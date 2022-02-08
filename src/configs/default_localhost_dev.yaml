@@ -1,0 +1,14 @@
+api:
+  port: 5000
+
+postgres:
+  host: ${oc.env:DB_HOST, 127.0.0.1}
+  port: ${oc.env:DB_PORT, 5432}
+  db: ${oc.env:DB, dwts}
+  user: ${oc.env:DB_USER, root}
+  password: ${oc.env:DB_PASSWORD, rootpwd}
+
+logging:
+  path: /tmp/dwts_backend_logs
+  max_file_size: 500 # MB
+  level: DEBUG
