@@ -38,7 +38,7 @@ app.include_router(general.router)
 def startup_event():
     try:
         logger.info("Booting D-WISE Tool Suite Backend ...")
-        SQLService()._create_database_and_tables(drop_if_exists=True)
+        SQLService()._create_database_and_tables(drop_if_exists=False)
         logger.info("Started D-WISE Tool Suite Backend!")
 
     except Exception as e:
