@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class CodeORM(ORMBase):
@@ -11,6 +11,10 @@ class CodeORM(ORMBase):
     color = Column(String, index=True)
 
     # one to one
+    current_code = relationship("CurrentCodeORM",
+                                uselist=False,
+                                back_populates="code")  # TODO Flo: How to handle cascading deletes?
+
     object_handle = relationship("ObjectHandleORM",
                                  uselist=False,
                                  back_populates="code",
@@ -33,11 +37,17 @@ class CurrentCodeORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
 
     # one to one
+    object_handle = relationship("ObjectHandleORM",
+                                 uselist=False,
+                                 back_populates="current_code",
+                                 cascade="all, delete",
+                                 passive_deletes=True)
+
     code_id = Column(Integer, ForeignKey('code.id'), index=True)
-    code = relationship("CodeORM", remote_side=[id])
+    code = relationship("CodeORM", back_populates="current_code")
 
     # one to many
-    annotations = relationship("SpanAnnotationORM",
-                               back_populates="span_annotations",
-                               cascade="all, delete",
-                               passive_deletes=True)
+    span_annotations = relationship("SpanAnnotationORM",
+                                    back_populates="current_code",
+                                    cascade="all, delete",
+                                    passive_deletes=True)

@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 from uvicorn import Config, Server
 
-from api.endpoints import general
-from app.db.sql_service import SQLService
+from api.endpoints import general, project
+from app.core.db.sql_service import SQLService
 from config import conf
 
 # create the FastAPI app

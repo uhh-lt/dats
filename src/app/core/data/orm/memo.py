@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class MemoORM(ORMBase):
@@ -11,13 +11,14 @@ class MemoORM(ORMBase):
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
-    attached_to = Column(Integer, ForeignKey('objecthandle.id'), index=True)
+    attached_to = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memo")
 
-    object_handle = relationship("ObjectHandleORM",
-                                 uselist=False,
-                                 back_populates="memo",
-                                 cascade="all, delete",
-                                 passive_deletes=True)
+    # FIXME Flo: SQLAlchemy ambiguous FK issue...
+    # object_handle = relationship("ObjectHandleORM",
+    #                              uselist=False,
+    #                              back_populates="memo",
+    #                              cascade="all, delete",
+    #                              passive_deletes=True)
 
     # many to one
     project_id = Column(Integer, ForeignKey('project.id'), index=True)

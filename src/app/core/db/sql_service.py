@@ -1,3 +1,5 @@
+from typing import Generator
+
 from loguru import logger
 from pydantic import PostgresDsn
 from sqlalchemy import create_engine
@@ -6,34 +8,35 @@ from sqlalchemy_utils import database_exists, create_database, drop_database
 
 """we import all ORM here so that SQLAlchemy knows about them to generate the SQL tables"""
 # noinspection PyUnresolvedReferences
-from app.db.orm.action import ActionORM
+from app.core.data.orm.action import ActionORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.annotation_document import AnnotationDocumentORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.code import CodeORM
+from app.core.data.orm.code import CodeORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.document_tag import DocumentTagORM
+from app.core.data.orm.document_tag import DocumentTagORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.filter import FilterORM
+from app.core.data.orm.filter import FilterORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.memo import MemoORM
+from app.core.data.orm.memo import MemoORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.object_handle import ObjectHandleORM
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.object_handle import ObjectHandleORM
+from app.core.data.orm.orm_base import ORMBase
 # noinspection PyUnresolvedReferences
-from app.db.orm.project import ProjectORM
+from app.core.data.orm.project import ProjectORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.project import ProjectUserLinkTable
+from app.core.data.orm.project import ProjectUserLinkTable
 # noinspection PyUnresolvedReferences
-from app.db.orm.query import QueryORM
+from app.core.data.orm.query import QueryORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document import SourceDocumentORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.span_annotation import SpanAnnotationORM
+from app.core.data.orm.span_annotation import SpanAnnotationORM
 # noinspection PyUnresolvedReferences
-from app.db.orm.user import UserORM
+from app.core.data.orm.user import UserORM
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from sqlalchemy.orm import sessionmaker
 
 
 class SQLService(metaclass=SingletonMeta):
@@ -47,10 +50,14 @@ class SQLService(metaclass=SingletonMeta):
                 path=f"/{conf.postgres.db}",
             )
 
-            cls.__engine: Engine = create_engine(db_uri,
-                                                 pool_pre_ping=True,
-                                                 echo=True)
+            engine = create_engine(db_uri,
+                                   pool_pre_ping=True,
+                                   echo=True)
             logger.info("Successfully established connection to PostgresSQL!")
+
+            cls.__engine: Engine = engine
+            cls.__session_maker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
             return super(SQLService, cls).__new__(cls)
 
         except Exception as e:
@@ -74,3 +81,10 @@ class SQLService(metaclass=SingletonMeta):
             logger.warning("Created Tables!")
 
         logger.info("Done setting up PostgresSQL DB and tables!")
+
+    def get_db_session(self) -> Generator:
+        try:
+            session = self.__session_maker()
+            yield session
+        finally:
+            session.close()

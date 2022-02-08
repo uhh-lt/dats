@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class DocumentTagORM(ORMBase):
@@ -26,5 +26,5 @@ class DocumentTagORM(ORMBase):
 
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):
-    source_document_id = Column(Integer, ForeignKey("project.id"), primary_key=True)
-    document_tag_id = Column(Integer, ForeignKey("sourcedocument.id"), primary_key=True)
+    source_document_id = Column(Integer, ForeignKey("sourcedocument.id"), primary_key=True)
+    document_tag_id = Column(Integer, ForeignKey("documenttag.id"), primary_key=True)

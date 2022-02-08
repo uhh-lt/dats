@@ -1,17 +1,20 @@
 from sqlalchemy import Column, Integer, String, DateTime, func, ForeignKey
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class ProjectORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False, index=True)
+    title = Column(String, nullable=False, unique=True, index=True)
     description = Column(String, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
+    # owner_id = Column(Integer, ForeignKey("user.id"))  # TODO Flo: how to handle cascade deletes?
+    # owner = relationship("UserORM", uselist=False)  # TODO Flo: how to handle cascade deletes?
+
     object_handle = relationship("ObjectHandleORM",
                                  uselist=False,
                                  back_populates="project",
@@ -38,6 +41,11 @@ class ProjectORM(ORMBase):
                                  back_populates="project",
                                  cascade="all, delete",
                                  passive_deletes=True)
+    
+    actions = relationship("ActionORM",
+                           back_populates="project",
+                           cascade="all, delete",
+                           passive_deletes=True)
 
     # many to many
     users = relationship("UserORM", secondary="ProjectUserLinkTable".lower(), back_populates="projects")

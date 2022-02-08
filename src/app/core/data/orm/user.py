@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, func
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class UserORM(ORMBase):
@@ -35,6 +35,11 @@ class UserORM(ORMBase):
                          back_populates="user",
                          cascade="all, delete",
                          passive_deletes=True)
+
+    actions = relationship("ActionORM",
+                           back_populates="user",
+                           cascade="all, delete",
+                           passive_deletes=True)
 
     # many to many
     projects = relationship("ProjectORM", secondary="ProjectUserLinkTable".lower(), back_populates="users")

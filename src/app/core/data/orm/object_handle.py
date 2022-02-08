@@ -1,20 +1,26 @@
 from sqlalchemy import Column, Integer, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class ObjectHandleORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
 
+    # one to one (memo is parent)
+    attached_memo_id = Column(Integer, ForeignKey('memo.id', ondelete="CASCADE"), index=True)
+    attached_memo = relationship("MemoORM", back_populates="attached_to", foreign_keys=[attached_memo_id])
+
+    # one to one (ObjectHandle is child)
     user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), index=True)
     user = relationship("UserORM", back_populates="object_handle")
 
     project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), index=True)
     project = relationship("ProjectORM", back_populates="object_handle")
 
-    memo_id = Column(Integer, ForeignKey('memo.id', ondelete="CASCADE"), index=True)
-    memo = relationship("MemoORM", back_populates="object_handle")
+    # FIXME Flo: SQLAlchemy ambiguous FK issue...
+    # memo_id = Column(Integer, ForeignKey('memo.id', ondelete="CASCADE"), index=True)
+    # memo = relationship("MemoORM", back_populates="object_handle", foreign_keys=[memo_id])
 
     code_id = Column(Integer, ForeignKey('code.id', ondelete="CASCADE"), index=True)
     code = relationship("CodeORM", back_populates="object_handle")
@@ -51,11 +57,12 @@ class ObjectHandleORM(ORMBase):
     query = relationship("QueryORM", back_populates="object_handle")
 
     __table_args__ = (
+        # FIXME Flo: SQLAlchemy ambiguous FK issue...
+        #  + CASE WHEN memo_id IS NULL THEN 0 ELSE 1 END
         # CHECK constraint that asserts that exactly one of the IDs is NOT NULL
         CheckConstraint("""(
                         CASE WHEN user_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN project_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN memo_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN code_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN current_code_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN source_document_id IS NULL THEN 0 ELSE 1 END

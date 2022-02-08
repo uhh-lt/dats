@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class SourceDocumentORM(ORMBase):
@@ -22,7 +22,7 @@ class SourceDocumentORM(ORMBase):
     project = relationship("ProjectORM", back_populates="source_documents")
 
     # one to many
-    metadata_ = relationship("SourceDocumentORM",
+    metadata_ = relationship("SourceDocumentMetadataORM",
                              back_populates="source_document",
                              cascade="all, delete",
                              passive_deletes=True)
@@ -42,6 +42,13 @@ class SourceDocumentMetadataORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String, nullable=False, index=True)
     value = Column(String, index=True)
+
+    # one to one
+    object_handle = relationship("ObjectHandleORM",
+                                 uselist=False,
+                                 back_populates="source_document_metadata",
+                                 cascade="all, delete",
+                                 passive_deletes=True)
 
     # many to one
     source_document_id = Column(Integer, ForeignKey('sourcedocument.id', ondelete="CASCADE"), index=True)

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
-from app.db.orm.orm_base import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 
 
 class SpanAnnotationORM(ORMBase):
@@ -18,7 +18,7 @@ class SpanAnnotationORM(ORMBase):
 
     # many to one
     current_code_id = Column(Integer, ForeignKey('currentcode.id', ondelete="CASCADE"), index=True)
-    current_code = relationship("UserORM", back_populates="span_annotations")
+    current_code = relationship("CurrentCodeORM", back_populates="span_annotations")
 
     annotation_document_id = Column(Integer, ForeignKey('annotationdocument.id', ondelete="CASCADE"), index=True)
     annotation_document = relationship("AnnotationDocumentORM", back_populates="span_annotations")
