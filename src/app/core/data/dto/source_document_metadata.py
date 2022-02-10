@@ -1,0 +1,33 @@
+from typing import Optional
+
+from pydantic import BaseModel, Field
+
+from app.core.data.dto.dto_base import UpdateDTOBase, ReadDTOBase
+
+
+# Properties shared across all DTOs
+class SourceDocumentMetadataBaseDTO(BaseModel):
+    key: str = Field(description='Key of the SourceDocumentMetadata')
+    value: str = Field(description='Value of the SourceDocumentMetadata')
+
+
+# Properties for creation
+class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
+    source_document_id: int = Field(description='SourceDocument the SourceDocumentMetadata belongs to')
+
+
+# Properties for updating
+class SourceDocumentMetadataUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase):
+    key: Optional[str] = Field(description='Key of the SourceDocumentMetadata', default=None)
+    value: Optional[str] = Field(description='Value of the SourceDocumentMetadata', default=None)
+
+
+# Properties for reading (as in ORM)
+class SourceDocumentMetadataRead(SourceDocumentMetadataBaseDTO):
+    id: int = Field(description='ID of the SourceDocumentMetadata')
+    key: str = Field(description='Key of the SourceDocumentMetadata')
+    value: str = Field(description='Value of the SourceDocumentMetadata')
+    source_document_id: int = Field(description='SourceDocument the SourceDocumentMetadata belongs to')
+
+    class Config:
+        orm_mode = True
