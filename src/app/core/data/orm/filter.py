@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from app.core.data.orm.orm_base import ORMBase
 
 
+# TODO Flo
 class FilterORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
 

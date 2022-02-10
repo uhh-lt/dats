@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -8,6 +8,8 @@ class SpanAnnotationORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     begin = Column(Integer, nullable=False, index=True)
     end = Column(Integer, nullable=False, index=True)
+    created = Column(DateTime, server_default=func.now(), index=True)
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
     object_handle = relationship("ObjectHandleORM",

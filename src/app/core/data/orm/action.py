@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -6,6 +6,7 @@ from app.core.data.orm.orm_base import ORMBase
 
 class ActionORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
+    executed = Column(DateTime, server_default=func.now(), index=True)
 
     # one to one
     object_handle = relationship("ObjectHandleORM",

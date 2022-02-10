@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, String
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -9,6 +9,8 @@ class CodeORM(ORMBase):
     name = Column(String, nullable=False, index=True)  # TODO Flo: Do we want unique=True?
     description = Column(String, index=True)
     color = Column(String, index=True)
+    created = Column(DateTime, server_default=func.now(), index=True)
+    updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
     current_code = relationship("CurrentCodeORM",
