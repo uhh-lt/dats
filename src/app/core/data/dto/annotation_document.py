@@ -2,8 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from .dto_base import ReadDTOBase
-
 
 # Properties shared across all DTOs
 class AnnotationDocumentBaseDTO(BaseModel):

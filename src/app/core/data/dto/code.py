@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from .dto_base import UpdateDTOBase, ReadDTOBase
+from .dto_base import UpdateDTOBase
 
 
 # Properties shared across all DTOs

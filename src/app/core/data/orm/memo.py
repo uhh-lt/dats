@@ -7,6 +7,7 @@ from app.core.data.orm.orm_base import ORMBase
 class MemoORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False, index=True)
+    content = Column(String, nullable=False, index=False)  # TODO Flo: This will go to ES soon!
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 

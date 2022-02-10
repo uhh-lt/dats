@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from .dto_base import ReadDTOBase, UpdateDTOBase
+from .dto_base import UpdateDTOBase
 
 """
  Flo: 
@@ -18,17 +18,17 @@ from .dto_base import ReadDTOBase, UpdateDTOBase
 # Properties shared across all DTOs
 class MemoBaseDTO(BaseModel):
     title: str = Field(description='Title of the Memo')
+    content: str = Field(description='Content of the Memo')
 
 
 # Properties to update
-class MemoBaseUpdateSDoc(MemoBaseDTO, UpdateDTOBase):
+class MemoUpdateBase(MemoBaseDTO, UpdateDTOBase):
     title: Optional[str] = Field(description='Title of the Memo', default=None)
     content: Optional[str] = Field(description='Content of the Memo', default=None)
 
 
 # Properties to create
 class MemoCreateBaseDTO(MemoBaseDTO):
-    content: str = Field(description='Content of the Memo')
     user_id: int = Field(description='User the Memo belongs to')
     project_id: int = Field(description='Project the Memo belongs to')
 

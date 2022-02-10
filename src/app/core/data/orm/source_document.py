@@ -7,6 +7,7 @@ from app.core.data.orm.orm_base import ORMBase
 class SourceDocumentORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, nullable=False, index=True)
+    content = Column(String, nullable=False, index=False)  # TODO Flo: This will go to ES soon!
     doctype = Column(Integer, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
 
