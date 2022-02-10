@@ -28,7 +28,7 @@ class MemoUpdateBase(MemoBaseDTO, UpdateDTOBase):
 
 
 # Properties to create
-class MemoCreateBaseDTO(MemoBaseDTO):
+class MemoCreate(MemoBaseDTO):
     user_id: int = Field(description='User the Memo belongs to')
     project_id: int = Field(description='Project the Memo belongs to')
 
@@ -43,29 +43,24 @@ class MemoReadBaseDTO(MemoBaseDTO):
 
 
 # Properties in DB (as in ORM)
-class MemoInDB(MemoReadBaseDTO):  # Flo: We inherit from ReadDTO because we want implicit orm_mode = True
-    attached_to: int = Field(description='The ObjectHandle the Memo is attached to')
+class MemoInDB(MemoReadBaseDTO):
+    attached_to_id: int = Field(description='The ObjectHandle the Memo is attached to')
 
-
-class MemoCreateAnnotationDocument(MemoCreateBaseDTO):
-    source_document_id: int = Field(description='AnnotationDocument the Memo belongs to')
+    class Config:
+        orm_mode = True
 
 
 class MemoReadAnnotationDocument(MemoReadBaseDTO):
-    source_document_id: int = Field(description='AnnotationDocument the Memo belongs to')
-
-
-class MemoCreateCode(MemoCreateBaseDTO):
-    code_id: int = Field(description='Code the Memo belongs to')
+    attached_source_document_id: int = Field(description='AnnotationDocument the Memo is attached to')
 
 
 class MemoReadCode(MemoReadBaseDTO):
-    code_id: int = Field(description='Code the Memo belongs to')
-
-
-class MemoCreateSpanAnnotation(MemoCreateBaseDTO):
-    span_annotation: int = Field(description='SpanAnnotation the Memo belongs to')
+    attached_code_id: int = Field(description='Code the Memo is attached to')
 
 
 class MemoReadSpanAnnotation(MemoReadBaseDTO):
-    span_annotation: int = Field(description='SpanAnnotation the Memo belongs to')
+    attached_span_annotation_id: int = Field(description='SpanAnnotation the Memo is attached to')
+
+
+class MemoReadProject(MemoReadBaseDTO):
+    attached_project_id: int = Field(description='Project the Memo is attached to')

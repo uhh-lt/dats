@@ -4,7 +4,7 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 from uvicorn import Config, Server
 
-from api.endpoints import general, project, user
+from api.endpoints import general, project, user, source_document, code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.db.sql_service import SQLService
 from config import conf
@@ -36,6 +36,8 @@ app.add_middleware(
 app.include_router(general.router)
 app.include_router(user.router)
 app.include_router(project.router)
+app.include_router(source_document.router)
+app.include_router(code.router)
 
 
 # add custom exception handlers
@@ -53,7 +55,7 @@ async def no_such_element_error_handler(request, exc: NotImplementedError):
 def startup_event():
     try:
         logger.info("Booting D-WISE Tool Suite Backend ...")
-        SQLService()._create_database_and_tables(drop_if_exists=True)
+        SQLService()._create_database_and_tables(drop_if_exists=False)
         logger.info("Started D-WISE Tool Suite Backend!")
 
     except Exception as e:

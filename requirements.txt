@@ -44,3 +44,5 @@ starlette==0.17.1
 typing_extensions==4.0.1
 uvicorn==0.17.4
 wheel==0.37.1
+
+elasticsearch==8.0.0

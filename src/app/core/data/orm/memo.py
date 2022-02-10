@@ -12,6 +12,7 @@ class MemoORM(ORMBase):
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
+    attached_to_id = Column(Integer, ForeignKey('objecthandle.id'), index=True)
     attached_to = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memo")
 
     # FIXME Flo: SQLAlchemy ambiguous FK issue...

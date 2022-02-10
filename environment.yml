@@ -71,5 +71,8 @@ dependencies:
   - zlib=1.2.11=h7f8727e_4
   - pip:
     - dnspython==2.2.0
+    - elastic-transport==8.0.0
+    - elasticsearch==8.0.0
     - email-validator==1.1.3
     - python-multipart==0.0.5
+    - urllib3==1.26.8

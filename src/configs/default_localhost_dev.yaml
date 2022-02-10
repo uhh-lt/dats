@@ -12,3 +12,18 @@ logging:
   path: /tmp/dwts_backend_logs
   max_file_size: 500 # MB
   level: DEBUG
+
+elasticsearch:
+  host: ${oc.env:ES_HOST, 127.0.0.1}
+  port: ${oc.env:ES_PORT, 10194}
+  use_ssl: False
+  verify_certs: False
+  sniff_on_start: False
+  sniff_on_connection_fail: False
+  sniffer_timeout: 120
+  index_mappings:
+    docs: configs/default_doc_index_mapping.json
+    memos: configs/default_memo_index_mapping.json
+  index_settings:
+    docs:
+    memos:

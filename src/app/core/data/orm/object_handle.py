@@ -7,9 +7,8 @@ from app.core.data.orm.orm_base import ORMBase
 class ObjectHandleORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
 
-    # one to one (memo is parent)
-    attached_memo_id = Column(Integer, ForeignKey('memo.id', ondelete="CASCADE"), index=True)
-    attached_memo = relationship("MemoORM", back_populates="attached_to", foreign_keys=[attached_memo_id])
+    # one to one
+    attached_memo = relationship("MemoORM", back_populates="attached_to", uselist=False)
 
     # one to one (ObjectHandle is child)
     user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), index=True)
