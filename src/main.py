@@ -4,9 +4,12 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 from uvicorn import Config, Server
 
+from app.core.startup import startup
+
+startup(reset_database=False)
+
 from api.endpoints import general, project, user, source_document, code
 from app.core.data.crud.crud_base import NoSuchElementError
-from app.core.db.sql_service import SQLService
 from config import conf
 
 # create the FastAPI app
@@ -32,13 +35,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# include the endpoint routers
-app.include_router(general.router)
-app.include_router(user.router)
-app.include_router(project.router)
-app.include_router(source_document.router)
-app.include_router(code.router)
-
 
 # add custom exception handlers
 @app.exception_handler(NoSuchElementError)
@@ -51,23 +47,17 @@ async def no_such_element_error_handler(request, exc: NotImplementedError):
     return PlainTextResponse(str(exc), status_code=501)
 
 
-@app.on_event("startup")
-def startup_event():
-    try:
-        logger.info("Booting D-WISE Tool Suite Backend ...")
-        SQLService()._create_database_and_tables(drop_if_exists=False)
-        logger.info("Started D-WISE Tool Suite Backend!")
-
-    except Exception as e:
-        msg = f"Error while starting the API! Exception: {str(e)}"
-        logger.error(msg)
-        raise SystemExit(msg)
-
-
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("Shutting Down D-WISE Tool Suite Backend!")
 
+
+# include the endpoint routers
+app.include_router(general.router)
+app.include_router(user.router)
+app.include_router(project.router)
+app.include_router(source_document.router)
+app.include_router(code.router)
 
 if __name__ == "__main__":
     # read port from config
