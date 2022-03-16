@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from typing import Generator
 
 from loguru import logger
@@ -36,7 +37,7 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.user import UserORM
 from app.util.singleton_meta import SingletonMeta
 from config import conf
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 
 class SQLService(metaclass=SingletonMeta):
@@ -82,7 +83,15 @@ class SQLService(metaclass=SingletonMeta):
 
         logger.info("Done setting up PostgresSQL DB and tables!")
 
-    def get_db_session(self) -> Generator:
+    def get_db_session(self) -> Generator[Session, None, None]:
+        try:
+            session = self.__session_maker()
+            yield session
+        finally:
+            session.close()
+
+    @contextmanager
+    def db_session(self) -> Generator[Session, None, None]:
         try:
             session = self.__session_maker()
             yield session
