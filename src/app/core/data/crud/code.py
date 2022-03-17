@@ -17,12 +17,15 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.add(db_obj)
         db.commit()
 
-        # second create a CurrentCode
+        # second create a CurrentCode that links to the code
         ccc = CurrentCodeCreate(code_id=db_obj.id)
         cc_db_obj = crud_current_code.create(db=db, create_dto=ccc)
 
         db.refresh(db_obj)
         return db_obj
+
+    def exists_by_name(self, db: Session, *, name: int) -> bool:
+        return db.query(self.model.id).filter(self.model.name == name).first() is not None
 
 
 crud_code = CRUDCode(CodeORM)
