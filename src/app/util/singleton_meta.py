@@ -12,7 +12,7 @@ class SingletonMeta(ABCMeta):
     def __call__(cls, *args, **kwargs):
         if cls.__singleton:
             return cls.__singleton
-        singleton = cls.__new__(cls)
+        singleton = cls.__new__(cls, *args, **kwargs)
         singleton.__init__(*args, **kwargs)
         cls.__singleton = singleton
         return singleton
