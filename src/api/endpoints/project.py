@@ -231,7 +231,7 @@ async def delete_project_codes(*,
 async def get_logbook_memo(*,
                            db: Session = Depends(SQLService().get_db_session),
                            id: int) -> Optional[MemoReadProject]:
-    proj_db_obj = crud_code.read(db=db, id=id)
+    proj_db_obj = crud_project.read(db=db, id=id)
     memo_as_in_db_dto = MemoInDB.from_orm(proj_db_obj.object_handle.attached_memo)
     return MemoReadProject(**memo_as_in_db_dto.dict(exclude={"attached_to"}), attached_project_id=proj_db_obj.id)
 
