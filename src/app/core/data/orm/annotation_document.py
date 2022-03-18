@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, func
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, func, Sequence
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -11,9 +11,15 @@ if TYPE_CHECKING:
     from app.core.data.orm.user import UserORM
     from app.core.data.orm.object_handle import ObjectHandleORM
 
+annotation_document_id_sequence = Sequence(name="annotation_document_id_sequence")
+
 
 class AnnotationDocumentORM(ORMBase):
-    id = Column(Integer, autoincrement=True, unique=True, index=True)
+    id = Column(Integer,
+                annotation_document_id_sequence,
+                server_default=annotation_document_id_sequence.next_value(),
+                unique=True,
+                index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
