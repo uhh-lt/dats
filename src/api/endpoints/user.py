@@ -1,12 +1,15 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
 # from api.auth.jwt_oauth2 import authenticate, credentials_exception, generate_jwt, current_user
 from app.core.data.dto.code import CodeRead, CodeCreate
+from app.core.data.dto.memo import MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, \
+    MemoReadProject, MemoReadSourceDocument
 from app.core.data.dto.user import UserRead, UserCreate, UserUpdate
 from app.core.db.sql_service import SQLService
 
@@ -80,9 +83,9 @@ async def create_user_code(*,
             response_model=List[CodeRead],
             summary="Returns all Codes of the User",
             description="Returns all Codes of the User with the given ID")
-async def get_project_codes(*,
-                            id: int,
-                            db: Session = Depends(SQLService().get_db_session)) -> List[CodeRead]:
+async def get_user_codes(*,
+                         id: int,
+                         db: Session = Depends(SQLService().get_db_session)) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=id)
     return [CodeRead.from_orm(code) for code in db_obj.codes]
@@ -92,9 +95,41 @@ async def get_project_codes(*,
                response_model=Optional[UserRead],
                summary="Removes all Codes of the User",
                description="Removes all Codes of the User with the given ID if it exists")
-async def delete_project_codes(*,
-                               id: int,
-                               db: Session = Depends(SQLService().get_db_session)) -> Optional[UserRead]:
+async def delete_user_codes(*,
+                            id: int,
+                            db: Session = Depends(SQLService().get_db_session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.remove_all_codes(db=db, id=id)
+    return UserRead.from_orm(db_obj)
+
+
+@router.get("/{id}/memo", tags=tags,
+            response_model=List[Union[MemoReadCode,
+                                      MemoReadSpanAnnotation,
+                                      MemoReadAnnotationDocument,
+                                      MemoReadSourceDocument,
+                                      MemoReadProject]],
+            summary="Returns all Memos of the User",
+            description="Returns all Memos of the User with the given ID")
+async def get_user_memos(*,
+                         id: int,
+                         db: Session = Depends(SQLService().get_db_session)) -> List[Union[MemoReadCode,
+                                                                                           MemoReadSpanAnnotation,
+                                                                                           MemoReadAnnotationDocument,
+                                                                                           MemoReadSourceDocument,
+                                                                                           MemoReadProject]]:
+    # TODO Flo: only if the user has access?
+    db_obj = crud_user.read(db=db, id=id)
+    return [crud_memo.get_memo_read_dtos_from_orm(db=db, db_obj=memo) for memo in db_obj.memos]
+
+
+@router.delete("/{id}/code", tags=tags,
+               response_model=Optional[UserRead],
+               summary="Removes all Memos of the User",
+               description="Removes all Memos of the User with the given ID if it exists")
+async def delete_user_memos(*,
+                            id: int,
+                            db: Session = Depends(SQLService().get_db_session)) -> Optional[UserRead]:
+    # TODO Flo: only if the user has access?
+    db_obj = crud_user.remove_all_memos(db=db, id=id)
     return UserRead.from_orm(db_obj)
