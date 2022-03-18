@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 
+from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoReadSpanAnnotation
 from app.core.data.dto.span_annotation import SpanAnnotationRead
 
@@ -41,6 +42,15 @@ async def delete_by_id(id: int) -> Optional[SpanAnnotationRead]:
             summary="Adds a Memo to the SpanAnnotation",
             description="Adds a Memo to the SpanAnnotation with the given ID if it exists")
 async def add_memo(id: int) -> Optional[MemoReadSpanAnnotation]:
+    # TODO Flo: only if the user has access?
+    raise NotImplementedError()
+
+
+@router.get("/{id}/code", tags=tags,
+            response_model=Optional[CodeRead],
+            summary="Returns the Code of the SpanAnnotation",
+            description="Returns the Code of the SpanAnnotation with the given ID if it exists.")
+async def get_code(id: int) -> Optional[MemoReadSpanAnnotation]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
 
