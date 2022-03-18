@@ -21,8 +21,8 @@ tags = ["code"]
 async def create_new_code(*,
                           db: Session = Depends(SQLService().get_db_session),
                           code: CodeCreate) -> Optional[CodeRead]:
-    db_user = crud_code.create(db=db, create_dto=code)
-    return CodeRead.from_orm(db_user)
+    db_code = crud_code.create(db=db, create_dto=code)
+    return CodeRead.from_orm(db_code)
 
 
 @router.get("/current/{current_code_id}", tags=tags,
