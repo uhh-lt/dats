@@ -46,6 +46,25 @@ system_codes:
   SENTENCE:
     desc: "A sentence spanning multiple Tokens."
 
+docprepro:
+  spacy:
+    default_model: "en_core_web_trf"
+    english_model: "en_core_web_trf"
+    german_model: "de_core_news_lg"
+  celery:
+    backend:
+      host: localhost
+      port: 6379
+      db: 0
+      password: dwts123
+    broker:
+      host: localhost
+      port: 5672
+      user: dwtsuser
+      password: dwts123
+
+
+
 
 postgres:
   host: ${oc.env:DB_HOST, 127.0.0.1}
