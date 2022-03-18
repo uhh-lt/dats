@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class CodeORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False, index=True)  # TODO Flo: Do we want unique=True?
+    name = Column(String, nullable=False, index=True)
     description = Column(String, index=True)
     color = Column(String, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
@@ -41,6 +41,10 @@ class CodeORM(ORMBase):
     # hierarchy reference
     parent_code_id = Column(Integer, ForeignKey('code.id', ondelete="CASCADE"))
     parent_code: "CodeORM" = relationship("CodeORM", remote_side=[id])
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'project_id', 'name', name='UC_name_unique_per_user_and_project'),
+    )
 
 
 class CurrentCodeORM(ORMBase):
