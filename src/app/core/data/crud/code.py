@@ -41,7 +41,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                                         user_id=SYSTEM_USER_ID,
                                         parent_code_id=parent_code_id)
 
-                if not self.exists_by_user_and_name_and_project(db,
+                if not self.exists_by_name_and_user_and_project(db,
                                                                 code_name=create_dto.name,
                                                                 proj_id=create_dto.project_id,
                                                                 user_id=create_dto.user_id):
@@ -56,20 +56,20 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         return created
 
     def read_by_name(self, db: Session, code_name: str) -> List[CodeORM]:
-        return db.query(self.model.id).filter(self.model.name == code_name).all()
+        return db.query(self.model).filter(self.model.name == code_name).all()
 
     def read_by_name_and_project(self, db: Session, code_name: str, proj_id: int) -> List[CodeORM]:
-        return db.query(self.model.id).filter(self.model.name == code_name,
-                                              self.model.project_id == proj_id).all()
+        return db.query(self.model).filter(self.model.name == code_name,
+                                           self.model.project_id == proj_id).all()
 
     def read_by_name_and_user(self, db: Session, code_name: str, user_id: int) -> List[CodeORM]:
-        return db.query(self.model.id).filter(self.model.name == code_name,
-                                              self.model.user_id == user_id).all()
+        return db.query(self.model).filter(self.model.name == code_name,
+                                           self.model.user_id == user_id).all()
 
     def read_by_name_and_user_and_project(self, db: Session, code_name: str, user_id: int, proj_id: int) -> CodeORM:
-        return db.query(self.model.id).filter(self.model.name == code_name,
-                                              self.model.user_id == user_id,
-                                              self.model.project_id == proj_id).first()
+        return db.query(self.model).filter(self.model.name == code_name,
+                                           self.model.user_id == user_id,
+                                           self.model.project_id == proj_id).first()
 
     def exists_by_name(self, db: Session, *, code_name: str) -> bool:
         return db.query(self.model.id).filter(self.model.name == code_name).first() is not None
@@ -82,7 +82,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         return db.query(self.model.id).filter(self.model.name == code_name,
                                               self.model.user_id == user_id).first() is not None
 
-    def exists_by_user_and_name_and_project(self, db: Session, *, code_name: str, user_id: int, proj_id: int) -> bool:
+    def exists_by_name_and_user_and_project(self, db: Session, *, code_name: str, user_id: int, proj_id: int) -> bool:
         return db.query(self.model.id).filter(self.model.name == code_name,
                                               self.model.user_id == user_id,
                                               self.model.project_id == proj_id).first() is not None
