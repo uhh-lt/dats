@@ -1,6 +1,8 @@
 from typing import List, Dict
 from typing import Optional
 
+# noinspection PyUnresolvedReferences,PyProtectedMember
+from celery import Signature
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi import UploadFile, File
 from sqlalchemy.orm import Session
@@ -9,11 +11,10 @@ from api.dependencies import skip_limit_params
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
-from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead, CodeCreate
 from app.core.data.dto.memo import MemoReadProject, MemoInDB, MemoCreate
-from app.core.data.dto.source_document import SourceDocumentCreate, DocTypeDict, SourceDocumentRead
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.db.sql_service import SQLService
@@ -107,30 +108,33 @@ async def get_project_sdoc_metadata(*,
 
 
 @router.put("/{id}/sdoc", tags=tags,
-            response_model=Optional[SourceDocumentRead],
+            response_model=str,
             summary="Uploads a SourceDocument to the Project",
             description="Uploads a SourceDocument to the Project with the given ID if it exists")
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
 async def upload_project_sdoc(*,
                               id: int,
-                              db: Session = Depends(SQLService().get_db_session),
                               file: UploadFile = File(..., description="The file represented by the SourceDocument")) \
-        -> Optional[SourceDocumentRead]:
+        -> str:
     # TODO Flo: only if the user has access?
     # TODO Flo: Support other MIME Types
     if not file.content_type == "text/plain":
         raise HTTPException(detail="Only plain text files allowed!", status_code=406)
 
-    txt_content = await file.read()
-    create_dto = SourceDocumentCreate(content=txt_content.decode("utf-8"),
-                                      filename=file.filename,
-                                      doctype=DocTypeDict[file.content_type],
-                                      project_id=id)
+    import_uploaded_document = "app.docprepro.process.import_uploaded_document"
+    generate_automatic_annotations = "app.docprepro.process.generate_automatic_annotations"
+    persist_automatic_annotations = "app.docprepro.process.persist_automatic_annotations"
 
-    sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
+    document_preprocessing = (
+            Signature(import_uploaded_document, kwargs={"doc_file": file, "project_id": id}) |
+            Signature(generate_automatic_annotations) |
+            Signature(persist_automatic_annotations)
+    )
+    document_preprocessing.apply_async()
 
-    return SourceDocumentRead.from_orm(sdoc_db_obj)
+    # TODO Flo: How to notify user or system when done?
+    return "Upload and preprocessing of Document started in the background!"
 
 
 @router.delete("/{id}/sdoc", tags=tags,
