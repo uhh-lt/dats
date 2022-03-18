@@ -29,8 +29,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    @staticmethod
-    def create_system_codes_for_project(db: Session, proj_id: int) -> List[CodeORM]:
+    def create_system_codes_for_project(self, db: Session, proj_id: int) -> List[CodeORM]:
         created: List[CodeORM] = []
 
         def __create_recursively(code_dict: Dict[str, Dict[str, Any]], parent_code_id: int = None):
@@ -42,8 +41,11 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                                         user_id=SYSTEM_USER_ID,
                                         parent_code_id=parent_code_id)
 
-                if not crud_code.exists_by_name(db, name=code_name):
-                    db_code = crud_code.create(db=db, create_dto=create_dto)
+                if not self.exists_by_user_and_name_and_project(db,
+                                                                code_name=create_dto.name,
+                                                                proj_id=create_dto.project_id,
+                                                                user_id=create_dto.user_id):
+                    db_code = self.create(db=db, create_dto=create_dto)
                     created.append(db_code)
 
                     if "children" in code_dict[code_name]:
@@ -53,8 +55,37 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
         return created
 
-    def exists_by_name(self, db: Session, *, name: str) -> bool:
-        return db.query(self.model.id).filter(self.model.name == name).first() is not None
+    def read_by_name(self, db: Session, code_name: str) -> List[CodeORM]:
+        return db.query(self.model.id).filter(self.model.name == code_name).all()
+
+    def read_by_name_and_project(self, db: Session, code_name: str, proj_id: int) -> List[CodeORM]:
+        return db.query(self.model.id).filter(self.model.name == code_name,
+                                              self.model.project_id == proj_id).all()
+
+    def read_by_name_and_user(self, db: Session, code_name: str, user_id: int) -> List[CodeORM]:
+        return db.query(self.model.id).filter(self.model.name == code_name,
+                                              self.model.user_id == user_id).all()
+
+    def read_by_name_and_user_and_project(self, db: Session, code_name: str, user_id: int, proj_id: int) -> CodeORM:
+        return db.query(self.model.id).filter(self.model.name == code_name,
+                                              self.model.user_id == user_id,
+                                              self.model.project_id == proj_id).first()
+
+    def exists_by_name(self, db: Session, *, code_name: str) -> bool:
+        return db.query(self.model.id).filter(self.model.name == code_name).first() is not None
+
+    def exists_by_name_and_project(self, db: Session, *, code_name: str, proj_id: int) -> bool:
+        return db.query(self.model.id).filter(self.model.name == code_name,
+                                              self.model.project_id == proj_id).first() is not None
+
+    def exists_by_name_and_user(self, db: Session, *, code_name: str, user_id: int) -> bool:
+        return db.query(self.model.id).filter(self.model.name == code_name,
+                                              self.model.user_id == user_id).first() is not None
+
+    def exists_by_user_and_name_and_project(self, db: Session, *, code_name: str, user_id: int, proj_id: int) -> bool:
+        return db.query(self.model.id).filter(self.model.name == code_name,
+                                              self.model.user_id == user_id,
+                                              self.model.project_id == proj_id).first() is not None
 
 
 crud_code = CRUDCode(CodeORM)
