@@ -1,11 +1,16 @@
+from typing import List, Dict, Any
+
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.current_code import crud_current_code
+from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.code import CodeCreate, CodeUpdate
 from app.core.data.dto.current_code import CurrentCodeCreate
 from app.core.data.orm.code import CodeORM
+from app.util.color import get_random_color
+from config import conf
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
@@ -24,7 +29,31 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.refresh(db_obj)
         return db_obj
 
-    def exists_by_name(self, db: Session, *, name: int) -> bool:
+    @staticmethod
+    def create_system_codes_for_project(db: Session, proj_id: int) -> List[CodeORM]:
+        created: List[CodeORM] = []
+
+        def __create_recursively(code_dict: Dict[str, Dict[str, Any]], parent_code_id: int = None):
+            for code_name in code_dict.keys():
+                create_dto = CodeCreate(name=str(code_name),
+                                        color=get_random_color()[0],
+                                        description=code_dict[code_name]["desc"],
+                                        project_id=proj_id,
+                                        user_id=SYSTEM_USER_ID,
+                                        parent_code_id=parent_code_id)
+
+                if not crud_code.exists_by_name(db, name=code_name):
+                    db_code = crud_code.create(db=db, create_dto=create_dto)
+                    created.append(db_code)
+
+                    if "children" in code_dict[code_name]:
+                        __create_recursively(code_dict[code_name]["children"], parent_code_id=db_code.id)
+
+        __create_recursively(conf.system_codes)
+
+        return created
+
+    def exists_by_name(self, db: Session, *, name: str) -> bool:
         return db.query(self.model.id).filter(self.model.name == name).first() is not None
 
 

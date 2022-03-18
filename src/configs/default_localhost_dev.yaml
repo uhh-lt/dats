@@ -3,6 +3,50 @@ api:
 
 repository_root: /tmp/dwts
 
+system_codes:
+  NAMED_ENTITY:
+    desc: "A named entity"
+    children:
+      CARDINAL:
+        desc: "Numerals that do not fall under another type"
+      DATE:
+        desc: "Absolute or relative dates or periods"
+      EVENT:
+        desc: "Named hurricanes, battles, wars, sports events, etc."
+      FAC:
+        desc: "Buildings, airports, highways, bridges, etc."
+      GPE:
+        desc: "Countries, cities, states"
+      LANGUAGE:
+        desc: "Any named language"
+      LAW:
+        desc: "Named documents made into laws."
+      LOC:
+        desc: "Non-GPE locations, mountain ranges, bodies of water"
+      MONEY:
+        desc: "Monetary values, including unit"
+      NORP:
+        desc: "Nationalities or religious or political groups"
+      ORDINAL:
+        desc: "'first', 'second', etc."
+      ORG:
+        desc: "Companies, agencies, institutions, etc."
+      PERCENT:
+        desc: "Percentage, including '%'"
+      PERSON:
+        desc: "People, including fictional"
+      PRODUCT:
+        desc: "Objects, vehicles, foods, etc. (not services)"
+      QUANTITY:
+        desc: "Measurements, as of weight or distance"
+      TIME:
+        desc: "Times smaller than a day"
+      WORK_OF_ART:
+        desc: "Titles of books, songs, etc."
+  SENTENCE:
+    desc: "A sentence spanning multiple Tokens."
+
+
 postgres:
   host: ${oc.env:DB_HOST, 127.0.0.1}
   port: ${oc.env:DB_PORT, 5432}
