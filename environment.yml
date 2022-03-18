@@ -5,6 +5,7 @@ channels:
 dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=4.5=1_gnu
+  - amqp=2.6.1=py_0
   - antlr-python-runtime=4.9.3=pyhd8ed1ab_1
   - anyio=3.5.0=py39hf3d152e_0
   - anyjson=0.3.3=pyhd8ed1ab_1004
@@ -12,11 +13,18 @@ dependencies:
   - arrow=1.2.2=pyhd8ed1ab_0
   - asgiref=3.5.0=pyhd8ed1ab_0
   - babel=2.9.1=pyh44b312d_0
+  - backports=1.0=py_2
+  - backports.functools_lru_cache=1.6.4=pyhd8ed1ab_0
   - bcrypt=3.2.0=py39h3811e60_1
-  - ca-certificates=2021.10.26=h06a4308_2
+  - billiard=3.6.4.0=py39h3811e60_0
+  - ca-certificates=2022.2.1=h06a4308_0
+  - celery=4.4.0=py_0
   - certifi=2021.10.8=py39h06a4308_2
   - cffi=1.15.0=py39hd667e15_1
-  - click=8.0.3=py39hf3d152e_1
+  - click=8.0.3=pyhd3eb1b0_0
+  - click-didyoumean=0.3.0=pyhd8ed1ab_0
+  - click-plugins=1.1.1=py_0
+  - click-repl=0.2.0=pyhd8ed1ab_0
   - colour=0.1.5=py_0
   - cryptography=35.0.0=py39hbca0aa6_0
   - fastapi=0.73.0=pyhd8ed1ab_0
@@ -43,6 +51,8 @@ dependencies:
   - pendulum=2.1.2=pyhd8ed1ab_1
   - phonenumbers=8.12.42=pyhd8ed1ab_0
   - pip=21.2.4=py39h06a4308_0
+  - prompt-toolkit=3.0.27=pyha770c72_0
+  - prompt_toolkit=3.0.27=hd8ed1ab_0
   - psycopg2=2.8.6=py39h3c74f83_1
   - pycparser=2.21=pyhd8ed1ab_0
   - pydantic=1.8.2=py39h3811e60_0
@@ -54,6 +64,7 @@ dependencies:
   - pyyaml=5.4.1=py39h3811e60_0
   - readline=8.1.2=h7f8727e_1
   - setuptools=58.0.4=py39h06a4308_0
+  - simplejson=3.17.6=py39h7f8727e_0
   - six=1.16.0=pyh6c4a22f_0
   - sniffio=1.2.0=py39hf3d152e_2
   - sqlalchemy=1.4.13=py39h3811e60_0
@@ -65,14 +76,62 @@ dependencies:
   - typing_extensions=4.0.1=pyha770c72_0
   - tzdata=2021e=hda174b7_0
   - uvicorn=0.17.4=py39hf3d152e_0
+  - wcwidth=0.2.5=pyh9f0ad1d_2
   - wheel=0.37.1=pyhd3eb1b0_0
   - xz=5.2.5=h7b6447c_0
   - yaml=0.2.5=h516909a_0
   - zlib=1.2.11=h7f8727e_4
   - pip:
+    - blessings==1.7
+    - blis==0.7.6
+    - catalogue==2.0.6
+    - charset-normalizer==2.0.12
+    - cymem==2.0.6
+    - de-core-news-lg==3.2.0
+    - de-dep-news-trf==3.2.0
+    - deprecated==1.2.13
     - dnspython==2.2.0
     - elastic-transport==8.0.0
     - elasticsearch==8.0.0
     - email-validator==1.1.3
+    - en-core-web-lg==3.2.0
+    - en-core-web-trf==3.2.0
+    - filelock==3.6.0
+    - frozendict==2.3.0
+    - gpustat==0.6.0
+    - huggingface-hub==0.4.0
+    - jinja2==3.0.3
+    - joblib==1.1.0
+    - kombu==4.6.11
+    - langcodes==3.3.0
+    - markupsafe==2.1.0
+    - murmurhash==1.0.6
+    - numpy==1.22.3
+    - nvidia-ml-py3==7.352.0
+    - packaging==21.3
+    - pathy==0.6.1
+    - preshed==3.0.6
+    - psutil==5.9.0
+    - pyparsing==3.0.7
     - python-multipart==0.0.5
+    - redis==4.1.4
+    - regex==2022.3.2
+    - requests==2.27.1
+    - sacremoses==0.0.47
+    - smart-open==5.2.1
+    - spacy==3.2.3
+    - spacy-alignments==0.8.4
+    - spacy-legacy==3.0.9
+    - spacy-loggers==1.0.1
+    - spacy-transformers==1.1.4
+    - srsly==2.4.2
+    - thinc==8.0.14
+    - tokenizers==0.10.3
+    - torch==1.11.0
+    - tqdm==4.63.0
+    - transformers==4.15.0
+    - typer==0.4.0
     - urllib3==1.26.8
+    - vine==1.3.0
+    - wasabi==0.9.0
+    - wrapt==1.14.0

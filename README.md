@@ -19,13 +19,16 @@ pip install -r requirements.txt
 
 ### How to run
 
-1) run PostgresSQL with docker
+1) run services with docker
 
 ```docker
-docker run -d -p 5432:5432 \ 
-              -v postgres-volume:/var/lib/postgresql/data \
-              -e POSTGRES_PASSWORD=rootpwd \ 
-              -e POSTGRES_USER=root postgres
+docker-compose -f services_docker-compose.yml up
+```
+
+2) run celery worker (via cli not docker)
+
+```shell
+celery worker -A app.docprepro.process -l info -c 4
 ```
 
 3) run main.py
