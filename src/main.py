@@ -8,7 +8,7 @@ from app.core.startup import startup
 
 startup(reset_database=False)
 
-from api.endpoints import general, project, user, source_document, code
+from api.endpoints import general, project, user, source_document, code, annotation_document
 from app.core.data.crud.crud_base import NoSuchElementError
 from config import conf
 
@@ -57,6 +57,7 @@ app.include_router(general.router)
 app.include_router(user.router)
 app.include_router(project.router)
 app.include_router(source_document.router)
+app.include_router(annotation_document.router)
 app.include_router(code.router)
 
 if __name__ == "__main__":
