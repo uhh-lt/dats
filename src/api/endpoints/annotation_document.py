@@ -71,9 +71,9 @@ async def add_span_annotations(*,
             description="Returns all Annotations in the AnnotationDocument with the given ID if it exists")
 async def get_all_annotations(*,
                               db: Session = Depends(SQLService().get_db_session),
-                              id: int) -> List[AnnotationDocumentRead]:
+                              id: int) -> List[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    return [SpanAnnotationRead.from_orm(span) for span in crud_adoc.read(db=db, id=id).span_annotations]
 
 
 @router.delete("/{id}/annotations", tags=tags,
