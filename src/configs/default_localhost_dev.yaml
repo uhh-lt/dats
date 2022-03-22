@@ -53,17 +53,15 @@ docprepro:
     german_model: "de_core_news_lg"
   celery:
     backend:
-      host: localhost
-      port: 6379
+      host: ${oc.env:CELERY_BACKEND_HOST, localhost}
+      port: ${oc.env:CELERY_BACKEND_PORT, 6379}
       db: 0
-      password: dwts123
+      password: ${oc.env:CELERY_BACKEND_PASSWORD, dwts123}
     broker:
-      host: localhost
-      port: 5672
-      user: dwtsuser
-      password: dwts123
-
-
+      host: ${oc.env:CELERY_BROKER_HOST, localhost}
+      port: ${oc.env:CELERY_BROKER_PORT, 5672}
+      user: ${oc.env:CELERY_BROKER_USER, dwtsuser}
+      password: ${oc.env:CELERY_BROKER_PASSWORD, dwts123}
 
 
 postgres:
