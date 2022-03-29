@@ -8,9 +8,9 @@ from app.core.startup import startup
 
 startup(reset_database=False)
 
-from api.endpoints import general, project, user, source_document, code, annotation_document
-from app.core.data.crud.crud_base import NoSuchElementError
-from config import conf
+from api.endpoints import general, project, user, source_document, code, annotation_document  # noqa E402
+from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
+from config import conf  # noqa E402
 
 # create the FastAPI app
 app = FastAPI(
@@ -38,12 +38,12 @@ app.add_middleware(
 
 # add custom exception handlers
 @app.exception_handler(NoSuchElementError)
-async def no_such_element_error_handler(request, exc: NoSuchElementError):
+async def no_such_element_error_handler(_, exc: NoSuchElementError):
     return PlainTextResponse(str(exc), status_code=404)
 
 
 @app.exception_handler(NotImplementedError)
-async def no_such_element_error_handler(request, exc: NotImplementedError):
+async def no_such_element_error_handler(_, exc: NotImplementedError):
     return PlainTextResponse(str(exc), status_code=501)
 
 
@@ -60,7 +60,8 @@ app.include_router(source_document.router)
 app.include_router(annotation_document.router)
 app.include_router(code.router)
 
-if __name__ == "__main__":
+
+def main() -> None:
     # read port from config
     port = int(conf.api.port)
     assert port is not None and isinstance(port, int) and port > 0, \
@@ -78,3 +79,7 @@ if __name__ == "__main__":
     )
 
     server.run()
+
+
+if __name__ == "__main__":
+    main()

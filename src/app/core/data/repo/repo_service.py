@@ -15,30 +15,30 @@ from config import conf
 
 class RepoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
+        repo_root = Path(conf.repository_root)
+        cls.repo_root = repo_root
+        cls.logs_root = repo_root.joinpath("logs")
+        cls.proj_root = repo_root.joinpath("projects")
+
+        return super(RepoService, cls).__new__(cls)
+
+    def _create_directory_structure(self):
         try:
             # make sure repository root dir exists
-            repo_root = Path(conf.repository_root)
-            if not repo_root.exists():
-                repo_root.mkdir(parents=True)
-                logger.info(f"Created DWTS repository at {str(repo_root)}")
-            cls.repo_root = repo_root
+            if not self.repo_root.exists():
+                self.repo_root.mkdir(parents=True)
+                logger.info(f"Created DWTS repository at {str(self.repo_root)}")
 
             # make sure logs dir exists
-            logs_root = repo_root.joinpath("logs")
-            if not logs_root.exists():
-                logs_root.mkdir()
-            cls.logs_root = logs_root
+            if not self.logs_root.exists():
+                self.logs_root.mkdir()
 
             # make sure projects dir exists
-            proj_root = repo_root.joinpath("projects")
-            if not proj_root.exists():
-                proj_root.mkdir()
-            cls.proj_root = proj_root
-
-            return super(RepoService, cls).__new__(cls)
+            if not self.proj_root.exists():
+                self.proj_root.mkdir()
 
         except Exception as e:
-            msg = f"Cannot setup repository at {conf.repository_root}"
+            msg = f"Cannot create repository directory structure at {conf.repository_root}"
             logger.error(msg)
             raise SystemExit(msg)
 
@@ -46,7 +46,7 @@ class RepoService(metaclass=SingletonMeta):
                                 doc_file: UploadFile,
                                 project_id: int) -> Tuple[Path, SourceDocumentCreate]:
         # save the file to disk
-        dst = self.proj_root.joinpath(f"projects/{project_id}/docs/{doc_file.filename}")
+        dst = self.proj_root.joinpath(f"{project_id}/docs/{doc_file.filename}")
         try:
             if dst.exists():
                 # FIXME Flo: Throw or what?!
