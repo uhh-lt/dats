@@ -115,11 +115,12 @@ async def get_project_sdoc_metadata(*,
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
 async def upload_project_sdoc(*,
                               id: int,
-                              file: UploadFile = File(..., description="The file represented by the SourceDocument")) \
+                              doc_file: UploadFile = File(...,
+                                                          description="The file represented by the SourceDocument")) \
         -> str:
     # TODO Flo: only if the user has access?
     # TODO Flo: Support other MIME Types
-    if not file.content_type == "text/plain":
+    if not doc_file.content_type == "text/plain":
         raise HTTPException(detail="Only plain text files allowed!", status_code=406)
 
     import_uploaded_document = "app.docprepro.process.import_uploaded_document"
@@ -127,7 +128,7 @@ async def upload_project_sdoc(*,
     persist_automatic_annotations = "app.docprepro.process.persist_automatic_annotations"
 
     document_preprocessing = (
-            Signature(import_uploaded_document, kwargs={"doc_file": file, "project_id": id}) |
+            Signature(import_uploaded_document, kwargs={"doc_file": doc_file, "project_id": id}) |
             Signature(generate_automatic_annotations) |
             Signature(persist_automatic_annotations)
     )
