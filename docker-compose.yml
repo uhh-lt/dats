@@ -61,7 +61,7 @@ services:
       - dwts_backend_network
 
   celery-worker:
-    image: dwts_backend_celery:latest
+    image: uhhlt/dwts_backend_celery:latest
     build:
       context: .
       dockerfile: Dockerfile_celery_worker
@@ -89,7 +89,7 @@ services:
       - dwts_backend_network
 
   dwts_backend:
-    image: dwts_backend:latest
+    image: uhhlt/dwts_backend:latest
     build:
       context: .
       dockerfile: Dockerfile_backend
