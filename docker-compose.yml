@@ -1,0 +1,131 @@
+version: "3.7"
+
+services:
+  postgres:
+    image: "postgres:latest"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dwtsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwts123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - "postgres_data:/var/lib/postgresql/data"
+    networks:
+      - dwts_backend_network
+
+  rabbitmq:
+    image: "rabbitmq:management"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-dwtsuser}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dwts123}
+    ports:
+      - "4369:4369"
+      - "5672:5672"
+      - "25672:25672"
+      - "15672:15672"
+    volumes:
+      - "rabbitmq_data:/var/lib/rabbitmq/data"
+    networks:
+      - dwts_backend_network
+
+  redis:
+    image: "redis:latest"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dwts123}
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis_data:/var/lib/redis/data"
+    command: redis-server --requirepass "${REDIS_PASSWORD:-dwts123}"
+    networks:
+      - dwts_backend_network
+
+  celery-flower:
+    image: gregsi/latest-celery-flower-docker:latest
+    environment:
+      AMQP_USERNAME: ${RABBITMQ_USER:-dwtsuser}
+      AMQP_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
+      AMQP_ADMIN_USERNAME: ${RABBITMQ_USER:-dwtsuser}
+      AMQP_ADMIN_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
+      AMQP_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      AMQP_PORT: ${RABBITMQ_PORT:-5672}
+      AMQP_ADMIN_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      AMQP_ADMIN_PORT: ${RABBITMQ_PORT:-15672}
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-dwtsuser:dwts123}
+    ports:
+      - "5555:5555"
+    depends_on:
+      - rabbitmq
+      - redis
+    networks:
+      - dwts_backend_network
+
+  celery-worker:
+    image: dwts_backend_celery:latest
+    build:
+      context: .
+      dockerfile: Dockerfile_celery_worker
+    environment:
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dwts123}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_USER: ${RABBITMQ_USER:-dwtsuser}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-dwts}
+      POSTGRES_USER: ${POSTGRES_USER:-dwtsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwts123}
+    depends_on:
+      - rabbitmq
+      - redis
+      - postgres
+    restart: always
+    networks:
+      - dwts_backend_network
+
+  dwts_backend:
+    image: dwts_backend:latest
+    build:
+      context: .
+      dockerfile: Dockerfile_backend
+    environment:
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dwts123}
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+      RABBITMQ_USER: ${RABBITMQ_USER:-dwtsuser}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-dwts}
+      POSTGRES_USER: ${POSTGRES_USER:-dwtsuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwts123}
+    volumes:
+      - ./src:/dwts_code/src
+      - ./backend_repo:/tmp/dwts
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+      - celery-worker
+    ports:
+      - "5500:5000"
+    restart: always
+    networks:
+      - dwts_backend_network
+
+volumes:
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  dwts_backend_network:
+    name: dwts_backend_network
