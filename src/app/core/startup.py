@@ -26,6 +26,8 @@ def startup(reset_database: bool = False) -> None:
 
 
 def __init_services__(reset_database: bool = False) -> None:
+    # import celery app to configure
+    from app.docprepro.celery import app
     from app.core.data.repo.repo_service import RepoService
     RepoService()._create_directory_structure()
     # create SQL DBs and Tables # TODO Flo: Alembic
