@@ -36,10 +36,10 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         db.refresh(db_obj)
         return db_obj
 
-    def create_for_code(self, db: Session, code_id: int, create_dto: MemoCreate) -> MemoORM:
+    def create_for_code(self, db: Session, id: int, create_dto: MemoCreate) -> MemoORM:
         # create an ObjectHandle for the Code
         oh_db_obj = crud_object_handle.create(db=db,
-                                              create_dto=ObjectHandleCreate(code_id=code_id))
+                                              create_dto=ObjectHandleCreate(code_id=id))
 
         return self.__create_memo(create_dto, db, oh_db_obj)
 
@@ -52,11 +52,11 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
 
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
-    def get_memo_read_dtos_from_orm(db: Session, db_obj: MemoORM) -> Union[MemoReadCode,
-                                                                           MemoReadSpanAnnotation,
-                                                                           MemoReadAnnotationDocument,
-                                                                           MemoReadSourceDocument,
-                                                                           MemoReadProject]:
+    def get_memo_read_dto_from_orm(db: Session, db_obj: MemoORM) -> Union[MemoReadCode,
+                                                                          MemoReadSpanAnnotation,
+                                                                          MemoReadAnnotationDocument,
+                                                                          MemoReadSourceDocument,
+                                                                          MemoReadProject]:
         attached_to = crud_object_handle.resolve_handled_object(db=db, handle=db_obj.attached_to)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         if isinstance(attached_to, CodeORM):

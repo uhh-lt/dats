@@ -22,7 +22,7 @@ class MemoBaseDTO(BaseModel):
 
 
 # Properties to update
-class MemoUpdateBase(MemoBaseDTO, UpdateDTOBase):
+class MemoUpdate(MemoBaseDTO, UpdateDTOBase):
     title: Optional[str] = Field(description='Title of the Memo', default=None)
     content: Optional[str] = Field(description='Content of the Memo', default=None)
 

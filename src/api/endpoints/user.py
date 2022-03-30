@@ -120,7 +120,7 @@ async def get_user_memos(*,
                                                                                            MemoReadProject]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=id)
-    return [crud_memo.get_memo_read_dtos_from_orm(db=db, db_obj=memo) for memo in db_obj.memos]
+    return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo) for memo in db_obj.memos]
 
 
 @router.delete("/{id}/code", tags=tags,
