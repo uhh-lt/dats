@@ -12,81 +12,81 @@ router = APIRouter(prefix="/adoc")
 tags = ["annotationDocument"]
 
 
-@router.get("/{id}", tags=tags,
+@router.get("/{adoc_id}", tags=tags,
             response_model=Optional[AnnotationDocumentRead],
             summary="Returns the AnnotationDocument",
             description="Returns the AnnotationDocument with the given ID if it exists")
-async def get_by_id(*,
-                    db: Session = Depends(SQLService().get_db_session),
-                    id: int) -> Optional[AnnotationDocumentRead]:
+async def get_by_adoc_id(*,
+                         db: Session = Depends(SQLService().get_db_session),
+                         adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_adoc.read(db=db, id=id)
+    db_obj = crud_adoc.read(db=db, id=adoc_id)
     return AnnotationDocumentRead.from_orm(db_obj)
 
 
-@router.delete("/{id}", tags=tags,
+@router.delete("/{adoc_id}", tags=tags,
                response_model=Optional[AnnotationDocumentRead],
                summary="Removes the AnnotationDocument",
                description="Removes the AnnotationDocument with the given ID if it exists")
-async def delete_by_id(*,
-                       db: Session = Depends(SQLService().get_db_session),
-                       id: int) -> Optional[AnnotationDocumentRead]:
+async def delete_by_adoc_id(*,
+                            db: Session = Depends(SQLService().get_db_session),
+                            adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_adoc.remove(db=db, id=id)
+    db_obj = crud_adoc.remove(db=db, id=adoc_id)
     return AnnotationDocumentRead.from_orm(db_obj)
 
 
 # TODO Flo: creating a new adoc is done implicitly when creating the first annotation
-# @router.put("/{id}", tags=tags,
+# @router.put("/{adoc_id}", tags=tags,
 #             response_model=Optional[DocumentRead],
 #             description="Returns the AnnotationDocument with the given ID if it exists")
-# async def create(id: int
+# async def create(adoc_id: int
 #                 ) -> Optional[DocumentRead]:
 #     raise NotImplementedError()
 
 
 # TODO Flo: updating the adoc is done implicitly when adding annotations.
 #  However we might need it for adoc metadata like finished state
-# @router.patch("/{id}", tags=tags,
+# @router.patch("/{adoc_id}", tags=tags,
 #               response_model=Optional[DocumentRead],
 #               description="Returns the AnnotationDocument with the given ID if it exists")
-# async def update(id: int
+# async def update(adoc_id: int
 #                 ) -> Optional[DocumentRead]:
 #     raise NotImplementedError()
 
-@router.put("/{id}/span_annotation", tags=tags,
+@router.put("/{adoc_id}/span_annotation", tags=tags,
             response_model=Optional[AnnotationDocumentRead],
             summary="Adds a SpanAnnotation to the AnnotationDocument",
             description="Adds a SpanAnnotation to the AnnotationDocument with the given ID if it exists")
 async def add_span_annotations(*,
                                db: Session = Depends(SQLService().get_db_session),
-                               id: int) -> Optional[AnnotationDocumentRead]:
+                               adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
 
 
-@router.get("/{id}/annotations", tags=tags,
+@router.get("/{adoc_id}/annotations", tags=tags,
             response_model=List[SpanAnnotationRead],
             summary="Returns all Annotations in the AnnotationDocument",
             description="Returns all Annotations in the AnnotationDocument with the given ID if it exists")
 async def get_all_annotations(*,
                               db: Session = Depends(SQLService().get_db_session),
-                              id: int) -> List[SpanAnnotationRead]:
+                              adoc_id: int) -> List[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
-    return [SpanAnnotationRead.from_orm(span) for span in crud_adoc.read(db=db, id=id).span_annotations]
+    return [SpanAnnotationRead.from_orm(span) for span in crud_adoc.read(db=db, id=adoc_id).span_annotations]
 
 
-@router.delete("/{id}/annotations", tags=tags,
+@router.delete("/{adoc_id}/annotations", tags=tags,
                response_model=Optional[AnnotationDocumentRead],
                summary="Removes all Annotations in the AnnotationDocument",
                description="Removes all Annotations in the AnnotationDocument with the given ID if it exists")
 async def delete_all_annotations(*,
                                  db: Session = Depends(SQLService().get_db_session),
-                                 id: int) -> Optional[AnnotationDocumentRead]:
+                                 adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
 
-# @router.put("/{id}/memo", tags=tags,
+# @router.put("/{adoc_id}/memo", tags=tags,
 #             response_model=UserRead,
 #             summary="Adds a Memo to the AnnotationDocument",
 #             description="Adds a Memo to the AnnotationDocument with the given ID if it exists")
@@ -95,7 +95,7 @@ async def delete_all_annotations(*,
 #     raise NotImplementedError()
 #
 #
-# @router.get("/{id}/memo", tags=tags,
+# @router.get("/{adoc_id}/memo", tags=tags,
 #             response_model=UserRead,
 #             summary="Returns the Memo attached to the AnnotationDocument",
 #             description="Returns the Memo attached to the AnnotationDocument with the given ID if it exists")
