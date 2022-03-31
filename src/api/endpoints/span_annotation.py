@@ -3,9 +3,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from requests import Session
 
+from app.core.data.crud.memo import crud_memo
+from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import MemoReadSpanAnnotation
-from app.core.data.dto.span_annotation import SpanAnnotationRead
+from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
+from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/span_SpanAnnotation")
@@ -22,7 +25,8 @@ async def get_by_id(*,
                     db: Session = Depends(session),
                     id: int) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    db_obj = crud_span_anno.read(db=db, id=id)
+    return SpanAnnotationRead.from_orm(db_obj)
 
 
 @router.patch("/{id}", tags=tags,
@@ -31,9 +35,11 @@ async def get_by_id(*,
               description="Updates the SpanAnnotation with the given ID.")
 async def update_by_id(*,
                        db: Session = Depends(session),
-                       id: int) -> Optional[SpanAnnotationRead]:
+                       id: int,
+                       span_anno: SpanAnnotationUpdate) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    db_obj = crud_span_anno.update(db=db, id=id, update_dto=span_anno)
+    return SpanAnnotationRead.from_orm(db_obj)
 
 
 @router.delete("/{id}", tags=tags,
@@ -44,7 +50,8 @@ async def delete_by_id(*,
                        db: Session = Depends(session),
                        id: int) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    db_obj = crud_sdoc.remove(db=db, id=id)
+    return SpanAnnotationRead.from_orm(db_obj)
 
 
 @router.put("/{id}/memo", tags=tags,
@@ -53,9 +60,14 @@ async def delete_by_id(*,
             description="Adds a Memo to the SpanAnnotation with the given ID if it exists")
 async def add_memo(*,
                    db: Session = Depends(session),
-                   id: int) -> Optional[MemoReadSpanAnnotation]:
+                   id: int,
+                   memo: MemoCreate) -> Optional[MemoReadSpanAnnotation]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    db_obj = crud_memo.create_for_span_annotation(db=db, span_anno_id=id, create_dto=memo)
+    memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+    attached_span_anno = db_obj.attached_to.span_annotation
+    return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                                  attached_span_annotation_id=attached_span_anno.id)
 
 
 @router.get("/{id}/code", tags=tags,
@@ -77,4 +89,7 @@ async def get_memo(*,
                    db: Session = Depends(session),
                    id: int) -> Optional[MemoReadSpanAnnotation]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    span_db_obj = crud_sdoc.read(db=db, id=id)
+    memo_as_in_db_dto = MemoInDB.from_orm(span_db_obj.object_handle.attached_memo)
+    return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                                  attached_span_annotation_id=span_db_obj.id)
