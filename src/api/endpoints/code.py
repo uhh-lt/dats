@@ -84,7 +84,7 @@ async def add_memo(*,
                    code_id: int,
                    memo: MemoCreate) -> Optional[MemoReadCode]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_memo.create_for_code(db=db, id=code_id, create_dto=memo)
+    db_obj = crud_memo.create_for_code(db=db, code_id=code_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
     attached_code = db_obj.attached_to.code
     return MemoReadCode(**memo_as_in_db_dto.dict(exclude={"attached_to"}), attached_code_id=attached_code.id)

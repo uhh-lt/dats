@@ -36,10 +36,10 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         db.refresh(db_obj)
         return db_obj
 
-    def create_for_code(self, db: Session, id: int, create_dto: MemoCreate) -> MemoORM:
+    def create_for_code(self, db: Session, code_id: int, create_dto: MemoCreate) -> MemoORM:
         # create an ObjectHandle for the Code
         oh_db_obj = crud_object_handle.create(db=db,
-                                              create_dto=ObjectHandleCreate(code_id=id))
+                                              create_dto=ObjectHandleCreate(code_id=code_id))
 
         return self.__create_memo(create_dto, db, oh_db_obj)
 
