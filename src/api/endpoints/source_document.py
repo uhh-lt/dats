@@ -14,13 +14,15 @@ from app.core.db.sql_service import SQLService
 router = APIRouter(prefix="/sdoc")
 tags = ["sourceDocument"]
 
+session = SQLService().get_db_session
+
 
 @router.get("/{id}", tags=tags,
             response_model=Optional[SourceDocumentRead],
             summary="Returns the SourceDocument",
             description="Returns the SourceDocument with the given ID if it exists")
 async def get_by_id(*,
-                    db: Session = Depends(SQLService().get_db_session),
+                    db: Session = Depends(session),
                     id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     #  What about the content?!
@@ -33,7 +35,7 @@ async def get_by_id(*,
                summary="Removes the SourceDocument",
                description="Removes the SourceDocument with the given ID if it exists")
 async def delete_by_id(*,
-                       db: Session = Depends(SQLService().get_db_session),
+                       db: Session = Depends(session),
                        id: int) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=id)
@@ -45,7 +47,7 @@ async def delete_by_id(*,
             summary="Returns the SourceDocumentMetadata",
             description="Returns the SourceDocumentMetadata with the given ID if it exists")
 async def get_metadata_by_id(*,
-                             db: Session = Depends(SQLService().get_db_session),
+                             db: Session = Depends(session),
                              id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
@@ -56,7 +58,7 @@ async def get_metadata_by_id(*,
               summary="Updates the SourceDocumentMetadata",
               description="Updates the SourceDocumentMetadata with the given ID if it exists.")
 async def update_metadata_by_id(*,
-                                db: Session = Depends(SQLService().get_db_session),
+                                db: Session = Depends(session),
                                 id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
@@ -67,7 +69,7 @@ async def update_metadata_by_id(*,
             summary="Returns the AnnotationDocument for the SourceDocument of the User",
             description="Returns the AnnotationDocument for the SourceDocument of the User.")
 async def get_adoc_of_user(*,
-                           db: Session = Depends(SQLService().get_db_session),
+                           db: Session = Depends(session),
                            id: int,
                            user_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
@@ -79,7 +81,7 @@ async def get_adoc_of_user(*,
             summary="Returns all AnnotationDocuments for the SourceDocument",
             description="Returns all AnnotationDocuments for the SourceDocument.")
 async def get_all_adocs(*,
-                        db: Session = Depends(SQLService().get_db_session),
+                        db: Session = Depends(session),
                         id: int) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
@@ -90,7 +92,7 @@ async def get_all_adocs(*,
                summary="Removes all AnnotationDocuments for the SourceDocument",
                description="Removes all AnnotationDocuments for the SourceDocument.")
 async def remove_all_adocs(*,
-                           db: Session = Depends(SQLService().get_db_session),
+                           db: Session = Depends(session),
                            id: int) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
@@ -101,7 +103,7 @@ async def remove_all_adocs(*,
             summary="Returns all DocumentTags of the SourceDocument",
             description="Returns all DocumentTags of the SourceDocument.")
 async def get_all_tags(*,
-                       db: Session = Depends(SQLService().get_db_session),
+                       db: Session = Depends(session),
                        id: int) -> List[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
@@ -112,7 +114,7 @@ async def get_all_tags(*,
                summary="Removes all DocumentTags of the SourceDocument",
                description="Removes all DocumentTags of the SourceDocument.")
 async def remove_all_tags(*,
-                          db: Session = Depends(SQLService().get_db_session),
+                          db: Session = Depends(session),
                           id: int) -> List[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
@@ -123,7 +125,7 @@ async def remove_all_tags(*,
             summary="Adds a Memo to the SourceDocument",
             description="Adds a Memo to the SourceDocument with the given ID if it exists")
 async def add_memo(*,
-                   db: Session = Depends(SQLService().get_db_session),
+                   db: Session = Depends(session),
                    sdoc_id: int,
                    memo: MemoCreate) -> Optional[MemoReadSourceDocument]:
     # TODO Flo: only if the user has access?
@@ -139,7 +141,7 @@ async def add_memo(*,
             summary="Returns the Memo attached to the SourceDocument",
             description="Returns the Memo attached to the SourceDocument with the given ID if it exists.")
 async def get_memo(*,
-                   db: Session = Depends(SQLService().get_db_session),
+                   db: Session = Depends(session),
                    sdoc_id: int) -> Optional[MemoReadSourceDocument]:
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     memo_as_in_db_dto = MemoInDB.from_orm(sdoc_db_obj.object_handle.attached_memo)

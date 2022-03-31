@@ -13,13 +13,15 @@ from app.core.db.sql_service import SQLService
 router = APIRouter(prefix="/code")
 tags = ["code"]
 
+session = SQLService().get_db_session
+
 
 @router.put("", tags=tags,
             response_model=Optional[CodeRead],
             summary="Creates a new Code",
             description="Creates a new Code and returns it with the generated ID.")
 async def create_new_code(*,
-                          db: Session = Depends(SQLService().get_db_session),
+                          db: Session = Depends(session),
                           code: CodeCreate) -> Optional[CodeRead]:
     db_code = crud_code.create(db=db, create_dto=code)
     return CodeRead.from_orm(db_code)
@@ -30,7 +32,7 @@ async def create_new_code(*,
             summary="Returns the Code linked by the CurrentCode",
             description="Returns the Code linked by the CurrentCode with the given ID.")
 async def get_code_by_current_code_id(*,
-                                      db: Session = Depends(SQLService().get_db_session),
+                                      db: Session = Depends(session),
                                       current_code_id: int) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     cc_db_obj = crud_current_code.read(db=db, id=current_code_id)
@@ -43,7 +45,7 @@ async def get_code_by_current_code_id(*,
             summary="Returns the Code",
             description="Returns the Code with the given ID.")
 async def get_by_id(*,
-                    db: Session = Depends(SQLService().get_db_session),
+                    db: Session = Depends(session),
                     code_id: int) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_code.read(db=db, id=code_id)
@@ -55,7 +57,7 @@ async def get_by_id(*,
               summary="Updates the Code",
               description="Updates the Code with the given ID.")
 async def update_by_id(*,
-                       db: Session = Depends(SQLService().get_db_session),
+                       db: Session = Depends(session),
                        code_id: int,
                        code: CodeUpdate) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
@@ -68,7 +70,7 @@ async def update_by_id(*,
                summary="Deletes the Code",
                description="Deletes the Code with the given ID.")
 async def delete_by_id(*,
-                       db: Session = Depends(SQLService().get_db_session),
+                       db: Session = Depends(session),
                        code_id: int) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_code.remove(db=db, id=code_id)
@@ -80,7 +82,7 @@ async def delete_by_id(*,
             summary="Adds a Memo to the Code",
             description="Adds a Memo to the Code with the given ID if it exists")
 async def add_memo(*,
-                   db: Session = Depends(SQLService().get_db_session),
+                   db: Session = Depends(session),
                    code_id: int,
                    memo: MemoCreate) -> Optional[MemoReadCode]:
     # TODO Flo: only if the user has access?
@@ -95,7 +97,7 @@ async def add_memo(*,
             summary="Returns the Memo attached to the Code",
             description="Returns the Memo attached to the Code with the given ID if it exists.")
 async def get_memo(*,
-                   db: Session = Depends(SQLService().get_db_session),
+                   db: Session = Depends(session),
                    code_id: int) -> Optional[MemoReadCode]:
     code_db_obj = crud_code.read(db=db, id=code_id)
     memo_as_in_db_dto = MemoInDB.from_orm(code_db_obj.object_handle.attached_memo)

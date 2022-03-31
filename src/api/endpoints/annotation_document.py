@@ -11,13 +11,15 @@ from app.core.db.sql_service import SQLService
 router = APIRouter(prefix="/adoc")
 tags = ["annotationDocument"]
 
+session = SQLService().get_db_session
+
 
 @router.get("/{adoc_id}", tags=tags,
             response_model=Optional[AnnotationDocumentRead],
             summary="Returns the AnnotationDocument",
             description="Returns the AnnotationDocument with the given ID if it exists")
 async def get_by_adoc_id(*,
-                         db: Session = Depends(SQLService().get_db_session),
+                         db: Session = Depends(session),
                          adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.read(db=db, id=adoc_id)
@@ -29,7 +31,7 @@ async def get_by_adoc_id(*,
                summary="Removes the AnnotationDocument",
                description="Removes the AnnotationDocument with the given ID if it exists")
 async def delete_by_adoc_id(*,
-                            db: Session = Depends(SQLService().get_db_session),
+                            db: Session = Depends(session),
                             adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.remove(db=db, id=adoc_id)
@@ -59,7 +61,7 @@ async def delete_by_adoc_id(*,
             summary="Adds a SpanAnnotation to the AnnotationDocument",
             description="Adds a SpanAnnotation to the AnnotationDocument with the given ID if it exists")
 async def add_span_annotations(*,
-                               db: Session = Depends(SQLService().get_db_session),
+                               db: Session = Depends(session),
                                adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
@@ -70,7 +72,7 @@ async def add_span_annotations(*,
             summary="Returns all Annotations in the AnnotationDocument",
             description="Returns all Annotations in the AnnotationDocument with the given ID if it exists")
 async def get_all_annotations(*,
-                              db: Session = Depends(SQLService().get_db_session),
+                              db: Session = Depends(session),
                               adoc_id: int) -> List[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
     return [SpanAnnotationRead.from_orm(span) for span in crud_adoc.read(db=db, id=adoc_id).span_annotations]
@@ -81,7 +83,7 @@ async def get_all_annotations(*,
                summary="Removes all Annotations in the AnnotationDocument",
                description="Removes all Annotations in the AnnotationDocument with the given ID if it exists")
 async def delete_all_annotations(*,
-                                 db: Session = Depends(SQLService().get_db_session),
+                                 db: Session = Depends(session),
                                  adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
