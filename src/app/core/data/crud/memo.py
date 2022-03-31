@@ -50,6 +50,27 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
 
         return self.__create_memo(create_dto, db, oh_db_obj)
 
+    def create_for_sdoc(self, db: Session, sdoc_id: int, create_dto: MemoCreate) -> MemoORM:
+        # create an ObjectHandle for the SourceDocument
+        oh_db_obj = crud_object_handle.create(db=db,
+                                              create_dto=ObjectHandleCreate(source_document_id=sdoc_id))
+
+        return self.__create_memo(create_dto, db, oh_db_obj)
+
+    def create_for_adoc(self, db: Session, adoc_id: int, create_dto: MemoCreate) -> MemoORM:
+        # create an ObjectHandle for the AnnotationDocument
+        oh_db_obj = crud_object_handle.create(db=db,
+                                              create_dto=ObjectHandleCreate(annotation_document_id=adoc_id))
+
+        return self.__create_memo(create_dto, db, oh_db_obj)
+
+    def create_for_span_annotation(self, db: Session, span_anno_id: int, create_dto: MemoCreate) -> MemoORM:
+        # create an ObjectHandle for the SpanAnnotation
+        oh_db_obj = crud_object_handle.create(db=db,
+                                              create_dto=ObjectHandleCreate(span_annotation_id=span_anno_id))
+
+        return self.__create_memo(create_dto, db, oh_db_obj)
+
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
     def get_memo_read_dto_from_orm(db: Session, db_obj: MemoORM) -> Union[MemoReadCode,
