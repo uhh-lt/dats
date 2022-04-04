@@ -36,8 +36,7 @@ async def get_code_by_current_code_id(*,
                                       current_code_id: int) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     cc_db_obj = crud_current_code.read(db=db, id=current_code_id)
-    c_db_obj = crud_code.read(db=db, id=cc_db_obj.id)
-    return CodeRead.from_orm(c_db_obj)
+    return CodeRead.from_orm(cc_db_obj.code)
 
 
 @router.get("/{code_id}", tags=tags,

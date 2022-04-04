@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead
+from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationCreate
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/adoc")
@@ -47,7 +48,7 @@ async def delete_by_adoc_id(*,
 #     raise NotImplementedError()
 
 
-# TODO Flo: updating the adoc is done implicitly when adding annotations.
+# TODO Flo: updating the adoc is done implicitly when adding span_annotations.
 #  However we might need it for adoc metadata like finished state
 # @router.patch("/{adoc_id}", tags=tags,
 #               response_model=Optional[DocumentRead],
@@ -57,20 +58,23 @@ async def delete_by_adoc_id(*,
 #     raise NotImplementedError()
 
 @router.put("/{adoc_id}/span_annotation", tags=tags,
-            response_model=Optional[AnnotationDocumentRead],
+            response_model=Optional[SpanAnnotationRead],
             summary="Adds a SpanAnnotation to the AnnotationDocument",
             description="Adds a SpanAnnotation to the AnnotationDocument with the given ID if it exists")
-async def add_span_annotations(*,
-                               db: Session = Depends(session),
-                               adoc_id: int) -> Optional[AnnotationDocumentRead]:
+async def add_span_annotation(*,
+                              db: Session = Depends(session),
+                              adoc_id: int,
+                              span: SpanAnnotationCreate) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    if span.annotation_document_id != adoc_id:
+        span.annotation_document_id = adoc_id
+    return crud_span_anno.create(db=db, create_dto=span)
 
 
-@router.get("/{adoc_id}/annotations", tags=tags,
+@router.get("/{adoc_id}/span_annotations", tags=tags,
             response_model=List[SpanAnnotationRead],
-            summary="Returns all Annotations in the AnnotationDocument",
-            description="Returns all Annotations in the AnnotationDocument with the given ID if it exists")
+            summary="Returns all SpanAnnotations in the AnnotationDocument",
+            description="Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists")
 async def get_all_annotations(*,
                               db: Session = Depends(session),
                               adoc_id: int) -> List[SpanAnnotationRead]:
@@ -78,15 +82,15 @@ async def get_all_annotations(*,
     return [SpanAnnotationRead.from_orm(span) for span in crud_adoc.read(db=db, id=adoc_id).span_annotations]
 
 
-@router.delete("/{adoc_id}/annotations", tags=tags,
+@router.delete("/{adoc_id}/span_annotations", tags=tags,
                response_model=Optional[AnnotationDocumentRead],
-               summary="Removes all Annotations in the AnnotationDocument",
-               description="Removes all Annotations in the AnnotationDocument with the given ID if it exists")
+               summary="Removes all SpanAnnotations in the AnnotationDocument",
+               description="Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists")
 async def delete_all_annotations(*,
                                  db: Session = Depends(session),
                                  adoc_id: int) -> Optional[AnnotationDocumentRead]:
-    # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    # TODO Flo: only if the user has access? What to return? Only delete spans from the current user!!!!
+    return AnnotationDocumentRead.from_orm(crud_adoc.remove_all_span_annotations(db=db, id=adoc_id))
 
 # @router.put("/{adoc_id}/memo", tags=tags,
 #             response_model=UserRead,
