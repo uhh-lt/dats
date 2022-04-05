@@ -125,7 +125,7 @@ async def get_user_memos(*,
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo) for memo in db_obj.memos]
 
 
-@router.delete("/{id}/code", tags=tags,
+@router.delete("/{id}/memo", tags=tags,
                response_model=Optional[UserRead],
                summary="Removes all Memos of the User",
                description="Removes all Memos of the User with the given ID if it exists")
