@@ -80,6 +80,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwts123}
     volumes:
       - ./src:/dwts_code/src
+      - ./backend_repo:/tmp/dwts
     depends_on:
       - rabbitmq
       - redis
