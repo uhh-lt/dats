@@ -68,3 +68,7 @@ class MemoReadSpanAnnotation(MemoReadBaseDTO):
 
 class MemoReadProject(MemoReadBaseDTO):
     attached_project_id: int = Field(description='Project the Memo is attached to')
+
+
+class MemoReadDocumentTag(MemoReadBaseDTO):
+    attached_document_tag_id: int = Field(description='DocumentTag the Memo is attached to')

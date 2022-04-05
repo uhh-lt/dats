@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.memo import MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, MemoReadProject, \
-    MemoReadSourceDocument, MemoUpdate
+    MemoReadSourceDocument, MemoUpdate, MemoReadDocumentTag
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/memo")
@@ -19,7 +19,8 @@ session = SQLService().get_db_session
                                  MemoReadSpanAnnotation,
                                  MemoReadAnnotationDocument,
                                  MemoReadSourceDocument,
-                                 MemoReadProject],
+                                 MemoReadProject,
+                                 MemoReadDocumentTag],
             summary="Returns the Memo",
             description="Returns the Memo with the given ID if it exists")
 async def get_by_id(*,
@@ -28,7 +29,8 @@ async def get_by_id(*,
                                            MemoReadSpanAnnotation,
                                            MemoReadAnnotationDocument,
                                            MemoReadSourceDocument,
-                                           MemoReadProject]:
+                                           MemoReadProject,
+                                           MemoReadDocumentTag]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.read(db=db, id=memo_id)
     return crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
@@ -39,7 +41,8 @@ async def get_by_id(*,
                                    MemoReadSpanAnnotation,
                                    MemoReadAnnotationDocument,
                                    MemoReadSourceDocument,
-                                   MemoReadProject],
+                                   MemoReadProject,
+                                   MemoReadDocumentTag],
               summary="Updates the Memo",
               description="Updates the Memo with the given ID if it exists")
 async def update_by_id(*,
@@ -49,7 +52,8 @@ async def update_by_id(*,
                                                   MemoReadSpanAnnotation,
                                                   MemoReadAnnotationDocument,
                                                   MemoReadSourceDocument,
-                                                  MemoReadProject]:
+                                                  MemoReadProject,
+                                                  MemoReadDocumentTag]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.update(db=db, id=memo_id, update_dto=memo)
     return crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
@@ -60,7 +64,8 @@ async def update_by_id(*,
                                     MemoReadSpanAnnotation,
                                     MemoReadAnnotationDocument,
                                     MemoReadSourceDocument,
-                                    MemoReadProject],
+                                    MemoReadProject,
+                                    MemoReadDocumentTag],
                summary="Removes the Memo",
                description="Removes the Memo with the given ID if it exists")
 async def delete_by_id(*,
@@ -69,7 +74,8 @@ async def delete_by_id(*,
                                               MemoReadSpanAnnotation,
                                               MemoReadAnnotationDocument,
                                               MemoReadSourceDocument,
-                                              MemoReadProject]:
+                                              MemoReadProject,
+                                              MemoReadDocumentTag]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.remove(db=db, id=memo_id)
     return crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)

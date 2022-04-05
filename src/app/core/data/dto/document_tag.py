@@ -33,3 +33,9 @@ class DocumentTagRead(DocumentTagBaseDTO):
 
     class Config:
         orm_mode = True
+
+
+# To link a SourceDocument with a DocumentTag
+class SourceDocumentDocumentTagLink(BaseModel):
+    source_document_id: int = Field(description='ID of the SourceDocument')
+    document_tag_id: int = Field(description='ID of the DocumentTag')

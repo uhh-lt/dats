@@ -13,7 +13,8 @@ if TYPE_CHECKING:
 
 class DocumentTagORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
-    value = Column(String, nullable=False, index=True)
+    title = Column(String, nullable=False, index=True)
+    description = Column(String, nullable=True, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
