@@ -30,46 +30,46 @@ async def register(*,
     return UserRead.from_orm(db_user)
 
 
-@router.get("/{id}", tags=tags,
+@router.get("/{user_id}", tags=tags,
             response_model=Optional[UserRead],
             summary="Returns the User",
             description="Returns the User with the given ID if it exists")
 async def get_by_id(*,
                     db: Session = Depends(session),
-                    id: int) -> Optional[UserRead]:
-    db_user = crud_user.read(db=db, id=id)
+                    user_id: int) -> Optional[UserRead]:
+    db_user = crud_user.read(db=db, id=user_id)
     return UserRead.from_orm(db_user)
 
 
-@router.patch("/{id}", tags=tags,
+@router.patch("/{user_id}", tags=tags,
               response_model=Optional[UserRead],
               summary="Updates the User",
               description="Updates the User with the given ID if it exists")
 async def update_by_id(*,
                        db: Session = Depends(session),
-                       id: int,
+                       user_id: int,
                        user: UserUpdate) -> Optional[UserRead]:
-    db_user = crud_user.update(db=db, id=id, update_dto=user)
+    db_user = crud_user.update(db=db, id=user_id, update_dto=user)
     return UserRead.from_orm(db_user)
 
 
-@router.delete("/{id}", tags=tags,
+@router.delete("/{user_id}", tags=tags,
                response_model=Optional[UserRead],
                summary="Removes the User",
                description="Removes the User with the given ID if it exists")
 async def delete_by_id(*,
                        db: Session = Depends(session),
-                       id: int) -> Optional[UserRead]:
-    db_user = crud_user.remove(db=db, id=id)
+                       user_id: int) -> Optional[UserRead]:
+    db_user = crud_user.remove(db=db, id=user_id)
     return UserRead.from_orm(db_user)
 
 
-@router.put("/{id}/code", tags=tags,
+@router.put("/{user_id}/code", tags=tags,
             response_model=Optional[CodeRead],
             summary="Creates a new Code for the User",
             description="Creates a new Code for the User with the given ID")
 async def create_user_code(*,
-                           id: int,
+                           user_id: int,
                            db: Session = Depends(session),
                            code: CodeCreate) -> Optional[CodeRead]:
     # Flo: Do we really want to create codes here and not at PUT/code !? Since a code is owned by a project and a user
@@ -81,31 +81,31 @@ async def create_user_code(*,
     return CodeRead.from_orm(db_obj)
 
 
-@router.get("/{id}/code", tags=tags,
+@router.get("/{user_id}/code", tags=tags,
             response_model=List[CodeRead],
             summary="Returns all Codes of the User",
             description="Returns all Codes of the User with the given ID")
 async def get_user_codes(*,
-                         id: int,
+                         user_id: int,
                          db: Session = Depends(session)) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_user.read(db=db, id=id)
+    db_obj = crud_user.read(db=db, id=user_id)
     return [CodeRead.from_orm(code) for code in db_obj.codes]
 
 
-@router.delete("/{id}/code", tags=tags,
+@router.delete("/{user_id}/code", tags=tags,
                response_model=Optional[UserRead],
                summary="Removes all Codes of the User",
                description="Removes all Codes of the User with the given ID if it exists")
 async def delete_user_codes(*,
-                            id: int,
+                            user_id: int,
                             db: Session = Depends(session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_user.remove_all_codes(db=db, id=id)
+    db_obj = crud_user.remove_all_codes(db=db, id=user_id)
     return UserRead.from_orm(db_obj)
 
 
-@router.get("/{id}/memo", tags=tags,
+@router.get("/{user_id}/memo", tags=tags,
             response_model=List[Union[MemoReadCode,
                                       MemoReadSpanAnnotation,
                                       MemoReadAnnotationDocument,
@@ -114,24 +114,24 @@ async def delete_user_codes(*,
             summary="Returns all Memos of the User",
             description="Returns all Memos of the User with the given ID")
 async def get_user_memos(*,
-                         id: int,
+                         user_id: int,
                          db: Session = Depends(session)) -> List[Union[MemoReadCode,
                                                                        MemoReadSpanAnnotation,
                                                                        MemoReadAnnotationDocument,
                                                                        MemoReadSourceDocument,
                                                                        MemoReadProject]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_user.read(db=db, id=id)
+    db_obj = crud_user.read(db=db, id=user_id)
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo) for memo in db_obj.memos]
 
 
-@router.delete("/{id}/memo", tags=tags,
+@router.delete("/{user_id}/memo", tags=tags,
                response_model=Optional[UserRead],
                summary="Removes all Memos of the User",
                description="Removes all Memos of the User with the given ID if it exists")
 async def delete_user_memos(*,
-                            id: int,
+                            user_id: int,
                             db: Session = Depends(session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_user.remove_all_memos(db=db, id=id)
+    db_obj = crud_user.remove_all_memos(db=db, id=user_id)
     return UserRead.from_orm(db_obj)
