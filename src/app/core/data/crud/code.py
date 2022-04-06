@@ -62,6 +62,10 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         return db.query(self.model).filter(self.model.name == code_name,
                                            self.model.project_id == proj_id).all()
 
+    def read_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[CodeORM]:
+        return db.query(self.model).filter(self.model.user_id == user_id,
+                                           self.model.project_id == proj_id).all()
+
     def read_by_name_and_user(self, db: Session, code_name: str, user_id: int) -> List[CodeORM]:
         return db.query(self.model).filter(self.model.name == code_name,
                                            self.model.user_id == user_id).all()
@@ -86,6 +90,10 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         return db.query(self.model.id).filter(self.model.name == code_name,
                                               self.model.user_id == user_id,
                                               self.model.project_id == proj_id).first() is not None
+
+    def remove_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[CodeORM]:
+        return db.delete(self.model).filter(self.model.user_id == user_id,
+                                            self.model.project_id == proj_id).all()
 
 
 crud_code = CRUDCode(CodeORM)
