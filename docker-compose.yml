@@ -81,6 +81,7 @@ services:
     volumes:
       - ./src:/dwts_code/src
       - ./backend_repo:/tmp/dwts
+      - ./spacy_models:/spacy_models
     depends_on:
       - rabbitmq
       - redis

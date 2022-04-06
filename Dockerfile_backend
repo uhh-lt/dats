@@ -33,18 +33,12 @@ RUN apt-get update && apt-get upgrade -y \
         # Installing `poetry` package manager:
       # https://github.com/python-poetry/poetry
       && curl -sSL 'https://install.python-poetry.org' | python - \
-      && poetry --version \
-        # Install rust
-      && curl https://sh.rustup.rs -sSf | bash -s -- -y \
-      && echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
-
+      && poetry --version
 
 WORKDIR /dwts_code
 
 # Copy only requirements, to cache them in docker layer
 COPY ./poetry.lock ./pyproject.toml /dwts_code/
-
-# RUN echo ${PWD} && ls -lah
 
 # Project initialization:
 RUN echo "$DWTS_ENV" && poetry version \
@@ -52,11 +46,21 @@ RUN echo "$DWTS_ENV" && poetry version \
   # Upgrading pip, it is insecure, remove after `pip@21.1`
   && poetry run pip install -U pip
 
-WORKDIR /dwts_code/src
+# For development, Jupyter remote kernel
+# Using inside the container:
+# jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
+ARG INSTALL_JUPYTER=false
+RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; fi"
 
 
 FROM dev_build as prod_build
-COPY . /dwts_code
 
-ENTRYPOINT ["python", "main.py"]
+COPY . /dwts_code
+WORKDIR /dwts_code/src
+
+ENV C_FORCE_ROOT=1
+
+RUN chmod +x backend_entrypoint.sh
+
+CMD ["bash", "backend_entrypoint.sh"]
 

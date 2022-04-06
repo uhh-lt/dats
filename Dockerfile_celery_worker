@@ -47,14 +47,22 @@ COPY ./poetry.lock ./pyproject.toml /dwts_code/
 RUN echo "$DWTS_ENV" && poetry version \
   && poetry install --no-interaction --no-ansi \
   # Upgrading pip, it is insecure, remove after `pip@21.1`
-  && poetry run pip install -U pip \
-  && python -m spacy download 'en_core_web_trf'  # TODO Flo: Load all models from the config
+  && poetry run pip install -U pip
 
-WORKDIR /dwts_code/src
+# For development, Jupyter remote kernel
+# Using inside the container:
+# jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
+ARG INSTALL_JUPYTER=false
+RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; fi"
+
 
 FROM dev_build as prod_build
 
 COPY . /dwts_code
+WORKDIR /dwts_code/src
 
 ENV C_FORCE_ROOT=1
-ENTRYPOINT ["celery", "-A", "app.docprepro.process", "worker", "-l", "DEBUG", "-c", "1"]
+
+RUN chmod +x celery_worker_entrypoint.sh
+
+CMD ["bash", "celery_worker_entrypoint.sh"]

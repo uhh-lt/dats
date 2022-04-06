@@ -1,5 +1,5 @@
 api:
-  port: 5000
+  port: ${oc.env:API_PORT, 5000}
 
 repository_root: /tmp/dwts
 
@@ -48,6 +48,7 @@ system_codes:
 
 docprepro:
   spacy:
+    # note that the spacy models have to be installed in the env to use it! (docker!)
     default_model: "en_core_web_trf"
     english_model: "en_core_web_trf"
     german_model: "de_core_news_lg"
@@ -73,7 +74,7 @@ postgres:
 
 logging:
   max_file_size: 500 # MB
-  level: DEBUG
+  level: ${oc.env:LOG_LEVEL, debug}
 
 elasticsearch:
   host: ${oc.env:ES_HOST, 127.0.0.1}
