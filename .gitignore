@@ -1,5 +1,7 @@
-# jupyter notebooks
-notebooks
+src/dev_notebooks
+backend_repo
+sample_data
+spacy_models
 
 # backend logs
 backend/src/logs
@@ -264,7 +266,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/

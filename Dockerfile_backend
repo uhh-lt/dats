@@ -52,6 +52,12 @@ RUN echo "$DWTS_ENV" && poetry version \
 ARG INSTALL_JUPYTER=false
 RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; fi"
 
+# Add Tini
+ARG TINI_VERSION=v0.19.0
+# for Mac M1: tini-arm64 otherwise just tini
+ARG TINI_BINARY=tini
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_BINARY} /tini
+RUN chmod +x /tini
 
 FROM dev_build as prod_build
 
@@ -60,7 +66,6 @@ WORKDIR /dwts_code/src
 
 ENV C_FORCE_ROOT=1
 
-RUN chmod +x backend_entrypoint.sh
+RUN chmod +x "backend_entrypoint.sh"
 
-CMD ["bash", "backend_entrypoint.sh"]
-
+ENTRYPOINT ["/tini", "--", "/dwts_code/src/backend_entrypoint.sh"]
