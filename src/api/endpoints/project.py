@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict
 from typing import Optional
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -11,7 +11,7 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
-from app.core.data.dto.code import CodeRead, CodeCreate
+from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoReadProject, MemoInDB, MemoCreate
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
@@ -201,23 +201,6 @@ async def get_project_codes(*,
     return [CodeRead.from_orm(code) for code in proj_db_obj.codes]
 
 
-@router.put("/{id}/code", tags=tags,
-            response_model=Optional[CodeRead],
-            summary="Creates a new Code in the Project",
-            description="Creates a new Code in the Project with the given ID")
-async def create_project_code(*,
-                              id: int,
-                              db: Session = Depends(session),
-                              code: CodeCreate) -> Optional[CodeRead]:
-    # Flo: Do we really want to create codes here and not at PUT/code !? Since a code is owned by a project and a user
-    #  it would make more sense for me tbh. Then we would also not need to check id == code.project_id
-    if not code.project_id == id:
-        raise ValueError("Code.project_id does not match project id")
-    # TODO Flo: only if the user has access?
-    db_obj = crud_code.create(db=db, create_dto=code)
-    return CodeRead.from_orm(db_obj)
-
-
 @router.delete("/{proj_id}/code", tags=tags,
                response_model=Optional[ProjectRead],
                summary="Removes all Codes of the Project",
@@ -228,6 +211,31 @@ async def delete_project_codes(*,
     # TODO Flo: only if the user has access?
     db_obj = crud_project.remove_all_codes(db=db, id=proj_id)
     return ProjectRead.from_orm(db_obj)
+
+
+@router.get("/{proj_id}/user/{user_id}/code", tags=tags,
+            response_model=List[CodeRead],
+            summary="Returns all Codes of the Project from a User",
+            description="Returns all Codes of the Project from a User")
+async def get_user_codes_of_project(*,
+                                    proj_id: int,
+                                    user_id: int,
+                                    db: Session = Depends(session)) -> List[CodeRead]:
+    # TODO Flo: only if the user has access?
+    return [CodeRead.from_orm(code_db_obj) for code_db_obj in
+            crud_code.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)]
+
+
+@router.delete("/{proj_id}/user/{user_id}/code", tags=tags,
+               response_model=int,
+               summary="Removes all Codes of the Project from a User",
+               description="Removes all Codes of the Project from a User. Returns the number of removed Codes.")
+async def remove_user_codes_of_project(*,
+                                       proj_id: int,
+                                       user_id: int,
+                                       db: Session = Depends(session)) -> int:
+    # TODO Flo: only if the user has access?
+    return len(crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id))
 
 
 @router.get("/{proj_id}/memo", tags=tags,
