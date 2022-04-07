@@ -1,6 +1,7 @@
-from typing import Union
+from typing import Union, List
 
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
@@ -22,6 +23,23 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
 
     def create(self, db: Session, *, create_dto: MemoCreate) -> MemoORM:
         raise NotImplementedError()
+
+    def read_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[Union[MemoReadCode,
+                                                                                              MemoReadSpanAnnotation,
+                                                                                              MemoReadAnnotationDocument,
+                                                                                              MemoReadSourceDocument,
+                                                                                              MemoReadProject,
+                                                                                              MemoReadDocumentTag]]:
+
+        return db.query(self.model).filter(self.model.user_id == user_id,
+                                           self.model.project_id == proj_id).all()
+
+    def remove_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[int]:
+        statement = delete(self.model).where(self.model.user_id == user_id,
+                                             self.model.project_id == proj_id).returning(self.model.id)
+        removed_ids = db.execute(statement).fetchall()
+        db.commit()
+        return list(map(lambda t: t[0], removed_ids))
 
     def exists_for_user_and_object_handle(self, db: Session, *, user_id: int, attached_to_id: int) -> bool:
         return db.query(self.model.id).filter(self.model.user_idr == user_id,
