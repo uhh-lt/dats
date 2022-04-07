@@ -8,13 +8,24 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
-from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate
+from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate, SpanAnnotationCreate
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/span")
 tags = ["spanAnnotation"]
 
 session = SQLService().get_db_session
+
+
+@router.put("", tags=tags,
+            response_model=Optional[SpanAnnotationRead],
+            summary="Creates a SpanAnnotation",
+            description="Creates a SpanAnnotation")
+async def add_span_annotation(*,
+                              db: Session = Depends(session),
+                              span: SpanAnnotationCreate) -> Optional[SpanAnnotationRead]:
+    # TODO Flo: only if the user has access?
+    return SpanAnnotationRead.from_orm(crud_span_anno.create(db=db, create_dto=span))
 
 
 @router.get("/{span_id}", tags=tags,

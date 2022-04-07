@@ -4,15 +4,24 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.span_annotation import crud_span_anno
-from app.core.data.dto.annotation_document import AnnotationDocumentRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationCreate
+from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/adoc")
 tags = ["annotationDocument"]
 
 session = SQLService().get_db_session
+
+
+@router.put("", tags=tags,
+            response_model=Optional[AnnotationDocumentRead],
+            summary="Creates an AnnotationDocument",
+            description="Creates an AnnotationDocument")
+async def create(*,
+                 db: Session = Depends(session),
+                 adoc: AnnotationDocumentCreate) -> Optional[AnnotationDocumentRead]:
+    return AnnotationDocumentRead.from_orm(crud_adoc.create(db=db, create_dto=adoc))
 
 
 @router.get("/{adoc_id}", tags=tags,
@@ -39,38 +48,6 @@ async def delete_by_adoc_id(*,
     return AnnotationDocumentRead.from_orm(db_obj)
 
 
-# TODO Flo: creating a new adoc is done implicitly when creating the first annotation
-# @router.put("/{adoc_id}", tags=tags,
-#             response_model=Optional[DocumentRead],
-#             description="Returns the AnnotationDocument with the given ID if it exists")
-# async def create(adoc_id: int
-#                 ) -> Optional[DocumentRead]:
-#     raise NotImplementedError()
-
-
-# TODO Flo: updating the adoc is done implicitly when adding span_annotations.
-#  However we might need it for adoc metadata like finished state
-# @router.patch("/{adoc_id}", tags=tags,
-#               response_model=Optional[DocumentRead],
-#               description="Returns the AnnotationDocument with the given ID if it exists")
-# async def update(adoc_id: int
-#                 ) -> Optional[DocumentRead]:
-#     raise NotImplementedError()
-
-@router.put("/{adoc_id}/span_annotation", tags=tags,
-            response_model=Optional[SpanAnnotationRead],
-            summary="Adds a SpanAnnotation to the AnnotationDocument",
-            description="Adds a SpanAnnotation to the AnnotationDocument with the given ID if it exists")
-async def add_span_annotation(*,
-                              db: Session = Depends(session),
-                              adoc_id: int,
-                              span: SpanAnnotationCreate) -> Optional[SpanAnnotationRead]:
-    # TODO Flo: only if the user has access?
-    if span.annotation_document_id != adoc_id:
-        span.annotation_document_id = adoc_id
-    return crud_span_anno.create(db=db, create_dto=span)
-
-
 @router.get("/{adoc_id}/span_annotations", tags=tags,
             response_model=List[SpanAnnotationRead],
             summary="Returns all SpanAnnotations in the AnnotationDocument",
@@ -91,20 +68,3 @@ async def delete_all_annotations(*,
                                  adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access? What to return? Only delete spans from the current user!!!!
     return AnnotationDocumentRead.from_orm(crud_adoc.remove_all_span_annotations(db=db, id=adoc_id))
-
-# @router.put("/{adoc_id}/memo", tags=tags,
-#             response_model=UserRead,
-#             summary="Adds a Memo to the AnnotationDocument",
-#             description="Adds a Memo to the AnnotationDocument with the given ID if it exists")
-# async def add_memo(user: UserRead = Depends(current_user)) -> Optional[UserRead]:
-#     # TODO Flo: only if the user has access?
-#     raise NotImplementedError()
-#
-#
-# @router.get("/{adoc_id}/memo", tags=tags,
-#             response_model=UserRead,
-#             summary="Returns the Memo attached to the AnnotationDocument",
-#             description="Returns the Memo attached to the AnnotationDocument with the given ID if it exists")
-# async def get_memo(user: UserRead = Depends(current_user)) -> Optional[UserRead]:
-#     # TODO Flo: only if the user has access?
-#     raise NotImplementedError()
