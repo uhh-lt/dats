@@ -94,15 +94,14 @@ async def get_user_codes(*,
 
 
 @router.delete("/{user_id}/code", tags=tags,
-               response_model=Optional[UserRead],
+               response_model=List[int],
                summary="Removes all Codes of the User",
                description="Removes all Codes of the User with the given ID if it exists")
 async def delete_user_codes(*,
                             user_id: int,
-                            db: Session = Depends(session)) -> Optional[UserRead]:
+                            db: Session = Depends(session)) -> List[int]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_user.remove_all_codes(db=db, id=user_id)
-    return UserRead.from_orm(db_obj)
+    return crud_user.remove_all_codes(db=db, id=user_id)
 
 
 @router.get("/{user_id}/memo", tags=tags,
@@ -126,12 +125,11 @@ async def get_user_memos(*,
 
 
 @router.delete("/{user_id}/memo", tags=tags,
-               response_model=Optional[UserRead],
+               response_model=List[int],
                summary="Removes all Memos of the User",
                description="Removes all Memos of the User with the given ID if it exists")
 async def delete_user_memos(*,
                             user_id: int,
-                            db: Session = Depends(session)) -> Optional[UserRead]:
+                            db: Session = Depends(session)) -> List[int]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_user.remove_all_memos(db=db, id=user_id)
-    return UserRead.from_orm(db_obj)
+    return crud_user.remove_all_memos(db=db, id=user_id)
