@@ -1,6 +1,7 @@
 from typing import List, Dict, Any
 
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
@@ -91,9 +92,12 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                                               self.model.user_id == user_id,
                                               self.model.project_id == proj_id).first() is not None
 
-    def remove_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[CodeORM]:
-        return db.delete(self.model).filter(self.model.user_id == user_id,
-                                            self.model.project_id == proj_id).all()
+    def remove_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[int]:
+        statement = delete(self.model).where(self.model.user_id == user_id,
+                                             self.model.project_id == proj_id).returning(self.model.id)
+        removed_ids = db.execute(statement).fetchall()
+        db.commit()
+        return list(map(lambda t: t[0], removed_ids))
 
 
 crud_code = CRUDCode(CodeORM)
