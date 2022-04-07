@@ -1,14 +1,17 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from api.dependencies import skip_limit_params
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoReadSourceDocument, MemoInDB, MemoCreate
 from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataUpdate, SourceDocumentMetadataRead
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/sdoc")
@@ -42,26 +45,30 @@ async def delete_by_id(*,
     return SourceDocumentRead.from_orm(db_obj)
 
 
-@router.get("/{sdoc_id}/metadata", tags=tags,
-            response_model=Optional[SourceDocumentRead],
-            summary="Returns the SourceDocumentMetadata",
-            description="Returns the SourceDocumentMetadata with the given ID if it exists")
-async def get_metadata_by_id(*,
-                             db: Session = Depends(session),
-                             sdoc_id: int) -> Optional[SourceDocumentRead]:
+@router.get("/{sdoc_id}/metadata}", tags=tags,
+            response_model=List[SourceDocumentMetadataRead],
+            summary="Returns all SourceDocumentMetadata",
+            description="Returns all SourceDocumentMetadata with the given ID if it exists")
+async def get_all_metadata(*,
+                           db: Session = Depends(session),
+                           sdoc_id: int) -> List[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    return [SourceDocumentMetadataRead.from_orm(meta) for meta in sdoc_db_obj.metadata_]
 
 
-@router.patch("/{sdoc_id}/metadata", tags=tags,
-              response_model=Optional[SourceDocumentRead],
+@router.patch("/{sdoc_id}/metadata/{metadata_id}", tags=tags,
+              response_model=Optional[SourceDocumentMetadataRead],
               summary="Updates the SourceDocumentMetadata",
               description="Updates the SourceDocumentMetadata with the given ID if it exists.")
 async def update_metadata_by_id(*,
                                 db: Session = Depends(session),
-                                sdoc_id: int) -> Optional[SourceDocumentRead]:
+                                sdoc_id: int,
+                                metadata_id: int,
+                                metadata: SourceDocumentMetadataUpdate) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    metadata_db_obj = crud_sdoc_meta.update(db=db, id=metadata_id, update_dto=metadata)
+    SourceDocumentMetadataRead.from_orm(metadata_db_obj)
 
 
 @router.get("/{sdoc_id}/adoc/{user_id}", tags=tags,
