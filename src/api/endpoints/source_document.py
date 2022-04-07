@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
-from app.core.data.dto.document_tag import DocumentTagRead, SourceDocumentDocumentTagLink
+from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoReadSourceDocument, MemoInDB, MemoCreate
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.db.sql_service import SQLService
@@ -110,30 +110,41 @@ async def get_all_tags(*,
     return [DocumentTagRead.from_orm(doc_tag_db_obj) for doc_tag_db_obj in sdoc_db_obj.document_tags]
 
 
-@router.post("/{sdoc_id}/tags", tags=tags,
-             response_model=Optional[SourceDocumentRead],
-             summary="Unlinks all DocumentTags with the SourceDocument",
-             description="Unlinks all DocumentTags of the SourceDocument.")
-async def unlink_all_tags(*,
-                          db: Session = Depends(session),
-                          sdoc_id: int) -> Optional[SourceDocumentRead]:
+@router.delete("/{sdoc_id}/tags", tags=tags,
+               response_model=Optional[SourceDocumentRead],
+               summary="Unlinks all DocumentTags with the SourceDocument",
+               description="Unlinks all DocumentTags of the SourceDocument.")
+async def unlinks_all_tags(*,
+                           db: Session = Depends(session),
+                           sdoc_id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, id=sdoc_id)
     return SourceDocumentRead.from_orm(sdoc_db_obj)
 
 
-@router.post("/{sdoc_id}/tag", tags=tags,
-             response_model=Optional[SourceDocumentRead],
-             summary="Links a DocumentTag with the SourceDocument",
-             description="Links a DocumentTag with the SourceDocument with the given ID if it exists")
-async def add_tag(*,
-                  db: Session = Depends(session),
-                  sdoc_id: int,
-                  link: SourceDocumentDocumentTagLink) -> Optional[SourceDocumentRead]:
+@router.patch("/{sdoc_id}/tag/{tag_id}", tags=tags,
+              response_model=Optional[SourceDocumentRead],
+              summary="Links a DocumentTag with the SourceDocument",
+              description="Links a DocumentTag with the SourceDocument with the given ID if it exists")
+async def link_tag(*,
+                   db: Session = Depends(session),
+                   sdoc_id: int,
+                   tag_id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    if link.source_document_id != sdoc_id:
-        link.source_document_id = sdoc_id
-    sdoc_db_obj = crud_sdoc.link_document_tag(db=db, link=link)
+    sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
+    return SourceDocumentRead.from_orm(sdoc_db_obj)
+
+
+@router.delete("/{sdoc_id}/tag/{tag_id}", tags=tags,
+               response_model=Optional[SourceDocumentRead],
+               summary="Unlinks the DocumentTag from the SourceDocument",
+               description="Unlinks the DocumentTags from the SourceDocument.")
+async def unlink_tag(*,
+                     db: Session = Depends(session),
+                     sdoc_id: int,
+                     tag_id: int) -> Optional[SourceDocumentRead]:
+    # TODO Flo: only if the user has access?
+    sdoc_db_obj = crud_sdoc.unlink_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.from_orm(sdoc_db_obj)
 
 
