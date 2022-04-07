@@ -1,10 +1,9 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 from typing import Optional
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi import UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, File
 from sqlalchemy.orm import Session
 
 from api.dependencies import skip_limit_params
@@ -48,75 +47,75 @@ async def read_all(*,
     return [ProjectRead.from_orm(proj) for proj in db_objs]
 
 
-@router.get("/{id}", tags=tags,
+@router.get("/{proj_id}", tags=tags,
             response_model=Optional[ProjectRead],
             summary="Returns the Project with the given ID",
             description="Returns the Project with the given ID if it exists")
 async def read_project(*,
                        db: Session = Depends(session),
-                       id: int) -> Optional[ProjectRead]:
+                       proj_id: int) -> Optional[ProjectRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.read(db=db, id=id)
+    db_obj = crud_project.read(db=db, id=proj_id)
     return ProjectRead.from_orm(db_obj)
 
 
-@router.patch("/{id}", tags=tags,
+@router.patch("/{proj_id}", tags=tags,
               response_model=ProjectRead,
               summary="Updates the Project",
               description="Updates the Project with the given ID.")
 async def update_project(*,
                          db: Session = Depends(session),
-                         id: int,
+                         proj_id: int,
                          proj: ProjectUpdate) -> ProjectRead:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.update(db=db, id=id, update_dto=proj)
+    db_obj = crud_project.update(db=db, id=proj_id, update_dto=proj)
     return ProjectRead.from_orm(db_obj)
 
 
-@router.delete("/{id}", tags=tags,
+@router.delete("/{proj_id}", tags=tags,
                response_model=ProjectRead,
                summary="Removes the Project",
                description="Removes the Project with the given ID.")
 async def delete_project(*,
                          db: Session = Depends(session),
-                         id: int) -> ProjectRead:
+                         proj_id: int) -> ProjectRead:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.remove(db=db, id=id)
+    db_obj = crud_project.remove(db=db, id=proj_id)
     return ProjectRead.from_orm(db_obj)
 
 
-@router.get("/{id}/sdoc", tags=tags,
+@router.get("/{proj_id}/sdoc", tags=tags,
             response_model=List[SourceDocumentRead],
             summary="Returns all SourceDocuments of the Project",
             description="Returns all SourceDocuments of the Project with the given ID")
 async def get_project_sdocs(*,
-                            id: int,
+                            proj_id: int,
                             db: Session = Depends(session)) -> List[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.read(db=db, id=id)
+    db_obj = crud_project.read(db=db, id=proj_id)
     return [SourceDocumentRead.from_orm(sdoc) for sdoc in db_obj.source_documents]
 
 
-@router.get("/{id}/sdoc/metadata", tags=tags,
+@router.get("/{proj_id}/sdoc/metadata", tags=tags,
             response_model=List[SourceDocumentMetadataRead],
             summary="Returns all SourceDocumentMetadata of the Project",
             description="Returns all SourceDocumentMetadata of the Project with the given ID")
 async def get_project_sdoc_metadata(*,
-                                    id: int,
+                                    proj_id: int,
                                     db: Session = Depends(session)) \
         -> List[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     raise NotImplementedError()
 
 
-@router.put("/{id}/sdoc", tags=tags,
+@router.put("/{proj_id}/sdoc", tags=tags,
             response_model=str,
             summary="Uploads a SourceDocument to the Project",
             description="Uploads a SourceDocument to the Project with the given ID if it exists")
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
 async def upload_project_sdoc(*,
-                              id: int,
+                              proj_id: int,
                               doc_file: UploadFile = File(...,
                                                           description="The file represented by the SourceDocument")) \
         -> str:
@@ -130,7 +129,7 @@ async def upload_project_sdoc(*,
     persist_automatic_annotations = "app.docprepro.process.persist_automatic_annotations"
 
     document_preprocessing = (
-            Signature(import_uploaded_document, kwargs={"doc_file": doc_file, "project_id": id}) |
+            Signature(import_uploaded_document, kwargs={"doc_file": doc_file, "project_id": proj_id}) |
             Signature(generate_automatic_annotations) |
             Signature(persist_automatic_annotations)
     )
@@ -140,65 +139,65 @@ async def upload_project_sdoc(*,
     return "Upload and preprocessing of Document started in the background!"
 
 
-@router.delete("/{id}/sdoc", tags=tags,
+@router.delete("/{proj_id}/sdoc", tags=tags,
                response_model=Optional[ProjectRead],
                summary="Removes all SourceDocuments of the Project",
                description="Removes all SourceDocuments of the Project with the given ID if it exists")
 async def delete_project_sdocs(*,
-                               id: int,
+                               proj_id: int,
                                db: Session = Depends(session)) -> Optional[ProjectRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.remove_all_source_documents(db=db, id=id)
+    db_obj = crud_project.remove_all_source_documents(db=db, id=proj_id)
     return ProjectRead.from_orm(db_obj)
 
 
-@router.patch("/{id}/user/{user_id}", tags=tags,
+@router.patch("/{proj_id}/user/{user_id}", tags=tags,
               response_model=Optional[UserRead],
               summary="Associates the User with the Project",
               description="Associates an existing User to the Project with the given ID if it exists")
 async def associate_user_to_project(*,
-                                    id: int,
+                                    proj_id: int,
                                     user_id: int,
                                     db: Session = Depends(session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.associate_user(db=db, id=id, user_id=user_id)
+    user_db_obj = crud_project.associate_user(db=db, id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
-@router.delete("/{id}/user/{user_id}", tags=tags,
+@router.delete("/{proj_id}/user/{user_id}", tags=tags,
                response_model=Optional[UserRead],
                summary="Dissociates the Users with the Project",
                description="Dissociates the Users with the Project with the given ID if it exists")
 async def dissociate_user_from_project(*,
-                                       id: int,
+                                       proj_id: int,
                                        user_id: int,
                                        db: Session = Depends(session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.dissociate_user(db=db, id=id, user_id=user_id)
+    user_db_obj = crud_project.dissociate_user(db=db, id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
-@router.get("/{id}/user", tags=tags,
+@router.get("/{proj_id}/user", tags=tags,
             response_model=List[UserRead],
             summary="Returns all Users of the Project",
             description="Returns all Users of the Project with the given ID")
 async def get_project_users(*,
-                            id: int,
+                            proj_id: int,
                             db: Session = Depends(session)) -> List[UserRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=id)
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [UserRead.from_orm(user) for user in proj_db_obj.users]
 
 
-@router.get("/{id}/code", tags=tags,
+@router.get("/{proj_id}/code", tags=tags,
             response_model=List[CodeRead],
             summary="Returns all Codes of the Project",
             description="Returns all Codes of the Project with the given ID")
 async def get_project_codes(*,
-                            id: int,
+                            proj_id: int,
                             db: Session = Depends(session)) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=id)
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [CodeRead.from_orm(code) for code in proj_db_obj.codes]
 
 
@@ -219,39 +218,39 @@ async def create_project_code(*,
     return CodeRead.from_orm(db_obj)
 
 
-@router.delete("/{id}/code", tags=tags,
+@router.delete("/{proj_id}/code", tags=tags,
                response_model=Optional[ProjectRead],
                summary="Removes all Codes of the Project",
                description="Removes all Codes of the Project with the given ID if it exists")
 async def delete_project_codes(*,
-                               id: int,
+                               proj_id: int,
                                db: Session = Depends(session)) -> Optional[ProjectRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.remove_all_codes(db=db, id=id)
+    db_obj = crud_project.remove_all_codes(db=db, id=proj_id)
     return ProjectRead.from_orm(db_obj)
 
 
-@router.get("/{id}/logbook", tags=tags,
+@router.get("/{proj_id}/memo", tags=tags,
             response_model=Optional[MemoReadProject],
-            summary="Returns the LogBook Memo of the current User for the Project.",
-            description="Returns the LogBook Memo of the current User for the Project with the given ID.")
-async def get_logbook_memo(*,
-                           db: Session = Depends(session),
-                           id: int) -> Optional[MemoReadProject]:
-    proj_db_obj = crud_project.read(db=db, id=id)
+            summary="Returns the Memo of the current User for the Project.",
+            description="Returns the Memo of the current User for the Project with the given ID.")
+async def get_memo(*,
+                   db: Session = Depends(session),
+                   proj_id: int) -> Optional[MemoReadProject]:
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
     memo_as_in_db_dto = MemoInDB.from_orm(proj_db_obj.object_handle.attached_memo)
     return MemoReadProject(**memo_as_in_db_dto.dict(exclude={"attached_to"}), attached_project_id=proj_db_obj.id)
 
 
-@router.put("/{id}/logbook", tags=tags,
+@router.put("/{proj_id}/memo", tags=tags,
             response_model=Optional[MemoReadProject],
-            summary="Adds a LogBook Memo of the current User to the Project.",
-            description="Adds a LogBook Memo of the current User to the Project with the given ID if it exists")
+            summary="Adds a Memo of the current User to the Project.",
+            description="Adds a Memo of the current User to the Project with the given ID if it exists")
 async def add_memo(*,
                    db: Session = Depends(session),
-                   id: int,
+                   proj_id: int,
                    memo: MemoCreate) -> Optional[MemoReadProject]:
-    db_obj = crud_memo.create_for_project(db=db, project_id=id, create_dto=memo)
+    db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
     attached_project = db_obj.attached_to.project
     return MemoReadProject(**memo_as_in_db_dto.dict(exclude={"attached_to"}), attached_project_id=attached_project.id)
