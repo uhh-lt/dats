@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Union
 from typing import Optional
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -12,7 +12,8 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import MemoReadProject, MemoInDB, MemoCreate
+from app.core.data.dto.memo import MemoReadProject, MemoInDB, MemoCreate, MemoReadDocumentTag, MemoReadSourceDocument, \
+    MemoReadAnnotationDocument, MemoReadSpanAnnotation, MemoReadCode
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.user import UserRead
@@ -236,6 +237,41 @@ async def remove_user_codes_of_project(*,
                                        db: Session = Depends(session)) -> int:
     # TODO Flo: only if the user has access?
     return len(crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id))
+
+
+@router.get("/{proj_id}/user/{user_id}/memo", tags=tags,
+            response_model=List[Union[MemoReadCode,
+                                      MemoReadSpanAnnotation,
+                                      MemoReadAnnotationDocument,
+                                      MemoReadSourceDocument,
+                                      MemoReadProject,
+                                      MemoReadDocumentTag]],
+            summary="Returns all Memos of the Project from a User",
+            description="Returns all Memos of the Project from a User")
+async def get_user_memos_of_project(*,
+                                    proj_id: int,
+                                    user_id: int,
+                                    db: Session = Depends(session)) -> List[Union[MemoReadCode,
+                                                                                  MemoReadSpanAnnotation,
+                                                                                  MemoReadAnnotationDocument,
+                                                                                  MemoReadSourceDocument,
+                                                                                  MemoReadProject,
+                                                                                  MemoReadDocumentTag]]:
+    # TODO Flo: only if the user has access?
+    db_objs = crud_memo.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
+    return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs]
+
+
+@router.delete("/{proj_id}/user/{user_id}/memo", tags=tags,
+               response_model=List[int],
+               summary="Removes all Memos of the Project from a User",
+               description="Removes all Memos of the Project from a User. Returns the number of removed Memos.")
+async def remove_user_memos_of_project(*,
+                                       proj_id: int,
+                                       user_id: int,
+                                       db: Session = Depends(session)) -> List[int]:
+    # TODO Flo: only if the user has access?
+    return crud_memo.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
 @router.get("/{proj_id}/memo", tags=tags,
