@@ -94,7 +94,7 @@ def generate_automatic_annotations(ppd: PreProDoc) -> PreProDoc:
         ppd.stopwords.append(token.is_stop)
 
         if not (token.is_stop or token.is_punct) and (token.is_alpha or token.is_digit):
-            ppd.word_freqs.update(token.text)
+            ppd.word_freqs.update((token.text,))
 
     # create AutoSpans for NER
     ppd.spans["NER"] = list()
@@ -128,6 +128,9 @@ def persist_automatic_annotations(ppd: PreProDoc) -> AnnotationDocumentRead:
         # convert AutoSpans to SpanAnnotations
         for code in ppd.spans.keys():
             for aspan in ppd.spans[code]:
+                # FIXME Flo: hacky solution for German NER model, which only contains ('LOC', 'MISC', 'ORG', 'PER')
+                if aspan.type == "PER":
+                    aspan.type = "PERSON"
                 db_code = crud_code.read_by_name_and_user_and_project(db,
                                                                       code_name=aspan.type,
                                                                       user_id=SYSTEM_USER_ID,
@@ -147,8 +150,11 @@ def persist_automatic_annotations(ppd: PreProDoc) -> AnnotationDocumentRead:
                 crud_span_anno.create(db, create_dto=create_dto)
 
         # Flo: persist word frequencies
+        sorted_word_freqs = {k: v for (k, v) in sorted(ppd.word_freqs.items(),
+                                                       key=lambda i: i[1],
+                                                       reverse=True)}
         sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="word_frequencies",
-                                                            value=str(dict(ppd.word_freqs)),
+                                                            value=str(sorted_word_freqs),
                                                             source_document_id=ppd.sdoc_id)
         sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 

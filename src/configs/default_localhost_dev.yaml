@@ -43,6 +43,8 @@ system_codes:
         desc: "Times smaller than a day"
       WORK_OF_ART:
         desc: "Titles of books, songs, etc."
+      MISC:
+        desc: "Miscellaneous entities, e.g. events, nationalities, products or works of art"
   SENTENCE:
     desc: "A sentence spanning multiple Tokens."
 
