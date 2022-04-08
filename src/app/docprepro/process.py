@@ -4,6 +4,7 @@ import spacy
 import torch
 from fastapi import UploadFile
 from langdetect import detect_langs
+from loguru import logger
 from spacy.tokens import Doc
 
 from app.core.data.crud.annotation_document import crud_adoc
@@ -138,7 +139,8 @@ def persist_automatic_annotations(ppd: PreProDoc) -> AnnotationDocumentRead:
 
                 if not db_code:
                     # FIXME FLO: create code on the fly for system user?
-                    pass
+                    logger.warning(f"No Code <{aspan.type}> found! Skipping persistence of SpanAnnotation ...")
+                    continue
 
                 ccid = db_code.current_code.id
 
