@@ -12,11 +12,10 @@ UpdateDTOType = TypeVar("UpdateDTOType", bound=BaseModel)
 
 
 class NoSuchElementError(Exception):
-    def __init__(self, model: Type[ORMModelType], id: int):
+    def __init__(self, model: Type[ORMModelType], **kwargs):
         self.model = model
         self.model_name = model.__name__.replace('ORM', '')
-        self.id = id
-        super().__init__(f"There exists no {self.model_name} with ID = {id} !")
+        super().__init__(f"There exists no {self.model_name} with: {kwargs} !")
 
 
 class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
@@ -33,7 +32,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def read(self, db: Session, id: int) -> Optional[ORMModelType]:
         db_obj = db.query(self.model).filter(self.model.id == id).first()
         if not db_obj:
-            raise NoSuchElementError(self.model, id)
+            raise NoSuchElementError(self.model, id=id)
         return db_obj
 
     def read_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ORMModelType]:
@@ -50,10 +49,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.refresh(db_obj)
         return db_obj
 
-    def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> ORMModelType:
-        db_obj = db.query(self.model).get(id)
-        if not db_obj:
-            raise NoSuchElementError(self.model, id)
+    def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> Optional[ORMModelType]:
+        db_obj = self.read(db=db, id=id)
         obj_data = jsonable_encoder(db_obj)
         update_data = update_dto.dict(exclude_unset=True)
         for field in obj_data:
@@ -64,10 +61,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> ORMModelType:
-        db_obj = db.query(self.model).get(id)
-        if not db_obj:
-            raise NoSuchElementError(self.model, id)
+    def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
+        db_obj = self.read(db=db, id=id)
         db.delete(db_obj)
         db.commit()
         return db_obj
