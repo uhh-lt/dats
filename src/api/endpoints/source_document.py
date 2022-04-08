@@ -1,9 +1,9 @@
-from typing import Optional, List, Dict
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import skip_limit_params
+from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -68,7 +68,7 @@ async def update_metadata_by_id(*,
                                 metadata: SourceDocumentMetadataUpdate) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     metadata_db_obj = crud_sdoc_meta.update(db=db, id=metadata_id, update_dto=metadata)
-    SourceDocumentMetadataRead.from_orm(metadata_db_obj)
+    return SourceDocumentMetadataRead.from_orm(metadata_db_obj)
 
 
 @router.get("/{sdoc_id}/adoc/{user_id}", tags=tags,
@@ -80,7 +80,7 @@ async def get_adoc_of_user(*,
                            sdoc_id: int,
                            user_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    return AnnotationDocumentRead.from_orm(crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id))
 
 
 @router.get("/{sdoc_id}/adoc", tags=tags,
@@ -91,18 +91,18 @@ async def get_all_adocs(*,
                         db: Session = Depends(session),
                         sdoc_id: int) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    return [AnnotationDocumentRead.from_orm(adoc) for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents]
 
 
 @router.delete("/{sdoc_id}/adoc", tags=tags,
-               response_model=List[AnnotationDocumentRead],
+               response_model=List[int],
                summary="Removes all AnnotationDocuments for the SourceDocument",
                description="Removes all AnnotationDocuments for the SourceDocument.")
 async def remove_all_adocs(*,
                            db: Session = Depends(session),
-                           sdoc_id: int) -> List[AnnotationDocumentRead]:
+                           sdoc_id: int) -> List[int]:
     # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    return crud_adoc.remove_by_sdoc(db=db, sdoc_id=sdoc_id)
 
 
 @router.get("/{sdoc_id}/tags", tags=tags,

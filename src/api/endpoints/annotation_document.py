@@ -1,9 +1,11 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from api.dependencies import skip_limit_params
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
 from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.db.sql_service import SQLService
@@ -54,17 +56,20 @@ async def delete_by_adoc_id(*,
             description="Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists")
 async def get_all_annotations(*,
                               db: Session = Depends(session),
-                              adoc_id: int) -> List[SpanAnnotationRead]:
+                              adoc_id: int,
+                              skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
-    return [SpanAnnotationRead.from_orm(span) for span in crud_adoc.read(db=db, id=adoc_id).span_annotations]
+    return [SpanAnnotationRead.from_orm(span) for span in crud_span_anno.read_by_adoc(db=db,
+                                                                                      adoc_id=adoc_id,
+                                                                                      **skip_limit)]
 
 
 @router.delete("/{adoc_id}/span_annotations", tags=tags,
-               response_model=Optional[AnnotationDocumentRead],
+               response_model=List[int],
                summary="Removes all SpanAnnotations in the AnnotationDocument",
                description="Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists")
 async def delete_all_annotations(*,
                                  db: Session = Depends(session),
-                                 adoc_id: int) -> Optional[AnnotationDocumentRead]:
-    # TODO Flo: only if the user has access? What to return? Only delete spans from the current user!!!!
-    return AnnotationDocumentRead.from_orm(crud_adoc.remove_all_span_annotations(db=db, id=adoc_id))
+                                 adoc_id: int) -> List[int]:
+    # TODO Flo: only if the user has access? What to return?
+    return crud_span_anno.remove_by_adoc(db=db, id=adoc_id)

@@ -99,5 +99,11 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.commit()
         return list(map(lambda t: t[0], removed_ids))
 
+    def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
+        statement = delete(self.model).where(self.model.project_id == proj_id).returning(self.model.id)
+        removed_ids = db.execute(statement).fetchall()
+        db.commit()
+        return list(map(lambda t: t[0], removed_ids))
+
 
 crud_code = CRUDCode(CodeORM)

@@ -3,19 +3,21 @@ from typing import Optional
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, File
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, File, Query
 from sqlalchemy.orm import Session
 
 from api.dependencies import skip_limit_params
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead
+from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoReadProject, MemoInDB, MemoCreate, MemoReadDocumentTag, MemoReadSourceDocument, \
     MemoReadAnnotationDocument, MemoReadSpanAnnotation, MemoReadCode
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.db.sql_service import SQLService
 
@@ -87,26 +89,23 @@ async def delete_project(*,
 
 @router.get("/{proj_id}/sdoc", tags=tags,
             response_model=List[SourceDocumentRead],
-            summary="Returns all SourceDocuments of the Project",
-            description="Returns all SourceDocuments of the Project with the given ID")
+            summary="Returns all SourceDocuments of the Project that match the query parameters",
+            description="Returns all SourceDocuments of the Project with the given ID that match the query parameters")
 async def get_project_sdocs(*,
                             proj_id: int,
-                            db: Session = Depends(session)) -> List[SourceDocumentRead]:
+                            db: Session = Depends(session),
+                            tag_id: Optional[int] = Query(title="DocumentTag ID",
+                                                          description="The ID of the DocumentTag",
+                                                          ge=0,
+                                                          le=10e6,
+                                                          default=None)) -> List[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.read(db=db, id=proj_id)
-    return [SourceDocumentRead.from_orm(sdoc) for sdoc in db_obj.source_documents]
+    if tag_id is not None:
+        sdocs = crud_sdoc.read_by_project_and_document_tag(db=db, proj_id=proj_id, tag_id=tag_id)
+    else:
+        sdocs = crud_project.read(db=db, id=proj_id).source_documents
 
-
-@router.get("/{proj_id}/sdoc/metadata", tags=tags,
-            response_model=List[SourceDocumentMetadataRead],
-            summary="Returns all SourceDocumentMetadata of the Project",
-            description="Returns all SourceDocumentMetadata of the Project with the given ID")
-async def get_project_sdoc_metadata(*,
-                                    proj_id: int,
-                                    db: Session = Depends(session)) \
-        -> List[SourceDocumentMetadataRead]:
-    # TODO Flo: only if the user has access?
-    raise NotImplementedError()
+    return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs]
 
 
 @router.put("/{proj_id}/sdoc", tags=tags,
@@ -141,15 +140,14 @@ async def upload_project_sdoc(*,
 
 
 @router.delete("/{proj_id}/sdoc", tags=tags,
-               response_model=Optional[ProjectRead],
+               response_model=List[int],
                summary="Removes all SourceDocuments of the Project",
                description="Removes all SourceDocuments of the Project with the given ID if it exists")
 async def delete_project_sdocs(*,
                                proj_id: int,
-                               db: Session = Depends(session)) -> Optional[ProjectRead]:
+                               db: Session = Depends(session)) -> List[int]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.remove_all_source_documents(db=db, id=proj_id)
-    return ProjectRead.from_orm(db_obj)
+    return crud_sdoc.remove_by_project(db=db, proj_id=proj_id)
 
 
 @router.patch("/{proj_id}/user/{user_id}", tags=tags,
@@ -203,15 +201,37 @@ async def get_project_codes(*,
 
 
 @router.delete("/{proj_id}/code", tags=tags,
-               response_model=Optional[ProjectRead],
+               response_model=List[int],
                summary="Removes all Codes of the Project",
                description="Removes all Codes of the Project with the given ID if it exists")
 async def delete_project_codes(*,
                                proj_id: int,
-                               db: Session = Depends(session)) -> Optional[ProjectRead]:
+                               db: Session = Depends(session)) -> List[int]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.remove_all_codes(db=db, id=proj_id)
-    return ProjectRead.from_orm(db_obj)
+    return crud_code.remove_by_project(db=db, proj_id=proj_id)
+
+
+@router.get("/{proj_id}/tag", tags=tags,
+            response_model=List[DocumentTagRead],
+            summary="Returns all DocumentTags of the Project",
+            description="Returns all DocumentTags of the Project with the given ID")
+async def get_project_tags(*,
+                           proj_id: int,
+                           db: Session = Depends(session)) -> List[DocumentTagRead]:
+    # TODO Flo: only if the user has access?
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    return [DocumentTagRead.from_orm(tag) for tag in proj_db_obj.document_tags]
+
+
+@router.delete("/{proj_id}/tag", tags=tags,
+               response_model=List[int],
+               summary="Removes all DocumentTags of the Project",
+               description="Removes all DocumentTags of the Project with the given ID if it exists")
+async def delete_project_tags(*,
+                              proj_id: int,
+                              db: Session = Depends(session)) -> List[int]:
+    # TODO Flo: only if the user has access?
+    return crud_document_tag.remove_by_project(db=db, proj_id=proj_id)
 
 
 @router.get("/{proj_id}/user/{user_id}/code", tags=tags,
@@ -234,9 +254,9 @@ async def get_user_codes_of_project(*,
 async def remove_user_codes_of_project(*,
                                        proj_id: int,
                                        user_id: int,
-                                       db: Session = Depends(session)) -> int:
+                                       db: Session = Depends(session)) -> List[int]:
     # TODO Flo: only if the user has access?
-    return len(crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id))
+    return crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
 @router.get("/{proj_id}/user/{user_id}/memo", tags=tags,
