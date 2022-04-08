@@ -44,7 +44,7 @@ async def no_such_element_error_handler(_, exc: NoSuchElementError):
 
 
 @app.exception_handler(NotImplementedError)
-async def no_such_element_error_handler(_, exc: NotImplementedError):
+async def not_implemented_error_handler(_, exc: NotImplementedError):
     return PlainTextResponse(str(exc), status_code=501)
 
 
