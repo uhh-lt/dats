@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from .code import CodeRead
 from .dto_base import UpdateDTOBase
 
 
@@ -20,8 +20,7 @@ class SpanAnnotationCreate(SpanAnnotationBaseDTO):
 
 # Properties for updating
 class SpanAnnotationUpdate(SpanAnnotationBaseDTO, UpdateDTOBase):
-    begin: Optional[int] = Field(description='Begin of the SpanAnnotation')
-    end: Optional[int] = Field(description='End of the SpanAnnotation')
+    current_code_id: int = Field(description='CurrentCode the SpanAnnotation refers to')
 
 
 # Properties for reading (as in ORM)
@@ -34,3 +33,11 @@ class SpanAnnotationRead(SpanAnnotationBaseDTO):
 
     class Config:
         orm_mode = True
+
+
+class SpanAnnotationReadResolvedCode(SpanAnnotationBaseDTO):
+    id: int = Field(description='ID of the SpanAnnotation')
+    code: CodeRead = Field(description='Code the SpanAnnotation refers to')
+    annotation_document_id: int = Field(description='AnnotationDocument the SpanAnnotation refers to')
+    created: datetime = Field(description="Created timestamp of the SpanAnnotation")
+    updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")

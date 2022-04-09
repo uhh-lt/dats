@@ -1,14 +1,16 @@
-from typing import Optional
+from typing import Optional, Union
 
 from fastapi import APIRouter, Depends
 from requests import Session
 
+from api.dependencies import resolve_code_param
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
-from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate, SpanAnnotationCreate
+from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate, SpanAnnotationCreate, \
+    SpanAnnotationReadResolvedCode
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/span")
@@ -18,51 +20,86 @@ session = SQLService().get_db_session
 
 
 @router.put("", tags=tags,
-            response_model=Optional[SpanAnnotationRead],
+            response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]],
             summary="Creates a SpanAnnotation",
             description="Creates a SpanAnnotation")
 async def add_span_annotation(*,
                               db: Session = Depends(session),
-                              span: SpanAnnotationCreate) -> Optional[SpanAnnotationRead]:
+                              span: SpanAnnotationCreate,
+                              resolve_code: bool = Depends(resolve_code_param)) \
+        -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
-    return SpanAnnotationRead.from_orm(crud_span_anno.create(db=db, create_dto=span))
+    db_obj = crud_span_anno.create(db=db, create_dto=span)
+    span_dto = SpanAnnotationRead.from_orm(db_obj)
+    if resolve_code:
+        return SpanAnnotationReadResolvedCode(**span_dto.dict(exclude={"current_code_id"}),
+                                              code=CodeRead.from_orm(db_obj.current_code.code))
+    else:
+        return span_dto
 
 
 @router.get("/{span_id}", tags=tags,
-            response_model=Optional[SpanAnnotationRead],
+            response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]],
             summary="Returns the SpanAnnotation",
             description="Returns the SpanAnnotation with the given ID.")
 async def get_by_id(*,
                     db: Session = Depends(session),
-                    span_id: int) -> Optional[SpanAnnotationRead]:
+                    span_id: int,
+                    resolve_code: bool = Depends(resolve_code_param)) -> Optional[
+    Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.read(db=db, id=span_id)
-    return SpanAnnotationRead.from_orm(db_obj)
+    span_dto = SpanAnnotationRead.from_orm(db_obj)
+    if resolve_code:
+        return SpanAnnotationReadResolvedCode(**span_dto.dict(exclude={"current_code_id"}),
+                                              code=CodeRead.from_orm(db_obj.current_code.code))
+    else:
+        return span_dto
 
 
 @router.patch("/{span_id}", tags=tags,
-              response_model=Optional[SpanAnnotationRead],
+              response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]],
               summary="Updates the SpanAnnotation",
               description="Updates the SpanAnnotation with the given ID.")
 async def update_by_id(*,
                        db: Session = Depends(session),
                        span_id: int,
-                       span_anno: SpanAnnotationUpdate) -> Optional[SpanAnnotationRead]:
+                       span_anno: SpanAnnotationUpdate,
+                       resolve_code: bool = Depends(resolve_code_param)) -> Optional[
+    Union[SpanAnnotationRead,
+          SpanAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.update(db=db, id=span_id, update_dto=span_anno)
-    return SpanAnnotationRead.from_orm(db_obj)
+    span_dto = SpanAnnotationRead.from_orm(db_obj)
+    if resolve_code:
+        return SpanAnnotationReadResolvedCode(**span_dto.dict(exclude={"current_code_id"}),
+                                              code=CodeRead.from_orm(db_obj.current_code.code))
+    else:
+        return span_dto
 
 
 @router.delete("/{span_id}", tags=tags,
-               response_model=Optional[SpanAnnotationRead],
+               response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]],
                summary="Deletes the SpanAnnotation",
                description="Deletes the SpanAnnotation with the given ID.")
 async def delete_by_id(*,
                        db: Session = Depends(session),
-                       span_id: int) -> Optional[SpanAnnotationRead]:
+                       span_id: int) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=span_id)
     return SpanAnnotationRead.from_orm(db_obj)
+
+
+@router.get("/{span_id}/code", tags=tags,
+            response_model=Optional[CodeRead],
+            summary="Returns the Code of the SpanAnnotation",
+            description="Returns the Code of the SpanAnnotation with the given ID if it exists.")
+async def get_code(*,
+                   db: Session = Depends(session),
+                   span_id: int) -> Optional[CodeRead]:
+    # TODO Flo: only if the user has access?
+    span_db_obj = crud_span_anno.read(db=db, id=span_id)
+    return CodeRead.from_orm(span_db_obj.current_code.code)
 
 
 @router.put("/{span_id}/memo", tags=tags,
@@ -93,15 +130,3 @@ async def get_memo(*,
     memo_as_in_db_dto = MemoInDB.from_orm(span_db_obj.object_handle.attached_memo)
     return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
                                   attached_span_annotation_id=span_db_obj.id)
-
-
-@router.get("/{span_id}/code", tags=tags,
-            response_model=Optional[CodeRead],
-            summary="Returns the Code of the SpanAnnotation",
-            description="Returns the Code of the SpanAnnotation with the given ID if it exists.")
-async def get_code(*,
-                   db: Session = Depends(session),
-                   span_id: int) -> Optional[CodeRead]:
-    # TODO Flo: only if the user has access?
-    span_db_obj = crud_span_anno.read(db=db, id=span_id)
-    return CodeRead.from_orm(span_db_obj.current_code.code)
