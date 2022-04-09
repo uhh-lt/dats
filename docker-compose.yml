@@ -90,7 +90,7 @@ services:
       - redis
       - postgres
     ports:
-      - "8888:8888"
+      - "9999:8888"
     restart: always
     networks:
       - dwts_backend_network
