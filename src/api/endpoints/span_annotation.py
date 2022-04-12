@@ -5,7 +5,6 @@ from requests import Session
 
 from api.dependencies import resolve_code_param
 from app.core.data.crud.memo import crud_memo
-from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
