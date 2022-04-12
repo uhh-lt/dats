@@ -1,3 +1,4 @@
+import json
 from collections import Counter
 
 import spacy
@@ -151,12 +152,12 @@ def persist_automatic_annotations(ppd: PreProDoc) -> AnnotationDocumentRead:
 
                 crud_span_anno.create(db, create_dto=create_dto)
 
-        # Flo: persist word frequencies
+        # persist word frequencies
         sorted_word_freqs = {k: v for (k, v) in sorted(ppd.word_freqs.items(),
                                                        key=lambda i: i[1],
                                                        reverse=True)}
         sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="word_frequencies",
-                                                            value=str(sorted_word_freqs),
+                                                            value=json.dumps(sorted_word_freqs).replace("\"", "'"),
                                                             source_document_id=ppd.sdoc_id)
         sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
