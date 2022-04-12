@@ -21,8 +21,8 @@ session = SQLService().get_db_session
             description="Creates a new DocumentTag and returns it with the generated ID.")
 async def create_new_doc_tag(*,
                              db: Session = Depends(session),
-                             code: DocumentTagCreate) -> Optional[DocumentTagRead]:
-    db_obj = crud_document_tag.create(db=db, create_dto=code)
+                             doc_tag: DocumentTagCreate) -> Optional[DocumentTagRead]:
+    db_obj = crud_document_tag.create(db=db, create_dto=doc_tag)
     return DocumentTagRead.from_orm(db_obj)
 
 
