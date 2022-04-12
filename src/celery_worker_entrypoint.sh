@@ -10,7 +10,7 @@ mkdir -p /spacy_models
 #  the docker-compose
 
 if [ ! -f /spacy_models/de_core_news_lg-3.2.0.tar.gz ]; then
-  wget https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.2.0/de_core_news_lg-3.2.0.tar.gz
+  wget -P /spacy_models https://github.com/explosion/spacy-models/releases/download/de_core_news_lg-3.2.0/de_core_news_lg-3.2.0.tar.gz
 else
   echo "spaCy model 'de_core_news_lg' already downloaded!"
 fi
@@ -19,7 +19,7 @@ if [ ! -d /usr/local/lib/python3.9/site-packages/de_core_news_lg ]; then
 fi
 
 if [ ! -f /spacy_models/en_core_web_trf-3.2.0.tar.gz ]; then
-  wget https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.2.0/en_core_web_trf-3.2.0.tar.gz
+   wget -P /spacy_models https://github.com/explosion/spacy-models/releases/download/en_core_web_trf-3.2.0/en_core_web_trf-3.2.0.tar.gz
 else
   echo "spaCy model 'en_core_web_trf' already downloaded!"
 fi
