@@ -1,5 +1,12 @@
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import relationship
+
+if TYPE_CHECKING:
+    from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.user import UserORM
 
 from app.core.data.orm.orm_base import ORMBase
 
@@ -13,7 +20,7 @@ class MemoORM(ORMBase):
 
     # one to one
     attached_to_id = Column(Integer, ForeignKey('objecthandle.id'), index=True)
-    attached_to = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memo")
+    attached_to: "ObjectHandleORM" = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memo")
 
     # FIXME Flo: SQLAlchemy ambiguous FK issue...
     # object_handle = relationship("ObjectHandleORM",
@@ -24,7 +31,7 @@ class MemoORM(ORMBase):
 
     # many to one
     project_id = Column(Integer, ForeignKey('project.id'), index=True)
-    project = relationship("ProjectORM", back_populates="memos")
+    project: "ProjectORM" = relationship("ProjectORM", back_populates="memos")
 
     user_id = Column(Integer, ForeignKey('user.id'), index=True)
-    user = relationship("UserORM", back_populates="memos")
+    user: "UserORM" = relationship("UserORM", back_populates="memos")

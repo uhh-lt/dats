@@ -14,7 +14,6 @@ class DocumentTagBaseDTO(BaseModel):
 
 # Properties for creation
 class DocumentTagCreate(DocumentTagBaseDTO):
-    title: str = Field(description='Title of the DocumentTag')
     description: Optional[str] = Field(description='Description of the DocumentTag', default=None)
     project_id: int = Field(description='Project the DocumentTag belongs to')
 
@@ -28,8 +27,15 @@ class DocumentTagUpdate(DocumentTagBaseDTO, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class DocumentTagRead(DocumentTagBaseDTO):
     id: int = Field(description='ID of the DocumentTag')
+    project_id: int = Field(description='Project the DocumentTag belongs to')
     created: datetime = Field(description="Created timestamp of the DocumentTag")
     updated: datetime = Field(description="Updated timestamp of the DocumentTag")
 
     class Config:
         orm_mode = True
+
+
+# To link a SourceDocument with a DocumentTag
+class SourceDocumentDocumentTagLink(BaseModel):
+    source_document_id: int = Field(description='ID of the SourceDocument')
+    document_tag_id: int = Field(description='ID of the DocumentTag')

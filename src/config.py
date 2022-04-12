@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from loguru import logger
 from omegaconf import OmegaConf
@@ -8,7 +9,7 @@ __conf_file__ = os.getenv("DWISE_BACKEND_CONFIG", "./configs/default_localhost_d
 conf = OmegaConf.load(__conf_file__)
 
 # setup loguru logging
-logger.add(conf.logging.path + '/{time}.log',
+logger.add(str(Path(conf.repository_root).joinpath("logs/{time}.log")),
            rotation=f"{conf.logging.max_file_size} MB",
            level=conf.logging.level.upper())
 

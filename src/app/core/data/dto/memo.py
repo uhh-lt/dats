@@ -22,7 +22,7 @@ class MemoBaseDTO(BaseModel):
 
 
 # Properties to update
-class MemoUpdateBase(MemoBaseDTO, UpdateDTOBase):
+class MemoUpdate(MemoBaseDTO, UpdateDTOBase):
     title: Optional[str] = Field(description='Title of the Memo', default=None)
     content: Optional[str] = Field(description='Content of the Memo', default=None)
 
@@ -51,7 +51,11 @@ class MemoInDB(MemoReadBaseDTO):
 
 
 class MemoReadAnnotationDocument(MemoReadBaseDTO):
-    attached_source_document_id: int = Field(description='AnnotationDocument the Memo is attached to')
+    attached_annotation_document_id: int = Field(description='AnnotationDocument the Memo is attached to')
+
+
+class MemoReadSourceDocument(MemoReadBaseDTO):
+    attached_source_document_id: int = Field(description='SourceDocument the Memo is attached to')
 
 
 class MemoReadCode(MemoReadBaseDTO):
@@ -64,3 +68,7 @@ class MemoReadSpanAnnotation(MemoReadBaseDTO):
 
 class MemoReadProject(MemoReadBaseDTO):
     attached_project_id: int = Field(description='Project the Memo is attached to')
+
+
+class MemoReadDocumentTag(MemoReadBaseDTO):
+    attached_document_tag_id: int = Field(description='DocumentTag the Memo is attached to')

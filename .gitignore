@@ -1,5 +1,7 @@
-# jupyter notebooks
-notebooks
+src/dev_notebooks
+backend_repo
+sample_data
+spacy_models
 
 # backend logs
 backend/src/logs
@@ -237,6 +239,7 @@ docs/_build/
 target/
 
 # Jupyter Notebook
+*.ipynb
 .ipynb_checkpoints
 
 # IPython
@@ -264,7 +267,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/

@@ -1,17 +1,82 @@
 api:
-  port: 5000
+  port: ${oc.env:API_PORT, 5000}
+
+repository_root: /tmp/dwts
+
+system_codes:
+  NAMED_ENTITY:
+    desc: "A named entity"
+    children:
+      CARDINAL:
+        desc: "Numerals that do not fall under another type"
+      DATE:
+        desc: "Absolute or relative dates or periods"
+      EVENT:
+        desc: "Named hurricanes, battles, wars, sports events, etc."
+      FAC:
+        desc: "Buildings, airports, highways, bridges, etc."
+      GPE:
+        desc: "Countries, cities, states"
+      LANGUAGE:
+        desc: "Any named language"
+      LAW:
+        desc: "Named documents made into laws."
+      LOC:
+        desc: "Non-GPE locations, mountain ranges, bodies of water"
+      MONEY:
+        desc: "Monetary values, including unit"
+      NORP:
+        desc: "Nationalities or religious or political groups"
+      ORDINAL:
+        desc: "'first', 'second', etc."
+      ORG:
+        desc: "Companies, agencies, institutions, etc."
+      PERCENT:
+        desc: "Percentage, including '%'"
+      PERSON:
+        desc: "People, including fictional"
+      PRODUCT:
+        desc: "Objects, vehicles, foods, etc. (not services)"
+      QUANTITY:
+        desc: "Measurements, as of weight or distance"
+      TIME:
+        desc: "Times smaller than a day"
+      WORK_OF_ART:
+        desc: "Titles of books, songs, etc."
+      MISC:
+        desc: "Miscellaneous entities, e.g. events, nationalities, products or works of art"
+  SENTENCE:
+    desc: "A sentence spanning multiple Tokens."
+
+docprepro:
+  spacy:
+    # note that the spacy models have to be installed in the env to use it! (docker!)
+    default_model: "en_core_web_trf"
+    english_model: "en_core_web_trf"
+    german_model: "de_core_news_lg"
+  celery:
+    backend:
+      host: ${oc.env:REDIS_HOST, localhost}
+      port: ${oc.env:REDIS_PORT, 6379}
+      db: 0
+      password: ${oc.env:REDIS_PASSWORD, dwts123}
+    broker:
+      host: ${oc.env:RABBITMQ_HOST, localhost}
+      port: ${oc.env:RABBITMQ_PORT, 5672}
+      user: ${oc.env:RABBITMQ_USER, dwtsuser}
+      password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
+
 
 postgres:
-  host: ${oc.env:DB_HOST, 127.0.0.1}
-  port: ${oc.env:DB_PORT, 5432}
-  db: ${oc.env:DB, dwts}
-  user: ${oc.env:DB_USER, root}
-  password: ${oc.env:DB_PASSWORD, rootpwd}
+  host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
+  port: ${oc.env:POSTGRES_PORT, 5432}
+  db: ${oc.env:POSTGRES_DB, dwts}
+  user: ${oc.env:POSTGRES_USER, dwtsuser}
+  password: ${oc.env:POSTGRES_PASSWORD, dwts123}
 
 logging:
-  path: /tmp/dwts_backend_logs
   max_file_size: 500 # MB
-  level: DEBUG
+  level: ${oc.env:LOG_LEVEL, debug}
 
 elasticsearch:
   host: ${oc.env:ES_HOST, 127.0.0.1}
