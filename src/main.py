@@ -9,7 +9,7 @@ from app.core.startup import startup
 startup(reset_database=False)
 
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
-    span_annotation, document_tag  # noqa E402
+    span_annotation, document_tag, span_group  # noqa E402
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from config import conf  # noqa E402
 
@@ -58,9 +58,10 @@ app.include_router(general.router)
 app.include_router(user.router)
 app.include_router(project.router)
 app.include_router(source_document.router)
+app.include_router(document_tag.router)
 app.include_router(annotation_document.router)
 app.include_router(span_annotation.router)
-app.include_router(document_tag.router)
+app.include_router(span_group.router)
 app.include_router(code.router)
 app.include_router(memo.router)
 
