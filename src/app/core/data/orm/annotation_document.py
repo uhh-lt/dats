@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.user import UserORM
     from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.span_group import SpanGroupORM
 
 annotation_document_id_sequence = Sequence(name="annotation_document_id_sequence")
 
@@ -35,6 +36,11 @@ class AnnotationDocumentORM(ORMBase):
                                                                back_populates="annotation_document",
                                                                cascade="all, delete",
                                                                passive_deletes=True)
+
+    span_groups: List["SpanGroupORM"] = relationship("SpanGroupORM",
+                                                     back_populates="annotation_document",
+                                                     cascade="all, delete",
+                                                     passive_deletes=True)
 
     # many to one
     source_document_id = Column(Integer,

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import Column, Integer, ForeignKey, DateTime, func
 from sqlalchemy.orm import relationship
@@ -6,9 +6,10 @@ from sqlalchemy.orm import relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.code import CurrentCodeORM
     from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.annotation_document import AnnotationDocumentORM
+    from app.core.data.orm.span_group import SpanGroupORM
 
 
 class SpanAnnotationORM(ORMBase):
@@ -32,3 +33,8 @@ class SpanAnnotationORM(ORMBase):
     annotation_document_id = Column(Integer, ForeignKey('annotationdocument.id', ondelete="CASCADE"), index=True)
     annotation_document: "AnnotationDocumentORM" = relationship("AnnotationDocumentORM",
                                                                 back_populates="span_annotations")
+
+    # many to many
+    span_groups: List["SpanGroupORM"] = relationship("SpanGroupORM",
+                                                     secondary="SpanAnnotationSpanGroupLinkTable".lower(),
+                                                     back_populates="span_annotations")

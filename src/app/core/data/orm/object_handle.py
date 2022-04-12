@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, ForeignKey, CheckConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
+from app.core.data.orm.span_group import SpanGroupORM
 
 if TYPE_CHECKING:
     from app.core.data.orm.project import ProjectORM
@@ -55,7 +56,10 @@ class ObjectHandleORM(ORMBase):
     span_annotation_id = Column(Integer, ForeignKey('spanannotation.id', ondelete="CASCADE"), index=True)
     span_annotation: "SpanAnnotationORM" = relationship("SpanAnnotationORM", back_populates="object_handle")
 
-    document_tag_id = Column(Integer, ForeignKey('documenttag.id', ondelete="CASCADE"), index=True)
+    span_group_id = Column(Integer, ForeignKey('documenttag.id', ondelete="CASCADE"), index=True)
+    span_group: "SpanGroupORM" = relationship("SpanGroupORM", back_populates="object_handle")
+
+    document_tag_id = Column(Integer, ForeignKey('spangroup.id', ondelete="CASCADE"), index=True)
     document_tag: "DocumentTagORM" = relationship("DocumentTagORM", back_populates="object_handle")
 
     action_id = Column(Integer, ForeignKey('action.id', ondelete="CASCADE"), index=True)
