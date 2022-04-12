@@ -45,7 +45,7 @@ async def delete_by_id(*,
     return SourceDocumentRead.from_orm(db_obj)
 
 
-@router.get("/{sdoc_id}/metadata}", tags=tags,
+@router.get("/{sdoc_id}/metadata", tags=tags,
             response_model=List[SourceDocumentMetadataRead],
             summary="Returns all SourceDocumentMetadata",
             description="Returns all SourceDocumentMetadata with the given ID if it exists")
