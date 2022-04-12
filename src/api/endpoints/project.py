@@ -113,30 +113,34 @@ async def get_project_sdocs(*,
 
 @router.put("/{proj_id}/sdoc", tags=tags,
             response_model=str,
-            summary="Uploads a SourceDocument to the Project",
-            description="Uploads a SourceDocument to the Project with the given ID if it exists")
+            summary="Uploads one or multiple SourceDocument to the Project",
+            description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists")
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
+#  see: https://fastapi.tiangolo.com/tutorial/request-files/#multiple-file-uploads-with-additional-metadata
 async def upload_project_sdoc(*,
                               proj_id: int,
-                              doc_file: UploadFile = File(...,
-                                                          description="The file represented by the SourceDocument")) \
+                              doc_files: List[UploadFile] = File(...,
+                                                                 description=("File(s) that get uploaded and "
+                                                                              "represented by the SourceDocument(s)"))) \
         -> str:
     # TODO Flo: only if the user has access?
-    # TODO Flo: Support other MIME Types
-    if not doc_file.content_type == "text/plain":
-        raise HTTPException(detail="Only plain text files allowed!", status_code=406)
 
     import_uploaded_document = "app.docprepro.process.import_uploaded_document"
     generate_automatic_annotations = "app.docprepro.process.generate_automatic_annotations"
     persist_automatic_annotations = "app.docprepro.process.persist_automatic_annotations"
 
-    document_preprocessing = (
-            Signature(import_uploaded_document, kwargs={"doc_file": doc_file, "project_id": proj_id}) |
-            Signature(generate_automatic_annotations) |
-            Signature(persist_automatic_annotations)
-    )
-    document_preprocessing.apply_async()
+    for doc_file in doc_files:
+        if not doc_file.content_type == "text/plain":
+            # TODO Flo: Support other MIME Types
+            raise HTTPException(detail="Only plain text files allowed!", status_code=406)
+
+        document_preprocessing = (
+                Signature(import_uploaded_document, kwargs={"doc_file": doc_file, "project_id": proj_id}) |
+                Signature(generate_automatic_annotations) |
+                Signature(persist_automatic_annotations)
+        )
+        document_preprocessing.apply_async()
 
     # TODO Flo: How to notify user or system when done?
     return "Upload and preprocessing of Document started in the background!"
