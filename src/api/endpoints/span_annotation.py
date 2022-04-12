@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from fastapi import APIRouter, Depends
 from requests import Session
@@ -11,6 +11,7 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
 from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate, SpanAnnotationCreate, \
     SpanAnnotationReadResolvedCode
+from app.core.data.dto.span_group import SpanGroupRead
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/span")
@@ -86,7 +87,7 @@ async def delete_by_id(*,
                        db: Session = Depends(session),
                        span_id: int) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_sdoc.remove(db=db, id=span_id)
+    db_obj = crud_span_anno.remove(db=db, id=span_id)
     return SpanAnnotationRead.from_orm(db_obj)
 
 
@@ -100,6 +101,56 @@ async def get_code(*,
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
     return CodeRead.from_orm(span_db_obj.current_code.code)
+
+
+@router.get("/{span_id}/groups", tags=tags,
+            response_model=List[SpanGroupRead],
+            summary="Returns all SpanGroups that contain the the SpanAnnotation",
+            description="Returns all SpanGroups that contain the the SpanAnnotation.")
+async def get_all_groups(*,
+                         db: Session = Depends(session),
+                         span_id: int) -> List[SpanGroupRead]:
+    # TODO Flo: only if the user has access?
+    span_db_obj = crud_span_anno.read(db=db, id=span_id)
+    return [SpanGroupRead.from_orm(span_group_db_obj) for span_group_db_obj in span_db_obj.span_groups]
+
+
+@router.delete("/{span_id}/groups", tags=tags,
+               response_model=Optional[SpanAnnotationRead],
+               summary="Removes the SpanAnnotation from all SpanGroups",
+               description="Removes the SpanAnnotation from all SpanGroups")
+async def remove_from_all_groups(*,
+                                 db: Session = Depends(session),
+                                 span_id: int) -> Optional[SpanAnnotationRead]:
+    # TODO Flo: only if the user has access?
+    span_db_obj = crud_span_anno.remove_from_all_span_groups(db=db, span_id=span_id)
+    return SpanAnnotationRead.from_orm(span_db_obj)
+
+
+@router.patch("/{span_id}/group/{group_id}", tags=tags,
+              response_model=Optional[SpanAnnotationRead],
+              summary="Adds the SpanAnnotation to the SpanGroup",
+              description="Adds the SpanAnnotation to the SpanGroup")
+async def add_to_group(*,
+                       db: Session = Depends(session),
+                       span_id: int,
+                       group_id: int) -> Optional[SpanAnnotationRead]:
+    # TODO Flo: only if the user has access?
+    sdoc_db_obj = crud_span_anno.add_to_span_group(db=db, span_id=span_id, group_id=group_id)
+    return SpanAnnotationRead.from_orm(sdoc_db_obj)
+
+
+@router.delete("/{span_id}/group/{group_id}", tags=tags,
+               response_model=Optional[SpanAnnotationRead],
+               summary="Removes the SpanAnnotation from the SpanGroup",
+               description="Removes the SpanAnnotation from the SpanGroup")
+async def remove_from_group(*,
+                            db: Session = Depends(session),
+                            span_id: int,
+                            group_id: int) -> Optional[SpanAnnotationRead]:
+    # TODO Flo: only if the user has access?
+    sdoc_db_obj = crud_span_anno.remove_from_span_group(db=db, span_id=span_id, group_id=group_id)
+    return SpanAnnotationRead.from_orm(sdoc_db_obj)
 
 
 @router.put("/{span_id}/memo", tags=tags,

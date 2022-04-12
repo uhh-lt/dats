@@ -6,9 +6,11 @@ from sqlalchemy.orm import Session
 from api.dependencies import skip_limit_params, resolve_code_param
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.span_annotation import crud_span_anno
+from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationReadResolvedCode
+from app.core.data.dto.span_group import SpanGroupRead
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/adoc")
@@ -70,6 +72,19 @@ async def get_all_annotations(*,
                 for span_orm, span_dto in zip(spans, span_read_dtos)]
     else:
         return span_read_dtos
+
+
+@router.get("/{adoc_id}/span_groups", tags=tags,
+            response_model=List[SpanGroupRead],
+            summary="Returns all SpanGroups in the AnnotationDocument",
+            description="Returns all SpanGroups in the AnnotationDocument with the given ID if it exists")
+async def get_all_span_groups(*,
+                              db: Session = Depends(session),
+                              adoc_id: int,
+                              skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanGroupRead]:
+    # TODO Flo: only if the user has access?
+    return [SpanGroupRead.from_orm(group)
+            for group in crud_span_group.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)]
 
 
 @router.delete("/{adoc_id}/span_annotations", tags=tags,

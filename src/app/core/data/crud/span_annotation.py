@@ -1,9 +1,10 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.span_annotation import SpanAnnotationCreate, SpanAnnotationUpdate
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 
@@ -18,6 +19,30 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
         removed_ids = db.execute(statement).fetchall()
         db.commit()
         return list(map(lambda t: t[0], removed_ids))
+
+    def remove_from_all_span_groups(self, db: Session, span_id: int) -> Optional[SpanAnnotationORM]:
+        db_obj = self.read(db=db, id=span_id)
+        db_obj.span_groups = []
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
+
+    def add_to_span_group(self, db: Session, span_id: int, group_id: id) -> Optional[SpanAnnotationORM]:
+        span_db_obj = self.read(db=db, id=span_id)
+        group_db_obj = crud_span_group.read(db=db, id=group_id)
+        span_db_obj.span_groups.append(group_db_obj)
+        db.add(span_db_obj)
+        db.commit()
+        db.refresh(span_db_obj)
+        return span_db_obj
+
+    def remove_from_span_group(self, db: Session, span_id: int, group_id: id) -> Optional[SpanAnnotationORM]:
+        span_db_obj = self.read(db=db, id=span_id)
+        group_db_obj = crud_span_group.read(db=db, id=group_id)
+        span_db_obj.document_tags.remove(group_db_obj)
+        db.commit()
+        db.refresh(span_db_obj)
+        return span_db_obj
 
 
 crud_span_anno = CRUDSpanAnnotation(SpanAnnotationORM)

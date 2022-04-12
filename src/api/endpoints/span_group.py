@@ -1,9 +1,12 @@
-from typing import Optional
+from typing import Optional, List, Union
 
 from fastapi import APIRouter, Depends
 from requests import Session
 
+from api.dependencies import resolve_code_param
 from app.core.data.crud.span_group import crud_span_group
+from app.core.data.dto.code import CodeRead
+from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationReadResolvedCode
 from app.core.data.dto.span_group import SpanGroupRead, SpanGroupUpdate, SpanGroupCreate
 from app.core.db.sql_service import SQLService
 
@@ -59,3 +62,24 @@ async def delete_by_id(*,
     # TODO Flo: only if the user has access?
     db_obj = crud_span_group.remove(db=db, id=span_group_id)
     return SpanGroupRead.from_orm(db_obj)
+
+
+@router.get("/{span_group_id}/span_annotations", tags=tags,
+            response_model=List[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]],
+            summary="Returns all SpanAnnotations in the SpanGroup",
+            description="Returns all SpanAnnotations in the SpanGroup with the given ID if it exists")
+async def get_all_annotations(*,
+                              db: Session = Depends(session),
+                              span_group_id: int,
+                              resolve_code: bool = Depends(resolve_code_param)) \
+        -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
+    # TODO Flo: only if the user has access?
+    span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
+    spans = span_group_db_obj.span_annotations
+    span_read_dtos = [SpanAnnotationRead.from_orm(span) for span in spans]
+    if resolve_code:
+        return [SpanAnnotationReadResolvedCode(**span_dto.dict(exclude={"current_code_id"}),
+                                               code=CodeRead.from_orm(span_orm.current_code.code))
+                for span_orm, span_dto in zip(spans, span_read_dtos)]
+    else:
+        return span_read_dtos
