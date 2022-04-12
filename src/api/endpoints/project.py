@@ -94,14 +94,17 @@ async def delete_project(*,
 async def get_project_sdocs(*,
                             proj_id: int,
                             db: Session = Depends(session),
-                            tag_id: Optional[int] = Query(title="DocumentTag ID",
-                                                          description="The ID of the DocumentTag",
-                                                          ge=0,
-                                                          le=10e6,
-                                                          default=None)) -> List[SourceDocumentRead]:
+                            tag_ids: Optional[List[int]] = Query(title="DocumentTag IDs",
+                                                                 description="List of DocumentTag IDs",
+                                                                 default=None),
+                            all_tags: Optional[bool] = Query(title="All or Any DocumentTags",
+                                                             description=("If true return SourceDocuments tagged with"
+                                                                          " all DocumentTags, or any DocumentTag "
+                                                                          "otherwise"),
+                                                             default=False)) -> List[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    if tag_id is not None:
-        sdocs = crud_sdoc.read_by_project_and_document_tag(db=db, proj_id=proj_id, tag_id=tag_id)
+    if tag_ids is not None:
+        sdocs = crud_sdoc.read_by_project_and_document_tags(db=db, proj_id=proj_id, tag_ids=tag_ids, all_tags=all_tags)
     else:
         sdocs = crud_project.read(db=db, id=proj_id).source_documents
 

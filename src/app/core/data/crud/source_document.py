@@ -1,12 +1,12 @@
 from typing import List
 
-from sqlalchemy import delete
+from sqlalchemy import delete, func
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.dto.source_document import SourceDocumentCreate
-from app.core.data.orm.document_tag import DocumentTagORM
+from app.core.data.orm.document_tag import DocumentTagORM, SourceDocumentDocumentTagLinkTable
 from app.core.data.orm.source_document import SourceDocumentORM
 
 
@@ -49,6 +49,38 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
     def read_by_project_and_document_tag(self, db: Session, *, proj_id: int, tag_id: int) -> List[SourceDocumentORM]:
         return db.query(self.model).join(SourceDocumentORM, DocumentTagORM.source_documents) \
             .filter(self.model.project_id == proj_id, DocumentTagORM.id == tag_id).all()
+
+    def read_by_project_and_document_tags(self,
+                                          db: Session,
+                                          *,
+                                          proj_id: int,
+                                          tag_ids: List[int],
+                                          all_tags: bool = False) -> List[SourceDocumentORM]:
+        if not all_tags:
+            # all docs that have ANY of the tags
+            # noinspection PyUnresolvedReferences
+            return db.query(self.model).join(SourceDocumentORM, DocumentTagORM.source_documents) \
+                .filter(self.model.project_id == proj_id,
+                        DocumentTagORM.id.in_(tag_ids)).all()
+        else:
+            # all docs that have ALL the tags
+            """
+            We want this: 
+                SELECT *
+                FROM sourcedocument
+                INNER JOIN sourcedocumentdocumenttaglinktable
+                    ON sourcedocument.id = sourcedocumentdocumenttaglinktable.source_document_id
+                WHERE sourcedocumentdocumenttaglinktable.document_tag_id IN ( TAG_IDS )
+                GROUP BY sourcedocument.id
+                HAVING COUNT(*) = len(TAG_IDS)
+            """
+            query = db.query(self.model).join(SourceDocumentDocumentTagLinkTable,
+                                              self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
+            # noinspection PyUnresolvedReferences
+            query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
+            query = query.group_by(self.model.id)
+            query = query.having(func.count(self.model.id) == len(tag_ids))
+            return query.all()
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)
