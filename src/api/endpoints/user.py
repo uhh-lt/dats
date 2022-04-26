@@ -1,16 +1,18 @@
-from typing import Optional, List, Union, Dict
+from typing import Optional, List, Union
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from api.auth.jwt_oauth2 import authenticate, credentials_exception, generate_jwt, current_user
+from api.auth.jwt_oauth2 import authenticate, credentials_exception, current_user, generate_jwt
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.code import CodeRead
+from fastapi.encoders import jsonable_encoder
 from app.core.data.dto.memo import MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, \
     MemoReadProject, MemoReadSourceDocument
-from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin
+from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin, UserAuthorizationHeaderData
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/user")
@@ -31,22 +33,21 @@ async def register(*,
 
 
 @router.post("/login", tags=tags,
+             response_model=UserAuthorizationHeaderData,
              summary="Returns the JWT access token of the User",
              description=("Returns the JWT access token for the User if the login was successful. "
                           "This is usually only called from an OAuth2 client!"))
 async def login(*,
                 db: Session = Depends(session),
-                user_login_form_data: OAuth2PasswordRequestForm = Depends()) -> Dict[str, str]:
+                user_login_form_data: OAuth2PasswordRequestForm = Depends()) -> UserAuthorizationHeaderData:
     user_login = UserLogin(username=user_login_form_data.username,
                            password=user_login_form_data.password)
     user = authenticate(db=db, user_login=user_login)
     if not user:
         raise credentials_exception
 
-    return {
-        "access_token": generate_jwt(user),
-        "token_type": "bearer",
-    }
+    return UserAuthorizationHeaderData(access_token=generate_jwt(user),
+                                       token_type="bearer")
 
 
 @router.get("/auth_test", tags=tags,

@@ -42,3 +42,8 @@ class UserRead(UserBaseDTO):
 class UserLogin(BaseModel):
     username: str = Field(description='E-Mail of the User')
     password: str = Field(description='Hashed password of the User')
+
+
+class UserAuthorizationHeaderData(BaseModel):
+    access_token: str = Field(description='Value of the JWT')
+    token_type: str = Field(description='Type of the Token')
