@@ -1,15 +1,16 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 
 from fastapi import APIRouter, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from api.auth.jwt_oauth2 import authenticate, credentials_exception, generate_jwt, current_user
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
-# from api.auth.jwt_oauth2 import authenticate, credentials_exception, generate_jwt, current_user
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, \
     MemoReadProject, MemoReadSourceDocument
-from app.core.data.dto.user import UserRead, UserCreate, UserUpdate
+from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin
 from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/user")
@@ -27,6 +28,41 @@ async def register(*,
                    user: UserCreate) -> Optional[UserRead]:
     db_user = crud_user.create(db=db, create_dto=user)
     return UserRead.from_orm(db_user)
+
+
+@router.post("/login", tags=tags,
+             summary="Returns the JWT access token of the User",
+             description=("Returns the JWT access token for the User if the login was successful. "
+                          "This is usually only called from an OAuth2 client!"))
+async def login(*,
+                db: Session = Depends(session),
+                user_login_form_data: OAuth2PasswordRequestForm = Depends()) -> Dict[str, str]:
+    user_login = UserLogin(username=user_login_form_data.username,
+                           password=user_login_form_data.password)
+    user = authenticate(db=db, user_login=user_login)
+    if not user:
+        raise credentials_exception
+
+    return {
+        "access_token": generate_jwt(user),
+        "token_type": "bearer",
+    }
+
+
+@router.get("/auth_test", tags=tags,
+            response_model=Optional[UserRead],
+            summary="auth test",
+            description="auth_test")
+async def auth_test(*,
+                    user: UserRead = Depends(current_user)) -> Optional[UserRead]:
+    return user
+
+
+# @router.post("/logout", tags=tags,
+#              description="Logs out the current User")
+# async def logout(user: UserRead = Depends(current_user)) -> Dict[str, str]:
+#     # TODO Flo: How to end the session and disqualify the JWT?
+#     raise NotImplementedError()
 
 
 @router.get("/{user_id}", tags=tags,

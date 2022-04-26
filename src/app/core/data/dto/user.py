@@ -37,3 +37,8 @@ class UserRead(UserBaseDTO):
         orm_mode = True
         # Flo: We actually never want to return the password hence we exclude it from serialization
         fields = {'password': {'exclude': True}}
+
+
+class UserLogin(BaseModel):
+    username: str = Field(description='E-Mail of the User')
+    password: str = Field(description='Hashed password of the User')

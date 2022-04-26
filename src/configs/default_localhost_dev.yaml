@@ -1,5 +1,11 @@
 api:
   port: ${oc.env:API_PORT, 5000}
+  auth:
+    jwt:
+      token_url: /user/login
+      ttl: ${oc.env:JWT_TTL, 600} # seconds
+      algo: ${oc.env:JWT_ALGO, HS256}
+      secret: ${oc.env:JWT_SECRET, ""}
 
 repository_root: /tmp/dwts
 

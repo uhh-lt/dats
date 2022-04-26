@@ -21,6 +21,8 @@ loguru = "^0.6.0"
 omegaconf = "^2.1.1"
 uvicorn = "^0.17.6"
 langdetect = "^1.0.9"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
 
 [tool.poetry.dev-dependencies]
 
