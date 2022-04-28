@@ -3,15 +3,13 @@ from typing import Union
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from api.dependencies import get_db_session
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.memo import MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, MemoReadProject, \
     MemoReadSourceDocument, MemoUpdate, MemoReadDocumentTag
-from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/memo")
 tags = ["memo"]
-
-session = SQLService().get_db_session
 
 
 @router.get("/{memo_id}", tags=tags,
@@ -24,7 +22,7 @@ session = SQLService().get_db_session
             summary="Returns the Memo",
             description="Returns the Memo with the given ID if it exists")
 async def get_by_id(*,
-                    db: Session = Depends(session),
+                    db: Session = Depends(get_db_session),
                     memo_id: int) -> Union[MemoReadCode,
                                            MemoReadSpanAnnotation,
                                            MemoReadAnnotationDocument,
@@ -46,7 +44,7 @@ async def get_by_id(*,
               summary="Updates the Memo",
               description="Updates the Memo with the given ID if it exists")
 async def update_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        memo_id: int,
                        memo: MemoUpdate) -> Union[MemoReadCode,
                                                   MemoReadSpanAnnotation,
@@ -69,7 +67,7 @@ async def update_by_id(*,
                summary="Removes the Memo",
                description="Removes the Memo with the given ID if it exists")
 async def delete_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        memo_id: int) -> Union[MemoReadCode,
                                               MemoReadSpanAnnotation,
                                               MemoReadAnnotationDocument,

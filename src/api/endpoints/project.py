@@ -6,7 +6,7 @@ from celery import Signature
 from fastapi import APIRouter, Depends, UploadFile, HTTPException, File, Query
 from sqlalchemy.orm import Session
 
-from api.dependencies import skip_limit_params
+from api.dependencies import skip_limit_params, get_db_session
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
@@ -19,12 +19,9 @@ from app.core.data.dto.memo import MemoReadProject, MemoInDB, MemoCreate, MemoRe
     MemoReadAnnotationDocument, MemoReadSpanAnnotation, MemoReadCode
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import UserRead
-from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
-
-session = SQLService().get_db_session
 
 
 @router.put("", tags=tags,
@@ -32,7 +29,7 @@ session = SQLService().get_db_session
             summary="Creates a new Project",
             description="Creates a new Project.")
 async def create_new_project(*,
-                             db: Session = Depends(session),
+                             db: Session = Depends(get_db_session),
                              proj: ProjectCreate) -> ProjectRead:
     db_obj = crud_project.create(db=db, create_dto=proj)
     return ProjectRead.from_orm(db_obj)
@@ -43,7 +40,7 @@ async def create_new_project(*,
             summary="Returns all Projects of the current user",
             description="Returns all Projects of the current user")
 async def read_all(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[ProjectRead]:
     # TODO Flo: only return the projects of the current user
     db_objs = crud_project.read_multi(db=db, **skip_limit)
@@ -55,7 +52,7 @@ async def read_all(*,
             summary="Returns the Project with the given ID",
             description="Returns the Project with the given ID if it exists")
 async def read_project(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        proj_id: int) -> Optional[ProjectRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_project.read(db=db, id=proj_id)
@@ -67,7 +64,7 @@ async def read_project(*,
               summary="Updates the Project",
               description="Updates the Project with the given ID.")
 async def update_project(*,
-                         db: Session = Depends(session),
+                         db: Session = Depends(get_db_session),
                          proj_id: int,
                          proj: ProjectUpdate) -> ProjectRead:
     # TODO Flo: only if the user has access?
@@ -80,7 +77,7 @@ async def update_project(*,
                summary="Removes the Project",
                description="Removes the Project with the given ID.")
 async def delete_project(*,
-                         db: Session = Depends(session),
+                         db: Session = Depends(get_db_session),
                          proj_id: int) -> ProjectRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_project.remove(db=db, id=proj_id)
@@ -93,7 +90,7 @@ async def delete_project(*,
             description="Returns all SourceDocuments of the Project with the given ID that match the query parameters")
 async def get_project_sdocs(*,
                             proj_id: int,
-                            db: Session = Depends(session),
+                            db: Session = Depends(get_db_session),
                             tag_ids: Optional[List[int]] = Query(title="DocumentTag IDs",
                                                                  description="List of DocumentTag IDs",
                                                                  default=None),
@@ -152,7 +149,7 @@ async def upload_project_sdoc(*,
                description="Removes all SourceDocuments of the Project with the given ID if it exists")
 async def delete_project_sdocs(*,
                                proj_id: int,
-                               db: Session = Depends(session)) -> List[int]:
+                               db: Session = Depends(get_db_session)) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_sdoc.remove_by_project(db=db, proj_id=proj_id)
 
@@ -164,7 +161,7 @@ async def delete_project_sdocs(*,
 async def associate_user_to_project(*,
                                     proj_id: int,
                                     user_id: int,
-                                    db: Session = Depends(session)) -> Optional[UserRead]:
+                                    db: Session = Depends(get_db_session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.associate_user(db=db, id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
@@ -177,7 +174,7 @@ async def associate_user_to_project(*,
 async def dissociate_user_from_project(*,
                                        proj_id: int,
                                        user_id: int,
-                                       db: Session = Depends(session)) -> Optional[UserRead]:
+                                       db: Session = Depends(get_db_session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.dissociate_user(db=db, id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
@@ -189,7 +186,7 @@ async def dissociate_user_from_project(*,
             description="Returns all Users of the Project with the given ID")
 async def get_project_users(*,
                             proj_id: int,
-                            db: Session = Depends(session)) -> List[UserRead]:
+                            db: Session = Depends(get_db_session)) -> List[UserRead]:
     # TODO Flo: only if the user has access?
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [UserRead.from_orm(user) for user in proj_db_obj.users]
@@ -201,7 +198,7 @@ async def get_project_users(*,
             description="Returns all Codes of the Project with the given ID")
 async def get_project_codes(*,
                             proj_id: int,
-                            db: Session = Depends(session)) -> List[CodeRead]:
+                            db: Session = Depends(get_db_session)) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [CodeRead.from_orm(code) for code in proj_db_obj.codes]
@@ -213,7 +210,7 @@ async def get_project_codes(*,
                description="Removes all Codes of the Project with the given ID if it exists")
 async def delete_project_codes(*,
                                proj_id: int,
-                               db: Session = Depends(session)) -> List[int]:
+                               db: Session = Depends(get_db_session)) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_code.remove_by_project(db=db, proj_id=proj_id)
 
@@ -224,7 +221,7 @@ async def delete_project_codes(*,
             description="Returns all DocumentTags of the Project with the given ID")
 async def get_project_tags(*,
                            proj_id: int,
-                           db: Session = Depends(session)) -> List[DocumentTagRead]:
+                           db: Session = Depends(get_db_session)) -> List[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [DocumentTagRead.from_orm(tag) for tag in proj_db_obj.document_tags]
@@ -236,7 +233,7 @@ async def get_project_tags(*,
                description="Removes all DocumentTags of the Project with the given ID if it exists")
 async def delete_project_tags(*,
                               proj_id: int,
-                              db: Session = Depends(session)) -> List[int]:
+                              db: Session = Depends(get_db_session)) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_document_tag.remove_by_project(db=db, proj_id=proj_id)
 
@@ -248,7 +245,7 @@ async def delete_project_tags(*,
 async def get_user_codes_of_project(*,
                                     proj_id: int,
                                     user_id: int,
-                                    db: Session = Depends(session)) -> List[CodeRead]:
+                                    db: Session = Depends(get_db_session)) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     return [CodeRead.from_orm(code_db_obj) for code_db_obj in
             crud_code.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)]
@@ -261,7 +258,7 @@ async def get_user_codes_of_project(*,
 async def remove_user_codes_of_project(*,
                                        proj_id: int,
                                        user_id: int,
-                                       db: Session = Depends(session)) -> List[int]:
+                                       db: Session = Depends(get_db_session)) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
@@ -278,12 +275,12 @@ async def remove_user_codes_of_project(*,
 async def get_user_memos_of_project(*,
                                     proj_id: int,
                                     user_id: int,
-                                    db: Session = Depends(session)) -> List[Union[MemoReadCode,
-                                                                                  MemoReadSpanAnnotation,
-                                                                                  MemoReadAnnotationDocument,
-                                                                                  MemoReadSourceDocument,
-                                                                                  MemoReadProject,
-                                                                                  MemoReadDocumentTag]]:
+                                    db: Session = Depends(get_db_session)) -> List[Union[MemoReadCode,
+                                                                                         MemoReadSpanAnnotation,
+                                                                                         MemoReadAnnotationDocument,
+                                                                                         MemoReadSourceDocument,
+                                                                                         MemoReadProject,
+                                                                                         MemoReadDocumentTag]]:
     # TODO Flo: only if the user has access?
     db_objs = crud_memo.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs]
@@ -296,7 +293,7 @@ async def get_user_memos_of_project(*,
 async def remove_user_memos_of_project(*,
                                        proj_id: int,
                                        user_id: int,
-                                       db: Session = Depends(session)) -> List[int]:
+                                       db: Session = Depends(get_db_session)) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_memo.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
@@ -306,7 +303,7 @@ async def remove_user_memos_of_project(*,
             summary="Returns the Memo of the current User for the Project.",
             description="Returns the Memo of the current User for the Project with the given ID.")
 async def get_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    proj_id: int) -> Optional[MemoReadProject]:
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     memo_as_in_db_dto = MemoInDB.from_orm(proj_db_obj.object_handle.attached_memo)
@@ -318,7 +315,7 @@ async def get_memo(*,
             summary="Adds a Memo of the current User to the Project.",
             description="Adds a Memo of the current User to the Project with the given ID if it exists")
 async def add_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    proj_id: int,
                    memo: MemoCreate) -> Optional[MemoReadProject]:
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)

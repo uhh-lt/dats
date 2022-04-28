@@ -3,6 +3,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from api.dependencies import get_db_session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
@@ -17,7 +18,7 @@ from app.core.db.sql_service import SQLService
 router = APIRouter(prefix="/sdoc")
 tags = ["sourceDocument"]
 
-session = SQLService().get_db_session
+
 
 
 @router.get("/{sdoc_id}", tags=tags,
@@ -25,7 +26,7 @@ session = SQLService().get_db_session
             summary="Returns the SourceDocument",
             description="Returns the SourceDocument with the given ID if it exists")
 async def get_by_id(*,
-                    db: Session = Depends(session),
+                    db: Session = Depends(get_db_session),
                     sdoc_id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     #  What about the content?!
@@ -38,7 +39,7 @@ async def get_by_id(*,
                summary="Removes the SourceDocument",
                description="Removes the SourceDocument with the given ID if it exists")
 async def delete_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        sdoc_id: int) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
@@ -50,7 +51,7 @@ async def delete_by_id(*,
             summary="Returns all SourceDocumentMetadata",
             description="Returns all SourceDocumentMetadata with the given ID if it exists")
 async def get_all_metadata(*,
-                           db: Session = Depends(session),
+                           db: Session = Depends(get_db_session),
                            sdoc_id: int) -> List[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
@@ -62,7 +63,7 @@ async def get_all_metadata(*,
               summary="Updates the SourceDocumentMetadata",
               description="Updates the SourceDocumentMetadata with the given ID if it exists.")
 async def update_metadata_by_id(*,
-                                db: Session = Depends(session),
+                                db: Session = Depends(get_db_session),
                                 sdoc_id: int,
                                 metadata_id: int,
                                 metadata: SourceDocumentMetadataUpdate) -> Optional[SourceDocumentMetadataRead]:
@@ -76,7 +77,7 @@ async def update_metadata_by_id(*,
             summary="Returns the AnnotationDocument for the SourceDocument of the User",
             description="Returns the AnnotationDocument for the SourceDocument of the User.")
 async def get_adoc_of_user(*,
-                           db: Session = Depends(session),
+                           db: Session = Depends(get_db_session),
                            sdoc_id: int,
                            user_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
@@ -88,7 +89,7 @@ async def get_adoc_of_user(*,
             summary="Returns all AnnotationDocuments for the SourceDocument",
             description="Returns all AnnotationDocuments for the SourceDocument.")
 async def get_all_adocs(*,
-                        db: Session = Depends(session),
+                        db: Session = Depends(get_db_session),
                         sdoc_id: int) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     return [AnnotationDocumentRead.from_orm(adoc) for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents]
@@ -99,7 +100,7 @@ async def get_all_adocs(*,
                summary="Removes all AnnotationDocuments for the SourceDocument",
                description="Removes all AnnotationDocuments for the SourceDocument.")
 async def remove_all_adocs(*,
-                           db: Session = Depends(session),
+                           db: Session = Depends(get_db_session),
                            sdoc_id: int) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_adoc.remove_by_sdoc(db=db, sdoc_id=sdoc_id)
@@ -110,7 +111,7 @@ async def remove_all_adocs(*,
             summary="Returns all DocumentTags linked with the SourceDocument",
             description="Returns all DocumentTags linked with the SourceDocument.")
 async def get_all_tags(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        sdoc_id: int) -> List[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
@@ -122,7 +123,7 @@ async def get_all_tags(*,
                summary="Unlinks all DocumentTags with the SourceDocument",
                description="Unlinks all DocumentTags of the SourceDocument.")
 async def unlinks_all_tags(*,
-                           db: Session = Depends(session),
+                           db: Session = Depends(get_db_session),
                            sdoc_id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, id=sdoc_id)
@@ -134,7 +135,7 @@ async def unlinks_all_tags(*,
               summary="Links a DocumentTag with the SourceDocument",
               description="Links a DocumentTag with the SourceDocument with the given ID if it exists")
 async def link_tag(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    sdoc_id: int,
                    tag_id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
@@ -147,7 +148,7 @@ async def link_tag(*,
                summary="Unlinks the DocumentTag from the SourceDocument",
                description="Unlinks the DocumentTags from the SourceDocument.")
 async def unlink_tag(*,
-                     db: Session = Depends(session),
+                     db: Session = Depends(get_db_session),
                      sdoc_id: int,
                      tag_id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
@@ -160,7 +161,7 @@ async def unlink_tag(*,
             summary="Adds a Memo to the SourceDocument",
             description="Adds a Memo to the SourceDocument with the given ID if it exists")
 async def add_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    sdoc_id: int,
                    memo: MemoCreate) -> Optional[MemoReadSourceDocument]:
     # TODO Flo: only if the user has access?
@@ -176,7 +177,7 @@ async def add_memo(*,
             summary="Returns the Memo attached to the SourceDocument",
             description="Returns the Memo attached to the SourceDocument with the given ID if it exists.")
 async def get_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    sdoc_id: int) -> Optional[MemoReadSourceDocument]:
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     memo_as_in_db_dto = MemoInDB.from_orm(sdoc_db_obj.object_handle.attached_memo)

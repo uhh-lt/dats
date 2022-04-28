@@ -1,24 +1,21 @@
 from typing import Optional, List, Union
 
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from api.auth.jwt_oauth2 import authenticate, credentials_exception, current_user, generate_jwt
+from api.dependencies import get_current_user, get_db_session
+from api.util import credentials_exception
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.code import CodeRead
-from fastapi.encoders import jsonable_encoder
 from app.core.data.dto.memo import MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, \
     MemoReadProject, MemoReadSourceDocument
 from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin, UserAuthorizationHeaderData
-from app.core.db.sql_service import SQLService
+from app.core.security import generate_jwt
 
 router = APIRouter(prefix="/user")
 tags = ["user"]
-
-session = SQLService().get_db_session
 
 
 @router.put("", tags=tags,
@@ -26,23 +23,30 @@ session = SQLService().get_db_session
             summary="Registers a new User",
             description="Registers a new User and returns it with the generated ID.")
 async def register(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    user: UserCreate) -> Optional[UserRead]:
+    db_user = crud_user.read_by_email(db, email=user.email)
+    if db_user:
+        raise HTTPException(
+            status_code=400,
+            detail="The user with this username already exists in the system.",
+        )
+
     db_user = crud_user.create(db=db, create_dto=user)
     return UserRead.from_orm(db_user)
 
 
 @router.post("/login", tags=tags,
              response_model=UserAuthorizationHeaderData,
-             summary="Returns the JWT access token of the User",
-             description=("Returns the JWT access token for the User if the login was successful. "
+             summary="Returns the JWT access token for the provided user login data",
+             description=("Returns the JWT access token for the provided user login data if the login was successful. "
                           "This is usually only called from an OAuth2 client!"))
 async def login(*,
-                db: Session = Depends(session),
+                db: Session = Depends(get_db_session),
                 user_login_form_data: OAuth2PasswordRequestForm = Depends()) -> UserAuthorizationHeaderData:
     user_login = UserLogin(username=user_login_form_data.username,
                            password=user_login_form_data.password)
-    user = authenticate(db=db, user_login=user_login)
+    user = crud_user.authenticate(db=db, user_login=user_login)
     if not user:
         raise credentials_exception
 
@@ -50,20 +54,13 @@ async def login(*,
                                        token_type="bearer")
 
 
-@router.get("/auth_test", tags=tags,
+@router.get("/me", tags=tags,
             response_model=Optional[UserRead],
-            summary="auth test",
-            description="auth_test")
-async def auth_test(*,
-                    user: UserRead = Depends(current_user)) -> Optional[UserRead]:
+            summary="Returns the current user",
+            description="Returns the current (logged in) user")
+async def get_me(*,
+                 user: UserRead = Depends(get_current_user)) -> Optional[UserRead]:
     return user
-
-
-# @router.post("/logout", tags=tags,
-#              description="Logs out the current User")
-# async def logout(user: UserRead = Depends(current_user)) -> Dict[str, str]:
-#     # TODO Flo: How to end the session and disqualify the JWT?
-#     raise NotImplementedError()
 
 
 @router.get("/{user_id}", tags=tags,
@@ -71,7 +68,7 @@ async def auth_test(*,
             summary="Returns the User",
             description="Returns the User with the given ID if it exists")
 async def get_by_id(*,
-                    db: Session = Depends(session),
+                    db: Session = Depends(get_db_session),
                     user_id: int) -> Optional[UserRead]:
     db_user = crud_user.read(db=db, id=user_id)
     return UserRead.from_orm(db_user)
@@ -82,7 +79,7 @@ async def get_by_id(*,
               summary="Updates the User",
               description="Updates the User with the given ID if it exists")
 async def update_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        user_id: int,
                        user: UserUpdate) -> Optional[UserRead]:
     db_user = crud_user.update(db=db, id=user_id, update_dto=user)
@@ -94,7 +91,7 @@ async def update_by_id(*,
                summary="Removes the User",
                description="Removes the User with the given ID if it exists")
 async def delete_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        user_id: int) -> Optional[UserRead]:
     db_user = crud_user.remove(db=db, id=user_id)
     return UserRead.from_orm(db_user)
@@ -106,7 +103,7 @@ async def delete_by_id(*,
             description="Returns all Codes of the User with the given ID")
 async def get_user_codes(*,
                          user_id: int,
-                         db: Session = Depends(session)) -> List[CodeRead]:
+                         db: Session = Depends(get_db_session)) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=user_id)
     return [CodeRead.from_orm(code) for code in db_obj.codes]
@@ -118,7 +115,7 @@ async def get_user_codes(*,
                description="Removes all Codes of the User with the given ID if it exists")
 async def delete_user_codes(*,
                             user_id: int,
-                            db: Session = Depends(session)) -> List[int]:
+                            db: Session = Depends(get_db_session)) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_user.remove_all_codes(db=db, id=user_id)
 
@@ -133,11 +130,11 @@ async def delete_user_codes(*,
             description="Returns all Memos of the User with the given ID")
 async def get_user_memos(*,
                          user_id: int,
-                         db: Session = Depends(session)) -> List[Union[MemoReadCode,
-                                                                       MemoReadSpanAnnotation,
-                                                                       MemoReadAnnotationDocument,
-                                                                       MemoReadSourceDocument,
-                                                                       MemoReadProject]]:
+                         db: Session = Depends(get_db_session)) -> List[Union[MemoReadCode,
+                                                                              MemoReadSpanAnnotation,
+                                                                              MemoReadAnnotationDocument,
+                                                                              MemoReadSourceDocument,
+                                                                              MemoReadProject]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=user_id)
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo) for memo in db_obj.memos]
@@ -149,6 +146,6 @@ async def get_user_memos(*,
                description="Removes all Memos of the User with the given ID if it exists")
 async def delete_user_memos(*,
                             user_id: int,
-                            db: Session = Depends(session)) -> List[int]:
+                            db: Session = Depends(get_db_session)) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_user.remove_all_memos(db=db, id=user_id)

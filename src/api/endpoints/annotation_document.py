@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Union
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import skip_limit_params, resolve_code_param
+from api.dependencies import skip_limit_params, resolve_code_param, get_db_session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
@@ -11,12 +11,9 @@ from app.core.data.dto.annotation_document import AnnotationDocumentRead, Annota
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationReadResolvedCode
 from app.core.data.dto.span_group import SpanGroupRead
-from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/adoc")
 tags = ["annotationDocument"]
-
-session = SQLService().get_db_session
 
 
 @router.put("", tags=tags,
@@ -24,7 +21,7 @@ session = SQLService().get_db_session
             summary="Creates an AnnotationDocument",
             description="Creates an AnnotationDocument")
 async def create(*,
-                 db: Session = Depends(session),
+                 db: Session = Depends(get_db_session),
                  adoc: AnnotationDocumentCreate) -> Optional[AnnotationDocumentRead]:
     return AnnotationDocumentRead.from_orm(crud_adoc.create(db=db, create_dto=adoc))
 
@@ -34,7 +31,7 @@ async def create(*,
             summary="Returns the AnnotationDocument",
             description="Returns the AnnotationDocument with the given ID if it exists")
 async def get_by_adoc_id(*,
-                         db: Session = Depends(session),
+                         db: Session = Depends(get_db_session),
                          adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.read(db=db, id=adoc_id)
@@ -46,7 +43,7 @@ async def get_by_adoc_id(*,
                summary="Removes the AnnotationDocument",
                description="Removes the AnnotationDocument with the given ID if it exists")
 async def delete_by_adoc_id(*,
-                            db: Session = Depends(session),
+                            db: Session = Depends(get_db_session),
                             adoc_id: int) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.remove(db=db, id=adoc_id)
@@ -58,7 +55,7 @@ async def delete_by_adoc_id(*,
             summary="Returns all SpanAnnotations in the AnnotationDocument",
             description="Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists")
 async def get_all_annotations(*,
-                              db: Session = Depends(session),
+                              db: Session = Depends(get_db_session),
                               adoc_id: int,
                               skip_limit: Dict[str, str] = Depends(skip_limit_params),
                               resolve_code: bool = Depends(resolve_code_param)) \
@@ -79,7 +76,7 @@ async def get_all_annotations(*,
             summary="Returns all SpanGroups in the AnnotationDocument",
             description="Returns all SpanGroups in the AnnotationDocument with the given ID if it exists")
 async def get_all_span_groups(*,
-                              db: Session = Depends(session),
+                              db: Session = Depends(get_db_session),
                               adoc_id: int,
                               skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanGroupRead]:
     # TODO Flo: only if the user has access?
@@ -92,7 +89,7 @@ async def get_all_span_groups(*,
                summary="Removes all SpanAnnotations in the AnnotationDocument",
                description="Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists")
 async def delete_all_annotations(*,
-                                 db: Session = Depends(session),
+                                 db: Session = Depends(get_db_session),
                                  adoc_id: int) -> List[int]:
     # TODO Flo: only if the user has access? What to return?
     return crud_span_anno.remove_by_adoc(db=db, id=adoc_id)

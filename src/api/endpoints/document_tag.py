@@ -3,16 +3,14 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from requests import Session
 
+from api.dependencies import get_db_session
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.document_tag import DocumentTagRead, DocumentTagUpdate, DocumentTagCreate
 from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
-from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/doctag")
 tags = ["documentTag"]
-
-session = SQLService().get_db_session
 
 
 @router.put("", tags=tags,
@@ -20,7 +18,7 @@ session = SQLService().get_db_session
             summary="Creates a new DocumentTag",
             description="Creates a new DocumentTag and returns it with the generated ID.")
 async def create_new_doc_tag(*,
-                             db: Session = Depends(session),
+                             db: Session = Depends(get_db_session),
                              doc_tag: DocumentTagCreate) -> Optional[DocumentTagRead]:
     db_obj = crud_document_tag.create(db=db, create_dto=doc_tag)
     return DocumentTagRead.from_orm(db_obj)
@@ -31,7 +29,7 @@ async def create_new_doc_tag(*,
             summary="Returns the DocumentTag",
             description="Returns the DocumentTag with the given ID.")
 async def get_by_id(*,
-                    db: Session = Depends(session),
+                    db: Session = Depends(get_db_session),
                     tag_id: int) -> Optional[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.read(db=db, id=tag_id)
@@ -43,7 +41,7 @@ async def get_by_id(*,
               summary="Updates the DocumentTag",
               description="Updates the DocumentTag with the given ID.")
 async def update_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        tag_id: int,
                        span_anno: DocumentTagUpdate) -> Optional[DocumentTagRead]:
     # TODO Flo: only if the user has access?
@@ -56,7 +54,7 @@ async def update_by_id(*,
                summary="Deletes the DocumentTag",
                description="Deletes the DocumentTag with the given ID.")
 async def delete_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        tag_id: int) -> Optional[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.remove(db=db, id=tag_id)
@@ -68,7 +66,7 @@ async def delete_by_id(*,
             summary="Adds a Memo to the DocumentTag",
             description="Adds a Memo to the DocumentTag with the given ID if it exists")
 async def add_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    tag_id: int,
                    memo: MemoCreate) -> Optional[MemoReadSpanAnnotation]:
     # TODO Flo: only if the user has access?
@@ -84,7 +82,7 @@ async def add_memo(*,
             summary="Returns the Memo attached to the DocumentTag",
             description="Returns the Memo attached to the DocumentTag with the given ID if it exists.")
 async def get_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    tag_id: int) -> Optional[MemoReadSpanAnnotation]:
     # TODO Flo: only if the user has access?
     doc_tag_db_obj = crud_document_tag.read(db=db, id=tag_id)

@@ -57,7 +57,7 @@ class SQLService(metaclass=SingletonMeta):
             logger.info("Successfully established connection to PostgresSQL!")
 
             cls.__engine: Engine = engine
-            cls.__session_maker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+            cls.session_maker = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
             return super(SQLService, cls).__new__(cls)
 
@@ -83,17 +83,10 @@ class SQLService(metaclass=SingletonMeta):
 
         logger.info("Done setting up PostgresSQL DB and tables!")
 
-    def get_db_session(self) -> Generator[Session, None, None]:
-        try:
-            session = self.__session_maker()
-            yield session
-        finally:
-            session.close()
-
     @contextmanager
     def db_session(self) -> Generator[Session, None, None]:
         try:
-            session = self.__session_maker()
+            session = self.session_maker()
             yield session
         finally:
             session.close()

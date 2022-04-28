@@ -3,7 +3,7 @@ from typing import Optional, Union, List
 from fastapi import APIRouter, Depends
 from requests import Session
 
-from api.dependencies import resolve_code_param
+from api.dependencies import resolve_code_param, get_db_session
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
@@ -11,12 +11,9 @@ from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
 from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate, SpanAnnotationCreate, \
     SpanAnnotationReadResolvedCode
 from app.core.data.dto.span_group import SpanGroupRead
-from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/span")
 tags = ["spanAnnotation"]
-
-session = SQLService().get_db_session
 
 
 @router.put("", tags=tags,
@@ -24,7 +21,7 @@ session = SQLService().get_db_session
             summary="Creates a SpanAnnotation",
             description="Creates a SpanAnnotation")
 async def add_span_annotation(*,
-                              db: Session = Depends(session),
+                              db: Session = Depends(get_db_session),
                               span: SpanAnnotationCreate,
                               resolve_code: bool = Depends(resolve_code_param)) \
         -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
@@ -43,7 +40,7 @@ async def add_span_annotation(*,
             summary="Returns the SpanAnnotation",
             description="Returns the SpanAnnotation with the given ID.")
 async def get_by_id(*,
-                    db: Session = Depends(session),
+                    db: Session = Depends(get_db_session),
                     span_id: int,
                     resolve_code: bool = Depends(resolve_code_param)) -> Optional[
     Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
@@ -62,7 +59,7 @@ async def get_by_id(*,
               summary="Updates the SpanAnnotation",
               description="Updates the SpanAnnotation with the given ID.")
 async def update_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        span_id: int,
                        span_anno: SpanAnnotationUpdate,
                        resolve_code: bool = Depends(resolve_code_param)) -> Optional[
@@ -83,7 +80,7 @@ async def update_by_id(*,
                summary="Deletes the SpanAnnotation",
                description="Deletes the SpanAnnotation with the given ID.")
 async def delete_by_id(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        span_id: int) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.remove(db=db, id=span_id)
@@ -95,7 +92,7 @@ async def delete_by_id(*,
             summary="Returns the Code of the SpanAnnotation",
             description="Returns the Code of the SpanAnnotation with the given ID if it exists.")
 async def get_code(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    span_id: int) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
@@ -107,7 +104,7 @@ async def get_code(*,
             summary="Returns all SpanGroups that contain the the SpanAnnotation",
             description="Returns all SpanGroups that contain the the SpanAnnotation.")
 async def get_all_groups(*,
-                         db: Session = Depends(session),
+                         db: Session = Depends(get_db_session),
                          span_id: int) -> List[SpanGroupRead]:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
@@ -119,7 +116,7 @@ async def get_all_groups(*,
                summary="Removes the SpanAnnotation from all SpanGroups",
                description="Removes the SpanAnnotation from all SpanGroups")
 async def remove_from_all_groups(*,
-                                 db: Session = Depends(session),
+                                 db: Session = Depends(get_db_session),
                                  span_id: int) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.remove_from_all_span_groups(db=db, span_id=span_id)
@@ -131,7 +128,7 @@ async def remove_from_all_groups(*,
               summary="Adds the SpanAnnotation to the SpanGroup",
               description="Adds the SpanAnnotation to the SpanGroup")
 async def add_to_group(*,
-                       db: Session = Depends(session),
+                       db: Session = Depends(get_db_session),
                        span_id: int,
                        group_id: int) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
@@ -144,7 +141,7 @@ async def add_to_group(*,
                summary="Removes the SpanAnnotation from the SpanGroup",
                description="Removes the SpanAnnotation from the SpanGroup")
 async def remove_from_group(*,
-                            db: Session = Depends(session),
+                            db: Session = Depends(get_db_session),
                             span_id: int,
                             group_id: int) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
@@ -157,7 +154,7 @@ async def remove_from_group(*,
             summary="Adds a Memo to the SpanAnnotation",
             description="Adds a Memo to the SpanAnnotation with the given ID if it exists")
 async def add_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    span_id: int,
                    memo: MemoCreate) -> Optional[MemoReadSpanAnnotation]:
     # TODO Flo: only if the user has access?
@@ -173,7 +170,7 @@ async def add_memo(*,
             summary="Returns the Memo attached to the SpanAnnotation",
             description="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.")
 async def get_memo(*,
-                   db: Session = Depends(session),
+                   db: Session = Depends(get_db_session),
                    span_id: int) -> Optional[MemoReadSpanAnnotation]:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
