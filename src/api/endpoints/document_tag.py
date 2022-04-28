@@ -6,7 +6,8 @@ from requests import Session
 from api.dependencies import get_db_session
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
-from app.core.data.dto.document_tag import DocumentTagRead, DocumentTagUpdate, DocumentTagCreate
+from app.core.data.dto.document_tag import DocumentTagRead, DocumentTagUpdate, DocumentTagCreate, \
+    SourceDocumentDocumentTagMultiLink
 from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
 
 router = APIRouter(prefix="/doctag")
@@ -22,6 +23,32 @@ async def create_new_doc_tag(*,
                              doc_tag: DocumentTagCreate) -> Optional[DocumentTagRead]:
     db_obj = crud_document_tag.create(db=db, create_dto=doc_tag)
     return DocumentTagRead.from_orm(db_obj)
+
+
+@router.patch("/bulk/link", tags=tags,
+              response_model=int,
+              summary="Links multiple DocumentTags with the SourceDocuments",
+              description="Links multiple DocumentTags with the SourceDocuments and returns the number of new Links")
+async def link_multiple_tags(*,
+                             db: Session = Depends(get_db_session),
+                             multi_link: SourceDocumentDocumentTagMultiLink) -> int:
+    # TODO Flo: only if the user has access?
+    return crud_document_tag.link_multiple_document_tags(db=db,
+                                                         sdoc_ids=multi_link.source_document_ids,
+                                                         tag_ids=multi_link.document_tag_ids)
+
+
+@router.delete("/bulk/unlink", tags=tags,
+               response_model=int,
+               summary="Unlinks all DocumentTags with the SourceDocuments",
+               description="Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.")
+async def unlink_multiple_tags(*,
+                               db: Session = Depends(get_db_session),
+                               multi_link: SourceDocumentDocumentTagMultiLink) -> int:
+    # TODO Flo: only if the user has access?
+    return crud_document_tag.unlink_multiple_document_tags(db=db,
+                                                           sdoc_ids=multi_link.source_document_ids,
+                                                           tag_ids=multi_link.document_tag_ids)
 
 
 @router.get("/{tag_id}", tags=tags,

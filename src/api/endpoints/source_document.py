@@ -13,12 +13,9 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoReadSourceDocument, MemoInDB, MemoCreate
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataUpdate, SourceDocumentMetadataRead
-from app.core.db.sql_service import SQLService
 
 router = APIRouter(prefix="/sdoc")
 tags = ["sourceDocument"]
-
-
 
 
 @router.get("/{sdoc_id}", tags=tags,

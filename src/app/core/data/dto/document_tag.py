@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -39,3 +39,9 @@ class DocumentTagRead(DocumentTagBaseDTO):
 class SourceDocumentDocumentTagLink(BaseModel):
     source_document_id: int = Field(description='ID of the SourceDocument')
     document_tag_id: int = Field(description='ID of the DocumentTag')
+
+
+# To link multiple SourceDocuments with multiple DocumentTag
+class SourceDocumentDocumentTagMultiLink(BaseModel):
+    source_document_ids: List[int] = Field(description='List of IDs of SourceDocuments')
+    document_tag_ids: List[int] = Field(description='List of IDs of DocumentTags')
