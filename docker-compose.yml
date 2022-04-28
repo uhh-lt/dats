@@ -40,25 +40,25 @@ services:
     networks:
       - dwts_backend_network
 
-  celery-flower:
-    image: gregsi/latest-celery-flower-docker:latest
-    environment:
-      AMQP_USERNAME: ${RABBITMQ_USER:-dwtsuser}
-      AMQP_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
-      AMQP_ADMIN_USERNAME: ${RABBITMQ_USER:-dwtsuser}
-      AMQP_ADMIN_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
-      AMQP_HOST: ${RABBITMQ_HOST:-rabbitmq}
-      AMQP_PORT: ${RABBITMQ_PORT:-5672}
-      AMQP_ADMIN_HOST: ${RABBITMQ_HOST:-rabbitmq}
-      AMQP_ADMIN_PORT: ${RABBITMQ_PORT:-15672}
-      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-dwtsuser:dwts123}
-    ports:
-      - "5555:5555"
-    depends_on:
-      - rabbitmq
-      - redis
-    networks:
-      - dwts_backend_network
+#  celery-flower:
+#    image: gregsi/latest-celery-flower-docker:latest
+#    environment:
+#      AMQP_USERNAME: ${RABBITMQ_USER:-dwtsuser}
+#      AMQP_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
+#      AMQP_ADMIN_USERNAME: ${RABBITMQ_USER:-dwtsuser}
+#      AMQP_ADMIN_PASSWORD: ${RABBITMQ_PASSWORD:-dwts123}
+#      AMQP_HOST: ${RABBITMQ_HOST:-rabbitmq}
+#      AMQP_PORT: ${RABBITMQ_PORT:-5672}
+#      AMQP_ADMIN_HOST: ${RABBITMQ_HOST:-rabbitmq}
+#      AMQP_ADMIN_PORT: ${RABBITMQ_PORT:-15672}
+#      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-dwtsuser:dwts123}
+#    ports:
+#      - "5555:5555"
+#    depends_on:
+#      - rabbitmq
+#      - redis
+#    networks:
+#      - dwts_backend_network
 
   celery-worker:
     image: uhhlt/dwts_backend_celery:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
@@ -92,6 +92,10 @@ services:
     ports:
       - "9999:8888"
     restart: always
+    links:
+      - postgres
+      - redis
+      - rabbitmq
     networks:
       - dwts_backend_network
 
@@ -128,6 +132,10 @@ services:
       - "5500:${API_PORT:-5000}"
       - "8888:8888"
     restart: always
+    links:
+      - postgres
+      - redis
+      - rabbitmq
     networks:
       - dwts_backend_network
 
