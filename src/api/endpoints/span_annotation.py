@@ -7,7 +7,7 @@ from api.dependencies import resolve_code_param, get_db_session
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
+from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationUpdate, SpanAnnotationCreate, \
     SpanAnnotationReadResolvedCode
 from app.core.data.dto.span_group import SpanGroupRead
@@ -150,30 +150,31 @@ async def remove_from_group(*,
 
 
 @router.put("/{span_id}/memo", tags=tags,
-            response_model=Optional[MemoReadSpanAnnotation],
+            response_model=Optional[MemoRead],
             summary="Adds a Memo to the SpanAnnotation",
             description="Adds a Memo to the SpanAnnotation with the given ID if it exists")
 async def add_memo(*,
                    db: Session = Depends(get_db_session),
                    span_id: int,
-                   memo: MemoCreate) -> Optional[MemoReadSpanAnnotation]:
+                   memo: MemoCreate) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_span_annotation(db=db, span_anno_id=span_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-    attached_span_anno = db_obj.attached_to.span_annotation
-    return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                  attached_span_annotation_id=attached_span_anno.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=span_id,
+                    attached_object_type=AttachedObjectType.span_annotation)
 
 
 @router.get("/{span_id}/memo", tags=tags,
-            response_model=Optional[MemoReadSpanAnnotation],
+            response_model=Optional[MemoRead],
             summary="Returns the Memo attached to the SpanAnnotation",
             description="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.")
 async def get_memo(*,
                    db: Session = Depends(get_db_session),
-                   span_id: int) -> Optional[MemoReadSpanAnnotation]:
+                   span_id: int) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
     memo_as_in_db_dto = MemoInDB.from_orm(span_db_obj.object_handle.attached_memo)
-    return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                  attached_span_annotation_id=span_db_obj.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=span_id,
+                    attached_object_type=AttachedObjectType.span_annotation)

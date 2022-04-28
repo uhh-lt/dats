@@ -10,7 +10,7 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoReadSourceDocument, MemoInDB, MemoCreate
+from app.core.data.dto.memo import MemoInDB, MemoCreate, MemoRead, AttachedObjectType
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataUpdate, SourceDocumentMetadataRead
 
@@ -154,29 +154,30 @@ async def unlink_tag(*,
 
 
 @router.put("/{sdoc_id}/memo", tags=tags,
-            response_model=Optional[MemoReadSourceDocument],
+            response_model=Optional[MemoRead],
             summary="Adds a Memo to the SourceDocument",
             description="Adds a Memo to the SourceDocument with the given ID if it exists")
 async def add_memo(*,
                    db: Session = Depends(get_db_session),
                    sdoc_id: int,
-                   memo: MemoCreate) -> Optional[MemoReadSourceDocument]:
+                   memo: MemoCreate) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_sdoc(db=db, sdoc_id=sdoc_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-    attached_sdoc = db_obj.attached_to.source_document
-    return MemoReadSourceDocument(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                  attached_source_document_id=attached_sdoc.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=sdoc_id,
+                    attached_object_type=AttachedObjectType.source_document)
 
 
 @router.get("/{sdoc_id}/memo", tags=tags,
-            response_model=Optional[MemoReadSourceDocument],
+            response_model=Optional[MemoRead],
             summary="Returns the Memo attached to the SourceDocument",
             description="Returns the Memo attached to the SourceDocument with the given ID if it exists.")
 async def get_memo(*,
                    db: Session = Depends(get_db_session),
-                   sdoc_id: int) -> Optional[MemoReadSourceDocument]:
+                   sdoc_id: int) -> Optional[MemoRead]:
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     memo_as_in_db_dto = MemoInDB.from_orm(sdoc_db_obj.object_handle.attached_memo)
-    return MemoReadSourceDocument(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                  attached_source_document_id=sdoc_db_obj.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=sdoc_id,
+                    attached_object_type=AttachedObjectType.source_document)

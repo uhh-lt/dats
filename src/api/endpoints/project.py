@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict
 from typing import Optional
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -15,8 +15,7 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoReadProject, MemoInDB, MemoCreate, MemoReadDocumentTag, MemoReadSourceDocument, \
-    MemoReadAnnotationDocument, MemoReadSpanAnnotation, MemoReadCode
+from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import UserRead
 
@@ -264,23 +263,13 @@ async def remove_user_codes_of_project(*,
 
 
 @router.get("/{proj_id}/user/{user_id}/memo", tags=tags,
-            response_model=List[Union[MemoReadCode,
-                                      MemoReadSpanAnnotation,
-                                      MemoReadAnnotationDocument,
-                                      MemoReadSourceDocument,
-                                      MemoReadProject,
-                                      MemoReadDocumentTag]],
+            response_model=List[MemoRead],
             summary="Returns all Memos of the Project from a User",
             description="Returns all Memos of the Project from a User")
 async def get_user_memos_of_project(*,
                                     proj_id: int,
                                     user_id: int,
-                                    db: Session = Depends(get_db_session)) -> List[Union[MemoReadCode,
-                                                                                         MemoReadSpanAnnotation,
-                                                                                         MemoReadAnnotationDocument,
-                                                                                         MemoReadSourceDocument,
-                                                                                         MemoReadProject,
-                                                                                         MemoReadDocumentTag]]:
+                                    db: Session = Depends(get_db_session)) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
     db_objs = crud_memo.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs]
@@ -299,26 +288,29 @@ async def remove_user_memos_of_project(*,
 
 
 @router.get("/{proj_id}/memo", tags=tags,
-            response_model=Optional[MemoReadProject],
+            response_model=Optional[MemoRead],
             summary="Returns the Memo of the current User for the Project.",
             description="Returns the Memo of the current User for the Project with the given ID.")
 async def get_memo(*,
                    db: Session = Depends(get_db_session),
-                   proj_id: int) -> Optional[MemoReadProject]:
+                   proj_id: int) -> Optional[MemoRead]:
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     memo_as_in_db_dto = MemoInDB.from_orm(proj_db_obj.object_handle.attached_memo)
-    return MemoReadProject(**memo_as_in_db_dto.dict(exclude={"attached_to"}), attached_project_id=proj_db_obj.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=proj_id,
+                    attached_object_type=AttachedObjectType.project)
 
 
 @router.put("/{proj_id}/memo", tags=tags,
-            response_model=Optional[MemoReadProject],
+            response_model=Optional[MemoRead],
             summary="Adds a Memo of the current User to the Project.",
             description="Adds a Memo of the current User to the Project with the given ID if it exists")
 async def add_memo(*,
                    db: Session = Depends(get_db_session),
                    proj_id: int,
-                   memo: MemoCreate) -> Optional[MemoReadProject]:
+                   memo: MemoCreate) -> Optional[MemoRead]:
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-    attached_project = db_obj.attached_to.project
-    return MemoReadProject(**memo_as_in_db_dto.dict(exclude={"attached_to"}), attached_project_id=attached_project.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=proj_id,
+                    attached_object_type=AttachedObjectType.project)

@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -72,3 +73,17 @@ class MemoReadProject(MemoReadBaseDTO):
 
 class MemoReadDocumentTag(MemoReadBaseDTO):
     attached_document_tag_id: int = Field(description='DocumentTag the Memo is attached to')
+
+
+class AttachedObjectType(str, Enum):
+    annotation_document = 'annotation_document'
+    source_document = 'source_document'
+    code = 'code'
+    span_annotation = 'span_annotation'
+    project = 'project'
+    document_tag = 'document_tag'
+
+
+class MemoRead(MemoReadBaseDTO):
+    attached_object_id: int = Field(description='ID of the Object the Memo is attached to')
+    attached_object_type: AttachedObjectType = Field(description='Type of the Object the ID refers to')

@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
@@ -9,8 +9,7 @@ from api.util import credentials_exception
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, \
-    MemoReadProject, MemoReadSourceDocument
+from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin, UserAuthorizationHeaderData
 from app.core.security import generate_jwt
 
@@ -121,20 +120,12 @@ async def delete_user_codes(*,
 
 
 @router.get("/{user_id}/memo", tags=tags,
-            response_model=List[Union[MemoReadCode,
-                                      MemoReadSpanAnnotation,
-                                      MemoReadAnnotationDocument,
-                                      MemoReadSourceDocument,
-                                      MemoReadProject]],
+            response_model=List[MemoRead],
             summary="Returns all Memos of the User",
             description="Returns all Memos of the User with the given ID")
 async def get_user_memos(*,
                          user_id: int,
-                         db: Session = Depends(get_db_session)) -> List[Union[MemoReadCode,
-                                                                              MemoReadSpanAnnotation,
-                                                                              MemoReadAnnotationDocument,
-                                                                              MemoReadSourceDocument,
-                                                                              MemoReadProject]]:
+                         db: Session = Depends(get_db_session)) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=user_id)
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo) for memo in db_obj.memos]

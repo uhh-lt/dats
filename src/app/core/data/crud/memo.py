@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import List
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
@@ -6,8 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.object_handle import crud_object_handle
-from app.core.data.dto.memo import MemoCreate, MemoReadCode, MemoReadSpanAnnotation, MemoReadAnnotationDocument, \
-    MemoReadProject, MemoReadSourceDocument, MemoInDB, MemoReadDocumentTag
+from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM
@@ -24,12 +23,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
     def create(self, db: Session, *, create_dto: MemoCreate) -> MemoORM:
         raise NotImplementedError()
 
-    def read_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[Union[MemoReadCode,
-                                                                                              MemoReadSpanAnnotation,
-                                                                                              MemoReadAnnotationDocument,
-                                                                                              MemoReadSourceDocument,
-                                                                                              MemoReadProject,
-                                                                                              MemoReadDocumentTag]]:
+    def read_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[MemoORM]:
 
         return db.query(self.model).filter(self.model.user_id == user_id,
                                            self.model.project_id == proj_id).all()
@@ -99,32 +93,33 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
 
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
-    def get_memo_read_dto_from_orm(db: Session, db_obj: MemoORM) -> Union[MemoReadCode,
-                                                                          MemoReadSpanAnnotation,
-                                                                          MemoReadAnnotationDocument,
-                                                                          MemoReadSourceDocument,
-                                                                          MemoReadProject,
-                                                                          MemoReadDocumentTag]:
+    def get_memo_read_dto_from_orm(db: Session, db_obj: MemoORM) -> MemoRead:
         attached_to = crud_object_handle.resolve_handled_object(db=db, handle=db_obj.attached_to)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         if isinstance(attached_to, CodeORM):
-            return MemoReadCode(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                attached_code_id=attached_to.id)
+            return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                            attached_object_id=attached_to.id,
+                            attached_object_type=AttachedObjectType.code)
         elif isinstance(attached_to, SpanAnnotationORM):
-            return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                          attached_span_annotation_id=attached_to.id)
+            return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                            attached_object_id=attached_to.id,
+                            attached_object_type=AttachedObjectType.span_annotation)
         elif isinstance(attached_to, AnnotationDocumentORM):
-            return MemoReadAnnotationDocument(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                              attached_annotation_document_id=attached_to.id)
+            return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                            attached_object_id=attached_to.id,
+                            attached_object_type=AttachedObjectType.annotation_document)
         elif isinstance(attached_to, SourceDocumentORM):
-            return MemoReadSourceDocument(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                          attached_source_document_id=attached_to.id)
+            return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                            attached_object_id=attached_to.id,
+                            attached_object_type=AttachedObjectType.source_document)
         elif isinstance(attached_to, ProjectORM):
-            return MemoReadProject(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                   attached_project_id=attached_to.id)
+            return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                            attached_object_id=attached_to.id,
+                            attached_object_type=AttachedObjectType.project)
         elif isinstance(attached_to, DocumentTagORM):
-            return MemoReadDocumentTag(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                       attached_document_tag_id=attached_to.id)
+            return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                            attached_object_id=attached_to.id,
+                            attached_object_type=AttachedObjectType.document_tag)
 
 
 crud_memo = CRUDMemo(MemoORM)

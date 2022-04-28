@@ -8,7 +8,7 @@ from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.document_tag import DocumentTagRead, DocumentTagUpdate, DocumentTagCreate, \
     SourceDocumentDocumentTagMultiLink
-from app.core.data.dto.memo import MemoReadSpanAnnotation, MemoCreate, MemoInDB
+from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 
 router = APIRouter(prefix="/doctag")
 tags = ["documentTag"]
@@ -89,30 +89,31 @@ async def delete_by_id(*,
 
 
 @router.put("/{tag_id}/memo", tags=tags,
-            response_model=Optional[MemoReadSpanAnnotation],
+            response_model=Optional[MemoRead],
             summary="Adds a Memo to the DocumentTag",
             description="Adds a Memo to the DocumentTag with the given ID if it exists")
 async def add_memo(*,
                    db: Session = Depends(get_db_session),
                    tag_id: int,
-                   memo: MemoCreate) -> Optional[MemoReadSpanAnnotation]:
+                   memo: MemoCreate) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_span_annotation(db=db, span_anno_id=tag_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-    attached_span_anno = db_obj.attached_to.span_annotation
-    return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                  attached_span_annotation_id=attached_span_anno.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=tag_id,
+                    attached_object_type=AttachedObjectType.document_tag)
 
 
 @router.get("/{tag_id}/memo", tags=tags,
-            response_model=Optional[MemoReadSpanAnnotation],
+            response_model=Optional[MemoRead],
             summary="Returns the Memo attached to the DocumentTag",
             description="Returns the Memo attached to the DocumentTag with the given ID if it exists.")
 async def get_memo(*,
                    db: Session = Depends(get_db_session),
-                   tag_id: int) -> Optional[MemoReadSpanAnnotation]:
+                   tag_id: int) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
     doc_tag_db_obj = crud_document_tag.read(db=db, id=tag_id)
     memo_as_in_db_dto = MemoInDB.from_orm(doc_tag_db_obj.object_handle.attached_memo)
-    return MemoReadSpanAnnotation(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                                  attached_span_annotation_id=doc_tag_db_obj.id)
+    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                    attached_object_id=tag_id,
+                    attached_object_type=AttachedObjectType.document_tag)
