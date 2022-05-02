@@ -68,4 +68,4 @@ ENV C_FORCE_ROOT=1
 
 RUN chmod +x "backend_entrypoint.sh"
 
-ENTRYPOINT ["/tini", "--", "/dwts_code/src/backend_entrypoint.sh"]
+CMD ["/tini", "--", "/dwts_code/src/backend_entrypoint.sh"]

@@ -71,4 +71,4 @@ ENV C_FORCE_ROOT=1
 
 RUN chmod +x "celery_worker_entrypoint.sh"
 
-ENTRYPOINT ["/tini", "--", "/dwts_code/src/celery_worker_entrypoint.sh"]
+CMD ["/tini", "--", "/dwts_code/src/celery_worker_entrypoint.sh"]
