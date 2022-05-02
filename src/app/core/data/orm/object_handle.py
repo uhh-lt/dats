@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, ForeignKey, CheckConstraint, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.functions import coalesce
 
 from app.core.data.orm.orm_base import ORMBase
 from app.core.data.orm.span_group import SpanGroupORM
@@ -56,10 +57,10 @@ class ObjectHandleORM(ORMBase):
     span_annotation_id = Column(Integer, ForeignKey('spanannotation.id', ondelete="CASCADE"), index=True)
     span_annotation: "SpanAnnotationORM" = relationship("SpanAnnotationORM", back_populates="object_handle")
 
-    span_group_id = Column(Integer, ForeignKey('documenttag.id', ondelete="CASCADE"), index=True)
+    span_group_id = Column(Integer, ForeignKey('spangroup.id', ondelete="CASCADE"), index=True)
     span_group: "SpanGroupORM" = relationship("SpanGroupORM", back_populates="object_handle")
 
-    document_tag_id = Column(Integer, ForeignKey('spangroup.id', ondelete="CASCADE"), index=True)
+    document_tag_id = Column(Integer, ForeignKey('documenttag.id', ondelete="CASCADE"), index=True)
     document_tag: "DocumentTagORM" = relationship("DocumentTagORM", back_populates="object_handle")
 
     action_id = Column(Integer, ForeignKey('action.id', ondelete="CASCADE"), index=True)
@@ -74,6 +75,24 @@ class ObjectHandleORM(ORMBase):
     query_id = Column(Integer, ForeignKey('query.id', ondelete="CASCADE"), index=True)
     query: "QueryORM" = relationship("QueryORM", back_populates="object_handle")
 
+    # Flo: https://stackoverflow.com/questions/60207228/postgres-unique-constraint-with-multiple-columns-and-null-values
+    Index('idx_for_uc_work_with_null',
+          coalesce(user_id, 0),
+          coalesce(project_id, 0),
+          coalesce(code_id, 0),
+          coalesce(current_code_id, 0),
+          coalesce(source_document_id, 0),
+          coalesce(source_document_metadata_id, 0),
+          coalesce(annotation_document_id, 0),
+          coalesce(span_annotation_id, 0),
+          coalesce(span_group_id, 0),
+          coalesce(document_tag_id, 0),
+          coalesce(action_id, 0),
+          coalesce(action_target_id, 0),
+          coalesce(filter_id, 0),
+          coalesce(query_id, 0),
+          unique=True)
+
     __table_args__ = (
         # FIXME Flo: SQLAlchemy ambiguous FK issue...
         #  + CASE WHEN memo_id IS NULL THEN 0 ELSE 1 END
@@ -87,6 +106,7 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN source_document_metadata_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN annotation_document_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_annotation_id IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN span_group_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN document_tag_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN action_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN action_target_id IS NULL THEN 0 ELSE 1 END
@@ -94,4 +114,19 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN query_id IS NULL THEN 0 ELSE 1 END
                     ) = 1
                     """, name="CC_object_handle_refers_to_exactly_one_instance"),
+        UniqueConstraint("user_id",
+                         "project_id",
+                         "code_id",
+                         "current_code_id",
+                         "source_document_id",
+                         "source_document_metadata_id",
+                         "annotation_document_id",
+                         "span_annotation_id",
+                         "span_group_id",
+                         "document_tag_id",
+                         "action_id",
+                         "action_target_id",
+                         "filter_id",
+                         "query_id",
+                         name="UC_only_one_object_handle_per_instance"),
     )
