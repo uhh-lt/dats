@@ -60,5 +60,6 @@ if [ ! -d /usr/local/lib/python3.9/site-packages/en_core_web_trf ]; then
 fi
 
 LOG_LEVEL=${LOG_LEVEL:-debug}
+CONCURRENCY=${CONCURRENCY:-1}
 
-poetry run celery -A app.docprepro.process worker -l "$LOG_LEVEL" -c 1 # TODO Flo: Env vars for parameters
+poetry run celery -A app.docprepro.text.preprocess worker -Q textQ,celery -l "$LOG_LEVEL" -c "$CONCURRENCY" # TODO Flo: Env vars for parameters

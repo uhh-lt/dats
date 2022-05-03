@@ -2,24 +2,20 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.core.data.doc_type import DocType
+
 """
  TODO Flo: 
  Because we're not storing the content in the SQL DB but only in the ES instance we handle this differently
   than in other DTOs.
 """
 
-# FIXME Flo: dont do that, use enum!
-# TODO Flo: Add image, video, audio, pdf, etc.
-DocTypeDict = {
-    "text/plain": 1
-}
-
 
 # Properties shared across all DTOs
 class SourceDocumentBaseDTO(BaseModel):
     filename: str = Field(description='Filename of the SourceDocument')
     content: str = Field(description='Content of the SourceDocument')
-    doctype: int = Field(description='DOCTYPE of the SourceDocument')
+    doctype: DocType = Field(description='DOCTYPE of the SourceDocument')
     project_id: int = Field(description='Project the SourceDocument belongs to')
 
 

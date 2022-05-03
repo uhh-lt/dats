@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 from typing import Tuple
@@ -5,7 +6,8 @@ from typing import Tuple
 from fastapi import UploadFile
 from loguru import logger
 
-from app.core.data.dto.source_document import SourceDocumentCreate, DocTypeDict
+from app.core.data.doc_type import get_doc_type, DocType
+from app.core.data.dto.source_document import SourceDocumentCreate
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -22,8 +24,20 @@ class RepoService(metaclass=SingletonMeta):
 
         return super(RepoService, cls).__new__(cls)
 
-    def _create_directory_structure(self):
+    def _create_directory_structure(self, remove_if_exists: bool = False):
         try:
+            if self.repo_root.exists() and remove_if_exists:
+                logger.warning(f"Removing DWTS Repo at {self.repo_root}")
+                for filename in self.repo_root.iterdir():
+                    file_path = self.repo_root.joinpath(self.repo_root, filename)
+                    try:
+                        if file_path.is_file() or file_path.is_symlink():
+                            os.unlink(file_path)
+                        elif file_path.is_dir():
+                            shutil.rmtree(file_path)
+                    except Exception as e:
+                        print(f"Failed to remove {file_path} because: {e}")
+
             # make sure repository root dir exists
             if not self.repo_root.exists():
                 self.repo_root.mkdir(parents=True)
@@ -58,10 +72,15 @@ class RepoService(metaclass=SingletonMeta):
                 shutil.copyfileobj(doc_file.file, buffer)
                 logger.debug(f"Stored uploaded document at {str(dst)}")
                 doc_file.file.seek(0, 0)
-                txt_content = doc_file.file.read().decode("utf-8")
+                # FIXME Flo: Change SourceDocument to work with images! --> no raw_text
+                if get_doc_type(mime_type=doc_file.content_type) == DocType.image:
+                    txt_content = "IMAGES CONTAIN NO UTF-8 TEXT!"
+                else:
+                    txt_content = doc_file.file.read().decode("utf-8")
+
                 create_dto = SourceDocumentCreate(content=txt_content,
                                                   filename=doc_file.filename,
-                                                  doctype=DocTypeDict[doc_file.content_type],
+                                                  doctype=get_doc_type(mime_type=doc_file.content_type),
                                                   project_id=project_id)
         except Exception as e:
             # FIXME Flo: Throw or what?!

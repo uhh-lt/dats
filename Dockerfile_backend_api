@@ -18,7 +18,7 @@ ENV DWTS_ENV=${DWTS_ENV} \
   POETRY_NO_INTERACTION=1 \
   POETRY_VIRTUALENVS_CREATE=false \
   POETRY_CACHE_DIR='/var/cache/pypoetry' \
-  PATH="$PATH:/root/.local/bin:/root/.cargo/bin"
+  PATH="$PATH:/root/.local/bin"
 
 # System deps:
 RUN apt-get update && apt-get upgrade -y \
@@ -33,17 +33,14 @@ RUN apt-get update && apt-get upgrade -y \
         # Installing `poetry` package manager:
       # https://github.com/python-poetry/poetry
       && curl -sSL 'https://install.python-poetry.org' | python - \
-      && poetry --version \
-        # Install rust
-      && curl -sSf 'https://sh.rustup.rs' | bash -s -- -y \
-      && echo 'source $HOME/.cargo/env' >> $HOME/.bashrc \
-      && rustup --version
+      && poetry --version
 
 WORKDIR /dwts_code
 
 # Copy only requirements, to cache them in docker layer
 COPY ./poetry.lock ./pyproject.toml /dwts_code/
 
+# Project initialization:
 RUN echo "$DWTS_ENV" && poetry version \
   && poetry install --no-interaction --no-ansi \
   # Upgrading pip, it is insecure, remove after `pip@21.1`
@@ -69,6 +66,6 @@ WORKDIR /dwts_code/src
 
 ENV C_FORCE_ROOT=1
 
-RUN chmod +x "celery_worker_entrypoint.sh"
+RUN chmod +x "backend_api_entrypoint.sh"
 
-CMD ["/tini", "--", "/dwts_code/src/celery_worker_entrypoint.sh"]
+CMD ["/tini", "--", "/dwts_code/src/backend_api_entrypoint.sh"]

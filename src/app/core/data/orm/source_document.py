@@ -14,9 +14,9 @@ if TYPE_CHECKING:
 
 class SourceDocumentORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String, nullable=False, index=True)
+    filename = Column(String, unique=True, nullable=False, index=True)
     content = Column(String, nullable=False, index=False)  # TODO Flo: This will go to ES soon!
-    doctype = Column(Integer, nullable=False, index=True)
+    doctype = Column(String, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
 
     # one to one

@@ -55,11 +55,14 @@ system_codes:
     desc: "A sentence spanning multiple Tokens."
 
 docprepro:
-  spacy:
-    # note that the spacy models have to be installed in the env to use it! (docker!)
-    default_model: "en_core_web_trf"
-    english_model: "en_core_web_trf"
-    german_model: "de_core_news_lg"
+  text:
+    spacy:
+      # note that the spacy models have to be installed in the env to use it! (docker!)
+      default_model: "en_core_web_trf"
+      english_model: "en_core_web_trf"
+      german_model: "de_core_news_lg"
+  image:
+    default_mode: "akk"
   celery:
     backend:
       host: ${oc.env:REDIS_HOST, localhost}

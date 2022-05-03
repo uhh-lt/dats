@@ -2,6 +2,6 @@ from pydantic import BaseModel
 
 
 class AutoSpan(BaseModel):
-    type: str
+    code: str
     start: int
     end: int

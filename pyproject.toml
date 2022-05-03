@@ -23,6 +23,8 @@ uvicorn = "^0.17.6"
 langdetect = "^1.0.9"
 python-jose = "^3.3.0"
 passlib = "^1.7.4"
+Pillow = "^9.1.0"
+transformers = "^4.18.0"
 
 [tool.poetry.dev-dependencies]
 

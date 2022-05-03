@@ -1,8 +1,6 @@
 from typing import List, Dict
 from typing import Optional
 
-# noinspection PyUnresolvedReferences,PyProtectedMember
-from celery import Signature
 from fastapi import APIRouter, Depends, UploadFile, HTTPException, File, Query
 from sqlalchemy.orm import Session
 
@@ -12,12 +10,15 @@ from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.doc_type import mime_type_supported, get_doc_type, DocType
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import UserRead
+from app.docprepro.image import image_document_preprocessing_apply_async
+from app.docprepro.text import text_document_preprocessing_apply_async
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
@@ -120,26 +121,18 @@ async def upload_project_sdoc(*,
                                                                  description=("File(s) that get uploaded and "
                                                                               "represented by the SourceDocument(s)"))) \
         -> str:
-    # TODO Flo: only if the user has access?
-
-    import_uploaded_document = "app.docprepro.process.import_uploaded_document"
-    generate_automatic_annotations = "app.docprepro.process.generate_automatic_annotations"
-    persist_automatic_annotations = "app.docprepro.process.persist_automatic_annotations"
-
     for doc_file in doc_files:
-        if not doc_file.content_type == "text/plain":
-            # TODO Flo: Support other MIME Types
-            raise HTTPException(detail="Only plain text files allowed!", status_code=406)
-
-        document_preprocessing = (
-                Signature(import_uploaded_document, kwargs={"doc_file": doc_file, "project_id": proj_id}) |
-                Signature(generate_automatic_annotations) |
-                Signature(persist_automatic_annotations)
-        )
-        document_preprocessing.apply_async()
+        if not mime_type_supported(mime_type=doc_file.content_type):
+            raise HTTPException(detail=f"Document with MIME type {doc_file.content_type} not supported!",
+                                status_code=406)
+        doc_type = get_doc_type(mime_type=doc_file.content_type)
+        if doc_type == DocType.text:
+            text_document_preprocessing_apply_async(doc_file=doc_file, project_id=proj_id)
+        elif doc_type == DocType.image:
+            image_document_preprocessing_apply_async(doc_file=doc_file, project_id=proj_id)
 
     # TODO Flo: How to notify user or system when done?
-    return "Upload and preprocessing of Document started in the background!"
+    return f"Upload and preprocessing of {len(doc_files)} Document(s) started in the background!"
 
 
 @router.delete("/{proj_id}/sdoc", tags=tags,

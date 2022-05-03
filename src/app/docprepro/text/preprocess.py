@@ -19,36 +19,36 @@ from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCre
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.docprepro.autospan import AutoSpan
-from app.docprepro.celery.app import celery_app
-from app.docprepro.preprodoc import PreProDoc
+from app.docprepro.text.autospan import AutoSpan
+from app.docprepro.celery.celery_worker import celery_prepro_worker
+from app.docprepro.text.preprotextdoc import PreProTextDoc
 from config import conf
 
 # TODO Flo: maybe we want to break all process tasks up in smaller functions for better readability and modularity...
 #  However, this would be _little_ less efficient
 
 nlp = {
-    "de": spacy.load(conf.docprepro.spacy.german_model),
-    "en": spacy.load(conf.docprepro.spacy.english_model)
+    "de": spacy.load(conf.docprepro.text.spacy.german_model),
+    "en": spacy.load(conf.docprepro.text.spacy.english_model)
 }
 
 # https://github.com/explosion/spaCy/issues/8678
 torch.set_num_threads(1)
 
-if conf.docprepro.spacy.default_model == conf.docprepro.spacy.english_model:
+if conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.english_model:
     nlp["default"] = nlp["en"]
-elif conf.docprepro.spacy.default_model == conf.docprepro.spacy.german_model:
+elif conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.german_model:
     nlp["default"] = nlp["de"]
 else:
-    nlp["default"] = spacy.load(conf.docprepro.spacy.default_model)
+    nlp["default"] = spacy.load(conf.docprepro.text.spacy.default_model)
 
 sql = SQLService(echo=False)
 repo = RepoService()
 
 
-@celery_app.task(acks_late=True)
-def import_uploaded_document(doc_file: UploadFile,
-                             project_id: int) -> PreProDoc:
+@celery_prepro_worker.task(acks_late=True)
+def import_uploaded_text_document(doc_file: UploadFile,
+                                  project_id: int) -> PreProTextDoc:
     global sql
     global repo
 
@@ -70,17 +70,17 @@ def import_uploaded_document(doc_file: UploadFile,
     with sql.db_session() as db:
         sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
-    # create PreProDoc
-    ppd = PreProDoc(project_id=project_id,
-                    sdoc_id=sdoc_db_obj.id,
-                    raw_text=sdoc_db_obj.content)
+    # create PreProTextDoc
+    ppd = PreProTextDoc(project_id=project_id,
+                        sdoc_id=sdoc_db_obj.id,
+                        raw_text=sdoc_db_obj.content)
     ppd.metadata[sdoc_meta_db_obj.key] = sdoc_meta_db_obj.value
 
     return ppd
 
 
-@celery_app.task(acks_late=True)
-def generate_automatic_annotations(ppd: PreProDoc) -> PreProDoc:
+@celery_prepro_worker.task(acks_late=True)
+def generate_automatic_span_annotations(ppd: PreProTextDoc) -> PreProTextDoc:
     global nlp
     model = nlp[ppd.metadata["language"]] if ppd.metadata["language"] in nlp else nlp["default"]
 
@@ -101,7 +101,7 @@ def generate_automatic_annotations(ppd: PreProDoc) -> PreProDoc:
     # create AutoSpans for NER
     ppd.spans["NER"] = list()
     for ne in doc.ents:
-        auto = AutoSpan(type=f"{ne.label_}",
+        auto = AutoSpan(code=f"{ne.label_}",
                         start=ne.start_char,
                         end=ne.end_char)
         ppd.spans["NER"].append(auto)
@@ -109,7 +109,7 @@ def generate_automatic_annotations(ppd: PreProDoc) -> PreProDoc:
     # create AutoSpans for Sentences
     ppd.spans["SENTENCE"] = list()
     for s in doc.sents:
-        auto = AutoSpan(type=f"SENTENCE",
+        auto = AutoSpan(code=f"SENTENCE",
                         start=s.start_char,
                         end=s.end_char)
         ppd.spans["SENTENCE"].append(auto)
@@ -117,8 +117,8 @@ def generate_automatic_annotations(ppd: PreProDoc) -> PreProDoc:
     return ppd
 
 
-@celery_app.task(acks_late=True)
-def persist_automatic_annotations(ppd: PreProDoc) -> AnnotationDocumentRead:
+@celery_prepro_worker.task(acks_late=True)
+def persist_automatic_span_annotations(ppd: PreProTextDoc) -> AnnotationDocumentRead:
     # create AnnoDoc for system user
     with SQLService().db_session() as db:
         adoc_create = AnnotationDocumentCreate(source_document_id=ppd.sdoc_id,
@@ -131,16 +131,16 @@ def persist_automatic_annotations(ppd: PreProDoc) -> AnnotationDocumentRead:
         for code in ppd.spans.keys():
             for aspan in ppd.spans[code]:
                 # FIXME Flo: hacky solution for German NER model, which only contains ('LOC', 'MISC', 'ORG', 'PER')
-                if aspan.type == "PER":
-                    aspan.type = "PERSON"
+                if aspan.code == "PER":
+                    aspan.code = "PERSON"
                 db_code = crud_code.read_by_name_and_user_and_project(db,
-                                                                      code_name=aspan.type,
+                                                                      code_name=aspan.code,
                                                                       user_id=SYSTEM_USER_ID,
                                                                       proj_id=ppd.project_id)
 
                 if not db_code:
                     # FIXME FLO: create code on the fly for system user?
-                    logger.warning(f"No Code <{aspan.type}> found! Skipping persistence of SpanAnnotation ...")
+                    logger.warning(f"No Code <{aspan.code}> found! Skipping persistence of SpanAnnotation ...")
                     continue
 
                 ccid = db_code.current_code.id

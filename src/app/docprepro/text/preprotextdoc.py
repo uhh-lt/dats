@@ -2,10 +2,10 @@ from typing import List, Dict
 
 from pydantic import BaseModel, Field
 
-from app.docprepro.autospan import AutoSpan
+from app.docprepro.text.autospan import AutoSpan
 
 
-class PreProDoc(BaseModel):
+class PreProTextDoc(BaseModel):
     project_id: int
     sdoc_id: int
     raw_text: str
