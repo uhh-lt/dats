@@ -2,6 +2,7 @@ src/dev_notebooks
 backend_repo
 sample_data
 spacy_models
+image_models
 
 # backend logs
 backend/src/logs
