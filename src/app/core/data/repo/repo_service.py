@@ -66,7 +66,7 @@ class RepoService(metaclass=SingletonMeta):
                 # FIXME Flo: Throw or what?!
                 logger.warning("Cannot store uploaded document because a document with the same name already exists!")
             elif not dst.parent.exists():
-                dst.parent.mkdir(parents=True)
+                dst.parent.mkdir(parents=True, exist_ok=True)
 
             with dst.open("wb") as buffer:
                 shutil.copyfileobj(doc_file.file, buffer)

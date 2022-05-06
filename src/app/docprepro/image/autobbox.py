@@ -2,8 +2,8 @@ from pydantic import BaseModel
 
 
 class AutoBBox(BaseModel):
-    type: str
-    x: int
-    y: int
-    w: int
-    h: int
+    code: str
+    x_min: int
+    y_min: int
+    x_max: int
+    y_max: int

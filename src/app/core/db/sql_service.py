@@ -9,6 +9,10 @@ from sqlalchemy_utils import database_exists, create_database, drop_database
 
 """we import all ORM here so that SQLAlchemy knows about them to generate the SQL tables"""
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.project import ProjectORM
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.user import UserORM
+# noinspection PyUnresolvedReferences
 from app.core.data.orm.action import ActionORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -24,8 +28,6 @@ from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.orm_base import ORMBase
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.project import ProjectORM
-# noinspection PyUnresolvedReferences
 from app.core.data.orm.project import ProjectUserLinkTable
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.query import QueryORM
@@ -34,7 +36,9 @@ from app.core.data.orm.source_document import SourceDocumentORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.user import UserORM
+from app.core.data.orm.span_group import SpanGroupORM
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from sqlalchemy.orm import sessionmaker, Session

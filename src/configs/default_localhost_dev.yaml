@@ -10,6 +10,7 @@ api:
 repository_root: /tmp/dwts
 
 system_codes:
+  # text codes from spacy NER models (spans)
   NAMED_ENTITY:
     desc: "A named entity"
     children:
@@ -53,6 +54,227 @@ system_codes:
         desc: "Miscellaneous entities, e.g. events, nationalities, products or works of art"
   SENTENCE:
     desc: "A sentence spanning multiple Tokens."
+  # image codes from COCO 2017 (bbox)
+  ACCESSORY:
+    desc: Super Object Category from COCO 2017
+    children:
+      BACKPACK:
+        desc: Object Category from COCO 2017
+      EYE GLASSES:
+        desc: Object Category from COCO 2017
+      HANDBAG:
+        desc: Object Category from COCO 2017
+      HAT:
+        desc: Object Category from COCO 2017
+      SHOE:
+        desc: Object Category from COCO 2017
+      SUITCASE:
+        desc: Object Category from COCO 2017
+      TIE:
+        desc: Object Category from COCO 2017
+      UMBRELLA:
+        desc: Object Category from COCO 2017
+  ANIMAL:
+    desc: Super Object Category from COCO 2017
+    children:
+      BEAR:
+        desc: Object Category from COCO 2017
+      BIRD:
+        desc: Object Category from COCO 2017
+      CAT:
+        desc: Object Category from COCO 2017
+      COW:
+        desc: Object Category from COCO 2017
+      DOG:
+        desc: Object Category from COCO 2017
+      ELEPHANT:
+        desc: Object Category from COCO 2017
+      GIRAFFE:
+        desc: Object Category from COCO 2017
+      HORSE:
+        desc: Object Category from COCO 2017
+      SHEEP:
+        desc: Object Category from COCO 2017
+      ZEBRA:
+        desc: Object Category from COCO 2017
+  APPLIANCE:
+    desc: Super Object Category from COCO 2017
+    children:
+      BLENDER:
+        desc: Object Category from COCO 2017
+      MICROWAVE:
+        desc: Object Category from COCO 2017
+      OVEN:
+        desc: Object Category from COCO 2017
+      REFRIGERATOR:
+        desc: Object Category from COCO 2017
+      SINK:
+        desc: Object Category from COCO 2017
+      TOASTER:
+        desc: Object Category from COCO 2017
+  BACKGROUND:
+    desc: Super Object Category from COCO 2017
+  ELECTRONIC:
+    desc: Super Object Category from COCO 2017
+    children:
+      CELL PHONE:
+        desc: Object Category from COCO 2017
+      KEYBOARD:
+        desc: Object Category from COCO 2017
+      LAPTOP:
+        desc: Object Category from COCO 2017
+      MOUSE:
+        desc: Object Category from COCO 2017
+      REMOTE:
+        desc: Object Category from COCO 2017
+      TV:
+        desc: Object Category from COCO 2017
+  FOOD:
+    desc: Super Object Category from COCO 2017
+    children:
+      APPLE:
+        desc: Object Category from COCO 2017
+      BANANA:
+        desc: Object Category from COCO 2017
+      BROCCOLI:
+        desc: Object Category from COCO 2017
+      CAKE:
+        desc: Object Category from COCO 2017
+      CARROT:
+        desc: Object Category from COCO 2017
+      DONUT:
+        desc: Object Category from COCO 2017
+      HOT DOG:
+        desc: Object Category from COCO 2017
+      ORANGE:
+        desc: Object Category from COCO 2017
+      PIZZA:
+        desc: Object Category from COCO 2017
+      SANDWICH:
+        desc: Object Category from COCO 2017
+  FURNITURE:
+    desc: Super Object Category from COCO 2017
+    children:
+      BED:
+        desc: Object Category from COCO 2017
+      CHAIR:
+        desc: Object Category from COCO 2017
+      COUCH:
+        desc: Object Category from COCO 2017
+      DESK:
+        desc: Object Category from COCO 2017
+      DINING TABLE:
+        desc: Object Category from COCO 2017
+      DOOR:
+        desc: Object Category from COCO 2017
+      MIRROR:
+        desc: Object Category from COCO 2017
+      POTTED PLANT:
+        desc: Object Category from COCO 2017
+      TOILET:
+        desc: Object Category from COCO 2017
+      WINDOW:
+        desc: Object Category from COCO 2017
+  INDOOR:
+    desc: Super Object Category from COCO 2017
+    children:
+      BOOK:
+        desc: Object Category from COCO 2017
+      CLOCK:
+        desc: Object Category from COCO 2017
+      HAIR BRUSH:
+        desc: Object Category from COCO 2017
+      HAIR DRIER:
+        desc: Object Category from COCO 2017
+      SCISSORS:
+        desc: Object Category from COCO 2017
+      TEDDY BEAR:
+        desc: Object Category from COCO 2017
+      TOOTHBRUSH:
+        desc: Object Category from COCO 2017
+      VASE:
+        desc: Object Category from COCO 2017
+  KITCHEN:
+    desc: Super Object Category from COCO 2017
+    children:
+      BOTTLE:
+        desc: Object Category from COCO 2017
+      BOWL:
+        desc: Object Category from COCO 2017
+      CUP:
+        desc: Object Category from COCO 2017
+      FORK:
+        desc: Object Category from COCO 2017
+      KNIFE:
+        desc: Object Category from COCO 2017
+      PLATE:
+        desc: Object Category from COCO 2017
+      SPOON:
+        desc: Object Category from COCO 2017
+      WINE GLASS:
+        desc: Object Category from COCO 2017
+  OUTDOOR:
+    desc: Super Object Category from COCO 2017
+    children:
+      BENCH:
+        desc: Object Category from COCO 2017
+      FIRE HYDRANT:
+        desc: Object Category from COCO 2017
+      PARKING METER:
+        desc: Object Category from COCO 2017
+      STOP SIGN:
+        desc: Object Category from COCO 2017
+      STREET SIGN:
+        desc: Object Category from COCO 2017
+      TRAFFIC LIGHT:
+        desc: Object Category from COCO 2017
+  PERSON:
+    desc: Super Object Category from COCO 2017
+    children:
+      PERSON:
+        desc: Object Category from COCO 2017
+  SPORTS:
+    desc: Super Object Category from COCO 2017
+    children:
+      BASEBALL BAT:
+        desc: Object Category from COCO 2017
+      BASEBALL GLOVE:
+        desc: Object Category from COCO 2017
+      FRISBEE:
+        desc: Object Category from COCO 2017
+      KITE:
+        desc: Object Category from COCO 2017
+      SKATEBOARD:
+        desc: Object Category from COCO 2017
+      SKIS:
+        desc: Object Category from COCO 2017
+      SNOWBOARD:
+        desc: Object Category from COCO 2017
+      SPORTS BALL:
+        desc: Object Category from COCO 2017
+      SURFBOARD:
+        desc: Object Category from COCO 2017
+      TENNIS RACKET:
+        desc: Object Category from COCO 2017
+  VEHICLE:
+    desc: Super Object Category from COCO 2017
+    children:
+      AIRPLANE:
+        desc: Object Category from COCO 2017
+      BICYCLE:
+        desc: Object Category from COCO 2017
+      BOAT:
+        desc: Object Category from COCO 2017
+      BUS:
+        desc: Object Category from COCO 2017
+      CAR:
+        desc: Object Category from COCO 2017
+      MOTORCYCLE:
+        desc: Object Category from COCO 2017
+      TRAIN:
+        desc: Object Category from COCO 2017
+      TRUCK:
+        desc: Object Category from COCO 2017
 
 docprepro:
   text:
@@ -62,7 +284,8 @@ docprepro:
       english_model: "en_core_web_trf"
       german_model: "de_core_news_lg"
   image:
-    default_mode: "akk"
+    default_detr_model: "facebook/detr-resnet-101"
+    confidence_threshold: 0.3
   celery:
     backend:
       host: ${oc.env:REDIS_HOST, localhost}

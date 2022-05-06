@@ -5,13 +5,14 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import coalesce
 
 from app.core.data.orm.orm_base import ORMBase
-from app.core.data.orm.span_group import SpanGroupORM
 
 if TYPE_CHECKING:
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.query import QueryORM
     from app.core.data.orm.source_document import SourceDocumentORM, SourceDocumentMetadataORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
+    from app.core.data.orm.span_group import SpanGroupORM
+    from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.user import UserORM
     from app.core.data.orm.action import ActionTargetORM, ActionORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -59,6 +60,9 @@ class ObjectHandleORM(ORMBase):
 
     span_group_id = Column(Integer, ForeignKey('spangroup.id', ondelete="CASCADE"), index=True)
     span_group: "SpanGroupORM" = relationship("SpanGroupORM", back_populates="object_handle")
+
+    bbox_annotation_id = Column(Integer, ForeignKey('bboxannotation.id', ondelete="CASCADE"), index=True)
+    bbox_annotation: "BBoxAnnotationORM" = relationship("BBoxAnnotationORM", back_populates="object_handle")
 
     document_tag_id = Column(Integer, ForeignKey('documenttag.id', ondelete="CASCADE"), index=True)
     document_tag: "DocumentTagORM" = relationship("DocumentTagORM", back_populates="object_handle")

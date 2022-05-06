@@ -25,6 +25,8 @@ python-jose = "^3.3.0"
 passlib = "^1.7.4"
 Pillow = "^9.1.0"
 transformers = "^4.18.0"
+torch = {version = "^1.11.0", platform = "linux"}
+timm = {version = "^0.5.4", platform = "linux"}
 
 [tool.poetry.dev-dependencies]
 

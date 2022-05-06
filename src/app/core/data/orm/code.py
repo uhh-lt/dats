@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
+    from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.user import UserORM
 
 
@@ -62,6 +63,12 @@ class CurrentCodeORM(ORMBase):
 
     # one to many
     span_annotations: List["SpanAnnotationORM"] = relationship("SpanAnnotationORM",
+                                                               back_populates="current_code",
+                                                               cascade="all, delete",
+                                                               passive_deletes=True)
+
+    # one to many
+    bbox_annotations: List["BBoxAnnotationORM"] = relationship("BBoxAnnotationORM",
                                                                back_populates="current_code",
                                                                cascade="all, delete",
                                                                passive_deletes=True)
