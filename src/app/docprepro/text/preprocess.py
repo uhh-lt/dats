@@ -19,8 +19,8 @@ from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCre
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.docprepro.text.autospan import AutoSpan
 from app.docprepro.celery.celery_worker import celery_prepro_worker
+from app.docprepro.text.autospan import AutoSpan
 from app.docprepro.text.preprotextdoc import PreProTextDoc
 from config import conf
 
@@ -103,16 +103,9 @@ def generate_automatic_span_annotations(ppd: PreProTextDoc) -> PreProTextDoc:
     for ne in doc.ents:
         auto = AutoSpan(code=f"{ne.label_}",
                         start=ne.start_char,
-                        end=ne.end_char)
+                        end=ne.end_char,
+                        text=ne.text)
         ppd.spans["NER"].append(auto)
-
-    # create AutoSpans for Sentences
-    ppd.spans["SENTENCE"] = list()
-    for s in doc.sents:
-        auto = AutoSpan(code=f"SENTENCE",
-                        start=s.start_char,
-                        end=s.end_char)
-        ppd.spans["SENTENCE"].append(auto)
 
     return ppd
 
@@ -148,7 +141,8 @@ def persist_automatic_span_annotations(ppd: PreProTextDoc) -> AnnotationDocument
                 create_dto = SpanAnnotationCreate(begin=aspan.start,
                                                   end=aspan.end,
                                                   current_code_id=ccid,
-                                                  annotation_document_id=adoc_db.id)
+                                                  annotation_document_id=adoc_db.id,
+                                                  span_text=aspan.text)
 
                 crud_span_anno.create(db, create_dto=create_dto)
 

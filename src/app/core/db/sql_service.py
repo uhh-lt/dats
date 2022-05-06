@@ -36,6 +36,8 @@ from app.core.data.orm.source_document import SourceDocumentORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.span_text import SpanTextORM
+# noinspection PyUnresolvedReferences
 from app.core.data.orm.span_group import SpanGroupORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM

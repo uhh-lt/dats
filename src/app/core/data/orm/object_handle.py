@@ -89,6 +89,7 @@ class ObjectHandleORM(ORMBase):
           coalesce(source_document_metadata_id, 0),
           coalesce(annotation_document_id, 0),
           coalesce(span_annotation_id, 0),
+          coalesce(bbox_annotation_id, 0),
           coalesce(span_group_id, 0),
           coalesce(document_tag_id, 0),
           coalesce(action_id, 0),
@@ -110,6 +111,7 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN source_document_metadata_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN annotation_document_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_annotation_id IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN bbox_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_group_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN document_tag_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN action_id IS NULL THEN 0 ELSE 1 END

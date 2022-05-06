@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.span_group import SpanGroupORM
+    from app.core.data.orm.span_text import SpanTextORM
 
 
 class SpanAnnotationORM(ORMBase):
@@ -33,6 +34,9 @@ class SpanAnnotationORM(ORMBase):
     annotation_document_id = Column(Integer, ForeignKey('annotationdocument.id', ondelete="CASCADE"), index=True)
     annotation_document: "AnnotationDocumentORM" = relationship("AnnotationDocumentORM",
                                                                 back_populates="span_annotations")
+
+    span_text_id = Column(Integer, ForeignKey('spantext.id', ondelete="CASCADE"), index=True)
+    span_text: "SpanTextORM" = relationship("SpanTextORM", back_populates="span_annotations")
 
     # many to many
     span_groups: List["SpanGroupORM"] = relationship("SpanGroupORM",

@@ -1,15 +1,32 @@
 from typing import List, Optional
 
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
+from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.span_annotation import SpanAnnotationCreate, SpanAnnotationUpdate
+from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 
 
 class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanAnnotationUpdate]):
+
+    def create(self, db: Session, *, create_dto: SpanAnnotationCreate) -> SpanAnnotationORM:
+        # first create the SpanText
+        span_text_orm = crud_span_text.create(db=db, create_dto=SpanTextCreate(text=create_dto.span_text))
+
+        # create the SpanAnnotation (and link the SpanText via FK)
+        dto_obj_data = jsonable_encoder(create_dto.dict(exclude={"span_text"}))
+        db_obj = self.model(**dto_obj_data)
+        db_obj.span_text_id = span_text_orm.id
+        db.add(db_obj)
+        db.commit()
+
+        db.refresh(db_obj)
+        return db_obj
 
     def read_by_adoc(self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 100) -> List[SpanAnnotationORM]:
         return db.query(self.model).where(self.model.annotation_document_id == adoc_id).offset(skip).limit(limit).all()
