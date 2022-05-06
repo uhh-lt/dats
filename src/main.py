@@ -6,7 +6,7 @@ from uvicorn import Config, Server
 
 from app.core.startup import startup
 
-startup(reset_data=True)
+startup(reset_data=False)
 
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
     span_annotation, document_tag, span_group, bbox_annotation  # noqa E402

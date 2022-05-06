@@ -80,6 +80,7 @@ class AttachedObjectType(str, Enum):
     source_document = 'source_document'
     code = 'code'
     span_annotation = 'span_annotation'
+    bbox_annotation = 'bbox_annotation'
     project = 'project'
     document_tag = 'document_tag'
 
