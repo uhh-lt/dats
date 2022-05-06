@@ -68,7 +68,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
 
     def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
         try:
-            super().create(db=db, create_dto=create_dto)
+            return super().create(db=db, create_dto=create_dto)
         except IntegrityError as e:
             # Flo: return existing OH when UC constraint fails
             if type(e.orig) == UniqueViolation:
