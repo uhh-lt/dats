@@ -9,7 +9,7 @@ from app.core.startup import startup
 startup(reset_data=False)
 
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
-    span_annotation, document_tag, span_group, bbox_annotation  # noqa E402
+    span_annotation, document_tag, span_group, bbox_annotation, search  # noqa E402
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from config import conf  # noqa E402
 
@@ -65,6 +65,7 @@ app.include_router(span_group.router)
 app.include_router(bbox_annotation.router)
 app.include_router(code.router)
 app.include_router(memo.router)
+app.include_router(search.router)
 
 
 def main() -> None:

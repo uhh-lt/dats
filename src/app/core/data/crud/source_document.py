@@ -1,12 +1,13 @@
 from typing import List, Set
 
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete, func, and_, or_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.search import SpanEntity
+from app.core.data.dto.search import SpanEntity, SDocsStatsResult
 from app.core.data.dto.source_document import SourceDocumentCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
@@ -82,7 +83,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                 HAVING COUNT(*) = len(TAG_IDS)
             """
             query = db.query(self.model).join(SourceDocumentDocumentTagLinkTable,
-                                              self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
+                             self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
             # noinspection PyUnresolvedReferences
             query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
             query = query.group_by(self.model.id)
@@ -115,6 +116,32 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                         for se in span_entities])))
         query = query.group_by(self.model.id, CurrentCodeORM.id, SpanTextORM.id)
         query = query.having(func.count(self.model.id) == len(span_entities)).all()
+        return query.offset(skip).limit(limit).all()
+
+    def entity_stats(self,
+                     db: Session,
+                     *,
+                     sdoc_ids: Set[int] = None,
+                     proj_id: int,
+                     skip: int = 0,
+                     limit: int = 100) \
+            -> List[SDocsStatsResult]:
+        # Flo: we always want ADocs from the SYSTEM_USER
+        user_ids = set()
+        user_ids.add(SYSTEM_USER_ID)
+
+        query = db.query(self.model.id, CodeORM.name, SpanTextORM.text, func.sum(self.model.id).label("count")) \
+            .join(AnnotationDocumentORM) \
+            .join(SpanAnnotationORM) \
+            .join(CurrentCodeORM) \
+            .join(CodeORM) \
+            .join(SpanTextORM)
+        # noinspection PyUnresolvedReferences
+        query = query.filter(and_(SourceDocumentORM.project_id == proj_id,
+                                  SourceDocumentORM.id.in_(list(sdoc_ids)),
+                                  AnnotationDocumentORM.user_id.in_(list(user_ids))))
+        query = query.group_by(self.model.id, CodeORM.id, SpanTextORM.id)
+
         return query.offset(skip).limit(limit).all()
 
 
