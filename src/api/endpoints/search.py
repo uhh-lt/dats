@@ -89,3 +89,52 @@
 #                                user: UserRead = Depends(current_user)) -> List[DocumentRead]:
 #     # TODO Flo: only if the user has access?
 #     raise NotImplementedError()
+
+from typing import List, Dict
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_db_session, skip_limit_params
+from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.dto.search import SearchSDocsQueryParameters
+from app.core.data.dto.source_document import SourceDocumentRead
+
+router = APIRouter(prefix="/search")
+tags = ["search"]
+
+
+@router.post("/sdoc", tags=tags,
+             response_model=List[SourceDocumentRead],
+             summary="Returns all SourceDocuments of the given Project that match the query parameters",
+             description=("Returns all SourceDocuments of the given Project with the given ID that match the"
+                          "query parameters"))
+async def search_sdocs(*,
+                       db: Session = Depends(get_db_session),
+                       query_params: SearchSDocsQueryParameters,
+                       skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SourceDocumentRead]:
+    # TODO Flo: only if the user has access?
+    # TODO Flo: combine both queries
+    if query_params.span_entities:
+        sdocs_spans = crud_sdoc.read_by_span_entities(db=db,
+                                                      proj_id=query_params.proj_id,
+                                                      user_ids=query_params.user_ids,
+                                                      span_entities=query_params.span_entities,
+                                                      **skip_limit)
+    if query_params.tag_ids:
+        sdocs_tags = crud_sdoc.read_by_project_and_document_tags(db=db,
+                                                                 proj_id=query_params.proj_id,
+                                                                 tag_ids=query_params.tag_ids,
+                                                                 all_tags=query_params.all_tags,
+                                                                 **skip_limit)
+
+    if query_params.span_entities and query_params.tag_ids:
+        sdocs_combined = set(sdocs_spans).union(set(sdocs_tags))
+        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_combined]
+    elif query_params.span_entities and not query_params.tag_ids:
+        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_spans]
+    elif not query_params.span_entities and query_params.tag_ids:
+        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_tags]
+    elif not query_params.span_entities and not query_params.tag_ids:
+        sdocs = crud_sdoc.read_by_project(proj_id=query_params.proj_id)
+        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs]
