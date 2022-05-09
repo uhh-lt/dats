@@ -97,6 +97,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.project import crud_project
 from app.core.data.dto.search import SearchSDocsQueryParameters
 from app.core.data.dto.source_document import SourceDocumentRead
 
@@ -136,5 +137,5 @@ async def search_sdocs(*,
     elif not query_params.span_entities and query_params.tag_ids:
         return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_tags]
     elif not query_params.span_entities and not query_params.tag_ids:
-        sdocs = crud_sdoc.read_by_project(proj_id=query_params.proj_id)
+        sdocs = crud_project.read(id=query_params.proj_id).source_documents
         return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs]
