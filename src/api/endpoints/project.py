@@ -1,7 +1,7 @@
 from typing import List, Dict
 from typing import Optional
 
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, File, Query
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, File
 from sqlalchemy.orm import Session
 
 from api.dependencies import skip_limit_params, get_db_session
@@ -91,20 +91,9 @@ async def delete_project(*,
 async def get_project_sdocs(*,
                             proj_id: int,
                             db: Session = Depends(get_db_session),
-                            tag_ids: Optional[List[int]] = Query(title="DocumentTag IDs",
-                                                                 description="List of DocumentTag IDs",
-                                                                 default=None),
-                            all_tags: Optional[bool] = Query(title="All or Any DocumentTags",
-                                                             description=("If true return SourceDocuments tagged with"
-                                                                          " all DocumentTags, or any DocumentTag "
-                                                                          "otherwise"),
-                                                             default=False)) -> List[SourceDocumentRead]:
+                            skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    if tag_ids is not None:
-        sdocs = crud_sdoc.read_by_project_and_document_tags(db=db, proj_id=proj_id, tag_ids=tag_ids, all_tags=all_tags)
-    else:
-        sdocs = crud_project.read(db=db, id=proj_id).source_documents
-
+    sdocs = crud_sdoc.read_by_project(db=db, proj_id=proj_id, **skip_limit)
     return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs]
 
 
