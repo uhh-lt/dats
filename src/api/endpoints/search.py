@@ -98,7 +98,7 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.project import crud_project
-from app.core.data.dto.search import SearchSDocsQueryParameters, SDocsStatsQueryParameters, SDocsStatsResult
+from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityStatsQueryParameters, SpanEntityStat
 from app.core.data.dto.source_document import SourceDocumentRead
 
 router = APIRouter(prefix="/search")
@@ -142,13 +142,11 @@ async def search_sdocs(*,
 
 
 @router.post("/stats", tags=tags,
-             response_model=List[SDocsStatsResult],
-             summary="Returns all SourceDocuments of the given Project that match the query parameters",
-             description=("Returns all SourceDocuments of the given Project with the given ID that match the"
-                          "query parameters"))
+             response_model=List[SpanEntityStat],
+             summary="Returns SpanEntityStats for the given SourceDocuments.",
+             description="Returns SpanEntityStats for the given SourceDocuments.")
 async def search_stats(*,
                        db: Session = Depends(get_db_session),
-                       query_params: SDocsStatsQueryParameters,
-                       skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SDocsStatsResult]:
-
-    return crud_sdoc.entity_stats(db=db, sdoc_ids=query_params.sdoc_ids, proj_id=query_params.proj_id, **skip_limit)
+                       query_params: SpanEntityStatsQueryParameters,
+                       skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanEntityStat]:
+    return crud_sdoc.collect_entity_stats(db=db, sdoc_ids=query_params.sdoc_ids, proj_id=query_params.proj_id, **skip_limit)

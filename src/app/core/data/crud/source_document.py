@@ -1,13 +1,12 @@
 from typing import List, Set
 
-from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete, func, and_, or_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.search import SpanEntity, SDocsStatsResult
+from app.core.data.dto.search import SpanEntity, SpanEntityStat
 from app.core.data.dto.source_document import SourceDocumentCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
@@ -126,19 +125,21 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         query = query.having(func.count(self.model.id) == len(span_entities)).all()
         return query.offset(skip).limit(limit).all()
 
-    def entity_stats(self,
-                     db: Session,
-                     *,
-                     sdoc_ids: Set[int] = None,
-                     proj_id: int,
-                     skip: int = 0,
-                     limit: int = 100) \
-            -> List[SDocsStatsResult]:
+    def collect_entity_stats(self,
+                             db: Session,
+                             *,
+                             user_ids: Set[int] = None,
+                             sdoc_ids: Set[int] = None,
+                             proj_id: int,
+                             skip: int = 0,
+                             limit: int = 100) \
+            -> List[SpanEntityStat]:
         # Flo: we always want ADocs from the SYSTEM_USER
-        user_ids = set()
+        if not user_ids:
+            user_ids = set()
         user_ids.add(SYSTEM_USER_ID)
 
-        query = db.query(self.model.id, CodeORM.name, SpanTextORM.text, func.sum(self.model.id).label("count")) \
+        query = db.query(self.model.id, CodeORM.id, SpanTextORM.text, func.sum(self.model.id).label("count")) \
             .join(AnnotationDocumentORM) \
             .join(SpanAnnotationORM) \
             .join(CurrentCodeORM) \
@@ -150,7 +151,11 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                   AnnotationDocumentORM.user_id.in_(list(user_ids))))
         query = query.group_by(self.model.id, CodeORM.id, SpanTextORM.id)
 
-        return query.offset(skip).limit(limit).all()
+        res = query.offset(skip).limit(limit).all()
+        return [SpanEntityStat(sdoc_id=sdoc_id,
+                               span_entity=SpanEntity(code_id=code_id,
+                                                      span_text=text),
+                               count=count) for (sdoc_id, code_id, text, count) in res]
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)
