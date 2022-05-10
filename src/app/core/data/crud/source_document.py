@@ -56,6 +56,14 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         return db.query(self.model).join(SourceDocumentORM, DocumentTagORM.source_documents) \
             .filter(self.model.project_id == proj_id, DocumentTagORM.id == tag_id).all()
 
+    def read_by_project(self,
+                        db: Session,
+                        *,
+                        proj_id: int,
+                        skip: int = 0,
+                        limit: int = 100) -> List[SourceDocumentORM]:
+        return db.query(self.model).filter(self.model.project_id == proj_id).offset(skip).limit(limit).all()
+
     def read_by_project_and_document_tags(self,
                                           db: Session,
                                           *,
@@ -83,7 +91,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                 HAVING COUNT(*) = len(TAG_IDS)
             """
             query = db.query(self.model).join(SourceDocumentDocumentTagLinkTable,
-                             self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
+                                              self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
             # noinspection PyUnresolvedReferences
             query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
             query = query.group_by(self.model.id)
