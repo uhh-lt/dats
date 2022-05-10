@@ -17,7 +17,7 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
 from app.core.data.dto.project import ProjectRead
-from app.core.data.dto.search import ElasticSearchSourceDocument
+from app.core.data.dto.search import ElasticSearchDocumentCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.repo.repo_service import RepoService
@@ -173,7 +173,7 @@ def add_document_to_elasticsearch_index(ppd: PreProTextDoc) -> PreProTextDoc:
     with SQLService().db_session() as db:
         proj = ProjectRead.from_orm(crud_project.read(db=db, id=ppd.project_id))
 
-    esdoc = ElasticSearchSourceDocument(filename=ppd.filename,
+    esdoc = ElasticSearchDocumentCreate(filename=ppd.filename,
                                         content=ppd.raw_text,
                                         tokens=ppd.tokens,
                                         keywords=ppd.keywords,

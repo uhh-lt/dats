@@ -1,11 +1,12 @@
-from typing import Dict, Any, Iterable
+from typing import Dict, Any, Iterable, Optional, Set
 
 import srsly
 from elasticsearch import Elasticsearch, TransportError, ConnectionError
 from loguru import logger
 
 from app.core.data.dto.project import ProjectRead
-from app.core.data.dto.search import ElasticSearchSourceDocument
+from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
+    ElasticSearchMemoRead
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -84,14 +85,56 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
     def add_document_to_index(self,
                               proj: ProjectRead,
-                              esdoc: ElasticSearchSourceDocument) -> int:
+                              esdoc: ElasticSearchDocumentCreate) -> int:
         # TODO Flo: what to do when this fails!? How to keep the SQL and ES consistent
         res = self.__client.index(index=proj.doc_index,
                                   id=str(esdoc.sdoc_id),
                                   document=esdoc.json())
         if not res['_id'] == esdoc.sdoc_id:
             # FIXME Flo: What to do?!
-            logger.error(f"ElasticSearch Document ID and SQL Document ID of Document {esdoc.filename} does not match!")
+            logger.error(f"ElasticSearch Document ID and SQL Document ID of Document {esdoc.filename} do not match!")
 
         logger.debug(f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to Index '{proj.doc_index}'!")
         return res['_id']
+
+    def get_esdoc_by_sdoc_id(self,
+                             proj: ProjectRead,
+                             sdoc_id: int,
+                             fields: Set[str] = None) -> Optional[ElasticSearchDocumentRead]:
+        res = self.__client.get(index=proj.doc_index,
+                                id=str(sdoc_id),
+                                _source_includes=fields)
+        return ElasticSearchDocumentRead(**res["_source"])
+
+    def delete_document_from_index(self,
+                                   proj: ProjectRead,
+                                   sdoc_id: int) -> None:
+        self.__client.delete(index=proj.doc_index, id=str(sdoc_id))
+        logger.info(f"Deleted Document with ID={sdoc_id} from Index '{proj.doc_index}'!")
+
+    def add_memo_to_index(self,
+                          proj: ProjectRead,
+                          esmemo: ElasticSearchMemoCreate) -> int:
+        res = self.__client.index(index=proj.memo_index,
+                                  id=str(esmemo.memo_id),
+                                  document=esmemo.json())
+        if not res['_id'] == esmemo.memo_id:
+            # FIXME Flo: What to do?!
+            logger.error(f"ElasticSearch Memo ID and SQL Memo ID of Memo {esmemo.title} do not match!")
+        logger.debug(f"Added Memo '{esmemo.title}' with ID '{res['_id']}' to Index '{proj.doc_index}'!")
+        return res['_id']
+
+    def get_esmemo_by_memo_id(self,
+                              proj: ProjectRead,
+                              memo_id: int,
+                              fields: Set[str] = None) -> Optional[ElasticSearchMemoRead]:
+        res = self.__client.get(index=proj.memo_index,
+                                id=str(memo_id),
+                                _source_includes=fields)
+        return ElasticSearchMemoRead(**res["_source"])
+
+    def delete_memo_from_index(self,
+                               proj: ProjectRead,
+                               memo_id: int) -> None:
+        self.__client.delete(index=proj.memo_index, id=str(memo_id))
+        logger.info(f"Deleted Memo with ID={memo_id} from Index '{proj.memo_index}'!")
