@@ -6,6 +6,7 @@ from app.docprepro.text.autospan import AutoSpan
 
 
 class PreProTextDoc(BaseModel):
+    filename: str
     project_id: int
     sdoc_id: int
     raw_text: str

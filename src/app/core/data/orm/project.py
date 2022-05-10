@@ -62,6 +62,14 @@ class ProjectORM(ORMBase):
     users: List["UserORM"] = relationship("UserORM", secondary="ProjectUserLinkTable".lower(),
                                           back_populates="projects")
 
+    @property
+    def doc_index(self):
+        return f"{self.title}_docs"
+
+    @property
+    def memo_index(self):
+        return f"{self.title}_memos"
+
 
 class ProjectUserLinkTable(ORMBase):
     project_id = Column(Integer, ForeignKey("project.id"), primary_key=True)

@@ -1,8 +1,4 @@
 from loguru import logger
-from pydantic import EmailStr
-
-from app.core.data.crud.user import crud_user
-from app.core.data.dto.user import UserCreate
 
 
 def startup(reset_data: bool = False) -> None:
@@ -31,15 +27,22 @@ def __init_services__(reset_database: bool = False,
                       reset_repo: bool = False) -> None:
     # import celery workers to configure
     from app.docprepro.celery.celery_worker import celery_prepro_worker
+    # import and init RepoService
     from app.core.data.repo.repo_service import RepoService
     RepoService()._create_directory_structure(remove_if_exists=reset_repo)
     # create SQL DBs and Tables # TODO Flo: Alembic
     from app.core.db.sql_service import SQLService
     SQLService()._create_database_and_tables(drop_if_exists=reset_database)
+    # import and init ElasticSearch
+    from app.core.search.elasticsearch_service import ElasticSearchService
+    ElasticSearchService()
 
 
 def __create_system_user__() -> None:
     from app.core.db.sql_service import SQLService
+    from app.core.data.crud.user import crud_user
+    from app.core.data.dto.user import UserCreate
+    from pydantic import EmailStr
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):
             # TODO Flo: this is not nice.. make sure system user cannot be changed, seen from outside, login, etc

@@ -10,15 +10,19 @@ from spacy.tokens import Doc
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
+from app.core.data.dto.project import ProjectRead
+from app.core.data.dto.search import ElasticSearchSourceDocument
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
+from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.celery.celery_worker import celery_prepro_worker
 from app.docprepro.text.autospan import AutoSpan
 from app.docprepro.text.preprotextdoc import PreProTextDoc
@@ -44,6 +48,7 @@ else:
 
 sql = SQLService(echo=False)
 repo = RepoService()
+es = ElasticSearchService()
 
 
 @celery_prepro_worker.task(acks_late=True)
@@ -71,7 +76,8 @@ def import_uploaded_text_document(doc_file: UploadFile,
         sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
     # create PreProTextDoc
-    ppd = PreProTextDoc(project_id=project_id,
+    ppd = PreProTextDoc(filename=create_dto.filename,
+                        project_id=project_id,
                         sdoc_id=sdoc_db_obj.id,
                         raw_text=sdoc_db_obj.content)
     ppd.metadata[sdoc_meta_db_obj.key] = sdoc_meta_db_obj.value
@@ -98,6 +104,13 @@ def generate_automatic_span_annotations(ppd: PreProTextDoc) -> PreProTextDoc:
         if not (token.is_stop or token.is_punct) and (token.is_alpha or token.is_digit):
             ppd.word_freqs.update((token.text,))
 
+    # sort the word freqs!
+    ppd.word_freqs = {k: v for (k, v) in sorted(ppd.word_freqs.items(),
+                                                key=lambda i: i[1],
+                                                reverse=True)}
+    # use top-5 as keywords
+    ppd.keywords = list(ppd.word_freqs.keys())[:5]
+
     # create AutoSpans for NER
     ppd.spans["NER"] = list()
     for ne in doc.ents:
@@ -111,7 +124,7 @@ def generate_automatic_span_annotations(ppd: PreProTextDoc) -> PreProTextDoc:
 
 
 @celery_prepro_worker.task(acks_late=True)
-def persist_automatic_span_annotations(ppd: PreProTextDoc) -> AnnotationDocumentRead:
+def persist_automatic_span_annotations(ppd: PreProTextDoc) -> PreProTextDoc:
     # create AnnoDoc for system user
     with SQLService().db_session() as db:
         adoc_create = AnnotationDocumentCreate(source_document_id=ppd.sdoc_id,
@@ -147,12 +160,26 @@ def persist_automatic_span_annotations(ppd: PreProTextDoc) -> AnnotationDocument
                 crud_span_anno.create(db, create_dto=create_dto)
 
         # persist word frequencies
-        sorted_word_freqs = {k: v for (k, v) in sorted(ppd.word_freqs.items(),
-                                                       key=lambda i: i[1],
-                                                       reverse=True)}
         sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="word_frequencies",
-                                                            value=json.dumps(sorted_word_freqs).replace("\"", "'"),
+                                                            value=json.dumps(ppd.word_freqs).replace("\"", "'"),
                                                             source_document_id=ppd.sdoc_id)
         sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
-    return adoc_read
+    return ppd
+
+
+@celery_prepro_worker.task(acks_late=True)
+def add_document_to_elasticsearch_index(ppd: PreProTextDoc) -> PreProTextDoc:
+    with SQLService().db_session() as db:
+        proj = ProjectRead.from_orm(crud_project.read(db=db, id=ppd.project_id))
+
+    esdoc = ElasticSearchSourceDocument(filename=ppd.filename,
+                                        content=ppd.raw_text,
+                                        tokens=ppd.tokens,
+                                        keywords=ppd.keywords,
+                                        sdoc_id=ppd.sdoc_id,
+                                        project_id=ppd.project_id)
+
+    es.add_document_to_index(proj=proj, esdoc=esdoc)
+
+    return ppd

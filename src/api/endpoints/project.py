@@ -17,6 +17,7 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import UserRead
+from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.image import image_document_preprocessing_apply_async
 from app.docprepro.text import text_document_preprocessing_apply_async
 
@@ -32,6 +33,13 @@ async def create_new_project(*,
                              db: Session = Depends(get_db_session),
                              proj: ProjectCreate) -> ProjectRead:
     db_obj = crud_project.create(db=db, create_dto=proj)
+
+    try:
+        # create the ES Indices
+        ElasticSearchService().create_project_indices(proj=ProjectRead.from_orm(db_obj))
+    except Exception as e:
+        crud_project.remove(db=db, id=db_obj.id)
+        raise HTTPException(status_code=500, detail="Cannot create ElasticSearch Indices for the Project!")
     return ProjectRead.from_orm(db_obj)
 
 
@@ -81,6 +89,14 @@ async def delete_project(*,
                          proj_id: int) -> ProjectRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_project.remove(db=db, id=proj_id)
+
+    try:
+        # remove the ES Indices # Flo Do we want this?!
+        ElasticSearchService().remove_project_indices(proj=ProjectRead.from_orm(db_obj))
+    except Exception as e:
+        crud_project.remove(db=db, id=db_obj.id)
+        raise HTTPException(status_code=500, detail="Cannot create ElasticSearch Indices for the Project!")
+
     return ProjectRead.from_orm(db_obj)
 
 

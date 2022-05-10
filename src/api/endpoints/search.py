@@ -5,7 +5,7 @@
 #
 # from api.auth.jwt_oauth2 import current_user
 # from app.core.crud.document_service import DocumentService
-# from app.search.elasticsearch import ElasticSearchService
+# from app.core.search.elasticsearch_service import ElasticSearchService
 # from config import conf
 # from model import DocumentRead, ProjectCreate
 # from model import UserRead

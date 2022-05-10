@@ -12,7 +12,6 @@ from app.core.data.orm.user import UserORM
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
     def create(self, db: Session, *, create_dto: ProjectCreate) -> ProjectORM:
-        # TODO Flo: create ES indices
         # 1) create the project
         dto_obj_data = jsonable_encoder(create_dto)
         # noinspection PyArgumentList

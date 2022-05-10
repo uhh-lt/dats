@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "filename": {
+      "type": "search_as_you_type",
+      "fields": {
+        "keyword": {
+          "type": "constant_keyword"
+        }
+      }
+    },
+    "content": {
+      "type": "text"
+    },
+    "tokens": {
+      "type": "keyword"
+    },
+    "keywords": {
+      "type": "keyword"
+    },
+    "sdoc_id": {
+      "type": "long"
+    },
+    "project_id": {
+      "type": "long"
+    },
+    "created": {
+      "type": "date"
+    }
+  }
+}

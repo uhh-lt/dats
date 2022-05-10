@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Set, Optional, List
 
 from pydantic import BaseModel, Field
@@ -36,3 +37,17 @@ class SearchSDocsQueryParameters(BaseModel):
 
     all_tags: Optional[bool] = Field(description=("If true return SourceDocuments tagged with all DocumentTags, or any"
                                                   "of the DocumentTags otherwise"), default=False)
+
+
+class ElasticSearchSourceDocument(BaseModel):
+    filename: str = Field(description='The filename of the SourceDocument')
+    content: str = Field(description='The raw text of the SourceDocument')
+    tokens: List[str] = Field(description='The list of the tokens in the SourceDocument')
+    keywords: List[str] = Field(description='The list of keywords of the SourceDocument')
+    sdoc_id: int = Field(description='The ID of the SourceDocument as it is in the SQL DB')
+    project_id: int = Field(description='The ID of the Project the SourceDocument belongs to')
+    created: datetime = Field(description="The created date of the SourceDocument", default=datetime.now())
+
+
+class ElasticSearchHit(ElasticSearchSourceDocument):
+    score: float = Field(description='The score of the SourceDocument that was found by a ES Query')
