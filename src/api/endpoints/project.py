@@ -86,8 +86,8 @@ async def delete_project(*,
 
 @router.get("/{proj_id}/sdoc", tags=tags,
             response_model=List[SourceDocumentRead],
-            summary="Returns all SourceDocuments of the Project that match the query parameters",
-            description="Returns all SourceDocuments of the Project with the given ID that match the query parameters")
+            summary="Returns all SourceDocuments of the Project.",
+            description="Returns all SourceDocuments of the Project with the given ID.")
 async def get_project_sdocs(*,
                             proj_id: int,
                             db: Session = Depends(get_db_session),
