@@ -28,7 +28,7 @@ class SpanAnnotationUpdate(SpanAnnotationBaseDTO, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class SpanAnnotationRead(SpanAnnotationBaseDTO):
     id: int = Field(description='ID of the SpanAnnotation')
-    span_text: str = Field(description='The SpanText the SpanAnnotation spans.')
+    span_text_id: str = Field(description='The SpanText the SpanAnnotation spans.')
     current_code_id: int = Field(description='CurrentCode the SpanAnnotation refers to')
     annotation_document_id: int = Field(description='AnnotationDocument the SpanAnnotation refers to')
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")
@@ -38,7 +38,7 @@ class SpanAnnotationRead(SpanAnnotationBaseDTO):
         orm_mode = True
 
 
-class SpanAnnotationReadResolvedCode(SpanAnnotationBaseDTO):
+class SpanAnnotationReadResolved(SpanAnnotationBaseDTO):
     id: int = Field(description='ID of the SpanAnnotation')
     span_text: str = Field(description='The SpanText the SpanAnnotation spans.')
     code: CodeRead = Field(description='Code the SpanAnnotation refers to')

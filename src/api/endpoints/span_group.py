@@ -6,7 +6,7 @@ from requests import Session
 from api.dependencies import resolve_code_param, get_db_session
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationReadResolvedCode
+from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationReadResolved
 from app.core.data.dto.span_group import SpanGroupRead, SpanGroupUpdate, SpanGroupCreate
 
 router = APIRouter(prefix="/spangroup")
@@ -62,21 +62,22 @@ async def delete_by_id(*,
 
 
 @router.get("/{span_group_id}/span_annotations", tags=tags,
-            response_model=List[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]],
+            response_model=List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
             summary="Returns all SpanAnnotations in the SpanGroup",
             description="Returns all SpanAnnotations in the SpanGroup with the given ID if it exists")
 async def get_all_annotations(*,
                               db: Session = Depends(get_db_session),
                               span_group_id: int,
                               resolve_code: bool = Depends(resolve_code_param)) \
-        -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolvedCode]]:
+        -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
     spans = span_group_db_obj.span_annotations
     span_read_dtos = [SpanAnnotationRead.from_orm(span) for span in spans]
     if resolve_code:
-        return [SpanAnnotationReadResolvedCode(**span_dto.dict(exclude={"current_code_id"}),
-                                               code=CodeRead.from_orm(span_orm.current_code.code))
+        return [SpanAnnotationReadResolved(**span_dto.dict(exclude={"current_code_id", "span_text_id"}),
+                                           code=CodeRead.from_orm(span_orm.current_code.code),
+                                           span_text=span_orm.span_text.text)
                 for span_orm, span_dto in zip(spans, span_read_dtos)]
     else:
         return span_read_dtos
