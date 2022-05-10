@@ -137,7 +137,7 @@ async def search_sdocs(*,
     elif not query_params.span_entities and query_params.tag_ids:
         return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_tags]
     elif not query_params.span_entities and not query_params.tag_ids:
-        sdocs = crud_project.read(id=query_params.proj_id).source_documents
+        sdocs = crud_project.read(db=db, id=query_params.proj_id).source_documents
         return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs]
 
 
