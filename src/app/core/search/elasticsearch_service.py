@@ -24,12 +24,13 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                 sniff_on_start=conf.elasticsearch.sniff_on_start,
                                 sniff_on_connection_fail=conf.elasticsearch.sniff_on_connection_fail,
                                 sniffer_timeout=conf.elasticsearch.sniffer_timeout)
-            esc.ping()
+            if not esc.ping():
+                raise ConnectionError()
 
             cls.__client = esc
 
         except (ConnectionError, TransportError) as e:
-            msg = f"Cannot connect to ElasticSearch - Error '{e.status_code}': '{e.error}'"
+            msg = f"Cannot connect to ElasticSearch - Error '{e}'"
             logger.error(msg)
             # TODO Flo: do we really want to exit here?
             raise SystemExit(msg)
