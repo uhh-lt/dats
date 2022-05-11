@@ -1,12 +1,15 @@
-from typing import Dict, Any, Iterable, Optional, Set
+from pathlib import Path
+from typing import Dict, Any, Iterable, Optional, Set, List
 
 import srsly
-from elasticsearch import Elasticsearch, TransportError, ConnectionError
+from elasticsearch import Elasticsearch
 from loguru import logger
 
+from app.core.data.doc_type import DocType
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
-    ElasticSearchMemoRead
+    ElasticSearchMemoRead, ElasticSearchDocumentHit
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -15,6 +18,16 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
     def __new__(cls, *args: Iterable[Any], **kwargs: Dict[Any, Any]):
         try:
+            memo_mappings_path = Path(conf.elasticsearch.index_mappings.memos)
+            doc_mappings_path = Path(conf.elasticsearch.index_mappings.memos)
+            if not memo_mappings_path.exists():
+                raise FileNotFoundError(f"Cannot find ElasticSearch Memo Index Mapping: {memo_mappings_path}")
+            elif not doc_mappings_path.exists():
+                raise FileNotFoundError(f"Cannot find ElasticSearch Document Index Mapping: {doc_mappings_path}")
+
+            cls.memo_mappings = srsly.read_json(memo_mappings_path)
+            cls.doc_mappings = srsly.read_json(doc_mappings_path)
+
             # ElasticSearch Connection
             esc = Elasticsearch([{"host": conf.elasticsearch.host, "port": conf.elasticsearch.port, }],
                                 use_ssl=conf.elasticsearch.use_ssl,
@@ -25,12 +38,12 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                 sniff_on_connection_fail=conf.elasticsearch.sniff_on_connection_fail,
                                 sniffer_timeout=conf.elasticsearch.sniffer_timeout)
             if not esc.ping():
-                raise ConnectionError()
+                raise Exception(f"Cant connect to ElasticSearch on {conf.elasticsearch.host}:{conf.elasticsearch.port}")
 
             cls.__client = esc
 
-        except (ConnectionError, TransportError) as e:
-            msg = f"Cannot connect to ElasticSearch - Error '{e}'"
+        except Exception as e:
+            msg = f"Cannot instantiate ElasticSearchService - Error '{e}'"
             logger.error(msg)
             # TODO Flo: do we really want to exit here?
             raise SystemExit(msg)
@@ -60,23 +73,21 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
     def create_project_indices(self, proj: ProjectRead) -> None:
         # create the ES Index for Documents
-        doc_mappings = srsly.read_json(conf.elasticsearch.index_mappings.docs)
         doc_settings = conf.elasticsearch.index_settings.docs
         if doc_settings is not None:
             doc_settings = srsly.read_json(doc_settings)
 
         self.__create_index(index=proj.doc_index,
-                            mappings=doc_mappings,
+                            mappings=self.doc_mappings,
                             settings=doc_settings,
                             replace_if_exists=True)
 
         # create the ES Index for Memos
-        memo_mappings = srsly.read_json(conf.elasticsearch.index_mappings.memos)
         memo_settings = conf.elasticsearch.index_settings.memos
         if memo_settings is not None:
             memo_settings = srsly.read_json(memo_settings)
         self.__create_index(index=proj.memo_index,
-                            mappings=memo_mappings,
+                            mappings=self.memo_mappings,
                             settings=memo_settings,
                             replace_if_exists=True)
 
@@ -139,68 +150,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                memo_id: int) -> None:
         self.__client.delete(index=proj.memo_index, id=str(memo_id))
         logger.info(f"Deleted Memo with ID={memo_id} from Index '{proj.memo_index}'!")
-
-    # def __search_sdocs(self, index: str, query: Dict[str, Any], limit: Optional[int] = 100) \
-    #         -> List[SourceDocumentRead]:
-    #     """
-    #     Helper function that can be reused to find Documents with different queries.
-    #     :param query: The ElasticSearch query object in ES Query DSL
-    #     :param limit: The maximum number of returned Documents
-    #     :return: A (possibly empty) list of Documents matching the query
-    #     :rtype: List[DocumentElasticSearchHit]
-    #     """
-    #     self.__check_index_name(index)
-    #
-    #     if not self.__client.indices.exists(index=index):
-    #         raise ValueError(f"ElasticSearch Index '{index}' does not exist!")
-    #
-    #     if query is None or len(query) < 1:
-    #         raise ValueError("Query DSL object must not be None or empty!")
-    #     if (not isinstance(limit, int)) or limit > 10000 or limit < 1:
-    #         raise ValueError("Limit must be a positive Integer smaller than 10000!")
-    #
-    #     res = self.__client.search(index=index,
-    #                                query=query,
-    #                                size=limit,
-    #                                filter_path=["hits.hits._source", "hits.hits._id", "hits.hits._score"])
-    #
-    #     if len(res) == 0:
-    #         return []
-    #
-    #     return [DocumentElasticSearchHit(filename=doc["_source"]["filename"],
-    #                                      created=doc["_source"]["created"],
-    #                                      content=doc["_source"]["content"],
-    #                                      score=doc["_score"],
-    #                                      id=doc["_id"]) for doc in res["hits"]["hits"]]
-    #
-    # def search_sdocs_by_exact_filename(self, index: str, filename: str, limit: Optional[int] = 100) \
-    #         -> List[SourceDocumentRead]:
-    #     # Flo: Using term query since filename is a keyword field
-    #     return self.__search_sdocs(index=index, query={
-    #         "term": {
-    #             "filename": filename
-    #         }
-    #     }, limit=limit)
-    #
-    # def search_sdocs_by_prefix_filename(self, index: str, filename_prefix: str, limit: Optional[int] = 100) \
-    #         -> List[SourceDocumentRead]:
-    #     return self.__search_sdocs(index=index, query={
-    #         "prefix": {
-    #             "filename": filename_prefix
-    #         }
-    #     }, limit=limit)
-    #
-    # def search_sdocs_via_query_in_content(self, index: str, query: str, limit: Optional[int] = 100) \
-    #         -> List[SourceDocumentRead]:
-    #     return self.__search_sdocs(index=index, query={
-    #         "match": {
-    #             "content": {
-    #                 "query": query
-    #                 # "fuzziness": 1
-    #             }
-    #         }
-    #     }, limit=limit)
-    #
 
     def _get_client(self) -> Elasticsearch:
         """
