@@ -41,6 +41,19 @@ class SearchSDocsQueryParameters(BaseModel):
                                                   "of the DocumentTags otherwise"), default=False)
 
 
+class SourceDocumentContentQuery(BaseModel):
+    proj_id: int = Field(description="The ID of the Project the SourceDocuments have to belong to.")
+    content_query: str = Field(description="The query term to search within the content of the SourceDocuments",
+                               min_length=1)
+
+
+class SourceDocumentFilenameQuery(BaseModel):
+    proj_id: int = Field(description="The ID of the Project the SourceDocuments have to belong to.")
+    filename_query: str = Field(description="The query term to search within the filename of the SourceDocuments",
+                                min_length=1)
+    prefix: bool = Field(description="If true, filename prefix search is done. If false exact filename is searched.")
+
+
 class ElasticSearchDocumentCreate(BaseModel):
     filename: str = Field(description="The filename of the SourceDocument")
     content: str = Field(description="The raw text of the SourceDocument")

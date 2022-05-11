@@ -204,13 +204,13 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
     def search_sdocs_by_exact_filename(self,
                                        proj: ProjectRead,
-                                       filename: str,
+                                       exact_filename: str,
                                        limit: Optional[int] = 10,
                                        skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
         # Flo: Using term query since filename is a keyword field
         return self.__search_sdocs(proj=proj, query={
             "term": {
-                "filename": filename
+                "filename": exact_filename
             }
         }, limit=limit, skip=skip)
 
