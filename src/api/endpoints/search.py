@@ -172,8 +172,8 @@ async def search_sdocs_by_content_query(*,
 
 @router.post("/sdoc/filename", tags=tags,
              response_model=PaginatedSourceDocumentSearchResults,
-             summary="Returns all SourceDocuments where the content matches the query via lexical search",
-             description="Returns all SourceDocuments where the content matches the query via lexical search")
+             summary="Returns all SourceDocuments where the filename matches the query via lexical search",
+             description="Returns all SourceDocuments where the filename matches the query via lexical search")
 async def search_sdocs_by_filename_query(*,
                                          db: Session = Depends(get_db_session),
                                          filename_query: SourceDocumentFilenameQuery,
