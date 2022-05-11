@@ -109,20 +109,23 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         if not user_ids:
             user_ids = set()
         user_ids.add(SYSTEM_USER_ID)
-        query = db.query(self.model) \
+        inner_query = db.query(self.model) \
             .join(AnnotationDocumentORM) \
             .join(SpanAnnotationORM) \
             .join(CurrentCodeORM) \
             .join(CodeORM) \
             .join(SpanTextORM)
         # noinspection PyUnresolvedReferences
-        query = query.filter(and_(SourceDocumentORM.project_id == proj_id,
-                                  AnnotationDocumentORM.user_id.in_(list(user_ids)),
-                                  or_(*[(CodeORM.id == se.code_id) & (SpanTextORM.text == se.span_text)
-                                        for se in span_entities])))
-        query = query.group_by(self.model.id, CurrentCodeORM.id, SpanTextORM.id)
-        query = query.having(func.count(self.model.id) == len(span_entities)).offset(skip).limit(limit)
-        return query.all()
+        inner_query = inner_query.filter(and_(SourceDocumentORM.project_id == proj_id,
+                                              AnnotationDocumentORM.user_id.in_(list(user_ids)),
+                                              or_(*[(CodeORM.id == se.code_id) & (SpanTextORM.text == se.span_text)
+                                                    for se in span_entities])))
+        inner_query = inner_query.group_by(self.model.id, CurrentCodeORM.id, SpanTextORM.id).from_self()
+
+        outer_query = inner_query.group_by(self.model)
+        outer_query = outer_query.having(func.count(self.model.id) == len(span_entities)).offset(skip).limit(limit)
+
+        return outer_query.all()
 
     def collect_entity_stats(self,
                              db: Session,
