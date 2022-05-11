@@ -42,7 +42,6 @@ services:
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
-    container_name: dwise_elasticsearch
     environment:
       # see https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-network.html
       # use 127.0.0.1 to access the ES node from OUTSIDE of the docker network (e.g. when ssh tunneling to ltdocker)
@@ -68,7 +67,6 @@ services:
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.3
-    container_name: dwise_kibana
     ports:
       - "${KIBANA_EXPOSED:-5601}:5601"
     environment:
