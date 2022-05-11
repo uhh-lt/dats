@@ -4,11 +4,12 @@ from typing import Dict, Any, Iterable, Optional, Set, List
 import srsly
 from elasticsearch import Elasticsearch
 from loguru import logger
+from omegaconf import OmegaConf
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
-    ElasticSearchMemoRead, ElasticSearchDocumentHit
+    ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedSourceDocumentSearchResults
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.util.singleton_meta import SingletonMeta
 from config import conf
@@ -150,6 +151,93 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                memo_id: int) -> None:
         self.__client.delete(index=proj.memo_index, id=str(memo_id))
         logger.info(f"Deleted Memo with ID={memo_id} from Index '{proj.memo_index}'!")
+
+    def __search_sdocs(self,
+                       proj: ProjectRead,
+                       query: Dict[str, Any],
+                       limit: Optional[int] = 10,
+                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+        """
+        Helper function that can be reused to find Documents with different queries.
+        :param query: The ElasticSearch query object in ES Query DSL
+        :param skip: The number of skipped Documents
+        :param limit: The maximum number of returned Documents
+        :return: A (possibly empty) list of Documents matching the query
+        :rtype: List[DocumentElasticSearchHit]
+        """
+        if not self.__client.indices.exists(index=proj.doc_index):
+            raise ValueError(f"ElasticSearch Index '{proj.doc_index}' does not exist!")
+
+        if query is None or len(query) < 1:
+            raise ValueError("Query DSL object must not be None or empty!")
+        if (not isinstance(limit, int)) or limit > 10000 or limit < 1:
+            raise ValueError("Limit must be a positive Integer smaller than 10000!")
+        elif (not isinstance(skip, int)) or skip > 10000 or limit < 1:
+            raise ValueError("Skip must be a positive Integer smaller than 10000!")
+
+        res = self.__client.search(index=proj.doc_index,
+                                   query=query,
+                                   size=limit,
+                                   from_=skip,
+                                   filter_path=["hits"])
+        # Flo: for convenience only...
+        res = OmegaConf.create(res)
+        if len(res) == 0:
+            return PaginatedSourceDocumentSearchResults(sdocs=[],
+                                                        has_more=False,
+                                                        current_page_offset=skip,
+                                                        next_page_offset=0)
+
+        esdocs = [ElasticSearchDocumentHit(**OmegaConf.to_container(doc["_source"]), score=doc["_score"])
+                  for doc in res.hits.hits]
+        sdocs = [SourceDocumentRead(filename=esdoc.filename,
+                                    content=esdoc.content,
+                                    doctype=DocType.text,
+                                    project_id=esdoc.project_id,
+                                    id=esdoc.sdoc_id,
+                                    created=esdoc.created) for esdoc in esdocs]
+        has_more = res.hits.total.value > limit
+        return PaginatedSourceDocumentSearchResults(sdocs=sdocs,
+                                                    has_more=has_more,
+                                                    current_page_offset=skip,
+                                                    next_page_offset=(skip + limit) if has_more else 0)
+
+    def search_sdocs_by_exact_filename(self,
+                                       proj: ProjectRead,
+                                       filename: str,
+                                       limit: Optional[int] = 10,
+                                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+        # Flo: Using term query since filename is a keyword field
+        return self.__search_sdocs(proj=proj, query={
+            "term": {
+                "filename": filename
+            }
+        }, limit=limit, skip=skip)
+
+    def search_sdocs_by_prefix_filename(self,
+                                        proj: ProjectRead,
+                                        filename_prefix: str,
+                                        limit: Optional[int] = 10,
+                                        skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+        return self.__search_sdocs(proj=proj, query={
+            "prefix": {
+                "filename": filename_prefix
+            }
+        }, limit=limit, skip=skip)
+
+    def search_sdocs_by_content_query(self,
+                                      proj: ProjectRead,
+                                      query: str,
+                                      limit: Optional[int] = 10,
+                                      skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+        return self.__search_sdocs(proj=proj, query={
+            "match": {
+                "content": {
+                    "query": query,
+                    "fuzziness": "1"  # TODO Flo: no constant here! either config or per call
+                }
+            }
+        }, limit=limit, skip=skip)
 
     def _get_client(self) -> Elasticsearch:
         """

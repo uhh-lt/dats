@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.memo import AttachedObjectType
+from app.core.data.dto.source_document import SourceDocumentRead
 
 
 class SpanEntity(BaseModel):
@@ -91,3 +92,10 @@ class ElasticSearchMemoRead(BaseModel):
 
 class ElasticMemoHit(ElasticSearchMemoRead):
     score: float = Field(description="The score of the Memo that was found by a ES Query")
+
+
+class PaginatedSourceDocumentSearchResults(BaseModel):
+    sdocs: List[SourceDocumentRead] = Field(description="The search results.")
+    has_more: bool = Field(description="Flag that indicates whether there are more search results.")
+    current_page_offset: int = Field(description="The offset that returns the current results.")
+    next_page_offset: int = Field(description="The offset that returns the next results.")
