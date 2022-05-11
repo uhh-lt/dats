@@ -122,8 +122,8 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                   or_(*[(CodeORM.id == se.code_id) & (SpanTextORM.text == se.span_text)
                                         for se in span_entities])))
         query = query.group_by(self.model.id, CurrentCodeORM.id, SpanTextORM.id)
-        query = query.having(func.count(self.model.id) == len(span_entities)).all()
-        return query.offset(skip).limit(limit).all()
+        query = query.having(func.count(self.model.id) == len(span_entities)).offset(skip).limit(limit)
+        return query.all()
 
     def collect_entity_stats(self,
                              db: Session,
