@@ -138,3 +138,71 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                memo_id: int) -> None:
         self.__client.delete(index=proj.memo_index, id=str(memo_id))
         logger.info(f"Deleted Memo with ID={memo_id} from Index '{proj.memo_index}'!")
+
+    # def __search_sdocs(self, index: str, query: Dict[str, Any], limit: Optional[int] = 100) \
+    #         -> List[SourceDocumentRead]:
+    #     """
+    #     Helper function that can be reused to find Documents with different queries.
+    #     :param query: The ElasticSearch query object in ES Query DSL
+    #     :param limit: The maximum number of returned Documents
+    #     :return: A (possibly empty) list of Documents matching the query
+    #     :rtype: List[DocumentElasticSearchHit]
+    #     """
+    #     self.__check_index_name(index)
+    #
+    #     if not self.__client.indices.exists(index=index):
+    #         raise ValueError(f"ElasticSearch Index '{index}' does not exist!")
+    #
+    #     if query is None or len(query) < 1:
+    #         raise ValueError("Query DSL object must not be None or empty!")
+    #     if (not isinstance(limit, int)) or limit > 10000 or limit < 1:
+    #         raise ValueError("Limit must be a positive Integer smaller than 10000!")
+    #
+    #     res = self.__client.search(index=index,
+    #                                query=query,
+    #                                size=limit,
+    #                                filter_path=["hits.hits._source", "hits.hits._id", "hits.hits._score"])
+    #
+    #     if len(res) == 0:
+    #         return []
+    #
+    #     return [DocumentElasticSearchHit(filename=doc["_source"]["filename"],
+    #                                      created=doc["_source"]["created"],
+    #                                      content=doc["_source"]["content"],
+    #                                      score=doc["_score"],
+    #                                      id=doc["_id"]) for doc in res["hits"]["hits"]]
+    #
+    # def search_sdocs_by_exact_filename(self, index: str, filename: str, limit: Optional[int] = 100) \
+    #         -> List[SourceDocumentRead]:
+    #     # Flo: Using term query since filename is a keyword field
+    #     return self.__search_sdocs(index=index, query={
+    #         "term": {
+    #             "filename": filename
+    #         }
+    #     }, limit=limit)
+    #
+    # def search_sdocs_by_prefix_filename(self, index: str, filename_prefix: str, limit: Optional[int] = 100) \
+    #         -> List[SourceDocumentRead]:
+    #     return self.__search_sdocs(index=index, query={
+    #         "prefix": {
+    #             "filename": filename_prefix
+    #         }
+    #     }, limit=limit)
+    #
+    # def search_sdocs_via_query_in_content(self, index: str, query: str, limit: Optional[int] = 100) \
+    #         -> List[SourceDocumentRead]:
+    #     return self.__search_sdocs(index=index, query={
+    #         "match": {
+    #             "content": {
+    #                 "query": query
+    #                 # "fuzziness": 1
+    #             }
+    #         }
+    #     }, limit=limit)
+    #
+
+    def _get_client(self) -> Elasticsearch:
+        """
+        private function used for testing purpose
+        """
+        return self.__client

@@ -13,6 +13,8 @@ class ObjectHandleBaseDTO(BaseModel):
     source_document_metadata_id: Optional[int] = None
     annotation_document_id: Optional[int] = None
     span_annotation_id: Optional[int] = None
+    span_group_id: Optional[int] = None
+    bbox_annotation_id: Optional[int] = None
     document_tag_id: Optional[int] = None
     action_id: Optional[int] = None
     action_target_id: Optional[int] = None
