@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-dwtsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwts123}
     ports:
-      - "${POSTGRES_EXPOSED}:5432"
+      - "${POSTGRES_EXPOSED:-5432}:5432"
     volumes:
       - "postgres_data:/var/lib/postgresql/data"
     networks:
@@ -19,10 +19,10 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-dwtsuser}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dwts123}
     ports:
-      - "${RABBIT1_EXPOSED}:4369"
-      - "${RABBIT2_EXPOSED}:5672"
-      - "${RABBIT3_EXPOSED}:25672"
-      - "${RABBIT_EXPOSED}:15672"
+      - "${RABBIT1_EXPOSED:-4369}:4369"
+      - "${RABBIT2_EXPOSED:-5672}:5672"
+      - "${RABBIT3_EXPOSED:-25672}:25672"
+      - "${RABBIT_EXPOSED:-15672}:15672"
     volumes:
       - "rabbitmq_data:/var/lib/rabbitmq/data"
     networks:
@@ -33,7 +33,7 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dwts123}
     ports:
-      - "${REDIS_EXPOSED}:6379"
+      - "${REDIS_EXPOSED:-6379}:6379"
     volumes:
       - "redis_data:/var/lib/redis/data"
     command: redis-server --requirepass "${REDIS_PASSWORD:-dwts123}"
@@ -128,7 +128,7 @@ services:
       - redis
       - postgres
     ports:
-      - "${JUPYTER_TEXT_EXPOSED}:8888"
+      - "${JUPYTER_TEXT_EXPOSED:-8889}:8888"
     restart: always
     links:
       - postgres
@@ -167,7 +167,7 @@ services:
       - redis
       - postgres
     ports:
-      - "${JUPYTER_IMAGE_EXPOSED}:8888"
+      - "${JUPYTER_IMAGE_EXPOSED:-8880}:8888"
     restart: always
     links:
       - postgres
@@ -207,8 +207,8 @@ services:
       - celery-text-worker
       - celery-image-worker
     ports:
-      - "${API_EXPOSED}:${API_PORT}"
-      - "${JUPYTER_EXPOSED}:8888"
+      - "${API_EXPOSED:-5000}:${API_PORT}"
+      - "${JUPYTER_EXPOSED:-8888}:8888"
     restart: always
     links:
       - postgres
