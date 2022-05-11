@@ -137,7 +137,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             user_ids = set()
         user_ids.add(SYSTEM_USER_ID)
 
-        query = db.query(self.model.id, CodeORM.id, SpanTextORM.text, func.sum(self.model.id).label("count")) \
+        query = db.query(self.model.id, CodeORM.id, SpanTextORM.text, func.count().label("count")) \
             .join(AnnotationDocumentORM) \
             .join(SpanAnnotationORM) \
             .join(CurrentCodeORM) \
