@@ -104,8 +104,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                               proj_id: int,
                               span_entities: List[SpanEntity],
                               skip: int = 0,
-                              limit: int = 100) \
-            -> List[SourceDocumentORM]:
+                              limit: int = 100) -> List[SourceDocumentORM]:
         # Flo: we always want ADocs from the SYSTEM_USER
         if not user_ids:
             user_ids = set()
@@ -132,8 +131,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                              sdoc_ids: Set[int] = None,
                              proj_id: int,
                              skip: int = 0,
-                             limit: int = 100) \
-            -> List[SpanEntityStat]:
+                             limit: int = 100) -> List[SpanEntityStat]:
         # Flo: we always want ADocs from the SYSTEM_USER
         if not user_ids:
             user_ids = set()
