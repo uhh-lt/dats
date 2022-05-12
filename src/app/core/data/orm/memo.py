@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func, Boolean
 from sqlalchemy.orm import relationship
 
 if TYPE_CHECKING:
@@ -15,6 +15,7 @@ class MemoORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False, index=True)
     content = Column(String, nullable=False, index=False)  # TODO Flo: This will go to ES soon!
+    starred = Column(Boolean, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 

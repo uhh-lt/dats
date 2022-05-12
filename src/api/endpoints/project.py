@@ -1,7 +1,7 @@
 from typing import List, Dict
 from typing import Optional
 
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, File
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, File, Query
 from sqlalchemy.orm import Session
 
 from api.dependencies import skip_limit_params, get_db_session
@@ -267,9 +267,12 @@ async def remove_user_codes_of_project(*,
 async def get_user_memos_of_project(*,
                                     proj_id: int,
                                     user_id: int,
+                                    only_starred: Optional[bool] = Query(title="Only Starred",
+                                                                         description="If true only starred Memos are returned",
+                                                                         default=False),
                                     db: Session = Depends(get_db_session)) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
-    db_objs = crud_memo.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
+    db_objs = crud_memo.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id, only_starred=only_starred)
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs]
 
 

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
@@ -28,7 +28,15 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
     def create(self, db: Session, *, create_dto: MemoCreate) -> MemoORM:
         raise NotImplementedError()
 
-    def read_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[MemoORM]:
+    def read_by_user_and_project(self,
+                                 db: Session,
+                                 user_id: int,
+                                 proj_id: int,
+                                 only_starred: Optional[bool]) -> List[MemoORM]:
+        if only_starred:
+            return db.query(self.model).filter(self.model.user_id == user_id,
+                                               self.model.project_id == proj_id,
+                                               self.model.starred == only_starred).all()
 
         return db.query(self.model).filter(self.model.user_id == user_id,
                                            self.model.project_id == proj_id).all()

@@ -26,17 +26,20 @@ class MemoBaseDTO(BaseModel):
 class MemoUpdate(MemoBaseDTO, UpdateDTOBase):
     title: Optional[str] = Field(description='Title of the Memo', default=None)
     content: Optional[str] = Field(description='Content of the Memo', default=None)
+    starred: Optional[bool] = Field(description='Starred flag of the Memo', default=None)
 
 
 # Properties to create
 class MemoCreate(MemoBaseDTO):
     user_id: int = Field(description='User the Memo belongs to')
     project_id: int = Field(description='Project the Memo belongs to')
+    starred: Optional[bool] = Field(description='Starred flag of the Memo', default=False)
 
 
 # Properties to read
 class MemoReadBaseDTO(MemoBaseDTO):
     id: int = Field(description='ID of the Memo')
+    starred: bool = Field(description='Starred flag of the Memo')
     user_id: int = Field(description='User the Memo belongs to')
     project_id: int = Field(description='Project the Memo belongs to')
     created: datetime = Field(description="Created timestamp of the Memo")
