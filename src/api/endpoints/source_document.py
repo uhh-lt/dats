@@ -55,6 +55,20 @@ async def get_all_metadata(*,
     return [SourceDocumentMetadataRead.from_orm(meta) for meta in sdoc_db_obj.metadata_]
 
 
+@router.get("/{sdoc_id}/metadata/{metadata_key}", tags=tags,
+            response_model=Optional[SourceDocumentMetadataRead],
+            summary="Returns the SourceDocumentMetadata with the given Key",
+            description="Returns the SourceDocumentMetadata with the given Key if it exists.")
+async def read_metadata_by_key(*,
+                               db: Session = Depends(get_db_session),
+                               sdoc_id: int,
+                               metadata_key: str) -> Optional[SourceDocumentMetadataRead]:
+    # TODO Flo: only if the user has access?
+    crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
+    metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(db=db, sdoc_id=sdoc_id, key=metadata_key)
+    return SourceDocumentMetadataRead.from_orm(metadata_db_obj)
+
+
 @router.patch("/{sdoc_id}/metadata/{metadata_id}", tags=tags,
               response_model=Optional[SourceDocumentMetadataRead],
               summary="Updates the SourceDocumentMetadata",

@@ -24,6 +24,12 @@ class CRUDSourceDocumentMetadata(CRUDBase[SourceDocumentMetadataORM,
         else:
             return super().update(db, id=metadata_id, update_dto=update_dto)
 
+    def read_by_sdoc_and_key(self, db: Session, sdoc_id: int, key: str) -> Optional[SourceDocumentMetadataORM]:
+        db_obj = db.query(self.model).filter(self.model.source_document_id == sdoc_id,
+                                             self.model.key == key).first()
+        if not db_obj:
+            raise NoSuchElementError(self.model, key=key, source_document_id=sdoc_id)
+        return db_obj
 
 
 crud_sdoc_meta = CRUDSourceDocumentMetadata(SourceDocumentMetadataORM)
