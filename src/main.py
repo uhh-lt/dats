@@ -48,9 +48,14 @@ async def not_implemented_error_handler(_, exc: NotImplementedError):
     return PlainTextResponse(str(exc), status_code=501)
 
 
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting D-WISE Tool Suite FastAPI!")
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
-    logger.info("Shutting Down D-WISE Tool Suite Backend!")
+    logger.info("Stopping D-WISE Tool Suite FastAPI!")
 
 
 # include the endpoint routers
