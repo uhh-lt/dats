@@ -34,8 +34,8 @@ class ProjectRead(ProjectBaseDTO):
 
     @property
     def doc_index(self):
-        return f"{self.title}_docs"
+        return f"dwts_{self.title}_docs"
 
     @property
     def memo_index(self):
-        return f"{self.title}_memos"
+        return f"dwts_{self.title}_memos"
