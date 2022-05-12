@@ -7,7 +7,13 @@ api:
       algo: ${oc.env:JWT_ALGO, HS256}
       secret: ${oc.env:JWT_SECRET, ""}
 
-repository_root: /tmp/dwts
+repo:
+  root_directory: /tmp/dwts
+  content_server:
+    https: False
+    host: ${oc.env:CONTENT_SERVER_HOST, 127.0.0.1}
+    port: ${oc.env:CONTENT_SERVER_EXPOSED, 13134}
+    context_path: /
 
 system_codes:
   # text codes from spacy NER models (spans)

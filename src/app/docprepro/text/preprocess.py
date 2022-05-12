@@ -18,6 +18,7 @@ from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.repo.repo_service import RepoService
@@ -65,22 +66,33 @@ def import_uploaded_text_document(doc_file: UploadFile,
     with sql.db_session() as db:
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
-    # detect the language in SourceDocumentMetadata
+    # store the detected language in SourceDocumentMetadata
     doc_lang = detect_langs(create_dto.content)[0].lang  # TODO Flo: what to do with mixed lang docs?
-    sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="language",
-                                                        value=doc_lang,
-                                                        source_document_id=sdoc_db_obj.id)
+    lang_metadata_create_dto = SourceDocumentMetadataCreate(key="language",
+                                                            value=doc_lang,
+                                                            source_document_id=sdoc_db_obj.id,
+                                                            read_only=True)
+
+    # store the URL to the file as SourceDocumentMetadata
+    sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
+    url_metadata_create_dto = SourceDocumentMetadataCreate(key="url",
+                                                           value=str(repo.get_sdoc_url(sdoc=sdoc)),
+                                                           source_document_id=sdoc_db_obj.id,
+                                                           read_only=True)
 
     # persist SourceDocumentMetadata
     with sql.db_session() as db:
-        sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
+        crud_sdoc_meta.create(db=db, create_dto=lang_metadata_create_dto)
+    with sql.db_session() as db:
+        crud_sdoc_meta.create(db=db, create_dto=url_metadata_create_dto)
 
     # create PreProTextDoc
     ppd = PreProTextDoc(filename=create_dto.filename,
                         project_id=project_id,
                         sdoc_id=sdoc_db_obj.id,
                         raw_text=sdoc_db_obj.content)
-    ppd.metadata[sdoc_meta_db_obj.key] = sdoc_meta_db_obj.value
+    ppd.metadata[lang_metadata_create_dto.key] = lang_metadata_create_dto.value
+    ppd.metadata[url_metadata_create_dto.key] = url_metadata_create_dto.value
 
     return ppd
 
@@ -162,7 +174,8 @@ def persist_automatic_span_annotations(ppd: PreProTextDoc) -> PreProTextDoc:
         # persist word frequencies
         sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="word_frequencies",
                                                             value=json.dumps(ppd.word_freqs).replace("\"", "'"),
-                                                            source_document_id=ppd.sdoc_id)
+                                                            source_document_id=ppd.sdoc_id,
+                                                            read_only=True)
         sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
     return ppd

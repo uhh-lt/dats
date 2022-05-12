@@ -14,6 +14,7 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate, AnnotationDocumentRead
 from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
@@ -66,21 +67,34 @@ def import_uploaded_image_document(doc_file: UploadFile,
     with sql.db_session() as db:
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
-    # FIXME Flo: Handle this better! (remove text content from SDoc in DB)
+    # create PreProDoc
+    ppid = PreProImageDoc(project_id=project_id,
+                          sdoc_id=sdoc_db_obj.id,
+                          image_dst=Path(dst))
+
     with Image.open(dst) as img:
         # store image metadata as SourceDocumentMetadata
         for meta in ["width", "height"]:
             sdoc_meta_create_dto = SourceDocumentMetadataCreate(key=meta,
                                                                 value=str(getattr(img, meta)),
-                                                                source_document_id=sdoc_db_obj.id)
+                                                                source_document_id=sdoc_db_obj.id,
+                                                                read_only=True)
             # persist SourceDocumentMetadata
             with sql.db_session() as db:
                 crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
-    # create PreProDoc
-    ppid = PreProImageDoc(project_id=project_id,
-                          sdoc_id=sdoc_db_obj.id,
-                          image_dst=Path(dst))
+            ppid.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
+
+    # store the URL to the file as SourceDocumentMetadata
+    sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
+    sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="url",
+                                                        value=str(repo.get_sdoc_url(sdoc=sdoc)),
+                                                        source_document_id=sdoc_db_obj.id,
+                                                        read_only=True)
+    # persist SourceDocumentMetadata
+    with sql.db_session() as db:
+        crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
+    ppid.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
 
     return ppid
 

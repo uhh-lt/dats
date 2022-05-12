@@ -1,13 +1,14 @@
 import os
 import shutil
+import urllib.parse as url
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Optional
 
 from fastapi import UploadFile
 from loguru import logger
 
 from app.core.data.doc_type import get_doc_type, DocType
-from app.core.data.dto.source_document import SourceDocumentCreate
+from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -17,10 +18,17 @@ from config import conf
 
 class RepoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        repo_root = Path(conf.repository_root)
+        repo_root = Path(conf.repo.root_directory)
         cls.repo_root = repo_root
         cls.logs_root = repo_root.joinpath("logs")
         cls.proj_root = repo_root.joinpath("projects")
+
+        # setup base url where the content server can be reached
+        base_url = "https://" if conf.repo.content_server.https else "http://"
+        base_url += conf.repo.content_server.host + ":"
+        base_url += str(conf.repo.content_server.port)
+        base_url += conf.repo.content_server.context_path
+        cls.base_url = base_url
 
         return super(RepoService, cls).__new__(cls)
 
@@ -52,9 +60,21 @@ class RepoService(metaclass=SingletonMeta):
                 self.proj_root.mkdir()
 
         except Exception as e:
-            msg = f"Cannot create repository directory structure at {conf.repository_root}"
+            msg = f"Cannot create repository directory structure at {conf.repo.root_directory}"
             logger.error(msg)
             raise SystemExit(msg)
+
+    def get_path_to_file(self, sdoc: SourceDocumentRead) -> Path:
+        return self.proj_root.joinpath(f"{sdoc.project_id}/docs/{sdoc.filename}")
+
+    def get_sdoc_url(self, sdoc: SourceDocumentRead) -> Optional[str]:
+        dst_path = RepoService().get_path_to_file(sdoc)
+        if not dst_path.exists():
+            logger.error((f"SourceDocument {sdoc.filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
+                          f" found in Repository at {dst_path}!"))
+            return None
+        return url.urljoin(self.base_url,
+                           str(dst_path.relative_to(self.repo_root)))
 
     def store_uploaded_document(self,
                                 doc_file: UploadFile,
