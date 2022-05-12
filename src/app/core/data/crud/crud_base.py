@@ -38,8 +38,11 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def read_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def exists(self, db: Session, *, id: int) -> bool:
-        return db.query(self.model.id).filter(self.model.id == id).first() is not None
+    def exists(self, db: Session, *, id: int, raise_error: bool = False) -> Optional[bool]:
+        exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
+        if not exists and raise_error:
+            raise NoSuchElementError(self.model, id=id)
+        return exists
 
     def create(self, db: Session, *, create_dto: CreateDTOType) -> ORMModelType:
         dto_obj_data = jsonable_encoder(create_dto)

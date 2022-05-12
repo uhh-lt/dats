@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func, Boolean
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 
 
 class SourceDocumentORM(ORMBase):
@@ -45,20 +46,3 @@ class SourceDocumentORM(ORMBase):
     document_tags: List["DocumentTagORM"] = relationship("DocumentTagORM",
                                                          secondary="SourceDocumentDocumentTagLinkTable".lower(),
                                                          back_populates="source_documents")
-
-
-class SourceDocumentMetadataORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, nullable=False, index=True)
-    value = Column(String, index=True)
-
-    # one to one
-    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
-                                                    uselist=False,
-                                                    back_populates="source_document_metadata",
-                                                    cascade="all, delete",
-                                                    passive_deletes=True)
-
-    # many to one
-    source_document_id = Column(Integer, ForeignKey('sourcedocument.id', ondelete="CASCADE"), index=True)
-    source_document: "SourceDocumentORM" = relationship("SourceDocumentORM", back_populates="metadata_")

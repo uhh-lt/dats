@@ -46,7 +46,7 @@ async def delete_by_id(*,
 @router.get("/{sdoc_id}/metadata", tags=tags,
             response_model=List[SourceDocumentMetadataRead],
             summary="Returns all SourceDocumentMetadata",
-            description="Returns all SourceDocumentMetadata with the given ID if it exists")
+            description="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists")
 async def get_all_metadata(*,
                            db: Session = Depends(get_db_session),
                            sdoc_id: int) -> List[SourceDocumentMetadataRead]:
@@ -65,7 +65,8 @@ async def update_metadata_by_id(*,
                                 metadata_id: int,
                                 metadata: SourceDocumentMetadataUpdate) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
-    metadata_db_obj = crud_sdoc_meta.update(db=db, id=metadata_id, update_dto=metadata)
+    crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
+    metadata_db_obj = crud_sdoc_meta.update(db=db, metadata_id=metadata_id, update_dto=metadata)
     return SourceDocumentMetadataRead.from_orm(metadata_db_obj)
 
 
