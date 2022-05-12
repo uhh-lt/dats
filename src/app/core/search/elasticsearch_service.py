@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any, Iterable, Optional, Set, List
+from typing import Dict, Any, Optional, Set, List
 
 import srsly
 from elasticsearch import Elasticsearch
@@ -17,7 +17,7 @@ from config import conf
 
 class ElasticSearchService(metaclass=SingletonMeta):
 
-    def __new__(cls, *args: Iterable[Any], **kwargs: Dict[Any, Any]):
+    def __new__(cls, *args, **kwargs):
         try:
             memo_mappings_path = Path(conf.elasticsearch.index_mappings.memos)
             doc_mappings_path = Path(conf.elasticsearch.index_mappings.memos)
@@ -50,6 +50,10 @@ class ElasticSearchService(metaclass=SingletonMeta):
             raise SystemExit(msg)
 
         logger.info("Successfully established connection to ElasticSearch!")
+
+        if kwargs["remove_all_indices"]:
+            logger.warning("Removing all ElasticSearch indices!")
+            esc.indices.delete(index="_all")
 
         return super(ElasticSearchService, cls).__new__(cls)
 

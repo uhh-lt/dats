@@ -1,7 +1,8 @@
 from loguru import logger
 
 
-def startup(reset_data: bool = False) -> None:
+def startup(sql_echo: bool = False,
+            reset_data: bool = False) -> None:
     """
     System Start Up Process
     """
@@ -10,8 +11,10 @@ def startup(reset_data: bool = False) -> None:
     from config import conf
     try:
         # start and init services
-        __init_services__(reset_database=reset_data,
-                          reset_repo=reset_data)
+        __init_services__(sql_echo=sql_echo,
+                          reset_database=reset_data,
+                          reset_repo=reset_data,
+                          reset_elasticsearch=reset_data)
         __create_system_user__()
 
     except Exception as e:
@@ -23,8 +26,10 @@ def startup(reset_data: bool = False) -> None:
 
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
-def __init_services__(reset_database: bool = False,
-                      reset_repo: bool = False) -> None:
+def __init_services__(sql_echo: bool = False,
+                      reset_database: bool = False,
+                      reset_repo: bool = False,
+                      reset_elasticsearch: bool = False) -> None:
     # import celery workers to configure
     from app.docprepro.celery.celery_worker import celery_prepro_worker
     # import and init RepoService
@@ -32,10 +37,10 @@ def __init_services__(reset_database: bool = False,
     RepoService()._create_directory_structure(remove_if_exists=reset_repo)
     # create SQL DBs and Tables # TODO Flo: Alembic
     from app.core.db.sql_service import SQLService
-    SQLService()._create_database_and_tables(drop_if_exists=reset_database)
+    SQLService(echo=sql_echo)._create_database_and_tables(drop_if_exists=reset_database)
     # import and init ElasticSearch
     from app.core.search.elasticsearch_service import ElasticSearchService
-    ElasticSearchService()
+    ElasticSearchService(remove_all_indices=reset_elasticsearch)
 
 
 def __create_system_user__() -> None:
