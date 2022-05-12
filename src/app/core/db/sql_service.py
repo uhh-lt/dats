@@ -34,6 +34,8 @@ from app.core.data.orm.query import QueryORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.source_document import SourceDocumentORM
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+# noinspection PyUnresolvedReferences
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.span_text import SpanTextORM

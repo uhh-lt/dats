@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate, SourceDocumentMetadataUpdate
-from app.core.data.orm.source_document import SourceDocumentMetadataORM
+
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 
 
 class CRUDSourceDocumentMetadata(CRUDBase[SourceDocumentMetadataORM,

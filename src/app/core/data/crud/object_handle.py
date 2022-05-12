@@ -24,7 +24,8 @@ from app.core.data.orm.filter import FilterORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.query import QueryORM
-from app.core.data.orm.source_document import SourceDocumentORM, SourceDocumentMetadataORM
+from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.user import UserORM

@@ -9,7 +9,8 @@ from app.core.data.orm.orm_base import ORMBase
 if TYPE_CHECKING:
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.query import QueryORM
-    from app.core.data.orm.source_document import SourceDocumentORM, SourceDocumentMetadataORM
+    from app.core.data.orm.source_document import SourceDocumentORM
+    from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.span_group import SpanGroupORM
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
