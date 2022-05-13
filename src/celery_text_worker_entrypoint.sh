@@ -9,7 +9,7 @@ set -e
 
 # assert that ES is healthy!
 chmod +x ./test_es.sh
-sh ./test_es.sh
+bash ./test_es.sh
 
 MODEL_ROOT=/spacy_models
 
