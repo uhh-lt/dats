@@ -26,8 +26,14 @@ class ElasticSearchService(metaclass=SingletonMeta):
             elif not doc_mappings_path.exists():
                 raise FileNotFoundError(f"Cannot find ElasticSearch Document Index Mapping: {doc_mappings_path}")
 
-            cls.memo_mappings = srsly.read_json(memo_mappings_path)
-            cls.doc_mappings = srsly.read_json(doc_mappings_path)
+            memo_mappings = srsly.read_json(memo_mappings_path)
+            doc_mappings = srsly.read_json(doc_mappings_path)
+
+            cls.doc_index_fields = set(doc_mappings["properties"].keys())
+            cls.memo_index_fields = set(memo_mappings["properties"].keys())
+
+            cls.doc_mappings = doc_mappings
+            cls.memo_mappings = memo_mappings
 
             # ElasticSearch Connection
             esc = Elasticsearch([{"host": conf.elasticsearch.host, "port": conf.elasticsearch.port, }],
