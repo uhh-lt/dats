@@ -4,6 +4,9 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 from uvicorn import Config, Server
 
+from app.core.data.repo.repo_service import FileNotFoundInRepositoryError
+from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
+    NoSuchMemoInElasticSearchError
 from app.core.startup import startup
 
 startup(reset_data=False)
@@ -38,9 +41,25 @@ app.add_middleware(
 
 
 # add custom exception handlers
+# TODO Flo: find a better place for this! (and Exceptions in general)
 @app.exception_handler(NoSuchElementError)
 async def no_such_element_error_handler(_, exc: NoSuchElementError):
     return PlainTextResponse(str(exc), status_code=404)
+
+
+@app.exception_handler(NoSuchSourceDocumentInElasticSearchError)
+async def no_such_sdoc_in_es_error_handler(_, exc: NoSuchSourceDocumentInElasticSearchError):
+    return PlainTextResponse(str(exc), status_code=500)
+
+
+@app.exception_handler(NoSuchMemoInElasticSearchError)
+async def no_such_memo_in_es_error_handler(_, exc: NoSuchMemoInElasticSearchError):
+    return PlainTextResponse(str(exc), status_code=500)
+
+
+@app.exception_handler(FileNotFoundInRepositoryError)
+async def no_such_memo_in_es_error_handler(_, exc: FileNotFoundInRepositoryError):
+    return PlainTextResponse(str(exc), status_code=500)
 
 
 @app.exception_handler(NotImplementedError)
