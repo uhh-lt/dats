@@ -8,11 +8,15 @@ from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.data.doc_type import DocType
+from app.core.data.dto import ProjectRead
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, MemoRead, AttachedObjectType
-from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataUpdate, SourceDocumentMetadataRead
+from app.core.data.repo.repo_service import RepoService
+from app.core.search.elasticsearch_service import ElasticSearchService
 
 router = APIRouter(prefix="/sdoc")
 tags = ["sourceDocument"]
@@ -37,10 +41,54 @@ async def get_by_id(*,
                description="Removes the SourceDocument with the given ID if it exists")
 async def delete_by_id(*,
                        db: Session = Depends(get_db_session),
-                       sdoc_id: int) -> SourceDocumentRead:
+                       sdoc_id: int) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
     return SourceDocumentRead.from_orm(db_obj)
+
+
+@router.get("/{sdoc_id}/content", tags=tags,
+            response_model=Optional[SourceDocumentContent],
+            summary="Returns the (textual) content of the SourceDocument",
+            description=("Returns the (textual) content of the SourceDocument if it exists. If the SourceDocument is "
+                         "not a text file, there is no content but an URL to the file content."))
+async def get_content(*,
+                      db: Session = Depends(get_db_session),
+                      sdoc_id: int) -> Optional[SourceDocumentContent]:
+    # TODO Flo: only if the user has access?
+    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    if sdoc_db_obj.doctype == DocType.text:
+        return ElasticSearchService().get_sdoc_content_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
+                                                                  proj=ProjectRead.from_orm(sdoc_db_obj.project))
+    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+
+
+@router.get("/{sdoc_id}/tokens", tags=tags,
+            response_model=Optional[SourceDocumentTokens],
+            summary="Returns the textual tokens of the SourceDocument if it is a text document.",
+            description="Returns the textual tokens of the SourceDocument if it is a text document.")
+async def get_tokens(*,
+                     db: Session = Depends(get_db_session),
+                     sdoc_id: int) -> Optional[SourceDocumentTokens]:
+    # TODO Flo: only if the user has access?
+    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    if not sdoc_db_obj.doctype == DocType.text:
+        raise NotImplementedError((f"Tokens can only be returned for textual SourceDocument and not of "
+                                   f"SourceDocuments with DocType {sdoc_db_obj.doctype}"))
+    return ElasticSearchService().get_sdoc_tokens_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
+                                                             proj=ProjectRead.from_orm(sdoc_db_obj.project))
+
+
+@router.get("/{sdoc_id}/url", tags=tags,
+            response_model=Optional[str],
+            summary="Returns the URL to the original file of the SourceDocument",
+            description="Returns the URL to the original file of the SourceDocument with the given ID if it exists.")
+async def get_file_url(*,
+                       db: Session = Depends(get_db_session),
+                       sdoc_id: int) -> Optional[str]:
+    # TODO Flo: only if the user has access?
+    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
 
 
 @router.get("/{sdoc_id}/metadata", tags=tags,

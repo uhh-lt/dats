@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class SourceDocumentMetadataORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     key = Column(String, nullable=False, index=True)
-    value = Column(String, index=True)
+    value = Column(String, index=False)
     read_only = Column(Boolean, nullable=False, index=True)
 
     # one to one

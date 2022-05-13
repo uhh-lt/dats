@@ -10,7 +10,7 @@ from app.core.data.doc_type import DocType
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
     ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedSourceDocumentSearchResults
-from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -152,10 +152,25 @@ class ElasticSearchService(metaclass=SingletonMeta):
             raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
         res = self.__client.get(index=proj.doc_index,
                                 id=str(sdoc_id),
-                                _source_includes=fields)
+                                _source=list(fields))
         if not res["found"]:
             raise NoSuchSourceDocumentInElasticSearchError(proj=proj, sdoc_id=sdoc_id)
         return ElasticSearchDocumentRead(**res["_source"])
+
+    def get_sdoc_content_by_sdoc_id(self,
+                                    *,
+                                    proj: ProjectRead,
+                                    sdoc_id: int) -> Optional[SourceDocumentContent]:
+        esdoc = self.get_esdoc_by_sdoc_id(proj=proj, sdoc_id=sdoc_id, fields={"content"})
+        return SourceDocumentContent(source_document_id=sdoc_id, content=esdoc.content)
+
+    def get_sdoc_tokens_by_sdoc_id(self,
+                                   *,
+                                   proj: ProjectRead,
+                                   sdoc_id: int) -> Optional[SourceDocumentTokens]:
+        esdoc = self.get_esdoc_by_sdoc_id(proj=proj, sdoc_id=sdoc_id, fields={"tokens"})
+        print(esdoc.json())
+        return SourceDocumentTokens(source_document_id=sdoc_id, tokens=esdoc.tokens)
 
     def delete_document_from_index(self,
                                    proj: ProjectRead,
@@ -184,7 +199,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
         res = self.__client.get(index=proj.memo_index,
                                 id=str(memo_id),
-                                _source_includes=fields)
+                                _source=list(fields))
         if not res["found"]:
             raise NoSuchMemoInElasticSearchError(proj=proj, memo_id=memo_id)
 
