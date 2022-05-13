@@ -14,6 +14,9 @@
     "tokens": {
       "type": "keyword"
     },
+    "token_character_offsets": {
+      "type": "integer_range"
+    },
     "keywords": {
       "type": "keyword"
     },

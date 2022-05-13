@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Tuple, Optional
 
 from pydantic import BaseModel, Field
 
@@ -48,4 +48,7 @@ class SourceDocumentContent(BaseModel):
 
 class SourceDocumentTokens(BaseModel):
     source_document_id: int = Field(description="ID of the SourceDocument")
-    tokens: List[str] = Field(description="The (textual) content of the SourceDocument")
+    tokens: List[str] = Field(description="The (textual) list Tokens of the SourceDocument")
+    token_character_offsets: Optional[List[Tuple[int, int]]] = Field(description=("The list of character offsets of"
+                                                                                  " the Tokens"),
+                                                                     default=None)

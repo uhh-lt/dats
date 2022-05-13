@@ -38,7 +38,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
             memo_mappings_path = Path(conf.elasticsearch.index_mappings.memos)
-            doc_mappings_path = Path(conf.elasticsearch.index_mappings.memos)
+            doc_mappings_path = Path(conf.elasticsearch.index_mappings.docs)
             if not memo_mappings_path.exists():
                 raise FileNotFoundError(f"Cannot find ElasticSearch Memo Index Mapping: {memo_mappings_path}")
             elif not doc_mappings_path.exists():
@@ -167,9 +167,16 @@ class ElasticSearchService(metaclass=SingletonMeta):
     def get_sdoc_tokens_by_sdoc_id(self,
                                    *,
                                    proj: ProjectRead,
-                                   sdoc_id: int) -> Optional[SourceDocumentTokens]:
-        esdoc = self.get_esdoc_by_sdoc_id(proj=proj, sdoc_id=sdoc_id, fields={"tokens"})
-        print(esdoc.json())
+                                   sdoc_id: int,
+                                   character_offsets: Optional[bool] = False) -> Optional[SourceDocumentTokens]:
+        fields = {"tokens"}
+        if character_offsets:
+            fields.add("token_character_offsets")
+        esdoc = self.get_esdoc_by_sdoc_id(proj=proj, sdoc_id=sdoc_id, fields=fields)
+        if character_offsets:
+            return SourceDocumentTokens(source_document_id=sdoc_id,
+                                        tokens=esdoc.tokens,
+                                        token_character_offsets=[(o.gte, o.lt) for o in esdoc.token_character_offsets])
         return SourceDocumentTokens(source_document_id=sdoc_id, tokens=esdoc.tokens)
 
     def delete_document_from_index(self,

@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_db_session
@@ -69,14 +69,19 @@ async def get_content(*,
             description="Returns the textual tokens of the SourceDocument if it is a text document.")
 async def get_tokens(*,
                      db: Session = Depends(get_db_session),
-                     sdoc_id: int) -> Optional[SourceDocumentTokens]:
+                     sdoc_id: int,
+                     character_offsets: Optional[bool] = Query(title="Include Character Offsets",
+                                                               description="If True include the character offsets.",
+                                                               default=False)) \
+        -> Optional[SourceDocumentTokens]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     if not sdoc_db_obj.doctype == DocType.text:
         raise NotImplementedError((f"Tokens can only be returned for textual SourceDocument and not of "
                                    f"SourceDocuments with DocType {sdoc_db_obj.doctype}"))
     return ElasticSearchService().get_sdoc_tokens_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
-                                                             proj=ProjectRead.from_orm(sdoc_db_obj.project))
+                                                             proj=ProjectRead.from_orm(sdoc_db_obj.project),
+                                                             character_offsets=character_offsets)
 
 
 @router.get("/{sdoc_id}/url", tags=tags,

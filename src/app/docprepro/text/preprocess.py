@@ -17,7 +17,7 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
 from app.core.data.dto.project import ProjectRead
-from app.core.data.dto.search import ElasticSearchDocumentCreate
+from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchIntegerRange
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
@@ -109,6 +109,7 @@ def generate_automatic_span_annotations(ppd: PreProTextDoc) -> PreProTextDoc:
     ppd.word_freqs = Counter()
     for token in doc:
         ppd.tokens.append(token.text)
+        ppd.token_character_offsets.append((token.idx, token.idx + len(token.text)))
         ppd.pos.append(token.pos_)
         ppd.lemmas.append(token.lemma_)
         ppd.stopwords.append(token.is_stop)
@@ -189,6 +190,8 @@ def add_document_to_elasticsearch_index(ppd: PreProTextDoc) -> PreProTextDoc:
     esdoc = ElasticSearchDocumentCreate(filename=ppd.filename,
                                         content=ppd.raw_text,
                                         tokens=ppd.tokens,
+                                        token_character_offsets=[ElasticSearchIntegerRange(gte=o[0], lt=o[1])
+                                                                 for o in ppd.token_character_offsets],
                                         keywords=ppd.keywords,
                                         sdoc_id=ppd.sdoc_id,
                                         project_id=ppd.project_id)

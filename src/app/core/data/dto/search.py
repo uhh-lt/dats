@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Set, Optional, List
+from typing import Set, Optional, List, Tuple
 
 from pydantic import BaseModel, Field
 
@@ -54,10 +54,18 @@ class SourceDocumentFilenameQuery(BaseModel):
     prefix: bool = Field(description="If true, filename prefix search is done. If false exact filename is searched.")
 
 
+class ElasticSearchIntegerRange(BaseModel):
+    gte: int
+    lt: int
+
+
 class ElasticSearchDocumentCreate(BaseModel):
     filename: str = Field(description="The filename of the SourceDocument")
     content: str = Field(description="The raw text of the SourceDocument")
     tokens: List[str] = Field(description="The list of the tokens in the SourceDocument")
+    token_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(description=("The list of character "
+                                                                                            "offsets for the tokens "
+                                                                                            "in the SourceDocument"))
     keywords: List[str] = Field(description="The list of keywords of the SourceDocument")
     sdoc_id: int = Field(description="The ID of the SourceDocument as it is in the SQL DB")
     project_id: int = Field(description="The ID of the Project the SourceDocument belongs to")
@@ -68,6 +76,9 @@ class ElasticSearchDocumentRead(BaseModel):
     filename: Optional[str] = Field(description="The filename of the SourceDocument")
     content: Optional[str] = Field(description="The raw text of the SourceDocument")
     tokens: Optional[List[str]] = Field(description="The list of the tokens in the SourceDocument")
+    token_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(description=("The list of character "
+                                                                                            "offsets for the tokens "
+                                                                                            "in the SourceDocument"))
     keywords: Optional[List[str]] = Field(description="The list of keywords of the SourceDocument")
     sdoc_id: Optional[int] = Field(description="The ID of the SourceDocument as it is in the SQL DB")
     project_id: Optional[int] = Field(description="The ID of the Project the SourceDocument belongs to")

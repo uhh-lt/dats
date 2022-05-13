@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from pydantic import BaseModel, Field
 
@@ -13,6 +13,7 @@ class PreProTextDoc(BaseModel):
     metadata: Dict[str, str] = Field(default=dict())
 
     tokens: List[str] = Field(default=list())
+    token_character_offsets: List[Tuple[int, int]] = Field(default=list())
     lemmas: List[str] = Field(default=list())
     pos: List[str] = Field(default=list())
     stopwords: List[bool] = Field(default=list())
