@@ -2,6 +2,10 @@
 
 set -e
 
+# assert that ES is healthy!
+chmod +x ./test_es.sh
+sh ./test_es.sh
+
 MODEL_ROOT=/image_models
 
 mkdir -p $MODEL_ROOT
