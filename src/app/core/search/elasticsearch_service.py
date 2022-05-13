@@ -15,6 +15,24 @@ from app.util.singleton_meta import SingletonMeta
 from config import conf
 
 
+class NoSuchSourceDocumentInElasticSearchError(Exception):
+    def __init__(self, proj: ProjectRead, sdoc_id: int):
+        super().__init__((f"There exists no SourceDocument with ID={sdoc_id} in Project {proj.title}"
+                          " in the respective ElasticSearch Index!"))
+
+
+class NoSuchMemoInElasticSearchError(Exception):
+    def __init__(self, proj: ProjectRead, memo_id: int):
+        super().__init__((f"There exists no Memo with ID={memo_id} in Project {proj.title}"
+                          " in the respective ElasticSearch Index!"))
+
+
+class NoSuchFieldInIndexError(Exception):
+    def __init__(self, index: str, fields: set, index_fields: set):
+        super().__init__((f"The following field(s) do not exist in the ElasticSearch index: {index}:"
+                          f" {fields.difference(index_fields)}"))
+
+
 class ElasticSearchService(metaclass=SingletonMeta):
 
     def __new__(cls, *args, **kwargs):
@@ -63,7 +81,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
         return super(ElasticSearchService, cls).__new__(cls)
 
-    def __delete_index(self, index: str) -> None:
+    def __delete_index(self,
+                       *, index: str) -> None:
         if self.__client.indices.exists(index=index):
             self.__client.indices.delete(index=index)
             logger.info(f"Removed ElasticSearch Index '{index}'!")
@@ -71,6 +90,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             logger.info(f"Cannot remove ElasticSearch Index '{index}' since it does not exist!")
 
     def __create_index(self,
+                       *,
                        index: str,
                        mappings: Dict[str, Any],
                        settings: Dict[str, Any] = None,
@@ -82,7 +102,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
             logger.info(
                 f"Created ElasticSearch Index '{index}' with Mappings: {mappings} and Settings: {settings}!")
 
-    def create_project_indices(self, proj: ProjectRead) -> None:
+    def create_project_indices(self,
+                               *, proj: ProjectRead) -> None:
         # create the ES Index for Documents
         doc_settings = conf.elasticsearch.index_settings.docs
         if doc_settings is not None:
@@ -102,11 +123,13 @@ class ElasticSearchService(metaclass=SingletonMeta):
                             settings=memo_settings,
                             replace_if_exists=True)
 
-    def remove_project_indices(self, proj: ProjectRead) -> None:
+    def remove_project_indices(self,
+                               *, proj: ProjectRead) -> None:
         self.__delete_index(index=proj.doc_index)
         self.__delete_index(index=proj.memo_index)
 
     def add_document_to_index(self,
+                              *,
                               proj: ProjectRead,
                               esdoc: ElasticSearchDocumentCreate) -> int:
         # TODO Flo: what to do when this fails!? How to keep the SQL and ES consistent
@@ -121,12 +144,17 @@ class ElasticSearchService(metaclass=SingletonMeta):
         return res['_id']
 
     def get_esdoc_by_sdoc_id(self,
+                             *,
                              proj: ProjectRead,
                              sdoc_id: int,
                              fields: Set[str] = None) -> Optional[ElasticSearchDocumentRead]:
+        if not fields.union(self.doc_index_fields):
+            raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
         res = self.__client.get(index=proj.doc_index,
                                 id=str(sdoc_id),
                                 _source_includes=fields)
+        if not res["found"]:
+            raise NoSuchSourceDocumentInElasticSearchError(proj=proj, sdoc_id=sdoc_id)
         return ElasticSearchDocumentRead(**res["_source"])
 
     def delete_document_from_index(self,
@@ -148,21 +176,29 @@ class ElasticSearchService(metaclass=SingletonMeta):
         return res['_id']
 
     def get_esmemo_by_memo_id(self,
+                              *,
                               proj: ProjectRead,
                               memo_id: int,
                               fields: Set[str] = None) -> Optional[ElasticSearchMemoRead]:
+        if not fields.union(self.doc_index_fields):
+            raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
         res = self.__client.get(index=proj.memo_index,
                                 id=str(memo_id),
                                 _source_includes=fields)
+        if not res["found"]:
+            raise NoSuchMemoInElasticSearchError(proj=proj, memo_id=memo_id)
+
         return ElasticSearchMemoRead(**res["_source"])
 
     def delete_memo_from_index(self,
+                               *,
                                proj: ProjectRead,
                                memo_id: int) -> None:
         self.__client.delete(index=proj.memo_index, id=str(memo_id))
         logger.info(f"Deleted Memo with ID={memo_id} from Index '{proj.memo_index}'!")
 
     def __search_sdocs(self,
+                       *,
                        proj: ProjectRead,
                        query: Dict[str, Any],
                        limit: Optional[int] = 10,
@@ -213,6 +249,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                                     next_page_offset=(skip + limit) if has_more else 0)
 
     def search_sdocs_by_exact_filename(self,
+                                       *,
                                        proj: ProjectRead,
                                        exact_filename: str,
                                        limit: Optional[int] = 10,
@@ -225,6 +262,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         }, limit=limit, skip=skip)
 
     def search_sdocs_by_prefix_filename(self,
+                                        *,
                                         proj: ProjectRead,
                                         filename_prefix: str,
                                         limit: Optional[int] = 10,
@@ -236,6 +274,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         }, limit=limit, skip=skip)
 
     def search_sdocs_by_content_query(self,
+                                      *,
                                       proj: ProjectRead,
                                       query: str,
                                       limit: Optional[int] = 10,
