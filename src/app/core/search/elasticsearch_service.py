@@ -52,8 +52,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
         logger.info("Successfully established connection to ElasticSearch!")
 
         if kwargs["remove_all_indices"]:
-            logger.warning("Removing all ElasticSearch indices!")
-            esc.indices.delete(index="_all")
+            logger.warning("Removing all DWTS ElasticSearch indices!")
+            esc.indices.delete(index="dwts_*", allow_no_indices=True)
 
         return super(ElasticSearchService, cls).__new__(cls)
 
