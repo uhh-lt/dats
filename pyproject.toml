@@ -28,6 +28,7 @@ transformers = "^4.18.0"
 torch = {version = "^1.11.0", platform = "linux"}
 timm = {version = "^0.5.4", platform = "linux"}
 elasticsearch = "7.17"
+python-magic = "^0.4.25"
 
 [tool.poetry.dev-dependencies]
 

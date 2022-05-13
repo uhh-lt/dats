@@ -1,13 +1,16 @@
 import os
 import shutil
 import urllib.parse as url
+import zipfile
 from pathlib import Path
 from typing import Tuple, Optional
+from zipfile import ZipFile
 
+import magic
 from fastapi import UploadFile
 from loguru import logger
 
-from app.core.data.doc_type import get_doc_type, DocType
+from app.core.data.doc_type import get_doc_type
 from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead
 from app.util.singleton_meta import SingletonMeta
 from config import conf
@@ -17,10 +20,26 @@ from config import conf
 #           this service...
 
 
-class FileNotFoundInRepositoryError(Exception):
+class SourceDocumentNotFoundInRepositoryError(Exception):
     def __init__(self, sdoc: SourceDocumentRead, dst: str):
         super().__init__((f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
                           f"the DWTS Repository at {dst}"))
+
+
+class FileNotFoundInRepositoryError(Exception):
+    def __init__(self, proj_id: int, filename: str, dst: str):
+        super().__init__(f"The file '{filename}' of Project {proj_id} cannot be found in the DWTS Repository at {dst}")
+
+
+class FileAlreadyExistsInRepositoryError(Exception):
+    def __init__(self, proj_id: int, filename: str, dst: str):
+        super().__init__(f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
+                         f"same name in the DWTS Repository at {dst}")
+
+
+class UnsupportedDocTypeForSourceDocument(Exception):
+    def __init__(self, dst_path: Path):
+        super().__init__(f"Unsupported DocType! Cannot create SourceDocument from file {dst_path}.")
 
 
 class RepoService(metaclass=SingletonMeta):
@@ -74,9 +93,10 @@ class RepoService(metaclass=SingletonMeta):
     def get_path_to_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False) -> Path:
         dst_path = self._generate_dst_path(proj_id=sdoc.project_id, filename=sdoc.filename)
         if raise_if_not_exists and not dst_path.exists():
-            logger.error((f"SourceDocument {sdoc.filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
-                          f" found in Repository at {dst_path}!"))
-            raise FileNotFoundInRepositoryError(sdoc=sdoc, dst=str(dst_path))
+            logger.error(
+                (f"SourceDocument {sdoc.filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
+                 f" found in Repository at {dst_path}!"))
+            raise SourceDocumentNotFoundInRepositoryError(sdoc=sdoc, dst=str(dst_path))
         return dst_path
 
     def _generate_dst_path(self, proj_id: int, filename: str) -> Path:
@@ -86,36 +106,40 @@ class RepoService(metaclass=SingletonMeta):
         dst_path = RepoService().get_path_to_file(sdoc, raise_if_not_exists=True)
         return url.urljoin(self.base_url, str(dst_path.relative_to(self.repo_root)))
 
-    def store_uploaded_document(self,
-                                doc_file: UploadFile,
-                                project_id: int) -> Tuple[Path, SourceDocumentCreate]:
-        # save the file to disk
-        dst = self._generate_dst_path(proj_id=project_id, filename=doc_file.filename)
+    def store_uploaded_file(self, proj_id: int, uploaded_file: UploadFile) -> Path:
+        dst = self._generate_dst_path(proj_id=proj_id, filename=uploaded_file.filename)
         try:
             if dst.exists():
-                # FIXME Flo: Throw or what?!
-                logger.warning("Cannot store uploaded document because a document with the same name already exists!")
+                logger.warning("Cannot store uploaded file because a file with the same name already exists!")
+                raise FileAlreadyExistsInRepositoryError(proj_id=proj_id, filename=uploaded_file.filename, dst=str(dst))
             elif not dst.parent.exists():
                 dst.parent.mkdir(parents=True, exist_ok=True)
 
             with dst.open("wb") as buffer:
-                shutil.copyfileobj(doc_file.file, buffer)
-                logger.debug(f"Stored uploaded document at {str(dst)}")
-                doc_file.file.seek(0, 0)
-                # FIXME Flo: Change SourceDocument to work with images! --> no raw_text
-                if get_doc_type(mime_type=doc_file.content_type) == DocType.image:
-                    txt_content = "IMAGES CONTAIN NO UTF-8 TEXT!"
-                else:
-                    txt_content = doc_file.file.read().decode("utf-8")
-
-                create_dto = SourceDocumentCreate(content=txt_content,
-                                                  filename=doc_file.filename,
-                                                  doctype=get_doc_type(mime_type=doc_file.content_type),
-                                                  project_id=project_id)
+                shutil.copyfileobj(uploaded_file.file, buffer)
+                logger.debug(f"Stored uploaded file at {str(dst)}")
         except Exception as e:
             # FIXME Flo: Throw or what?!
-            logger.warning(f"Cannot store uploaded document! Cause: {e}")
+            logger.warning(f"Cannot store uploaded file! Error: {e}")
         finally:
-            doc_file.file.close()
+            uploaded_file.file.close()
 
-        return dst, create_dto
+        return dst
+
+    def generate_source_document_create_dto_from_file(self, proj_id: int, filename: str) -> Tuple[Path,
+                                                                                                  SourceDocumentCreate]:
+        dst_path = self._generate_dst_path(proj_id=proj_id, filename=filename)
+        if not dst_path.exists():
+            logger.error(f"File '{filename}' in Project {proj_id} cannot be found in Repository at {dst_path}!")
+            raise FileNotFoundInRepositoryError(proj_id=proj_id, filename=filename, dst=str(dst_path))
+
+        doctype = get_doc_type(mime_type=magic.from_file(dst_path, mime=True))
+        if not doctype:
+            logger.error(f"Unsupported DocType! Cannot create SourceDocument from file {dst_path}.")
+            raise UnsupportedDocTypeForSourceDocument(dst_path=dst_path)
+
+        create_dto = SourceDocumentCreate(content="CONTENT IS NOW IN ElasticSearch!!!",
+                                          filename=filename,
+                                          doctype=doctype,
+                                          project_id=proj_id)
+        return dst_path, create_dto
