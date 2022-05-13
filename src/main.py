@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import PlainTextResponse
 from loguru import logger
 from uvicorn import Config, Server
@@ -38,6 +39,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Middleware to return GZip for results over a certain number of bytes
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 # add custom exception handlers
