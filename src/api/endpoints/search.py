@@ -132,7 +132,7 @@ async def search_sdocs(*,
                                                                  **skip_limit)
 
     if query_params.span_entities and query_params.tag_ids:
-        sdocs_combined = set(sdocs_spans).union(set(sdocs_tags))
+        sdocs_combined = set(sdocs_spans).intersection(set(sdocs_tags))
         return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_combined]
     elif query_params.span_entities and not query_params.tag_ids:
         return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_spans]
