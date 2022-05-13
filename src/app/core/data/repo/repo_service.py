@@ -16,6 +16,13 @@ from config import conf
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...
 
+
+class FileNotFoundInRepositoryError(Exception):
+    def __init__(self, sdoc: SourceDocumentRead, dst: str):
+        super().__init__((f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
+                          f"the DWTS Repository at {dst}"))
+
+
 class RepoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         repo_root = Path(conf.repo.root_directory)
@@ -64,23 +71,26 @@ class RepoService(metaclass=SingletonMeta):
             logger.error(msg)
             raise SystemExit(msg)
 
-    def get_path_to_file(self, sdoc: SourceDocumentRead) -> Path:
-        return self.proj_root.joinpath(f"{sdoc.project_id}/docs/{sdoc.filename}")
-
-    def get_sdoc_url(self, sdoc: SourceDocumentRead) -> Optional[str]:
-        dst_path = RepoService().get_path_to_file(sdoc)
-        if not dst_path.exists():
+    def get_path_to_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False) -> Path:
+        dst_path = self._generate_dst_path(proj_id=sdoc.project_id, filename=sdoc.filename)
+        if raise_if_not_exists and not dst_path.exists():
             logger.error((f"SourceDocument {sdoc.filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
                           f" found in Repository at {dst_path}!"))
-            return None
-        return url.urljoin(self.base_url,
-                           str(dst_path.relative_to(self.repo_root)))
+            raise FileNotFoundInRepositoryError(sdoc=sdoc, dst=str(dst_path))
+        return dst_path
+
+    def _generate_dst_path(self, proj_id: int, filename: str) -> Path:
+        return self.proj_root.joinpath(f"{proj_id}/docs/{filename}")
+
+    def get_sdoc_url(self, sdoc: SourceDocumentRead) -> Optional[str]:
+        dst_path = RepoService().get_path_to_file(sdoc, raise_if_not_exists=True)
+        return url.urljoin(self.base_url, str(dst_path.relative_to(self.repo_root)))
 
     def store_uploaded_document(self,
                                 doc_file: UploadFile,
                                 project_id: int) -> Tuple[Path, SourceDocumentCreate]:
         # save the file to disk
-        dst = self.proj_root.joinpath(f"{project_id}/docs/{doc_file.filename}")
+        dst = self._generate_dst_path(proj_id=project_id, filename=doc_file.filename)
         try:
             if dst.exists():
                 # FIXME Flo: Throw or what?!
