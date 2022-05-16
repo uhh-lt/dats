@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import PlainTextResponse
 from loguru import logger
+from psycopg2.errors import UniqueViolation
+from sqlalchemy.exc import IntegrityError
 from uvicorn import Config, Server
 
 from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, FileNotFoundInRepositoryError
@@ -71,9 +73,13 @@ async def file_not_found_in_repository_error_handler(_, exc: FileNotFoundInRepos
     return PlainTextResponse(str(exc), status_code=500)
 
 
-@app.exception_handler(NotImplementedError)
-async def not_implemented_error_handler(_, exc: NotImplementedError):
-    return PlainTextResponse(str(exc), status_code=501)
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(_, exc: IntegrityError):
+    if isinstance(exc.orig, UniqueViolation):
+        msg = str(exc.orig.pgerror).split("\n")[1]
+        return PlainTextResponse(msg, status_code=409)
+    else:
+        return PlainTextResponse(str(exc), status_code=500)
 
 
 @app.on_event("startup")
