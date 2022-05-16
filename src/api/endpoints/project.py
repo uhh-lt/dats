@@ -10,7 +10,7 @@ from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.doc_type import mime_type_supported, get_doc_type, DocType
+from app.core.data.doc_type import mime_type_supported
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -18,8 +18,7 @@ from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, Mem
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.docprepro.image import image_document_preprocessing_apply_async
-from app.docprepro.text import text_document_preprocessing_apply_async
+from app.docprepro.util import preprocess_uploaded_file
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
@@ -130,11 +129,7 @@ async def upload_project_sdoc(*,
         if not mime_type_supported(mime_type=doc_file.content_type):
             raise HTTPException(detail=f"Document with MIME type {doc_file.content_type} not supported!",
                                 status_code=406)
-        doc_type = get_doc_type(mime_type=doc_file.content_type)
-        if doc_type == DocType.text:
-            text_document_preprocessing_apply_async(doc_file=doc_file, project_id=proj_id)
-        elif doc_type == DocType.image:
-            image_document_preprocessing_apply_async(doc_file=doc_file, project_id=proj_id)
+        preprocess_uploaded_file(proj_id=proj_id, uploaded_file=doc_file)
 
     # TODO Flo: How to notify user or system when done?
     return f"Upload and preprocessing of {len(doc_files)} Document(s) started in the background!"

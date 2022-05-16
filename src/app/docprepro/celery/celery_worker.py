@@ -1,3 +1,6 @@
+import inspect
+from typing import Dict
+
 from celery import Celery
 
 from config import conf
@@ -17,8 +20,17 @@ class CeleryConfig:
     # https://docs.celeryq.dev/en/stable/userguide/routing.html
     task_routes = {
         "app.docprepro.text.preprocess.*": {"queue": "textQ"},
-        "app.docprepro.image.preprocess.*": {"queue": "imageQ"}
+        "app.docprepro.image.preprocess.*": {"queue": "imageQ"},
+        "app.docprepro.archive.preprocess.*": {"queue": "archiveQ"}
     }
+
+    def to_dict(self) -> Dict:
+        d = {}
+        for attr in dir(self):
+            value = getattr(self, attr)
+            if not attr.startswith('__') and not inspect.ismethod(value):
+                d[attr] = value
+        return d
 
 
 # Flo: Setup the celery worker with Redis backend (for results) and RabbitMQ broker (for message passing)

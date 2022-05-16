@@ -3,7 +3,7 @@ import shutil
 import urllib.parse as url
 import zipfile
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 from zipfile import ZipFile
 
 import magic
@@ -42,6 +42,11 @@ class UnsupportedDocTypeForSourceDocument(Exception):
         super().__init__(f"Unsupported DocType! Cannot create SourceDocument from file {dst_path}.")
 
 
+class ErroneousArchiveException(Exception):
+    def __init__(self, archive_path: Path):
+        super().__init__(f"Error with Archive {archive_path}.")
+
+
 class RepoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         repo_root = Path(conf.repo.root_directory)
@@ -57,6 +62,33 @@ class RepoService(metaclass=SingletonMeta):
         cls.base_url = base_url
 
         return super(RepoService, cls).__new__(cls)
+
+    @staticmethod
+    def _extract_archive(archive_path: Path) -> List[Path]:
+        if not zipfile.is_zipfile(archive_path):
+            raise ErroneousArchiveException(archive_path=archive_path)
+        dst = archive_path.parent
+        # taken from: https://stackoverflow.com/a/4917469
+        # flattens the extracted file hierarchy
+        try:
+            with ZipFile(archive_path, "r") as zip_archive:
+                extracted_files = zip_archive.namelist()
+                for member in extracted_files:
+                    filename = os.path.basename(member)
+                    # skip directories
+                    if not filename:
+                        # TODO Flo: what to do with nested subdirectories
+                        continue
+
+                    # copy file (taken from zipfile's extract)
+                    source = zip_archive.open(member)
+                    target = open(os.path.join(dst, filename), "wb")
+                    with source, target:
+                        shutil.copyfileobj(source, target)
+        except Exception as e:
+            raise ErroneousArchiveException(archive_path=archive_path)
+
+        return [dst.joinpath(file) for file in extracted_files]
 
     def _create_directory_structure(self, remove_if_exists: bool = False):
         try:
@@ -106,6 +138,10 @@ class RepoService(metaclass=SingletonMeta):
         dst_path = RepoService().get_path_to_file(sdoc, raise_if_not_exists=True)
         return url.urljoin(self.base_url, str(dst_path.relative_to(self.repo_root)))
 
+    def store_and_extract_archive_file(self, proj_id: int, archive_file: UploadFile) -> List[Path]:
+        dst = self.store_uploaded_file(proj_id=proj_id, uploaded_file=archive_file)
+        return self._extract_archive(dst)
+
     def store_uploaded_file(self, proj_id: int, uploaded_file: UploadFile) -> Path:
         dst = self._generate_dst_path(proj_id=proj_id, filename=uploaded_file.filename)
         try:
@@ -133,9 +169,11 @@ class RepoService(metaclass=SingletonMeta):
             logger.error(f"File '{filename}' in Project {proj_id} cannot be found in Repository at {dst_path}!")
             raise FileNotFoundInRepositoryError(proj_id=proj_id, filename=filename, dst=str(dst_path))
 
-        doctype = get_doc_type(mime_type=magic.from_file(dst_path, mime=True))
+        mime_type = magic.from_file(dst_path, mime=True)
+        doctype = get_doc_type(mime_type=mime_type)
         if not doctype:
-            logger.error(f"Unsupported DocType! Cannot create SourceDocument from file {dst_path}.")
+            logger.error(f"Unsupported DocType (for MIME Type {mime_type})!"
+                         " Cannot create SourceDocument from file {dst_path}.")
             raise UnsupportedDocTypeForSourceDocument(dst_path=dst_path)
 
         create_dto = SourceDocumentCreate(content="CONTENT IS NOW IN ElasticSearch!!!",

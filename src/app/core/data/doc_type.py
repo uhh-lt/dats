@@ -24,6 +24,10 @@ __mime_type_to_doc_type_map = frozendict({
     for mime_type in __doc_type_to_mime_type_map[doc_type]
 })
 
+__archive_mime_types__ = frozenset({
+    "application/zip"
+})
+
 
 def get_doc_type(mime_type: str) -> Optional[DocType]:
     if mime_type in __mime_type_to_doc_type_map:
@@ -32,4 +36,8 @@ def get_doc_type(mime_type: str) -> Optional[DocType]:
 
 
 def mime_type_supported(mime_type: str) -> bool:
-    return mime_type in __mime_type_to_doc_type_map
+    return mime_type in __mime_type_to_doc_type_map or is_archive_file(mime_type)
+
+
+def is_archive_file(mime_type: str) -> bool:
+    return mime_type in __archive_mime_types__

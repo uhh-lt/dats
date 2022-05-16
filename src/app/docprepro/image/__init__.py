@@ -4,6 +4,8 @@ from typing import Any
 from celery import Signature
 from fastapi import UploadFile
 
+from app.docprepro.image.preproimagedoc import PreProImageDoc
+
 # Flo: Task names (as they could be imported)
 import_uploaded_image_document = "app.docprepro.image.preprocess.import_uploaded_image_document"
 generate_automatic_bbox_annotations = "app.docprepro.image.preprocess.generate_automatic_bbox_annotations"

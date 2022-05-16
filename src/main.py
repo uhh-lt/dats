@@ -5,12 +5,12 @@ from fastapi.responses import PlainTextResponse
 from loguru import logger
 from uvicorn import Config, Server
 
-from app.core.data.repo.repo_service import FileNotFoundInRepositoryError
+from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, FileNotFoundInRepositoryError
 from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
     NoSuchMemoInElasticSearchError
 from app.core.startup import startup
 
-startup(reset_data=False)
+startup(reset_data=True)
 
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
     span_annotation, document_tag, span_group, bbox_annotation, search  # noqa E402
@@ -61,8 +61,13 @@ async def no_such_memo_in_es_error_handler(_, exc: NoSuchMemoInElasticSearchErro
     return PlainTextResponse(str(exc), status_code=500)
 
 
+@app.exception_handler(SourceDocumentNotFoundInRepositoryError)
+async def source_document_not_found_in_repository_error_handler(_, exc: SourceDocumentNotFoundInRepositoryError):
+    return PlainTextResponse(str(exc), status_code=500)
+
+
 @app.exception_handler(FileNotFoundInRepositoryError)
-async def no_such_memo_in_es_error_handler(_, exc: FileNotFoundInRepositoryError):
+async def file_not_found_in_repository_error_handler(_, exc: FileNotFoundInRepositoryError):
     return PlainTextResponse(str(exc), status_code=500)
 
 
