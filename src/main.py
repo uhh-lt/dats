@@ -12,7 +12,7 @@ from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticS
     NoSuchMemoInElasticSearchError
 from app.core.startup import startup
 
-startup(reset_data=True)
+startup(reset_data=False)
 
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
     span_annotation, document_tag, span_group, bbox_annotation, search  # noqa E402

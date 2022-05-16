@@ -6,6 +6,7 @@ import torch
 from fastapi import UploadFile
 from loguru import logger
 from spacy import Language
+from tqdm import tqdm
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
@@ -28,25 +29,40 @@ from app.docprepro.text.util import generate_preprotextdoc, generate_automatic_s
 from app.docprepro.util import persist_as_sdoc
 from config import conf
 
+# https://github.com/explosion/spaCy/issues/8678
+torch.set_num_threads(1)
+
+
+def __load_spacy_models() -> Dict[str, Language]:
+    logger.info(f"Starting to load spaCy Models...")
+    logger.info(f"Loading spaCy Model '{conf.docprepro.text.spacy.german_model}' ...")
+    spacy_german = spacy.load(conf.docprepro.text.spacy.german_model)
+    logger.info(f"Loading spaCy Model '{conf.docprepro.text.spacy.english_model}' ...")
+    spacy_english = spacy.load(conf.docprepro.text.spacy.english_model)
+    logger.info(f"Starting to load spaCy Models... Done!")
+
+    nlp: Dict[str, Language] = {
+        "de": spacy_german,
+        "en": spacy_english
+    }
+
+    if conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.english_model:
+        nlp["default"] = nlp["en"]
+    elif conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.german_model:
+        nlp["default"] = nlp["de"]
+    else:
+        nlp["default"] = spacy.load(conf.docprepro.text.spacy.default_model)
+
+    return nlp
+
+
+nlp = __load_spacy_models()
+
 SPACY_PIPE_THRESHOLD = conf.docprepro.text.spacy.pipe_threshold
 
 # TODO Flo: maybe we want to break all process tasks up in smaller functions for better readability and modularity...
 #  However, this would be _little_ less efficient
 
-nlp: Dict[str, Language] = {
-    "de": spacy.load(conf.docprepro.text.spacy.german_model),
-    "en": spacy.load(conf.docprepro.text.spacy.english_model)
-}
-
-# https://github.com/explosion/spaCy/issues/8678
-torch.set_num_threads(1)
-
-if conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.english_model:
-    nlp["default"] = nlp["en"]
-elif conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.german_model:
-    nlp["default"] = nlp["de"]
-else:
-    nlp["default"] = spacy.load(conf.docprepro.text.spacy.default_model)
 
 sql = SQLService(echo=False)
 repo = RepoService()
@@ -67,13 +83,13 @@ def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreP
     global nlp
 
     if len(pptds) < SPACY_PIPE_THRESHOLD:
-        return generate_automatic_span_annotations_sequentially(pptds, nlp=nlp)
-    return generate_automatic_span_annotations_pipeline(pptds, nlp=nlp)
+        return generate_automatic_span_annotations_sequentially(pptds, nlp)
+    return generate_automatic_span_annotations_pipeline(pptds, nlp)
 
 
 @celery_prepro_worker.task(acks_late=True)
 def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
-    for pptd in pptds:
+    for pptd in tqdm(pptds, desc="Persisting Automatic SpanAnnotations... "):
         # create AnnoDoc for system user
         with SQLService().db_session() as db:
             adoc_create = AnnotationDocumentCreate(source_document_id=pptd.sdoc_id,
@@ -120,7 +136,7 @@ def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PrePr
 
 @celery_prepro_worker.task(acks_late=True)
 def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
-    for pptd in pptds:
+    for pptd in tqdm(pptds, desc="Adding documents to ElasticSearch... "):
         with SQLService().db_session() as db:
             proj = ProjectRead.from_orm(crud_project.read(db=db, id=pptd.project_id))
 

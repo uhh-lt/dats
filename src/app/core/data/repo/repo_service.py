@@ -3,6 +3,7 @@ import shutil
 import urllib.parse as url
 import zipfile
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Tuple, Optional, List
 from zipfile import ZipFile
 
@@ -51,6 +52,7 @@ class RepoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         repo_root = Path(conf.repo.root_directory)
         cls.repo_root = repo_root
+        cls.temp_files_root = repo_root.joinpath("temporary_files")
         cls.logs_root = repo_root.joinpath("logs")
         cls.proj_root = repo_root.joinpath("projects")
 
@@ -65,6 +67,7 @@ class RepoService(metaclass=SingletonMeta):
 
     @staticmethod
     def _extract_archive(archive_path: Path) -> List[Path]:
+        logger.info("Extracting archive...")
         if not zipfile.is_zipfile(archive_path):
             raise ErroneousArchiveException(archive_path=archive_path)
         dst = archive_path.parent
@@ -88,7 +91,11 @@ class RepoService(metaclass=SingletonMeta):
         except Exception as e:
             raise ErroneousArchiveException(archive_path=archive_path)
 
+        logger.info("Extracting archive... Done!")
         return [dst.joinpath(file) for file in extracted_files]
+
+    def store_temporary_file(self, temp: NamedTemporaryFile) -> Path:
+        return Path(shutil.move(temp.name, self.temp_files_root))
 
     def _create_directory_structure(self, remove_if_exists: bool = False):
         try:
@@ -134,29 +141,49 @@ class RepoService(metaclass=SingletonMeta):
     def _generate_dst_path(self, proj_id: int, filename: str) -> Path:
         return self.proj_root.joinpath(f"{proj_id}/docs/{filename}")
 
+    def _make_directory_structure(self, proj_id: int, filename: str) -> Optional[Path]:
+        dst_path = self._generate_dst_path(proj_id=proj_id, filename=filename)
+        try:
+            if dst_path.exists():
+                logger.warning("Cannot store uploaded file because a file with the same name already exists!")
+                raise FileAlreadyExistsInRepositoryError(proj_id=proj_id, filename=filename, dst=str(dst_path))
+            elif not dst_path.parent.exists():
+                dst_path.parent.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            # FIXME Flo: Throw or what?!
+            logger.warning(f"Cannot store uploaded file! Error: {e}")
+
+        return dst_path
+
     def get_sdoc_url(self, sdoc: SourceDocumentRead) -> Optional[str]:
         dst_path = RepoService().get_path_to_file(sdoc, raise_if_not_exists=True)
         return url.urljoin(self.base_url, str(dst_path.relative_to(self.repo_root)))
 
-    def store_and_extract_archive_file(self, proj_id: int, archive_file: UploadFile) -> List[Path]:
-        dst = self.store_uploaded_file(proj_id=proj_id, uploaded_file=archive_file)
-        return self._extract_archive(dst)
+    def store_and_extract_temporary_archive_file(self, proj_id: int, temporary_archive_file_path: Path) -> List[Path]:
+        dst = self._move_uploaded_temporary_archive_to_project(proj_id=proj_id,
+                                                               temporary_archive_file_path=temporary_archive_file_path)
+        return self._extract_archive(archive_path=dst)
+
+    def _move_uploaded_temporary_archive_to_project(self, proj_id: int, temporary_archive_file_path: Path) -> Optional[
+        Path]:
+        try:
+            dst = self._make_directory_structure(proj_id=proj_id, filename=temporary_archive_file_path.name)
+            shutil.move(temporary_archive_file_path, dst)
+            return dst
+        except Exception as e:
+            # FIXME Flo: Throw or what?!
+            logger.warning(f"Cannot store temporary archive file in project repo! Error:\n {e}")
 
     def store_uploaded_file(self, proj_id: int, uploaded_file: UploadFile) -> Path:
-        dst = self._generate_dst_path(proj_id=proj_id, filename=uploaded_file.filename)
         try:
-            if dst.exists():
-                logger.warning("Cannot store uploaded file because a file with the same name already exists!")
-                raise FileAlreadyExistsInRepositoryError(proj_id=proj_id, filename=uploaded_file.filename, dst=str(dst))
-            elif not dst.parent.exists():
-                dst.parent.mkdir(parents=True, exist_ok=True)
+            dst = self._make_directory_structure(proj_id=proj_id, filename=uploaded_file.filename)
 
             with dst.open("wb") as buffer:
                 shutil.copyfileobj(uploaded_file.file, buffer)
                 logger.debug(f"Stored uploaded file at {str(dst)}")
         except Exception as e:
             # FIXME Flo: Throw or what?!
-            logger.warning(f"Cannot store uploaded file! Error: {e}")
+            logger.warning(f"Cannot store uploaded file! Error:\n  {e}")
         finally:
             uploaded_file.file.close()
 

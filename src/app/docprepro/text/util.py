@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 
 from langdetect import detect_langs
+from loguru import logger
 from spacy import Language
 from spacy.tokens import Doc
+from tqdm import tqdm
 
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document import SourceDocumentRead
@@ -89,9 +91,11 @@ def generate_automatic_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDo
     return pptd
 
 
-def generate_automatic_span_annotations_sequentially(pptds: List[PreProTextDoc], nlp: Dict[str, Language]) \
-        -> List[PreProTextDoc]:
-    for pptd in pptds:
+def generate_automatic_span_annotations_sequentially(pptds: List[PreProTextDoc],
+                                                     nlp: Dict[str, Language]) -> List[PreProTextDoc]:
+    logger.info(f"Generating Automatic Span Annotations in spaCy sequential Mode for {len(pptds)} Documents...")
+
+    for pptd in tqdm(pptds, desc="Generating Automatic Span Annotations in spaCy sequential Mode... "):
         # Flo: use the language specific model for each pptd
         model = nlp[pptd.metadata["language"]] if pptd.metadata["language"] in nlp else nlp["default"]
         doc: Doc = model(pptd.raw_text)
@@ -101,9 +105,12 @@ def generate_automatic_span_annotations_sequentially(pptds: List[PreProTextDoc],
     return pptds
 
 
-def generate_automatic_span_annotations_pipeline(pptds: List[PreProTextDoc], nlp: Dict[str, Language]) \
-        -> List[PreProTextDoc]:
-    # Flo: first we have to sort the PreProTextDoc by language and extract the text from the pptds that we want to use with the models
+def generate_automatic_span_annotations_pipeline(pptds: List[PreProTextDoc],
+                                                 nlp: Dict[str, Language]) -> List[PreProTextDoc]:
+    logger.info(f"Generating Automatic Span Annotations in spaCy Pipeline Mode for {len(pptds)} Documents...")
+
+    # Flo: first we have to sort the PreProTextDoc by language and extract the text from the pptds that we want to
+    #  use with the models
     pptds_data: Dict[str, List[Tuple[str, PreProTextDoc]]] = {lang: [] for lang in nlp.keys()}
     for pptd in pptds:
         pptd_lang = pptd.metadata["language"] if pptd.metadata["language"] in nlp else "default"
@@ -111,7 +118,8 @@ def generate_automatic_span_annotations_pipeline(pptds: List[PreProTextDoc], nlp
 
     # Flo: now apply language specific model in pipeline mode
     for (lang, model) in nlp.items():
-        for doc, pptd in model.pipe(pptds_data[lang], as_tuples=True):
+        for doc, pptd in tqdm(model.pipe(pptds_data[lang], as_tuples=True), total=len(pptds_data[lang]),
+                              desc="Generating Automatic Span Annotations in spaCy Pipeline Mode... "):
             generate_automatic_span_annotations_single_pptd(doc=doc, pptd=pptd)
 
     return pptds

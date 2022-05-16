@@ -1,5 +1,6 @@
 api:
   port: ${oc.env:API_PORT, 5000}
+  max_upload_file_size: 104857600 # 100 MB in bytes
   auth:
     jwt:
       token_url: /user/login
@@ -294,6 +295,9 @@ docprepro:
     default_detr_model: "facebook/detr-resnet-101"
     confidence_threshold: 0.3
   celery:
+    batch_size:
+      text: 50
+      image: 10
     backend:
       host: ${oc.env:REDIS_HOST, localhost}
       port: ${oc.env:REDIS_PORT, 6379}

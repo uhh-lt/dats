@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Tuple
+from tempfile import NamedTemporaryFile
+from typing import Tuple, IO
 
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import get_doc_type, DocType, is_archive_file
@@ -31,7 +32,23 @@ def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
     elif doc_type == DocType.image:
         image_document_preprocessing_apply_async(doc_file=uploaded_file, project_id=proj_id)
     elif is_archive_file(uploaded_file.content_type):
-        import_uploaded_archive_apply_async(archive_file=uploaded_file, project_id=proj_id)
+        temporary_archive_file_path = _store_archive_temporarily(uploaded_file=uploaded_file)
+        import_uploaded_archive_apply_async(temporary_archive_file_path=temporary_archive_file_path, project_id=proj_id)
+
+
+def _store_archive_temporarily(uploaded_file: UploadFile) -> Path:
+    real_file_size = 0
+    temp: IO = NamedTemporaryFile(delete=False)
+    for chunk in uploaded_file.file:
+        real_file_size += len(chunk)
+        if real_file_size > conf.api.max_upload_file_size:
+            raise HTTPException(status_code=413,
+                                detail=(f"File {uploaded_file.filename} is too large!"
+                                        f" Maximum allowed size in bytes: {conf.api.max_upload_file_size}"))
+        temp.write(chunk)
+    temp.close()
+    dst = repo.store_temporary_file(temp=temp)
+    return Path(dst)
 
 
 def persist_as_sdoc(doc_file: UploadFile,
