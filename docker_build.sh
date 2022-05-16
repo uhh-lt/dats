@@ -112,7 +112,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     docker build -f Dockerfile_celery_archive_worker --build-arg INSTALL_JUPYTER="${jupyter}" --build-arg TINI_BINARY="${tini}" -t uhhlt/dwts_backend_celery_archive:"${docker_tag}" .
 
     if [ $push == true ]; then
-      docker login && docker push uhhlt/dwts_backend_celery_image:"${docker_tag}"
+      docker login && docker push uhhlt/dwts_backend_celery_archive:"${docker_tag}"
     fi
   fi
 fi
