@@ -42,13 +42,18 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
 
 
 class SourceDocumentContent(BaseModel):
-    source_document_id: int = Field(description="ID of the SourceDocument")
-    content: str = Field(description="The (textual) content of the SourceDocument")
+    source_document_id: int = Field(description="ID of the SourceDocument the content belongs to.")
+    content: str = Field(description="The (textual) content of the SourceDocument the content belongs to.")
 
 
 class SourceDocumentTokens(BaseModel):
-    source_document_id: int = Field(description="ID of the SourceDocument")
-    tokens: List[str] = Field(description="The (textual) list Tokens of the SourceDocument")
+    source_document_id: int = Field(description="ID of the SourceDocument the Tokens belong to.")
+    tokens: List[str] = Field(description="The (textual) list Tokens of the SourceDocument the Tokens belong to.")
     token_character_offsets: Optional[List[Tuple[int, int]]] = Field(description=("The list of character offsets of"
                                                                                   " the Tokens"),
                                                                      default=None)
+
+
+class SourceDocumentKeywords(BaseModel):
+    source_document_id: int = Field(description="ID of the SourceDocument the Keywords belong to.")
+    keywords: List[str] = Field(description="The list of Keywords of the SourceDocument the Keywords belong to.")

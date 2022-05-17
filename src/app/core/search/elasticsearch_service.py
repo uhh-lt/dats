@@ -10,7 +10,8 @@ from app.core.data.doc_type import DocType
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
     ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedSourceDocumentSearchResults
-from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens
+from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens, \
+    SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -178,6 +179,17 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                         tokens=esdoc.tokens,
                                         token_character_offsets=[(o.gte, o.lt) for o in esdoc.token_character_offsets])
         return SourceDocumentTokens(source_document_id=sdoc_id, tokens=esdoc.tokens)
+
+    def get_sdoc_keywords_by_sdoc_id(self,
+                                     *,
+                                     proj: ProjectRead,
+                                     sdoc_id: int,
+                                     character_offsets: Optional[bool] = False) -> Optional[SourceDocumentKeywords]:
+        fields = {"keywords"}
+        if character_offsets:
+            fields.add("token_character_offsets")
+        esdoc = self.get_esdoc_by_sdoc_id(proj=proj, sdoc_id=sdoc_id, fields=fields)
+        return SourceDocumentKeywords(source_document_id=sdoc_id, keywords=esdoc.keywords)
 
     def delete_document_from_index(self,
                                    proj: ProjectRead,
