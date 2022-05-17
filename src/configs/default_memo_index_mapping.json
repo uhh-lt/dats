@@ -11,6 +11,9 @@
     "content": {
       "type": "text"
     },
+    "starred": {
+      "type": "boolean"
+    },
     "project_id": {
       "type": "long"
     },

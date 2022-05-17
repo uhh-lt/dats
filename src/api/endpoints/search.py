@@ -1,95 +1,3 @@
-# from typing import Optional, List
-#
-# from fastapi import APIRouter, Depends
-# from fastapi import Query
-#
-# from api.auth.jwt_oauth2 import current_user
-# from app.core.crud.document_service import DocumentService
-# from app.core.search.elasticsearch_service import ElasticSearchService
-# from config import conf
-# from model import DocumentRead, ProjectCreate
-# from model import UserRead
-#
-# router = APIRouter(prefix="/search")
-# tags = ["search"]
-#
-# limit_query_parameter = Query(title="Document Limit",
-#                               description="The maximum number of returned Documents",
-#                               gt=0,
-#                               lt=10000,
-#                               default=100)
-#
-# es: ElasticSearchService = ElasticSearchService()
-# doc_service: DocumentService = DocumentService()
-#
-# # FIXME
-# demo_proj = ProjectCreate(name=conf.demo.project_name)
-
-
-# @router.get("/docs/filename/exact/", tags=tags,
-#             response_model=List[DocumentRead],
-#             description="Returns the Document with the given ID if it exists")
-# async def search_docs_by_exact_filename(filename: str,
-#                                         limit: Optional[int] = limit_query_parameter) \
-#         -> List[DocumentRead]:
-#     es_docs = es.search_docs_by_exact_filename(index=demo_proj.doc_index,
-#                                                filename=filename,
-#                                                limit=limit)
-#     return doc_service.to_document_reads(es_docs)
-#
-#
-# @router.get("/docs/filename/prefix/", tags=tags,
-#             response_model=List[DocumentRead],
-#             description="Returns the Documents starting with the given prefix")
-# async def search_docs_by_prefix_filename(filename_prefix: str,
-#                                          limit: Optional[int] = limit_query_parameter) \
-#         -> List[DocumentRead]:
-#     es_docs = es.search_docs_by_prefix_filename(index=demo_proj.doc_index,
-#                                                 filename_prefix=filename_prefix,
-#                                                 limit=limit)
-#     return doc_service.to_document_reads(es_docs)
-#
-#
-# @router.get("/docs/content/", tags=tags,
-#             response_model=List[DocumentRead],
-#             description="Returns the best matching Documents according to the query")
-# async def search_docs_via_query_in_content(query: str,
-#                                            limit: Optional[int] = limit_query_parameter) \
-#         -> List[DocumentRead]:
-#     es_docs = es.search_docs_via_query_in_content(index=demo_proj.doc_index,
-#                                                   query=query,
-#                                                   limit=limit)
-#     return doc_service.to_document_reads(es_docs)
-#
-#
-# @router.get("/memo/content/", tags=tags,
-#             response_model=List[DocumentRead],
-#             description="Returns the best matching Memo according to the query")
-# async def search_memo_via_query_in_content(query: str,
-#                                            limit: Optional[int] = limit_query_parameter) \
-#         -> List[DocumentRead]:
-#     es_docs = es.search_docs_via_query_in_content(index=demo_proj.doc_index,
-#                                                   query=query,
-#                                                   limit=limit)
-#     return doc_service.to_document_reads(es_docs)
-
-# @router.post("/{project}/docs", tags=tags,
-#              response_model=List[DocumentRead],
-#              description="Returns the Document with the given ID if it exists")
-# async def search_through_docs(filename: str, limit: Optional[int] = limit_query_parameter
-#                               , user: UserRead = Depends(current_user)) -> List[DocumentRead]:
-#     # TODO Flo: only if the user has access?
-#     raise NotImplementedError()
-#
-#
-# @router.post("/{project}/memos", tags=tags,
-#              response_model=List[DocumentRead],
-#              description="Returns the Document with the given ID if it exists")
-# async def search_through_memos(filename: str, limit: Optional[int] = limit_query_parameter,
-#                                user: UserRead = Depends(current_user)) -> List[DocumentRead]:
-#     # TODO Flo: only if the user has access?
-#     raise NotImplementedError()
-
 from typing import List, Dict
 
 from fastapi import APIRouter, Depends
@@ -99,7 +7,8 @@ from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityStatsQueryParameters, SpanEntityStat, \
-    PaginatedSourceDocumentSearchResults, SourceDocumentContentQuery, SourceDocumentFilenameQuery
+    PaginatedSourceDocumentSearchResults, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
+    PaginatedMemoSearchResults, MemoTitleQuery
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 
@@ -155,7 +64,7 @@ async def search_stats(*,
                                           **skip_limit)
 
 
-@router.post("/sdoc/content", tags=tags,
+@router.post("/lexical/sdoc/content", tags=tags,
              response_model=PaginatedSourceDocumentSearchResults,
              summary="Returns all SourceDocuments where the content matches the query via lexical search",
              description="Returns all SourceDocuments where the content matches the query via lexical search")
@@ -170,7 +79,7 @@ async def search_sdocs_by_content_query(*,
                                                                 **skip_limit)
 
 
-@router.post("/sdoc/filename", tags=tags,
+@router.post("/lexical/sdoc/filename", tags=tags,
              response_model=PaginatedSourceDocumentSearchResults,
              summary="Returns all SourceDocuments where the filename matches the query via lexical search",
              description="Returns all SourceDocuments where the filename matches the query via lexical search")
@@ -187,3 +96,44 @@ async def search_sdocs_by_filename_query(*,
         return ElasticSearchService().search_sdocs_by_exact_filename(proj=proj,
                                                                      exact_filename=filename_query.filename_query,
                                                                      **skip_limit)
+
+
+@router.post("/lexical/memo/content", tags=tags,
+             response_model=PaginatedMemoSearchResults,
+             summary="Returns all Memos where the content matches the query via lexical search",
+             description="Returns all Memos where the content matches the query via lexical search")
+async def search_memos_by_content_query(*,
+                                        db: Session = Depends(get_db_session),
+                                        content_query: MemoContentQuery,
+                                        skip_limit: Dict[str, str] = Depends(skip_limit_params)) \
+        -> PaginatedMemoSearchResults:
+    proj = crud_project.read(db=db, id=content_query.proj_id)
+    return ElasticSearchService().search_memos_by_content_query(proj=proj,
+                                                                query=content_query.content_query,
+                                                                user_id=content_query.user_id,
+                                                                starred=content_query.starred,
+                                                                **skip_limit)
+
+
+@router.post("/lexical/memo/title", tags=tags,
+             response_model=PaginatedMemoSearchResults,
+             summary="Returns all Memos where the title matches the query via lexical search",
+             description="Returns all Memos where the title matches the query via lexical search")
+async def search_memos_by_title_query(*,
+                                      db: Session = Depends(get_db_session),
+                                      title_query: MemoTitleQuery,
+                                      skip_limit: Dict[str, str] = Depends(skip_limit_params)) \
+        -> PaginatedMemoSearchResults:
+    proj = crud_project.read(db=db, id=title_query.proj_id)
+    if title_query.prefix:
+        return ElasticSearchService().search_memos_by_prefix_title(proj=proj,
+                                                                   user_id=title_query.user_id,
+                                                                   title_prefix=title_query.title_query,
+                                                                   starred=title_query.starred,
+                                                                   **skip_limit)
+    else:
+        return ElasticSearchService().search_memos_by_exact_title(proj=proj,
+                                                                  user_id=title_query.user_id,
+                                                                  exact_title=title_query.title_query,
+                                                                  starred=title_query.starred,
+                                                                  **skip_limit)

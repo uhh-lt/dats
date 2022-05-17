@@ -1,10 +1,10 @@
 from datetime import datetime
-from typing import Set, Optional, List, Tuple
+from typing import Set, Optional, List
 
 from pydantic import BaseModel, Field
 
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.memo import AttachedObjectType
+from app.core.data.dto.memo import AttachedObjectType, MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
 
 
@@ -54,6 +54,24 @@ class SourceDocumentFilenameQuery(BaseModel):
     prefix: bool = Field(description="If true, filename prefix search is done. If false exact filename is searched.")
 
 
+class MemoQueryBase(BaseModel):
+    proj_id: int = Field(description="The ID of the Project the Memo have to belong to.")
+    user_id: int = Field(description="The ID of the User the Memo have to belong to.")
+    starred: Optional[bool] = Field(description=("If set (i.e. not NULL / NONE), only returns Memo that have the "
+                                                 "given starred status"), default=None)
+
+
+class MemoContentQuery(MemoQueryBase):
+    content_query: str = Field(description="The query term to search within the content of the Memo",
+                               min_length=1)
+
+
+class MemoTitleQuery(MemoQueryBase):
+    title_query: str = Field(description="The query term to search within the title of the Memo",
+                             min_length=1)
+    prefix: bool = Field(description="If true, filename prefix search is done. If false exact title is searched.")
+
+
 class ElasticSearchIntegerRange(BaseModel):
     gte: int
     lt: int
@@ -92,6 +110,7 @@ class ElasticSearchDocumentHit(ElasticSearchDocumentRead):
 class ElasticSearchMemoCreate(BaseModel):
     title: str = Field(description="The title of the Memo")
     content: str = Field(description="The content of the Memo")
+    starred: Optional[bool] = Field(description='Starred flag of the Memo', default=False)
     memo_id: int = Field(description="The ID of the Memo as it is in the SQL DB")
     project_id: int = Field(description="The ID of the Project the Memo belongs to")
     user_id: int = Field(description="The ID of the User the Memo belongs to")
@@ -104,6 +123,7 @@ class ElasticSearchMemoCreate(BaseModel):
 class ElasticSearchMemoRead(BaseModel):
     title: Optional[str] = Field(description="The title of the Memo")
     content: Optional[str] = Field(description="The content of the Memo")
+    starred: Optional[bool] = Field(description='Starred flag of the Memo')
     memo_id: Optional[int] = Field(description="The ID of the Memo as it is in the SQL DB")
     project_id: Optional[int] = Field(description="The ID of the Project the Memo belongs to")
     user_id: Optional[int] = Field(description="The ID of the User the Memo belongs to")
@@ -118,8 +138,15 @@ class ElasticMemoHit(ElasticSearchMemoRead):
     score: float = Field(description="The score of the Memo that was found by a ES Query")
 
 
-class PaginatedSourceDocumentSearchResults(BaseModel):
-    sdocs: List[SourceDocumentRead] = Field(description="The search results.")
+class PaginatedSearchResults(BaseModel):
     has_more: bool = Field(description="Flag that indicates whether there are more search results.")
     current_page_offset: int = Field(description="The offset that returns the current results.")
     next_page_offset: int = Field(description="The offset that returns the next results.")
+
+
+class PaginatedSourceDocumentSearchResults(PaginatedSearchResults):
+    sdocs: List[SourceDocumentRead] = Field(description="The SourceDocument search results on the requested page.")
+
+
+class PaginatedMemoSearchResults(PaginatedSearchResults):
+    memos: List[MemoRead] = Field(description="The Memo search results on the requested page.")

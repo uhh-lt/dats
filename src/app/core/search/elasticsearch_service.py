@@ -7,9 +7,11 @@ from loguru import logger
 from omegaconf import OmegaConf
 
 from app.core.data.doc_type import DocType
+from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
-    ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedSourceDocumentSearchResults
+    ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedSourceDocumentSearchResults, PaginatedMemoSearchResults, \
+    ElasticMemoHit
 from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens, \
     SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
@@ -231,22 +233,28 @@ class ElasticSearchService(metaclass=SingletonMeta):
         self.__client.delete(index=proj.memo_index, id=str(memo_id))
         logger.info(f"Deleted Memo with ID={memo_id} from Index '{proj.memo_index}'!")
 
-    def __search_sdocs(self,
-                       *,
-                       proj: ProjectRead,
-                       query: Dict[str, Any],
-                       limit: Optional[int] = 10,
-                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+    def __search(self,
+                 *,
+                 sdoc: bool = True,
+                 proj: ProjectRead,
+                 query: Dict[str, Any],
+                 limit: Optional[int] = 10,
+                 skip: Optional[int] = 0) -> Dict[str, Any]:
         """
-        Helper function that can be reused to find Documents with different queries.
+        Helper function that can be reused to find SDocs or Memos with different queries.
         :param query: The ElasticSearch query object in ES Query DSL
-        :param skip: The number of skipped Documents
-        :param limit: The maximum number of returned Documents
-        :return: A (possibly empty) list of Documents matching the query
+        :param skip: The number of skipped elements
+        :param limit: The maximum number of returned elements
+        :return: A (possibly empty) list of Memo matching the query
         :rtype: List[DocumentElasticSearchHit]
         """
-        if not self.__client.indices.exists(index=proj.doc_index):
-            raise ValueError(f"ElasticSearch Index '{proj.doc_index}' does not exist!")
+        if sdoc:
+            idx = proj.doc_index
+        else:
+            idx = proj.memo_index
+
+        if not self.__client.indices.exists(index=idx):
+            raise ValueError(f"ElasticSearch Index '{idx}' does not exist!")
 
         if query is None or len(query) < 1:
             raise ValueError("Query DSL object must not be None or empty!")
@@ -255,11 +263,19 @@ class ElasticSearchService(metaclass=SingletonMeta):
         elif (not isinstance(skip, int)) or skip > 10000 or limit < 1:
             raise ValueError("Skip must be a positive Integer smaller than 10000!")
 
-        res = self.__client.search(index=proj.doc_index,
-                                   query=query,
-                                   size=limit,
-                                   from_=skip,
-                                   filter_path=["hits"])
+        return self.__client.search(index=idx,
+                                    query=query,
+                                    size=limit,
+                                    from_=skip,
+                                    filter_path=["hits"])
+
+    def __search_sdocs(self,
+                       *,
+                       proj: ProjectRead,
+                       query: Dict[str, Any],
+                       limit: Optional[int] = 10,
+                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+        res = self.__search(sdoc=True, proj=proj, query=query, limit=limit, skip=skip)
         # Flo: for convenience only...
         res = OmegaConf.create(res)
         if len(res) == 0:
@@ -281,6 +297,63 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                                     has_more=has_more,
                                                     current_page_offset=skip,
                                                     next_page_offset=(skip + limit) if has_more else 0)
+
+    def __search_memos(self,
+                       *,
+                       proj: ProjectRead,
+                       query: Dict[str, Any],
+                       user_id: int,
+                       starred: Optional[bool] = None,
+                       limit: Optional[int] = 10,
+                       skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+
+        # add user to query
+        query["bool"]["must"].append(
+            {
+                "match": {
+                    "user_id": user_id
+                }
+            }
+        )
+        if starred is not None:
+            # add starred to query
+            query["bool"]["must"].append(
+                {
+                    "match": {
+                        "starred": str(starred).lower()
+                    }
+                }
+            )
+
+        print(str(query).replace("'", '"'))
+
+        res = self.__search(sdoc=False, proj=proj, query=query, limit=limit, skip=skip)
+        # Flo: for convenience only...
+        res = OmegaConf.create(res)
+        if len(res) == 0:
+            return PaginatedMemoSearchResults(memos=[],
+                                              has_more=False,
+                                              current_page_offset=skip,
+                                              next_page_offset=0)
+
+        esmemos = [ElasticMemoHit(**OmegaConf.to_container(doc["_source"]), score=doc["_score"])
+                   for doc in res.hits.hits]
+        memos = [MemoRead(title=esmemo.title,
+                          content=esmemo.content,
+                          starred=esmemo.starred,
+                          id=esmemo.memo_id,
+                          user_id=esmemo.user_id,
+                          project_id=esmemo.project_id,
+                          created=esmemo.created,
+                          updated=esmemo.updated,
+                          attached_object_id=esmemo.attached_object_id,
+                          attached_object_type=esmemo.attached_object_type)
+                 for esmemo in esmemos]
+        has_more = res.hits.total.value > limit
+        return PaginatedMemoSearchResults(memos=memos,
+                                          has_more=has_more,
+                                          current_page_offset=skip,
+                                          next_page_offset=(skip + limit) if has_more else 0)
 
     def search_sdocs_by_exact_filename(self,
                                        *,
@@ -321,6 +394,70 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 }
             }
         }, limit=limit, skip=skip)
+
+    def search_memos_by_exact_title(self,
+                                    *,
+                                    proj: ProjectRead,
+                                    user_id: int,
+                                    exact_title: str,
+                                    starred: Optional[bool] = None,
+                                    limit: Optional[int] = 10,
+                                    skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+        # Flo: Using term query since title is a keyword field
+        return self.__search_memos(proj=proj, query={
+            "bool": {
+                "must": [
+                    {
+                        "term": {
+                            "title": exact_title
+                        }
+                    }
+                ]
+            }
+        }, user_id=user_id, starred=starred, limit=limit, skip=skip)
+
+    def search_memos_by_prefix_title(self,
+                                     *,
+                                     proj: ProjectRead,
+                                     user_id: int,
+                                     title_prefix: str,
+                                     starred: Optional[bool] = None,
+                                     limit: Optional[int] = 10,
+                                     skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+        return self.__search_memos(proj=proj, query={
+            "bool": {
+                "must": [
+                    {
+                        "prefix": {
+                            "title": title_prefix
+                        }
+                    }
+                ]
+            }
+        }, user_id=user_id, starred=starred, limit=limit, skip=skip)
+
+    def search_memos_by_content_query(self,
+                                      *,
+                                      proj: ProjectRead,
+                                      user_id: int,
+                                      query: str,
+                                      starred: Optional[bool] = None,
+                                      limit: Optional[int] = 10,
+                                      skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+        return self.__search_memos(proj=proj, query={
+            "bool": {
+                "must": [
+                    {
+                        "match": {
+                            "content": {
+                                "query": query,
+                                "fuzziness": 1
+                            }
+                        }
+                    }
+                ]
+            }
+        }, user_id=user_id, starred=starred, limit=limit, skip=skip)
 
     def _get_client(self) -> Elasticsearch:
         """
