@@ -70,9 +70,9 @@ async def get_by_id(*,
 async def update_by_id(*,
                        db: Session = Depends(get_db_session),
                        tag_id: int,
-                       span_anno: DocumentTagUpdate) -> Optional[DocumentTagRead]:
+                       doc_tag: DocumentTagUpdate) -> Optional[DocumentTagRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_document_tag.update(db=db, id=tag_id, update_dto=span_anno)
+    db_obj = crud_document_tag.update(db=db, id=tag_id, update_dto=doc_tag)
     return DocumentTagRead.from_orm(db_obj)
 
 
@@ -97,7 +97,7 @@ async def add_memo(*,
                    tag_id: int,
                    memo: MemoCreate) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_memo.create_for_span_annotation(db=db, span_anno_id=tag_id, create_dto=memo)
+    db_obj = crud_memo.create_for_document_tag(db=db, doc_tag_id=tag_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
     return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
                     attached_object_id=tag_id,
