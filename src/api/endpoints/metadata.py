@@ -48,7 +48,7 @@ async def update_by_id(*,
 
 
 @router.delete("/{metadata_id}", tags=tags,
-               response_model=Optional[SourceDocumentMetadataUpdate],
+               response_model=Optional[SourceDocumentMetadataRead],
                summary="Deletes the Metadata",
                description="Deletes the Metadata with the given ID.")
 async def delete_by_id(*,
