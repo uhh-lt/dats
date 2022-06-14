@@ -35,7 +35,7 @@ async def get_by_id(*,
 
 
 @router.patch("/{metadata_id}", tags=tags,
-              response_model=SourceDocumentMetadataUpdate,
+              response_model=SourceDocumentMetadataRead,
               summary="Updates the Metadata",
               description="Updates the Metadata with the given ID.")
 async def update_by_id(*,
