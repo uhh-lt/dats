@@ -43,7 +43,7 @@ async def update_by_id(*,
                        metadata_id: int,
                        metadata: SourceDocumentMetadataUpdate) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_sdoc_meta.update(db=db, id=metadata_id, update_dto=metadata)
+    db_obj = crud_sdoc_meta.update(db=db, metadata_id=metadata_id, update_dto=metadata)
     return SourceDocumentMetadataRead.from_orm(db_obj)
 
 
