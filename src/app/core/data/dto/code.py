@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from app.util.color import get_next_color
+
 from .dto_base import UpdateDTOBase
 
 
@@ -18,6 +20,7 @@ class CodeBaseDTO(BaseModel):
 class CodeCreate(CodeBaseDTO):
     project_id: int = Field(description='Project the Code belongs to')
     user_id: int = Field(description='User the Code belongs to')
+    color: Optional[str] = Field(description='Color of the Code', default_factory=get_next_color)
 
 
 # Properties for updating

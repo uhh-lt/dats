@@ -8,9 +8,10 @@ from .dto_base import UpdateDTOBase
 
 # Properties shared across all DTOs
 class SpanAnnotationBaseDTO(BaseModel):
-    begin: int = Field(description='Begin of the SpanAnnotation')
-    end: int = Field(description='End of the SpanAnnotation')
-    # TODO Flo: Token offset
+    begin: int = Field(description='Begin of the SpanAnnotation in characters')
+    end: int = Field(description='End of the SpanAnnotation in characters')
+    begin_token: int = Field(description='Begin of the SpanAnnotation in tokens')
+    end_token: int = Field(description='End of the SpanAnnotation in tokens')
 
 
 # Properties for creation
@@ -21,7 +22,7 @@ class SpanAnnotationCreate(SpanAnnotationBaseDTO):
 
 
 # Properties for updating
-class SpanAnnotationUpdate(SpanAnnotationBaseDTO, UpdateDTOBase):
+class SpanAnnotationUpdate(BaseModel, UpdateDTOBase):
     current_code_id: int = Field(description='CurrentCode the SpanAnnotation refers to')
 
 

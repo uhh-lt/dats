@@ -17,6 +17,8 @@ class SpanAnnotationORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     begin = Column(Integer, nullable=False, index=True)
     end = Column(Integer, nullable=False, index=True)
+    begin_token = Column(Integer, nullable=False, index=True)
+    end_token = Column(Integer, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 

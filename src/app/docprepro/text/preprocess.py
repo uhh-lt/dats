@@ -120,7 +120,9 @@ def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PrePr
                                                       end=aspan.end,
                                                       current_code_id=ccid,
                                                       annotation_document_id=adoc_db.id,
-                                                      span_text=aspan.text)
+                                                      span_text=aspan.text,
+                                                      begin_token=aspan.start_token,
+                                                      end_token=aspan.end_token)
 
                     crud_span_anno.create(db, create_dto=create_dto)
 

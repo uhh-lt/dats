@@ -10,7 +10,7 @@ from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.code import CodeCreate, CodeUpdate
 from app.core.data.dto.current_code import CurrentCodeCreate
 from app.core.data.orm.code import CodeORM
-from app.util.color import get_random_color
+from app.util.color import get_next_color
 from config import conf
 
 
@@ -36,7 +36,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         def __create_recursively(code_dict: Dict[str, Dict[str, Any]], parent_code_id: int = None):
             for code_name in code_dict.keys():
                 create_dto = CodeCreate(name=str(code_name),
-                                        color=get_random_color()[0],
+                                        color=get_next_color(),
                                         description=code_dict[code_name]["desc"],
                                         project_id=proj_id,
                                         user_id=SYSTEM_USER_ID,

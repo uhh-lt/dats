@@ -6,3 +6,5 @@ class AutoSpan(BaseModel):
     text: str
     start: int
     end: int
+    start_token: int
+    end_token: int

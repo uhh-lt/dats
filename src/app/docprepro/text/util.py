@@ -85,7 +85,9 @@ def generate_automatic_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDo
         auto = AutoSpan(code=f"{ne.label_}",
                         start=ne.start_char,
                         end=ne.end_char,
-                        text=ne.text)
+                        text=ne.text,
+                        start_token=ne.start,
+                        end_token=ne.end)
         pptd.spans["NER"].append(auto)
 
     return pptd
