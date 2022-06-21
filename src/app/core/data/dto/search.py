@@ -19,6 +19,11 @@ class SpanEntityStat(BaseModel):
     count: int = Field(description="Number of occurrences of the SpanEntity in the SourceDocument.")
 
 
+class KeywordStat(BaseModel):
+    keyword: str = Field(description="The counted keyword.")
+    count: int = Field(description="Number of occurrences of the keyword.")
+
+
 class SpanEntityStatsQueryParameters(BaseModel):
     proj_id: int = Field(description="The ID of the Project the SourceDocuments have to belong to.")
     sdoc_ids: Set[int] = Field(description="List of IDs of SourceDocuments the stats are computed for.")

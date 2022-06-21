@@ -146,6 +146,25 @@ class ElasticSearchService(metaclass=SingletonMeta):
         logger.debug(f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to Index '{proj.doc_index}'!")
         return res['_id']
 
+    def get_esdocs_by_sdoc_ids(self,
+                               *,
+                               proj: ProjectRead,
+                               sdoc_ids: Set[int],
+                               fields: Set[str] = None) -> Optional[List[ElasticSearchDocumentRead]]:
+        if not fields.union(self.doc_index_fields):
+            raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
+        results = self.__client.mget(index=proj.doc_index,
+                                     _source=list(fields),
+                                     body={'ids': list(sdoc_ids)})
+
+        esdocs = []
+        for res in results["docs"]:
+            if not res["found"]:
+                raise NoSuchSourceDocumentInElasticSearchError(proj=proj, sdoc_id=res["_id"])
+            esdocs.append(ElasticSearchDocumentRead(sdoc_id=res["_id"], **res["_source"]))
+
+        return esdocs
+
     def get_esdoc_by_sdoc_id(self,
                              *,
                              proj: ProjectRead,
@@ -192,6 +211,16 @@ class ElasticSearchService(metaclass=SingletonMeta):
             fields.add("token_character_offsets")
         esdoc = self.get_esdoc_by_sdoc_id(proj=proj, sdoc_id=sdoc_id, fields=fields)
         return SourceDocumentKeywords(source_document_id=sdoc_id, keywords=esdoc.keywords)
+
+    def get_sdoc_keywords_by_sdoc_ids(self,
+                                      *,
+                                      proj: ProjectRead,
+                                      sdoc_ids: Set[int]
+                                      ) -> Optional[List[SourceDocumentKeywords]]:
+        fields = {"keywords"}
+        return [SourceDocumentKeywords(source_document_id=esdoc.sdoc_id, keywords=esdoc.keywords)
+                for esdoc
+                in self.get_esdocs_by_sdoc_ids(proj=proj, sdoc_ids=sdoc_ids, fields=fields)]
 
     def delete_document_from_index(self,
                                    proj: ProjectRead,

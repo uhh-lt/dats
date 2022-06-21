@@ -1,3 +1,4 @@
+from collections import Counter
 from typing import List, Dict
 
 from fastapi import APIRouter, Depends
@@ -8,9 +9,10 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityStatsQueryParameters, SpanEntityStat, \
     PaginatedSourceDocumentSearchResults, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
-    PaginatedMemoSearchResults, MemoTitleQuery
+    PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.search.elasticsearch_service import ElasticSearchService
+from app.core.data.dto import ProjectRead
 
 router = APIRouter(prefix="/search")
 tags = ["search"]
@@ -74,6 +76,21 @@ async def search_stats(*,
                        skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanEntityStat]:
     return crud_sdoc.collect_entity_stats(db=db, sdoc_ids=query_params.sdoc_ids, proj_id=query_params.proj_id,
                                           **skip_limit)
+
+
+@router.post("/keyword_stats", tags=tags,
+             response_model=List[KeywordStat],
+             summary="Returns SpanEntityStats for the given SourceDocuments.",
+             description="Returns SpanEntityStats for the given SourceDocuments.")
+async def search_keyword_stats(*,
+                               db: Session = Depends(get_db_session),
+                               query_params: SpanEntityStatsQueryParameters,
+                               skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[KeywordStat]:
+    proj = crud_project.read(db=db, id=query_params.proj_id)
+    keywords = ElasticSearchService().get_sdoc_keywords_by_sdoc_ids(sdoc_ids=query_params.sdoc_ids,
+                                                                    proj=ProjectRead.from_orm(proj))
+    keyword_counts = Counter([kw for x in keywords for kw in x.keywords])
+    return [KeywordStat(keyword=keyword, count=count) for keyword, count in keyword_counts.items()]
 
 
 @router.post("/lexical/sdoc/content", tags=tags,
