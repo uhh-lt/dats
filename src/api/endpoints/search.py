@@ -10,7 +10,6 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityStatsQueryParameters, SpanEntityStat, \
     PaginatedSourceDocumentSearchResults, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
     PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat
-from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.data.dto import ProjectRead
 
@@ -58,6 +57,14 @@ async def search_sdocs(*,
                                                                             **skip_limit).sdocs]
         sdocs.append(sdocs_terms)
 
+    if query_params.keywords:
+        proj = crud_project.read(db=db, id=query_params.proj_id)
+        sdocs_terms = [sdoc.id for sdoc in
+                       ElasticSearchService().search_sdocs_by_keywords_query(proj=proj,
+                                                                             keywords=query_params.keywords,
+                                                                             **skip_limit).sdocs]
+        sdocs.append(sdocs_terms)
+
     if len(sdocs) == 0:
         # no search results, so we return all documents!
         return [sdoc.id for sdoc in crud_project.read(db=db, id=query_params.proj_id).source_documents]
@@ -86,6 +93,7 @@ async def search_keyword_stats(*,
                                db: Session = Depends(get_db_session),
                                query_params: SpanEntityStatsQueryParameters,
                                skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[KeywordStat]:
+    # todo: How to use skip_limit?
     proj = crud_project.read(db=db, id=query_params.proj_id)
     keywords = ElasticSearchService().get_sdoc_keywords_by_sdoc_ids(sdoc_ids=query_params.sdoc_ids,
                                                                     proj=ProjectRead.from_orm(proj))

@@ -35,6 +35,10 @@ class SearchSDocsQueryParameters(BaseModel):
     user_ids: Optional[Set[int]] = Field(description="The IDs of the User the SourceDocuments have to belong to.",
                                          default={SYSTEM_USER_ID})
 
+    keywords: Optional[List[str]] = Field(description=("List of Keywords that have to be present in"
+                                                       " the SourceDocuments keywords (via Elasticsearch)"),
+                                          default=None)
+
     search_terms: Optional[List[str]] = Field(description=("List of SearchTerms that have to be present in"
                                                            " the SourceDocuments content (via Elasticsearch)"),
                                               default=None)

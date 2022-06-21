@@ -424,6 +424,28 @@ class ElasticSearchService(metaclass=SingletonMeta):
             }
         }, limit=limit, skip=skip)
 
+    def search_sdocs_by_keywords_query(self,
+                                       *,
+                                       proj: ProjectRead,
+                                       keywords: List[str],
+                                       limit: Optional[int] = 10,
+                                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+        query: Dict[str, any] = {
+            "bool": {
+                "must": []
+            }
+        }
+
+        for keyword in keywords:
+            query["bool"]["must"].append(
+                {
+                    "match": {
+                        "keywords": keyword
+                    }
+                }
+            )
+        return self.__search_sdocs(proj=proj, query=query, limit=limit, skip=skip)
+
     def search_memos_by_exact_title(self,
                                     *,
                                     proj: ProjectRead,
