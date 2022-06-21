@@ -15,47 +15,20 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         db.commit()
         return list(map(lambda t: t[0], removed_ids))
 
-    @staticmethod
-    def link_multiple_document_tags(db: Session, *, sdoc_ids: List[int], tag_ids: List[int]) -> int:
+    def set_multiple_document_tags(self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]) -> int:
         """
-        Links all SDocs with all DocTags
+        Sets DocTags to SDocs
         """
-        from sqlalchemy.dialects.postgresql import insert
+        from app.core.data.crud.source_document import crud_sdoc
 
-        insert_values = [
-            {
-                "source_document_id": str(sdoc_id),
-                "document_tag_id": str(tag_id)
-            }
-            for sdoc_id in sdoc_ids for tag_id in tag_ids
-        ]
+        sdoc_db_objs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+        doc_tag_db_objs = self.read_by_ids(db=db, ids=tag_ids)
 
-        insert_stmt = insert(SourceDocumentDocumentTagLinkTable) \
-            .on_conflict_do_nothing() \
-            .returning(SourceDocumentDocumentTagLinkTable.source_document_id)
-
-        new_rows = db.execute(
-            insert_stmt,
-            insert_values).fetchall()
+        for sdoc_db_obj in sdoc_db_objs:
+            sdoc_db_obj.document_tags = doc_tag_db_objs
         db.commit()
 
-        return len(new_rows)
-
-    # noinspection PyUnresolvedReferences
-    @staticmethod
-    def unlink_multiple_document_tags(db: Session, *, sdoc_ids: List[int], tag_ids: List[int]) -> int:
-        """
-        Unlinks all DocTags with all SDocs
-        """
-        del_rows = db.execute(
-            delete(SourceDocumentDocumentTagLinkTable).where(
-                SourceDocumentDocumentTagLinkTable.source_document_id.in_(sdoc_ids),
-                SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids)
-            ).returning(SourceDocumentDocumentTagLinkTable.source_document_id)
-        ).fetchall()
-        db.commit()
-
-        return len(del_rows)
+        return len(sdoc_ids)
 
 
 crud_document_tag = CRUDDocumentTag(DocumentTagORM)
