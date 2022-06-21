@@ -30,6 +30,10 @@ class SearchSDocsQueryParameters(BaseModel):
     user_ids: Optional[Set[int]] = Field(description="The IDs of the User the SourceDocuments have to belong to.",
                                          default={SYSTEM_USER_ID})
 
+    search_terms: Optional[List[str]] = Field(description=("List of SearchTerms that have to be present in"
+                                                           " the SourceDocuments content (via Elasticsearch)"),
+                                              default=None)
+
     span_entities: Optional[List[SpanEntity]] = Field(description=("List of SpanEntities that have to be present in"
                                                                    " the SourceDocuments"), default=None)
 
@@ -38,7 +42,7 @@ class SearchSDocsQueryParameters(BaseModel):
                                          default=None)
 
     all_tags: Optional[bool] = Field(description=("If true return SourceDocuments tagged with all DocumentTags, or any"
-                                                  "of the DocumentTags otherwise"), default=False)
+                                                  "of the DocumentTags otherwise"), default=True)
 
 
 class SourceDocumentContentQuery(BaseModel):

@@ -17,39 +17,51 @@ tags = ["search"]
 
 
 @router.post("/sdoc", tags=tags,
-             response_model=List[SourceDocumentRead],
+             response_model=List[int],
              summary="Returns all SourceDocuments of the given Project that match the query parameters",
-             description=("Returns all SourceDocuments of the given Project with the given ID that match the"
+             description=("Returns all SourceDocuments of the given Project with the given ID that match the "
                           "query parameters"))
 async def search_sdocs(*,
                        db: Session = Depends(get_db_session),
                        query_params: SearchSDocsQueryParameters,
-                       skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SourceDocumentRead]:
+                       skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[int]:
     # TODO Flo: only if the user has access?
     # TODO Flo: combine both queries
+
+    sdocs = []
+
     if query_params.span_entities:
         sdocs_spans = crud_sdoc.read_by_span_entities(db=db,
                                                       proj_id=query_params.proj_id,
                                                       user_ids=query_params.user_ids,
                                                       span_entities=query_params.span_entities,
                                                       **skip_limit)
+        sdocs_spans = [sdoc.id for sdoc in sdocs_spans]
+        sdocs.append(sdocs_spans)
+
     if query_params.tag_ids:
         sdocs_tags = crud_sdoc.read_by_project_and_document_tags(db=db,
                                                                  proj_id=query_params.proj_id,
                                                                  tag_ids=query_params.tag_ids,
                                                                  all_tags=query_params.all_tags,
                                                                  **skip_limit)
+        sdocs_tags = [sdoc.id for sdoc in sdocs_tags]
+        sdocs.append(sdocs_tags)
 
-    if query_params.span_entities and query_params.tag_ids:
-        sdocs_combined = set(sdocs_spans).intersection(set(sdocs_tags))
-        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_combined]
-    elif query_params.span_entities and not query_params.tag_ids:
-        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_spans]
-    elif not query_params.span_entities and query_params.tag_ids:
-        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs_tags]
-    elif not query_params.span_entities and not query_params.tag_ids:
-        sdocs = crud_project.read(db=db, id=query_params.proj_id).source_documents
-        return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs]
+    if query_params.search_terms:
+        proj = crud_project.read(db=db, id=query_params.proj_id)
+        sdocs_terms = [sdoc.id for sdoc in
+                       ElasticSearchService().search_sdocs_by_content_query(proj=proj,
+                                                                            query=" ".join(query_params.search_terms),
+                                                                            **skip_limit).sdocs]
+        sdocs.append(sdocs_terms)
+
+    if len(sdocs) == 0:
+        # no search results, so we return all documents!
+        return [sdoc.id for sdoc in crud_project.read(db=db, id=query_params.proj_id).source_documents]
+    else:
+        # we have search results, now we combine!
+        return list(set.intersection(*map(set, sdocs)))
 
 
 @router.post("/stats", tags=tags,
