@@ -291,9 +291,18 @@ docprepro:
       default_model: "en_core_web_trf"
       english_model: "en_core_web_trf"
       german_model: "de_core_news_lg"
+      device: cpu
   image:
-    default_detr_model: "facebook/detr-resnet-101"
-    confidence_threshold: 0.3
+    object_detection:
+      model: "facebook/detr-resnet-101"
+      confidence_threshold: 0.3
+      device: cpu
+    image_captioning:
+      model: "nlpconnect/vit-gpt2-image-captioning"
+      max_caption_length: 16
+      num_beams: 4
+      device: cpu
+
   celery:
     batch_size:
       text: 50

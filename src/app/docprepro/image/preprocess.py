@@ -5,13 +5,16 @@ from PIL import Image
 from fastapi import UploadFile
 from loguru import logger
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
+from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate, AnnotationDocumentRead
 from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.celery.celery_worker import celery_prepro_worker
@@ -28,11 +31,12 @@ sql = SQLService(echo=False)
 repo = RepoService()
 
 # FIXME Flo: Use the cached model! --> set HUGGINGFACE_CACHE to /image_models (in the container)
-feature_extractor = DetrFeatureExtractor.from_pretrained(conf.docprepro.image.default_detr_model)
-model = DetrForObjectDetection.from_pretrained(conf.docprepro.image.default_detr_model)
-model.eval()
+# TODO Flo currently only use CPU... adding gpu device needs nvidia-docker for GPU support
+object_detection_feature_extractor = DetrFeatureExtractor.from_pretrained(conf.docprepro.image.object_detection.model)
+object_detection_model = DetrForObjectDetection.from_pretrained(conf.docprepro.image.object_detection.model)
+object_detection_model.eval()
 
-# Flo: This has to be in order!!!
+# Flo: This has to be in order!!! (for object detection with DETR)
 coco2017_labels = ['background', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
                    'train', 'truck', 'boat', 'traffic light', 'fire hydrant',
                    'street sign', 'stop sign', 'parking meter', 'bench', 'bird',
@@ -50,6 +54,11 @@ coco2017_labels = ['background', 'person', 'bicycle', 'car', 'motorcycle', 'airp
                    'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
                    'toothbrush']
 
+# TODO Flo currently only use CPU... adding gpu device needs nvidia-docker for GPU support
+image_captioning_feature_extractor = ViTFeatureExtractor.from_pretrained(conf.docprepro.image.image_captioning.model)
+image_captioning_model = VisionEncoderDecoderModel.from_pretrained(conf.docprepro.image.image_captioning.model)
+image_captioning_tokenizer = AutoTokenizer.from_pretrained(conf.docprepro.image.image_captioning.model)
+
 
 @celery_prepro_worker.task(acks_late=True)
 def import_uploaded_image_document(doc_file: UploadFile,
@@ -62,23 +71,23 @@ def import_uploaded_image_document(doc_file: UploadFile,
 
 @celery_prepro_worker.task(acks_late=True)
 def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
-    global feature_extractor
-    global model
+    global object_detection_feature_extractor
+    global object_detection_model
 
     for ppid in ppids:
         # Flo: let the DETR detect and classify objects in the image
         with Image.open(ppid.image_dst) as img:
             if img.mode != "RGB":
                 img = img.convert("RGB")
-            inputs = feature_extractor(img, return_tensors="pt")
-            outputs = model(**inputs)
+            inputs = object_detection_feature_extractor(img, return_tensors="pt")
+            outputs = object_detection_model(**inputs)
             img_size = torch.tensor([tuple(reversed(img.size))])
-            output_dict = feature_extractor.post_process(outputs, img_size)[0]
+            output_dict = object_detection_feature_extractor.post_process(outputs, img_size)[0]
 
         # Flo: apply the confidence threshold
-        confidence_threshold = conf.docprepro.image.confidence_threshold
+        confidence_threshold = conf.docprepro.image.object_detection.confidence_threshold
         keep = output_dict["scores"] > confidence_threshold
-        # TODO Flo: do we want to persist confidences?
+        # TODO Flo: do we want to persist confidences? Yes!
         confidences = output_dict["scores"][keep].tolist()
         bboxes = output_dict["boxes"][keep].int().tolist()
         label_ids = output_dict["labels"][keep].tolist()
@@ -88,6 +97,46 @@ def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[Pre
         for (x_min, y_min, x_max, y_max), code in zip(bboxes, labels):
             bbox = AutoBBox(code=code, x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max)
             ppid.bboxes.append(bbox)
+
+    return ppids
+
+
+@celery_prepro_worker.task(acks_late=True)
+def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
+    global image_captioning_feature_extractor
+    global image_captioning_model
+    global image_captioning_tokenizer
+
+    images: List[Image] = []
+    for ppid in ppids:
+        # Flo: open the images to create an image batch for faster forwarding
+        with Image.open(ppid.image_dst) as img:
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            images.append(img)
+
+    pixel_values = image_captioning_feature_extractor(images=images, return_tensors="pt").pixel_values
+    # TODO Flo currently only use CPU... needs nvidia-docker for GPU support
+    # pixel_values = pixel_values.to(image_captioning_device)
+
+    max_caption_length = conf.docprepro.image.image_captioning.max_caption_length
+    num_beams = conf.docprepro.image.image_captioning.num_beams
+    output_ids = image_captioning_model.generate(pixel_values, max_length=max_caption_length, num_beams=num_beams)
+
+    captions = image_captioning_tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+    captions = [cap.strip() for cap in captions]
+
+    # create metadata holding the captions
+    for ppid, cap in zip(ppids, captions):
+        sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="caption",
+                                                            value=cap,
+                                                            source_document_id=ppid.sdoc_id,
+                                                            read_only=True)
+        # persist SourceDocumentMetadata
+        with sql.db_session() as db:
+            crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
+
+        ppid.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
 
     return ppids
 
