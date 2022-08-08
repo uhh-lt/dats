@@ -326,6 +326,14 @@ postgres:
   user: ${oc.env:POSTGRES_USER, dwtsuser}
   password: ${oc.env:POSTGRES_PASSWORD, dwts123}
 
+
+redis:
+  host: ${oc.env:REDIS_HOST, localhost}
+  port: ${oc.env:REDIS_PORT, 6379}
+  password: ${oc.env:REDIS_PASSWORD, dwts123}
+  clients:
+    feedback: 1 # name: redis db index -- DO NOT USE DB 0, it's reserved for RabbitMQ!
+
 logging:
   max_file_size: 500 # MB
   level: ${oc.env:LOG_LEVEL, debug}
