@@ -5,3 +5,4 @@ Dockerfile.dev
 Dockerfile
 .dockerignore
 .gitignore
+package-lock.json
