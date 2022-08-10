@@ -1,0 +1,27 @@
+name: Build Frontend Docker Image
+
+on:
+  push:
+    branches:
+    - mwp_v1
+    paths:
+    - 'frontend/**'
+
+jobs:
+  build:
+    name: build-frontend-docker-image
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Build and push
+      uses: docker/build-push-action@v2
+      with:
+        context: frontend/
+        push: true
+        tags: uhhlt/dwts_frontend:latest
