@@ -1,5 +1,6 @@
 import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
 import { CodeRead, MemoRead, UserCreate, UserRead, UserService } from "./openapi";
+import {QueryKey} from "./QueryKey";
 
 // user
 const useGetUser = (userId: number) =>
@@ -7,6 +8,9 @@ const useGetUser = (userId: number) =>
 
 const useRegister = (options: UseMutationOptions<UserRead, Error, { requestBody: UserCreate }>) =>
   useMutation(UserService.registerUserPut, options);
+
+const useGetAll = () =>
+    useQuery<UserRead[], Error>([QueryKey.USERS], () => UserService.getAllUserGet({}));
 
 // codes
 const useGetAllCodes = (userId: number) =>
@@ -18,6 +22,7 @@ const useGetAllMemos = (userId: number) =>
 
 const UserHooks = {
   useGetUser,
+  useGetAll,
   useRegister,
   useGetAllCodes,
   useGetAllMemos,

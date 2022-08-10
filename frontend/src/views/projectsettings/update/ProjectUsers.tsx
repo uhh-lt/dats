@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, {useMemo, useState} from "react";
 import {
+  Autocomplete,
   Box,
   Button,
   CardContent,
@@ -21,20 +22,33 @@ import AddIcon from "@mui/icons-material/Add";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { ProjectRead } from "../../../api/openapi";
+import {ProjectRead, UserRead} from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
+import UserHooks from "../../../api/UserHooks";
 
 interface ProjectUsersProps {
   project: ProjectRead;
 }
 
 function ProjectUsers({ project }: ProjectUsersProps) {
-  const [userSearch, setUserSearch] = useState("");
+  const [selectedUser, setSelectedUser] = useState<UserRead | null>(null);
   const queryClient = useQueryClient();
 
   // query all users that belong to the project
+  const allUsers = UserHooks.useGetAll();
   const projectUsers = ProjectHooks.useGetAllUsers(project.id);
+
+  // list of users that are not associated with the project
+  const autoCompleteUsers = useMemo(() => {
+    if (!allUsers.data || !projectUsers.data) {
+      return [];
+    }
+
+    const projectUserIds = projectUsers.data.map(user => user.id);
+
+    return allUsers.data.filter((user) => projectUserIds.indexOf(user.id) === -1)
+  }, [projectUsers.data, allUsers.data]);
 
   // add user
   const addUserMutation = ProjectHooks.useAddUser({
@@ -50,13 +64,14 @@ function ProjectUsers({ project }: ProjectUsersProps) {
         text: "Successfully added user " + data.first_name + "!",
         severity: "success",
       });
-      setUserSearch("");
+      setSelectedUser(null);
     },
   });
   const handleClickAddUser = () => {
+    if(!selectedUser) return;
     addUserMutation.mutate({
       projId: project.id,
-      userId: parseInt(userSearch),
+      userId: selectedUser.id,
     });
   };
 
@@ -83,6 +98,10 @@ function ProjectUsers({ project }: ProjectUsersProps) {
     });
   };
 
+  const handleChangeSelectedUser = (event: React.SyntheticEvent, value: UserRead | null) => {
+    setSelectedUser(value)
+  }
+
   return (
     <React.Fragment>
       <Toolbar variant="dense">
@@ -91,20 +110,27 @@ function ProjectUsers({ project }: ProjectUsersProps) {
             <Typography variant="h6" color="inherit" component="div">
               Add user
             </Typography>
-            <Box sx={{ flexGrow: 1 }} />
-            <TextField
-              size="small"
-              variant="outlined"
-              placeholder="Search users..."
-              value={userSearch}
-              onChange={(event) => setUserSearch(event.target.value)}
-            />
+            {allUsers.isError ? (
+                <Typography>Error: {allUsers.error.message}</Typography>
+            ) : (
+                <Autocomplete
+                    value={selectedUser}
+                    onChange={handleChangeSelectedUser}
+                    sx={{ ml: 1, flexGrow: 1 }}
+                    size="small"
+                    disablePortal
+                    options={autoCompleteUsers}
+                    renderInput={(params) => <TextField {...params} label="User" />}
+                    disabled={!allUsers.isSuccess}
+                    getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
+                />
+            )}
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               sx={{ ml: 1 }}
               onClick={handleClickAddUser}
-              disabled={addUserMutation.isLoading || userSearch.length <= 0}
+              disabled={addUserMutation.isLoading || selectedUser === null}
             >
               Add
             </Button>
@@ -115,9 +141,9 @@ function ProjectUsers({ project }: ProjectUsersProps) {
         </Stack>
       </Toolbar>
       <Divider />
-      {projectUsers.isLoading && <CardContent>Loading project users...</CardContent>}
+      {projectUsers.isLoading && <CardContent>Loading users...</CardContent>}
       {projectUsers.isError && (
-        <CardContent>An error occurred while loading project documents for project {project.id}...</CardContent>
+        <CardContent>An error occurred while loading project users for project {project.id}...</CardContent>
       )}
       {projectUsers.isSuccess && (
         <Stack direction="row" spacing={2} sx={{ width: "100%" }}>
