@@ -1,0 +1,63 @@
+{
+  "name": "frontend-react",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.9.0",
+    "@emotion/styled": "^11.8.1",
+    "@fontsource/roboto": "^4.5.7",
+    "@hookform/error-message": "^2.0.0",
+    "@mui/icons-material": "^5.8.3",
+    "@mui/lab": "^5.0.0-alpha.85",
+    "@mui/material": "^5.8.3",
+    "@reduxjs/toolkit": "^1.8.2",
+    "@tanstack/react-query": "^4.0.10",
+    "@tanstack/react-query-devtools": "^4.0.10",
+    "@toast-ui/react-editor": "^3.1.7",
+    "d3": "^7.4.4",
+    "i18next": "^21.8.9",
+    "lodash": "^4.17.21",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "react-hook-form": "^7.32.0",
+    "react-i18next": "^11.17.1",
+    "react-redux": "^8.0.2",
+    "react-router-dom": "^6.3.0",
+    "react-scripts": "^5.0.1",
+    "ts-tree-structure": "^1.0.2",
+    "typescript": "^4.7.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "generate": "rm -rf src/api/openapi; openapi --input http://localhost:5500/openapi.json --useOptions --output src/api/openapi; prettier -w src/api/openapi"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/d3": "^7.4.0",
+    "@types/lodash": "^4.14.182",
+    "@types/react": "^18.0.12",
+    "@types/react-dom": "^18.0.5",
+    "openapi-typescript-codegen": "^0.23.0",
+    "prettier": "2.6.2"
+  },
+  "prettier": {
+    "printWidth": 120
+  }
+}

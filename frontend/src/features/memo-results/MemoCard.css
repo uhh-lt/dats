@@ -1,0 +1,7 @@
+.myMemoCard:not(:hover) div.MuiCardHeader-action {
+    opacity: 0;
+}
+
+.myMemoCard:not(:hover) .MuiCardActions-root button {
+    opacity: 0;
+}

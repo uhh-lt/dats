@@ -1,0 +1,17 @@
+.myFlexContainer {
+    display: flex;
+    flex-flow: column !important;
+}
+
+.myFlexFitContentContainer {
+    flex: 0 0 auto;
+}
+
+.myFlexFillAllContainer {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+.h100 {
+    height: 100%;
+}

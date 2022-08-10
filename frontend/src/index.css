@@ -1,0 +1,56 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.DragHandle {
+  cursor: grabbing;
+}
+
+.MyDragBox {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.MyDragBoxHeader {
+  padding-right: 0;
+  flex-grow: 0;
+}
+
+.MyDragBoxContent {
+  flex-grow: 1;
+  overflow-y: auto
+}
+
+.hide-button {
+  position: absolute;
+  top: 0;
+  right: 5px;
+  color: rgba(0, 0, 0, 0.8);
+  z-index: 100;
+  cursor: pointer;
+}
+
+.hide-button:hover {
+  color: white;
+}
+
+.overflow-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.myShowMoreListItem:not(:hover) div.myShowMoreMenu {
+  opacity: 0;
+}

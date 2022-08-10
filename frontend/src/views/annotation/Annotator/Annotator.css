@@ -1,0 +1,57 @@
+.mark {
+    position:absolute;
+    width:100%;
+    /* height: 100%; */
+    top:0;
+    left:0;
+    z-index: -1;
+}
+
+.mark.start {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.mark.end {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.tok {
+    position: relative;
+}
+
+.para {
+    /* content-visibility: auto; */
+    /* contain-intrinsic-height: 50px; */
+}
+
+.spangroup {
+    user-select: none;
+    font-size: 14px;
+}
+
+.spangroup.inline {
+    vertical-align: top;
+    margin-left: 4px;
+}
+
+.spangroup.above {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    line-height: 12px;
+    white-space: nowrap;
+    user-select: auto;
+    z-index: -1;
+}
+
+.spangroup > span {
+    /* border-radius: 4px; */
+    margin-right: 4px;
+}
+
+.spangroup.inline > span {
+    border: 1px solid black;
+    border-radius: 4px;
+}
