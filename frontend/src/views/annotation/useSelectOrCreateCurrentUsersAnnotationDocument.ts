@@ -57,7 +57,7 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
         setAnnotationDocument(adoc);
       }
     }
-  }, [user.data, annotationDocuments.data]);
+  }, [user.data, annotationDocuments.data, createAdocMutation, sdocId]);
 
   return annotationDocument;
 }
