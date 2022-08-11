@@ -3,7 +3,7 @@ import { Container, Grid } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import ProjectSelection from "./ProjectSelection";
 
-function ProjectUpdate() {
+function ProjectSettings() {
   return (
     <Container maxWidth="xl">
       <Grid container spacing={2}>
@@ -18,4 +18,4 @@ function ProjectUpdate() {
   );
 }
 
-export default ProjectUpdate;
+export default ProjectSettings;
