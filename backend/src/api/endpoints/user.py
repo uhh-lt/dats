@@ -1,10 +1,10 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session
+from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from api.util import credentials_exception
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
@@ -71,6 +71,17 @@ async def get_by_id(*,
                     user_id: int) -> Optional[UserRead]:
     db_user = crud_user.read(db=db, id=user_id)
     return UserRead.from_orm(db_user)
+
+
+@router.get("", tags=tags,
+            response_model=List[UserRead],
+            summary="Returns all Users",
+            description="Returns all Users that exist in the system")
+async def get_all(*,
+                  db: Session = Depends(get_db_session),
+                  skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[UserRead]:
+    db_objs = crud_user.read_multi(db=db, **skip_limit)
+    return [UserRead.from_orm(proj) for proj in db_objs]
 
 
 @router.patch("/{user_id}", tags=tags,
