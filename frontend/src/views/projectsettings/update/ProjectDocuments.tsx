@@ -1,7 +1,6 @@
 import React, { ChangeEvent, useRef, useState } from "react";
 import {
   Box,
-  Button,
   CardContent,
   Divider,
   IconButton,
@@ -20,6 +19,7 @@ import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
 import { QueryKey } from "../../../api/QueryKey";
+import { LoadingButton } from "@mui/lab";
 
 interface ProjectDocumentsProps {
   project: ProjectRead;
@@ -105,15 +105,17 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
           multiple
           accept="text/plain,image/jpeg,image/png,application/zip"
         />
-        <Button
+        <LoadingButton
           variant="contained"
           component="label"
           startIcon={<UploadFileIcon />}
           onClick={handleClickUploadFile}
-          disabled={files.length === 0 || uploadFileMutation.isLoading}
+          disabled={files.length === 0}
+          loading={uploadFileMutation.isLoading}
+          loadingPosition="start"
         >
           Upload File{files.length > 1 ? "s" : ""}
-        </Button>
+        </LoadingButton>
       </Toolbar>
       <Divider />
       {projectDocuments.isLoading && <CardContent>Loading project documents...</CardContent>}

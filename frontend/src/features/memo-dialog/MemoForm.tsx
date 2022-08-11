@@ -1,8 +1,9 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { Button, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { MemoRead } from "../../api/openapi";
+import { LoadingButton } from "@mui/lab";
 
 interface MemoFormProps {
   title: string;
@@ -73,7 +74,7 @@ export function MemoForm({ title, memo, handleCreateOrUpdateMemo, isCreateLoadin
               variant="standard"
               {...register("title", { required: "Title is required" })}
               error={Boolean(errors.title)}
-              helperText={<ErrorMessage errors={errors} name='title' />}
+              helperText={<ErrorMessage errors={errors} name="title" />}
             />
             <TextField
               multiline
@@ -83,19 +84,33 @@ export function MemoForm({ title, memo, handleCreateOrUpdateMemo, isCreateLoadin
               variant="standard"
               {...register("content", { required: "Content is required" })}
               error={Boolean(errors.content)}
-              helperText={<ErrorMessage errors={errors} name='content' />}
+              helperText={<ErrorMessage errors={errors} name="content" />}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
           {memo ? (
-            <Button variant="contained" color="success" fullWidth type="submit" disabled={isUpdateLoading}>
-              {isUpdateLoading ? "Updating memo..." : "Update memo"}
-            </Button>
+            <LoadingButton
+              variant="contained"
+              color="success"
+              fullWidth
+              type="submit"
+              loading={isUpdateLoading}
+              loadingPosition="start"
+            >
+              Update memo
+            </LoadingButton>
           ) : (
-            <Button variant="contained" color="success" fullWidth type="submit" disabled={isCreateLoading}>
-              {isCreateLoading ? "Creating memo..." : "Create memo"}
-            </Button>
+            <LoadingButton
+              variant="contained"
+              color="success"
+              fullWidth
+              type="submit"
+              loading={isCreateLoading}
+              loadingPosition="start"
+            >
+              Create memo
+            </LoadingButton>
           )}
         </DialogActions>
       </form>

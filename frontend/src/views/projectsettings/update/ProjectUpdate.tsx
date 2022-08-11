@@ -2,7 +2,7 @@ import React from "react";
 import { AppBar, Box, Button, Card, CardContent, Tabs, Toolbar, Typography } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import TabPanel from "@mui/lab/TabPanel";
-import { TabContext } from "@mui/lab";
+import { LoadingButton, TabContext } from "@mui/lab";
 import ProjectDocuments from "./ProjectDocuments";
 import ProjectUsers from "./ProjectUsers";
 import ProjectCodes from "./ProjectCodes";
@@ -63,16 +63,18 @@ function ProjectUpdate() {
                 {project.isSuccess ? project.data.title : "Project name"}
               </Typography>
               <Box sx={{ flexGrow: 1 }} />
-              <Button
+              <LoadingButton
                 variant="contained"
                 color="error"
                 startIcon={<DeleteIcon />}
                 sx={{ mr: 1 }}
                 onClick={handleClickRemoveProject}
-                disabled={removeProjectMutation.isLoading && !project.isSuccess}
+                disabled={!project.isSuccess}
+                loading={removeProjectMutation.isLoading}
+                loadingPosition="start"
               >
                 Delete
-              </Button>
+              </LoadingButton>
               <Button variant="contained" startIcon={<CloseIcon />} component={Link} to="/projects">
                 Close
               </Button>

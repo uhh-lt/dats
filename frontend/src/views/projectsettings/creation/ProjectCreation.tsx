@@ -16,12 +16,12 @@ import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
-
 import CloseIcon from "@mui/icons-material/Close";
 import { Link, useNavigate } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
+import { LoadingButton } from "@mui/lab";
 
 function ProjectCreation() {
   const navigate = useNavigate();
@@ -108,16 +108,17 @@ function ProjectCreation() {
         <Divider />
         <CardActions>
           <Box sx={{ flexGrow: 1 }} />
-          <Button
+          <LoadingButton
             variant="contained"
             color="success"
             startIcon={<SaveIcon />}
             sx={{ mr: 1 }}
             type="submit"
-            disabled={createProjectMutation.isLoading}
+            loading={createProjectMutation.isLoading}
+            loadingPosition="start"
           >
-            {createProjectMutation.isLoading ? "Creating project..." : "Create project"}
-          </Button>
+            Create project
+          </LoadingButton>
         </CardActions>
       </form>
     </Card>

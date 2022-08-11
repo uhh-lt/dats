@@ -86,7 +86,9 @@ function MemoCard({ memoId }: MemoCardProps) {
               </Avatar>
             }
             action={
-              <IconButton onClick={handleClick}>{memo.data.starred ? <StarIcon /> : <StarOutlineIcon />}</IconButton>
+              <IconButton onClick={handleClick} disabled={updateMutation.isLoading}>
+                {memo.data.starred ? <StarIcon /> : <StarOutlineIcon />}
+              </IconButton>
             }
             title={memo.data.title}
             sx={{ pb: 0, pt: 1 }}

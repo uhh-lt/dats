@@ -8,6 +8,7 @@ import { CodeRead } from "../../../api/openapi";
 import CodeHooks from "../../../api/CodeHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
+import { LoadingButton } from "@mui/lab";
 
 interface CodeDialogProps {
   projectId: number;
@@ -126,9 +127,16 @@ export default function CodeCreationDialog({ projectId, userId, codes }: CodeDia
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button variant="contained" color="success" fullWidth type="submit" disabled={createCodeMutation.isLoading}>
-              {createCodeMutation.isLoading ? "Creating code..." : "Create Code"}
-            </Button>
+            <LoadingButton
+              variant="contained"
+              color="success"
+              fullWidth
+              type="submit"
+              loading={createCodeMutation.isLoading}
+              loadingPosition="start"
+            >
+              Create Code
+            </LoadingButton>
           </DialogActions>
         </form>
       </Dialog>

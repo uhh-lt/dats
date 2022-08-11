@@ -8,6 +8,7 @@ import { useParams } from "react-router-dom";
 import TagHooks from "../../../../api/TagHooks";
 import { QueryKey } from "../../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
+import {LoadingButton} from "@mui/lab";
 /**
  * A dialog that allows to create a DocumentTag.
  * This component listens to the 'open-tag' event.
@@ -101,9 +102,14 @@ function TagCreationDialog() {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
-          <Button variant="contained" type="submit" disabled={createTagMutation.isLoading}>
+          <LoadingButton
+              variant="contained"
+              type="submit"
+              loading={createTagMutation.isLoading}
+              loadingPosition="start"
+          >
             Create
-          </Button>
+          </LoadingButton>
         </DialogActions>
       </form>
     </Dialog>

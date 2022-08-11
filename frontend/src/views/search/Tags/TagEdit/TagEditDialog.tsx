@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
@@ -8,6 +8,7 @@ import { DocumentTagRead, DocumentTagService } from "../../../../api/openapi";
 import TagHooks from "../../../../api/TagHooks";
 import { QueryKey } from "../../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
+import { LoadingButton } from "@mui/lab";
 
 /**
  * A dialog that allows to update a DocumentTag.
@@ -126,15 +127,17 @@ function TagEditDialog() {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button
+          <LoadingButton
             variant="contained"
             color="success"
             fullWidth
             type="submit"
-            disabled={updateTagMutation.isLoading || !tag.isSuccess}
+            disabled={!tag.isSuccess}
+            loading={updateTagMutation.isLoading}
+            loadingPosition="start"
           >
-            {updateTagMutation.isLoading ? "Updating tag..." : "Update Tag"}
-          </Button>
+            Update Tag
+          </LoadingButton>
         </DialogActions>
       </form>
     </Dialog>

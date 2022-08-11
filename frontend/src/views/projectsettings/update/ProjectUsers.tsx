@@ -2,7 +2,6 @@ import React, {useMemo, useState} from "react";
 import {
   Autocomplete,
   Box,
-  Button,
   CardContent,
   Checkbox,
   Divider,
@@ -25,6 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {ProjectRead, UserRead} from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
+import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
 
 interface ProjectUsersProps {
@@ -125,15 +125,17 @@ function ProjectUsers({ project }: ProjectUsersProps) {
                     getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
                 />
             )}
-            <Button
+            <LoadingButton
               variant="contained"
               startIcon={<AddIcon />}
               sx={{ ml: 1 }}
               onClick={handleClickAddUser}
-              disabled={addUserMutation.isLoading || selectedUser === null}
+              disabled={selectedUser === null}
+              loading={addUserMutation.isLoading}
+              loadingPosition="start"
             >
               Add
-            </Button>
+            </LoadingButton>
           </Box>
           <Typography variant="h6" color="inherit" component="div" sx={{ flex: "1 1 0" }}>
             Permission for User 1
