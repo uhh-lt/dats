@@ -7,6 +7,7 @@ export const QueryKey = {
   PROJECT_TAGS: "projectTags",
 
   USER: "user",
+  USERS: "users",
   USER_CODES: "userCodes",
   USER_MEMOS: "userMemos",
 

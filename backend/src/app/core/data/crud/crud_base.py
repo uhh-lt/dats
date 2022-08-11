@@ -38,9 +38,6 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def read_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def read_by_ids(self, db: Session, ids: List[int]) -> List[ORMModelType]:
-        return db.query(self.model).filter(self.model.id.in_(ids)).all()
-
     def exists(self, db: Session, *, id: int, raise_error: bool = False) -> Optional[bool]:
         exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
         if not exists and raise_error:
