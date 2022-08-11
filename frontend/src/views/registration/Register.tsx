@@ -18,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
 import UserHooks from "../../api/UserHooks";
 import { ErrorMessage } from "@hookform/error-message";
+import { LoadingButton } from "@mui/lab";
 
 function Register() {
   let navigate = useNavigate();
@@ -95,7 +96,7 @@ function Register() {
                 type="text"
                 {...register("firstName", { required: "First name is required" })}
                 error={Boolean(errors.firstName)}
-                helperText={<ErrorMessage errors={errors} name='firstName' />}
+                helperText={<ErrorMessage errors={errors} name="firstName" />}
               />
               <TextField
                 variant="outlined"
@@ -104,7 +105,7 @@ function Register() {
                 type="text"
                 {...register("lastName", { required: "Last name is required" })}
                 error={Boolean(errors.lastName)}
-                helperText={<ErrorMessage errors={errors} name='lastName' />}
+                helperText={<ErrorMessage errors={errors} name="lastName" />}
               />
             </Stack>
 
@@ -116,7 +117,7 @@ function Register() {
               margin="dense"
               {...register("mail", { required: "E-Mail is required" })}
               error={Boolean(errors.mail)}
-              helperText={<ErrorMessage errors={errors} name='mail' />}
+              helperText={<ErrorMessage errors={errors} name="mail" />}
             />
 
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 0.5 }}>
@@ -133,7 +134,7 @@ function Register() {
                   },
                 })}
                 error={Boolean(errors.password)}
-                helperText={<ErrorMessage errors={errors} name='password' />}
+                helperText={<ErrorMessage errors={errors} name="password" />}
               />
               <TextField
                 variant="outlined"
@@ -145,7 +146,7 @@ function Register() {
                   validate: (value) => value === password.current || "Passwords do not match!",
                 })}
                 error={Boolean(errors.confirm)}
-                helperText={<ErrorMessage errors={errors} name='confirm' />}
+                helperText={<ErrorMessage errors={errors} name="confirm" />}
               />
             </Stack>
             <FormHelperText sx={{ ml: 1.8 }}>
@@ -163,14 +164,16 @@ function Register() {
               Back
             </Button>
             <Box sx={{ flexGrow: 1 }} />
-            <Button
+            <LoadingButton
               variant="contained"
               color="success"
               type="submit"
-              disabled={registerUserMutation.isLoading || registerUserMutation.isSuccess}
+              disabled={registerUserMutation.isSuccess}
+              loading={registerUserMutation.isLoading}
+              loadingPosition="start"
             >
-              {registerUserMutation.isLoading ? "Loading..." : "Register"}
-            </Button>
+              Register
+            </LoadingButton>
           </CardActions>
         </form>
       </Card>

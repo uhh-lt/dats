@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
@@ -8,6 +8,7 @@ import { CodeRead } from "../../../api/openapi";
 import CodeHooks from "../../../api/CodeHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
+import { LoadingButton } from "@mui/lab";
 
 interface CodeEditDialogProps {
   codes: CodeRead[];
@@ -143,15 +144,17 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button
+          <LoadingButton
             variant="contained"
             color="success"
             fullWidth
             type="submit"
-            disabled={updateCodeMutation.isLoading || !code}
+            disabled={!code}
+            loading={updateCodeMutation.isLoading}
+            loadingPosition="start"
           >
-            {updateCodeMutation.isLoading ? "Updating code..." : "Update Code"}
-          </Button>
+            Update Code
+          </LoadingButton>
         </DialogActions>
       </form>
     </Dialog>

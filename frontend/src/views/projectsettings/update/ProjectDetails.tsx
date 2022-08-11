@@ -1,4 +1,4 @@
-import { Box, Button, CardActions, CardContent, Divider, Stack, TextField } from "@mui/material";
+import { Box, CardActions, CardContent, Divider, Stack, TextField } from "@mui/material";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
@@ -8,6 +8,7 @@ import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
+import { LoadingButton } from "@mui/lab";
 
 interface ProjectDetailsProps {
   project: ProjectRead;
@@ -91,16 +92,17 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
       <Divider />
       <CardActions>
         <Box sx={{ flexGrow: 1 }} />
-        <Button
+        <LoadingButton
           variant="contained"
           color="success"
           startIcon={<SaveIcon />}
           sx={{ mr: 1 }}
           type="submit"
-          disabled={updateProjectMutation.isLoading}
+          loading={updateProjectMutation.isLoading}
+          loadingPosition="start"
         >
-          {updateProjectMutation.isLoading ? "Updating project..." : "Update project"}
-        </Button>
+          Update project
+        </LoadingButton>
       </CardActions>
     </form>
   );

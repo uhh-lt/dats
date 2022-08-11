@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   Box,
-  Button,
   CardContent,
   Checkbox,
   Divider,
@@ -24,6 +23,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
+import { LoadingButton } from "@mui/lab";
 
 interface ProjectUsersProps {
   project: ProjectRead;
@@ -99,15 +99,17 @@ function ProjectUsers({ project }: ProjectUsersProps) {
               value={userSearch}
               onChange={(event) => setUserSearch(event.target.value)}
             />
-            <Button
+            <LoadingButton
               variant="contained"
               startIcon={<AddIcon />}
               sx={{ ml: 1 }}
               onClick={handleClickAddUser}
-              disabled={addUserMutation.isLoading || userSearch.length <= 0}
+              disabled={userSearch.length <= 0}
+              loading={addUserMutation.isLoading}
+              loadingPosition="start"
             >
               Add
-            </Button>
+            </LoadingButton>
           </Box>
           <Typography variant="h6" color="inherit" component="div" sx={{ flex: "1 1 0" }}>
             Permission for User 1
