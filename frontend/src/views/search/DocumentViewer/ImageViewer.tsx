@@ -83,7 +83,7 @@ function ImageViewer({ sdoc, adoc, showEntities }: ImageViewerProps) {
   return (
     <>
       {annotations.isError && <span>{annotations.error.message}</span>}
-      <svg ref={svgRef} onClick={() => console.log("TEST")} width="100%" height="100%">
+      <svg ref={svgRef} width="100%" height="100%" style={{ cursor: "move" }}>
         <g ref={gRef}>
           <image href={sdoc.content} />
           <g ref={bboxRef}></g>

@@ -1,4 +1,4 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
@@ -9,6 +9,8 @@ import CodeHooks from "../../../api/CodeHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
+import { HexColorPicker } from "react-colorful";
+import ColorUtils from "../../../utils/ColorUtils";
 
 interface CodeEditDialogProps {
   codes: CodeRead[];
@@ -21,12 +23,14 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm();
 
-  // state
+  // local state
   const [code, setCode] = useState<CodeRead | null>(null);
   const [open, setOpen] = useState(false);
   const [selectedParent, setSelectedParent] = useState(-1);
+  const [color, setColor] = useState("#000000");
 
   // listen to event
   // create a (memoized) function that stays the same across re-renders
@@ -45,12 +49,14 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   // initialize form when code changes
   useEffect(() => {
     if (code) {
+      const c = ColorUtils.rgbStringToHex(code.color) || code.color;
       reset({
         name: code.name,
         description: code.description,
-        color: code.color,
+        color: c,
       });
       setSelectedParent(!code.parent_code_id ? -1 : code.parent_code_id);
+      setColor(c);
     }
   }, [code, reset]);
 
@@ -115,7 +121,6 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
                   </MenuItem>
                 ))}
             </TextField>
-
             <TextField
               label="Name"
               fullWidth
@@ -124,13 +129,26 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               error={Boolean(errors.name)}
               helperText={<ErrorMessage errors={errors} name="name" />}
             />
-            <TextField
-              label="Color"
-              fullWidth
-              variant="standard"
-              {...register("color", { required: "Color is required" })}
-              error={Boolean(errors.color)}
-              helperText={<ErrorMessage errors={errors} name="color" />}
+            <Stack direction="row">
+              <TextField
+                label="Color"
+                fullWidth
+                variant="standard"
+                {...register("color", { required: "Color is required" })}
+                onChange={(e) => setColor(e.target.value)}
+                error={Boolean(errors.color)}
+                helperText={<ErrorMessage errors={errors} name="color" />}
+                InputLabelProps={{ shrink: true }}
+              />
+              <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
+            </Stack>
+            <HexColorPicker
+              style={{ width: "100%" }}
+              color={color}
+              onChange={(newColor) => {
+                setValue("color", newColor); // set value of text input
+                setColor(newColor); // set value of color picker (and box)
+              }}
             />
             <TextField
               multiline

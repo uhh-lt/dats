@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
@@ -20,6 +21,7 @@ import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import { CodeRead } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { HexColorPicker } from "react-colorful";
 
 interface CodeCreationDialogProps {
   onCreateSuccess: (code: CodeRead) => void;
@@ -41,6 +43,7 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
 
   // local state
   const [isCodeCreateDialogOpen, setIsCodeCreateDialogOpen] = useState(false);
+  const [color, setColor] = useState("#000000");
 
   // react form
   const {
@@ -80,12 +83,15 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
 
   // methods
   const openCodeCreateDialog = (name?: string) => {
+    // reset
+    reset();
     setValue("name", name ? name : "");
+    setValue("color", "#000000");
+    setColor("#000000");
     setIsCodeCreateDialogOpen(true);
   };
 
   const closeCodeCreateDialog = () => {
-    reset();
     setIsCodeCreateDialogOpen(false);
   };
 
@@ -134,13 +140,26 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
               error={Boolean(errors.name)}
               helperText={<ErrorMessage errors={errors} name="name" />}
             />
-            <TextField
-              label="Color"
-              fullWidth
-              variant="standard"
-              {...register("color", { required: "Color is required" })}
-              error={Boolean(errors.color)}
-              helperText={<ErrorMessage errors={errors} name="color" />}
+            <Stack direction="row">
+              <TextField
+                label="Color"
+                fullWidth
+                variant="standard"
+                {...register("color", { required: "Color is required" })}
+                onChange={(e) => setColor(e.target.value)}
+                error={Boolean(errors.color)}
+                helperText={<ErrorMessage errors={errors} name="color" />}
+                InputLabelProps={{ shrink: true }}
+              />
+              <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
+            </Stack>
+            <HexColorPicker
+              style={{ width: "100%" }}
+              color={color}
+              onChange={(newColor) => {
+                setValue("color", newColor); // set value of text input
+                setColor(newColor); // set value of color picker (and box)
+              }}
             />
             <TextField
               multiline
