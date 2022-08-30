@@ -7,26 +7,20 @@ import { AttachedObjectType } from "../../api/openapi";
 import { MemoColors, MemoNames, MemoShortnames } from "../memo-results/MemoEnumUtils";
 
 interface MemoExplorerProps {
-  handleCategoryClick: (category: string) => void;
-  handleAllClick: () => void;
+  handleCategoryClick: (category: string | undefined) => void;
   selectedCategory: string | undefined;
 }
 
-function MemoExplorer({
-  handleCategoryClick,
-  handleAllClick,
-  selectedCategory,
-  ...props
-}: MemoExplorerProps & ListProps) {
+function MemoExplorer({ handleCategoryClick, selectedCategory, ...props }: MemoExplorerProps & ListProps) {
   return (
     <List {...(props as ListProps)}>
-      <ListItemButton onClick={() => handleAllClick()}>
+      <ListItemButton selected={selectedCategory === undefined} onClick={() => handleCategoryClick(undefined)}>
         <ListItemIcon>
           <LightbulbIcon />
         </ListItemIcon>
         <ListItemText primary="Alle Memos" />
       </ListItemButton>
-      <ListItemButton onClick={() => handleCategoryClick("important")}>
+      <ListItemButton selected={selectedCategory === "important"} onClick={() => handleCategoryClick("important")}>
         <ListItemIcon>
           <StarIcon />
         </ListItemIcon>
@@ -36,7 +30,7 @@ function MemoExplorer({
       {Object.values(AttachedObjectType).map((key) => (
         <ListItemButton
           key={MemoShortnames[key]}
-          selected={selectedCategory === MemoNames[key].toLowerCase()}
+          selected={selectedCategory === MemoNames[key]}
           onClick={() => handleCategoryClick(MemoNames[key])}
         >
           <ListItemIcon style={{ color: MemoColors[key] }}>

@@ -42,5 +42,8 @@ export const QueryKey = {
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
   SEARCH_RESULTS: "searchResults",
 
+  SEARCH_MEMO_CONTENT: "searchMemoContent",
+  SEARCH_MEMO_TITLE: "searchMemoTitle",
+
   KEYWORDS: "keywords",
 };

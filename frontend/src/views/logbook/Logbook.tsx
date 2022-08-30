@@ -1,36 +1,51 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useMemo } from "react";
 import { Box, Grid } from "@mui/material";
 import MemoExplorer from "../../features/memo-explorer/MemoExplorer";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import Portal from "@mui/material/Portal";
 import SearchBar from "../search/SearchBar/SearchBar";
 import MemoResults from "../../features/memo-results/MemoResults";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useForm } from "react-hook-form";
-import { MemoNames } from "../../features/memo-results/MemoEnumUtils";
 import UserHooks from "../../api/UserHooks";
-
+import { useAuth } from "../../auth/AuthProvider";
+import SearchHooks from "../../api/SearchHooks";
 // import "@toast-ui/editor/dist/toastui-editor.css";
 // import { Editor } from "@toast-ui/react-editor";
 
+// todo: convert local state to global state
+// todo: move memo explorer, memo results, memo card into Logbook (as they are not reusable yet)
+// todo: add button to navigate to attached object (document / code / bounding box...)
+// todo: show attached object name in memo card
 function Logbook() {
-  const navigate = useNavigate();
   const appBarContainerRef = useContext(AppBarContext);
 
-  // queries
-  const memos = UserHooks.useGetAllMemos(1);
+  // global state
+  const { user } = useAuth();
 
   // router
-  const { projectId, category } = useParams() as {
+  const { projectId } = useParams() as {
     projectId: string;
-    category: string | undefined;
   };
 
+  // local state
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [category, setCategory] = React.useState<string | undefined>(undefined);
+
+  // queries
+  const searchMemos = SearchHooks.useSearchMemoContent({
+    content_query: searchTerm,
+    user_id: user.data!.id,
+    proj_id: parseInt(projectId),
+  });
+  const userMemos = UserHooks.useGetAllMemos(user.data!.id);
+
   // computed
-  // todo: the filtering should happen in the backend?
-  const filteredMemos = category
-    ? memos.data?.filter((memo) => MemoNames[memo.attached_object_type].toLowerCase() === category.toLowerCase())
-    : memos.data;
+  // select memos based on search term (if there is no search term, show all user memos)
+  const memos = useMemo(
+    () => (searchTerm.trim().length > 0 ? searchMemos : userMemos),
+    [searchMemos, searchTerm, userMemos]
+  );
 
   // editor
   // const editorRef = React.createRef<Editor>();
@@ -43,32 +58,21 @@ function Logbook() {
   // };
 
   // searchbar form
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset } = useForm();
 
   // search form handling
   const handleSearch = (data: any) => {
     const query: string = data.query;
-    if (query.startsWith("category:")) {
-      navigate(`/project/${projectId}/logbook/${query.split(":")[1].toLowerCase()}`);
-    }
+    setSearchTerm(query);
   };
   const handleSearchError = (data: any) => console.error(data);
   const handleClearSearch = () => {
+    setSearchTerm("");
     reset();
-    navigate(`/project/${projectId}/logbook/`);
   };
 
-  // update search query (so that current tag = tagId from url)
-  useEffect(() => {
-    if (category) {
-      setValue("query", `category:${category.toLowerCase()}`);
-    } else {
-      setValue("query", ``);
-    }
-  }, [category, setValue]);
-
-  const handleCategoryClick = (category: string) => {
-    navigate(`/project/${projectId}/logbook/${category.toLowerCase()}`);
+  const handleCategoryClick = (category: string | undefined) => {
+    setCategory(category);
   };
 
   return (
@@ -87,7 +91,6 @@ function Logbook() {
             <MemoExplorer
               sx={{ p: 0, whiteSpace: "nowrap", overflowX: "hidden" }}
               handleCategoryClick={handleCategoryClick}
-              handleAllClick={handleClearSearch}
               selectedCategory={category}
             />
           </Box>
@@ -96,7 +99,7 @@ function Logbook() {
           <Box className="h100" sx={{ overflowY: "auto" }}>
             {memos.isLoading && <div>Loading!</div>}
             {memos.isError && <div>Error: {memos.error.message}</div>}
-            {memos.isSuccess && filteredMemos && <MemoResults memos={filteredMemos} />}
+            {memos.isSuccess && <MemoResults memoIds={memos.data.map((memo) => memo.id)} filter={category} />}
           </Box>
         </Grid>
         <Grid item md={5} className="h100">

@@ -1,17 +1,18 @@
 import { Stack } from "@mui/material";
 import React from "react";
 import MemoCard from "./MemoCard";
-import { MemoRead } from "../../api/openapi";
 
 interface MemoResultsProps {
-  memos: MemoRead[];
+  memoIds: number[];
+  filter: string | undefined;
 }
 
-function MemoResults({ memos }: MemoResultsProps) {
+// todo: the filtering should happen in the backend?
+function MemoResults({ memoIds, filter }: MemoResultsProps) {
   return (
     <Stack spacing={2}>
-      {memos.map((memo) => (
-        <MemoCard key={memo.id} memoId={memo.id} />
+      {memoIds.map((memoId) => (
+        <MemoCard key={memoId} memoId={memoId} filter={filter} />
       ))}
     </Stack>
   );

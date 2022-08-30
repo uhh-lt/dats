@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card, CardActions, CardContent, CardHeader, IconButton, Typography } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import "./MemoCard.css";
-import { MemoColors, MemoShortnames } from "./MemoEnumUtils";
+import { MemoColors, MemoNames, MemoShortnames } from "./MemoEnumUtils";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import EditIcon from "@mui/icons-material/Edit";
@@ -14,11 +14,29 @@ import MemoAPI from "../memo-dialog/MemoAPI";
 
 interface MemoCardProps {
   memoId: number;
+  filter: string | undefined;
 }
 
-function MemoCard({ memoId }: MemoCardProps) {
+function MemoCard({ memoId, filter }: MemoCardProps) {
   // query
   const memo = MemoHooks.useGetMemo(memoId);
+
+  // todo: the filtering should happen in the backend?
+  const isFilteredOut = useMemo(() => {
+    if (filter === undefined) {
+      return false;
+    }
+
+    if (!memo.data) {
+      return false;
+    }
+
+    if (filter === "important") {
+      return !memo.data.starred;
+    }
+
+    return MemoNames[memo.data.attached_object_type] !== filter;
+  }, [memo.data, filter]);
 
   // mutation
   const queryClient = useQueryClient();
@@ -58,55 +76,59 @@ function MemoCard({ memoId }: MemoCardProps) {
 
   // rendering
   return (
-    <Card variant="outlined" className="myMemoCard">
-      {memo.isLoading && (
-        <CardHeader
-          title="Loading..."
-          sx={{ pb: 0, pt: 1 }}
-          titleTypographyProps={{
-            variant: "h5",
-          }}
-        />
+    <>
+      {isFilteredOut ? null : (
+        <Card variant="outlined" className="myMemoCard">
+          {memo.isLoading && (
+            <CardHeader
+              title="Loading..."
+              sx={{ pb: 0, pt: 1 }}
+              titleTypographyProps={{
+                variant: "h5",
+              }}
+            />
+          )}
+          {memo.isError && (
+            <CardHeader
+              title={`Error: ${memo.error.message}`}
+              sx={{ pb: 0, pt: 1 }}
+              titleTypographyProps={{
+                variant: "h5",
+              }}
+            />
+          )}
+          {memo.isSuccess && (
+            <>
+              <CardHeader
+                avatar={
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: MemoColors[memo.data.attached_object_type] }}>
+                    {MemoShortnames[memo.data.attached_object_type]}
+                  </Avatar>
+                }
+                action={
+                  <IconButton onClick={handleClick} disabled={updateMutation.isLoading}>
+                    {memo.data.starred ? <StarIcon /> : <StarOutlineIcon />}
+                  </IconButton>
+                }
+                title={memo.data.title}
+                sx={{ pb: 0, pt: 1 }}
+                titleTypographyProps={{
+                  variant: "h5",
+                }}
+              />
+              <CardContent sx={{ py: 0, my: 1, maxHeight: 300, overflowY: "hidden" }}>
+                <Typography variant="body1">{memo.data.content}</Typography>
+              </CardContent>
+              <CardActions sx={{ px: 0.5, pt: 0, pb: 0.5 }}>
+                <IconButton aria-label="settings" onClick={handleOpenMemo} size="small">
+                  <EditIcon fontSize="inherit" />
+                </IconButton>
+              </CardActions>
+            </>
+          )}
+        </Card>
       )}
-      {memo.isError && (
-        <CardHeader
-          title={`Error: ${memo.error.message}`}
-          sx={{ pb: 0, pt: 1 }}
-          titleTypographyProps={{
-            variant: "h5",
-          }}
-        />
-      )}
-      {memo.isSuccess && (
-        <>
-          <CardHeader
-            avatar={
-              <Avatar sx={{ width: 32, height: 32, bgcolor: MemoColors[memo.data.attached_object_type] }}>
-                {MemoShortnames[memo.data.attached_object_type]}
-              </Avatar>
-            }
-            action={
-              <IconButton onClick={handleClick} disabled={updateMutation.isLoading}>
-                {memo.data.starred ? <StarIcon /> : <StarOutlineIcon />}
-              </IconButton>
-            }
-            title={memo.data.title}
-            sx={{ pb: 0, pt: 1 }}
-            titleTypographyProps={{
-              variant: "h5",
-            }}
-          />
-          <CardContent sx={{ py: 0, my: 1, maxHeight: 300, overflowY: "hidden" }}>
-            <Typography variant="body1">{memo.data.content}</Typography>
-          </CardContent>
-          <CardActions sx={{ px: 0.5, pt: 0, pb: 0.5 }}>
-            <IconButton aria-label="settings" onClick={handleOpenMemo} size="small">
-              <EditIcon fontSize="inherit" />
-            </IconButton>
-          </CardActions>
-        </>
-      )}
-    </Card>
+    </>
   );
 }
 
