@@ -1,28 +1,39 @@
-import { AnnotationDocumentRead, BBoxAnnotationReadResolvedCode, SourceDocumentRead } from "../../../api/openapi";
-import AdocHooks from "../../../api/AdocHooks";
+import {
+  AnnotationDocumentRead,
+  AnnotationDocumentService,
+  BBoxAnnotationReadResolvedCode,
+  SourceDocumentRead,
+} from "../../../api/openapi";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import CodeSelector, { CodeSelectorHandle } from "./CodeSelector";
 import { ICode } from "../Annotator/ICode";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SVGBBox from "./SVGBBox";
 import SVGBBoxText from "./SVGBBoxText";
+import { flatten } from "lodash";
 
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentRead;
   adoc: AnnotationDocumentRead | null;
+  visibleAdocIds: number[];
 }
 
-// todo: add support for multiple visible adoc ids!!! (as in annotator)
+// todo: refactor this when applying react bulletproof architecture
+const keyFactory = {
+  all: ["visibleAdocBbox"] as const,
+  visible: (ids: number[]) => [...keyFactory.all, ids] as const,
+};
+
 // todo: rename create code dialog
 // todo: optimistic rendering!
 
-function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
+function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
   // references to svg elements
   const svgRef = useRef<SVGSVGElement>(null);
   const gZoomRef = useRef<SVGGElement>(null);
@@ -37,7 +48,23 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = AdocHooks.useGetAllBboxAnnotations(adoc?.id);
+  const annotations = useQuery<
+    BBoxAnnotationReadResolvedCode[],
+    Error,
+    BBoxAnnotationReadResolvedCode[],
+    ReturnType<typeof keyFactory["visible"]>
+  >(keyFactory.visible(visibleAdocIds), async ({ queryKey }) => {
+    const ids = queryKey[1];
+    const queries = ids.map(
+      (adocId) =>
+        AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
+          adocId: adocId,
+          resolve: true,
+        }) as Promise<BBoxAnnotationReadResolvedCode[]>
+    );
+    const annotations = await Promise.all(queries);
+    return flatten(annotations);
+  });
 
   // computed
   const data = useMemo(() => {

@@ -58,7 +58,11 @@ function Annotation() {
               {sourceDocument.isSuccess && annotationDocument && (
                 <>
                   {sourceDocument.data.doctype === DocType.IMAGE ? (
-                    <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
+                    <ImageAnnotator
+                      sdoc={sourceDocument.data}
+                      adoc={annotationDocument}
+                      visibleAdocIds={visibleAdocIds}
+                    />
                   ) : sourceDocument.data.doctype === DocType.TEXT ? (
                     <Annotator sdoc={sourceDocument.data} adoc={annotationDocument} visibleAdocIds={visibleAdocIds} />
                   ) : (
