@@ -64,6 +64,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       });
     },
     onSuccess: (data: CodeRead) => {
+      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES]);
       setOpen(false); // close dialog
       SnackbarAPI.openSnackbar({

@@ -9,9 +9,9 @@ import { useSelectOrCreateCurrentUsersAnnotationDocument } from "./useSelectOrCr
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
 import { DocType } from "../../api/openapi";
 import { Annotator } from "./Annotator/Annotator";
-import ImageViewer from "../search/DocumentViewer/ImageViewer";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { AnnoActions } from "./annoSlice";
+import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
 
 function Annotation() {
   // global client state (URL)
@@ -58,7 +58,11 @@ function Annotation() {
               {sourceDocument.isSuccess && annotationDocument && (
                 <>
                   {sourceDocument.data.doctype === DocType.IMAGE ? (
-                    <ImageViewer sdoc={sourceDocument.data} adoc={annotationDocument} showEntities={true} />
+                    <ImageAnnotator
+                      sdoc={sourceDocument.data}
+                      adoc={annotationDocument}
+                      visibleAdocIds={visibleAdocIds}
+                    />
                   ) : sourceDocument.data.doctype === DocType.TEXT ? (
                     <Annotator sdoc={sourceDocument.data} adoc={annotationDocument} visibleAdocIds={visibleAdocIds} />
                   ) : (

@@ -16,6 +16,7 @@ export const QueryKey = {
   MEMO_TAG: "tagMemo",
   MEMO_SDOC: "sdocMemo",
   MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
+  MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
 
   SDOC: "sdoc",
   SDOC_TAGS: "sdocTags",
@@ -34,6 +35,7 @@ export const QueryKey = {
   CODE: "code",
   TAG: "tag",
   SPAN_ANNOTATION: "annotation",
+  BBOX_ANNOTATION: "bboxAnnotation",
   METADATA: "metadata",
 
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
