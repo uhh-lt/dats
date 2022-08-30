@@ -30,16 +30,11 @@ const keyFactory = {
   visible: (ids: number[]) => [...keyFactory.all, ids] as const,
 };
 
-// todo: rename create code dialog
-// todo: optimistic rendering!
-
 function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
   // references to svg elements
   const svgRef = useRef<SVGSVGElement>(null);
   const gZoomRef = useRef<SVGGElement>(null);
   const gDragRef = useRef<SVGGElement>(null);
-  const bboxRef = useRef<SVGGElement>(null);
-  const textRef = useRef<SVGGElement>(null);
   const rectRef = useRef<SVGRectElement>(null);
   const imgRef = useRef<SVGImageElement>(null);
   const codeSelectorRef = useRef<CodeSelectorHandle>(null);
@@ -78,51 +73,160 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
   // mutations for create, update, delete
   const queryClient = useQueryClient();
   const createMutation = BboxAnnotationHooks.useCreateAnnotation({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, data.id]);
-      queryClient.invalidateQueries([QueryKey.ADOC_BBOX_ANNOTATIONS, adoc?.id]);
       SnackbarAPI.openSnackbar({
         text: `Created Bounding Box Annotation ${data.id}`,
         severity: "success",
       });
     },
-  });
-  const updateMutation = BboxAnnotationHooks.useUpdate({
-    onError: (error: Error) => {
+    // optimistic updates
+    onMutate: async (newBbox) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries(keyFactory.visible(visibleAdocIds));
+
+      // Snapshot the previous value
+      const previousBboxes = queryClient.getQueryData(keyFactory.visible(visibleAdocIds));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        keyFactory.visible(visibleAdocIds),
+        (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+          const bbox = {
+            ...newBbox.requestBody,
+            id: -1,
+            code: {
+              name: "",
+              color: "",
+              description: "",
+              id: newBbox.requestBody.current_code_id,
+              project_id: 0,
+              user_id: 0,
+              created: "",
+              updated: "",
+            },
+            created: "",
+            updated: "",
+          };
+          return old === undefined ? [bbox] : [...old, bbox];
+        }
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousBboxes, myCustomQueryKey: keyFactory.visible(visibleAdocIds) };
+    },
+    onError: (error: Error, newBbox, context: any) => {
       SnackbarAPI.openSnackbar({
         text: error.message,
         severity: "error",
       });
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
     },
+    // Always re-fetch after error or success:
+    onSettled: (data, error, variables, context: any) => {
+      queryClient.invalidateQueries(context.myCustomQueryKey);
+    },
+  });
+  const updateMutation = BboxAnnotationHooks.useUpdate({
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, data.id]);
-      queryClient.invalidateQueries([QueryKey.ADOC_BBOX_ANNOTATIONS, adoc?.id]);
       SnackbarAPI.openSnackbar({
         text: `Updated Bounding Box Annotation ${data.id}`,
         severity: "success",
       });
     },
-  });
-  const deleteMutation = BboxAnnotationHooks.useDelete({
-    onError: (error: Error) => {
+    // optimistic update
+    // todo: this is not working yet, because optimistic update only updates the bbox annotation, not the list of bbox annotations
+    onMutate: async (newBbox) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries([QueryKey.BBOX_ANNOTATION, newBbox.bboxId]);
+
+      // Snapshot the previous value
+      const previousBbox = queryClient.getQueryData([QueryKey.BBOX_ANNOTATION, newBbox.bboxId]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        [QueryKey.BBOX_ANNOTATION, newBbox.bboxId],
+        (old: BBoxAnnotationReadResolvedCode | undefined) => {
+          if (old === undefined) {
+            return undefined;
+          }
+          return {
+            ...old,
+            code: {
+              name: "",
+              color: "",
+              description: "",
+              id: newBbox.requestBody.current_code_id,
+              project_id: 0,
+              user_id: 0,
+              created: "",
+              updated: "",
+            },
+          };
+        }
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousBbox };
+    },
+    onError: (error: Error, newBbox, context: any) => {
       SnackbarAPI.openSnackbar({
         text: error.message,
         severity: "error",
       });
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData([QueryKey.BBOX_ANNOTATION, newBbox.bboxId], context.previousBbox);
     },
+    // Always re-fetch after error or success:
+    onSettled: (newBbox, error, variables, context: any) => {
+      if (newBbox) {
+        queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, newBbox.id]);
+      }
+      queryClient.invalidateQueries(["visibleAdocBbox"]); // todo: this should not be necessary, as the list does actually not change on update. Change the rendering.
+    },
+  });
+  const deleteMutation = BboxAnnotationHooks.useDelete({
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, data.id]);
-      queryClient.invalidateQueries([QueryKey.ADOC_BBOX_ANNOTATIONS, adoc?.id]);
+      queryClient.invalidateQueries(["visibleAdocBbox"]);
       SnackbarAPI.openSnackbar({
         text: `Deleted Bounding Box Annotation ${data.id}`,
         severity: "success",
       });
+    },
+    // optimistic updates
+    onMutate: async ({ bboxId }) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries(keyFactory.visible(visibleAdocIds));
+
+      // Snapshot the previous value
+      const previousBboxes = queryClient.getQueryData(keyFactory.visible(visibleAdocIds));
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(
+        keyFactory.visible(visibleAdocIds),
+        (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+          if (old === undefined) {
+            return undefined;
+          }
+
+          return old.filter((bbox) => bbox.id !== bboxId);
+        }
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousBboxes, myCustomQueryKey: keyFactory.visible(visibleAdocIds) };
+    },
+    onError: (error: Error, newBbox, context: any) => {
+      SnackbarAPI.openSnackbar({
+        text: error.message,
+        severity: "error",
+      });
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
+    },
+    // Always re-fetch after error or success:
+    onSettled: (data, error, variables, context: any) => {
+      queryClient.invalidateQueries(context.myCustomQueryKey);
     },
   });
 
@@ -367,12 +471,12 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
               height={0}
             ></rect>
           </g>
-          <g ref={bboxRef}>
+          <g>
             {data.map((bbox) => (
               <SVGBBox key={bbox.id} bbox={bbox} onContextMenu={handleRightClick} />
             ))}
           </g>
-          <g ref={textRef}>
+          <g>
             {data.map((bbox) => (
               <SVGBBoxText key={bbox.id} bbox={bbox} />
             ))}
