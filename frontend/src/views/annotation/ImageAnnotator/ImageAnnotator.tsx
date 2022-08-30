@@ -334,14 +334,14 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
             Annotate
           </Button>
         </ButtonGroup>
-        <Button onClick={() => resetZoom()} variant="outlined" sx={{ ml: 2 }}>
+        <Button onClick={() => resetZoom()} variant="outlined" sx={{ ml: 2, flexShrink: 0 }}>
           Reset Zoom
         </Button>
         <Typography variant="body1" component="div" sx={{ ml: 2 }}>
           Hint:{" "}
           {isZooming
-            ? "Try to drag the image & use mouse wheel to zoom."
-            : "Drag to create annotations, right click boxes to edit annotations."}
+            ? "Try to drag the image & use mouse wheel to zoom. Right click boxes to edit annotations."
+            : "Drag to create annotations. Right click boxes to edit annotations."}
         </Typography>
       </Toolbar>
 

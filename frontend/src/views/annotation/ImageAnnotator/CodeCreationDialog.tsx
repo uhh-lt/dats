@@ -1,5 +1,14 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { useParams } from "react-router-dom";
@@ -20,6 +29,7 @@ export interface CodeCreationDialogHandle {
   open: (name?: string) => void;
 }
 
+// todo: refactor, this is basically the same as CodeExplorer/CodeCreationDialog.tsx
 const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDialogProps>(({ onCreateSuccess }, ref) => {
   // global state
   const { projectId } = useParams() as { projectId: string };
@@ -27,6 +37,7 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
 
   // global state (redux)
   const parentCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
+  const parentCode = CodeHooks.useGetCode(parentCodeId);
 
   // local state
   const [isCodeCreateDialogOpen, setIsCodeCreateDialogOpen] = useState(false);
@@ -105,33 +116,43 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   return (
     <Dialog open={isCodeCreateDialogOpen} onClose={handleCloseCodeCreateDialog}>
       <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
-        <DialogTitle>Add a new film</DialogTitle>
+        <DialogTitle>Create a new code</DialogTitle>
         <DialogContent>
-          <DialogContentText>Did you miss any film in our list? Please, add it!</DialogContentText>
-          <TextField
-            label="Name"
-            fullWidth
-            variant="standard"
-            {...register("name", { required: "Name is required" })}
-            error={Boolean(errors.name)}
-            helperText={<ErrorMessage errors={errors} name="name" />}
-          />
-          <TextField
-            label="Color"
-            fullWidth
-            variant="standard"
-            {...register("color", { required: "Color is required" })}
-            error={Boolean(errors.color)}
-            helperText={<ErrorMessage errors={errors} name="color" />}
-          />
-          <TextField
-            label="Description"
-            fullWidth
-            variant="standard"
-            {...register("description", { required: "Description is required" })}
-            error={Boolean(errors.description)}
-            helperText={<ErrorMessage errors={errors} name="description" />}
-          />
+          <Stack spacing={3}>
+            {parentCodeId && parentCode.isSuccess ? (
+              <DialogContentText>
+                Add your new code. It will be added as a child of {parentCode.data.name}.
+              </DialogContentText>
+            ) : (
+              <DialogContentText>Add your new code. It will be added to the root.</DialogContentText>
+            )}
+            <TextField
+              label="Name"
+              fullWidth
+              variant="standard"
+              {...register("name", { required: "Name is required" })}
+              error={Boolean(errors.name)}
+              helperText={<ErrorMessage errors={errors} name="name" />}
+            />
+            <TextField
+              label="Color"
+              fullWidth
+              variant="standard"
+              {...register("color", { required: "Color is required" })}
+              error={Boolean(errors.color)}
+              helperText={<ErrorMessage errors={errors} name="color" />}
+            />
+            <TextField
+              multiline
+              minRows={5}
+              label="Description"
+              fullWidth
+              variant="standard"
+              {...register("description", { required: "Description is required" })}
+              error={Boolean(errors.description)}
+              helperText={<ErrorMessage errors={errors} name="description" />}
+            />
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseCodeCreateDialog}>Cancel</Button>
