@@ -1,4 +1,4 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
@@ -9,6 +9,8 @@ import TagHooks from "../../../../api/TagHooks";
 import { QueryKey } from "../../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
+import { HexColorPicker } from "react-colorful";
+import ColorUtils from "../../../../utils/ColorUtils";
 
 /**
  * A dialog that allows to update a DocumentTag.
@@ -23,11 +25,13 @@ function TagEditDialog() {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm();
 
   // state
   const [tagId, setTagId] = useState<number | undefined>(undefined);
   const [open, setOpen] = useState(false);
+  const [color, setColor] = useState("#000000");
 
   // query
   const tag = useQuery<DocumentTagRead, Error>(
@@ -54,10 +58,13 @@ function TagEditDialog() {
   // initialize form when tag changes
   useEffect(() => {
     if (tag.data) {
+      const c = ColorUtils.rgbStringToHex(tag.data.description) || tag.data.description;
       reset({
         title: tag.data.title,
         description: tag.data.description,
+        color: c,
       });
+      setColor(c);
     }
   }, [tag.data, reset]);
 
@@ -112,6 +119,31 @@ function TagEditDialog() {
               error={Boolean(errors?.title)}
               helperText={<>{errors?.title ? errors.title.message : ""}</>}
               disabled={!tag.isSuccess}
+            />
+            <Stack direction="row">
+              <TextField
+                label="Color"
+                fullWidth
+                variant="standard"
+                {...register("color", { required: "Color is required" })}
+                onChange={(e) => {
+                  setColor(e.target.value);
+                  setValue("description", e.target.value); // todo: remove this hack once tag has color attribute
+                }}
+                error={Boolean(errors.color)}
+                helperText={<ErrorMessage errors={errors} name="color" />}
+                InputLabelProps={{ shrink: true }}
+              />
+              <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
+            </Stack>
+            <HexColorPicker
+              style={{ width: "100%" }}
+              color={color}
+              onChange={(newColor) => {
+                setValue("color", newColor); // set value of text input
+                setColor(newColor); // set value of color picker (and box)
+                setValue("description", newColor); // todo: remove this hack once tag has color attribute
+              }}
             />
             <TextField
               multiline

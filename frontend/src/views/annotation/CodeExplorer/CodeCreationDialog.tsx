@@ -1,4 +1,14 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  MenuItem,
+  Stack,
+  TextField,
+} from "@mui/material";
 import React, { useEffect, useState } from "react";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,6 +19,7 @@ import CodeHooks from "../../../api/CodeHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
+import { HexColorPicker } from "react-colorful";
 
 interface CodeDialogProps {
   projectId: number;
@@ -23,17 +34,21 @@ export default function CodeCreationDialog({ projectId, userId, codes }: CodeDia
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
   } = useForm();
 
-  // state
+  // local state
   const [open, setOpen] = useState(false); // state of the dialog, either open or closed
   const [selectedParent, setSelectedParent] = useState(-1);
+  const [color, setColor] = useState("#000000");
 
   // initialize state properly
   useEffect(() => {
     setSelectedParent(-1);
+    setColor("#000000");
     reset();
-  }, [reset]);
+    setValue("color", "#000000");
+  }, [setValue, reset]);
 
   // mutations
   const queryClient = useQueryClient();
@@ -52,7 +67,11 @@ export default function CodeCreationDialog({ projectId, userId, codes }: CodeDia
         text: `Added code ${data.name}`,
         severity: "success",
       });
-      reset(); // reset form
+
+      // reset
+      reset();
+      setColor("#000000");
+      setValue("color", "#000000");
     },
   });
 
@@ -106,13 +125,26 @@ export default function CodeCreationDialog({ projectId, userId, codes }: CodeDia
                 error={Boolean(errors.name)}
                 helperText={<ErrorMessage errors={errors} name="name" />}
               />
-              <TextField
-                label="Color"
-                fullWidth
-                variant="standard"
-                {...register("color", { required: "Color is required" })}
-                error={Boolean(errors.color)}
-                helperText={<ErrorMessage errors={errors} name="color" />}
+              <Stack direction="row">
+                <TextField
+                  label="Color"
+                  fullWidth
+                  variant="standard"
+                  {...register("color", { required: "Color is required" })}
+                  onChange={(e) => setColor(e.target.value)}
+                  error={Boolean(errors.color)}
+                  helperText={<ErrorMessage errors={errors} name="color" />}
+                  InputLabelProps={{ shrink: true }}
+                />
+                <Box sx={{ width: 48, height: 48, backgroundColor: color, ml: 1, flexShrink: 0 }} />
+              </Stack>
+              <HexColorPicker
+                style={{ width: "100%" }}
+                color={color}
+                onChange={(newColor) => {
+                  setValue("color", newColor); // set value of text input
+                  setColor(newColor); // set value of color picker (and box)
+                }}
               />
               <TextField
                 multiline
