@@ -61,7 +61,7 @@ function ProjectSelection() {
           </Button>
         </Toolbar>
       </AppBar>
-      <CardContent sx={{ p: 0 }} className="myFlexFillAllContainer">
+      <CardContent sx={{ p: "0px !important" }} className="myFlexFillAllContainer">
         {content}
       </CardContent>
     </Card>
