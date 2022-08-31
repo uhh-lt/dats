@@ -1,20 +1,10 @@
 import React from "react";
-import {
-  Box,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListSubheader,
-} from "@mui/material";
+import { Box, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import InfoIcon from "@mui/icons-material/Info";
 import GavelIcon from "@mui/icons-material/Gavel";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { Link as RouterLink } from "react-router-dom";
-import ImportDocumentListButton from "../../features/document-import/ImportDocumentListButton";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
@@ -44,12 +34,18 @@ export default function TemporaryDrawer() {
       onClick={toggleDrawer(anchor, false)}
       onKeyDown={toggleDrawer(anchor, false)}
     >
+      {/*<List>*/}
+      {/*  <ListSubheader component="div">Corpora</ListSubheader>*/}
+      {/*  <ImportDocumentListButton />*/}
+      {/*</List>*/}
+      {/*<Divider />*/}
       <List>
-        <ListSubheader component="div">Corpora</ListSubheader>
-        <ImportDocumentListButton />
-      </List>
-      <Divider />
-      <List>
+        <ListItem button component={RouterLink} to="/projects">
+          <ListItemIcon>
+            <FactCheckIcon />
+          </ListItemIcon>
+          <ListItemText primary="Projects" />
+        </ListItem>
         <ListItem button component={RouterLink} to="/about">
           <ListItemIcon>
             <InfoIcon />
