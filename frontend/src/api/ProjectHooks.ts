@@ -3,6 +3,8 @@ import {
   Body_upload_project_sdoc_project__proj_id__sdoc_put,
   CodeRead,
   DocumentTagRead,
+  MemoCreate,
+  MemoRead,
   ProjectCreate,
   ProjectRead,
   ProjectService,
@@ -72,6 +74,23 @@ const useGetAllCodes = (projectId: number) =>
     })
   );
 
+// memo
+const useGetMemo = (projectId: number | undefined) =>
+  useQuery<MemoRead, Error>(
+    [QueryKey.PROJECT_MEMO, projectId],
+    () =>
+      ProjectService.getMemoProjectProjIdMemoGet({
+        projId: projectId!,
+      }),
+    {
+      retry: false,
+      enabled: !!projectId,
+    }
+  );
+
+const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { projId: number; requestBody: MemoCreate }>) =>
+  useMutation(ProjectService.addMemoProjectProjIdMemoPut, options);
+
 const ProjectHooks = {
   // tags
   useGetAllTags,
@@ -89,6 +108,9 @@ const ProjectHooks = {
   useAddUser,
   useRemoveUser,
   useGetAllCodes,
+  // memo
+  useGetMemo,
+  useCreateMemo,
 };
 
 export default ProjectHooks;

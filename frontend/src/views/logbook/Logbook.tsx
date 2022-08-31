@@ -12,10 +12,9 @@ import { useAuth } from "../../auth/AuthProvider";
 import SearchHooks from "../../api/SearchHooks";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { LogbookActions } from "./logbookSlice";
-// import "@toast-ui/editor/dist/toastui-editor.css";
-// import { Editor } from "@toast-ui/react-editor";
+import "@toast-ui/editor/dist/toastui-editor.css";
+import LogbookEditor from "./LogbookEditor";
 
-// todo: insert editor
 // todo: implement recent activities timeline
 function Logbook() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -47,16 +46,6 @@ function Logbook() {
     () => (searchTerm.trim().length > 0 ? searchMemos : userMemos),
     [searchMemos, searchTerm, userMemos]
   );
-
-  // editor
-  // const editorRef = React.createRef<Editor>();
-  //
-  // const handleSave = () => {
-  //   const editor = editorRef.current?.getInstance();
-  //   if (editor) {
-  //     console.log(editor.getMarkdown());
-  //   }
-  // };
 
   // searchbar form
   const { register, handleSubmit, reset, setValue } = useForm();
@@ -111,18 +100,7 @@ function Logbook() {
         </Grid>
         <Grid item md={5} className="h100">
           <Box className="h100" sx={{ pr: 1 }}>
-            Todo: Insert editor here
-            {/*<Editor*/}
-            {/*  initialValue="hello react editor world!"*/}
-            {/*  previewStyle="vertical"*/}
-            {/*  height="100%"*/}
-            {/*  initialEditType="wysiwyg"*/}
-            {/*  useCommandShortcut={true}*/}
-            {/*  usageStatistics={false}*/}
-            {/*  hideModeSwitch={true}*/}
-            {/*  ref={editorRef}*/}
-            {/*  onBlur={() => handleSave()}*/}
-            {/*/>*/}
+            <LogbookEditor />
           </Box>
         </Grid>
       </Grid>
