@@ -4,7 +4,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 
 function TagManageButton(props: ListItemButtonProps) {
   return (
-    <ListItemButton onClick={() => console.log("Manage!")} {...props}>
+    <ListItemButton onClick={() => console.log("Manage!")} {...props} disabled>
       <ListItemIcon>
         <SettingsIcon />
       </ListItemIcon>

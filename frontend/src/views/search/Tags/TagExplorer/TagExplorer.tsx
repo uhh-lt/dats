@@ -39,7 +39,7 @@ function TagExplorer({
           </ListItemIcon>
           <ListItemText primary="Alle Dokumente" />
         </ListItem>
-        <ListItem button onClick={() => handleNewDocumentsClick()}>
+        <ListItem button onClick={() => handleNewDocumentsClick()} disabled>
           <ListItemIcon>
             <DownloadIcon />
           </ListItemIcon>
