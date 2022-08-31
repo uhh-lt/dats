@@ -19,6 +19,7 @@ export const QueryKey = {
   MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
 
   SDOC: "sdoc",
+  SDOC_BY_ADOC: "sdocByAdoc",
   SDOC_TAGS: "sdocTags",
   SDOC_ADOCS: "sdocAdocs",
   SDOC_METADATAS: "sdocMetadatas",
@@ -41,6 +42,9 @@ export const QueryKey = {
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
   SEARCH_RESULTS: "searchResults",
+
+  SEARCH_MEMO_CONTENT: "searchMemoContent",
+  SEARCH_MEMO_TITLE: "searchMemoTitle",
 
   KEYWORDS: "keywords",
 };

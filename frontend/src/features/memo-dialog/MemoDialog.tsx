@@ -17,21 +17,7 @@ import { MemoContentSourceDocument } from "./MemoContentSourceDocument";
 import { MemoContentCode } from "./MemoContentCode";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation";
-
-const useGetAttachedObjectQuery = (type: AttachedObjectType | undefined) => {
-  switch (type) {
-    case AttachedObjectType.DOCUMENT_TAG:
-      return TagHooks.useGetTag;
-    case AttachedObjectType.CODE:
-      return CodeHooks.useGetCode;
-    case AttachedObjectType.SOURCE_DOCUMENT:
-      return SdocHooks.useGetDocument;
-    case AttachedObjectType.SPAN_ANNOTATION:
-      return SpanAnnotationHooks.useGetAnnotation;
-    default:
-      return CodeHooks.useGetCode;
-  }
-};
+import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
 
 const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   switch (type) {
@@ -57,7 +43,7 @@ export default function MemoDialog() {
 
   // query
   const memo = useGetMemoQuery(attachedType)(idToGetMemo);
-  const attachedObject = useGetAttachedObjectQuery(attachedType)(attachedId);
+  const attachedObject = useGetMemosAttachedObject(attachedType)(attachedId);
 
   // listen to open-memo event and open the dialog
   const openModal = useCallback((event: CustomEventInit) => {
