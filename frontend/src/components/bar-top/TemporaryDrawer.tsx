@@ -1,5 +1,15 @@
 import React from "react";
-import { Box, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText } from "@mui/material";
+import {
+  Box,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import InfoIcon from "@mui/icons-material/Info";
 import GavelIcon from "@mui/icons-material/Gavel";
@@ -38,25 +48,33 @@ export default function TemporaryDrawer() {
       {/*  <ListSubheader component="div">Corpora</ListSubheader>*/}
       {/*  <ImportDocumentListButton />*/}
       {/*</List>*/}
-      {/*<Divider />*/}
       <List>
-        <ListItem button component={RouterLink} to="/projects">
-          <ListItemIcon>
-            <FactCheckIcon />
-          </ListItemIcon>
-          <ListItemText primary="Projects" />
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/projects">
+            <ListItemIcon>
+              <FactCheckIcon />
+            </ListItemIcon>
+            <ListItemText primary="Projects" />
+          </ListItemButton>
         </ListItem>
-        <ListItem button component={RouterLink} to="/about">
-          <ListItemIcon>
-            <InfoIcon />
-          </ListItemIcon>
-          <ListItemText primary="About" />
+        <Divider />
+
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/about">
+            <ListItemIcon>
+              <InfoIcon />
+            </ListItemIcon>
+            <ListItemText primary="About" />
+          </ListItemButton>
         </ListItem>
-        <ListItem button component={RouterLink} to="/imprint">
-          <ListItemIcon>
-            <GavelIcon />
-          </ListItemIcon>
-          <ListItemText primary="Imprint" />
+
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/imprint">
+            <ListItemIcon>
+              <GavelIcon />
+            </ListItemIcon>
+            <ListItemText primary="Imprint" />
+          </ListItemButton>
         </ListItem>
       </List>
     </Box>

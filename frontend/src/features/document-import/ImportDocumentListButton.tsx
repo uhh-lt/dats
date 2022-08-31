@@ -1,4 +1,4 @@
-import { ListItem, ListItemIcon, ListItemText } from "@mui/material";
+import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import React from "react";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import eventBus from "../../EventBus";
@@ -9,11 +9,13 @@ export default function ImportDocumentListButton() {
   };
 
   return (
-    <ListItem button onClick={handleClickOpen}>
-      <ListItemIcon>
-        <InboxIcon />
-      </ListItemIcon>
-      <ListItemText primary="Import document" />
+    <ListItem disablePadding>
+      <ListItemButton onClick={handleClickOpen}>
+        <ListItemIcon>
+          <InboxIcon />
+        </ListItemIcon>
+        <ListItemText primary="Import document" />
+      </ListItemButton>
     </ListItem>
   );
 }

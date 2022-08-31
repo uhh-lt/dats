@@ -31,15 +31,12 @@ function ProjectSelection() {
         {projects.data
           ?.sort((a, b) => a.id - b.id)
           .map((project) => (
-            <ListItem
-              disablePadding
-              key={project.id}
-              component={RouterLink}
-              button
-              to={`/projectsettings/${project.id}`}
-              selected={project.id.toString() === projectId}
-            >
-              <ListItemButton>
+            <ListItem disablePadding key={project.id}>
+              <ListItemButton
+                component={RouterLink}
+                to={`/projectsettings/${project.id}`}
+                selected={project.id.toString() === projectId}
+              >
                 <ListItemText primary={project.title} />
               </ListItemButton>
             </ListItem>
