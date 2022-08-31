@@ -37,7 +37,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
               backgroundColor: spanAnnotation.code.color,
             }}
           >
-            [{spanAnnotation.code.name} {spanAnnotation.code.id}]{" "}
+            [{spanAnnotation.code.name}] {/*[{spanAnnotation.code.name} {spanAnnotation.code.id}]{" "}*/}
             {sdoc.content.substring(spanAnnotation.begin, spanAnnotation.end)}
           </span>
         );
