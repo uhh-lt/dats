@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { Box, Grid } from "@mui/material";
 import MemoExplorer from "./MemoExplorer";
 import { useParams } from "react-router-dom";
@@ -10,11 +10,11 @@ import { useForm } from "react-hook-form";
 import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import SearchHooks from "../../api/SearchHooks";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { LogbookActions } from "./logbookSlice";
 // import "@toast-ui/editor/dist/toastui-editor.css";
 // import { Editor } from "@toast-ui/react-editor";
 
-// todo: convert local state to global state
-// todo: move memo explorer, memo results, memo card into Logbook (as they are not reusable yet)
 // todo: add button to navigate to attached object (document / code / bounding box...)
 // todo: show attached object name in memo card
 function Logbook() {
@@ -28,9 +28,10 @@ function Logbook() {
     projectId: string;
   };
 
-  // local state
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [category, setCategory] = React.useState<string | undefined>(undefined);
+  // global state (redux)
+  const dispatch = useAppDispatch();
+  const searchTerm = useAppSelector((state) => state.logbook.searchTerm);
+  const category = useAppSelector((state) => state.logbook.category);
 
   // queries
   const searchMemos = SearchHooks.useSearchMemoContent({
@@ -58,21 +59,27 @@ function Logbook() {
   // };
 
   // searchbar form
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm();
+
+  // init form with value from global state (redux)
+  useEffect(() => {
+    setValue("query", searchTerm);
+  }, [setValue]); // we only want to set the value once, not every time the searchTerm changes!
 
   // search form handling
   const handleSearch = (data: any) => {
     const query: string = data.query;
-    setSearchTerm(query);
+    dispatch(LogbookActions.setSearchTerm(query));
   };
+
   const handleSearchError = (data: any) => console.error(data);
   const handleClearSearch = () => {
-    setSearchTerm("");
+    dispatch(LogbookActions.setSearchTerm(""));
     reset();
   };
 
   const handleCategoryClick = (category: string | undefined) => {
-    setCategory(category);
+    dispatch(LogbookActions.setCategory(category));
   };
 
   return (
