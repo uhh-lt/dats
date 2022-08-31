@@ -239,7 +239,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
         left: rect.left,
         top: rect.top + rect.height,
       };
-      codeSelectorRef.current!.open(position, d.code.id);
+      codeSelectorRef.current!.open(position, d);
       setSelectedBbox(d);
     },
     [codeSelectorRef]

@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus";
 import {
   AttachedObjectType,
+  BBoxAnnotationReadResolvedCode,
   CodeRead,
   DocumentTagRead,
   SourceDocumentRead,
@@ -18,6 +19,8 @@ import { MemoContentCode } from "./MemoContentCode";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation";
 import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
+import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation";
 
 const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   switch (type) {
@@ -29,6 +32,8 @@ const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
       return SdocHooks.useGetMemo;
     case AttachedObjectType.SPAN_ANNOTATION:
       return SpanAnnotationHooks.useGetMemo;
+    case AttachedObjectType.BBOX_ANNOTATION:
+      return BboxAnnotationHooks.useGetMemo;
     default:
       return MemoHooks.useGetMemo;
   }
@@ -89,6 +94,11 @@ export default function MemoDialog() {
             <MemoContentSpanAnnotation
               memo={memo.data}
               spanAnnotation={attachedObject.data as SpanAnnotationReadResolved}
+            />
+          ) : attachedType === AttachedObjectType.BBOX_ANNOTATION ? (
+            <MemoContentBboxAnnotation
+              memo={memo.data}
+              bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolvedCode}
             />
           ) : (
             <div>This memo type is not supported!</div>

@@ -3,6 +3,7 @@ import TagHooks from "../../api/TagHooks";
 import CodeHooks from "../../api/CodeHooks";
 import SdocHooks from "../../api/SdocHooks";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 
 const useGetMemosAttachedObject = (type: AttachedObjectType | undefined) => {
   switch (type) {
@@ -14,6 +15,8 @@ const useGetMemosAttachedObject = (type: AttachedObjectType | undefined) => {
       return SdocHooks.useGetDocument;
     case AttachedObjectType.SPAN_ANNOTATION:
       return SpanAnnotationHooks.useGetAnnotation;
+    case AttachedObjectType.BBOX_ANNOTATION:
+      return BboxAnnotationHooks.useGetAnnotation;
     default:
       return CodeHooks.useGetCode;
   }
