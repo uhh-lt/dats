@@ -19,9 +19,13 @@ const useCreateAnnotation = (
 ) => useMutation(SpanAnnotationService.addSpanAnnotationSpanPut, options);
 
 const useGetAnnotation = (spanId: number | undefined) =>
-  useQuery<SpanAnnotationRead | SpanAnnotationReadResolved, Error>(
+  useQuery<SpanAnnotationReadResolved, Error>(
     [QueryKey.SPAN_ANNOTATION, spanId],
-    () => SpanAnnotationService.getByIdSpanSpanIdGet({ spanId: spanId!, resolve: true }),
+    () =>
+      SpanAnnotationService.getByIdSpanSpanIdGet({
+        spanId: spanId!,
+        resolve: true,
+      }) as Promise<SpanAnnotationReadResolved>,
     { enabled: !!spanId }
   );
 

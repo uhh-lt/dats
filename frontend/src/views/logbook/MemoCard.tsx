@@ -11,6 +11,8 @@ import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../api/QueryKey";
 import { useQueryClient } from "@tanstack/react-query";
 import MemoAPI from "../../features/memo-dialog/MemoAPI";
+import useGetMemosAttachedObject from "../../features/memo-dialog/useGetMemosAttachedObject";
+import AttachedObjectLink from "./AttachedObjectLink";
 
 interface MemoCardProps {
   memoId: number;
@@ -20,7 +22,9 @@ interface MemoCardProps {
 function MemoCard({ memoId, filter }: MemoCardProps) {
   // query
   const memo = MemoHooks.useGetMemo(memoId);
+  const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
 
+  // computed
   // todo: the filtering should happen in the backend?
   const isFilteredOut = useMemo(() => {
     if (filter === undefined) {
@@ -56,7 +60,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
     },
   });
 
-  // actions
+  // ui events
   const handleOpenMemo = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
     if (memo.data) {
@@ -97,7 +101,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
               }}
             />
           )}
-          {memo.isSuccess && (
+          {memo.isSuccess && attachedObject.isSuccess && (
             <>
               <CardHeader
                 avatar={
@@ -117,6 +121,12 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
                 }}
               />
               <CardContent sx={{ py: 0, my: 1, maxHeight: 300, overflowY: "hidden" }}>
+                <Typography sx={{ mb: 1.5 }} color="text.secondary">
+                  <AttachedObjectLink
+                    attachedObject={attachedObject.data}
+                    attachedObjectType={memo.data.attached_object_type}
+                  />
+                </Typography>
                 <Typography variant="body1">{memo.data.content}</Typography>
               </CardContent>
               <CardActions sx={{ px: 0.5, pt: 0, pb: 0.5 }}>

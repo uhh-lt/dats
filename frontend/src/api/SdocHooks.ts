@@ -2,6 +2,7 @@ import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query
 
 import {
   AnnotationDocumentRead,
+  AnnotationDocumentService,
   DocType,
   DocumentTagRead,
   MemoCreate,
@@ -15,27 +16,37 @@ import {
 import { QueryKey } from "./QueryKey";
 
 // sdoc
+const fetchSdoc = async (sdocId: number) => {
+  const sdoc = await SourceDocumentService.getByIdSdocSdocIdGet({
+    sdocId: sdocId!,
+  });
+  switch (sdoc.doctype) {
+    case DocType.TEXT:
+      const content = await SourceDocumentService.getContentSdocSdocIdContentGet({ sdocId: sdocId });
+      sdoc.content = content.content;
+      break;
+    case DocType.IMAGE:
+      const url = await SourceDocumentService.getFileUrlSdocSdocIdUrlGet({ sdocId: sdocId });
+      sdoc.content = process.env.REACT_APP_CONTENT + url.split(/:\d+/)[1]; // todo: replace once backend returns relative URL
+      break;
+  }
+  return sdoc;
+};
+
 const useGetDocument = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
+    enabled: !!sdocId,
+  });
+
+const useGetDocumentByAdocId = (adocId: number | undefined) =>
   useQuery<SourceDocumentRead, Error>(
-    [QueryKey.SDOC, sdocId],
+    [QueryKey.SDOC_BY_ADOC, adocId],
     async () => {
-      const sdoc = await SourceDocumentService.getByIdSdocSdocIdGet({
-        sdocId: sdocId!,
-      });
-      switch (sdoc.doctype) {
-        case DocType.TEXT:
-          const content = await SourceDocumentService.getContentSdocSdocIdContentGet({ sdocId: sdocId! });
-          sdoc.content = content.content;
-          break;
-        case DocType.IMAGE:
-          const url = await SourceDocumentService.getFileUrlSdocSdocIdUrlGet({ sdocId: sdocId! });
-          sdoc.content = process.env.REACT_APP_CONTENT + url.split(/:\d+/)[1]; // todo: replace once backend returns relative URL
-          break;
-      }
-      return sdoc;
+      const adoc = await AnnotationDocumentService.getByAdocIdAdocAdocIdGet({ adocId: adocId! });
+      return await fetchSdoc(adoc.source_document_id);
     },
     {
-      enabled: !!sdocId,
+      enabled: !!adocId,
     }
   );
 
@@ -168,6 +179,7 @@ const useGetMetadatas = (sdocIds: number[]) =>
 const SdocHooks = {
   // sdoc
   useGetDocument,
+  useGetDocumentByAdocId,
   useGetDocumentTokens,
   useGetDocumentKeywords,
   useDeleteDocument,

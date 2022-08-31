@@ -15,8 +15,8 @@ import { LogbookActions } from "./logbookSlice";
 // import "@toast-ui/editor/dist/toastui-editor.css";
 // import { Editor } from "@toast-ui/react-editor";
 
-// todo: add button to navigate to attached object (document / code / bounding box...)
-// todo: show attached object name in memo card
+// todo: insert editor
+// todo: implement recent activities timeline
 function Logbook() {
   const appBarContainerRef = useContext(AppBarContext);
 
