@@ -52,7 +52,6 @@ function DocumentExplorer({ ...props }) {
   // ui event handler
   const handleDocumentTagChange = (event: SelectChangeEvent) => {
     const tagId = event.target.value;
-    console.log(tagId !== "-1" ? parseInt(event.target.value) : undefined);
     dispatch(AnnoActions.setSelectedDocumentTagId(tagId !== "-1" ? parseInt(event.target.value) : undefined));
   };
 
