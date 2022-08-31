@@ -5,6 +5,7 @@ export const QueryKey = {
   PROJECT_DOCUMENTS: "projectDocuments",
   PROJECT_CODES: "projectCodes",
   PROJECT_TAGS: "projectTags",
+  PROJECT_MEMO: "projectMemo",
 
   USER: "user",
   USERS: "users",
