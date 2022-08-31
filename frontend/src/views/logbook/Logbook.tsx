@@ -1,10 +1,10 @@
 import React, { useContext, useMemo } from "react";
 import { Box, Grid } from "@mui/material";
-import MemoExplorer from "../../features/memo-explorer/MemoExplorer";
+import MemoExplorer from "./MemoExplorer";
 import { useParams } from "react-router-dom";
 import Portal from "@mui/material/Portal";
 import SearchBar from "../search/SearchBar/SearchBar";
-import MemoResults from "../../features/memo-results/MemoResults";
+import MemoResults from "./MemoResults";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useForm } from "react-hook-form";
 import UserHooks from "../../api/UserHooks";

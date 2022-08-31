@@ -4,7 +4,7 @@ import LabelIcon from "@mui/icons-material/Label";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import StarIcon from "@mui/icons-material/Star";
 import { AttachedObjectType } from "../../api/openapi";
-import { MemoColors, MemoNames, MemoShortnames } from "../memo-results/MemoEnumUtils";
+import { MemoColors, MemoNames, MemoShortnames } from "./MemoEnumUtils";
 
 interface MemoExplorerProps {
   handleCategoryClick: (category: string | undefined) => void;

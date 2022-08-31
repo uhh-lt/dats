@@ -7,10 +7,10 @@ import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import MemoHooks from "../../api/MemoHooks";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
+import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../api/QueryKey";
 import { useQueryClient } from "@tanstack/react-query";
-import MemoAPI from "../memo-dialog/MemoAPI";
+import MemoAPI from "../../features/memo-dialog/MemoAPI";
 
 interface MemoCardProps {
   memoId: number;
