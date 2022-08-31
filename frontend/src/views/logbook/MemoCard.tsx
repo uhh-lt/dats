@@ -83,25 +83,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
     <>
       {isFilteredOut ? null : (
         <Card variant="outlined" className="myMemoCard">
-          {memo.isLoading && (
-            <CardHeader
-              title="Loading..."
-              sx={{ pb: 0, pt: 1 }}
-              titleTypographyProps={{
-                variant: "h5",
-              }}
-            />
-          )}
-          {memo.isError && (
-            <CardHeader
-              title={`Error: ${memo.error.message}`}
-              sx={{ pb: 0, pt: 1 }}
-              titleTypographyProps={{
-                variant: "h5",
-              }}
-            />
-          )}
-          {memo.isSuccess && attachedObject.isSuccess && (
+          {memo.isSuccess && attachedObject.isSuccess ? (
             <>
               <CardHeader
                 avatar={
@@ -135,6 +117,22 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
                 </IconButton>
               </CardActions>
             </>
+          ) : memo.isError ? (
+            <CardHeader
+              title={`Error: ${memo.error.message}`}
+              sx={{ pb: 1, pt: 1 }}
+              titleTypographyProps={{
+                variant: "h5",
+              }}
+            />
+          ) : (
+            <CardHeader
+              title="Loading..."
+              sx={{ pb: 1, pt: 1 }}
+              titleTypographyProps={{
+                variant: "h5",
+              }}
+            />
           )}
         </Card>
       )}
