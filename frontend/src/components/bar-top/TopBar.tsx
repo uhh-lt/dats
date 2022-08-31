@@ -25,7 +25,7 @@ function TopBar(props: AppBarProps) {
               <TemporaryDrawer />
               <Typography variant="h6" noWrap sx={{ display: { xs: "none", sm: "block" } }}>
                 <Link component={RouterLink} to="/projects" underline="none" color="inherit">
-                  D-WISE
+                  DWTS
                 </Link>
               </Typography>
             </Stack>
