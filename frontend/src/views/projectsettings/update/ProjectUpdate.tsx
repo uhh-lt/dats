@@ -54,9 +54,9 @@ function ProjectUpdate() {
   };
 
   return (
-    <Card>
+    <Card className="myFlexContainer mh100">
       <TabContext value={tab}>
-        <AppBar position="relative" color="secondary">
+        <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
           <Toolbar variant="dense" sx={{ flexDirection: "column", alignItems: "flex-start" }} disableGutters>
             <Toolbar variant="dense" sx={{ width: "100%" }}>
               <Typography variant="h6" color="inherit" component="div">
@@ -98,16 +98,16 @@ function ProjectUpdate() {
         {project.isError && <CardContent>An error occurred while loading project {projectId}...</CardContent>}
         {project.isSuccess && (
           <React.Fragment>
-            <TabPanel value="1" sx={{ p: 0 }}>
+            <TabPanel value="1" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectDetails project={project.data} />
             </TabPanel>
-            <TabPanel value="2" sx={{ p: 0 }}>
+            <TabPanel value="2" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectDocuments project={project.data} />
             </TabPanel>
-            <TabPanel value="3" sx={{ p: 0 }}>
+            <TabPanel value="3" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectUsers project={project.data} />
             </TabPanel>
-            <TabPanel value="4" sx={{ p: 0 }}>
+            <TabPanel value="4" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectCodes project={project.data} />
             </TabPanel>
           </React.Fragment>

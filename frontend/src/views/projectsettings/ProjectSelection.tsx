@@ -49,8 +49,8 @@ function ProjectSelection() {
   }
 
   return (
-    <Card>
-      <AppBar position="relative" color="secondary">
+    <Card className="myFlexContainer mh100">
+      <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
         <Toolbar variant="dense">
           <Typography variant="h6" color="inherit" component="div">
             Projects
@@ -61,7 +61,9 @@ function ProjectSelection() {
           </Button>
         </Toolbar>
       </AppBar>
-      <CardContent sx={{ p: 0 }}>{content}</CardContent>
+      <CardContent sx={{ p: 0 }} className="myFlexFillAllContainer">
+        {content}
+      </CardContent>
     </Card>
   );
 }
