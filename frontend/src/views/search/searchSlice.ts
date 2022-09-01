@@ -8,6 +8,8 @@ interface SearchState {
   isShowEntities: boolean;
   isShowTags: boolean;
   isListView: boolean;
+  page: number;
+  rowsPerPage: number;
 }
 
 const initialState: SearchState = {
@@ -17,6 +19,8 @@ const initialState: SearchState = {
   isShowEntities: false,
   isShowTags: false,
   isListView: false,
+  page: 0,
+  rowsPerPage: 10,
 };
 
 export const searchSlice = createSlice({
@@ -75,6 +79,12 @@ export const searchSlice = createSlice({
     },
     toggleListView: (state) => {
       state.isListView = !state.isListView;
+    },
+    setRowsPerPage: (state, action: PayloadAction<number>) => {
+      state.rowsPerPage = action.payload;
+    },
+    setPage: (state, action: PayloadAction<number>) => {
+      state.page = action.payload;
     },
   },
 });

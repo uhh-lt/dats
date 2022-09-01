@@ -1,6 +1,5 @@
 import TablePagination from "@mui/material/TablePagination";
 import * as React from "react";
-import { Dispatch, SetStateAction } from "react";
 import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -8,6 +7,8 @@ import LastPageIcon from "@mui/icons-material/LastPage";
 import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
+import { SearchActions } from "../../searchSlice";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -63,21 +64,22 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 }
 
 interface TableNavigationProps {
-  page: number;
-  setPage: Dispatch<SetStateAction<number>>;
-  rowsPerPage: number;
-  setRowsPerPage: Dispatch<SetStateAction<number>>;
   numDocuments: number;
 }
 
-function TableNavigation({ page, setPage, rowsPerPage, setRowsPerPage, numDocuments }: TableNavigationProps) {
-  // actions
+function TableNavigation({ numDocuments }: TableNavigationProps) {
+  // global client state (redux)
+  const dispatch = useAppDispatch();
+  const page = useAppSelector((state) => state.search.page);
+  const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
+
+  // ui event handlers
   const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage);
+    dispatch(SearchActions.setPage(newPage));
   };
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    dispatch(SearchActions.setRowsPerPage(parseInt(event.target.value, 10)));
+    dispatch(SearchActions.setPage(0));
   };
 
   return (

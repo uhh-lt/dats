@@ -60,7 +60,7 @@ function AddDocumentMetadataButton({ sdocId }: AddDocumentMetadataButtonProps) {
         fullWidth
         onClick={handleAddMetadata}
       >
-        Add Metadata
+        Add
       </LoadingButton>
     </Grid>
   );
