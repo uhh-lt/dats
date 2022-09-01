@@ -12,26 +12,6 @@ code {
     monospace;
 }
 
-.DragHandle {
-  cursor: grabbing;
-}
-
-.MyDragBox {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.MyDragBoxHeader {
-  padding-right: 0;
-  flex-grow: 0;
-}
-
-.MyDragBoxContent {
-  flex-grow: 1;
-  overflow-y: auto
-}
-
 .hide-button {
   position: absolute;
   top: 0;

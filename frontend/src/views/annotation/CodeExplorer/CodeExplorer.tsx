@@ -68,10 +68,10 @@ function CodeExplorer({ ...props }) {
   };
 
   return (
-    <Paper square className="MyDragBox" {...props} elevation={1}>
-      <AppBar position="relative" color="secondary" className="MyDragBoxHeader">
+    <Paper square className="myFlexContainer h100" {...props} elevation={1}>
+      <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
         <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
-          <Typography variant="h6" color="inherit" component="div" className="DragHandle">
+          <Typography variant="h6" color="inherit" component="div">
             Code Explorer
           </Typography>
         </Toolbar>
@@ -80,7 +80,7 @@ function CodeExplorer({ ...props }) {
       <Divider />
       {codeTree && (
         <CodeTreeView
-          sx={{ overflowY: "auto" }}
+          className="myFlexFillAllContainer"
           data={codeTree.model}
           multiSelect={false}
           selected={selectedCodeId?.toString() || ""}

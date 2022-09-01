@@ -56,11 +56,11 @@ function DocumentExplorer({ ...props }) {
   };
 
   return (
-    <Paper square className="MyDragBox" {...props}>
-      <AppBar position="relative" color="secondary" className="MyDragBoxHeader">
+    <Paper square className="myFlexContainer h100" {...props}>
+      <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
         <Toolbar variant="dense">
           <Stack direction="row" sx={{ width: "100%", justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="h6" color="inherit" component="div" className="DragHandle overflow-ellipsis">
+            <Typography variant="h6" color="inherit" component="div" className="overflow-ellipsis">
               Document Explorer
             </Typography>
             {documentTags.isLoading && <div>Loading!</div>}
@@ -93,7 +93,7 @@ function DocumentExplorer({ ...props }) {
         <>
           {sdocs.data.length === 0 && <div>No documents found...</div>}
           {sdocs.data.length > 0 && (
-            <List>
+            <List className="myFlexFillAllContainer">
               {sdocs.data.map((sId) => (
                 <ListItem
                   key={sId}
