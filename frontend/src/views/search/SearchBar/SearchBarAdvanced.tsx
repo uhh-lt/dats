@@ -12,7 +12,7 @@ function SearchBarAdvanced({ anchorEl }: SearchBarAdvancedProps) {
   // state
   const [open, setOpen] = React.useState<boolean>(false);
 
-  const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleOpen = () => {
     setOpen(true);
   };
   const handleClose = () => {
@@ -21,10 +21,12 @@ function SearchBarAdvanced({ anchorEl }: SearchBarAdvancedProps) {
 
   return (
     <>
-      <Tooltip title="Erweiterte Suchoptionen">
-        <IconButton sx={{ p: "10px" }} onClick={handleOpen}>
-          <TuneIcon />
-        </IconButton>
+      <Tooltip title="Advanced search options">
+        <span>
+          <IconButton sx={{ p: "10px" }} onClick={handleOpen} disabled>
+            <TuneIcon />
+          </IconButton>
+        </span>
       </Tooltip>
       <Popover
         container={anchorEl}
