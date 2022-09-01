@@ -5,6 +5,7 @@ import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import StarIcon from "@mui/icons-material/Star";
 import { AttachedObjectType } from "../../api/openapi";
 import { MemoColors, MemoNames, MemoShortnames } from "./MemoEnumUtils";
+import { FILTER_OUT_TYPES } from "./Logbook";
 
 interface MemoExplorerProps {
   handleCategoryClick: (category: string | undefined) => void;
@@ -27,18 +28,20 @@ function MemoExplorer({ handleCategoryClick, selectedCategory, ...props }: MemoE
         <ListItemText primary="Important memos" />
       </ListItemButton>
       <Divider />
-      {Object.values(AttachedObjectType).map((key) => (
-        <ListItemButton
-          key={MemoShortnames[key]}
-          selected={selectedCategory === MemoNames[key]}
-          onClick={() => handleCategoryClick(MemoNames[key])}
-        >
-          <ListItemIcon style={{ color: MemoColors[key] }}>
-            <LabelIcon />
-          </ListItemIcon>
-          <ListItemText primary={MemoNames[key]} />
-        </ListItemButton>
-      ))}
+      {Object.values(AttachedObjectType)
+        .filter((value) => FILTER_OUT_TYPES.indexOf(value) === -1)
+        .map((key) => (
+          <ListItemButton
+            key={MemoShortnames[key]}
+            selected={selectedCategory === MemoNames[key]}
+            onClick={() => handleCategoryClick(MemoNames[key])}
+          >
+            <ListItemIcon style={{ color: MemoColors[key] }}>
+              <LabelIcon />
+            </ListItemIcon>
+            <ListItemText primary={MemoNames[key]} />
+          </ListItemButton>
+        ))}
     </List>
   );
 }
