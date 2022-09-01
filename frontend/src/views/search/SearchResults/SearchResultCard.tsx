@@ -9,18 +9,16 @@ import {
   Typography,
 } from "@mui/material";
 import { SearchResultItem } from "./SearchResultItem";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SdocHooks from "../../../api/SdocHooks";
-import { useMemo } from "react";
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
-import BorderColorIcon from "@mui/icons-material/BorderColor";
-import MemoButton from "../../../features/memo-dialog/MemoButton";
 import * as React from "react";
+import { useMemo } from "react";
+import MemoButton from "../../../features/memo-dialog/MemoButton";
 import SearchResultTag from "./SearchResultTag";
 import { DocType } from "../../../api/openapi";
 import Checkbox from "@mui/material/Checkbox";
+import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
 
 function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCheckboxChange }: SearchResultItem) {
   // router
@@ -94,15 +92,7 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
         </CardContent>
       </CardActionArea>
       <CardActions>
-        <Tooltip title="Annotate">
-          <IconButton
-            component={Link}
-            to={`/project/${projectId}/annotation/${sdocId}`}
-            onClick={(e: any) => e.stopPropagation()}
-          >
-            <BorderColorIcon />
-          </IconButton>
-        </Tooltip>
+        <AnnotateButton projectId={projectId} sdocId={sdocId} />
         <MemoButton sdocId={sdocId} edge="end" />
       </CardActions>
     </Card>

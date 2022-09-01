@@ -6,6 +6,8 @@ import DeleteButton from "./ToolBarElements/DeleteButton";
 import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton";
 import DocumentNavigation from "../../../components/DocumentNavigation";
 import * as React from "react";
+import AnnotateButton from "./ToolBarElements/AnnotateButton";
+import { useParams } from "react-router-dom";
 
 interface DocumentViewerToolbarProps {
   sdocId: number;
@@ -13,9 +15,13 @@ interface DocumentViewerToolbarProps {
 }
 
 function DocumentViewerToolbar({ sdocId, searchResultIds }: DocumentViewerToolbarProps) {
+  // router
+  const { projectId } = useParams() as { projectId: string };
+
   return (
     <Toolbar disableGutters variant="dense" sx={{ minHeight: "52px", p: "0px 4px" }}>
       <BackButton />
+      <AnnotateButton projectId={projectId} sdocId={sdocId} />
       <MemoButton sdocId={sdocId} />
       <TagMenuButton forceSdocId={sdocId} popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
       <DeleteButton disabled />

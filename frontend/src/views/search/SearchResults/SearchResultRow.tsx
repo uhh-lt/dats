@@ -2,10 +2,7 @@ import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
 import { Stack } from "@mui/material";
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
-import { Link, useParams } from "react-router-dom";
-import BorderColorIcon from "@mui/icons-material/BorderColor";
+import { useParams } from "react-router-dom";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
 import * as React from "react";
 import { useMemo } from "react";
@@ -13,6 +10,7 @@ import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SdocHooks from "../../../api/SdocHooks";
 import SearchResultTag from "./SearchResultTag";
 import { SearchResultItem } from "./SearchResultItem";
+import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
 
 function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnCheckboxChange }: SearchResultItem) {
   // router
@@ -83,15 +81,7 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
             {sdoc.isSuccess && <>{sdoc.data.content}</>}
           </div>
           <Stack direction={"row"} component={"span"} className={"myQuickMenu"}>
-            <Tooltip title="Annotate">
-              <IconButton
-                component={Link}
-                to={`/project/${projectId}/annotation/${sdocId}`}
-                onClick={(e: any) => e.stopPropagation()}
-              >
-                <BorderColorIcon />
-              </IconButton>
-            </Tooltip>
+            <AnnotateButton projectId={projectId} sdocId={sdocId} />
             <MemoButton sdocId={sdocId} edge="end" />
           </Stack>
         </Stack>
