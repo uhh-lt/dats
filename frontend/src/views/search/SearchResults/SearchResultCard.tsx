@@ -85,9 +85,7 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
           <Stack direction={"row"} sx={{ alignItems: "center", height: 22 }}>
             {tags.isLoading && <>...</>}
             {tags.isError && <>{tags.error.message}</>}
-            {tags.isSuccess &&
-              isShowTags &&
-              tags.data.map((tag) => <SearchResultTag key={tag.id} label={tag.title} color={tag.description} />)}
+            {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}
           </Stack>
         </CardContent>
       </CardActionArea>

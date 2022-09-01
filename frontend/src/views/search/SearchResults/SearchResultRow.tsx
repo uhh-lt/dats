@@ -71,9 +71,7 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
         <Stack direction={"row"} sx={{ alignItems: "center" }}>
           {tags.isLoading && <>...</>}
           {tags.isError && <>{tags.error.message}</>}
-          {tags.isSuccess &&
-            isShowTags &&
-            tags.data.map((tag) => <SearchResultTag key={tag.id} label={tag.title} color={tag.description} />)}
+          {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}
 
           <div style={{ overflow: "hidden", textOverflow: "ellipsis", flexGrow: 1 }}>
             {sdoc.isLoading && <>...</>}
