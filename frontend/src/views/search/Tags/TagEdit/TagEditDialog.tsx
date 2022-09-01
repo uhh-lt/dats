@@ -11,6 +11,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
 import ColorUtils from "../../../../utils/ColorUtils";
+import SaveIcon from "@mui/icons-material/Save";
 
 /**
  * A dialog that allows to update a DocumentTag.
@@ -162,6 +163,7 @@ function TagEditDialog() {
           <LoadingButton
             variant="contained"
             color="success"
+            startIcon={<SaveIcon />}
             fullWidth
             type="submit"
             disabled={!tag.isSuccess}

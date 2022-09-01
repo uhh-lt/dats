@@ -11,6 +11,7 @@ import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
 import ColorUtils from "../../../utils/ColorUtils";
+import SaveIcon from "@mui/icons-material/Save";
 
 interface CodeEditDialogProps {
   codes: CodeRead[];
@@ -166,6 +167,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           <LoadingButton
             variant="contained"
             color="success"
+            startIcon={<SaveIcon />}
             fullWidth
             type="submit"
             disabled={!code}

@@ -20,6 +20,7 @@ import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
+import SaveIcon from "@mui/icons-material/Save";
 
 interface CodeDialogProps {
   projectId: number;
@@ -162,6 +163,7 @@ export default function CodeCreationDialog({ projectId, userId, codes }: CodeDia
             <LoadingButton
               variant="contained"
               color="success"
+              startIcon={<SaveIcon />}
               fullWidth
               type="submit"
               loading={createCodeMutation.isLoading}
