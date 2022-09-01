@@ -54,7 +54,7 @@ function UserProfileMenu({ handleLogout }: UserProfileMenuProps) {
                 </Typography>
                 <Typography align="center" variant="body1">
                   <Button variant="outlined" color="inherit" component={Link} to={"/user/" + user.data.id}>
-                    Edit profile
+                    View profile
                   </Button>
                 </Typography>
               </Stack>
