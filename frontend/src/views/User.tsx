@@ -18,7 +18,7 @@ function User() {
             User {user.data.id}
           </Typography>
           <Typography variant={"body1"} gutterBottom>
-            <b>Name:</b> {user.data.first_name} {user.data.last_name}!
+            <b>Name:</b> {user.data.first_name} {user.data.last_name}
           </Typography>
           <Typography variant={"body1"} gutterBottom>
             <b>Mail:</b> {user.data.email}
