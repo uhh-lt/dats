@@ -11,7 +11,6 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import EditIcon from "@mui/icons-material/Edit";
 import { Link } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
@@ -26,13 +25,6 @@ function Projects() {
           All Projects
           {/*All Projects {user.data && `of ${user.data.email}`}*/}
         </Typography>
-        <Typography>Title</Typography>
-        <IconButton size="large" color="inherit">
-          <ArrowUpwardIcon />
-        </IconButton>
-        <IconButton size="large" color="inherit">
-          <ArrowUpwardIcon />
-        </IconButton>
       </Toolbar>
       {projects.isLoading && <div>Loading!</div>}
       {projects.isError && <div>Error: {projects.error.message}</div>}
