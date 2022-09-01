@@ -27,7 +27,7 @@ function TwoBarLayout() {
             <Box className="myFlexFillAllContainer" sx={{ overflowY: "hidden" }}>
               <Outlet />
             </Box>
-            <BottomBar sx={{ flex: "0 1 59px" }} />
+            <BottomBar sx={{ flex: "0 1 0" }} />
           </Box>
           <MemoDialog />
           <ImportDocumentDialog />
