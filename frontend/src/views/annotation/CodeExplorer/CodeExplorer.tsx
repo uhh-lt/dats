@@ -12,6 +12,9 @@ import Tree, { Node } from "ts-tree-structure";
 import { AnnoActions } from "../annoSlice";
 import CodeCreationDialog from "./CodeCreationDialog";
 import CodeEditDialog from "./CodeEditDialog";
+import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
+import CodeEditButton from "./CodeEditButton";
+import MemoButton from "../../../features/memo-dialog/MemoButton";
 
 function CodeExplorer({ ...props }) {
   const { projectId } = useParams() as { projectId: string };
@@ -88,6 +91,13 @@ function CodeExplorer({ ...props }) {
           onNodeSelect={handleSelectCode}
           onExpandClick={handleExpandClick}
           onCollapseClick={handleCollapseClick}
+          renderActions={(node) => (
+            <React.Fragment>
+              <CodeToggleVisibilityButton code={node} />
+              <CodeEditButton code={node.code} />
+              <MemoButton codeId={node.code.id} />
+            </React.Fragment>
+          )}
         />
       )}
       {allCodes.data && <CodeEditDialog codes={allCodes.data} />}
