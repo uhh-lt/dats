@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react";
+import React, { useMemo, useState } from "react";
 import {
   Autocomplete,
   Box,
@@ -15,13 +15,14 @@ import {
   Stack,
   TextField,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
-import {ProjectRead, UserRead} from "../../../api/openapi";
+import { ProjectRead, UserRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { LoadingButton } from "@mui/lab";
@@ -45,9 +46,9 @@ function ProjectUsers({ project }: ProjectUsersProps) {
       return [];
     }
 
-    const projectUserIds = projectUsers.data.map(user => user.id);
+    const projectUserIds = projectUsers.data.map((user) => user.id);
 
-    return allUsers.data.filter((user) => projectUserIds.indexOf(user.id) === -1)
+    return allUsers.data.filter((user) => projectUserIds.indexOf(user.id) === -1);
   }, [projectUsers.data, allUsers.data]);
 
   // add user
@@ -68,7 +69,7 @@ function ProjectUsers({ project }: ProjectUsersProps) {
     },
   });
   const handleClickAddUser = () => {
-    if(!selectedUser) return;
+    if (!selectedUser) return;
     addUserMutation.mutate({
       projId: project.id,
       userId: selectedUser.id,
@@ -99,8 +100,8 @@ function ProjectUsers({ project }: ProjectUsersProps) {
   };
 
   const handleChangeSelectedUser = (event: React.SyntheticEvent, value: UserRead | null) => {
-    setSelectedUser(value)
-  }
+    setSelectedUser(value);
+  };
 
   return (
     <React.Fragment>
@@ -111,19 +112,19 @@ function ProjectUsers({ project }: ProjectUsersProps) {
               Add user
             </Typography>
             {allUsers.isError ? (
-                <Typography>Error: {allUsers.error.message}</Typography>
+              <Typography>Error: {allUsers.error.message}</Typography>
             ) : (
-                <Autocomplete
-                    value={selectedUser}
-                    onChange={handleChangeSelectedUser}
-                    sx={{ ml: 1, flexGrow: 1 }}
-                    size="small"
-                    disablePortal
-                    options={autoCompleteUsers}
-                    renderInput={(params) => <TextField {...params} label="User" />}
-                    disabled={!allUsers.isSuccess}
-                    getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
-                />
+              <Autocomplete
+                value={selectedUser}
+                onChange={handleChangeSelectedUser}
+                sx={{ ml: 1, flexGrow: 1 }}
+                size="small"
+                disablePortal
+                options={autoCompleteUsers}
+                renderInput={(params) => <TextField {...params} label="User" />}
+                disabled={!allUsers.isSuccess}
+                getOptionLabel={(option) => `${option.first_name} ${option.last_name}`}
+              />
             )}
             <LoadingButton
               variant="contained"
@@ -156,9 +157,13 @@ function ProjectUsers({ project }: ProjectUsersProps) {
                   disablePadding
                   key={user.id}
                   secondaryAction={
-                    <IconButton onClick={() => handleClickRemoveUser(user.id)}>
-                      <DeleteIcon />
-                    </IconButton>
+                    <Tooltip title={"Remove user from project"}>
+                      <span>
+                        <IconButton onClick={() => handleClickRemoveUser(user.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
                   }
                 >
                   <ListItemButton>

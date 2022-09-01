@@ -8,6 +8,7 @@ import {
   Grid,
   IconButton,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
@@ -75,9 +76,13 @@ function Projects() {
                   <Typography variant="subtitle1" component="div" sx={{ flexGrow: 1 }}>
                     {project.title}
                   </Typography>
-                  <IconButton color="inherit" component={Link} to={`/projectsettings/${project.id}`}>
-                    <EditIcon />
-                  </IconButton>
+                  <Tooltip title={"Project settings"}>
+                    <span>
+                      <IconButton color="inherit" component={Link} to={`/projectsettings/${project.id}`}>
+                        <EditIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                 </CardActions>
               </Card>
             </Grid>

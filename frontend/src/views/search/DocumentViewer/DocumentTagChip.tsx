@@ -1,5 +1,5 @@
 import TagHooks from "../../../api/TagHooks";
-import { Chip } from "@mui/material";
+import { Chip, Tooltip } from "@mui/material";
 import React from "react";
 import { DocumentTagRead } from "../../../api/openapi";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -24,7 +24,11 @@ function DocumentTagChip({ tagId, handleClick, handleDelete }: DocumentTagChipPr
           onClick={() => handleClick(tag.data)}
           onDelete={() => handleDelete(tag.data)}
           sx={{ borderColor: tag.data.description, color: tag.data.description }}
-          deleteIcon={<CancelIcon style={{ color: tag.data.description }} />}
+          deleteIcon={
+            <Tooltip title="Remove tag">
+              <CancelIcon style={{ color: tag.data.description }} />
+            </Tooltip>
+          }
         />
       )}
     </>

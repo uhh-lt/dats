@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Card, CardActions, CardContent, CardHeader, IconButton, Typography } from "@mui/material";
+import { Card, CardActions, CardContent, CardHeader, IconButton, Tooltip, Typography } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import "./MemoCard.css";
 import { MemoColors, MemoNames, MemoShortnames } from "./MemoEnumUtils";
@@ -92,9 +92,13 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
                   </Avatar>
                 }
                 action={
-                  <IconButton onClick={handleClick} disabled={updateMutation.isLoading}>
-                    {memo.data.starred ? <StarIcon /> : <StarOutlineIcon />}
-                  </IconButton>
+                  <Tooltip title={memo.data.starred ? "Marked" : "Not marked"}>
+                    <span>
+                      <IconButton onClick={handleClick} disabled={updateMutation.isLoading}>
+                        {memo.data.starred ? <StarIcon /> : <StarOutlineIcon />}
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                 }
                 title={memo.data.title}
                 sx={{ pb: 0, pt: 1 }}
@@ -112,9 +116,13 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
                 <Typography variant="body1">{memo.data.content}</Typography>
               </CardContent>
               <CardActions sx={{ px: 0.5, pt: 0, pb: 0.5 }}>
-                <IconButton aria-label="settings" onClick={handleOpenMemo} size="small">
-                  <EditIcon fontSize="inherit" />
-                </IconButton>
+                <Tooltip title={"Edit memo"}>
+                  <span>
+                    <IconButton aria-label="settings" onClick={handleOpenMemo} size="small">
+                      <EditIcon fontSize="inherit" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               </CardActions>
             </>
           ) : memo.isError ? (

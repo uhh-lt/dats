@@ -1,4 +1,4 @@
-import { IconButton, InputBase, Paper } from "@mui/material";
+import { IconButton, InputBase, Paper, Tooltip } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import React from "react";
@@ -23,13 +23,21 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
       onSubmit={handleSubmit}
       ref={container}
     >
-      <IconButton sx={{ p: "10px" }} type="submit">
-        <SearchIcon />
-      </IconButton>
+      <Tooltip title={"Search"}>
+        <span>
+          <IconButton sx={{ p: "10px" }} type="submit">
+            <SearchIcon />
+          </IconButton>
+        </span>
+      </Tooltip>
       <InputBase sx={{ ml: 1, flex: 1 }} placeholder={placeholder} {...register("query")} />
-      <IconButton sx={{ p: "10px" }} onClick={() => handleClearSearch()}>
-        <ClearIcon />
-      </IconButton>
+      <Tooltip title={"Clear search"}>
+        <span>
+          <IconButton sx={{ p: "10px" }} onClick={() => handleClearSearch()}>
+            <ClearIcon />
+          </IconButton>
+        </span>
+      </Tooltip>
       <SearchBarAdvanced anchorEl={container.current} />
     </Paper>
   );

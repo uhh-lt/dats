@@ -1,4 +1,4 @@
-import { IconButton, IconButtonProps } from "@mui/material";
+import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import React from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import eventBus from "../../../../EventBus";
@@ -14,9 +14,11 @@ function TagEditButton({ tagId, ...props }: IconButtonProps & { tagId: number })
   };
 
   return (
-    <IconButton onClick={handleClickOpen} {...props}>
-      <EditIcon />
-    </IconButton>
+    <Tooltip title="Edit tag">
+      <IconButton onClick={handleClickOpen} {...props}>
+        <EditIcon />
+      </IconButton>
+    </Tooltip>
   );
 }
 
