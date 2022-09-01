@@ -17,7 +17,7 @@ function ToggleListViewButton({ ...props }: ToggleListViewButtonProps & IconButt
   };
 
   return (
-    <Tooltip title="Listenansicht/Kachelansicht">
+    <Tooltip title="List view/Tile view">
       <IconButton onClick={handleClick} {...props}>
         {showList ? <ReorderIcon /> : <VerticalSplitIcon />}
       </IconButton>

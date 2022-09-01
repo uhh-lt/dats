@@ -20,7 +20,7 @@ function Imprint() {
         22527 Hamburg
       </Typography>
       <Typography variant={"body1"} gutterBottom mt={1}>
-        <b>Vertreten durch:</b>
+        <b>Represented by:</b>
         <br />
         Chris Biemann, Tim Fischer, Florian Schneider
       </Typography>

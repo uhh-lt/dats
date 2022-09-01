@@ -18,13 +18,13 @@ function MemoExplorer({ handleCategoryClick, selectedCategory, ...props }: MemoE
         <ListItemIcon>
           <LightbulbIcon />
         </ListItemIcon>
-        <ListItemText primary="Alle Memos" />
+        <ListItemText primary="All memos" />
       </ListItemButton>
       <ListItemButton selected={selectedCategory === "important"} onClick={() => handleCategoryClick("important")}>
         <ListItemIcon>
           <StarIcon />
         </ListItemIcon>
-        <ListItemText primary="Wichtige Memos" />
+        <ListItemText primary="Important memos" />
       </ListItemButton>
       <Divider />
       {Object.values(AttachedObjectType).map((key) => (

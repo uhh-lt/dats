@@ -17,7 +17,7 @@ function ToggleSplitViewButton({ ...props }: ToggleSplitViewButtonProps & IconBu
   };
 
   return (
-    <Tooltip title="Fenster teilen/nicht teilen">
+    <Tooltip title="Split/not split view">
       <IconButton onClick={handleClick} {...props}>
         {isSplitView ? <ReorderIcon /> : <VerticalSplitIcon />}
       </IconButton>

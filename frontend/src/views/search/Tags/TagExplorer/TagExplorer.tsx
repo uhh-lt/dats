@@ -38,7 +38,7 @@ function TagExplorer({
             <ListItemIcon>
               <StorageIcon />
             </ListItemIcon>
-            <ListItemText primary="Alle Dokumente" />
+            <ListItemText primary="All documents" />
           </ListItemButton>
         </ListItem>
 
@@ -47,7 +47,7 @@ function TagExplorer({
             <ListItemIcon>
               <DownloadIcon />
             </ListItemIcon>
-            <ListItemText primary="Neue Dokumente" />
+            <ListItemText primary="New documents" />
           </ListItemButton>
         </ListItem>
 

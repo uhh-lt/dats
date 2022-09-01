@@ -21,7 +21,7 @@ function TagCreationButton({ tagName, ...props }: TagActionButtonCreateProps & L
       <ListItemIcon>
         <AddIcon />
       </ListItemIcon>
-      <ListItemText primary={tagName.length > 0 ? `"${tagName}" (Neu erstellen)` : "Neu erstellen"} />
+      <ListItemText primary={tagName.length > 0 ? `"${tagName}" (Create new)` : "Create new"} />
     </ListItemButton>
   );
 }

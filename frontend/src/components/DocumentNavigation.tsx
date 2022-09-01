@@ -45,14 +45,14 @@ function DocumentNavigation({ idsToNavigate, searchPrefix, showText }: DocumentN
           {currentDocumentIdx !== -1 ? `${currentDocumentIdx + 1} von ${idsToNavigate.length}` : ""}
         </Typography>
       )}
-      <Tooltip title="Zurück">
+      <Tooltip title="Previous document">
         <span>
           <IconButton onClick={() => handlePrevDocument()} disabled={!hasPrevDocument()} sx={{ color: "inherit" }}>
             <KeyboardArrowLeft />
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Vor">
+      <Tooltip title="Next document">
         <span>
           <IconButton onClick={() => handleNextDocument()} disabled={!hasNextDocument()} sx={{ color: "inherit" }}>
             <KeyboardArrowRight />

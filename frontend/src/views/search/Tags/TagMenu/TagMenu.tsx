@@ -220,7 +220,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
       <ListItem disablePadding dense key={"apply"}>
         <ListItemButton onClick={handleApplyTags} dense disabled={updateTagsMutation.isLoading}>
           <Typography align={"center"} sx={{ width: "100%" }}>
-            Anwenden
+            Apply
           </Typography>
         </ListItemButton>
       </ListItem>
@@ -257,7 +257,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             onChange={handleSearchChange}
             variant="standard"
             fullWidth
-            placeholder="Label hinzufügen..."
+            placeholder="Add label..."
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">

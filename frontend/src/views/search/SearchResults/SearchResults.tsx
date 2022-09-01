@@ -61,7 +61,7 @@ export default function SearchResults({ documentIds, handleResultClick }: Search
   return (
     <>
       {documentIds.length === 0 ? (
-        <Typography>Keine Suchergebnisse für diese Anfrage...</Typography>
+        <Typography>No search results for this query...</Typography>
       ) : (
         <>
           {isListView ? (
