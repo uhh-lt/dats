@@ -1,12 +1,15 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import KeywordStats from "./KeywordStats";
 import CodeStats from "./CodeStats";
 import useComputeEntityStats from "./useComputeEntityStats";
 import DocumentTagStats from "./DocumentTagStats";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
+import { ContextMenuData } from "../SearchResults/SearchResultContextMenu";
+import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
+import { CodeRead } from "../../../api/openapi";
 
 interface SearchStatisticsProps {
   sdocIds: number[];
@@ -34,18 +37,61 @@ function SearchStatistics({
   // query all codes of the current project
   const projectCodes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
+  // a code map that maps codeId -> CodeRead
+  const codeMap = useMemo(() => {
+    const result = new Map<number, CodeRead>();
+    if (projectCodes.data) {
+      projectCodes.data.forEach((code) => {
+        result.set(code.id, code);
+      });
+    }
+    return result;
+  }, [projectCodes]);
+
   // stats
+  const [validStats, setValidStats] = useState(new Map<number, Map<string, number>>());
   const stats = useComputeEntityStats(sdocIds);
+
+  // computed
+  const filteredProjectCodes = useMemo(() => {
+    if (!projectCodes.data) return [];
+    return projectCodes.data.filter((code) => validStats.get(code.id) !== undefined);
+  }, [projectCodes.data, validStats]);
+
+  // effects
+  // make sure that a valid tab is selected, when the stats (and thus the documents) change
+  useEffect(() => {
+    if (tab !== "keywords" && tab !== "tags") {
+      const currentCodeId = parseInt(tab);
+      if (stats.get(currentCodeId) === undefined) {
+        setTab("keywords");
+      }
+    }
+    setValidStats(stats);
+  }, [setValidStats, stats]);
+
+  // context menu
+  const [contextMenuData, setContextMenuData] = React.useState<ContextMenuData | null>(null);
+  const openContextMenu = useCallback((event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenuData({ x: event.pageX, y: event.pageY });
+  }, []);
+  const closeContextMenu = useCallback(() => {
+    setContextMenuData(null);
+  }, []);
+  const handleMenuItemClick = useCallback((code: CodeRead) => {
+    setTab(`${code.id}`);
+  }, []);
 
   return (
     <Box className="myFlexContainer" {...(props as BoxProps)}>
       <TabContext value={tab}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
-          <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
+          <Tabs value={tab} onChange={handleTabChange} variant="scrollable" onContextMenu={openContextMenu}>
             <Tab label="Keywords" value="keywords" />
             <Tab label="Tags" value="tags" />
-            {projectCodes.data?.map((code) => (
-              <Tab key={code.id} label={code.name} value={`code-${code.id}`} />
+            {Array.from(validStats.keys()).map((codeId) => (
+              <Tab key={codeId} label={codeMap.get(codeId)?.name || "ERROR"} value={`${codeId}`} />
             ))}
           </Tabs>
         </Box>
@@ -56,13 +102,19 @@ function SearchStatistics({
           <TabPanel value="tags" sx={{ p: 2 }}>
             <DocumentTagStats documentIds={sdocIds} handleClick={handleTagClick} />
           </TabPanel>
-          {Array.from(stats.entries()).map(([codeId, data]) => (
-            <TabPanel key={codeId} value={`code-${codeId}`} sx={{ p: 2 }}>
+          {Array.from(validStats.entries()).map(([codeId, data]) => (
+            <TabPanel key={codeId} value={`${codeId}`} sx={{ p: 2 }}>
               <CodeStats key={codeId} codeId={codeId} data={data} handleClick={handleCodeClick} />
             </TabPanel>
           ))}
         </Box>
       </TabContext>
+      <SearchStatisticsContextMenu
+        menuItems={filteredProjectCodes}
+        contextMenuData={contextMenuData}
+        handleClose={closeContextMenu}
+        handleMenuItemClick={handleMenuItemClick}
+      />
     </Box>
   );
 }

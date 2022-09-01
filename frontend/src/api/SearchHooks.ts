@@ -20,7 +20,7 @@ const useSearchEntityStats = (projectId: number, sdocIds: number[] | undefined) 
         },
       }),
     {
-      enabled: !!sdocIds,
+      enabled: !!sdocIds && sdocIds.length > 0,
     }
   );
 
