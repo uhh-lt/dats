@@ -43,11 +43,19 @@ const routes: RouteObject[] = [
     children: [
       {
         path: "/projects",
-        element: <Projects />,
+        element: (
+          <RequireAuth>
+            <Projects />
+          </RequireAuth>
+        ),
       },
       {
         path: "/projectsettings",
-        element: <ProjectSettings />,
+        element: (
+          <RequireAuth>
+            <ProjectSettings />
+          </RequireAuth>
+        ),
         children: [
           { index: true, element: <ProjectCreation /> },
           { path: "/projectsettings/:projectId", element: <ProjectUpdate /> },
@@ -63,7 +71,11 @@ const routes: RouteObject[] = [
       },
       {
         path: "/user/:userId",
-        element: <User />,
+        element: (
+          <RequireAuth>
+            <User />
+          </RequireAuth>
+        ),
       },
       { path: "*", element: <NotFound /> },
     ],

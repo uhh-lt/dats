@@ -15,10 +15,13 @@ import InfoIcon from "@mui/icons-material/Info";
 import GavelIcon from "@mui/icons-material/Gavel";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { Link as RouterLink } from "react-router-dom";
+import { useAuth } from "../../auth/AuthProvider";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
 export default function TemporaryDrawer() {
+  const { isLoggedIn } = useAuth();
+
   const [state, setState] = React.useState({
     top: false,
     left: false,
@@ -49,15 +52,19 @@ export default function TemporaryDrawer() {
       {/*  <ImportDocumentListButton />*/}
       {/*</List>*/}
       <List>
-        <ListItem disablePadding>
-          <ListItemButton component={RouterLink} to="/projects">
-            <ListItemIcon>
-              <FactCheckIcon />
-            </ListItemIcon>
-            <ListItemText primary="Projects" />
-          </ListItemButton>
-        </ListItem>
-        <Divider />
+        {isLoggedIn && (
+          <>
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/projects">
+                <ListItemIcon>
+                  <FactCheckIcon />
+                </ListItemIcon>
+                <ListItemText primary="Projects" />
+              </ListItemButton>
+            </ListItem>
+            <Divider />
+          </>
+        )}
 
         <ListItem disablePadding>
           <ListItemButton component={RouterLink} to="/about">

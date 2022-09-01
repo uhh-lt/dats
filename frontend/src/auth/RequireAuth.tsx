@@ -6,12 +6,12 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   let auth = useAuth();
   let location = useLocation();
 
-  if (auth.user.isLoading) {
-    return <></>;
+  if (auth.isLoggedIn) {
+    return children;
   }
 
-  if (auth.user.isSuccess) {
-    return children;
+  if (auth.user.isFetching) {
+    return <>Waiting...</>;
   }
 
   // Redirect them to the /login page, but save the current location they were
