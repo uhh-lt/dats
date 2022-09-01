@@ -1,4 +1,4 @@
-import { Menu, MenuItem } from "@mui/material";
+import { Menu } from "@mui/material";
 import React from "react";
 import TagMenuListButtton from "./TagMenuListButtton";
 
@@ -26,9 +26,6 @@ function SearchResultContextMenu({ contextMenuData, handleClose }: SearchContext
       }}
       PaperProps={{ sx: { width: 240 } }}
     >
-      <MenuItem onClick={handleClose}>Profile</MenuItem>
-      <MenuItem onClick={handleClose}>My account</MenuItem>
-      <MenuItem onClick={handleClose}>Logout</MenuItem>
       <TagMenuListButtton popoverOrigin={{ vertical: "top", horizontal: "right" }} />
     </Menu>
   );
