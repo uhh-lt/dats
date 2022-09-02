@@ -10,6 +10,7 @@ import { QueryKey } from "../../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from "@mui/icons-material/Save";
+
 /**
  * A dialog that allows to create a DocumentTag.
  * This component listens to the 'open-tag' event.
@@ -17,9 +18,7 @@ import SaveIcon from "@mui/icons-material/Save";
  * @constructor
  */
 function TagCreationDialog() {
-  // react router
-  const { projectId } = useParams() as { projectId: string };
-  const projId = parseInt(projectId);
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // use react hook form
   const {
@@ -64,7 +63,7 @@ function TagCreationDialog() {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, projId]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, projectId]);
       setOpen(false); // close dialog
       SnackbarAPI.openSnackbar({
         text: `Added tag ${data.title}`,
@@ -80,7 +79,7 @@ function TagCreationDialog() {
       requestBody: {
         title: data.name,
         description: "1234",
-        project_id: projId,
+        project_id: projectId,
       },
     });
   };

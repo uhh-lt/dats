@@ -5,18 +5,26 @@ export const QueryKey = {
   PROJECT_DOCUMENTS: "projectDocuments",
   PROJECT_CODES: "projectCodes",
   PROJECT_TAGS: "projectTags",
+  // the logbook
   PROJECT_MEMO: "projectMemo",
 
   USER: "user",
   USERS: "users",
   USER_CODES: "userCodes",
+  // get all memos by user id
   USER_MEMOS: "userMemos",
 
+  // get memo by memo id
   MEMO: "memo",
+  // get memo by code id
   MEMO_CODE: "codeMemo",
+  // get memo by tag id
   MEMO_TAG: "tagMemo",
+  // get memo by sdoc id
   MEMO_SDOC: "sdocMemo",
+  // get memo by span annotation id
   MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
+  // get memo by bbox annotation id
   MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
 
   SDOC: "sdoc",

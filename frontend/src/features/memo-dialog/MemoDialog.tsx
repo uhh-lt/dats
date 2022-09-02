@@ -85,20 +85,26 @@ export default function MemoDialog() {
       {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && (
         <>
           {attachedType === AttachedObjectType.CODE ? (
-            <MemoContentCode memo={memo.data} code={attachedObject.data as CodeRead} />
+            <MemoContentCode memo={memo.data} code={attachedObject.data as CodeRead} closeDialog={handleClose} />
           ) : attachedType === AttachedObjectType.SOURCE_DOCUMENT ? (
-            <MemoContentSourceDocument memo={memo.data} sdoc={attachedObject.data as SourceDocumentRead} />
+            <MemoContentSourceDocument
+              memo={memo.data}
+              sdoc={attachedObject.data as SourceDocumentRead}
+              closeDialog={handleClose}
+            />
           ) : attachedType === AttachedObjectType.DOCUMENT_TAG ? (
-            <MemoContentTag memo={memo.data} tag={attachedObject.data as DocumentTagRead} />
+            <MemoContentTag memo={memo.data} tag={attachedObject.data as DocumentTagRead} closeDialog={handleClose} />
           ) : attachedType === AttachedObjectType.SPAN_ANNOTATION ? (
             <MemoContentSpanAnnotation
               memo={memo.data}
               spanAnnotation={attachedObject.data as SpanAnnotationReadResolved}
+              closeDialog={handleClose}
             />
           ) : attachedType === AttachedObjectType.BBOX_ANNOTATION ? (
             <MemoContentBboxAnnotation
               memo={memo.data}
               bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolvedCode}
+              closeDialog={handleClose}
             />
           ) : (
             <div>This memo type is not supported!</div>
