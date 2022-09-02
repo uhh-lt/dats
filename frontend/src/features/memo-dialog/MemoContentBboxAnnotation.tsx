@@ -33,6 +33,7 @@ export function MemoContentBboxAnnotation({
     });
   }, []);
   const createMutation = BboxAnnotationHooks.useCreateMemo({
+    onError,
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({

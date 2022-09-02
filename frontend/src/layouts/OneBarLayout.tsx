@@ -3,6 +3,7 @@ import { Box, CssBaseline } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import SnackbarDialog from "../features/snackbar/SnackbarDialog";
 import TopBar from "../components/bar-top/TopBar";
+import FloatingFeedbackButton from "../features/feedback/FloatingFeedbackButton";
 
 function OneBarLayout() {
   return (
@@ -14,6 +15,7 @@ function OneBarLayout() {
           <Outlet />
         </Box>
       </Box>
+      <FloatingFeedbackButton />
       <SnackbarDialog />
     </React.Fragment>
   );
