@@ -28,12 +28,16 @@ const useCreateCode = (options: UseMutationOptions<CodeRead, Error, { requestBod
 const useUpdateCode = (options: UseMutationOptions<CodeRead, Error, { codeId: number; requestBody: CodeUpdate }>) =>
   useMutation(CodeService.updateByIdCodeCodeIdPatch, options);
 
+const useDeleteCode = (options: UseMutationOptions<CodeRead, Error, { codeId: number }>) =>
+  useMutation(CodeService.deleteByIdCodeCodeIdDelete, options);
+
 const CodeHooks = {
   useCreateMemo,
   useGetMemo,
   useGetCode,
   useCreateCode,
   useUpdateCode,
+  useDeleteCode,
 };
 
 export default CodeHooks;

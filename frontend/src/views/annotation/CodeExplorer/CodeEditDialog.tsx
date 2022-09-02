@@ -12,6 +12,7 @@ import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
 import ColorUtils from "../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 interface CodeEditDialogProps {
   codes: CodeRead[];
@@ -80,6 +81,24 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       });
     },
   });
+  const deleteCodeMutation = CodeHooks.useDeleteCode({
+    onError: (error: Error) => {
+      SnackbarAPI.openSnackbar({
+        text: error.message,
+        severity: "error",
+      });
+    },
+    onSuccess: (data: CodeRead) => {
+      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_CODES]);
+      queryClient.invalidateQueries([QueryKey.USER_CODES]);
+      setOpen(false); // close dialog
+      SnackbarAPI.openSnackbar({
+        text: `Deleted code ${data.name}`,
+        severity: "success",
+      });
+    },
+  });
 
   // form handling
   const handleCodeUpdate = (data: any) => {
@@ -96,6 +115,13 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     }
   };
   const handleError = (data: any) => console.error(data);
+  const handleCodeDelete = () => {
+    if (code) {
+      deleteCodeMutation.mutate({ codeId: code.id });
+    } else {
+      throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");
+    }
+  };
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
@@ -164,6 +190,18 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           </Stack>
         </DialogContent>
         <DialogActions>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            disabled={!code}
+            loading={deleteCodeMutation.isLoading}
+            loadingPosition="start"
+            onClick={handleCodeDelete}
+            sx={{ flexShrink: 0 }}
+          >
+            Delete Code
+          </LoadingButton>
           <LoadingButton
             variant="contained"
             color="success"
