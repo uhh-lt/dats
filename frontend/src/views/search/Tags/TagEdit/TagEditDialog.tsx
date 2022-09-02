@@ -12,6 +12,7 @@ import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
 import ColorUtils from "../../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 /**
  * A dialog that allows to update a DocumentTag.
@@ -87,6 +88,23 @@ function TagEditDialog() {
       });
     },
   });
+  const deleteTagMutation = TagHooks.useDeleteTag({
+    onError: (error: Error) => {
+      SnackbarAPI.openSnackbar({
+        text: error.message,
+        severity: "error",
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS]);
+      queryClient.invalidateQueries([QueryKey.SDOC_TAGS]);
+      setOpen(false); // close dialog
+      SnackbarAPI.openSnackbar({
+        text: `Deleted tag with id ${data.id}`,
+        severity: "success",
+      });
+    },
+  });
 
   // form handling
   const handleTagUpdate = (data: any) => {
@@ -103,6 +121,13 @@ function TagEditDialog() {
     }
   };
   const handleError = (data: any) => console.error(data);
+  const handleDelete = () => {
+    if (tag.data) {
+      deleteTagMutation.mutate({ tagId: tag.data.id });
+    } else {
+      throw new Error("Invalid invocation of method handleDelete! Only call when tag.data is available!");
+    }
+  };
 
   return (
     <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
@@ -160,6 +185,18 @@ function TagEditDialog() {
           </Stack>
         </DialogContent>
         <DialogActions>
+          <LoadingButton
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            disabled={!tag.isSuccess}
+            loading={deleteTagMutation.isLoading}
+            loadingPosition="start"
+            onClick={handleDelete}
+            sx={{ flexShrink: 0 }}
+          >
+            Delete Tag
+          </LoadingButton>
           <LoadingButton
             variant="contained"
             color="success"
