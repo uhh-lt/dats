@@ -8,6 +8,7 @@ import TagCreationDialog from "../views/search/Tags/TagCreate/TagCreationDialog"
 import BottomBar from "../components/bar-bottom/BottomBar";
 import TopBar from "../components/bar-top/TopBar";
 import "./Layout.css";
+import FloatingFeedbackButton from "../features/feedback/FloatingFeedbackButton";
 
 export const AppBarContext = React.createContext<React.MutableRefObject<any> | null>(null);
 
@@ -29,6 +30,7 @@ function TwoBarLayout() {
             </Box>
             <BottomBar sx={{ flex: "0 1 0" }} />
           </Box>
+          <FloatingFeedbackButton />
           <MemoDialog />
           <ImportDocumentDialog />
           <SnackbarDialog />

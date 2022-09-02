@@ -14,13 +14,14 @@ class RedisService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         try:
             # setup redis
-            r_host = conf.backend.redis.host
-            r_port = conf.backend.redis.port
+            r_host = conf.redis.host
+            r_port = conf.redis.port
+            r_pass = conf.redis.password
 
             # setup clients
             clients = {}
-            for client, db_idx in conf.backend.redis.clients.items():
-                clients[client.lower()] = redis.Redis(host=r_host, port=r_port, db=db_idx)
+            for client, db_idx in conf.redis.clients.items():
+                clients[client.lower()] = redis.Redis(host=r_host, port=r_port, db=db_idx, password=r_pass)
                 assert clients[client].ping(), \
                     f"Couldn't connect to Redis {str(client)} DB #{db_idx} at {r_host}:{r_port}!"
                 logger.info(f"Successfully connected to Redis {str(client)} DB #{db_idx}")
@@ -29,6 +30,8 @@ class RedisService(metaclass=SingletonMeta):
             msg = f"Cannot connect to Redis DB - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
+
+        return super(RedisService, cls).__new__(cls)
 
     def shutdown(self) -> None:
         logger.info("Shutting down Redis Service!")
@@ -67,7 +70,7 @@ class RedisService(metaclass=SingletonMeta):
 
     def load_feedback(self, key: str) -> Optional[FeedbackRead]:
         client = self._get_client('feedback')
-        fb = await client.get(key.encode('utf-8'))
+        fb = client.get(key.encode('utf-8'))
         if fb is None:
             logger.error(f"Feedback with ID {key} does not exist!")
             return None

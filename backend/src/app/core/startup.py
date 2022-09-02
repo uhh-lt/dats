@@ -41,6 +41,9 @@ def __init_services__(sql_echo: bool = False,
     # import and init ElasticSearch
     from app.core.search.elasticsearch_service import ElasticSearchService
     ElasticSearchService(remove_all_indices=reset_elasticsearch)
+    # import and init RedisService
+    from app.core.db.redis_service import RedisService
+    RedisService()
 
 
 def __create_system_user__() -> None:
