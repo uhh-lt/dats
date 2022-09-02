@@ -78,7 +78,7 @@ function TagCreationDialog() {
     createTagMutation.mutate({
       requestBody: {
         title: data.name,
-        description: "1234",
+        description: "created on the fly",
         project_id: projectId,
       },
     });
@@ -88,11 +88,11 @@ function TagCreationDialog() {
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleTagCreation, handleError)}>
-        <DialogTitle>Neues Label</DialogTitle>
+        <DialogTitle>New tag</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
-            label="Geben Sie einen neuen Labelnamen ein:"
+            label="Please enter a name for the new tag"
             fullWidth
             variant="standard"
             {...register("name", { required: "Tag name is required" })}
