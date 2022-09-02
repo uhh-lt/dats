@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
-import { CodeRead } from "../../../api/openapi";
+import { CodeRead, CodeUpdate } from "../../../api/openapi";
 import CodeHooks from "../../../api/CodeHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
@@ -13,6 +13,7 @@ import { HexColorPicker } from "react-colorful";
 import ColorUtils from "../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 
 interface CodeEditDialogProps {
   codes: CodeRead[];
@@ -103,20 +104,30 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   // form handling
   const handleCodeUpdate = (data: any) => {
     if (code) {
-      updateCodeMutation.mutate({
-        requestBody: {
+      // only allow updating of color for SYSTEM CODES
+      let requestBody: CodeUpdate = {
+        color: data.color,
+      };
+
+      if (code.user_id !== SYSTEM_USER_ID) {
+        requestBody = {
+          ...requestBody,
           name: data.name,
           description: data.description,
-          color: data.color,
           ...(selectedParent !== -1 && { parent_code_id: selectedParent }),
-        },
+        };
+      }
+
+      updateCodeMutation.mutate({
+        requestBody,
         codeId: code.id,
       });
     }
   };
   const handleError = (data: any) => console.error(data);
   const handleCodeDelete = () => {
-    if (code) {
+    // disallow deleting of SYSTEM CODES
+    if (code && code.user_id !== SYSTEM_USER_ID) {
       deleteCodeMutation.mutate({ codeId: code.id });
     } else {
       throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");
@@ -136,6 +147,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               variant="filled"
               value={selectedParent}
               onChange={(e) => setSelectedParent(parseInt(e.target.value))}
+              disabled={!code || code.user_id === SYSTEM_USER_ID}
             >
               <MenuItem key={-1} value={-1}>
                 No parent
@@ -155,6 +167,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               {...register("name", { required: "Code name is required" })}
               error={Boolean(errors.name)}
               helperText={<ErrorMessage errors={errors} name="name" />}
+              disabled={!code || code.user_id === SYSTEM_USER_ID}
             />
             <Stack direction="row">
               <TextField
@@ -186,6 +199,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               {...register("description", { required: "Description is required" })}
               error={Boolean(errors.description)}
               helperText={<ErrorMessage errors={errors} name="description" />}
+              disabled={!code || code.user_id === SYSTEM_USER_ID}
             />
           </Stack>
         </DialogContent>
@@ -194,11 +208,11 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
-            disabled={!code}
             loading={deleteCodeMutation.isLoading}
             loadingPosition="start"
             onClick={handleCodeDelete}
             sx={{ flexShrink: 0 }}
+            disabled={!code || code.user_id === SYSTEM_USER_ID}
           >
             Delete Code
           </LoadingButton>
