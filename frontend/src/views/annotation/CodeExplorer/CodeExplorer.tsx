@@ -12,6 +12,9 @@ import Tree, { Node } from "ts-tree-structure";
 import { AnnoActions } from "../annoSlice";
 import CodeCreationDialog from "./CodeCreationDialog";
 import CodeEditDialog from "./CodeEditDialog";
+import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
+import CodeEditButton from "./CodeEditButton";
+import MemoButton from "../../../features/memo-dialog/MemoButton";
 
 function CodeExplorer({ ...props }) {
   const { projectId } = useParams() as { projectId: string };
@@ -68,10 +71,10 @@ function CodeExplorer({ ...props }) {
   };
 
   return (
-    <Paper square className="MyDragBox" {...props} elevation={1}>
-      <AppBar position="relative" color="secondary" className="MyDragBoxHeader">
+    <Paper square className="myFlexContainer h100" {...props} elevation={1}>
+      <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
         <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
-          <Typography variant="h6" color="inherit" component="div" className="DragHandle">
+          <Typography variant="h6" color="inherit" component="div">
             Code Explorer
           </Typography>
         </Toolbar>
@@ -80,7 +83,7 @@ function CodeExplorer({ ...props }) {
       <Divider />
       {codeTree && (
         <CodeTreeView
-          sx={{ overflowY: "auto" }}
+          className="myFlexFillAllContainer"
           data={codeTree.model}
           multiSelect={false}
           selected={selectedCodeId?.toString() || ""}
@@ -88,6 +91,13 @@ function CodeExplorer({ ...props }) {
           onNodeSelect={handleSelectCode}
           onExpandClick={handleExpandClick}
           onCollapseClick={handleCollapseClick}
+          renderActions={(node) => (
+            <React.Fragment>
+              <CodeToggleVisibilityButton code={node} />
+              <CodeEditButton code={node.code} />
+              <MemoButton codeId={node.code.id} />
+            </React.Fragment>
+          )}
         />
       )}
       {allCodes.data && <CodeEditDialog codes={allCodes.data} />}

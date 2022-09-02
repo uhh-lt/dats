@@ -14,6 +14,13 @@ import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { LogbookActions } from "./logbookSlice";
 import "@toast-ui/editor/dist/toastui-editor.css";
 import LogbookEditor from "./LogbookEditor";
+import { AttachedObjectType } from "../../api/openapi";
+
+export const FILTER_OUT_TYPES = [
+  AttachedObjectType.ANNOTATION_DOCUMENT,
+  AttachedObjectType.PROJECT,
+  AttachedObjectType.SPAN_GROUP,
+];
 
 // todo: implement recent activities timeline
 function Logbook() {
@@ -42,6 +49,7 @@ function Logbook() {
 
   // computed
   // select memos based on search term (if there is no search term, show all user memos)
+  // filter out memos that are not supported yet
   const memos = useMemo(
     () => (searchTerm.trim().length > 0 ? searchMemos : userMemos),
     [searchMemos, searchTerm, userMemos]
@@ -95,7 +103,15 @@ function Logbook() {
           <Box className="h100" sx={{ overflowY: "auto" }}>
             {memos.isLoading && <div>Loading!</div>}
             {memos.isError && <div>Error: {memos.error.message}</div>}
-            {memos.isSuccess && <MemoResults memoIds={memos.data.map((memo) => memo.id)} filter={category} />}
+            {memos.isSuccess && (
+              <MemoResults
+                memoIds={memos.data
+                  .filter((m) => !FILTER_OUT_TYPES.includes(m.attached_object_type))
+                  .map((memo) => memo.id)}
+                filter={category}
+                noResultsText={`No memos match your query "${searchTerm}" :(`}
+              />
+            )}
           </Box>
         </Grid>
         <Grid item md={5} className="h100">

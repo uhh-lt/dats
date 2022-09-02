@@ -1,23 +1,27 @@
 import React, { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { SpanAnnotationReadResolved } from "../../api/openapi";
+import { BBoxAnnotationReadResolvedCode, MemoRead } from "../../api/openapi";
 import MemoHooks from "../../api/MemoHooks";
 import { QueryKey } from "../../api/QueryKey";
 import { MemoForm } from "./MemoForm";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import { MemoContentProps } from "./MemoContentBboxAnnotation";
 
-interface MemoContentSpanAnnotationProps {
-  spanAnnotation: SpanAnnotationReadResolved;
+export interface MemoContentProps {
+  memo: MemoRead | undefined;
+  closeDialog: () => void;
 }
 
-export function MemoContentSpanAnnotation({
-  spanAnnotation,
+interface MemoContentBboxAnnotationProps {
+  bboxAnnotation: BBoxAnnotationReadResolvedCode;
+}
+
+export function MemoContentBboxAnnotation({
+  bboxAnnotation,
   memo,
   closeDialog,
-}: MemoContentSpanAnnotationProps & MemoContentProps) {
+}: MemoContentBboxAnnotationProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
@@ -28,12 +32,11 @@ export function MemoContentSpanAnnotation({
       severity: "error",
     });
   }, []);
-  const createMutation = SpanAnnotationHooks.useCreateMemo({
-    onError,
+  const createMutation = BboxAnnotationHooks.useCreateMemo({
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
-        text: `Created memo for spanAnnotation ${spanAnnotation.id}`,
+        text: `Created memo for bboxAnnotation ${bboxAnnotation.id}`,
         severity: "success",
       });
       closeDialog();
@@ -43,9 +46,9 @@ export function MemoContentSpanAnnotation({
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id]);
       SnackbarAPI.openSnackbar({
-        text: `Updated memo for spanAnnotation ${spanAnnotation.id}`,
+        text: `Updated memo for bboxAnnotation ${bboxAnnotation.id}`,
         severity: "success",
       });
       closeDialog();
@@ -55,10 +58,10 @@ export function MemoContentSpanAnnotation({
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
-        text: `Deleted memo for spanAnnotation ${spanAnnotation.id}`,
+        text: `Deleted memo for bboxAnnotation ${bboxAnnotation.id}`,
         severity: "success",
       });
       closeDialog();
@@ -66,7 +69,7 @@ export function MemoContentSpanAnnotation({
   });
 
   // form handling
-  const handleCreateOrUpdateSpanAnnotationMemo = (data: any) => {
+  const handleCreateOrUpdateBboxAnnotationMemo = (data: any) => {
     if (memo) {
       updateMutation.mutate({
         memoId: memo.id,
@@ -77,30 +80,30 @@ export function MemoContentSpanAnnotation({
       });
     } else {
       createMutation.mutate({
-        spanId: spanAnnotation.id,
+        bboxId: bboxAnnotation.id,
         requestBody: {
           user_id: 1,
-          project_id: spanAnnotation.code.project_id,
+          project_id: bboxAnnotation.code.project_id,
           title: data.title,
           content: data.content,
         },
       });
     }
   };
-  const handleDeleteSpanAnnotationMemo = () => {
+  const handleDeleteBboxAnnotationMemo = () => {
     if (memo) {
       deleteMutation.mutate({ memoId: memo.id });
     } else {
-      throw Error("Invalid invocation of handleDeleteSpanAnnotationMemo. No memo to delete.");
+      throw Error("Invalid invocation of handleDeleteBboxAnnotationMemo. No memo to delete.");
     }
   };
 
   return (
     <MemoForm
-      title={`Memo for spanAnnotation ${spanAnnotation.id}`}
+      title={`Memo for bboxAnnotation ${bboxAnnotation.id}`}
       memo={memo}
-      handleCreateOrUpdateMemo={handleCreateOrUpdateSpanAnnotationMemo}
-      handleDeleteMemo={handleDeleteSpanAnnotationMemo}
+      handleCreateOrUpdateMemo={handleCreateOrUpdateBboxAnnotationMemo}
+      handleDeleteMemo={handleDeleteBboxAnnotationMemo}
       isUpdateLoading={updateMutation.isLoading}
       isCreateLoading={createMutation.isLoading}
       isDeleteLoading={deleteMutation.isLoading}

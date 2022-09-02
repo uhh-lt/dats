@@ -9,10 +9,7 @@ import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import ICodeTree from "./ICodeTree";
-import MemoButton from "../../../features/memo-dialog/MemoButton";
-import CodeEditButton from "./CodeEditButton";
 import SquareIcon from "@mui/icons-material/Square";
-import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 
 type StyledTreeItemProps = TreeItemProps & {
   labelIcon: React.ElementType<SvgIconProps>;
@@ -94,9 +91,16 @@ interface CodeTreeViewProps {
   data: ICodeTree;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
+  renderActions: (node: ICodeTree) => React.ReactNode;
 }
 
-function CodeTreeView({ data, onExpandClick, onCollapseClick, ...props }: CodeTreeViewProps & TreeViewProps) {
+function CodeTreeView({
+  renderActions,
+  data,
+  onExpandClick,
+  onCollapseClick,
+  ...props
+}: CodeTreeViewProps & TreeViewProps) {
   const renderTree = (nodes: ICodeTree[]) => {
     return nodes.map((node) => (
       <StyledTreeItem
@@ -122,13 +126,7 @@ function CodeTreeView({ data, onExpandClick, onCollapseClick, ...props }: CodeTr
           </Box>
         }
         labelIconColor={node.code.color}
-        actions={
-          <React.Fragment>
-            <CodeToggleVisibilityButton code={node} />
-            <CodeEditButton code={node.code} />
-            <MemoButton codeId={node.code.id} />
-          </React.Fragment>
-        }
+        actions={renderActions(node)}
       >
         {Array.isArray(node.children) && node.children.length > 0 && (
           <React.Fragment> {renderTree(node.children)}</React.Fragment>

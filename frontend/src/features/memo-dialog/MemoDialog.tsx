@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus";
 import {
   AttachedObjectType,
+  BBoxAnnotationReadResolvedCode,
   CodeRead,
   DocumentTagRead,
   SourceDocumentRead,
@@ -18,6 +19,8 @@ import { MemoContentCode } from "./MemoContentCode";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation";
 import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
+import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation";
 
 const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   switch (type) {
@@ -29,6 +32,8 @@ const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
       return SdocHooks.useGetMemo;
     case AttachedObjectType.SPAN_ANNOTATION:
       return SpanAnnotationHooks.useGetMemo;
+    case AttachedObjectType.BBOX_ANNOTATION:
+      return BboxAnnotationHooks.useGetMemo;
     default:
       return MemoHooks.useGetMemo;
   }
@@ -80,15 +85,26 @@ export default function MemoDialog() {
       {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && (
         <>
           {attachedType === AttachedObjectType.CODE ? (
-            <MemoContentCode memo={memo.data} code={attachedObject.data as CodeRead} />
+            <MemoContentCode memo={memo.data} code={attachedObject.data as CodeRead} closeDialog={handleClose} />
           ) : attachedType === AttachedObjectType.SOURCE_DOCUMENT ? (
-            <MemoContentSourceDocument memo={memo.data} sdoc={attachedObject.data as SourceDocumentRead} />
+            <MemoContentSourceDocument
+              memo={memo.data}
+              sdoc={attachedObject.data as SourceDocumentRead}
+              closeDialog={handleClose}
+            />
           ) : attachedType === AttachedObjectType.DOCUMENT_TAG ? (
-            <MemoContentTag memo={memo.data} tag={attachedObject.data as DocumentTagRead} />
+            <MemoContentTag memo={memo.data} tag={attachedObject.data as DocumentTagRead} closeDialog={handleClose} />
           ) : attachedType === AttachedObjectType.SPAN_ANNOTATION ? (
             <MemoContentSpanAnnotation
               memo={memo.data}
               spanAnnotation={attachedObject.data as SpanAnnotationReadResolved}
+              closeDialog={handleClose}
+            />
+          ) : attachedType === AttachedObjectType.BBOX_ANNOTATION ? (
+            <MemoContentBboxAnnotation
+              memo={memo.data}
+              bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolvedCode}
+              closeDialog={handleClose}
             />
           ) : (
             <div>This memo type is not supported!</div>

@@ -39,9 +39,10 @@ interface TagMenuProps {
   popoverOrigin: PopoverOrigin | undefined;
   anchorEl: HTMLElement | null;
   setAnchorEl: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
+  forceSdocId?: number;
 }
 
-function TagMenu({ anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
+function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
   // react router
   const { projectId, sdocId } = useParams() as { projectId: string; sdocId: string | undefined };
   const projId = parseInt(projectId);
@@ -49,10 +50,13 @@ function TagMenu({ anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
   // redux
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
 
-  // the document ids we manipulate are either the selected documents, or the currently viewed document
+  // the document ids we manipulate are either the forced sdocId, the selected documents, or the currently viewed document
   const documentIds = useMemo(() => {
+    if (forceSdocId) {
+      return [forceSdocId];
+    }
     return selectedDocumentIds.length > 0 ? selectedDocumentIds : [parseInt(sdocId!)];
-  }, [selectedDocumentIds, sdocId]);
+  }, [forceSdocId, selectedDocumentIds, sdocId]);
 
   // queries
   const allTags = ProjectHooks.useGetAllTags(projId);
@@ -67,7 +71,7 @@ function TagMenu({ anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
         severity: "error",
       });
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.sourceDocumentIds.forEach((sdocId) => {
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
@@ -87,7 +91,7 @@ function TagMenu({ anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
         severity: "error",
       });
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
@@ -107,7 +111,7 @@ function TagMenu({ anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
         severity: "error",
       });
     },
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
@@ -216,7 +220,7 @@ function TagMenu({ anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
       <ListItem disablePadding dense key={"apply"}>
         <ListItemButton onClick={handleApplyTags} dense disabled={updateTagsMutation.isLoading}>
           <Typography align={"center"} sx={{ width: "100%" }}>
-            Anwenden
+            Apply
           </Typography>
         </ListItemButton>
       </ListItem>
@@ -253,7 +257,7 @@ function TagMenu({ anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
             onChange={handleSearchChange}
             variant="standard"
             fullWidth
-            placeholder="Label hinzufügen..."
+            placeholder="Add label..."
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">

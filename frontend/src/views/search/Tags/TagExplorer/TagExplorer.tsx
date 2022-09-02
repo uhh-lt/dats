@@ -1,4 +1,4 @@
-import { Divider, List, ListItem, ListItemIcon, ListItemText, ListProps } from "@mui/material";
+import { Divider, List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListProps } from "@mui/material";
 import React from "react";
 import TagCreationButton from "../TagCreate/TagCreationButton";
 import TagManageButton from "../TagManage/TagManageButton";
@@ -33,18 +33,24 @@ function TagExplorer({
   return (
     <>
       <List {...(props as ListProps)}>
-        <ListItem button onClick={() => handleAllDocumentsClick()}>
-          <ListItemIcon>
-            <StorageIcon />
-          </ListItemIcon>
-          <ListItemText primary="Alle Dokumente" />
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleAllDocumentsClick()}>
+            <ListItemIcon>
+              <StorageIcon />
+            </ListItemIcon>
+            <ListItemText primary="All documents" />
+          </ListItemButton>
         </ListItem>
-        <ListItem button onClick={() => handleNewDocumentsClick()}>
-          <ListItemIcon>
-            <DownloadIcon />
-          </ListItemIcon>
-          <ListItemText primary="Neue Dokumente" />
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleNewDocumentsClick()} disabled>
+            <ListItemIcon>
+              <DownloadIcon />
+            </ListItemIcon>
+            <ListItemText primary="New documents" />
+          </ListItemButton>
         </ListItem>
+
         <Divider />
         {allTags.isLoading && <div>Loading!</div>}
         {allTags.isError && <div>Error: {allTags.error.message}</div>}

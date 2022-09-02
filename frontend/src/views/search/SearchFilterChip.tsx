@@ -1,25 +1,36 @@
-import { Chip, ChipProps } from "@mui/material";
+import { Chip, ChipProps, Tooltip } from "@mui/material";
 import * as React from "react";
 import { SearchFilter, SearchFilterType } from "./SearchFilter";
 import CodeHooks from "../../api/CodeHooks";
 import { SpanEntity } from "../../api/openapi";
 import TagHooks from "../../api/TagHooks";
+import CancelIcon from "@mui/icons-material/Cancel";
 
 interface SearchFilterChipProps {
   filter: SearchFilter;
   handleDelete: (filter: SearchFilter) => void;
 }
 
+const props: ChipProps = {
+  deleteIcon: (
+    <Tooltip title="Remove filter">
+      <CancelIcon />
+    </Tooltip>
+  ),
+};
+
 function SearchFilterChip({ filter, handleDelete }: SearchFilterChipProps) {
   switch (filter.type) {
     case SearchFilterType.CODE:
-      return <CodeFilterChip spanEntity={filter.data as SpanEntity} onDelete={() => handleDelete(filter)} />;
+      return <CodeFilterChip spanEntity={filter.data as SpanEntity} onDelete={() => handleDelete(filter)} {...props} />;
     case SearchFilterType.TAG:
-      return <DocumentTagFilterChip documentTagId={filter.data as number} onDelete={() => handleDelete(filter)} />;
+      return (
+        <DocumentTagFilterChip documentTagId={filter.data as number} onDelete={() => handleDelete(filter)} {...props} />
+      );
     case SearchFilterType.KEYWORD:
-      return <KeywordFilterChip keyword={filter.data as string} onDelete={() => handleDelete(filter)} />;
+      return <KeywordFilterChip keyword={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
     case SearchFilterType.TEXT:
-      return <TextFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} />;
+      return <TextFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
     default:
       return <>ERROR!!</>;
   }

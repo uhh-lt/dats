@@ -16,6 +16,7 @@ import ProjectCreation from "../views/projectsettings/creation/ProjectCreation";
 import ProjectSettings from "../views/projectsettings/ProjectSettings";
 import Search from "../views/search/Search";
 import RequireAuth from "../auth/RequireAuth";
+import User from "../views/User";
 
 const routes: RouteObject[] = [
   {
@@ -42,11 +43,19 @@ const routes: RouteObject[] = [
     children: [
       {
         path: "/projects",
-        element: <Projects />,
+        element: (
+          <RequireAuth>
+            <Projects />
+          </RequireAuth>
+        ),
       },
       {
         path: "/projectsettings",
-        element: <ProjectSettings />,
+        element: (
+          <RequireAuth>
+            <ProjectSettings />
+          </RequireAuth>
+        ),
         children: [
           { index: true, element: <ProjectCreation /> },
           { path: "/projectsettings/:projectId", element: <ProjectUpdate /> },
@@ -59,6 +68,14 @@ const routes: RouteObject[] = [
       {
         path: "/imprint",
         element: <Imprint />,
+      },
+      {
+        path: "/user/:userId",
+        element: (
+          <RequireAuth>
+            <User />
+          </RequireAuth>
+        ),
       },
       { path: "*", element: <NotFound /> },
     ],

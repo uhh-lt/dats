@@ -16,10 +16,15 @@ import { QueryKey } from "./QueryKey";
 
 //tags
 const useGetAllTags = (projectId: number) =>
-  useQuery<DocumentTagRead[], Error>([QueryKey.PROJECT_TAGS, projectId], () =>
-    ProjectService.getProjectTagsProjectProjIdTagGet({
-      projId: projectId,
-    })
+  useQuery<DocumentTagRead[], Error>(
+    [QueryKey.PROJECT_TAGS, projectId],
+    () =>
+      ProjectService.getProjectTagsProjectProjIdTagGet({
+        projId: projectId,
+      }),
+    {
+      select: (tag) => tag.sort((a, b) => a.id - b.id),
+    }
   );
 
 // project
@@ -68,10 +73,15 @@ const useRemoveUser = (options: UseMutationOptions<UserRead, Error, { projId: nu
 
 // codes
 const useGetAllCodes = (projectId: number) =>
-  useQuery<CodeRead[], Error>([QueryKey.PROJECT_CODES, projectId], () =>
-    ProjectService.getProjectCodesProjectProjIdCodeGet({
-      projId: projectId,
-    })
+  useQuery<CodeRead[], Error>(
+    [QueryKey.PROJECT_CODES, projectId],
+    () =>
+      ProjectService.getProjectCodesProjectProjIdCodeGet({
+        projId: projectId,
+      }),
+    {
+      select: (codes) => codes.sort((a, b) => a.id - b.id),
+    }
   );
 
 // memo

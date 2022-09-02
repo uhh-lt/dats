@@ -1,54 +1,67 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { MemoRead, SourceDocumentRead } from "../../api/openapi";
+import { SourceDocumentRead } from "../../api/openapi";
 import SdocHooks from "../../api/SdocHooks";
 import MemoHooks from "../../api/MemoHooks";
 import { QueryKey } from "../../api/QueryKey";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoForm } from "./MemoForm";
+import { MemoContentProps } from "./MemoContentBboxAnnotation";
 
 interface MemoContentSourceDocumentProps {
   sdoc: SourceDocumentRead;
-  memo: MemoRead | undefined;
 }
 
-export function MemoContentSourceDocument({ sdoc, memo }: MemoContentSourceDocumentProps) {
+export function MemoContentSourceDocument({
+  sdoc,
+  memo,
+  closeDialog,
+}: MemoContentSourceDocumentProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
   const queryClient = useQueryClient();
+  const onError = useCallback((error: Error) => {
+    SnackbarAPI.openSnackbar({
+      text: error.message,
+      severity: "error",
+    });
+  }, []);
   const createMutation = SdocHooks.useCreateMemo({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
+    onError,
     onSuccess: () => {
-      queryClient.invalidateQueries([QueryKey.MEMO_SDOC, sdoc.id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
         text: `Created memo for source document ${sdoc.filename}`,
         severity: "success",
       });
+      closeDialog();
     },
   });
   const updateMutation = MemoHooks.useUpdateMemo({
-    onError: (error: Error) => {
+    onError,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SDOC, sdoc.id]);
       SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
+        text: `Updated memo for source document ${sdoc.filename}`,
+        severity: "success",
       });
+      closeDialog();
     },
+  });
+  const deleteMutation = MemoHooks.useDeleteMemo({
+    onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC, sdoc.id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
-        text: `Updated memo for source document ${sdoc.filename}`,
+        text: `Deleted memo for source document ${sdoc.filename}`,
         severity: "success",
       });
+      closeDialog();
     },
   });
 
@@ -74,14 +87,23 @@ export function MemoContentSourceDocument({ sdoc, memo }: MemoContentSourceDocum
       });
     }
   };
+  const handleDeleteSdocMemo = () => {
+    if (memo) {
+      deleteMutation.mutate({ memoId: memo.id });
+    } else {
+      throw Error("Invalid invocation of handleDeleteSdocMemo. No memo to delete.");
+    }
+  };
 
   return (
     <MemoForm
       title={`Memo for Source Document ${sdoc.filename}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
+      handleDeleteMemo={handleDeleteSdocMemo}
       isUpdateLoading={updateMutation.isLoading}
       isCreateLoading={createMutation.isLoading}
+      isDeleteLoading={deleteMutation.isLoading}
     />
   );
 }

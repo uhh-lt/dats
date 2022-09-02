@@ -7,9 +7,11 @@ import { IconButtonProps } from "@mui/material";
 function DeleteButton(props: IconButtonProps) {
   return (
     <Tooltip title="Delete">
-      <IconButton {...props}>
-        <DeleteIcon />
-      </IconButton>
+      <span>
+        <IconButton {...props}>
+          <DeleteIcon />
+        </IconButton>
+      </span>
     </Tooltip>
   );
 }

@@ -239,7 +239,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
         left: rect.left,
         top: rect.top + rect.height,
       };
-      codeSelectorRef.current!.open(position, d.code.id);
+      codeSelectorRef.current!.open(position, d);
       setSelectedBbox(d);
     },
     [codeSelectorRef]
@@ -384,8 +384,8 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
           y_max: y + height,
         },
       });
-      console.log("Add", code);
-      console.log(`drag end: {x: ${x}, y: ${y}, width: ${width}, height: ${height}}`);
+      // console.log("Add", code);
+      // console.log(`drag end: {x: ${x}, y: ${y}, width: ${width}, height: ${height}}`);
     } else {
       console.error("This should never happen! (onCodeSelectorAddCode)");
     }
@@ -404,7 +404,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
           y_max: selectedBbox.y_max,
         },
       });
-      console.log("Edit", code);
+      // console.log("Edit", code);
     } else {
       console.error("This should never happen! (onCodeSelectorEditCode)");
     }
@@ -415,7 +415,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
       deleteMutation.mutate({
         bboxId: selectedBbox.id,
       });
-      console.log("Delete", code);
+      // console.log("Delete", code);
     } else {
       console.error("This should never happen! (onCodeSelectorDeleteCode)");
     }

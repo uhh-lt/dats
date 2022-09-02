@@ -9,11 +9,12 @@ export default function MemoButton({
   tagId,
   memoId,
   spanAnnotationId,
+  bboxId,
   ...props
 }: MemoEvent & IconButtonProps) {
   const handleClickOpen = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
-    MemoAPI.openMemo({ codeId, sdocId, tagId, memoId, spanAnnotationId });
+    MemoAPI.openMemo({ codeId, sdocId, tagId, memoId, spanAnnotationId, bboxId });
   };
 
   return (

@@ -28,6 +28,9 @@ const useUpdateTag = (
   options: UseMutationOptions<DocumentTagRead, Error, { tagId: number; requestBody: DocumentTagUpdate }>
 ) => useMutation(DocumentTagService.updateByIdDoctagTagIdPatch, options);
 
+const useDeleteTag = (options: UseMutationOptions<DocumentTagRead, Error, { tagId: number }>) =>
+  useMutation(DocumentTagService.deleteByIdDoctagTagIdDelete, options);
+
 const useBulkLinkDocumentTags = (
   options: UseMutationOptions<number, Error, { requestBody: SourceDocumentDocumentTagMultiLink }>
 ) => useMutation(DocumentTagService.linkMultipleTagsDoctagBulkLinkPatch, options);
@@ -100,6 +103,7 @@ const TagHooks = {
   useGetTag,
   useCreateTag,
   useUpdateTag,
+  useDeleteTag,
   useBulkUpdateDocumentTags,
   useBulkLinkDocumentTags,
   useBulkUnlinkDocumentTags,

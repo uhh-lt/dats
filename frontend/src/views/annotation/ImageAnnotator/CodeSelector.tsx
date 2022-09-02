@@ -18,6 +18,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import CodeCreationDialog, { CodeCreationDialogHandle } from "./CodeCreationDialog";
 import CodeHooks from "../../../api/CodeHooks";
+import MemoButton from "../../../features/memo-dialog/MemoButton";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi";
 
 interface ICodeFilter extends ICode {
   title: string;
@@ -33,7 +35,7 @@ interface CodeSelectorProps {
 }
 
 export interface CodeSelectorHandle {
-  open: (position: PopoverPosition, codeId?: number | undefined) => void;
+  open: (position: PopoverPosition, bbox?: BBoxAnnotationReadResolvedCode | undefined) => void;
 }
 
 const CodeSelector = forwardRef<CodeSelectorHandle, CodeSelectorProps>(({ onClose, onAdd, onEdit, onDelete }, ref) => {
@@ -47,6 +49,7 @@ const CodeSelector = forwardRef<CodeSelectorHandle, CodeSelectorProps>(({ onClos
   const [showCodeSelection, setShowCodeSelection] = useState(false);
   const [isAutoCompleteOpen, setIsAutoCompleteOpen] = useState(false);
   const [codeToEditId, setCodeToEditId] = useState<number | undefined>(undefined);
+  const [bboxToEdit, setBboxToEdit] = useState<BBoxAnnotationReadResolvedCode | undefined>(undefined);
   const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilter | null>(null);
 
   // global server state (react query)
@@ -70,9 +73,13 @@ const CodeSelector = forwardRef<CodeSelectorHandle, CodeSelectorProps>(({ onClos
   }));
 
   // methods
-  const openCodeSelector = (position: PopoverPosition, codeId: number | undefined = undefined) => {
-    setCodeToEditId(codeId);
-    setShowCodeSelection(codeId === undefined);
+  const openCodeSelector = (
+    position: PopoverPosition,
+    bbox: BBoxAnnotationReadResolvedCode | undefined = undefined
+  ) => {
+    setCodeToEditId(bbox?.code.id);
+    setBboxToEdit(bbox);
+    setShowCodeSelection(bbox === undefined);
     setIsPopoverOpen(true);
     setPosition(position);
   };
@@ -157,13 +164,13 @@ const CodeSelector = forwardRef<CodeSelectorHandle, CodeSelectorProps>(({ onClos
         horizontal: "left",
       }}
     >
-      {!showCodeSelection && codeToEditId ? (
-        <List dense={true}>
+      {!showCodeSelection && codeToEditId && bboxToEdit ? (
+        <List dense>
           {codeToEdit.data && (
             <ListItem key={codeToEdit.data.id}>
               <Box style={{ width: 20, height: 20, backgroundColor: codeToEdit.data.color, marginRight: 8 }} />
               <ListItemText primary={codeToEdit.data.name} />
-              {/*<MemoButton bbox={spanAnnotation.id} />*/}
+              <MemoButton bboxId={bboxToEdit.id} sx={{ ml: 1 }} />
               <Tooltip title="Delete">
                 <IconButton onClick={() => handleDelete()}>
                   <DeleteIcon />

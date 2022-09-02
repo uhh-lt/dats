@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import * as React from "react";
 import { useCallback, useContext, useMemo } from "react";
-import { Box, Divider, Grid, Stack, Toolbar, Typography } from "@mui/material";
+import { Divider, Grid, Stack, Typography } from "@mui/material";
 import DocumentViewer from "./DocumentViewer/DocumentViewer";
 import SearchResults from "./SearchResults/SearchResults";
 import TagExplorer from "./Tags/TagExplorer/TagExplorer";
@@ -23,18 +23,9 @@ import {
 import { SearchActions } from "./searchSlice";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { useQuery } from "@tanstack/react-query";
-import ToggleAllDocumentsButton from "./ToolBar/ToggleAllDocumentsButton";
-import TableNavigation from "./ToolBar/TableNavigation";
-import ToggleSplitViewButton from "./ToolBar/ToggleSplitViewButton";
-import BackButton from "./ToolBar/BackButton";
-import DocumentNavigation from "../../components/DocumentNavigation";
-import ToggleShowEntitiesButton from "./ToolBar/ToggleShowEntitiesButton";
-import DeleteButton from "./ToolBar/DeleteButton";
-import TagMenuButton from "./ToolBar/TagMenuButton";
 import SearchFilterChip from "./SearchFilterChip";
-import MemoButton from "../../features/memo-dialog/MemoButton";
-import ToggleShowTagsButton from "./ToolBar/ToggleShowTagsButton";
-import ToggleListViewButton from "./ToolBar/ToggleListViewButton";
+import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
+import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -54,11 +45,8 @@ function Search() {
   const appBarContainerRef = useContext(AppBarContext);
 
   // redux (global client state)
-  const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
-  const isListView = useAppSelector((state) => state.search.isListView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
-  const isShowTags = useAppSelector((state) => state.search.isShowTags);
   const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
 
@@ -77,13 +65,8 @@ function Search() {
     });
   });
 
-  // state (local client state)
-  const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
   // computed (local client state)
   const searchResultIds = useMemo(() => searchResults.data || [], [searchResults.data]);
-  const numSearchResults = useMemo(() => (searchResults.data ? searchResults.data.length : 0), [searchResults]);
   const viewDocument = Boolean(sdocId);
   const selectedTag = useMemo(() => {
     if (filters.length === 1 && isNumber(filters[0].data)) {
@@ -91,26 +74,6 @@ function Search() {
     }
     return undefined;
   }, [filters]);
-
-  // handle split view
-  const toggleSplitView = () => {
-    dispatch(SearchActions.toggleSplitView());
-  };
-
-  // handle list
-  const toggleListView = () => {
-    dispatch(SearchActions.toggleListView());
-  };
-
-  // handle show entities
-  const toggleShowEntities = () => {
-    dispatch(SearchActions.toggleShowEntities());
-  };
-
-  // handle show tags
-  const toggleShowTags = () => {
-    dispatch(SearchActions.toggleShowTags());
-  };
 
   // handle navigation
   const navigateIfNecessary = useCallback(
@@ -121,9 +84,6 @@ function Search() {
     },
     [location.pathname, navigate]
   );
-  const handleBackClick = () => {
-    navigate(location.pathname.split("/doc")[0]);
-  };
   const handleResultClick = (sdoc: SourceDocumentRead) => {
     // remove doc/:docId from url (if it exists) then add new doc id
     let url = removeTrailingSlash(location.pathname.split("/doc")[0]);
@@ -144,15 +104,6 @@ function Search() {
     dispatch(SearchActions.clearSelectedDocuments());
     dispatch(SearchActions.clearFilters());
     navigateIfNecessary(`/project/${projectId}/search/`);
-  };
-
-  // handle selecting
-  const handleToggleAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      dispatch(SearchActions.setSelectedDocuments(searchResultIds));
-      return;
-    }
-    dispatch(SearchActions.clearSelectedDocuments());
   };
 
   // handle filtering
@@ -224,92 +175,41 @@ function Search() {
             handleCodeClick={handleAddCodeFilter}
           />
         </Grid>
-        <Grid item md={isSplitView ? 5 : 10} className="h100 myFlexContainer">
+        <Grid
+          item
+          md={isSplitView ? 5 : 10}
+          display={isSplitView || !viewDocument ? "flex" : "none"}
+          className="h100 myFlexContainer"
+        >
           <Stack direction="row" style={{ flexWrap: "wrap", gap: "8px" }}>
             {filters.map((filter) => (
               <SearchFilterChip key={filter.id} filter={filter} handleDelete={handleRemoveFilter} />
             ))}
           </Stack>
-
-          <Toolbar disableGutters variant="dense" sx={{ minHeight: "52px", p: "0px 4px" }}>
-            {viewDocument && !isSplitView ? (
-              <>
-                <BackButton onClick={() => handleBackClick()} />
-                <MemoButton sdocId={parseInt(sdocId!)} />
-              </>
-            ) : (
-              <ToggleAllDocumentsButton
-                numSelectedDocuments={numSelectedDocuments}
-                numTotalDocuments={numSearchResults}
-                handleChange={handleToggleAllClick}
-              />
+          <SearchResultsToolbar searchResultIds={searchResultIds} />
+          <React.Fragment>
+            {searchResults.isLoading && <div>Loading!</div>}
+            {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
+            {searchResults.isSuccess && (
+              <SearchResults documentIds={searchResults.data} handleResultClick={handleResultClick} />
             )}
-
-            {(viewDocument || numSelectedDocuments > 0) && (
-              <>
-                <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
-                <DeleteButton />
-              </>
-            )}
-
-            {viewDocument && (
-              <ToggleShowEntitiesButton showEntities={isShowEntities} handleClick={() => toggleShowEntities()} />
-            )}
-
-            <Box sx={{ flexGrow: 1 }} />
-            {viewDocument && !isSplitView ? (
-              <DocumentNavigation idsToNavigate={searchResultIds} searchPrefix="../search/doc/" showText={true} />
-            ) : (
-              <>
-                <TableNavigation
-                  page={page}
-                  setPage={setPage}
-                  rowsPerPage={rowsPerPage}
-                  setRowsPerPage={setRowsPerPage}
-                  numDocuments={numSearchResults}
-                />
-
-                <ToggleShowTagsButton showTags={isShowTags} handleClick={() => toggleShowTags()} />
-                <ToggleListViewButton showList={isListView} onClick={() => toggleListView()} />
-              </>
-            )}
-            <ToggleSplitViewButton isSplitView={isSplitView} onClick={() => toggleSplitView()} />
-          </Toolbar>
-
-          {viewDocument && !isSplitView ? (
-            <DocumentViewer
-              sdocId={sdocId ? parseInt(sdocId) : undefined}
-              handleTagClick={handleAddTagFilter}
-              showEntities={isShowEntities}
-              className="myFlexFillAllContainer"
-              isIdleContent={<Typography>Select a document to read it :)</Typography>}
-            />
-          ) : (
-            <React.Fragment>
-              {searchResults.isLoading && <div>Loading!</div>}
-              {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
-              {searchResults.isSuccess && (
-                <SearchResults
-                  page={page}
-                  rowsPerPage={rowsPerPage}
-                  documentIds={searchResults.data}
-                  handleResultClick={handleResultClick}
-                />
-              )}
-            </React.Fragment>
-          )}
+          </React.Fragment>
         </Grid>
-        {isSplitView && (
-          <Grid item md={5} className="h100 myFlexContainer">
-            <DocumentViewer
-              sdocId={sdocId ? parseInt(sdocId) : undefined}
-              handleTagClick={handleAddTagFilter}
-              showEntities={isShowEntities}
-              className="myFlexFillAllContainer"
-              isIdleContent={<Typography>Select a document to read it :)</Typography>}
-            />
-          </Grid>
-        )}
+        <Grid
+          item
+          md={isSplitView ? 5 : 10}
+          display={isSplitView || viewDocument ? "flex" : "none"}
+          className="h100 myFlexContainer"
+        >
+          {sdocId && <DocumentViewerToolbar sdocId={parseInt(sdocId)} searchResultIds={searchResultIds} />}
+          <DocumentViewer
+            sdocId={sdocId ? parseInt(sdocId) : undefined}
+            handleTagClick={handleAddTagFilter}
+            showEntities={isShowEntities}
+            className="myFlexFillAllContainer"
+            isIdleContent={<Typography>Click a document to read it :)</Typography>}
+          />
+        </Grid>
       </Grid>
     </>
   );

@@ -7,6 +7,7 @@ export interface MemoEvent {
   tagId?: number;
   memoId?: number;
   spanAnnotationId?: number;
+  bboxId?: number;
 }
 
 function openMemo(props: MemoEvent) {
@@ -22,6 +23,11 @@ function openMemo(props: MemoEvent) {
     eventBus.dispatch("open-memo", {
       memoType: AttachedObjectType.SPAN_ANNOTATION,
       data: { id: props.spanAnnotationId },
+    });
+  } else if (props.bboxId) {
+    eventBus.dispatch("open-memo", {
+      memoType: AttachedObjectType.BBOX_ANNOTATION,
+      data: { id: props.bboxId },
     });
   } else {
     throw new Error("You have to provide exactly one MemoEvent argument!");

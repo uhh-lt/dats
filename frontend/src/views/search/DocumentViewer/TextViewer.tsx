@@ -37,7 +37,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
               backgroundColor: spanAnnotation.code.color,
             }}
           >
-            [{spanAnnotation.code.name} {spanAnnotation.code.id}]{" "}
+            [{spanAnnotation.code.name}] {/*[{spanAnnotation.code.name} {spanAnnotation.code.id}]{" "}*/}
             {sdoc.content.substring(spanAnnotation.begin, spanAnnotation.end)}
           </span>
         );
@@ -51,7 +51,9 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
       lastEnd = spanAnnotation.end;
     });
     if (lastEnd < sdoc.content.length) {
-      result.push(<React.Fragment>{sdoc.content.substring(lastEnd, sdoc.content.length)}</React.Fragment>);
+      result.push(
+        <React.Fragment key={`post-post`}>{sdoc.content.substring(lastEnd, sdoc.content.length)}</React.Fragment>
+      );
     }
     return result;
   }, [annotations.data, sdoc.content]);

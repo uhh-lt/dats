@@ -4,16 +4,28 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { MemoRead } from "../../api/openapi";
 import { LoadingButton } from "@mui/lab";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SaveIcon from "@mui/icons-material/Save";
 
 interface MemoFormProps {
   title: string;
   memo: MemoRead | undefined;
   handleCreateOrUpdateMemo: (data: any) => void;
+  handleDeleteMemo: () => void;
   isUpdateLoading: boolean;
   isCreateLoading: boolean;
+  isDeleteLoading: boolean;
 }
 
-export function MemoForm({ title, memo, handleCreateOrUpdateMemo, isCreateLoading, isUpdateLoading }: MemoFormProps) {
+export function MemoForm({
+  title,
+  memo,
+  handleCreateOrUpdateMemo,
+  handleDeleteMemo,
+  isCreateLoading,
+  isUpdateLoading,
+  isDeleteLoading,
+}: MemoFormProps) {
   // use react hook form
   const {
     register,
@@ -90,20 +102,35 @@ export function MemoForm({ title, memo, handleCreateOrUpdateMemo, isCreateLoadin
         </DialogContent>
         <DialogActions>
           {memo ? (
-            <LoadingButton
-              variant="contained"
-              color="success"
-              fullWidth
-              type="submit"
-              loading={isUpdateLoading}
-              loadingPosition="start"
-            >
-              Update memo
-            </LoadingButton>
+            <>
+              <LoadingButton
+                variant="contained"
+                color="error"
+                startIcon={<DeleteIcon />}
+                loading={isDeleteLoading}
+                loadingPosition="start"
+                onClick={handleDeleteMemo}
+                sx={{ flexShrink: 0 }}
+              >
+                Delete Memo
+              </LoadingButton>
+              <LoadingButton
+                variant="contained"
+                color="success"
+                startIcon={<SaveIcon />}
+                fullWidth
+                type="submit"
+                loading={isUpdateLoading}
+                loadingPosition="start"
+              >
+                Update memo
+              </LoadingButton>
+            </>
           ) : (
             <LoadingButton
               variant="contained"
               color="success"
+              startIcon={<SaveIcon />}
               fullWidth
               type="submit"
               loading={isCreateLoading}

@@ -15,15 +15,15 @@ import SearchResultRow from "./SearchResultRow";
 import SearchResultCard from "./SearchResultCard";
 
 interface SearchResultsNewProps {
-  page: number;
-  rowsPerPage: number;
   documentIds: number[];
   handleResultClick: (sdoc: SourceDocumentRead) => void;
 }
 
-export default function SearchResults({ page, rowsPerPage, documentIds, handleResultClick }: SearchResultsNewProps) {
+export default function SearchResults({ documentIds, handleResultClick }: SearchResultsNewProps) {
   // redux (global client state)
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
+  const page = useAppSelector((state) => state.search.page);
+  const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
   const isListView = useAppSelector((state) => state.search.isListView);
   const dispatch = useAppDispatch();
 
@@ -61,7 +61,7 @@ export default function SearchResults({ page, rowsPerPage, documentIds, handleRe
   return (
     <>
       {documentIds.length === 0 ? (
-        <Typography>Keine Suchergebnisse für diese Anfrage...</Typography>
+        <Typography>No search results for this query...</Typography>
       ) : (
         <>
           {isListView ? (

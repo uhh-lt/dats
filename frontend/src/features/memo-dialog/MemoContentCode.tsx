@@ -1,19 +1,19 @@
 import React, { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { CodeRead, MemoRead } from "../../api/openapi";
+import { CodeRead } from "../../api/openapi";
 import CodeHooks from "../../api/CodeHooks";
 import MemoHooks from "../../api/MemoHooks";
 import { QueryKey } from "../../api/QueryKey";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoForm } from "./MemoForm";
+import { MemoContentProps } from "./MemoContentBboxAnnotation";
 
 interface MemoContentCodeProps {
   code: CodeRead;
-  memo: MemoRead | undefined;
 }
 
-export function MemoContentCode({ code, memo }: MemoContentCodeProps) {
+export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
@@ -25,26 +25,39 @@ export function MemoContentCode({ code, memo }: MemoContentCodeProps) {
     });
   }, []);
   const createMutation = CodeHooks.useCreateMemo({
-    onError: onError,
+    onError,
     onSuccess: () => {
-      queryClient.invalidateQueries([QueryKey.MEMO_CODE, code.id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
         text: `Created memo for code ${code.name}`,
         severity: "success",
       });
+      closeDialog();
     },
   });
   const updateMutation = MemoHooks.useUpdateMemo({
-    onError: onError,
+    onError,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_CODE, code.id]);
+      SnackbarAPI.openSnackbar({
+        text: `Updated memo for code ${code.name}`,
+        severity: "success",
+      });
+      closeDialog();
+    },
+  });
+  const deleteMutation = MemoHooks.useDeleteMemo({
+    onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       queryClient.invalidateQueries([QueryKey.MEMO_CODE, code.id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
-        text: `Updated memo for code ${code.name}`,
+        text: `Deleted memo for code ${code.id}`,
         severity: "success",
       });
+      closeDialog();
     },
   });
 
@@ -70,14 +83,23 @@ export function MemoContentCode({ code, memo }: MemoContentCodeProps) {
       });
     }
   };
+  const handleDeleteCodeMemo = () => {
+    if (memo) {
+      deleteMutation.mutate({ memoId: memo.id });
+    } else {
+      throw Error("Invalid invocation of handleDeleteCodeMemo. No memo to delete.");
+    }
+  };
 
   return (
     <MemoForm
       title={`Memo for code ${code.name}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
+      handleDeleteMemo={handleDeleteCodeMemo}
       isUpdateLoading={updateMutation.isLoading}
       isCreateLoading={createMutation.isLoading}
+      isDeleteLoading={deleteMutation.isLoading}
     />
   );
 }

@@ -6,19 +6,22 @@ import {
   IconButton,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  ListSubheader,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import InfoIcon from "@mui/icons-material/Info";
 import GavelIcon from "@mui/icons-material/Gavel";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { Link as RouterLink } from "react-router-dom";
-import ImportDocumentListButton from "../../features/document-import/ImportDocumentListButton";
+import { useAuth } from "../../auth/AuthProvider";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
 export default function TemporaryDrawer() {
+  const { isLoggedIn } = useAuth();
+
   const [state, setState] = React.useState({
     top: false,
     left: false,
@@ -44,23 +47,41 @@ export default function TemporaryDrawer() {
       onClick={toggleDrawer(anchor, false)}
       onKeyDown={toggleDrawer(anchor, false)}
     >
+      {/*<List>*/}
+      {/*  <ListSubheader component="div">Corpora</ListSubheader>*/}
+      {/*  <ImportDocumentListButton />*/}
+      {/*</List>*/}
       <List>
-        <ListSubheader component="div">Corpora</ListSubheader>
-        <ImportDocumentListButton />
-      </List>
-      <Divider />
-      <List>
-        <ListItem button component={RouterLink} to="/about">
-          <ListItemIcon>
-            <InfoIcon />
-          </ListItemIcon>
-          <ListItemText primary="About" />
+        {isLoggedIn && (
+          <>
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/projects">
+                <ListItemIcon>
+                  <FactCheckIcon />
+                </ListItemIcon>
+                <ListItemText primary="Projects" />
+              </ListItemButton>
+            </ListItem>
+            <Divider />
+          </>
+        )}
+
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/about">
+            <ListItemIcon>
+              <InfoIcon />
+            </ListItemIcon>
+            <ListItemText primary="About" />
+          </ListItemButton>
         </ListItem>
-        <ListItem button component={RouterLink} to="/imprint">
-          <ListItemIcon>
-            <GavelIcon />
-          </ListItemIcon>
-          <ListItemText primary="Imprint" />
+
+        <ListItem disablePadding>
+          <ListItemButton component={RouterLink} to="/imprint">
+            <ListItemIcon>
+              <GavelIcon />
+            </ListItemIcon>
+            <ListItemText primary="Imprint" />
+          </ListItemButton>
         </ListItem>
       </List>
     </Box>

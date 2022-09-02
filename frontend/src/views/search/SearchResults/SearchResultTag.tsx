@@ -1,13 +1,21 @@
+import TagHooks from "../../../api/TagHooks";
+
 interface SearchResultTagProps {
-  label: string;
-  color: string;
+  tagId: number;
 }
 
-function SearchResultTag({ label, color }: SearchResultTagProps) {
+function SearchResultTag({ tagId }: SearchResultTagProps) {
+  // global server state (react query)
+  const tag = TagHooks.useGetTag(tagId);
+
   return (
-    <span className={"myTag"} style={{ color: color, borderColor: color }}>
-      {label}
-    </span>
+    <>
+      {tag.isSuccess ? (
+        <span className={"myTag"} style={{ color: tag.data.description, borderColor: tag.data.description }}>
+          {tag.data.title}
+        </span>
+      ) : null}
+    </>
   );
 }
 

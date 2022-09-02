@@ -2,11 +2,11 @@ import React from "react";
 import { Box, Button, Card, CardActions, CardContent, TextField, Typography } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link as RouterLink, Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../auth/AuthProvider";
 import { ApiError } from "../api/openapi";
-import { ErrorMessage } from '@hookform/error-message';
+import { ErrorMessage } from "@hookform/error-message";
 
 function Login() {
   const {
@@ -59,7 +59,14 @@ function Login() {
         D-WISE Tool Suite
       </Typography>
       {isLoggedIn ? (
-        <>Hi! You are already logged in :)</>
+        <>
+          Hi! You are already logged in :)
+          <Box display="flex" mt={5}>
+            <Button component={RouterLink} to={"/projects"} variant="contained" color="primary" sx={{ mx: "auto" }}>
+              Go to projects
+            </Button>
+          </Box>
+        </>
       ) : (
         <Card sx={{ width: 450 }} raised component={"form"} onSubmit={handleSubmit(handleLogin, handleError)}>
           <CardContent>
@@ -74,7 +81,7 @@ function Login() {
                 placeholder="User"
                 {...register("user", { required: "User is required" })}
                 error={Boolean(errors.user)}
-                helperText={<ErrorMessage errors={errors} name='user' />}
+                helperText={<ErrorMessage errors={errors} name="user" />}
               />
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
@@ -86,7 +93,7 @@ function Login() {
                 type="password"
                 {...register("password", { required: "Password is required" })}
                 error={Boolean(errors.password)}
-                helperText={<ErrorMessage errors={errors} name='password' />}
+                helperText={<ErrorMessage errors={errors} name="password" />}
               />
             </Box>
           </CardContent>

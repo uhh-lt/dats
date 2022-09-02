@@ -24,9 +24,13 @@ function TopBar(props: AppBarProps) {
             <Stack direction="row" sx={{ alignItems: "center", height: "100%" }}>
               <TemporaryDrawer />
               <Typography variant="h6" noWrap sx={{ display: { xs: "none", sm: "block" } }}>
-                <Link component={RouterLink} to="/projects" underline="none" color="inherit">
-                  D-WISE
-                </Link>
+                {isLoggedIn ? (
+                  <Link component={RouterLink} to="/projects" underline="none" color="inherit">
+                    DWTS
+                  </Link>
+                ) : (
+                  "DWTS"
+                )}
               </Typography>
             </Stack>
           </Grid>

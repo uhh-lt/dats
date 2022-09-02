@@ -9,6 +9,7 @@ import {
   ListItemButton,
   ListItemText,
   Toolbar,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -129,9 +130,13 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
               disablePadding
               key={document.id}
               secondaryAction={
-                <IconButton onClick={() => handleClickDeleteFile(document.id)}>
-                  <DeleteIcon />
-                </IconButton>
+                <Tooltip title={"Delete document"}>
+                  <span>
+                    <IconButton onClick={() => handleClickDeleteFile(document.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               }
             >
               <ListItemButton>
