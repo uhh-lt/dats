@@ -41,6 +41,11 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
     },
   });
 
+  // reset mutation state when sdocId changes
+  useEffect(() => {
+    createAdocMutation.reset();
+  }, [sdocId]);
+
   // create annotation document for user if no adoc exists
   useEffect(() => {
     if (annotationDocuments.isSuccess && user.isSuccess) {
@@ -57,17 +62,16 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
       if (createAdocMutation.isLoading) return;
 
       // we are not creating an annotation document, but we need to create one
-      console.log("GOGOGO");
       createAdocMutation.mutate({
         requestBody: {
           user_id: user.data.id,
           source_document_id: sdocId!, // we ḱnow that sdocId is defined, because annotationDocuments.data exists
         },
       });
-    } else {
-      createAdocMutation.reset();
     }
   }, [user, annotationDocuments, createAdocMutation, sdocId]);
+
+  console.log("HIHIHI", user.isSuccess);
 
   // only return an annotation document if it matches with the source document
   return annotationDocument?.source_document_id === sdocId ? annotationDocument : undefined;

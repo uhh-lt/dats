@@ -7,9 +7,9 @@ import SdocHooks from "../../api/SdocHooks";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useSelectOrCreateCurrentUsersAnnotationDocument } from "./useSelectOrCreateCurrentUsersAnnotationDocument";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
-import { DocType } from "../../api/openapi";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
 import TextAnnotator from "./TextAnnotator/TextAnnotator";
+import { DocType } from "../../api/openapi";
 
 function Annotation() {
   // global client state (URL)
