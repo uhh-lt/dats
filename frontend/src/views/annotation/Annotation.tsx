@@ -1,5 +1,5 @@
 import { Grid, Portal, Typography } from "@mui/material";
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import DocumentExplorer from "../../features/document-explorer/DocumentExplorer";
 import { useParams } from "react-router-dom";
 import CodeExplorer from "./CodeExplorer/CodeExplorer";
@@ -8,10 +8,8 @@ import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useSelectOrCreateCurrentUsersAnnotationDocument } from "./useSelectOrCreateCurrentUsersAnnotationDocument";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
 import { DocType } from "../../api/openapi";
-import { Annotator } from "./Annotator/Annotator";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { AnnoActions } from "./annoSlice";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
+import TextAnnotator from "./TextAnnotator/TextAnnotator";
 
 function Annotation() {
   // global client state (URL)
@@ -21,21 +19,9 @@ function Annotation() {
   // global client state (context)
   const appBarContainerRef = useContext(AppBarContext);
 
-  // global client state (redux)
-  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
-  const dispatch = useAppDispatch();
-
   // global server state (react query)
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
   const annotationDocument = useSelectOrCreateCurrentUsersAnnotationDocument(sourceDocumentId);
-
-  // effects
-  // set visible adocs to current users adoc (so that your own annotations are visible by default)
-  useEffect(() => {
-    if (annotationDocument) {
-      dispatch(AnnoActions.setVisibleAdocIds([annotationDocument.id]));
-    }
-  }, [dispatch, annotationDocument]);
 
   return (
     <>
@@ -52,23 +38,20 @@ function Annotation() {
           <AnnotationDocumentSelector sdocId={sourceDocumentId} />
           {sdocId ? (
             <>
-              {sourceDocument.isLoading && <div>Loading SourceDocument!</div>}
-              {sourceDocument.isError && <div>Error: {sourceDocument.error.message}</div>}
-              {!annotationDocument && <div>Loading or creating your AnnotationDocument!</div>}
-              {sourceDocument.isSuccess && annotationDocument && (
+              {sourceDocument.isSuccess && annotationDocument ? (
                 <>
                   {sourceDocument.data.doctype === DocType.IMAGE ? (
-                    <ImageAnnotator
-                      sdoc={sourceDocument.data}
-                      adoc={annotationDocument}
-                      visibleAdocIds={visibleAdocIds}
-                    />
+                    <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
                   ) : sourceDocument.data.doctype === DocType.TEXT ? (
-                    <Annotator sdoc={sourceDocument.data} adoc={annotationDocument} visibleAdocIds={visibleAdocIds} />
+                    <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
                   ) : (
                     <div>ERROR! This DocType is not (yet) supported!</div>
                   )}
                 </>
+              ) : sourceDocument.isError ? (
+                <div>Error: {sourceDocument.error.message}</div>
+              ) : (
+                <div>Loading...</div>
               )}
             </>
           ) : (

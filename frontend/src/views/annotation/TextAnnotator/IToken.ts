@@ -4,4 +4,5 @@ export interface IToken {
   beginChar: number;
   endChar: number;
   whitespace: boolean;
+  index: number;
 }

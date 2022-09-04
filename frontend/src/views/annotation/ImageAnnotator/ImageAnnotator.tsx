@@ -3,12 +3,13 @@ import {
   AnnotationDocumentService,
   BBoxAnnotationReadResolvedCode,
   SourceDocumentRead,
+  SpanAnnotationReadResolved,
 } from "../../../api/openapi";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
-import CodeSelector, { CodeSelectorHandle } from "./CodeSelector";
-import { ICode } from "../Annotator/ICode";
+import CodeContextMenu, { CodeSelectorHandle } from "../ContextMenu/CodeContextMenu";
+import { ICode } from "../TextAnnotator/ICode";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
@@ -21,7 +22,6 @@ import { flatten } from "lodash";
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentRead;
   adoc: AnnotationDocumentRead | null;
-  visibleAdocIds: number[];
 }
 
 // todo: refactor this when applying react bulletproof architecture
@@ -30,7 +30,7 @@ const keyFactory = {
   visible: (ids: number[]) => [...keyFactory.all, ids] as const,
 };
 
-function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
+function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
   // references to svg elements
   const svgRef = useRef<SVGSVGElement>(null);
   const gZoomRef = useRef<SVGGElement>(null);
@@ -40,6 +40,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
   const codeSelectorRef = useRef<CodeSelectorHandle>(null);
 
   // global client state (redux)
+  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
@@ -239,7 +240,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
         left: rect.left,
         top: rect.top + rect.height,
       };
-      codeSelectorRef.current!.open(position, d);
+      codeSelectorRef.current!.open(position, [d]);
       setSelectedBbox(d);
     },
     [codeSelectorRef]
@@ -391,7 +392,10 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
     }
   };
 
-  const onCodeSelectorEditCode = (code: ICode) => {
+  const onCodeSelectorEditCode = (
+    annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
+    code: ICode
+  ) => {
     if (selectedBbox) {
       updateMutation.mutate({
         bboxId: selectedBbox.id,
@@ -410,7 +414,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
     }
   };
 
-  const onCodeSelectorDeleteCode = (code: ICode) => {
+  const onCodeSelectorDeleteCode = () => {
     if (selectedBbox) {
       deleteMutation.mutate({
         bboxId: selectedBbox.id,
@@ -449,7 +453,7 @@ function ImageAnnotator({ sdoc, adoc, visibleAdocIds }: ImageAnnotatorProps) {
         </Typography>
       </Toolbar>
 
-      <CodeSelector
+      <CodeContextMenu
         ref={codeSelectorRef}
         onAdd={onCodeSelectorAddCode}
         onEdit={onCodeSelectorEditCode}

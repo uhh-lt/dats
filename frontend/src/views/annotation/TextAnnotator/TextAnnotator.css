@@ -1,7 +1,6 @@
 .mark {
     position:absolute;
     width:100%;
-    /* height: 100%; */
     top:0;
     left:0;
     z-index: -1;
@@ -19,11 +18,6 @@
 
 .tok {
     position: relative;
-}
-
-.para {
-    /* content-visibility: auto; */
-    /* contain-intrinsic-height: 50px; */
 }
 
 .spangroup {
@@ -47,7 +41,6 @@
 }
 
 .spangroup > span {
-    /* border-radius: 4px; */
     margin-right: 4px;
 }
 

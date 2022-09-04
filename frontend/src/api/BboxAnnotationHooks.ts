@@ -53,7 +53,7 @@ const useGetMemo = (bboxId: number | undefined) =>
 const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { bboxId: number; requestBody: MemoCreate }>) =>
   useMutation(BboxAnnotationService.addMemoBboxBboxIdMemoPut, options);
 
-const SpanAnnotationHooks = {
+const BboxAnnotationHooks = {
   useCreateAnnotation,
   useGetAnnotation,
   useUpdate,
@@ -63,4 +63,4 @@ const SpanAnnotationHooks = {
   useCreateMemo,
 };
 
-export default SpanAnnotationHooks;
+export default BboxAnnotationHooks;

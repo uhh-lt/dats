@@ -14,6 +14,7 @@ import {
   SourceDocumentTokens,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
 // sdoc
 const fetchSdoc = async (sdocId: number) => {
@@ -33,6 +34,18 @@ const fetchSdoc = async (sdocId: number) => {
   return sdoc;
 };
 
+const useGetDocumentNoContent = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentRead, Error>(
+    [QueryKey.SDOC_NO_CONTENT, sdocId],
+    () =>
+      SourceDocumentService.getByIdSdocSdocIdGet({
+        sdocId: sdocId!,
+      }),
+    {
+      enabled: !!sdocId,
+    }
+  );
+
 const useGetDocument = (sdocId: number | undefined) =>
   useQuery<SourceDocumentRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
     enabled: !!sdocId,
@@ -47,6 +60,9 @@ const useGetDocumentByAdocId = (adocId: number | undefined) =>
     },
     {
       enabled: !!adocId,
+      onSuccess: (sdoc) => {
+        queryClient.setQueryData([QueryKey.SDOC, sdoc.id], sdoc);
+      },
     }
   );
 
@@ -88,6 +104,11 @@ const useGetAllDocumentTags = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
+      onSuccess: (data) => {
+        data.forEach((tag) => {
+          queryClient.setQueryData([QueryKey.TAG, tag.id], tag);
+        });
+      },
     }
   );
 
@@ -120,6 +141,11 @@ const useGetAllAnnotationDocuments = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
+      onSuccess: (data) => {
+        data.forEach((adoc) => {
+          queryClient.setQueryData([QueryKey.ADOC, adoc.id], adoc);
+        });
+      },
     }
   );
 
@@ -180,6 +206,7 @@ const SdocHooks = {
   // sdoc
   useGetDocument,
   useGetDocumentByAdocId,
+  useGetDocumentNoContent,
   useGetDocumentTokens,
   useGetDocumentKeywords,
   useDeleteDocument,

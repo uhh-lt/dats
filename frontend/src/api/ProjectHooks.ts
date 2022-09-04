@@ -13,6 +13,7 @@ import {
   UserRead,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
 //tags
 const useGetAllTags = (projectId: number) =>
@@ -81,6 +82,11 @@ const useGetAllCodes = (projectId: number) =>
       }),
     {
       select: (codes) => codes.sort((a, b) => a.id - b.id),
+      onSuccess: (codes) => {
+        codes.forEach((code) => {
+          queryClient.setQueryData([QueryKey.CODE, code.id], code);
+        });
+      },
     }
   );
 
