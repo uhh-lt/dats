@@ -45,16 +45,27 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
   useEffect(() => {
     if (annotationDocuments.isSuccess && user.isSuccess) {
       const adoc = annotationDocuments.data.find((ad) => ad.user_id === user.data.id);
-      if (!adoc) {
-        createAdocMutation.mutate({
-          requestBody: {
-            user_id: user.data.id,
-            source_document_id: sdocId!, // we ḱnow that sdocId is defined, because annotationDocuments.data exists
-          },
-        });
-      } else {
+      if (adoc) {
         setAnnotationDocument(adoc);
+        return;
       }
+
+      // we just created an annotation document, no need to create another one
+      if (createAdocMutation.isSuccess) return;
+
+      // we are creating an annotation document, no need to create another one
+      if (createAdocMutation.isLoading) return;
+
+      // we are not creating an annotation document, but we need to create one
+      console.log("GOGOGO");
+      createAdocMutation.mutate({
+        requestBody: {
+          user_id: user.data.id,
+          source_document_id: sdocId!, // we ḱnow that sdocId is defined, because annotationDocuments.data exists
+        },
+      });
+    } else {
+      createAdocMutation.reset();
     }
   }, [user, annotationDocuments, createAdocMutation, sdocId]);
 

@@ -35,6 +35,7 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
   useEffect(() => {
     if (!user.isSuccess) return;
 
+    console.log(user);
     dispatch(AnnoActions.setVisibleUserIds([user.data.id]));
   }, [user]);
 
