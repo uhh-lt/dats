@@ -28,6 +28,7 @@ export const QueryKey = {
   MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
 
   SDOC: "sdoc",
+  SDOC_NO_CONTENT: "sdocNoContent",
   SDOC_BY_ADOC: "sdocByAdoc",
   SDOC_TAGS: "sdocTags",
   SDOC_ADOCS: "sdocAdocs",

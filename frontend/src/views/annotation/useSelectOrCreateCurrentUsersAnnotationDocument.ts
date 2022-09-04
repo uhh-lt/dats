@@ -33,31 +33,43 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_ADOCS, sdocId]);
+      queryClient.invalidateQueries([QueryKey.SDOC_ADOCS, data.source_document_id]);
       SnackbarAPI.openSnackbar({
         text: `Added annotation document for ${user.data!.first_name}`,
         severity: "success",
       });
-      setAnnotationDocument(data);
     },
   });
 
   // create annotation document for user if no adoc exists
   useEffect(() => {
-    if (annotationDocuments.data && user.data) {
+    if (annotationDocuments.isSuccess && user.isSuccess) {
       const adoc = annotationDocuments.data.find((ad) => ad.user_id === user.data.id);
-      if (!adoc) {
-        createAdocMutation.mutate({
-          requestBody: {
-            user_id: user.data.id,
-            source_document_id: sdocId!, // we ḱnow that sdocId is defined, because annotationDocuments.data exists
-          },
-        });
-      } else {
-        setAnnotationDocument(adoc);
-      }
-    }
-  }, [user.data, annotationDocuments.data, createAdocMutation, sdocId]);
 
-  return annotationDocument;
+      if (adoc) {
+        if (adoc !== annotationDocument) {
+          setAnnotationDocument(adoc);
+          createAdocMutation.reset();
+        }
+        return;
+      }
+
+      // we just created an annotation document, no need to create another one
+      if (createAdocMutation.isSuccess) return;
+
+      // we are creating an annotation document, no need to create another one
+      if (createAdocMutation.isLoading) return;
+
+      // we are not creating an annotation document, but we need to create one
+      createAdocMutation.mutate({
+        requestBody: {
+          user_id: user.data.id,
+          source_document_id: sdocId!, // we ḱnow that sdocId is defined, because annotationDocuments.data exists
+        },
+      });
+    }
+  }, [annotationDocument, user, annotationDocuments, createAdocMutation, sdocId]);
+
+  // only return an annotation document if it matches with the source document
+  return annotationDocument?.source_document_id === sdocId ? annotationDocument : undefined;
 }

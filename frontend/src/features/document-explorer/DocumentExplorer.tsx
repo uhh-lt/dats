@@ -23,14 +23,14 @@ import { SearchService } from "../../api/openapi";
 import { parseInt } from "lodash";
 import MemoButton from "../memo-dialog/MemoButton";
 import DocumentNavigation from "../../components/DocumentNavigation";
-import { AnnoActions, selectSelectedDocumentTagId } from "../../views/annotation/annoSlice";
+import { AnnoActions } from "../../views/annotation/annoSlice";
 
 function DocumentExplorer({ ...props }) {
   // router
   const { projectId, sdocId } = useParams() as { projectId: string; sdocId: string | undefined };
 
   // global client state (redux)
-  const selectedDocumentTag = useAppSelector(selectSelectedDocumentTagId);
+  const selectedDocumentTag = useAppSelector((state) => state.annotations.selectedDocumentTagId);
   const dispatch = useAppDispatch();
 
   // server state (react query)
@@ -127,7 +127,7 @@ function DocumentExplorer({ ...props }) {
 }
 
 function SourceDocumentTitle({ sdocId }: { sdocId: number }) {
-  const sdoc = SdocHooks.useGetDocument(sdocId);
+  const sdoc = SdocHooks.useGetDocumentNoContent(sdocId);
 
   if (sdoc.isSuccess) return <>{sdoc.data.filename}</>;
   if (sdoc.isError) return <>Error: {sdoc.error.message}</>;

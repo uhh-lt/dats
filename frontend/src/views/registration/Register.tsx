@@ -19,6 +19,7 @@ import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
 import UserHooks from "../../api/UserHooks";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 
 function Register() {
   let navigate = useNavigate();
@@ -171,6 +172,7 @@ function Register() {
               disabled={registerUserMutation.isSuccess}
               loading={registerUserMutation.isLoading}
               loadingPosition="start"
+              startIcon={<AppRegistrationIcon />}
             >
               Register
             </LoadingButton>
