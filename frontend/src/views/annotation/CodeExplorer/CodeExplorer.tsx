@@ -15,8 +15,10 @@ import CodeEditDialog from "./CodeEditDialog";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeEditButton from "./CodeEditButton";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
+import { useAuth } from "../../../auth/AuthProvider";
 
 function CodeExplorer({ ...props }) {
+  const { user } = useAuth();
   const { projectId } = useParams() as { projectId: string };
   const projId = parseInt(projectId);
 
@@ -79,28 +81,36 @@ function CodeExplorer({ ...props }) {
           </Typography>
         </Toolbar>
       </AppBar>
-      {allCodes.data && <CodeCreationDialog codes={allCodes.data} projectId={projId} userId={1} />}
-      <Divider />
-      {codeTree && (
-        <CodeTreeView
-          className="myFlexFillAllContainer"
-          data={codeTree.model}
-          multiSelect={false}
-          selected={selectedCodeId?.toString() || ""}
-          expanded={expandedCodeIds}
-          onNodeSelect={handleSelectCode}
-          onExpandClick={handleExpandClick}
-          onCollapseClick={handleCollapseClick}
-          renderActions={(node) => (
-            <React.Fragment>
-              <CodeToggleVisibilityButton code={node} />
-              <CodeEditButton code={node.code} />
-              <MemoButton codeId={node.code.id} />
-            </React.Fragment>
-          )}
-        />
+      {user.isSuccess && allCodes.isSuccess && codeTree ? (
+        <>
+          <CodeCreationDialog codes={allCodes.data} projectId={projId} userId={user.data.id} />
+          <Divider />
+          <CodeTreeView
+            className="myFlexFillAllContainer"
+            data={codeTree.model}
+            multiSelect={false}
+            selected={selectedCodeId?.toString() || ""}
+            expanded={expandedCodeIds}
+            onNodeSelect={handleSelectCode}
+            onExpandClick={handleExpandClick}
+            onCollapseClick={handleCollapseClick}
+            renderActions={(node) => (
+              <React.Fragment>
+                <CodeToggleVisibilityButton code={node} />
+                <CodeEditButton code={node.code} />
+                <MemoButton codeId={node.code.id} />
+              </React.Fragment>
+            )}
+          />
+          <CodeEditDialog codes={allCodes.data} />
+        </>
+      ) : user.isError ? (
+        <>{user.error.message}</>
+      ) : allCodes.isError ? (
+        <>{allCodes.error.message}</>
+      ) : (
+        "Loading..."
       )}
-      {allCodes.data && <CodeEditDialog codes={allCodes.data} />}
     </Paper>
   );
 }
