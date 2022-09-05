@@ -57,7 +57,7 @@ function Projects() {
           {projects.data.map((project) => (
             <Grid item key={project.id}>
               <Card sx={{ width: 420 }}>
-                <CardActionArea component={Link} to={`/project/${project.id}/annotation`}>
+                <CardActionArea component={Link} to={`/project/${project.id}/search`}>
                   <CardContent sx={{ padding: "0px !important" }}>
                     <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={200}>
                       {project.description}
