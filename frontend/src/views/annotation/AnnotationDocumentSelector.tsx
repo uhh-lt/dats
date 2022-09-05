@@ -1,10 +1,12 @@
 import SdocHooks from "../../api/SdocHooks";
-import { FormControl, MenuItem, Select, SelectChangeEvent, Toolbar } from "@mui/material";
+import { AppBar, FormControl, MenuItem, Select, SelectChangeEvent, Stack, Toolbar } from "@mui/material";
 import UserHooks from "../../api/UserHooks";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { AnnoActions } from "./annoSlice";
 import { useEffect } from "react";
 import { useAuth } from "../../auth/AuthProvider";
+import Typography from "@mui/material/Typography";
+import * as React from "react";
 
 interface AnnotationDocumentSelectorProps {
   sdocId: number | undefined;
@@ -55,18 +57,32 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
 
   // render
   return (
-    <Toolbar variant="dense">
-      <FormControl size="small" fullWidth>
-        <Select multiple value={visibleUserIds || []} onChange={handleChange} disabled={!annotationDocuments.isSuccess}>
-          {annotationDocuments.isSuccess &&
-            annotationDocuments.data.map((adoc) => (
-              <MenuItem key={adoc.user_id} value={adoc.user_id}>
-                <UserNameText userId={adoc.user_id} />
-              </MenuItem>
-            ))}
-        </Select>
-      </FormControl>
-    </Toolbar>
+    <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+      <Toolbar variant="dense">
+        <FormControl size="small" fullWidth>
+          <Stack direction="row" sx={{ width: "100%", alignItems: "center" }}>
+            <Typography variant="h6" color="inherit" component="div" className="overflow-ellipsis" flexShrink={0}>
+              Visible annotations:
+            </Typography>
+            <Select
+              sx={{ ml: 1, backgroundColor: "white" }}
+              multiple
+              fullWidth
+              value={visibleUserIds || []}
+              onChange={handleChange}
+              disabled={!annotationDocuments.isSuccess}
+            >
+              {annotationDocuments.isSuccess &&
+                annotationDocuments.data.map((adoc) => (
+                  <MenuItem key={adoc.user_id} value={adoc.user_id}>
+                    <UserNameText userId={adoc.user_id} />
+                  </MenuItem>
+                ))}
+            </Select>
+          </Stack>
+        </FormControl>
+      </Toolbar>
+    </AppBar>
   );
 }
 
