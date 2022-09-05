@@ -482,7 +482,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
           </g>
           <g>
             {data.map((bbox) => (
-              <SVGBBoxText key={bbox.id} bbox={bbox} />
+              <SVGBBoxText key={bbox.id} bbox={bbox} onContextMenu={handleRightClick} />
             ))}
           </g>
         </g>

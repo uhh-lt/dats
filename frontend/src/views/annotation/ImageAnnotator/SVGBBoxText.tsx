@@ -4,9 +4,10 @@ import CodeHooks from "../../../api/CodeHooks";
 
 interface SVGBBoxTextProps {
   bbox: BBoxAnnotationReadResolvedCode;
+  onContextMenu: (e: React.MouseEvent<SVGTextElement, MouseEvent>, bbox: BBoxAnnotationReadResolvedCode) => void;
 }
 
-function SVGBBoxText({ bbox }: SVGBBoxTextProps) {
+function SVGBBoxText({ bbox, onContextMenu }: SVGBBoxTextProps) {
   const code = CodeHooks.useGetCode(bbox.code.id);
 
   return (
@@ -22,6 +23,7 @@ function SVGBBoxText({ bbox }: SVGBBoxTextProps) {
           stroke={"black"}
           strokeWidth={0.75}
           fontSize={"21px"}
+          onContextMenu={(e) => onContextMenu(e, bbox)}
         >
           {code.data.name}
         </text>
