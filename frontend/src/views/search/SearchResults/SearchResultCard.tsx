@@ -6,6 +6,8 @@ import {
   CardHeader,
   CardMedia,
   Stack,
+  styled,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { SearchResultItem } from "./SearchResultItem";
@@ -19,6 +21,15 @@ import SearchResultTag from "./SearchResultTag";
 import { DocType } from "../../../api/openapi";
 import Checkbox from "@mui/material/Checkbox";
 import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
+
+const StyledCardHeader = styled(CardHeader)(() => ({
+  color: "inherit",
+  "& .MuiCardHeader-content": {
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+}));
 
 function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCheckboxChange }: SearchResultItem) {
   // router
@@ -47,21 +58,24 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
       raised={isSelected || (parseInt(urlSdocId || "") === sdocId && selectedDocumentIds.length === 0)}
     >
       <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data)}>
-        <CardHeader
-          title={title}
-          action={
-            <Checkbox
-              color="primary"
-              checked={isSelected}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(event) => handleOnCheckboxChange(event, sdocId)}
-              inputProps={{
-                "aria-labelledby": labelId,
-              }}
-              disabled={!sdoc.isSuccess}
-            />
-          }
-        />
+        <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>
+          <StyledCardHeader
+            title={title}
+            action={
+              <Checkbox
+                color="primary"
+                checked={isSelected}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(event) => handleOnCheckboxChange(event, sdocId)}
+                inputProps={{
+                  "aria-labelledby": labelId,
+                }}
+                sx={{ flexShrink: 0 }}
+                disabled={!sdoc.isSuccess}
+              />
+            }
+          />
+        </Tooltip>
         <CardContent sx={{ pt: 0 }}>
           {sdoc.isLoading && (
             <Typography sx={{ mb: 1.5 }} variant="body2">

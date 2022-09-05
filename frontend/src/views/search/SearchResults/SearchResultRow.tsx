@@ -1,7 +1,7 @@
 import TableRow from "@mui/material/TableRow";
 import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
-import { Stack } from "@mui/material";
+import { Stack, Tooltip } from "@mui/material";
 import { useParams } from "react-router-dom";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
 import * as React from "react";
@@ -52,21 +52,23 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
           disabled={!sdoc.isSuccess}
         />
       </TableCell>
-      <TableCell
-        component="th"
-        id={labelId}
-        scope="row"
-        padding="none"
-        style={{
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          width: "80px",
-        }}
-      >
-        {sdoc.isLoading && <>Loading</>}
-        {sdoc.isError && <>Error: </>}
-        {sdoc.isSuccess && <>{sdoc.data.filename}</>}
-      </TableCell>
+      <Tooltip title={sdoc.data?.filename || "Please wait..."} placement="top-start" enterDelay={500} followCursor>
+        <TableCell
+          component="th"
+          id={labelId}
+          scope="row"
+          padding="none"
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            width: "80px",
+          }}
+        >
+          {sdoc.isLoading && <>Loading</>}
+          {sdoc.isError && <>Error: </>}
+          {sdoc.isSuccess && <>{sdoc.data.filename}</>}
+        </TableCell>
+      </Tooltip>
       <TableCell className={"myTableCell"}>
         <Stack direction={"row"} sx={{ alignItems: "center" }}>
           {tags.isLoading && <>...</>}
