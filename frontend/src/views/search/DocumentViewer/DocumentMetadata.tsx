@@ -2,7 +2,7 @@ import SdocHooks from "../../../api/SdocHooks";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { SourceDocumentMetadataRead } from "../../../api/openapi";
 import { Box, Grid, IconButtonProps, Stack, TextField } from "@mui/material";
-import { AccountCircle, Add } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import MetadataHooks from "../../../api/MetadataHooks";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useForm } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 
 interface AddDocumentMetadataButtonProps {
   sdocId: number;
@@ -169,9 +170,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
     <>
       <Grid item md={2}>
         <Stack direction="row" sx={{ alignItems: "center" }}>
-          <IconButton size="small">
-            <AccountCircle />
-          </IconButton>
+          <InfoOutlinedIcon fontSize="medium" sx={{ mr: 1 }} />
           <TextField
             {...register("key", { required: "Key is required" })}
             error={Boolean(errors.key)}
