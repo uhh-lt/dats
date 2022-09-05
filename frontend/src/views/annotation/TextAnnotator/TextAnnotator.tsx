@@ -1,23 +1,20 @@
 import {
   AnnotationDocumentRead,
-  AnnotationDocumentService,
   BBoxAnnotationReadResolvedCode,
   SourceDocumentRead,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
-import SdocHooks from "../../../api/SdocHooks";
-import React, { MouseEvent, useMemo, useRef } from "react";
-import { IToken } from "./IToken";
-import Token from "./Token";
-import "./TextAnnotator.css";
+import React, { MouseEvent, useRef } from "react";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { selectionIsEmpty } from "./utils";
 import CodeContextMenu, { CodeSelectorHandle } from "../ContextMenu/CodeContextMenu";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 import { ICode } from "./ICode";
+import useComputeTokenData from "./useComputeTokenData";
+import TextAnnotatorRenderer from "./TextAnnotatorRenderer";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentRead;
@@ -38,24 +35,10 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
 
-  // global server state (react query)
-  const tokens = SdocHooks.useGetDocumentTokens(sdoc.id);
-  const annotations = useQuery<
-    SpanAnnotationReadResolved[],
-    Error,
-    SpanAnnotationReadResolved[],
-    ReturnType<typeof keyFactory["visible"]>
-  >(keyFactory.visible(visibleAdocIds), async ({ queryKey }) => {
-    const ids = queryKey[1];
-    const queries = ids.map(
-      (adocId) =>
-        AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
-          adocId: adocId,
-          resolve: true,
-        }) as Promise<SpanAnnotationReadResolved[]>
-    );
-    const annotations = await Promise.all(queries);
-    return annotations.flat();
+  // computed / custom hooks
+  const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
+    sdocId: sdoc.id,
+    annotationDocumentIds: visibleAdocIds,
   });
 
   // mutations for create, update, delete
@@ -209,56 +192,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     },
   });
 
-  // computed
-  // todo: maybe implement with selector?
-  const tokenData: IToken[] | undefined = useMemo(() => {
-    if (!tokens.data) return undefined;
-    if (!tokens.data.token_character_offsets) return undefined;
-
-    const offsets = tokens.data.token_character_offsets;
-    const texts = tokens.data.tokens;
-    console.time("tokenData");
-    const result = texts.map((text, index) => ({
-      beginChar: offsets[index][0],
-      endChar: offsets[index][1],
-      index,
-      text,
-      whitespace: offsets.length > index + 1 && offsets[index + 1][0] - offsets[index][1] > 0,
-      newLine: text.split("\n").length - 1,
-    }));
-    console.timeEnd("tokenData");
-    return result;
-  }, [tokens.data]);
-
-  // todo: maybe implement with selector?
-  // this map stores annotationId -> SpanAnnotationReadResolved
-  const annotationMap = useMemo(() => {
-    if (!annotations.data) return undefined;
-
-    console.time("annotationMap");
-    const result = new Map<number, SpanAnnotationReadResolved>();
-    annotations.data.forEach((a) => result.set(a.id, a));
-    console.timeEnd("annotationMap");
-    return result;
-  }, [annotations.data]);
-
-  // this map stores tokenId -> spanAnnotationId[]
-  const annotationsPerToken = useMemo(() => {
-    if (!annotations.data) return undefined;
-
-    console.time("annotationsPerToken");
-    const result = new Map<number, number[]>();
-    annotations.data.forEach((annotation) => {
-      for (let i = annotation.begin_token; i <= annotation.end_token - 1; i++) {
-        const tokenAnnotations = result.get(i) || [];
-        tokenAnnotations.push(annotation.id);
-        result.set(i, tokenAnnotations);
-      }
-    });
-    console.timeEnd("annotationsPerToken");
-    return result;
-  }, [annotations.data]);
-
   // handle ui events
   const handleContextMenu = (event: React.MouseEvent) => {
     if (!annotationsPerToken) return;
@@ -358,29 +291,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     });
   };
 
-  const renderedTokens = useMemo(() => {
-    if (!annotationsPerToken || !tokenData || !annotationMap) {
-      return <div>Loading...</div>;
-    }
-
-    console.time("renderTokens");
-    const result = (
-      <>
-        {tokenData.map((token) => (
-          <Token
-            key={`${sdoc.id}-${token.index}`}
-            token={token}
-            spanAnnotations={(annotationsPerToken.get(token.index) || []).map(
-              (annotationId) => annotationMap.get(annotationId)!
-            )}
-          />
-        ))}
-      </>
-    );
-    console.timeEnd("renderTokens");
-    return result;
-  }, [sdoc.id, annotationsPerToken, tokenData, annotationMap]);
-
   return (
     <div
       className="myFlexFillAllContainer"
@@ -393,7 +303,12 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         onEdit={handleCodeSelectorEditCode}
         onDelete={handleCodeSelectorDeleteAnnotation}
       />
-      {renderedTokens}
+      <TextAnnotatorRenderer
+        sdocId={sdoc.id}
+        tokenData={tokenData}
+        annotationsPerToken={annotationsPerToken}
+        annotationMap={annotationMap}
+      />
     </div>
   );
 }
