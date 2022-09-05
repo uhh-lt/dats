@@ -56,7 +56,7 @@ function DocumentExplorer({ ...props }) {
   };
 
   return (
-    <Paper square className="myFlexContainer h100" {...props}>
+    <Paper square className="myFlexContainer" {...props}>
       <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
         <Toolbar variant="dense">
           <Stack direction="row" sx={{ width: "100%", justifyContent: "space-between", alignItems: "center" }}>

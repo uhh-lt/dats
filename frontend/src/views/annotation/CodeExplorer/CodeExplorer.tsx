@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect, useMemo } from "react";
 import Typography from "@mui/material/Typography";
-import { AppBar, Divider, Paper, Toolbar } from "@mui/material";
+import { AppBar, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
 import { useParams } from "react-router-dom";
 import CodeTreeView from "./CodeTreeView";
 import ICodeTree from "./ICodeTree";
@@ -17,7 +17,11 @@ import CodeEditButton from "./CodeEditButton";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
 import { useAuth } from "../../../auth/AuthProvider";
 
-function CodeExplorer({ ...props }) {
+interface CodeExplorerProps {
+  showToolbar?: boolean;
+}
+
+function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps) {
   const { user } = useAuth();
   const { projectId } = useParams() as { projectId: string };
   const projId = parseInt(projectId);
@@ -72,15 +76,8 @@ function CodeExplorer({ ...props }) {
     // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
   };
 
-  return (
-    <Paper square className="myFlexContainer h100" {...props} elevation={1}>
-      <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
-        <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
-          <Typography variant="h6" color="inherit" component="div">
-            Code Explorer
-          </Typography>
-        </Toolbar>
-      </AppBar>
+  const content = (
+    <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
         <>
           <CodeCreationDialog codes={allCodes.data} projectId={projId} userId={user.data.id} />
@@ -111,7 +108,26 @@ function CodeExplorer({ ...props }) {
       ) : (
         "Loading..."
       )}
-    </Paper>
+    </>
+  );
+
+  return (
+    <>
+      {showToolbar ? (
+        <Paper square className="myFlexContainer" {...props} elevation={1}>
+          <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+            <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
+              <Typography variant="h6" color="inherit" component="div">
+                Code Explorer
+              </Typography>
+            </Toolbar>
+          </AppBar>
+          {content}
+        </Paper>
+      ) : (
+        <>{content}</>
+      )}
+    </>
   );
 }
 

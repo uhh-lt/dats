@@ -1,4 +1,4 @@
-import { Grid, Portal, Typography } from "@mui/material";
+import { AppBar, Button, ButtonGroup, Grid, Paper, Portal, Toolbar, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import DocumentExplorer from "../../features/document-explorer/DocumentExplorer";
 import { useParams } from "react-router-dom";
@@ -10,6 +10,7 @@ import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
 import TextAnnotator from "./TextAnnotator/TextAnnotator";
 import { DocType } from "../../api/openapi";
+import MemoExplorer from "./MemoExplorer/MemoExplorer";
 
 function Annotation() {
   // global client state (URL)
@@ -23,6 +24,12 @@ function Annotation() {
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
   const annotationDocument = useSelectOrCreateCurrentUsersAnnotationDocument(sourceDocumentId);
 
+  // ui event handler
+  const [showCodeExplorer, setShowCodeExplorer] = React.useState(true);
+  const toggleShowCodeExplorer = () => {
+    setShowCodeExplorer(!showCodeExplorer);
+  };
+
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
@@ -32,7 +39,7 @@ function Annotation() {
       </Portal>
       <Grid container columnSpacing={2} className="h100">
         <Grid item md={3} className="h100">
-          <DocumentExplorer sx={{ overflow: "auto" }} />
+          <DocumentExplorer sx={{ overflow: "auto", height: "100%" }} />
         </Grid>
         <Grid item md={6} className="h100 myFlexContainer">
           <AnnotationDocumentSelector sdocId={sourceDocumentId} />
@@ -59,7 +66,32 @@ function Annotation() {
           )}
         </Grid>
         <Grid item md={3} className="h100">
-          <CodeExplorer />
+          {/*<CodeExplorer showToolbar sx={{ height: "100%" }} />*/}
+          {/*<MemoExplorer showToolbar sx={{ height: "100%" }} sdocId={1} />*/}
+
+          <Paper square className="myFlexContainer h100" elevation={1}>
+            <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+              <Toolbar variant="dense">
+                <ButtonGroup>
+                  <Button
+                    onClick={() => toggleShowCodeExplorer()}
+                    variant={showCodeExplorer ? "contained" : "outlined"}
+                    color="success"
+                  >
+                    Code Explorer
+                  </Button>
+                  <Button
+                    onClick={() => toggleShowCodeExplorer()}
+                    variant={!showCodeExplorer ? "contained" : "outlined"}
+                    color="success"
+                  >
+                    Memo Explorer
+                  </Button>
+                </ButtonGroup>
+              </Toolbar>
+            </AppBar>
+            {showCodeExplorer ? <CodeExplorer /> : <MemoExplorer sdocId={sourceDocumentId} />}
+          </Paper>
         </Grid>
       </Grid>
     </>
