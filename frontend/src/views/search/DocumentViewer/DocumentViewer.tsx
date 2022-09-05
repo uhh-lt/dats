@@ -73,7 +73,7 @@ function DocumentViewer({
             ))}
         </Stack>
 
-        {sdoc.isSuccess && (
+        {sdoc.isSuccess && selectedAdoc && (
           <>
             {sdoc.data.doctype === DocType.TEXT && (
               <>

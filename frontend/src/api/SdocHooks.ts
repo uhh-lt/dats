@@ -33,6 +33,18 @@ const fetchSdoc = async (sdocId: number) => {
   return sdoc;
 };
 
+const useGetDocumentNoContent = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentRead, Error>(
+    [QueryKey.SDOC_NO_CONTENT, sdocId],
+    () =>
+      SourceDocumentService.getByIdSdocSdocIdGet({
+        sdocId: sdocId!,
+      }),
+    {
+      enabled: !!sdocId,
+    }
+  );
+
 const useGetDocument = (sdocId: number | undefined) =>
   useQuery<SourceDocumentRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
     enabled: !!sdocId,
@@ -111,8 +123,8 @@ const useDeleteDocumentTag = (
 ) => useMutation(SourceDocumentService.unlinkTagSdocSdocIdTagTagIdDelete, options);
 
 // adoc
-const useGetAllAnnotationDocuments = (sdocId: number | undefined) =>
-  useQuery<AnnotationDocumentRead[], Error>(
+const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
+  return useQuery<AnnotationDocumentRead[], Error>(
     [QueryKey.SDOC_ADOCS, sdocId],
     () =>
       SourceDocumentService.getAllAdocsSdocSdocIdAdocGet({
@@ -122,6 +134,7 @@ const useGetAllAnnotationDocuments = (sdocId: number | undefined) =>
       enabled: !!sdocId,
     }
   );
+};
 
 const useGetAnnotationDocumentByUserBatch = (sdocIds: number[], userId: number) =>
   useQuery([QueryKey.SDOC_ADOCS, sdocIds], async () => {
@@ -180,6 +193,7 @@ const SdocHooks = {
   // sdoc
   useGetDocument,
   useGetDocumentByAdocId,
+  useGetDocumentNoContent,
   useGetDocumentTokens,
   useGetDocumentKeywords,
   useDeleteDocument,

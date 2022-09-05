@@ -23,7 +23,10 @@ const useGetAllTags = (projectId: number) =>
         projId: projectId,
       }),
     {
-      select: (tag) => tag.sort((a, b) => a.id - b.id),
+      select: (tag) => {
+        const arrayForSort = [...tag];
+        return arrayForSort.sort((a, b) => a.id - b.id);
+      },
     }
   );
 
@@ -80,7 +83,10 @@ const useGetAllCodes = (projectId: number) =>
         projId: projectId,
       }),
     {
-      select: (codes) => codes.sort((a, b) => a.id - b.id),
+      select: (codes) => {
+        const arrayForSort = [...codes];
+        return arrayForSort.sort((a, b) => a.id - b.id);
+      },
     }
   );
 
