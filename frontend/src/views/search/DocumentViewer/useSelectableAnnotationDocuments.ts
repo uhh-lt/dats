@@ -23,5 +23,9 @@ export function useSelectableAnnotationDocuments(sdocId: number | undefined) {
     setSelectedAdoc(adoc);
   }, []);
 
-  return { annotationDocuments, selectedAdoc, handleSelectAnnotationDocument };
+  return {
+    annotationDocuments,
+    selectedAdoc: selectedAdoc?.source_document_id === sdocId ? selectedAdoc : null,
+    handleSelectAnnotationDocument,
+  };
 }
