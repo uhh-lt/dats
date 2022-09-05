@@ -9,19 +9,17 @@ from app.core.data.dto.dto_base import UpdateDTOBase
 # Properties shared across all DTOs
 class DocumentTagBaseDTO(BaseModel):
     title: str = Field(description='Title of the DocumentTag')
-    description: str = Field(description='Description of the DocumentTag')
+    description: Optional[str] = Field(description='Description of the DocumentTag', default=None)
 
 
 # Properties for creation
 class DocumentTagCreate(DocumentTagBaseDTO):
-    description: Optional[str] = Field(description='Description of the DocumentTag', default=None)
     project_id: int = Field(description='Project the DocumentTag belongs to')
 
 
 # Properties for updating
 class DocumentTagUpdate(DocumentTagBaseDTO, UpdateDTOBase):
     title: Optional[str] = Field(description='Title of the DocumentTag', default=None)
-    description: Optional[str] = Field(description='Description of the DocumentTag', default=None)
 
 
 # Properties for reading (as in ORM)
