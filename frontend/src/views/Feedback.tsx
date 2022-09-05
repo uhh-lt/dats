@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, CardHeader, Container, Stack, Typography } from "@mui/material";
 import React from "react";
 import FeedbackHooks from "../api/FeedbackHooks";
-import UserHooks from "../api/UserHooks";
+import UserName from "../components/UserName";
 
 function Feedback() {
   const feedback = FeedbackHooks.useGetAllFeedback();
@@ -42,21 +42,3 @@ function Feedback() {
 }
 
 export default Feedback;
-
-function UserName({ userId }: { userId: number }) {
-  const user = UserHooks.useGetUser(userId);
-
-  if (user.isSuccess) {
-    return (
-      <>
-        {user.data.first_name} {user.data.last_name}
-      </>
-    );
-  }
-
-  if (user.isError) {
-    return <>Error: {user.error.message}</>;
-  }
-
-  return <>Loading...</>;
-}

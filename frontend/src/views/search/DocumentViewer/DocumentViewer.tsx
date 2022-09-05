@@ -10,6 +10,7 @@ import DocumentMetadata from "./DocumentMetadata";
 import TextKeywords from "./TextKeywords";
 import ImageViewer from "./ImageViewer";
 import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
+import UserName from "../../../components/UserName";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;
@@ -58,7 +59,8 @@ function DocumentViewer({
             ))}
         </Stack>
         <DocumentMetadata sdocId={sdocId} />
-        <Stack direction={"row"}>
+        <Stack direction={"row"} alignItems="center">
+          <b>Annotations:</b>
           {annotationDocuments.isLoading && <span>Loading tags...</span>}
           {annotationDocuments.isError && <span>{annotationDocuments.error.message}</span>}
           {annotationDocuments.isSuccess &&
@@ -68,7 +70,7 @@ function DocumentViewer({
                 onClick={() => handleSelectAnnotationDocument(adoc)}
                 sx={{ color: selectedAdoc?.id === adoc.id ? "red" : "black" }}
               >
-                Annotations from User {adoc.user_id}
+                <UserName userId={adoc.user_id} />
               </Button>
             ))}
         </Stack>

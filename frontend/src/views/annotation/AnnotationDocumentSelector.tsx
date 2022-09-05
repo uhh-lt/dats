@@ -1,12 +1,12 @@
 import SdocHooks from "../../api/SdocHooks";
 import { AppBar, FormControl, MenuItem, Select, SelectChangeEvent, Stack, Toolbar } from "@mui/material";
-import UserHooks from "../../api/UserHooks";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { AnnoActions } from "./annoSlice";
+import * as React from "react";
 import { useEffect } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import Typography from "@mui/material/Typography";
-import * as React from "react";
+import UserName from "../../components/UserName";
 
 interface AnnotationDocumentSelectorProps {
   sdocId: number | undefined;
@@ -75,7 +75,7 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
               {annotationDocuments.isSuccess &&
                 annotationDocuments.data.map((adoc) => (
                   <MenuItem key={adoc.user_id} value={adoc.user_id}>
-                    <UserNameText userId={adoc.user_id} />
+                    <UserName userId={adoc.user_id} />
                   </MenuItem>
                 ))}
             </Select>
@@ -83,20 +83,5 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
         </FormControl>
       </Toolbar>
     </AppBar>
-  );
-}
-
-function UserNameText({ userId }: { userId: number }) {
-  const user = UserHooks.useGetUser(userId);
-  return (
-    <>
-      {user.isLoading && <>Loading...</>}
-      {user.isError && <>Error: {user.error.message}</>}
-      {user.isSuccess && (
-        <>
-          {user.data.first_name} {user.data.last_name}
-        </>
-      )}
-    </>
   );
 }
