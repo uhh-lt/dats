@@ -36,7 +36,7 @@ export default function AttachedObjectLink({ attachedObjectType, attachedObject 
       ) : attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
         <BBoxAnnotationLink bboxAnnotation={attachedObject as BBoxAnnotationReadResolvedCode} />
       ) : (
-        <div>Not supported!</div>
+        <>Not supported!</>
       )}
     </>
   );
