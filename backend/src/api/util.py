@@ -41,7 +41,6 @@ def get_object_memos(db_obj: Union[SourceDocumentORM,
             return None
         elif len(memo_as_in_db_dtos) > 1:
             logger.error(f'More than one Memo for the specified User!')
-            return None
 
     object_types = {
         SourceDocumentORM: AttachedObjectType.source_document,
@@ -56,8 +55,6 @@ def get_object_memos(db_obj: Union[SourceDocumentORM,
                       attached_object_id=db_obj.id,
                       attached_object_type=object_types[type(db_obj)])
              for memo_as_in_db_dto in memo_as_in_db_dtos]
-
-    print(memos)
 
     if user_id is not None:
         return memos[0]
