@@ -4,7 +4,7 @@
       "type": "search_as_you_type",
       "fields": {
         "keyword": {
-          "type": "constant_keyword"
+          "type": "keyword"
         }
       }
     },
