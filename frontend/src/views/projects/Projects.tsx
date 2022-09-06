@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   Card,
   CardActionArea,
@@ -15,10 +15,28 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Link } from "react-router-dom";
 import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
+import ProjectContextMenu, { ProjectContextMenuHandle } from "./ProjectContextMenu";
+import ProjectContextMenu2, { ContextMenuPosition } from "./ProjectContextMenu2";
 
 function Projects() {
   const { user } = useAuth();
   const projects = UserHooks.useGetProjects(user.data?.id);
+
+  // context menu 2
+  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
+  const onContextMenu2 = (projectId: number) => (event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenuPosition({ x: event.clientX, y: event.clientY });
+    setContextMenuData(projectId);
+  };
+
+  // context menu
+  const contextMenuRef = useRef<ProjectContextMenuHandle>(null);
+  const onContextMenu = (projectId: number) => (event: React.MouseEvent) => {
+    event.preventDefault();
+    contextMenuRef.current?.openContextMenu(projectId, { x: event.clientX, y: event.clientY });
+  };
 
   return (
     <Container maxWidth="xl">
@@ -31,57 +49,70 @@ function Projects() {
       {projects.isLoading && <div>Loading!</div>}
       {projects.isError && <div>Error: {projects.error.message}</div>}
       {projects.isSuccess && (
-        <Grid container spacing={2}>
-          <Grid item>
-            <Card
-              sx={{
-                width: 420,
-                border: "3px dashed lightgray",
-                boxShadow: 0,
-              }}
-            >
-              <CardActionArea component={Link} to="/projectsettings">
-                <CardContent
-                  sx={{
-                    height: 250,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
-                    CREATE NEW PROJECT
-                  </Typography>
-                </CardContent>
-              </CardActionArea>
-            </Card>
-          </Grid>
-          {projects.data.map((project) => (
-            <Grid item key={project.id}>
-              <Card sx={{ width: 420 }}>
-                <CardActionArea component={Link} to={`/project/${project.id}/search`}>
-                  <CardContent sx={{ padding: "0px !important" }}>
-                    <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={200}>
-                      {project.description}
+        <>
+          <Grid container spacing={2}>
+            <Grid item>
+              <Card
+                sx={{
+                  width: 420,
+                  border: "3px dashed lightgray",
+                  boxShadow: 0,
+                }}
+              >
+                <CardActionArea component={Link} to="/projectsettings">
+                  <CardContent
+                    sx={{
+                      height: 250,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
+                      CREATE NEW PROJECT
                     </Typography>
                   </CardContent>
                 </CardActionArea>
-                <CardActions>
-                  <Typography variant="subtitle1" component="div" sx={{ flexGrow: 1 }}>
-                    {project.title}
-                  </Typography>
-                  <Tooltip title={"Project settings"}>
-                    <span>
-                      <IconButton color="inherit" component={Link} to={`/projectsettings/${project.id}`}>
-                        <EditIcon />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                </CardActions>
               </Card>
             </Grid>
-          ))}
-        </Grid>
+            {projects.data.map((project) => (
+              <Grid item key={project.id}>
+                <Card sx={{ width: 420 }} onContextMenu={onContextMenu2(project.id)}>
+                  <CardActionArea component={Link} to={`/project/${project.id}/search`}>
+                    <CardContent sx={{ padding: "0px !important" }}>
+                      <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={200}>
+                        {project.description}
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                  <CardActions>
+                    <Typography
+                      variant="subtitle1"
+                      component={Link}
+                      to={`/project/${project.id}/search`}
+                      sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
+                    >
+                      {project.title}
+                    </Typography>
+                    <Tooltip title={"Project settings"}>
+                      <span>
+                        <IconButton color="inherit" component={Link} to={`/projectsettings/${project.id}`}>
+                          <EditIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+          <ProjectContextMenu ref={contextMenuRef} />
+          <ProjectContextMenu2
+            projectId={contextMenuData}
+            position={contextMenuPosition}
+            handleClose={() => setContextMenuPosition(null)}
+          />
+        </>
       )}
     </Container>
   );
