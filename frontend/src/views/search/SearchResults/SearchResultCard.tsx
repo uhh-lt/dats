@@ -58,24 +58,27 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
       raised={isSelected || (parseInt(urlSdocId || "") === sdocId && selectedDocumentIds.length === 0)}
     >
       <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data)}>
-        <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>
-          <StyledCardHeader
-            title={title}
-            action={
-              <Checkbox
-                color="primary"
-                checked={isSelected}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(event) => handleOnCheckboxChange(event, sdocId)}
-                inputProps={{
-                  "aria-labelledby": labelId,
-                }}
-                sx={{ flexShrink: 0 }}
-                disabled={!sdoc.isSuccess}
-              />
-            }
-          />
-        </Tooltip>
+        <StyledCardHeader
+          title={
+            <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>
+              <Typography variant="h5">{title}</Typography>
+            </Tooltip>
+          }
+          disableTypography
+          action={
+            <Checkbox
+              color="primary"
+              checked={isSelected}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(event) => handleOnCheckboxChange(event, sdocId)}
+              inputProps={{
+                "aria-labelledby": labelId,
+              }}
+              sx={{ flexShrink: 0 }}
+              disabled={!sdoc.isSuccess}
+            />
+          }
+        />
         <CardContent sx={{ pt: 0 }}>
           {sdoc.isLoading && (
             <Typography sx={{ mb: 1.5 }} variant="body2">
