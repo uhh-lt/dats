@@ -12,6 +12,7 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin, UserAuthorizationHeaderData
 from app.core.security import generate_jwt
+from app.core.data.dto import ProjectRead
 
 router = APIRouter(prefix="/user")
 tags = ["user"]
@@ -105,6 +106,18 @@ async def delete_by_id(*,
                        user_id: int) -> Optional[UserRead]:
     db_user = crud_user.remove(db=db, id=user_id)
     return UserRead.from_orm(db_user)
+
+
+@router.get("/{user_id}/project", tags=tags,
+            response_model=List[ProjectRead],
+            summary="Returns all Projects of the User",
+            description="Returns all Projects of the User with the given ID")
+async def get_user_projects(*,
+                            user_id: int,
+                            db: Session = Depends(get_db_session)) -> List[ProjectRead]:
+    # TODO Flo: only if the user has access?
+    db_obj = crud_user.read(db=db, id=user_id)
+    return [ProjectRead.from_orm(proj) for proj in db_obj.projects]
 
 
 @router.get("/{user_id}/code", tags=tags,
