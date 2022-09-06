@@ -5,11 +5,13 @@ from fastapi import APIRouter, Depends, UploadFile, HTTPException, File, Query
 from sqlalchemy.orm import Session
 
 from api.dependencies import skip_limit_params, get_db_session
+from api.util import get_object_memos
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.doc_type import mime_type_supported
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead
@@ -283,20 +285,6 @@ async def remove_user_memos_of_project(*,
     return crud_memo.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
-@router.get("/{proj_id}/memo", tags=tags,
-            response_model=Optional[MemoRead],
-            summary="Returns the Memo of the current User for the Project.",
-            description="Returns the Memo of the current User for the Project with the given ID.")
-async def get_memo(*,
-                   db: Session = Depends(get_db_session),
-                   proj_id: int) -> Optional[MemoRead]:
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
-    memo_as_in_db_dto = MemoInDB.from_orm(proj_db_obj.object_handle.attached_memo)
-    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                    attached_object_id=proj_id,
-                    attached_object_type=AttachedObjectType.project)
-
-
 @router.put("/{proj_id}/memo", tags=tags,
             response_model=Optional[MemoRead],
             summary="Adds a Memo of the current User to the Project.",
@@ -310,3 +298,27 @@ async def add_memo(*,
     return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
                     attached_object_id=proj_id,
                     attached_object_type=AttachedObjectType.project)
+
+
+@router.get("/{proj_id}/memo", tags=tags,
+            response_model=List[MemoRead],
+            summary="Returns the Memo of the current User for the Project.",
+            description="Returns the Memo of the current User for the Project with the given ID.")
+async def get_memos(*,
+                    db: Session = Depends(get_db_session),
+                    proj_id: int) -> List[MemoRead]:
+    db_obj = crud_project.read(db=db, id=proj_id)
+    return get_object_memos(db_obj=db_obj)
+
+
+@router.get("/{proj_id}/memo/{user_id}", tags=tags,
+            response_model=Optional[MemoRead],
+            summary="Returns the Memo attached to the Project of the User with the given ID",
+            description=("Returns the Memo attached to the Project with the given ID of the User with the"
+                         " given ID if it exists."))
+async def get_user_memo(*,
+                        db: Session = Depends(get_db_session),
+                        proj_id: int,
+                        user_id: int) -> Optional[MemoRead]:
+    db_obj = crud_span_anno.read(db=db, id=proj_id)
+    return get_object_memos(db_obj=db_obj, user_id=user_id)

@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_db_session
+from api.util import get_object_memos
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.memo import crud_memo
@@ -91,14 +92,24 @@ async def add_memo(*,
 
 
 @router.get("/{code_id}/memo", tags=tags,
-            response_model=Optional[MemoRead],
+            response_model=List[MemoRead],
             summary="Returns the Memo attached to the Code",
             description="Returns the Memo attached to the Code with the given ID if it exists.")
-async def get_memo(*,
-                   db: Session = Depends(get_db_session),
-                   code_id: int) -> Optional[MemoRead]:
-    code_db_obj = crud_code.read(db=db, id=code_id)
-    memo_as_in_db_dto = MemoInDB.from_orm(code_db_obj.object_handle.attached_memo)
-    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                    attached_object_id=code_db_obj.id,
-                    attached_object_type=AttachedObjectType.code)
+async def get_memos(*,
+                    db: Session = Depends(get_db_session),
+                    code_id: int) -> List[MemoRead]:
+    db_obj = crud_code.read(db=db, id=code_id)
+    return get_object_memos(db_obj=db_obj)
+
+
+@router.get("/{code_id}/memo/{user_id}", tags=tags,
+            response_model=Optional[MemoRead],
+            summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
+            description=("Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
+                         " given ID if it exists."))
+async def get_user_memo(*,
+                        db: Session = Depends(get_db_session),
+                        code_id: int,
+                        user_id: int) -> Optional[MemoRead]:
+    db_obj = crud_code.read(db=db, id=code_id)
+    return get_object_memos(db_obj=db_obj, user_id=user_id)

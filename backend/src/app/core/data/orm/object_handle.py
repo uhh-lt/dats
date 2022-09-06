@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import Column, Integer, ForeignKey, CheckConstraint, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
@@ -20,13 +20,17 @@ if TYPE_CHECKING:
     from app.core.data.orm.code import CodeORM, CurrentCodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.filter import FilterORM
+    from app.core.data.orm.memo import MemoORM
 
 
 class ObjectHandleORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
 
-    # one to one
-    attached_memo = relationship("MemoORM", back_populates="attached_to", uselist=False)
+    # one to many
+    attached_memos: List["MemoORM"] = relationship("MemoORM",
+                                                   back_populates="attached_to",
+                                                   cascade="all, delete",
+                                                   passive_deletes=True)
 
     # one to one (ObjectHandle is child)
     user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), index=True)
@@ -137,3 +141,19 @@ class ObjectHandleORM(ORMBase):
                          "query_id",
                          name="UC_only_one_object_handle_per_instance"),
     )
+
+
+if TYPE_CHECKING:
+    from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.query import QueryORM
+    from app.core.data.orm.source_document import SourceDocumentORM
+    from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+    from app.core.data.orm.span_annotation import SpanAnnotationORM
+    from app.core.data.orm.span_group import SpanGroupORM
+    from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+    from app.core.data.orm.user import UserORM
+    from app.core.data.orm.action import ActionTargetORM, ActionORM
+    from app.core.data.orm.annotation_document import AnnotationDocumentORM
+    from app.core.data.orm.code import CodeORM, CurrentCodeORM
+    from app.core.data.orm.document_tag import DocumentTagORM
+    from app.core.data.orm.filter import FilterORM

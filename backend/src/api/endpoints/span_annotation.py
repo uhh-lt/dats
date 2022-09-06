@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 from requests import Session
 
 from api.dependencies import resolve_code_param, get_db_session
+from api.util import get_object_memos
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
@@ -169,15 +170,25 @@ async def add_memo(*,
 
 
 @router.get("/{span_id}/memo", tags=tags,
-            response_model=Optional[MemoRead],
+            response_model=List[MemoRead],
             summary="Returns the Memo attached to the SpanAnnotation",
             description="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.")
-async def get_memo(*,
-                   db: Session = Depends(get_db_session),
-                   span_id: int) -> Optional[MemoRead]:
+async def get_memos(*,
+                    db: Session = Depends(get_db_session),
+                    span_id: int) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
-    span_db_obj = crud_span_anno.read(db=db, id=span_id)
-    memo_as_in_db_dto = MemoInDB.from_orm(span_db_obj.object_handle.attached_memo)
-    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                    attached_object_id=span_id,
-                    attached_object_type=AttachedObjectType.span_annotation)
+    db_obj = crud_span_anno.read(db=db, id=span_id)
+    return get_object_memos(db_obj=db_obj)
+
+
+@router.get("/{span_id}/memo/{user_id}", tags=tags,
+            response_model=Optional[MemoRead],
+            summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
+            description=("Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
+                         " given ID if it exists."))
+async def get_user_memo(*,
+                        db: Session = Depends(get_db_session),
+                        span_id: int,
+                        user_id: int) -> Optional[MemoRead]:
+    db_obj = crud_span_anno.read(db=db, id=span_id)
+    return get_object_memos(db_obj=db_obj, user_id=user_id)

@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter, Depends
 from requests import Session
 
 from api.dependencies import get_db_session
+from api.util import get_object_memos
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.document_tag import DocumentTagRead, DocumentTagUpdate, DocumentTagCreate, \
@@ -105,15 +106,25 @@ async def add_memo(*,
 
 
 @router.get("/{tag_id}/memo", tags=tags,
-            response_model=Optional[MemoRead],
+            response_model=List[MemoRead],
             summary="Returns the Memo attached to the DocumentTag",
             description="Returns the Memo attached to the DocumentTag with the given ID if it exists.")
-async def get_memo(*,
-                   db: Session = Depends(get_db_session),
-                   tag_id: int) -> Optional[MemoRead]:
+async def get_memos(*,
+                    db: Session = Depends(get_db_session),
+                    tag_id: int) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
-    doc_tag_db_obj = crud_document_tag.read(db=db, id=tag_id)
-    memo_as_in_db_dto = MemoInDB.from_orm(doc_tag_db_obj.object_handle.attached_memo)
-    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                    attached_object_id=tag_id,
-                    attached_object_type=AttachedObjectType.document_tag)
+    db_obj = crud_document_tag.read(db=db, id=tag_id)
+    return get_object_memos(db_obj=db_obj)
+
+
+@router.get("/{tag_id}/memo/{user_id}", tags=tags,
+            response_model=Optional[MemoRead],
+            summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
+            description=("Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
+                         " given ID if it exists."))
+async def get_user_memo(*,
+                        db: Session = Depends(get_db_session),
+                        tag_id: int,
+                        user_id: int) -> Optional[MemoRead]:
+    db_obj = crud_document_tag.read(db=db, id=tag_id)
+    return get_object_memos(db_obj=db_obj, user_id=user_id)

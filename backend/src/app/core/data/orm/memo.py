@@ -21,7 +21,7 @@ class MemoORM(ORMBase):
 
     # one to one
     attached_to_id = Column(Integer, ForeignKey('objecthandle.id'), index=True)
-    attached_to: "ObjectHandleORM" = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memo")
+    attached_to: "ObjectHandleORM" = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memos")
 
     # FIXME Flo: SQLAlchemy ambiguous FK issue...
     # object_handle = relationship("ObjectHandleORM",

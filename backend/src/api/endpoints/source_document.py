@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_db_session
+from api.util import get_object_memos
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
@@ -255,14 +256,24 @@ async def add_memo(*,
 
 
 @router.get("/{sdoc_id}/memo", tags=tags,
+            response_model=List[MemoRead],
+            summary="Returns all Memo attached to the SourceDocument",
+            description="Returns all Memo attached to the SourceDocument with the given ID if it exists.")
+async def get_memos(*,
+                    db: Session = Depends(get_db_session),
+                    sdoc_id: int) -> List[MemoRead]:
+    db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    return get_object_memos(db_obj=db_obj)
+
+
+@router.get("/{sdoc_id}/memo/{user_id}", tags=tags,
             response_model=Optional[MemoRead],
-            summary="Returns the Memo attached to the SourceDocument",
-            description="Returns the Memo attached to the SourceDocument with the given ID if it exists.")
-async def get_memo(*,
-                   db: Session = Depends(get_db_session),
-                   sdoc_id: int) -> Optional[MemoRead]:
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    memo_as_in_db_dto = MemoInDB.from_orm(sdoc_db_obj.object_handle.attached_memo)
-    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                    attached_object_id=sdoc_id,
-                    attached_object_type=AttachedObjectType.source_document)
+            summary="Returns the Memo attached to the SourceDocument of the User with the given ID",
+            description=("Returns the Memo attached to the SourceDocument with the given ID of the User with the"
+                         " given ID if it exists."))
+async def get_user_memo(*,
+                        db: Session = Depends(get_db_session),
+                        sdoc_id: int,
+                        user_id: int) -> Optional[MemoRead]:
+    db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    return get_object_memos(db_obj=db_obj, user_id=user_id)

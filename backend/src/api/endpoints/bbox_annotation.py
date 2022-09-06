@@ -1,11 +1,12 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from fastapi import APIRouter, Depends
 from requests import Session
 
 from api.dependencies import resolve_code_param, get_db_session
-from app.core.data.crud.memo import crud_memo
+from api.util import get_object_memos
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
+from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.bbox_annotation import BBoxAnnotationRead, BBoxAnnotationReadResolvedCode, BBoxAnnotationCreate, \
     BBoxAnnotationUpdate
 from app.core.data.dto.code import CodeRead
@@ -115,15 +116,25 @@ async def add_memo(*,
 
 
 @router.get("/{bbox_id}/memo", tags=tags,
-            response_model=Optional[MemoRead],
+            response_model=List[MemoRead],
             summary="Returns the Memo attached to the BBoxAnnotation",
             description="Returns the Memo attached to the BBoxAnnotation with the given ID if it exists.")
-async def get_memo(*,
-                   db: Session = Depends(get_db_session),
-                   bbox_id: int) -> Optional[MemoRead]:
+async def get_memos(*,
+                    db: Session = Depends(get_db_session),
+                    bbox_id: int) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
-    bbox_db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    memo_as_in_db_dto = MemoInDB.from_orm(bbox_db_obj.object_handle.attached_memo)
-    return MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                    attached_object_id=bbox_id,
-                    attached_object_type=AttachedObjectType.bbox_annotation)
+    db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
+    return get_object_memos(db_obj=db_obj)
+
+
+@router.get("/{bbox_id}/memo/{user_id}", tags=tags,
+            response_model=Optional[MemoRead],
+            summary="Returns the Memo attached to the BBoxAnnotation of the User with the given ID",
+            description=("Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the"
+                         " given ID if it exists."))
+async def get_user_memo(*,
+                        db: Session = Depends(get_db_session),
+                        bbox_id: int,
+                        user_id: int) -> Optional[MemoRead]:
+    db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
+    return get_object_memos(db_obj=db_obj, user_id=user_id)
