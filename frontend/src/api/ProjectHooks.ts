@@ -54,8 +54,17 @@ const useGetProjectDocuments = (projectId: number) =>
       projId: projectId,
     })
   );
-const useCreateProject = (options: UseMutationOptions<ProjectRead, Error, { requestBody: ProjectCreate }>) =>
-  useMutation(ProjectService.createNewProjectProjectPut, options);
+const useCreateProject = (
+  options: UseMutationOptions<ProjectRead, Error, { userId: number; requestBody: ProjectCreate }>
+) =>
+  useMutation(async ({ userId, requestBody }) => {
+    const project = await ProjectService.createNewProjectProjectPut({ requestBody });
+    await ProjectService.associateUserToProjectProjectProjIdUserUserIdPatch({
+      projId: project.id,
+      userId,
+    });
+    return project;
+  }, options);
 const useUpdateProject = (
   options: UseMutationOptions<ProjectRead, Error, { projId: number; requestBody: ProjectUpdate }>
 ) => useMutation(ProjectService.updateProjectProjectProjIdPatch, options);

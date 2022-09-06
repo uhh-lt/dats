@@ -9,6 +9,7 @@ export const QueryKey = {
   PROJECT_MEMO: "projectMemo",
 
   USER: "user",
+  USER_PROJECTS: "userProjects",
   USERS: "users",
   USER_CODES: "userCodes",
   // get all memos by user id

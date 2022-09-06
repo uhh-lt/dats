@@ -9,12 +9,14 @@ import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
+import { useAuth } from "../../../auth/AuthProvider";
 
 interface ProjectDetailsProps {
   project: ProjectRead;
 }
 
 function ProjectDetails({ project }: ProjectDetailsProps) {
+  const { user } = useAuth();
   const {
     register,
     handleSubmit,
@@ -32,7 +34,7 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECTS]);
+      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT, data.id]);
       SnackbarAPI.openSnackbar({
         text: "Successfully Updated Project with id " + data.id + "!",
@@ -49,6 +51,8 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
 
   // form handling
   const handleProjectUpdate = (data: any) => {
+    if (!user.data?.id) return;
+
     updateProjectMutation.mutate({
       projId: project.id,
       requestBody: {
@@ -101,6 +105,7 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
           type="submit"
           loading={updateProjectMutation.isLoading}
           loadingPosition="start"
+          disabled={!user.data}
         >
           Update project
         </LoadingButton>

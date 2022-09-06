@@ -22,8 +22,10 @@ import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
+import { useAuth } from "../../../auth/AuthProvider";
 
 function ProjectCreation() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const {
     register,
@@ -40,19 +42,21 @@ function ProjectCreation() {
         severity: "error",
       });
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECTS]);
+    onSuccess: (project) => {
+      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
       SnackbarAPI.openSnackbar({
-        text: "Successfully Created Project " + data.title + " with id " + data.id + "!",
+        text: "Successfully Created Project " + project.title + " with id " + project.id + "!",
         severity: "success",
       });
-      navigate(`/projectsettings/${data.id}`);
+      navigate(`/projectsettings/${project.id}`);
     },
   });
 
   // form handling
   const handleProjectCreation = (data: any) => {
+    if (!user.data) return;
     createProjectMutation.mutate({
+      userId: user.data.id,
       requestBody: {
         title: data.name,
         description: data.description,
@@ -117,6 +121,7 @@ function ProjectCreation() {
             type="submit"
             loading={createProjectMutation.isLoading}
             loadingPosition="start"
+            disabled={!user.data}
           >
             Create project
           </LoadingButton>

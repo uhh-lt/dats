@@ -14,9 +14,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { QueryKey } from "../../../api/QueryKey";
+import { useAuth } from "../../../auth/AuthProvider";
 
 function ProjectUpdate() {
-  // react router
+  const { user } = useAuth();
   const { projectId } = useParams() as { projectId: string };
   const projId = parseInt(projectId);
 
@@ -39,7 +40,7 @@ function ProjectUpdate() {
       });
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECTS]);
+      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
       SnackbarAPI.openSnackbar({
         text: "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
         severity: "success",

@@ -13,10 +13,12 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { Link } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
+import UserHooks from "../../api/UserHooks";
+import { useAuth } from "../../auth/AuthProvider";
 
 function Projects() {
-  const projects = ProjectHooks.useGetAllProjects();
+  const { user } = useAuth();
+  const projects = UserHooks.useGetProjects(user.data?.id);
 
   return (
     <Container maxWidth="xl">

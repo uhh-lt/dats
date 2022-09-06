@@ -14,36 +14,17 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import React from "react";
 import { Link, Link as RouterLink, useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
+import { useAuth } from "../../auth/AuthProvider";
+import UserHooks from "../../api/UserHooks";
 
 function ProjectSelection() {
-  const { projectId } = useParams<"projectId">();
-  const projects = ProjectHooks.useGetAllProjects();
+  const { user } = useAuth();
 
-  let content: JSX.Element;
-  if (projects.isLoading) {
-    content = <div>Loading!</div>;
-  } else if (projects.isError) {
-    content = <div>Error: {projects.error.message}</div>;
-  } else {
-    content = (
-      <List>
-        {projects.data
-          ?.sort((a, b) => a.id - b.id)
-          .map((project) => (
-            <ListItem disablePadding key={project.id}>
-              <ListItemButton
-                component={RouterLink}
-                to={`/projectsettings/${project.id}`}
-                selected={project.id.toString() === projectId}
-              >
-                <ListItemText primary={project.title} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-      </List>
-    );
-  }
+  // react router
+  const { projectId } = useParams() as { projectId: string };
+
+  // global server state (react query)
+  const projects = UserHooks.useGetProjects(user.data?.id);
 
   return (
     <Card className="myFlexContainer mh100">
@@ -59,7 +40,27 @@ function ProjectSelection() {
         </Toolbar>
       </AppBar>
       <CardContent sx={{ p: "0px !important" }} className="myFlexFillAllContainer">
-        {content}
+        {projects.isSuccess ? (
+          <List>
+            {projects.data
+              ?.sort((a, b) => a.id - b.id)
+              .map((project) => (
+                <ListItem disablePadding key={project.id}>
+                  <ListItemButton
+                    component={RouterLink}
+                    to={`/projectsettings/${project.id}`}
+                    selected={project.id.toString() === projectId}
+                  >
+                    <ListItemText primary={project.title} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+          </List>
+        ) : projects.isError ? (
+          <div>Error: {projects.error.message}</div>
+        ) : (
+          <div>Loading!</div>
+        )}
       </CardContent>
     </Card>
   );
