@@ -143,16 +143,30 @@ const useGetAnnotationDocumentByUserBatch = (sdocIds: number[], userId: number) 
   });
 
 // memo
-const useGetMemo = (sdocId: number | undefined) =>
-  useQuery<MemoRead, Error>(
+const useGetMemos = (sdocId: number | undefined) =>
+  useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SDOC, sdocId],
     () =>
-      SourceDocumentService.getMemoSdocSdocIdMemoGet({
+      SourceDocumentService.getMemosSdocSdocIdMemoGet({
         sdocId: sdocId!,
       }),
     {
       retry: false,
       enabled: !!sdocId,
+    }
+  );
+
+const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
+  useQuery<MemoRead, Error>(
+    [QueryKey.MEMO_SDOC, sdocId, userId],
+    () =>
+      SourceDocumentService.getUserMemoSdocSdocIdMemoUserIdGet({
+        sdocId: sdocId!,
+        userId: userId!,
+      }),
+    {
+      retry: false,
+      enabled: !!sdocId && !!userId,
     }
   );
 
@@ -206,6 +220,7 @@ const SdocHooks = {
   useGetAllAnnotationDocuments,
   useGetAnnotationDocumentByUserBatch,
   // memo
+  useGetMemos,
   useGetMemo,
   useCreateMemo,
   // metadata

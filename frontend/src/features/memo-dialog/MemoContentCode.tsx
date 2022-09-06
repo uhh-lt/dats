@@ -39,7 +39,7 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_CODE, code.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_CODE, code.id, data.user_id]);
       SnackbarAPI.openSnackbar({
         text: `Updated memo for code ${code.name}`,
         severity: "success",
@@ -51,7 +51,7 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_CODE, code.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_CODE, code.id, data.user_id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
         text: `Deleted memo for code ${code.id}`,
@@ -63,6 +63,8 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
 
   // form handling
   const handleCreateOrUpdateCodeMemo = (data: any) => {
+    if (!user.data) return;
+
     if (memo) {
       updateMutation.mutate({
         memoId: memo.id,
@@ -77,7 +79,7 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
         requestBody: {
           title: data.title,
           content: data.content,
-          user_id: 1,
+          user_id: user.data.id,
           project_id: code.project_id,
         },
       });

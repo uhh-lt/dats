@@ -100,16 +100,17 @@ const useGetAllCodes = (projectId: number) =>
   );
 
 // memo
-const useGetMemo = (projectId: number | undefined) =>
+const useGetMemo = (projectId: number | undefined, userId: number | undefined) =>
   useQuery<MemoRead, Error>(
-    [QueryKey.PROJECT_MEMO, projectId],
+    [QueryKey.PROJECT_MEMO, projectId, userId],
     () =>
-      ProjectService.getMemoProjectProjIdMemoGet({
+      ProjectService.getUserMemoProjectProjIdMemoUserIdGet({
         projId: projectId!,
+        userId: userId!,
       }),
     {
       retry: false,
-      enabled: !!projectId,
+      enabled: !!projectId && !!userId,
     }
   );
 

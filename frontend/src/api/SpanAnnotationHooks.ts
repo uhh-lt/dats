@@ -42,11 +42,18 @@ const useDeleteSpan = (
 ) => useMutation(SpanAnnotationService.deleteByIdSpanSpanIdDelete, options);
 
 // memo
-const useGetMemo = (spanId: number | undefined) =>
-  useQuery<MemoRead, Error>(
+const useGetMemos = (spanId: number | undefined) =>
+  useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
-    () => SpanAnnotationService.getMemoSpanSpanIdMemoGet({ spanId: spanId! }),
+    () => SpanAnnotationService.getMemosSpanSpanIdMemoGet({ spanId: spanId! }),
     { enabled: !!spanId, retry: false }
+  );
+
+const useGetMemo = (spanId: number | undefined, userId: number | undefined) =>
+  useQuery<MemoRead, Error>(
+    [QueryKey.MEMO_SPAN_ANNOTATION, spanId, userId],
+    () => SpanAnnotationService.getUserMemoSpanSpanIdMemoUserIdGet({ spanId: spanId!, userId: userId! }),
+    { enabled: !!spanId && !!userId, retry: false }
   );
 
 const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { spanId: number; requestBody: MemoCreate }>) =>
@@ -58,6 +65,7 @@ const SpanAnnotationHooks = {
   useUpdateSpan,
   useDeleteSpan,
   // memo
+  useGetMemos,
   useGetMemo,
   useCreateMemo,
 };

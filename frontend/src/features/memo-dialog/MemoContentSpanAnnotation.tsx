@@ -43,7 +43,7 @@ export function MemoContentSpanAnnotation({
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id, data.user_id]);
       SnackbarAPI.openSnackbar({
         text: `Updated memo for spanAnnotation ${spanAnnotation.id}`,
         severity: "success",
@@ -55,7 +55,7 @@ export function MemoContentSpanAnnotation({
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id, data.user_id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
         text: `Deleted memo for spanAnnotation ${spanAnnotation.id}`,
@@ -67,6 +67,8 @@ export function MemoContentSpanAnnotation({
 
   // form handling
   const handleCreateOrUpdateSpanAnnotationMemo = (data: any) => {
+    if (!user.data) return;
+
     if (memo) {
       updateMutation.mutate({
         memoId: memo.id,
@@ -79,7 +81,7 @@ export function MemoContentSpanAnnotation({
       createMutation.mutate({
         spanId: spanAnnotation.id,
         requestBody: {
-          user_id: 1,
+          user_id: user.data.id,
           project_id: spanAnnotation.code.project_id,
           title: data.title,
           content: data.content,

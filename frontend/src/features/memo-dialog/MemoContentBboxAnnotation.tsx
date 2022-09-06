@@ -47,7 +47,7 @@ export function MemoContentBboxAnnotation({
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id, data.user_id]);
       SnackbarAPI.openSnackbar({
         text: `Updated memo for bboxAnnotation ${bboxAnnotation.id}`,
         severity: "success",
@@ -59,7 +59,7 @@ export function MemoContentBboxAnnotation({
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id, data.user_id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
         text: `Deleted memo for bboxAnnotation ${bboxAnnotation.id}`,
@@ -71,6 +71,8 @@ export function MemoContentBboxAnnotation({
 
   // form handling
   const handleCreateOrUpdateBboxAnnotationMemo = (data: any) => {
+    if (!user.data) return;
+
     if (memo) {
       updateMutation.mutate({
         memoId: memo.id,
@@ -83,7 +85,7 @@ export function MemoContentBboxAnnotation({
       createMutation.mutate({
         bboxId: bboxAnnotation.id,
         requestBody: {
-          user_id: 1,
+          user_id: user.data.id,
           project_id: bboxAnnotation.code.project_id,
           title: data.title,
           content: data.content,

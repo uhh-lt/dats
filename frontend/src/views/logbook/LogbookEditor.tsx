@@ -17,7 +17,7 @@ function LogbookEditor() {
   const { projectId } = useParams() as { projectId: string };
 
   // global server state (react query)
-  const projectMemo = ProjectHooks.useGetMemo(parseInt(projectId));
+  const projectMemo = ProjectHooks.useGetMemo(parseInt(projectId), user.data?.id);
 
   // mutations
   const queryClient = useQueryClient();
@@ -30,7 +30,7 @@ function LogbookEditor() {
   const createMutation = ProjectHooks.useCreateMemo({
     onError: onError,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_MEMO, data.project_id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_MEMO, data.project_id, data.user_id]);
       SnackbarAPI.openSnackbar({
         text: `Created Logbook for project ${data.project_id}`,
         severity: "success",
@@ -40,7 +40,7 @@ function LogbookEditor() {
   const updateMutation = MemoHooks.useUpdateMemo({
     onError: onError,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_MEMO, data.project_id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_MEMO, data.project_id, data.user_id]);
       SnackbarAPI.openSnackbar({
         text: `Updated Logbook for project ${data.project_id}`,
         severity: "success",
@@ -50,6 +50,8 @@ function LogbookEditor() {
 
   // handle ui events
   const handleSave = () => {
+    if (!user.data) return;
+
     const editor = editorRef.current?.getInstance();
     if (editor) {
       const content = editor.getMarkdown();
@@ -84,7 +86,7 @@ function LogbookEditor() {
 
   return (
     <>
-      {!projectMemo.isLoading ? (
+      {!projectMemo.isLoading && user.data ? (
         <Editor
           initialValue={projectMemo.data?.content || "This is your logbook. Have fun!"}
           previewStyle="vertical"

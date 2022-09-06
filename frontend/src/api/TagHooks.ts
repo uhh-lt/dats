@@ -86,13 +86,23 @@ const useBulkUpdateDocumentTags = (
   }, options);
 
 // memos
-const useGetMemo = (tagId: number | undefined) =>
-  useQuery<MemoRead, Error>(
+const useGetMemos = (tagId: number | undefined) =>
+  useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_TAG, tagId],
-    () => DocumentTagService.getMemoDoctagTagIdMemoGet({ tagId: tagId! }),
+    () => DocumentTagService.getMemosDoctagTagIdMemoGet({ tagId: tagId! }),
     {
       retry: false,
       enabled: !!tagId,
+    }
+  );
+
+const useGetMemo = (tagId: number | undefined, userId: number | undefined) =>
+  useQuery<MemoRead, Error>(
+    [QueryKey.MEMO_TAG, tagId, userId],
+    () => DocumentTagService.getUserMemoDoctagTagIdMemoUserIdGet({ tagId: tagId!, userId: userId! }),
+    {
+      retry: false,
+      enabled: !!tagId && !!userId,
     }
   );
 
@@ -108,6 +118,7 @@ const TagHooks = {
   useBulkLinkDocumentTags,
   useBulkUnlinkDocumentTags,
   //memos
+  useGetMemos,
   useGetMemo,
   useCreateMemo,
 };

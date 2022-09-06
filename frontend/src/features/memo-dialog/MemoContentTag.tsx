@@ -39,7 +39,7 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_TAG, tag.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_TAG, tag.id, data.user_id]);
       SnackbarAPI.openSnackbar({
         text: `Updated memo for tag ${tag.title}`,
         severity: "success",
@@ -51,7 +51,7 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
     onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_TAG, tag.id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_TAG, tag.id, data.user_id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
         text: `Deleted memo for tag ${tag.title}`,
@@ -63,6 +63,8 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
 
   // form handling
   const handleCreateOrUpdateCodeMemo = (data: any) => {
+    if (!user.data) return;
+
     if (memo) {
       updateMutation.mutate({
         memoId: memo.id,
@@ -75,7 +77,7 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
       createMutation.mutate({
         tagId: tag.id,
         requestBody: {
-          user_id: 1,
+          user_id: user.data.id,
           project_id: tag.project_id,
           title: data.title,
           content: data.content,

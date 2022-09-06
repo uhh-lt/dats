@@ -43,11 +43,18 @@ const useDelete = (
 ) => useMutation(BboxAnnotationService.deleteByIdBboxBboxIdDelete, options);
 
 // memo
-const useGetMemo = (bboxId: number | undefined) =>
-  useQuery<MemoRead, Error>(
+const useGetMemos = (bboxId: number | undefined) =>
+  useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_BBOX_ANNOTATION, bboxId],
-    () => BboxAnnotationService.getMemoBboxBboxIdMemoGet({ bboxId: bboxId! }),
+    () => BboxAnnotationService.getMemosBboxBboxIdMemoGet({ bboxId: bboxId! }),
     { enabled: !!bboxId, retry: false }
+  );
+
+const useGetMemo = (bboxId: number | undefined, userId: number | undefined) =>
+  useQuery<MemoRead, Error>(
+    [QueryKey.MEMO_BBOX_ANNOTATION, bboxId, userId],
+    () => BboxAnnotationService.getUserMemoBboxBboxIdMemoUserIdGet({ bboxId: bboxId!, userId: userId! }),
+    { enabled: !!bboxId && !!userId, retry: false }
   );
 
 const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { bboxId: number; requestBody: MemoCreate }>) =>
@@ -60,6 +67,7 @@ const BboxAnnotationHooks = {
   useDelete,
   // memo
   useGetMemo,
+  useGetMemos,
   useCreateMemo,
 };
 

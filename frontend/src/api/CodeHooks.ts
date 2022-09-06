@@ -6,13 +6,23 @@ import { QueryKey } from "./QueryKey";
 const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { codeId: number; requestBody: MemoCreate }>) =>
   useMutation(CodeService.addMemoCodeCodeIdMemoPut, options);
 
-const useGetMemo = (codeId: number | undefined) =>
-  useQuery<MemoRead, Error>(
+const useGetMemos = (codeId: number | undefined) =>
+  useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_CODE, codeId],
-    () => CodeService.getMemoCodeCodeIdMemoGet({ codeId: codeId! }),
+    () => CodeService.getMemosCodeCodeIdMemoGet({ codeId: codeId! }),
     {
       retry: false,
       enabled: !!codeId,
+    }
+  );
+
+const useGetMemo = (codeId: number | undefined, userId: number | undefined) =>
+  useQuery<MemoRead, Error>(
+    [QueryKey.MEMO_CODE, codeId, userId],
+    () => CodeService.getUserMemoCodeCodeIdMemoUserIdGet({ codeId: codeId!, userId: userId! }),
+    {
+      retry: false,
+      enabled: !!codeId && !!userId,
     }
   );
 
@@ -34,6 +44,7 @@ const useDeleteCode = (options: UseMutationOptions<CodeRead, Error, { codeId: nu
 const CodeHooks = {
   useCreateMemo,
   useGetMemo,
+  useGetMemos,
   useGetCode,
   useCreateCode,
   useUpdateCode,

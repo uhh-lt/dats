@@ -21,6 +21,7 @@ import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation";
 import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation";
+import { useAuth } from "../../auth/AuthProvider";
 
 const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   switch (type) {
@@ -40,6 +41,8 @@ const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
 };
 
 export default function MemoDialog() {
+  const { user } = useAuth();
+
   // state
   const [open, setOpen] = useState(false);
   const [idToGetMemo, setIdToGetMemo] = useState<number | undefined>(undefined);
@@ -47,7 +50,7 @@ export default function MemoDialog() {
   const [attachedId, setAttachedId] = useState<number | undefined>(undefined);
 
   // query
-  const memo = useGetMemoQuery(attachedType)(idToGetMemo);
+  const memo = useGetMemoQuery(attachedType)(idToGetMemo, user.data?.id);
   const attachedObject = useGetMemosAttachedObject(attachedType)(attachedId);
 
   // listen to open-memo event and open the dialog
