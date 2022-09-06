@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import MemoAPI from "../../features/memo-dialog/MemoAPI";
 import useGetMemosAttachedObject from "../../features/memo-dialog/useGetMemosAttachedObject";
 import AttachedObjectLink from "./AttachedObjectLink";
+import { AttachedObjectType } from "../../api/openapi";
 
 interface MemoCardProps {
   memoId: number;
@@ -78,11 +79,40 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
     });
   };
 
+  const handleHoverEnter = () => {
+    switch (memo.data?.attached_object_type) {
+      case AttachedObjectType.SPAN_ANNOTATION:
+        const spans = Array.from(document.getElementsByClassName(`span-${memo.data.attached_object_id}`));
+        spans.forEach((element) => {
+          element.classList.add("hovered");
+        });
+        break;
+      case AttachedObjectType.BBOX_ANNOTATION:
+        const boxes = Array.from(document.getElementsByClassName(`bbox-${memo.data.attached_object_id}`));
+        boxes.forEach((element) => {
+          element.classList.add("hovered");
+        });
+        break;
+    }
+  };
+
+  const handleHoverLeave = () => {
+    const elements = Array.from(document.getElementsByClassName(`hovered`));
+    elements.forEach((element) => {
+      element.classList.remove("hovered");
+    });
+  };
+
   // rendering
   return (
     <>
       {isFilteredOut ? null : (
-        <Card variant="outlined" className="myMemoCard">
+        <Card
+          variant="outlined"
+          className="myMemoCard"
+          onMouseEnter={() => handleHoverEnter()}
+          onMouseLeave={() => handleHoverLeave()}
+        >
           {memo.isSuccess && attachedObject.isSuccess ? (
             <>
               <CardHeader
