@@ -21,6 +21,8 @@ import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
 import { QueryKey } from "../../../api/QueryKey";
 import { LoadingButton } from "@mui/lab";
+import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 
 interface ProjectDocumentsProps {
   project: ProjectRead;
@@ -92,6 +94,15 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
     deleteFileMutation.mutate({ sdocId: sourceFileId });
   };
 
+  // context menu
+  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
+  const onContextMenu = (sdocId: number) => (event: React.MouseEvent) => {
+    event.preventDefault();
+    setContextMenuPosition({ x: event.clientX, y: event.clientY });
+    setContextMenuData(sdocId);
+  };
+
   return (
     <React.Fragment>
       <Toolbar variant="dense">
@@ -129,6 +140,7 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
             <ListItem
               disablePadding
               key={document.id}
+              onContextMenu={onContextMenu(document.id)}
               secondaryAction={
                 <Tooltip title={"Delete document"}>
                   <span>
@@ -146,6 +158,13 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
           ))}
         </List>
       )}
+      <ProjectDocumentsContextMenu
+        position={contextMenuPosition}
+        projectId={project.id}
+        sdocId={contextMenuData}
+        handleClose={() => setContextMenuPosition(null)}
+        onDeleteDocument={handleClickDeleteFile}
+      />
     </React.Fragment>
   );
 }
