@@ -197,8 +197,9 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     if (!annotationsPerToken) return;
     if (!annotationMap) return;
 
-    const target = event.target as HTMLElement;
-    if (target.className === "tok" && target.childElementCount > 0) {
+    const target = (event.target as HTMLElement).parentElement;
+    console.log(target);
+    if (target && target.classList.contains("tok") && target.childElementCount > 0) {
       event.preventDefault();
 
       // get all annotations that span this token
@@ -241,8 +242,8 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     }
 
     // get the selected begin and end token
-    const selectionStart = selection?.anchorNode?.parentElement?.getAttribute("data-tokenid");
-    const selectionEnd = selection?.focusNode?.parentElement?.getAttribute("data-tokenid");
+    const selectionStart = selection?.anchorNode?.parentElement?.parentElement?.getAttribute("data-tokenid");
+    const selectionEnd = selection?.focusNode?.parentElement?.parentElement?.getAttribute("data-tokenid");
     if (!selectionStart || !selectionEnd) return;
 
     // create annotation
