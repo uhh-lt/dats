@@ -1,16 +1,16 @@
 import { Button, Card, CardActions, CardContent, Divider, IconButton, Popover, Stack, Typography } from "@mui/material";
 import React from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { useAuth } from "../../auth/AuthProvider";
 import { Link } from "react-router-dom";
+import Avatar from "@mui/material/Avatar";
+import { UserRead } from "../../api/openapi";
 
 interface UserProfileMenuProps {
   handleLogout: () => void;
+  user: UserRead;
 }
 
-function UserProfileMenu({ handleLogout }: UserProfileMenuProps) {
-  const { user } = useAuth();
-
+function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -26,8 +26,11 @@ function UserProfileMenu({ handleLogout }: UserProfileMenuProps) {
 
   return (
     <div>
-      <IconButton onClick={handleClick} color="inherit" size="large">
-        <AccountCircleIcon fontSize="inherit" />
+      <IconButton onClick={handleClick} size="medium">
+        <Avatar sx={{ bgcolor: "#2e7d32", border: "1px dashed white" }}>
+          {user.first_name.charAt(0).toUpperCase()}
+          {user.last_name.charAt(0).toUpperCase()}
+        </Avatar>
       </IconButton>
       <Popover
         id={id}
@@ -40,26 +43,24 @@ function UserProfileMenu({ handleLogout }: UserProfileMenuProps) {
         }}
       >
         <Card sx={{ minWidth: 275 }}>
-          {user.data && (
-            <CardContent>
-              <Stack spacing={1}>
-                <Typography align="center" variant="h2">
-                  <AccountCircleIcon fontSize="inherit" />
-                </Typography>
-                <Typography align="center" variant="h6">
-                  {user.data.first_name} {user.data.last_name}
-                </Typography>
-                <Typography align="center" variant="body1" color="slategrey">
-                  {user.data.email}
-                </Typography>
-                <Typography align="center" variant="body1">
-                  <Button variant="outlined" color="inherit" component={Link} to={"/user/" + user.data.id}>
-                    View profile
-                  </Button>
-                </Typography>
-              </Stack>
-            </CardContent>
-          )}
+          <CardContent>
+            <Stack spacing={1}>
+              <Typography align="center" variant="h2">
+                <AccountCircleIcon fontSize="inherit" />
+              </Typography>
+              <Typography align="center" variant="h6">
+                {user.first_name} {user.last_name}
+              </Typography>
+              <Typography align="center" variant="body1" color="slategrey">
+                {user.email}
+              </Typography>
+              <Typography align="center" variant="body1">
+                <Button variant="outlined" color="inherit" component={Link} to={"/user/" + user.id}>
+                  View profile
+                </Button>
+              </Typography>
+            </Stack>
+          </CardContent>
           <Divider />
           <CardActions sx={{ justifyContent: "center" }}>
             <Button onClick={() => handleLogout()} variant="outlined" color="error">

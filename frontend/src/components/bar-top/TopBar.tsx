@@ -7,7 +7,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import UserProfileMenu from "../../features/user-profile-menu/UserProfileMenu";
 
 function TopBar(props: AppBarProps) {
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   const navigate = useNavigate();
   const appBarContainerRef = useContext(AppBarContext);
 
@@ -46,7 +46,7 @@ function TopBar(props: AppBarProps) {
                   Login
                 </Button>
               ) : (
-                <UserProfileMenu handleLogout={handleLogout} />
+                <UserProfileMenu handleLogout={handleLogout} user={user.data!} />
               )}
             </Stack>
           </Grid>
