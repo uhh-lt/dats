@@ -51,10 +51,12 @@ function Token({ token, spanAnnotations }: TokenProps) {
 
   return (
     <>
-      <span className="tok" data-tokenid={token.index}>
+      <span className={`tok ${spans.map((s) => `span-${s.id}`).join(" ")}`} data-tokenid={token.index}>
         {spanGroups}
-        {token.text}
-        {token.whitespace && " "}
+        <span className={"text"}>
+          {token.text}
+          {token.whitespace && " "}
+        </span>
         {marks}
       </span>
       {token.newLine > 0 && range(token.newLine).map((i) => <br key={i}></br>)}

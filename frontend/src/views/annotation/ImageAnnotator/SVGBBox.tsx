@@ -14,6 +14,7 @@ function SVGBBox({ bbox, onContextMenu }: SVGBBoxProps) {
     <>
       {code.data && (
         <rect
+          className={`bbox-${bbox.id}`}
           key={bbox.id}
           x={bbox.x_min}
           y={bbox.y_min}

@@ -20,6 +20,14 @@
     position: relative;
 }
 
+.hovered .text {
+    font-weight: bold;
+}
+
+rect.hovered {
+    fill: #ffff0088;
+}
+
 .spangroup {
     user-select: none;
     font-size: 14px;

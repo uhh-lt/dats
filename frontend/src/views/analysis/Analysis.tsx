@@ -6,7 +6,7 @@ function Analysis() {
   return (
     <Grid container columnSpacing={2} className="h100">
       <Grid item md={3} className="h100">
-        <DocumentExplorer />
+        <DocumentExplorer sx={{ height: "100%" }} />
       </Grid>
       <Grid item md={9}>
         <AppBar position="relative" color="secondary" sx={{ paddingRight: 0 }}>
