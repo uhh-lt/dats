@@ -320,5 +320,5 @@ async def get_user_memo(*,
                         db: Session = Depends(get_db_session),
                         proj_id: int,
                         user_id: int) -> Optional[MemoRead]:
-    db_obj = crud_span_anno.read(db=db, id=proj_id)
+    db_obj = crud_project.read(db=db, id=proj_id)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
