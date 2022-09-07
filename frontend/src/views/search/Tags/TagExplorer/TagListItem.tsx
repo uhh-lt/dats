@@ -1,4 +1,4 @@
-import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { ListItem, ListItemButton, ListItemIcon, ListItemProps, ListItemText } from "@mui/material";
 import TagEditButton from "../TagEdit/TagEditButton";
 import MemoButton from "../../../../features/memo-dialog/MemoButton";
 import LabelIcon from "@mui/icons-material/Label";
@@ -11,7 +11,7 @@ interface TagListItemProps {
   handleClick: (tagId: number) => void;
 }
 
-function TagListItem({ tagId, selectedTagId, handleClick }: TagListItemProps) {
+function TagListItem({ tagId, selectedTagId, handleClick, ...props }: TagListItemProps & ListItemProps) {
   const tag = TagHooks.useGetTag(tagId);
 
   return (
@@ -28,6 +28,7 @@ function TagListItem({ tagId, selectedTagId, handleClick }: TagListItemProps) {
           }
           disablePadding
           className="myShowMoreListItem"
+          {...props}
         >
           <ListItemButton selected={selectedTagId === tag.data.id} onClick={() => handleClick(tag.data.id)}>
             <ListItemIcon style={{ color: tag.data.description }}>

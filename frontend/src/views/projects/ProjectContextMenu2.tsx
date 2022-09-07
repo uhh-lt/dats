@@ -9,10 +9,13 @@ export interface ContextMenuPosition {
   y: number;
 }
 
-interface ProjectContextMenuProps {
+export interface ContextMenuProps {
   position: ContextMenuPosition | null;
-  projectId: number | undefined;
   handleClose: () => void;
+}
+
+interface ProjectContextMenuProps extends ContextMenuProps {
+  projectId: number | undefined;
 }
 
 function ProjectContextMenu2({ position, projectId, handleClose }: ProjectContextMenuProps) {
