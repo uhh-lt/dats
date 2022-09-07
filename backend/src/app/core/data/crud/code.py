@@ -19,6 +19,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
         dto_obj_data = jsonable_encoder(create_dto)
         # first create the code
+        # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db.add(db_obj)
         db.commit()

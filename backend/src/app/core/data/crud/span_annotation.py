@@ -20,6 +20,7 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
 
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_obj_data = jsonable_encoder(create_dto.dict(exclude={"span_text"}))
+        # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db_obj.span_text_id = span_text_orm.id
         db.add(db_obj)

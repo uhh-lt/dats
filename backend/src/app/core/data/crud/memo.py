@@ -56,6 +56,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         # create the Memo
         dto_obj_data = jsonable_encoder(create_dto)
         dto_obj_data["attached_to_id"] = oh_db_obj.id
+        # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db.add(db_obj)
         db.commit()
