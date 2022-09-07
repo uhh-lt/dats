@@ -13,8 +13,10 @@ const useGetProjects = (userId: number | undefined) =>
   );
 
 // user
-const useGetUser = (userId: number) =>
-  useQuery<UserRead, Error>(["user", userId], () => UserService.getByIdUserUserIdGet({ userId }));
+const useGetUser = (userId: number | undefined) =>
+  useQuery<UserRead, Error>(["user", userId], () => UserService.getByIdUserUserIdGet({ userId: userId! }), {
+    enabled: !!userId,
+  });
 
 const useRegister = (options: UseMutationOptions<UserRead, Error, { requestBody: UserCreate }>) =>
   useMutation(UserService.registerUserPut, options);

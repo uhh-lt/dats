@@ -40,25 +40,35 @@ const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   }
 };
 
+interface MemoGetData {
+  idToGetMemo: number | undefined;
+  attachedObjectId: number | undefined;
+  attachedObjectType: AttachedObjectType | undefined;
+}
+
 export default function MemoDialog() {
   const { user } = useAuth();
 
   // state
   const [open, setOpen] = useState(false);
-  const [idToGetMemo, setIdToGetMemo] = useState<number | undefined>(undefined);
-  const [attachedType, setAttachedType] = useState<AttachedObjectType | undefined>(undefined);
-  const [attachedId, setAttachedId] = useState<number | undefined>(undefined);
+  const [memoGetData, setMemoGetData] = useState<MemoGetData>({
+    idToGetMemo: undefined,
+    attachedObjectId: undefined,
+    attachedObjectType: undefined,
+  });
 
   // query
-  const memo = useGetMemoQuery(attachedType)(idToGetMemo, user.data?.id);
-  const attachedObject = useGetMemosAttachedObject(attachedType)(attachedId);
+  const memo = useGetMemoQuery(memoGetData.attachedObjectType)(memoGetData.idToGetMemo, user.data?.id);
+  const attachedObject = useGetMemosAttachedObject(memoGetData.attachedObjectType)(memoGetData.attachedObjectId);
 
   // listen to open-memo event and open the dialog
   const openModal = useCallback((event: CustomEventInit) => {
     setOpen(true);
-    setIdToGetMemo(event.detail.data.id);
-    setAttachedId(event.detail.memoType ? event.detail.data.id : undefined);
-    setAttachedType(event.detail.memoType);
+    setMemoGetData({
+      idToGetMemo: event.detail.data.id,
+      attachedObjectId: event.detail.memoType ? event.detail.data.id : undefined,
+      attachedObjectType: event.detail.memoType,
+    });
   }, []);
 
   useEffect(() => {
@@ -71,39 +81,49 @@ export default function MemoDialog() {
   // update data once we got memo from db
   useEffect(() => {
     if (memo.data) {
-      if (memo.data.attached_object_id !== attachedId) setAttachedId(memo.data.attached_object_id);
-      if (memo.data.attached_object_type !== attachedType) setAttachedType(memo.data.attached_object_type);
+      if (
+        memo.data.attached_object_id !== memoGetData.attachedObjectId ||
+        memo.data.attached_object_type !== memoGetData.attachedObjectType
+      ) {
+        setMemoGetData({
+          idToGetMemo: memo.data.attached_object_id,
+          attachedObjectId: memo.data.attached_object_id,
+          attachedObjectType: memo.data.attached_object_type,
+        });
+      }
     }
-  }, [memo.data, attachedId, attachedType]);
+  }, [memo.data, memoGetData]);
 
   const handleClose = () => {
     setOpen(false);
-    setAttachedType(undefined);
-    setAttachedId(undefined);
-    setIdToGetMemo(undefined);
+    setMemoGetData({
+      idToGetMemo: undefined,
+      attachedObjectId: undefined,
+      attachedObjectType: undefined,
+    });
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && (
         <>
-          {attachedType === AttachedObjectType.CODE ? (
+          {memoGetData.attachedObjectType === AttachedObjectType.CODE ? (
             <MemoContentCode memo={memo.data} code={attachedObject.data as CodeRead} closeDialog={handleClose} />
-          ) : attachedType === AttachedObjectType.SOURCE_DOCUMENT ? (
+          ) : memoGetData.attachedObjectType === AttachedObjectType.SOURCE_DOCUMENT ? (
             <MemoContentSourceDocument
               memo={memo.data}
               sdoc={attachedObject.data as SourceDocumentRead}
               closeDialog={handleClose}
             />
-          ) : attachedType === AttachedObjectType.DOCUMENT_TAG ? (
+          ) : memoGetData.attachedObjectType === AttachedObjectType.DOCUMENT_TAG ? (
             <MemoContentTag memo={memo.data} tag={attachedObject.data as DocumentTagRead} closeDialog={handleClose} />
-          ) : attachedType === AttachedObjectType.SPAN_ANNOTATION ? (
+          ) : memoGetData.attachedObjectType === AttachedObjectType.SPAN_ANNOTATION ? (
             <MemoContentSpanAnnotation
               memo={memo.data}
               spanAnnotation={attachedObject.data as SpanAnnotationReadResolved}
               closeDialog={handleClose}
             />
-          ) : attachedType === AttachedObjectType.BBOX_ANNOTATION ? (
+          ) : memoGetData.attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
             <MemoContentBboxAnnotation
               memo={memo.data}
               bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolvedCode}

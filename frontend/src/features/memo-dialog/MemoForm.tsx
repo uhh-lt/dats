@@ -6,6 +6,7 @@ import { MemoRead } from "../../api/openapi";
 import { LoadingButton } from "@mui/lab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
+import UserHooks from "../../api/UserHooks";
 
 interface MemoFormProps {
   title: string;
@@ -34,6 +35,8 @@ export function MemoForm({
     reset,
   } = useForm();
 
+  const user = UserHooks.useGetUser(memo?.user_id);
+
   // initialize form when memo changes
   useEffect(() => {
     if (memo) {
@@ -55,9 +58,15 @@ export function MemoForm({
         <DialogTitle>{title}</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
-            {memo && (
+            {memo && user.data && (
               <>
-                <TextField label="Author" defaultValue={memo.user_id} fullWidth variant="standard" disabled />
+                <TextField
+                  label="Author"
+                  defaultValue={`${user.data.first_name} ${user.data.last_name}`}
+                  fullWidth
+                  variant="standard"
+                  disabled
+                />
                 <Stack direction="row" spacing={2}>
                   <TextField
                     fullWidth
