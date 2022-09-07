@@ -1,8 +1,8 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import VerticalSplitIcon from "@mui/icons-material/VerticalSplit";
-import ReorderIcon from "@mui/icons-material/Reorder";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
 import { SearchActions } from "../../searchSlice";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import ViewListIcon from "@mui/icons-material/ViewList";
 
 interface ToggleListViewButtonProps {}
 
@@ -19,7 +19,7 @@ function ToggleListViewButton({ ...props }: ToggleListViewButtonProps & IconButt
   return (
     <Tooltip title="List view/Tile view">
       <IconButton onClick={handleClick} {...props}>
-        {showList ? <ReorderIcon /> : <VerticalSplitIcon />}
+        {showList ? <ViewModuleIcon /> : <ViewListIcon />}
       </IconButton>
     </Tooltip>
   );

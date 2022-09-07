@@ -1,4 +1,13 @@
-import { Divider, List, ListItem, ListItemButton, ListItemIcon, ListItemText, ListProps } from "@mui/material";
+import {
+  BoxProps,
+  Divider,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+} from "@mui/material";
 import React from "react";
 import TagCreationButton from "../TagCreate/TagCreationButton";
 import TagManageButton from "../TagManage/TagManageButton";
@@ -10,6 +19,7 @@ import StorageIcon from "@mui/icons-material/Storage";
 import DownloadIcon from "@mui/icons-material/Download";
 import TagExplorerContextMenu from "./TagExplorerContextMenu";
 import { ContextMenuPosition } from "../../../projects/ProjectContextMenu2";
+import Box from "@mui/material/Box";
 
 interface TagSearchProps {
   handleAllDocumentsClick: () => void;
@@ -24,7 +34,7 @@ function TagExplorer({
   handleTagClick,
   selectedTag,
   ...props
-}: TagSearchProps & ListProps) {
+}: TagSearchProps & BoxProps) {
   // router
   const { projectId } = useParams() as { projectId: string };
 
@@ -42,8 +52,8 @@ function TagExplorer({
   };
 
   return (
-    <>
-      <List {...(props as ListProps)}>
+    <Box {...props}>
+      <List>
         <ListItem disablePadding>
           <ListItemButton onClick={() => handleAllDocumentsClick()}>
             <ListItemIcon>
@@ -61,8 +71,12 @@ function TagExplorer({
             <ListItemText primary="New documents" />
           </ListItemButton>
         </ListItem>
+      </List>
 
-        <Divider />
+      <Typography variant="h6" sx={{ mt: 1, px: 2 }}>
+        Tags:
+      </Typography>
+      <List>
         {allTags.isLoading && <div>Loading!</div>}
         {allTags.isError && <div>Error: {allTags.error.message}</div>}
         {allTags.isSuccess && (
@@ -88,7 +102,7 @@ function TagExplorer({
         position={contextMenuPosition}
         handleClose={() => setContextMenuPosition(null)}
       />
-    </>
+    </Box>
   );
 }
 

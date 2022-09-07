@@ -42,7 +42,7 @@ function DocumentNavigation({ idsToNavigate, searchPrefix, showText }: DocumentN
     <Stack direction="row" sx={{ alignItems: "center" }}>
       {showText && (
         <Typography>
-          {currentDocumentIdx !== -1 ? `${currentDocumentIdx + 1} von ${idsToNavigate.length}` : ""}
+          {currentDocumentIdx !== -1 ? `${currentDocumentIdx + 1} of ${idsToNavigate.length}` : ""}
         </Typography>
       )}
       <Tooltip title="Previous document">

@@ -8,7 +8,7 @@ function TagManageButton(props: ListItemButtonProps) {
       <ListItemIcon>
         <SettingsIcon />
       </ListItemIcon>
-      <ListItemText primary="Manage labels" />
+      <ListItemText primary="Manage tags" />
     </ListItemButton>
   );
 }
