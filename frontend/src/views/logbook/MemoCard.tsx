@@ -65,7 +65,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
   const handleOpenMemo = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
     if (memo.data) {
-      MemoAPI.openMemo({ memoId });
+      MemoAPI.openMemo({ memoId: memo.data.id });
     }
   };
 

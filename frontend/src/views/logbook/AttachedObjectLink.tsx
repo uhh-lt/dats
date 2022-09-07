@@ -44,9 +44,12 @@ export default function AttachedObjectLink({ attachedObjectType, attachedObject 
 
 function CodeLink({ code }: { code: CodeRead }) {
   return (
-    <Stack direction="row" alignItems="center">
+    <Stack direction="row" alignItems="center" component="span">
       attached to code{" "}
-      <Box sx={{ width: 22, height: 22, backgroundColor: code.color, ml: 1.5, mr: 1, flexShrink: 0 }} />
+      <Box
+        sx={{ width: 22, height: 22, backgroundColor: code.color, ml: 1.5, mr: 1, flexShrink: 0 }}
+        component="span"
+      />
       {code.name}
     </Stack>
   );
@@ -65,7 +68,7 @@ function SdocLink({ sdoc }: { sdoc: SourceDocumentRead }) {
 
 function TagLink({ tag }: { tag: DocumentTagRead }) {
   return (
-    <Stack direction="row" alignItems="center">
+    <Stack direction="row" alignItems="center" component="span">
       attached to tag <LabelIcon sx={{ ml: 1.5, mr: 1, color: tag.description }} />
       {tag.title}
     </Stack>
