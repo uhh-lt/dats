@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useCallback } from "react";
 import Typography from "@mui/material/Typography";
 import {
   AppBar,
@@ -6,6 +7,8 @@ import {
   List,
   ListItem,
   ListItemButton,
+  ListItemIcon,
+  ListItemProps,
   ListItemText,
   MenuItem,
   Paper,
@@ -13,17 +16,22 @@ import {
   SelectChangeEvent,
   Stack,
   Toolbar,
+  Tooltip,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import ProjectHooks from "../../api/ProjectHooks";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
 import { useQuery } from "@tanstack/react-query";
-import { SearchService } from "../../api/openapi";
+import { DocType, SearchService } from "../../api/openapi";
 import { parseInt } from "lodash";
 import MemoButton from "../memo-dialog/MemoButton";
 import DocumentNavigation from "../../components/DocumentNavigation";
 import { AnnoActions } from "../../views/annotation/annoSlice";
+import ArticleIcon from "@mui/icons-material/Article";
+import ImageIcon from "@mui/icons-material/Image";
+import { ContextMenuPosition } from "../../views/projects/ProjectContextMenu2";
+import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
 
 function DocumentExplorer({ ...props }) {
   // router
@@ -55,6 +63,21 @@ function DocumentExplorer({ ...props }) {
     dispatch(AnnoActions.setSelectedDocumentTagId(tagId !== "-1" ? parseInt(event.target.value) : undefined));
   };
 
+  // context menu
+  const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
+  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
+  const openContextMenu = useCallback(
+    (sdocId: number) => (event: React.MouseEvent) => {
+      event.preventDefault();
+      setContextMenuData(sdocId);
+      setContextMenuPosition({ x: event.pageX, y: event.pageY });
+    },
+    []
+  );
+  const closeContextMenu = useCallback(() => {
+    setContextMenuPosition(null);
+  }, []);
+
   return (
     <Paper square className="myFlexContainer" {...props}>
       <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
@@ -69,8 +92,6 @@ function DocumentExplorer({ ...props }) {
               <FormControl size="small">
                 <Select
                   sx={{ backgroundColor: "white" }}
-                  labelId="demo-simple-select-label"
-                  id="demo-simple-select"
                   value={selectedDocumentTag?.toString() || "-1"}
                   onChange={handleDocumentTagChange}
                 >
@@ -95,24 +116,11 @@ function DocumentExplorer({ ...props }) {
           {sdocs.data.length > 0 && (
             <List className="myFlexFillAllContainer">
               {sdocs.data.map((sId) => (
-                <ListItem
-                  key={sId}
-                  secondaryAction={
-                    <div className="myShowMoreMenu">
-                      <MemoButton edge="end" sdocId={sId} />
-                    </div>
-                  }
-                  disablePadding
-                  className="myShowMoreListItem"
-                >
-                  <ListItemButton
-                    component={RouterLink}
-                    to={`../annotation/${sId}`}
-                    selected={parseInt(sdocId || "") === sId}
-                  >
-                    <ListItemText primary={<SourceDocumentTitle sdocId={sId} />} />
-                  </ListItemButton>
-                </ListItem>
+                <DocumentExplorerListItem
+                  sdocId={sId}
+                  selectedSdocId={parseInt(sdocId || "")}
+                  onContextMenu={openContextMenu(sId)}
+                />
               ))}
             </List>
           )}
@@ -122,16 +130,47 @@ function DocumentExplorer({ ...props }) {
       ) : (
         <div>Loading!</div>
       )}
+      <DocumentExplorerContextMenu
+        projectId={parseInt(projectId)}
+        sdocId={contextMenuData}
+        handleClose={closeContextMenu}
+        position={contextMenuPosition}
+      />
     </Paper>
   );
 }
 
-function SourceDocumentTitle({ sdocId }: { sdocId: number }) {
+function DocumentExplorerListItem({
+  sdocId,
+  selectedSdocId,
+  ...props
+}: { sdocId: number; selectedSdocId: number } & ListItemProps) {
   const sdoc = SdocHooks.useGetDocumentNoContent(sdocId);
 
-  if (sdoc.isSuccess) return <>{sdoc.data.filename}</>;
-  if (sdoc.isError) return <>Error: {sdoc.error.message}</>;
-  return <>"Loading..."</>;
+  const title = sdoc.isSuccess ? sdoc.data.filename : sdoc.isError ? sdoc.error.message : "Loading...";
+
+  return (
+    <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>
+      <ListItem
+        key={sdocId}
+        secondaryAction={
+          <div className="myShowMoreMenu">
+            <MemoButton edge="end" sdocId={sdocId} />
+          </div>
+        }
+        disablePadding
+        className="myShowMoreListItem"
+        {...props}
+      >
+        <ListItemButton component={RouterLink} to={`../annotation/${sdocId}`} selected={selectedSdocId === sdocId}>
+          {sdoc.isSuccess && (
+            <ListItemIcon>{sdoc.data.doctype === DocType.TEXT ? <ArticleIcon /> : <ImageIcon />}</ListItemIcon>
+          )}
+          <ListItemText primary={title} sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} />
+        </ListItemButton>
+      </ListItem>
+    </Tooltip>
+  );
 }
 
 export default DocumentExplorer;
