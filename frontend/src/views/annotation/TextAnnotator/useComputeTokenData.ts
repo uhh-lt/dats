@@ -26,6 +26,7 @@ function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number
         AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
           adocId: adocId,
           resolve: true,
+          limit: 1000,
         }) as Promise<SpanAnnotationReadResolved[]>
     );
     const annotations = await Promise.all(queries);

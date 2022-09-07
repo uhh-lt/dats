@@ -18,6 +18,7 @@ const useSearchEntityStats = (projectId: number, sdocIds: number[] | undefined) 
           proj_id: projectId,
           sdoc_ids: sdocIds!,
         },
+        limit: 1000,
       }),
     {
       enabled: !!sdocIds && sdocIds.length > 0,
@@ -33,6 +34,7 @@ const useSearchKeywordStats = (projectId: number, sdocIds: number[]) =>
           proj_id: projectId,
           sdoc_ids: sdocIds!,
         },
+        limit: 1000,
       }),
     {
       enabled: sdocIds.length > 0,
