@@ -293,24 +293,23 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   };
 
   return (
-    <div
-      className="myFlexFillAllContainer"
-      style={{ lineHeight: "26px" }}
-      onContextMenu={handleContextMenu}
-      onMouseUp={handleMouseUp}
-    >
+    <>
       <CodeContextMenu
         ref={codeSelectorRef}
         onEdit={handleCodeSelectorEditCode}
         onDelete={handleCodeSelectorDeleteAnnotation}
       />
       <TextAnnotatorRenderer
+        className="myFlexFillAllContainer"
+        style={{ lineHeight: "26px" }}
+        onContextMenu={handleContextMenu}
+        onMouseUp={handleMouseUp}
         sdocId={sdoc.id}
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
       />
-    </div>
+    </>
   );
 }
 

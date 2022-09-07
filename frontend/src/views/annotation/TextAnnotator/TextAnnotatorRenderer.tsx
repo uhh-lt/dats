@@ -1,8 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Token from "./Token";
 import "./TextAnnotatorRenderer.css";
 import { SpanAnnotationReadResolved } from "../../../api/openapi";
 import { IToken } from "./IToken";
+import { Box, BoxProps, Divider } from "@mui/material";
+import { range } from "lodash";
+import PageNavigation from "./PageNavigation";
 
 interface TextAnnotationRendererProps {
   sdocId: number; // todo: is this necessary???
@@ -11,13 +14,23 @@ interface TextAnnotationRendererProps {
   annotationMap: Map<number, SpanAnnotationReadResolved> | undefined;
 }
 
+const tokensPerPage = 1000;
+
 // needs data from useComputeTokenData
 function TextAnnotationRenderer({
   sdocId,
   tokenData,
   annotationsPerToken,
   annotationMap,
-}: TextAnnotationRendererProps) {
+  ...props
+}: TextAnnotationRendererProps & BoxProps) {
+  const tokenCount = tokenData?.length || 0;
+  const [currentPage, setCurrentPage] = useState<number>(0);
+
+  const onPageChange = (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
   const renderedTokens = useMemo(() => {
     if (!annotationsPerToken || !tokenData || !annotationMap) {
       return <div>Loading...</div>;
@@ -26,11 +39,16 @@ function TextAnnotationRenderer({
     console.time("renderTokens");
     const result = (
       <>
-        {tokenData.map((token) => (
+        {range(
+          currentPage * tokensPerPage,
+          currentPage * tokensPerPage + tokensPerPage <= tokenCount
+            ? currentPage * tokensPerPage + tokensPerPage
+            : tokenCount
+        ).map((tokenId) => (
           <Token
-            key={`${sdocId}-${token.index}`}
-            token={token}
-            spanAnnotations={(annotationsPerToken.get(token.index) || []).map(
+            key={tokenId}
+            token={tokenData[tokenId]}
+            spanAnnotations={(annotationsPerToken.get(tokenId) || []).map(
               (annotationId) => annotationMap.get(annotationId)!
             )}
           />
@@ -39,9 +57,27 @@ function TextAnnotationRenderer({
     );
     console.timeEnd("renderTokens");
     return result;
-  }, [sdocId, annotationsPerToken, tokenData, annotationMap]);
+  }, [annotationsPerToken, tokenData, annotationMap, currentPage, tokenCount]);
 
-  return <>{renderedTokens}</>;
+  return (
+    <Box {...props}>
+      <PageNavigation
+        elementCount={tokenCount}
+        elementsPerPage={tokensPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+      />
+      <Divider />
+      {renderedTokens}
+      <Divider />
+      <PageNavigation
+        elementCount={tokenCount}
+        elementsPerPage={tokensPerPage}
+        currentPage={currentPage}
+        onPageChange={onPageChange}
+      />
+    </Box>
+  );
 }
 
 export default TextAnnotationRenderer;
