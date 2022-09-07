@@ -7,9 +7,9 @@ import useComputeEntityStats from "./useComputeEntityStats";
 import DocumentTagStats from "./DocumentTagStats";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { ContextMenuData } from "../SearchResults/SearchResultContextMenu";
 import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
 import { CodeRead } from "../../../api/openapi";
+import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 
 interface SearchStatisticsProps {
   sdocIds: number[];
@@ -68,16 +68,16 @@ function SearchStatistics({
       }
     }
     setValidStats(stats);
-  }, [setValidStats, stats]);
+  }, [tab, setValidStats, stats]);
 
   // context menu
-  const [contextMenuData, setContextMenuData] = React.useState<ContextMenuData | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
   const openContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
-    setContextMenuData({ x: event.pageX, y: event.pageY });
+    setContextMenuPosition({ x: event.pageX, y: event.pageY });
   }, []);
   const closeContextMenu = useCallback(() => {
-    setContextMenuData(null);
+    setContextMenuPosition(null);
   }, []);
   const handleMenuItemClick = useCallback((code: CodeRead) => {
     setTab(`${code.id}`);
@@ -111,7 +111,7 @@ function SearchStatistics({
       </TabContext>
       <SearchStatisticsContextMenu
         menuItems={filteredProjectCodes}
-        contextMenuData={contextMenuData}
+        contextMenuData={contextMenuPosition}
         handleClose={closeContextMenu}
         handleMenuItemClick={handleMenuItemClick}
       />

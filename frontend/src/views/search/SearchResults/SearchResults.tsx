@@ -6,20 +6,24 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
 import { Box, Typography } from "@mui/material";
-import SearchResultContextMenu, { ContextMenuData } from "./SearchResultContextMenu";
+import SearchResultContextMenu from "./SearchResultContextMenu";
 import "./SearchResults.css";
 import { SourceDocumentRead } from "../../../api/openapi";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../searchSlice";
 import SearchResultRow from "./SearchResultRow";
 import SearchResultCard from "./SearchResultCard";
+import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { useParams } from "react-router-dom";
 
-interface SearchResultsNewProps {
+interface SearchResultsProps {
   documentIds: number[];
   handleResultClick: (sdoc: SourceDocumentRead) => void;
 }
 
-export default function SearchResults({ documentIds, handleResultClick }: SearchResultsNewProps) {
+export default function SearchResults({ documentIds, handleResultClick }: SearchResultsProps) {
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+
   // redux (global client state)
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const page = useAppSelector((state) => state.search.page);
@@ -28,19 +32,21 @@ export default function SearchResults({ documentIds, handleResultClick }: Search
   const dispatch = useAppDispatch();
 
   // context menu
-  const [contextMenuData, setContextMenuData] = React.useState<ContextMenuData | null>(null);
+  const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
+  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
   const openContextMenu = useCallback(
-    (docId: number) => (event: React.MouseEvent) => {
+    (sdocId: number) => (event: React.MouseEvent) => {
       event.preventDefault();
-      if (selectedDocumentIds.indexOf(docId) === -1) {
-        dispatch(SearchActions.setSelectedDocuments([docId]));
+      if (selectedDocumentIds.indexOf(sdocId) === -1) {
+        dispatch(SearchActions.setSelectedDocuments([sdocId]));
       }
-      setContextMenuData({ x: event.pageX, y: event.pageY });
+      setContextMenuData(sdocId);
+      setContextMenuPosition({ x: event.pageX, y: event.pageY });
     },
     [dispatch, selectedDocumentIds]
   );
   const closeContextMenu = useCallback(() => {
-    setContextMenuData(null);
+    setContextMenuPosition(null);
   }, []);
 
   // computed
@@ -104,7 +110,12 @@ export default function SearchResults({ documentIds, handleResultClick }: Search
           )}
         </>
       )}
-      <SearchResultContextMenu contextMenuData={contextMenuData} handleClose={closeContextMenu} />
+      <SearchResultContextMenu
+        projectId={projectId}
+        sdocId={contextMenuData}
+        handleClose={closeContextMenu}
+        position={contextMenuPosition}
+      />
     </>
   );
 }
