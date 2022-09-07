@@ -8,18 +8,15 @@ from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.project import ProjectORM
-    from app.core.data.orm.query import QueryORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.span_group import SpanGroupORM
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
     from app.core.data.orm.user import UserORM
-    from app.core.data.orm.action import ActionTargetORM, ActionORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.code import CodeORM, CurrentCodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
-    from app.core.data.orm.filter import FilterORM
     from app.core.data.orm.memo import MemoORM
 
 
@@ -29,7 +26,6 @@ class ObjectHandleORM(ORMBase):
     # one to many
     attached_memos: List["MemoORM"] = relationship("MemoORM",
                                                    back_populates="attached_to",
-                                                   cascade="all, delete",
                                                    passive_deletes=True)
 
     # one to one (ObjectHandle is child)
@@ -72,18 +68,6 @@ class ObjectHandleORM(ORMBase):
     document_tag_id = Column(Integer, ForeignKey('documenttag.id', ondelete="CASCADE"), index=True)
     document_tag: "DocumentTagORM" = relationship("DocumentTagORM", back_populates="object_handle")
 
-    action_id = Column(Integer, ForeignKey('action.id', ondelete="CASCADE"), index=True)
-    action: "ActionORM" = relationship("ActionORM", back_populates="object_handle")
-
-    action_target_id = Column(Integer, ForeignKey('actiontarget.id', ondelete="CASCADE"), index=True)
-    action_target: "ActionTargetORM" = relationship("ActionTargetORM", back_populates="object_handle")
-
-    filter_id = Column(Integer, ForeignKey('filter.id', ondelete="CASCADE"), index=True)
-    filter: "FilterORM" = relationship("FilterORM", back_populates="object_handle")
-
-    query_id = Column(Integer, ForeignKey('query.id', ondelete="CASCADE"), index=True)
-    query: "QueryORM" = relationship("QueryORM", back_populates="object_handle")
-
     # Flo: https://stackoverflow.com/questions/60207228/postgres-unique-constraint-with-multiple-columns-and-null-values
     Index('idx_for_uc_work_with_null',
           coalesce(user_id, 0),
@@ -97,10 +81,6 @@ class ObjectHandleORM(ORMBase):
           coalesce(bbox_annotation_id, 0),
           coalesce(span_group_id, 0),
           coalesce(document_tag_id, 0),
-          coalesce(action_id, 0),
-          coalesce(action_target_id, 0),
-          coalesce(filter_id, 0),
-          coalesce(query_id, 0),
           unique=True)
 
     __table_args__ = (
@@ -119,10 +99,6 @@ class ObjectHandleORM(ORMBase):
                         + CASE WHEN bbox_annotation_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN span_group_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN document_tag_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN action_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN action_target_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN filter_id IS NULL THEN 0 ELSE 1 END
-                        + CASE WHEN query_id IS NULL THEN 0 ELSE 1 END
                     ) = 1
                     """, name="CC_object_handle_refers_to_exactly_one_instance"),
         UniqueConstraint("user_id",
@@ -135,25 +111,5 @@ class ObjectHandleORM(ORMBase):
                          "span_annotation_id",
                          "span_group_id",
                          "document_tag_id",
-                         "action_id",
-                         "action_target_id",
-                         "filter_id",
-                         "query_id",
                          name="UC_only_one_object_handle_per_instance"),
     )
-
-
-if TYPE_CHECKING:
-    from app.core.data.orm.project import ProjectORM
-    from app.core.data.orm.query import QueryORM
-    from app.core.data.orm.source_document import SourceDocumentORM
-    from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
-    from app.core.data.orm.span_annotation import SpanAnnotationORM
-    from app.core.data.orm.span_group import SpanGroupORM
-    from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-    from app.core.data.orm.user import UserORM
-    from app.core.data.orm.action import ActionTargetORM, ActionORM
-    from app.core.data.orm.annotation_document import AnnotationDocumentORM
-    from app.core.data.orm.code import CodeORM, CurrentCodeORM
-    from app.core.data.orm.document_tag import DocumentTagORM
-    from app.core.data.orm.filter import FilterORM

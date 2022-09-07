@@ -16,10 +16,6 @@ class ObjectHandleBaseDTO(BaseModel):
     span_group_id: Optional[int] = None
     bbox_annotation_id: Optional[int] = None
     document_tag_id: Optional[int] = None
-    action_id: Optional[int] = None
-    action_target_id: Optional[int] = None
-    filter_id: Optional[int] = None
-    query_id: Optional[int] = None
 
     # noinspection PyMethodParameters
     @root_validator

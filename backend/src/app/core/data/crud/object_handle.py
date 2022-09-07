@@ -16,14 +16,11 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.object_handle import ObjectHandleCreate
-from app.core.data.orm.action import ActionORM, ActionTargetORM
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
-from app.core.data.orm.filter import FilterORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project import ProjectORM
-from app.core.data.orm.query import QueryORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
@@ -34,15 +31,11 @@ from app.core.db.sql_service import SQLService
 
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
     __obj_id_crud_map = {
-        "action_id": None,
-        "action_target_id": None,
         "annotation_document_id": crud_adoc,
         "code_id": crud_code,
         "current_code_id": crud_current_code,
         "document_tag_id": crud_document_tag,
-        "filter_id": None,
         "project_id": crud_project,
-        "query_id": None,
         "source_document_id": crud_sdoc,
         "source_document_metadata_id": crud_sdoc_meta,
         "span_annotation_id": crud_span_anno,
@@ -51,14 +44,10 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
     }
 
     __obj_id_orm_type_map = {
-        "action_id": ActionORM,
-        "action_target_id": ActionTargetORM,
         "annotation_document_id": AnnotationDocumentORM,
         "code_id": CodeORM,
         "current_code_id": CurrentCodeORM,
         "document_tag_id": DocumentTagORM,
-        "filter_id": FilterORM,
-        "query_id": QueryORM,
         "project_id": ProjectORM,
         "source_document_id": SourceDocumentORM,
         "source_document_metadata_id": SourceDocumentMetadataORM,
@@ -98,14 +87,10 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
             raise NoSuchElementError(obj_type, id=obj_id_val)
         return db_obj
 
-    def resolve_handled_object(self, db: Session, handle: ObjectHandleORM) -> Union[ActionORM,
-                                                                                    ActionTargetORM,
-                                                                                    AnnotationDocumentORM,
+    def resolve_handled_object(self, db: Session, handle: ObjectHandleORM) -> Union[AnnotationDocumentORM,
                                                                                     CodeORM,
                                                                                     CurrentCodeORM,
                                                                                     DocumentTagORM,
-                                                                                    FilterORM,
-                                                                                    QueryORM,
                                                                                     ProjectORM,
                                                                                     SourceDocumentORM,
                                                                                     SourceDocumentMetadataORM,

@@ -13,15 +13,11 @@ from app.core.data.orm.project import ProjectORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.user import UserORM
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.action import ActionORM
-# noinspection PyUnresolvedReferences
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.code import CodeORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.document_tag import DocumentTagORM
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.filter import FilterORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.memo import MemoORM
 # noinspection PyUnresolvedReferences
@@ -29,8 +25,6 @@ from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.orm_base import ORMBase
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.project import ProjectUserLinkTable
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.query import QueryORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.source_document import SourceDocumentORM
 # noinspection PyUnresolvedReferences

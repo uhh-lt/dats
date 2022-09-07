@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.action import ActionORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.memo import MemoORM
@@ -45,11 +44,6 @@ class UserORM(ORMBase):
                                           back_populates="user",
                                           cascade="all, delete",
                                           passive_deletes=True)
-
-    actions: List["ActionORM"] = relationship("ActionORM",
-                                              back_populates="user",
-                                              cascade="all, delete",
-                                              passive_deletes=True)
 
     # many to many
     projects: List["ProjectORM"] = relationship("ProjectORM", secondary="ProjectUserLinkTable".lower(),
