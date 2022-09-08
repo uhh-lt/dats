@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import List, Set, Optional
 
 from sqlalchemy import delete, func, and_, or_
 from sqlalchemy.orm import Session
@@ -7,13 +7,14 @@ from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.search import SpanEntity, SpanEntityStat
-from app.core.data.dto.source_document import SourceDocumentCreate
+from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM, SourceDocumentDocumentTagLinkTable
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
+from app.core.data.repo.repo_service import RepoService
 
 
 class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]):
@@ -45,11 +46,24 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         db.refresh(db_obj)
         return db_obj
 
+    def remove(self, db: Session, *, id: int) -> Optional[SourceDocumentORM]:
+        sdoc_db_obj = super().remove(db=db, id=id)
+
+        # remove file from repo
+        RepoService().remove_sdoc_file(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+
+        return sdoc_db_obj
+
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         statement = delete(self.model).where(self.model.project_id == proj_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
-        return list(map(lambda t: t[0], removed_ids))
+        removed_ids = list(map(lambda t: t[0], removed_ids))
+
+        # remove files from repo
+        RepoService().remove_all_project_sdoc_files(proj_id=proj_id)
+
+        return removed_ids
 
     def read_by_project_and_document_tag(self, db: Session, *, proj_id: int, tag_id: int) -> List[SourceDocumentORM]:
         return db.query(self.model).join(SourceDocumentORM, DocumentTagORM.source_documents) \
