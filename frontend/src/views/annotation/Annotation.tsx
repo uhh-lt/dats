@@ -1,5 +1,5 @@
 import { AppBar, Button, ButtonGroup, Grid, Paper, Portal, Toolbar, Typography } from "@mui/material";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import DocumentExplorer from "../../features/document-explorer/DocumentExplorer";
 import { useParams } from "react-router-dom";
 import CodeExplorer from "./CodeExplorer/CodeExplorer";
@@ -25,7 +25,7 @@ function Annotation() {
   const annotationDocument = useSelectOrCreateCurrentUsersAnnotationDocument(sourceDocumentId);
 
   // ui event handler
-  const [showCodeExplorer, setShowCodeExplorer] = React.useState(true);
+  const [showCodeExplorer, setShowCodeExplorer] = useState(true);
   const toggleShowCodeExplorer = () => {
     setShowCodeExplorer(!showCodeExplorer);
   };

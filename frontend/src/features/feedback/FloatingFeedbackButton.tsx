@@ -7,7 +7,7 @@ import FeedbackIcon from "@mui/icons-material/Feedback";
 import { useAuth } from "../../auth/AuthProvider";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
 import { useLocation } from "react-router-dom";
@@ -25,7 +25,7 @@ function FloatingFeedbackButton() {
   } = useForm();
 
   // local state
-  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = React.useState(false);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
 
   // mutations
   const queryClient = useQueryClient();

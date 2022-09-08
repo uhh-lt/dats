@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Typography from "@mui/material/Typography";
 import {
   AppBar,
@@ -52,8 +52,8 @@ function DocumentExplorer({ ...props }) {
   };
 
   // context menu
-  const [contextMenuData, setContextMenuData] = React.useState<number>();
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = useState<number>();
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
   const openContextMenu = useCallback(
     (sdocId: number) => (event: React.MouseEvent) => {
       event.preventDefault();

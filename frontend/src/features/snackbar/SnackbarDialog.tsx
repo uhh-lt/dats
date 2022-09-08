@@ -1,13 +1,13 @@
 import { Snackbar } from "@mui/material";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus";
 import MuiAlert, { AlertProps } from "@mui/material/Alert";
 import { SnackbarEvent } from "./SnackbarAPI";
 
 export default function SnackbarDialog() {
-  const [open, setOpen] = React.useState(false);
-  const [text, setText] = React.useState("");
-  const [severity, setSeverity] = React.useState<AlertProps["severity"]>("success");
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [severity, setSeverity] = useState<AlertProps["severity"]>("success");
 
   const openSnackbar = useCallback((event: CustomEventInit) => {
     const snackbarEvent: SnackbarEvent = event.detail;

@@ -1,5 +1,5 @@
 import { CardContent } from "@mui/material";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
@@ -15,7 +15,7 @@ interface ProjectCodesProps {
 
 function ProjectCodes({ project }: ProjectCodesProps) {
   // local state
-  const [expandedCodeIds, setExpandedCodeIds] = React.useState<string[]>([]);
+  const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(project.id);

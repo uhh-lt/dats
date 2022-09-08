@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -37,8 +37,8 @@ export default function SearchResults({
   const dispatch = useAppDispatch();
 
   // context menu
-  const [contextMenuData, setContextMenuData] = React.useState<number>();
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = useState<number>();
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
   const openContextMenu = useCallback(
     (sdocId: number) => (event: React.MouseEvent) => {
       event.preventDefault();

@@ -20,7 +20,7 @@ import eventBus from "../../EventBus";
 export default function ImportDocumentDialog() {
   // state
   const [open, setOpen] = useState(false);
-  const [activeStep, setActiveStep] = React.useState(0);
+  const [activeStep, setActiveStep] = useState(0);
 
   // methods
   const handleNext = () => {

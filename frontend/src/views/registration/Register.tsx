@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -33,7 +33,7 @@ function Register() {
   // password
   const password = useRef();
   password.current = watch("password", "");
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const handleShowPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setShowPassword(event.target.checked);
   };

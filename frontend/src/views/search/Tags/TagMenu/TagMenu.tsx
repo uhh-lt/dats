@@ -111,7 +111,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   const open = Boolean(anchorEl);
 
   const [search, setSearch] = useState<string>("");
-  const [checked, setChecked] = React.useState<Map<number, CheckboxState>>(new Map<number, CheckboxState>());
+  const [checked, setChecked] = useState<Map<number, CheckboxState>>(new Map<number, CheckboxState>());
 
   // computed state
   const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {

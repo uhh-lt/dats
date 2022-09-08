@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Typography from "@mui/material/Typography";
 import { AppBar, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
 import { useParams } from "react-router-dom";
@@ -79,8 +79,8 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
   };
 
   // context menu
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = React.useState<ICodeTree>();
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = useState<ICodeTree>();
   const onContextMenu = (node: ICodeTree) => (event: any) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });

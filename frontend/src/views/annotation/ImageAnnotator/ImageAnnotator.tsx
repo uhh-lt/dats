@@ -45,7 +45,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
   }, [annotations.data, hiddenCodeIds]);
 
   // local client state
-  const [isZooming, setIsZooming] = React.useState(true);
+  const [isZooming, setIsZooming] = useState(true);
   const [selectedBbox, setSelectedBbox] = useState<BBoxAnnotationReadResolvedCode | null>(null);
 
   // mutations for create, update, delete

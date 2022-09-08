@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { AppBar, Box, Button, Card, CardContent, Tabs, Toolbar, Typography } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import TabPanel from "@mui/lab/TabPanel";
@@ -25,7 +25,7 @@ function ProjectUpdate() {
   const project = ProjectHooks.useGetProject(projId);
 
   // state
-  const [tab, setTab] = React.useState("1");
+  const [tab, setTab] = useState("1");
   const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
   };

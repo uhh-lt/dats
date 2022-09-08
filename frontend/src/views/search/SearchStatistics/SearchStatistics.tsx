@@ -71,7 +71,7 @@ function SearchStatistics({
   }, [tab, setValidStats, stats]);
 
   // context menu
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
   const openContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.pageX, y: event.pageY });

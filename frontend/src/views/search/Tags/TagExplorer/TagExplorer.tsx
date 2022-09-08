@@ -8,7 +8,7 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import TagCreationButton from "../TagCreate/TagCreationButton";
 import TagManageButton from "../TagManage/TagManageButton";
 import { useParams } from "react-router-dom";
@@ -43,8 +43,8 @@ function TagExplorer({
   const allTags = ProjectHooks.useGetAllTags(parseInt(projectId));
 
   // context menu
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = React.useState<number>();
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = useState<number>();
   const onContextMenu = (tagId: number) => (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });

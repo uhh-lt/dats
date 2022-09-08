@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Divider,
@@ -22,7 +22,7 @@ type Anchor = "top" | "left" | "bottom" | "right";
 export default function TemporaryDrawer() {
   const { isLoggedIn } = useAuth();
 
-  const [state, setState] = React.useState({
+  const [state, setState] = useState({
     top: false,
     left: false,
     bottom: false,

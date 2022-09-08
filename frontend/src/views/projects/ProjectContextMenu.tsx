@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef } from "react";
+import React, { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import SuperContextMenu, { SuperContextMenuHandle, SuperContextMenuPosition } from "./SuperContextMenu";
 import { ListItemIcon, ListItemText, MenuItem, Typography } from "@mui/material";
 import LabelIcon from "@mui/icons-material/Label";
@@ -15,7 +15,7 @@ const ProjectContextMenu = forwardRef<ProjectContextMenuHandle, ProjectContextMe
   const contextMenuRef = useRef<SuperContextMenuHandle>(null);
 
   // local client state
-  const [currentProjectId, setCurrentProjectId] = React.useState<number | null>(null);
+  const [currentProjectId, setCurrentProjectId] = useState<number | null>(null);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({

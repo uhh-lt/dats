@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import React from "react";
+import React, { useState } from "react";
 import { Link, Link as RouterLink, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import UserHooks from "../../api/UserHooks";
@@ -28,9 +28,9 @@ function ProjectSelection() {
   // global server state (react query)
   const projects = UserHooks.useGetProjects(user.data?.id);
 
-  // context menu 2
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = React.useState<number>();
+  // context menu
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = useState<number>();
   const onContextMenu = (projectId: number) => (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });

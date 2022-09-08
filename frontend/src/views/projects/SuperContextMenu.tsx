@@ -1,5 +1,5 @@
 import { Menu, PaperProps } from "@mui/material";
-import React, { forwardRef, useImperativeHandle } from "react";
+import React, { forwardRef, useImperativeHandle, useState } from "react";
 
 export interface SuperContextMenuPosition {
   x: number;
@@ -18,7 +18,7 @@ interface SuperContextMenuProps {
 const SuperContextMenu = forwardRef<SuperContextMenuHandle, SuperContextMenuProps & PaperProps>(
   ({ children, ...props }, ref) => {
     // local client state
-    const [position, setPosition] = React.useState<SuperContextMenuPosition | null>(null);
+    const [position, setPosition] = useState<SuperContextMenuPosition | null>(null);
 
     // exposed methods (via ref)
     useImperativeHandle(ref, () => ({

@@ -1,5 +1,5 @@
 import { PopoverOrigin } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import LabelIcon from "@mui/icons-material/Label";
@@ -11,7 +11,7 @@ interface TagMenuButtonProps {
 }
 
 function TagMenuButton({ forceSdocId, popoverOrigin }: TagMenuButtonProps) {
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);

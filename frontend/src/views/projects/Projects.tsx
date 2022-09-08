@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Card,
   CardActionArea,
@@ -23,8 +23,8 @@ function Projects() {
   const projects = UserHooks.useGetProjects(user.data?.id);
 
   // context menu 2
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = React.useState<number>();
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = useState<number>();
   const onContextMenu2 = (projectId: number) => (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });

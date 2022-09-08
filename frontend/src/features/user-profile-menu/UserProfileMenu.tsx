@@ -1,5 +1,5 @@
 import { Button, Card, CardActions, CardContent, Divider, IconButton, Popover, Stack, Typography } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Link } from "react-router-dom";
 import Avatar from "@mui/material/Avatar";
@@ -11,7 +11,7 @@ interface UserProfileMenuProps {
 }
 
 function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
-  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);

@@ -1,5 +1,5 @@
 import { Stack } from "@mui/material";
-import React from "react";
+import React, { useState } from "react";
 import MemoCard from "./MemoCard";
 import { ContextMenuPosition } from "../projects/ProjectContextMenu2";
 import MemoResultsContextMenu from "./MemoResultsContextMenu";
@@ -18,8 +18,8 @@ export interface MemoCardContextMenuData {
 // todo: the filtering should happen in the backend?
 function MemoResults({ noResultsText, memoIds, filter }: MemoResultsProps) {
   // context menu
-  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = React.useState<MemoCardContextMenuData>({
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = useState<MemoCardContextMenuData>({
     memoId: undefined,
     memoStarred: undefined,
   });
