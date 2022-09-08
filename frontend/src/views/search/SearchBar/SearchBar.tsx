@@ -1,7 +1,7 @@
 import { IconButton, InputBase, Paper, Tooltip } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import React from "react";
+import React, { useRef } from "react";
 import { UseFormRegister } from "react-hook-form";
 import SearchBarAdvanced from "./SearchBarAdvanced";
 
@@ -13,7 +13,7 @@ interface SearchBarProps {
 }
 
 function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: SearchBarProps) {
-  const container = React.useRef<HTMLFormElement | null>(null);
+  const container = useRef<HTMLFormElement | null>(null);
 
   return (
     <Paper

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Box, CssBaseline } from "@mui/material";
 import { Outlet, useParams } from "react-router-dom";
 import MemoDialog from "../features/memo-dialog/MemoDialog";
@@ -16,7 +16,7 @@ function TwoBarLayout() {
   const { projectId } = useParams() as { projectId: string };
 
   // search bar container
-  const container = React.useRef(null);
+  const container = useRef(null);
 
   if (parseInt(projectId)) {
     return (
