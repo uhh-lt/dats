@@ -1,4 +1,4 @@
-import { Box, Toolbar } from "@mui/material";
+import { Box, Toolbar, ToolbarProps } from "@mui/material";
 import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
 import TagMenuButton from "./ToolBarElements/TagMenuButton";
 import DeleteButton from "./ToolBarElements/DeleteButton";
@@ -13,7 +13,7 @@ interface SearchResultsToolbarProps {
   searchResultIds: number[];
 }
 
-function SearchResultsToolbar({ searchResultIds }: SearchResultsToolbarProps) {
+function SearchResultsToolbar({ searchResultIds, ...props }: SearchResultsToolbarProps & ToolbarProps) {
   // global client state (redux)
   const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
 
@@ -21,7 +21,7 @@ function SearchResultsToolbar({ searchResultIds }: SearchResultsToolbarProps) {
   const numSearchResults = searchResultIds.length;
 
   return (
-    <Toolbar disableGutters variant="dense" sx={{ minHeight: "52px", p: "0px 4px" }}>
+    <Toolbar disableGutters variant="dense" sx={{ minHeight: "52px", p: "0px 4px" }} {...props}>
       <ToggleAllDocumentsButton searchResultIds={searchResultIds} />
       {numSelectedDocuments > 0 && (
         <>

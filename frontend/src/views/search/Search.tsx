@@ -26,6 +26,7 @@ import { useQuery } from "@tanstack/react-query";
 import SearchFilterChip from "./SearchFilterChip";
 import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
 import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
+import Box from "@mui/material/Box";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -175,40 +176,51 @@ function Search() {
             handleCodeClick={handleAddCodeFilter}
           />
         </Grid>
-        <Grid
-          item
-          md={isSplitView ? 5 : 10}
-          display={isSplitView || !viewDocument ? "flex" : "none"}
-          className="h100 myFlexContainer"
-        >
-          <Stack direction="row" style={{ flexWrap: "wrap", gap: "8px" }}>
-            {filters.map((filter) => (
-              <SearchFilterChip key={filter.id} filter={filter} handleDelete={handleRemoveFilter} />
-            ))}
-          </Stack>
-          <SearchResultsToolbar searchResultIds={searchResultIds} />
-          <React.Fragment>
-            {searchResults.isLoading && <div>Loading!</div>}
-            {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
-            {searchResults.isSuccess && (
-              <SearchResults documentIds={searchResults.data} handleResultClick={handleResultClick} />
-            )}
-          </React.Fragment>
-        </Grid>
-        <Grid
-          item
-          md={isSplitView ? 5 : 10}
-          display={isSplitView || viewDocument ? "flex" : "none"}
-          className="h100 myFlexContainer"
-        >
-          {sdocId && <DocumentViewerToolbar sdocId={parseInt(sdocId)} searchResultIds={searchResultIds} />}
-          <DocumentViewer
-            sdocId={sdocId ? parseInt(sdocId) : undefined}
-            handleTagClick={handleAddTagFilter}
-            showEntities={isShowEntities}
-            className="myFlexFillAllContainer"
-            isIdleContent={<Typography>Click a document to read it :)</Typography>}
-          />
+        <Grid item md={10} className="myFlexContainer h100">
+          <Box className="myFlexFitContent">
+            <Stack direction="row" style={{ flexWrap: "wrap", gap: "8px" }}>
+              {filters.length > 0 && <Typography variant="h6">Filter:</Typography>}
+              {filters.map((filter) => (
+                <SearchFilterChip key={filter.id} filter={filter} handleDelete={handleRemoveFilter} />
+              ))}
+            </Stack>
+          </Box>
+          <Grid container className="myFlexFillAllContainer">
+            <Grid
+              item
+              md={isSplitView ? 6 : 12}
+              display={isSplitView || !viewDocument ? "flex" : "none"}
+              className="myFlexContainer h100"
+            >
+              <SearchResultsToolbar searchResultIds={searchResultIds} className="myFlexFitContentContainer" />
+              <React.Fragment>
+                {searchResults.isLoading && <div>Loading!</div>}
+                {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
+                {searchResults.isSuccess && (
+                  <SearchResults
+                    documentIds={searchResults.data}
+                    handleResultClick={handleResultClick}
+                    className="myFlexFillAllContainer"
+                  />
+                )}
+              </React.Fragment>
+            </Grid>
+            <Grid
+              item
+              md={isSplitView ? 6 : 12}
+              display={isSplitView || viewDocument ? "flex" : "none"}
+              className="myFlexContainer h100"
+            >
+              {sdocId && <DocumentViewerToolbar sdocId={parseInt(sdocId)} searchResultIds={searchResultIds} />}
+              <DocumentViewer
+                sdocId={sdocId ? parseInt(sdocId) : undefined}
+                handleTagClick={handleAddTagFilter}
+                showEntities={isShowEntities}
+                className="myFlexFillAllContainer"
+                isIdleContent={<Typography>Click a document to read it :)</Typography>}
+              />
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
     </>

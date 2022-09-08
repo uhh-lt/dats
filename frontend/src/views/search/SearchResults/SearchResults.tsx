@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
+import TableContainer, { TableContainerProps } from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
 import { Box, Typography } from "@mui/material";
 import SearchResultContextMenu from "./SearchResultContextMenu";
@@ -19,9 +19,14 @@ import { useParams } from "react-router-dom";
 interface SearchResultsProps {
   documentIds: number[];
   handleResultClick: (sdoc: SourceDocumentRead) => void;
+  className?: string;
 }
 
-export default function SearchResults({ documentIds, handleResultClick }: SearchResultsProps) {
+export default function SearchResults({
+  documentIds,
+  handleResultClick,
+  className,
+}: SearchResultsProps & TableContainerProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // redux (global client state)
@@ -71,7 +76,7 @@ export default function SearchResults({ documentIds, handleResultClick }: Search
       ) : (
         <>
           {isListView ? (
-            <TableContainer sx={{ width: "100%", overflowX: "hidden" }}>
+            <TableContainer sx={{ width: "100%", overflowX: "hidden" }} className={className}>
               <Table sx={{ tableLayout: "fixed", whiteSpace: "nowrap" }} aria-labelledby="tableTitle" size={"medium"}>
                 <TableBody>
                   {documentIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((sdocId) => (
@@ -96,7 +101,7 @@ export default function SearchResults({ documentIds, handleResultClick }: Search
               </Table>
             </TableContainer>
           ) : (
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: "16px", overflowY: "auto", p: 2 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: "16px", overflowY: "auto", p: 2 }} className={className}>
               {documentIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((sdocId) => (
                 <SearchResultCard
                   key={sdocId}
