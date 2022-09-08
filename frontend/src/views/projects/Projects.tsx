@@ -24,7 +24,7 @@ function Projects() {
 
   // context menu 2
   const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
+  const [contextMenuData, setContextMenuData] = React.useState<number>();
   const onContextMenu2 = (projectId: number) => (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });

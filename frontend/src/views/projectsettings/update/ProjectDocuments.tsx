@@ -84,7 +84,7 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
+  const [contextMenuData, setContextMenuData] = React.useState<number>();
   const onContextMenu = (sdocId: number) => (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });

@@ -37,7 +37,7 @@ export default function SearchResults({
   const dispatch = useAppDispatch();
 
   // context menu
-  const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
+  const [contextMenuData, setContextMenuData] = React.useState<number>();
   const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
   const openContextMenu = useCallback(
     (sdocId: number) => (event: React.MouseEvent) => {

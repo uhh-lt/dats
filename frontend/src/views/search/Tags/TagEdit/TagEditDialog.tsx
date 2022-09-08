@@ -30,7 +30,7 @@ function TagEditDialog() {
   } = useForm();
 
   // state
-  const [tagId, setTagId] = useState<number | undefined>(undefined);
+  const [tagId, setTagId] = useState<number>();
   const [open, setOpen] = useState(false);
   const [color, setColor] = useState("#000000");
 
