@@ -134,6 +134,16 @@ class RepoService(metaclass=SingletonMeta):
         proj_repo_path = self._generate_project_repo_root_path(proj_id=proj_id)
         shutil.rmtree(proj_repo_path)
 
+    def remove_sdoc_file(self, sdoc: SourceDocumentRead) -> None:
+        logger.info(f"Removing SourceDocument File {sdoc.filename} of project with ID={sdoc.project_id}")
+        self.get_path_to_sdoc_file(sdoc=sdoc, raise_if_not_exists=True).unlink()
+
+    def remove_all_project_sdoc_files(self, proj_id: int) -> None:
+        logger.info(f"Removing all SourceDocument Files of project with ID={proj_id}")
+        for f in map(Path, os.scandir(self._generate_project_repo_sdocs_root_path(proj_id=proj_id))):
+            logger.info(f"Removing SourceDocument File {f.name} of project with ID={proj_id}")
+            f.unlink(missing_ok=False)
+
     def get_path_to_sdoc_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False) -> Path:
         dst_path = self._generate_dst_path_for_project_file(proj_id=sdoc.project_id, filename=sdoc.filename)
         if raise_if_not_exists and not dst_path.exists():
@@ -146,8 +156,11 @@ class RepoService(metaclass=SingletonMeta):
     def _generate_project_repo_root_path(self, proj_id: int) -> Path:
         return self.proj_root.joinpath(f"{proj_id}/")
 
+    def _generate_project_repo_sdocs_root_path(self, proj_id: int) -> Path:
+        return self._generate_project_repo_root_path(proj_id=proj_id).joinpath("docs/")
+
     def _generate_dst_path_for_project_file(self, proj_id: int, filename: str) -> Path:
-        return self._generate_project_repo_root_path(proj_id=proj_id).joinpath(f"docs/{filename}")
+        return self._generate_project_repo_sdocs_root_path(proj_id=proj_id).joinpath(f"{filename}")
 
     def _create_directory_structure_for_project_file(self, proj_id: int, filename: str) -> Optional[Path]:
         dst_path = self._generate_dst_path_for_project_file(proj_id=proj_id, filename=filename)
