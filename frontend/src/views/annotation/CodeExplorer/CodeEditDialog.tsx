@@ -66,12 +66,6 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   // mutations
   const queryClient = useQueryClient();
   const updateCodeMutation = CodeHooks.useUpdateCode({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data: CodeRead) => {
       queryClient.invalidateQueries([QueryKey.CODE, data.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES]);
@@ -83,12 +77,6 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     },
   });
   const deleteCodeMutation = CodeHooks.useDeleteCode({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data: CodeRead) => {
       queryClient.invalidateQueries([QueryKey.CODE, data.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES]);

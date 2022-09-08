@@ -57,12 +57,6 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   // mutations
   const queryClient = useQueryClient();
   const createCodeMutation = CodeHooks.useCreateCode({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.CODE, data.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES, parseInt(projectId, 10)]);

@@ -65,12 +65,6 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   // mutations
   const queryClient = useQueryClient();
   const updateTagsMutation = TagHooks.useBulkUpdateDocumentTags({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.sourceDocumentIds.forEach((sdocId) => {
@@ -85,12 +79,6 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
     },
   });
   const addTagsMutation = TagHooks.useBulkLinkDocumentTags({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.source_document_ids.forEach((sdocId) => {
@@ -105,12 +93,6 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
     },
   });
   const removeTagsMutation = TagHooks.useBulkUnlinkDocumentTags({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data, variables) => {
       // we need to invalidate the document tags for every document that we updated
       variables.requestBody.source_document_ids.forEach((sdocId) => {

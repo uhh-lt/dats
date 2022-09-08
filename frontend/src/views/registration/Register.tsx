@@ -40,12 +40,6 @@ function Register() {
 
   // registration
   const registerUserMutation = UserHooks.useRegister({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: () => {
       SnackbarAPI.openSnackbar({
         text: "Registration success! Redirecting to login...",

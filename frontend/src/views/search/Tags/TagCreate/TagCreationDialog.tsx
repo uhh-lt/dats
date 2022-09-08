@@ -56,12 +56,6 @@ function TagCreationDialog() {
   // mutations
   const queryClient = useQueryClient();
   const createTagMutation = TagHooks.useCreateTag({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, projectId]);
       setOpen(false); // close dialog

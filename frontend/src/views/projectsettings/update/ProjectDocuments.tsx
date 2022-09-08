@@ -44,12 +44,6 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
   };
   const queryClient = useQueryClient();
   const uploadFileMutation = ProjectHooks.useUploadDocument({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_DOCUMENTS, project.id]);
       SnackbarAPI.openSnackbar({
@@ -76,12 +70,6 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
 
   // file deletion
   const deleteFileMutation = SdocHooks.useDeleteDocument({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_DOCUMENTS, project.id]);
       SnackbarAPI.openSnackbar({

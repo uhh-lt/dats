@@ -33,12 +33,6 @@ function ProjectUpdate() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const removeProjectMutation = ProjectHooks.useDeleteProject({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
       SnackbarAPI.openSnackbar({

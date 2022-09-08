@@ -16,12 +16,6 @@ function MemoStarButton({ memoId, isStarred, onClick, ...props }: MemoStarButton
   // mutation
   const queryClient = useQueryClient();
   const updateMutation = MemoHooks.useUpdateMemo({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       SnackbarAPI.openSnackbar({

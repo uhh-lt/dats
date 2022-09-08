@@ -38,12 +38,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
   // mutations for create, update, delete
   const queryClient = useQueryClient();
-  const showErrorSnackbar = (error: Error) => {
-    SnackbarAPI.openSnackbar({
-      text: error.message,
-      severity: "error",
-    });
-  };
   const createMutation = SpanAnnotationHooks.useCreateAnnotation({
     onSuccess: (data) => {
       SnackbarAPI.openSnackbar({
@@ -87,7 +81,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       return { previousSpanAnnotations, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
-      showErrorSnackbar(error);
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
     },
@@ -139,7 +132,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       return { previousAnnos };
     },
     onError: (error: Error, newSpanAnnotation, context: any) => {
-      showErrorSnackbar(error);
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId], context.previousAnnos);
     },
@@ -183,7 +175,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       return { previousSpanAnnotations, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
-      showErrorSnackbar(error);
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
     },
@@ -199,7 +190,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     if (!annotationMap) return;
 
     const target = (event.target as HTMLElement).parentElement;
-    console.log(target);
     if (target && target.classList.contains("tok") && target.childElementCount > 0) {
       event.preventDefault();
 

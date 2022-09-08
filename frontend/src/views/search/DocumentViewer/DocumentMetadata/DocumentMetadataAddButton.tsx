@@ -16,12 +16,6 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
   // mutations
   const queryClient = useQueryClient();
   const createMutation = MetadataHooks.useCreateMetadata({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data: SourceDocumentMetadataRead) => {
       queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
       queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);

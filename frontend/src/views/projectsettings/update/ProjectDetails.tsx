@@ -27,12 +27,6 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
   // mutations
   const queryClient = useQueryClient();
   const updateProjectMutation = ProjectHooks.useUpdateProject({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT, data.id]);

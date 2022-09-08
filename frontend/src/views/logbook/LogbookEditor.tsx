@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { Editor } from "@toast-ui/react-editor";
 import ProjectHooks from "../../api/ProjectHooks";
 import { useAuth } from "../../auth/AuthProvider";
@@ -21,14 +21,7 @@ function LogbookEditor() {
 
   // mutations
   const queryClient = useQueryClient();
-  const onError = useCallback((error: Error) => {
-    SnackbarAPI.openSnackbar({
-      text: error.message,
-      severity: "error",
-    });
-  }, []);
   const createMutation = ProjectHooks.useCreateMemo({
-    onError: onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_MEMO, data.project_id, data.user_id]);
       SnackbarAPI.openSnackbar({
@@ -38,7 +31,6 @@ function LogbookEditor() {
     },
   });
   const updateMutation = MemoHooks.useUpdateMemo({
-    onError: onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_MEMO, data.project_id, data.user_id]);
       SnackbarAPI.openSnackbar({

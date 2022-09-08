@@ -93,10 +93,6 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       return { previousBboxes, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
     },
@@ -148,10 +144,6 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       return { previousBbox };
     },
     onError: (error: Error, newBbox, context: any) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData([QueryKey.BBOX_ANNOTATION, newBbox.bboxId], context.previousBbox);
     },
@@ -195,10 +187,6 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       return { previousBboxes, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
     },

@@ -17,12 +17,6 @@ function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadata
   // mutations
   const queryClient = useQueryClient();
   const deleteMutation = MetadataHooks.useDeleteMetadata({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data: SourceDocumentMetadataRead) => {
       queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
       queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);

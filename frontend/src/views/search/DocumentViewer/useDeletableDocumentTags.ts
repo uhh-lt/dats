@@ -12,12 +12,6 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
   // mutations
   const queryClient = useQueryClient();
   const removeTagMutation = SdocHooks.useRemoveDocumentTag({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (doc) => {
       queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
       queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);

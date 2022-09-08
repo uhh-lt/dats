@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
 import { SpanAnnotationReadResolved } from "../../api/openapi";
@@ -22,14 +22,7 @@ export function MemoContentSpanAnnotation({
 
   // mutations
   const queryClient = useQueryClient();
-  const onError = useCallback((error: Error) => {
-    SnackbarAPI.openSnackbar({
-      text: error.message,
-      severity: "error",
-    });
-  }, []);
   const createMutation = SpanAnnotationHooks.useCreateMemo({
-    onError,
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
@@ -40,7 +33,6 @@ export function MemoContentSpanAnnotation({
     },
   });
   const updateMutation = MemoHooks.useUpdateMemo({
-    onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id, data.user_id]);
@@ -52,7 +44,6 @@ export function MemoContentSpanAnnotation({
     },
   });
   const deleteMutation = MemoHooks.useDeleteMemo({
-    onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id, data.user_id]);

@@ -55,12 +55,6 @@ function ProjectUsers({ project }: ProjectUsersProps) {
 
   // add user
   const addUserMutation = ProjectHooks.useAddUser({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_USERS, project.id]);
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, data.id]);
@@ -81,12 +75,6 @@ function ProjectUsers({ project }: ProjectUsersProps) {
 
   // remove user
   const removeUserMutation = ProjectHooks.useRemoveUser({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_USERS, project.id]);
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, data.id]);

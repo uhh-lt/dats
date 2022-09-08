@@ -34,12 +34,6 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
   // mutation
   const queryClient = useQueryClient();
   const updateMutation = MetadataHooks.useUpdateMetadata({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (metadata: SourceDocumentMetadataRead) => {
       queryClient.invalidateQueries([QueryKey.METADATA, metadata.id]);
       queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, metadata.source_document_id]);

@@ -54,12 +54,6 @@ export default function CodeCreationDialog({ projectId, userId, codes }: CodeDia
   // mutations
   const queryClient = useQueryClient();
   const createCodeMutation = CodeHooks.useCreateCode({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data: CodeRead) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES, projectId]);
       queryClient.invalidateQueries([QueryKey.USER_CODES, userId]);

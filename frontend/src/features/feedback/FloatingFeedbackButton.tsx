@@ -30,12 +30,6 @@ function FloatingFeedbackButton() {
   // mutations
   const queryClient = useQueryClient();
   const createMutation = FeedbackHooks.useCreateFeedback({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.FEEDBACKS]);
       SnackbarAPI.openSnackbar({

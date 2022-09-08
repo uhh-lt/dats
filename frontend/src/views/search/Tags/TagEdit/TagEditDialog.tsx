@@ -66,12 +66,6 @@ function TagEditDialog() {
   // mutations
   const queryClient = useQueryClient();
   const updateTagMutation = TagHooks.useUpdateTag({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.TAG, data.id]);
       setOpen(false); // close dialog
@@ -82,12 +76,6 @@ function TagEditDialog() {
     },
   });
   const deleteTagMutation = TagHooks.useDeleteTag({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_TAGS]);
       queryClient.invalidateQueries([QueryKey.SDOC_TAGS]);

@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
 import { DocumentTagRead } from "../../api/openapi";
@@ -18,14 +18,7 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
 
   // mutations
   const queryClient = useQueryClient();
-  const onError = useCallback((error: Error) => {
-    SnackbarAPI.openSnackbar({
-      text: error.message,
-      severity: "error",
-    });
-  }, []);
   const createMutation = TagHooks.useCreateMemo({
-    onError,
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
       SnackbarAPI.openSnackbar({
@@ -36,7 +29,6 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
     },
   });
   const updateMutation = MemoHooks.useUpdateMemo({
-    onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       queryClient.invalidateQueries([QueryKey.MEMO_TAG, tag.id, data.user_id]);
@@ -48,7 +40,6 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
     },
   });
   const deleteMutation = MemoHooks.useDeleteMemo({
-    onError,
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       queryClient.invalidateQueries([QueryKey.MEMO_TAG, tag.id, data.user_id]);

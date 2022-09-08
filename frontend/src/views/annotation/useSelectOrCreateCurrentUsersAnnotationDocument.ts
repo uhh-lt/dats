@@ -26,12 +26,6 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
   // mutation
   const queryClient = useQueryClient();
   const createAdocMutation = AdocHooks.useCreateAdoc({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.SDOC_ADOCS, data.source_document_id]);
       SnackbarAPI.openSnackbar({
