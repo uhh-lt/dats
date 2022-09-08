@@ -54,8 +54,8 @@ def _store_archive_temporarily(uploaded_file: UploadFile) -> Path:
 def persist_as_sdoc(doc_file: UploadFile,
                     project_id: int) -> Tuple[Path, SourceDocumentORM]:
     # save the file to disk
-    dst = repo.store_uploaded_file(uploaded_file=doc_file,
-                                   proj_id=project_id)
+    dst = repo.store_uploaded_file_in_project(uploaded_file=doc_file,
+                                              proj_id=project_id)
     # generate the create_dto
     dst, create_dto = repo.generate_source_document_create_dto_from_file(proj_id=project_id,
                                                                          filename=doc_file.filename)

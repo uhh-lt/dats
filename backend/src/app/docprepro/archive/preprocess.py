@@ -22,8 +22,8 @@ repo = RepoService()
 def import_uploaded_archive(temporary_archive_file_path: Path,
                             project_id: int) -> None:
     # store and extract the archive
-    file_dsts = repo.store_and_extract_temporary_archive_file(proj_id=project_id,
-                                                              temporary_archive_file_path=temporary_archive_file_path)
+    file_dsts = repo.store_and_extract_temporary_archive_file_in_project(proj_id=project_id,
+                                                                         temporary_archive_file_path=temporary_archive_file_path)
     pptds = []
     ppids = []
 

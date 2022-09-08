@@ -34,7 +34,7 @@ def __init_services__(sql_echo: bool = False,
     from app.docprepro.celery.celery_worker import celery_prepro_worker
     # import and init RepoService
     from app.core.data.repo.repo_service import RepoService
-    RepoService()._create_directory_structure(remove_if_exists=reset_repo)
+    RepoService()._create_root_repo_directory_structure(remove_if_exists=reset_repo)
     # create SQL DBs and Tables # TODO Flo: Alembic
     from app.core.db.sql_service import SQLService
     SQLService(echo=sql_echo)._create_database_and_tables(drop_if_exists=reset_database)
