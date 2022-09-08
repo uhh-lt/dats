@@ -21,6 +21,14 @@ class CRUDAnnotationDocument(CRUDBase[AnnotationDocumentORM, AnnotationDocumentC
             raise NoSuchElementError(self.model, sdoc_id=sdoc_id, user_id=user_id)
         return db_obj
 
+    def exists_by_sdoc_and_user(self, db: Session, *, sdoc_id: int, user_id: int, raise_error: bool = False) -> \
+            Optional[bool]:
+        exists = db.query(self.model).filter(self.model.source_document_id == sdoc_id,
+                                             self.model.user_id == user_id).first() is not None
+        if not exists and raise_error:
+            raise NoSuchElementError(self.model, id=id)
+        return exists
+
     def remove_by_sdoc(self, db: Session, *, sdoc_id: int) -> List[int]:
         statement = delete(self.model).where(self.model.source_document_id == sdoc_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()

@@ -4,6 +4,7 @@ import torch
 from PIL import Image
 from fastapi import UploadFile
 from loguru import logger
+from tqdm import tqdm
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
 from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
 
@@ -21,6 +22,7 @@ from app.docprepro.celery.celery_worker import celery_prepro_worker
 from app.docprepro.image.autobbox import AutoBBox
 from app.docprepro.image.preproimagedoc import PreProImageDoc
 from app.docprepro.image.util import generate_preproimagedoc
+from app.docprepro.text.preprotextdoc import PreProTextDoc
 from app.docprepro.util import persist_as_sdoc
 from config import conf
 
@@ -74,7 +76,7 @@ def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[Pre
     global object_detection_feature_extractor
     global object_detection_model
 
-    for ppid in ppids:
+    for ppid in tqdm(ppids, desc="Generating Automatic BBox Annotations... "):
         # Flo: let the DETR detect and classify objects in the image
         with Image.open(ppid.image_dst) as img:
             if img.mode != "RGB":
@@ -107,47 +109,51 @@ def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PrePr
     global image_captioning_model
     global image_captioning_tokenizer
 
-    images: List[Image] = []
-    for ppid in ppids:
-        # Flo: open the images to create an image batch for faster forwarding
-        img = Image.open(ppid.image_dst)
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        images.append(img)
+    with tqdm(total=len(ppids), desc="Generating automatic image captions...") as pbar:
+        images: List[Image] = []
+        for ppid in ppids:
+            # Flo: open the images to create an image batch for faster forwarding
+            img = Image.open(ppid.image_dst)
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            images.append(img)
 
-    pixel_values = image_captioning_feature_extractor(images=images, return_tensors="pt").pixel_values
+        pixel_values = image_captioning_feature_extractor(images=images, return_tensors="pt").pixel_values
 
-    # Flo: close the images again
-    map(lambda i: i.close(), images)
+        # Flo: close the images again
+        for img in images:
+            img.close()
 
-    # TODO Flo currently only use CPU... needs nvidia-docker for GPU support
-    # pixel_values = pixel_values.to(image_captioning_device)
+        # TODO Flo currently only use CPU... needs nvidia-docker for GPU support
+        # pixel_values = pixel_values.to(image_captioning_device)
 
-    max_caption_length = conf.docprepro.image.image_captioning.max_caption_length
-    num_beams = conf.docprepro.image.image_captioning.num_beams
-    output_ids = image_captioning_model.generate(pixel_values, max_length=max_caption_length, num_beams=num_beams)
+        max_caption_length = conf.docprepro.image.image_captioning.max_caption_length
+        num_beams = conf.docprepro.image.image_captioning.num_beams
+        output_ids = image_captioning_model.generate(pixel_values, max_length=max_caption_length, num_beams=num_beams)
 
-    captions = image_captioning_tokenizer.batch_decode(output_ids, skip_special_tokens=True)
-    captions = [cap.strip() for cap in captions]
+        captions = image_captioning_tokenizer.batch_decode(output_ids, skip_special_tokens=True)
+        captions = [cap.strip() for cap in captions]
 
-    # create metadata holding the captions
-    for ppid, cap in zip(ppids, captions):
-        sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="caption",
-                                                            value=cap,
-                                                            source_document_id=ppid.sdoc_id,
-                                                            read_only=True)
-        # persist SourceDocumentMetadata
-        with sql.db_session() as db:
-            crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
+        # create metadata holding the captions
+        for ppid, cap in zip(ppids, captions):
+            sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="caption",
+                                                                value=cap,
+                                                                source_document_id=ppid.sdoc_id,
+                                                                read_only=True)
+            # persist SourceDocumentMetadata
+            with sql.db_session() as db:
+                crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
-        ppid.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
+            ppid.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
+
+            pbar.update(1)
 
     return ppids
 
 
 @celery_prepro_worker.task(acks_late=True)
-def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> None:
-    for ppid in ppids:
+def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
+    for ppid in tqdm(ppids, desc="Persisting automatic BBox Annotations..."):
         # create AnnoDoc for system user
         with SQLService().db_session() as db:
             adoc_create = AnnotationDocumentCreate(source_document_id=ppid.sdoc_id,
@@ -178,3 +184,17 @@ def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> None:
                                                   annotation_document_id=adoc_read.id)
 
                 crud_bbox_anno.create(db, create_dto=create_dto)
+    return ppids
+
+
+@celery_prepro_worker.task(acks_late=True)
+def create_pptds_from_automatic_caption(ppids: List[PreProImageDoc]) -> List[PreProTextDoc]:
+    # Flo: create fake PPTDs to send them to the text worker to generate textual information and store in ES
+    #  Note that this has to be in its own async callable function to enable modular celery calls w/o dependencies
+    fake_pptds = [PreProTextDoc(filename=ppid.image_dst.name,
+                                project_id=ppid.project_id,
+                                sdoc_id=ppid.sdoc_id,
+                                raw_text=ppid.metadata["caption"],
+                                metadata={"language": "en"})
+                  for ppid in ppids]
+    return fake_pptds

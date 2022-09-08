@@ -78,9 +78,6 @@ async def get_tokens(*,
         -> Optional[SourceDocumentTokens]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    if not sdoc_db_obj.doctype == DocType.text:
-        raise NotImplementedError((f"Tokens can only be returned for textual SourceDocument and not of "
-                                   f"SourceDocuments with DocType {sdoc_db_obj.doctype}"))
     return ElasticSearchService().get_sdoc_tokens_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
                                                              proj=ProjectRead.from_orm(sdoc_db_obj.project),
                                                              character_offsets=character_offsets)
@@ -95,9 +92,6 @@ async def get_tokens(*,
                      sdoc_id: int) -> Optional[SourceDocumentKeywords]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    if not sdoc_db_obj.doctype == DocType.text:
-        raise NotImplementedError((f"Keywords can only be returned for textual SourceDocument and not of "
-                                   f"SourceDocuments with DocType {sdoc_db_obj.doctype}"))
     return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
                                                                proj=ProjectRead.from_orm(sdoc_db_obj.project))
 

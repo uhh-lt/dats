@@ -14,7 +14,7 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.annotation_document import AnnotationDocumentRead, AnnotationDocumentCreate
+from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchIntegerRange
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
@@ -92,11 +92,15 @@ def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PrePr
     for pptd in tqdm(pptds, desc="Persisting Automatic SpanAnnotations... "):
         # create AnnoDoc for system user
         with SQLService().db_session() as db:
-            adoc_create = AnnotationDocumentCreate(source_document_id=pptd.sdoc_id,
-                                                   user_id=SYSTEM_USER_ID)
 
-            adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
-            adoc_read = AnnotationDocumentRead.from_orm(adoc_db)
+            # Flo: since we're sending the automatically generated caption from image docs as pptds it could be
+            #  that there already is an adoc (with BBox Annos) for the system user and sdoc
+            if not crud_adoc.exists_by_sdoc_and_user(db=db, sdoc_id=pptd.sdoc_id, user_id=SYSTEM_USER_ID):
+                adoc_create = AnnotationDocumentCreate(source_document_id=pptd.sdoc_id,
+                                                       user_id=SYSTEM_USER_ID)
+                adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
+            else:
+                adoc_db = crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=pptd.sdoc_id, user_id=SYSTEM_USER_ID)
 
             # convert AutoSpans to SpanAnnotations
             for code in pptd.spans.keys():

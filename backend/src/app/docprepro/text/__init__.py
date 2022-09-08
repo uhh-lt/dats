@@ -1,8 +1,10 @@
-from typing import Any
+from typing import Any, List
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 from fastapi import UploadFile
+
+from app.docprepro.text.preprotextdoc import PreProTextDoc
 
 # Flo: Task names (as they could be imported)
 import_uploaded_text_document = "app.docprepro.text.preprocess.import_uploaded_text_document"
@@ -19,3 +21,12 @@ def text_document_preprocessing_apply_async(doc_file: UploadFile, project_id: in
             Signature(add_document_to_elasticsearch_index)
     )
     return text_document_preprocessing.apply_async()
+
+
+def pptd_preprocessing_apply_async(pptds: List[PreProTextDoc]) -> Any:
+    pptd_preprocessing = (
+            Signature(generate_automatic_span_annotations, kwargs={"pptds": pptds}) |
+            Signature(persist_automatic_span_annotations) |
+            Signature(add_document_to_elasticsearch_index)
+    )
+    return pptd_preprocessing.apply_async()
