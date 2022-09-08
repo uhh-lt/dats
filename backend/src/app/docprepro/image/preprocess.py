@@ -110,12 +110,16 @@ def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PrePr
     images: List[Image] = []
     for ppid in ppids:
         # Flo: open the images to create an image batch for faster forwarding
-        with Image.open(ppid.image_dst) as img:
-            if img.mode != "RGB":
-                img = img.convert("RGB")
-            images.append(img)
+        img = Image.open(ppid.image_dst)
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        images.append(img)
 
     pixel_values = image_captioning_feature_extractor(images=images, return_tensors="pt").pixel_values
+
+    # Flo: close the images again
+    map(lambda i: i.close(), images)
+
     # TODO Flo currently only use CPU... needs nvidia-docker for GPU support
     # pixel_values = pixel_values.to(image_captioning_device)
 
