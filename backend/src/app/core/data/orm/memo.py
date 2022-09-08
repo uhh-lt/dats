@@ -20,7 +20,7 @@ class MemoORM(ORMBase):
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
-    attached_to_id = Column(Integer, ForeignKey('objecthandle.id'), index=True)
+    attached_to_id = Column(Integer, ForeignKey('objecthandle.id', ondelete="CASCADE"), nullable=False, index=True)
     attached_to: "ObjectHandleORM" = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memos")
 
     # FIXME Flo: SQLAlchemy ambiguous FK issue...
@@ -31,8 +31,8 @@ class MemoORM(ORMBase):
     #                              passive_deletes=True)
 
     # many to one
-    project_id = Column(Integer, ForeignKey('project.id'), index=True)
+    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), nullable=False, index=True)
     project: "ProjectORM" = relationship("ProjectORM", back_populates="memos")
 
-    user_id = Column(Integer, ForeignKey('user.id'), index=True)
+    user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), nullable=False, index=True)
     user: "UserORM" = relationship("UserORM", back_populates="memos")

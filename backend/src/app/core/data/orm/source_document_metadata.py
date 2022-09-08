@@ -20,9 +20,11 @@ class SourceDocumentMetadataORM(ORMBase):
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="source_document_metadata",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # many to one
-    source_document_id = Column(Integer, ForeignKey('sourcedocument.id', ondelete="CASCADE"), index=True)
+    source_document_id = Column(Integer,
+                                ForeignKey('sourcedocument.id', ondelete="CASCADE"),
+                                nullable=False,
+                                index=True)
     source_document: "SourceDocumentORM" = relationship("SourceDocumentORM", back_populates="metadata_")

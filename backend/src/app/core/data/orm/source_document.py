@@ -24,25 +24,23 @@ class SourceDocumentORM(ORMBase):
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="source_document",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # many to one
-    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), index=True)
+    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), nullable=False, index=True)
     project: "ProjectORM" = relationship("ProjectORM", back_populates="source_documents")
 
     # one to many
     metadata_: List["SourceDocumentMetadataORM"] = relationship("SourceDocumentMetadataORM",
                                                                 back_populates="source_document",
-                                                                cascade="all, delete",
                                                                 passive_deletes=True)
 
     annotation_documents: List["AnnotationDocumentORM"] = relationship("AnnotationDocumentORM",
                                                                        back_populates="source_document",
-                                                                       cascade="all, delete",
                                                                        passive_deletes=True)
 
     # many to many
     document_tags: List["DocumentTagORM"] = relationship("DocumentTagORM",
                                                          secondary="SourceDocumentDocumentTagLinkTable".lower(),
-                                                         back_populates="source_documents")
+                                                         back_populates="source_documents",
+                                                         passive_deletes=True)

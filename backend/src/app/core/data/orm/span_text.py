@@ -16,5 +16,4 @@ class SpanTextORM(ORMBase):
     # one to many
     span_annotations: List["SpanAnnotationORM"] = relationship("SpanAnnotationORM",
                                                                back_populates="span_text",
-                                                               cascade="all, delete",
                                                                passive_deletes=True)

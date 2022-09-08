@@ -26,18 +26,20 @@ class SpanAnnotationORM(ORMBase):
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="span_annotation",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # many to one
-    current_code_id = Column(Integer, ForeignKey('currentcode.id', ondelete="CASCADE"), index=True)
+    current_code_id = Column(Integer, ForeignKey('currentcode.id', ondelete="CASCADE"), nullable=False, index=True)
     current_code: "CurrentCodeORM" = relationship("CurrentCodeORM", back_populates="span_annotations")
 
-    annotation_document_id = Column(Integer, ForeignKey('annotationdocument.id', ondelete="CASCADE"), index=True)
+    annotation_document_id = Column(Integer,
+                                    ForeignKey('annotationdocument.id', ondelete="CASCADE"),
+                                    nullable=False,
+                                    index=True)
     annotation_document: "AnnotationDocumentORM" = relationship("AnnotationDocumentORM",
                                                                 back_populates="span_annotations")
 
-    span_text_id = Column(Integer, ForeignKey('spantext.id', ondelete="CASCADE"), index=True)
+    span_text_id = Column(Integer, ForeignKey('spantext.id', ondelete="CASCADE"), nullable=False, index=True)
     span_text: "SpanTextORM" = relationship("SpanTextORM", back_populates="span_annotations")
 
     # many to many

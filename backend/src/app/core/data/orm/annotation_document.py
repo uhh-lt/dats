@@ -29,23 +29,19 @@ class AnnotationDocumentORM(ORMBase):
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="annotation_document",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # one to many
     span_annotations: List["SpanAnnotationORM"] = relationship("SpanAnnotationORM",
                                                                back_populates="annotation_document",
-                                                               cascade="all, delete",
                                                                passive_deletes=True)
 
     span_groups: List["SpanGroupORM"] = relationship("SpanGroupORM",
                                                      back_populates="annotation_document",
-                                                     cascade="all, delete",
                                                      passive_deletes=True)
 
     bbox_annotations: List["BBoxAnnotationORM"] = relationship("BBoxAnnotationORM",
                                                                back_populates="annotation_document",
-                                                               cascade="all, delete",
                                                                passive_deletes=True)
 
     # many to one

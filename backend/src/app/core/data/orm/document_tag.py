@@ -22,11 +22,10 @@ class DocumentTagORM(ORMBase):
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="document_tag",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # many to one
-    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), index=True)
+    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), nullable=False, index=True)
     project: "ProjectORM" = relationship("ProjectORM", back_populates="document_tags")
 
     # many to many

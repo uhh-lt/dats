@@ -21,20 +21,14 @@ class ProjectORM(ORMBase):
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
-    # one to one
-    # owner_id = Column(Integer, ForeignKey("user.id"))  # TODO Flo: how to handle cascade deletes?
-    # owner = relationship("UserORM", uselist=False)  # TODO Flo: how to handle cascade deletes?
-
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="project",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # one to many
     codes: List["CodeORM"] = relationship("CodeORM",
                                           back_populates="project",
-                                          cascade="all, delete",
                                           passive_deletes=True)
 
     source_documents: List["SourceDocumentORM"] = relationship("SourceDocumentORM",
@@ -49,7 +43,6 @@ class ProjectORM(ORMBase):
 
     document_tags: List["DocumentTagORM"] = relationship("DocumentTagORM",
                                                          back_populates="project",
-                                                         cascade="all, delete",
                                                          passive_deletes=True)
 
     # many to many

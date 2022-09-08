@@ -24,19 +24,19 @@ class CodeORM(ORMBase):
     # one to one
     current_code: "CurrentCodeORM" = relationship("CurrentCodeORM",
                                                   uselist=False,
-                                                  back_populates="code")  # TODO Flo: How to handle cascading deletes?
+                                                  back_populates="code",
+                                                  passive_deletes=True)
 
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="code",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # many to one
     user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), index=True)
     user: "UserORM" = relationship("UserORM", back_populates="codes")
 
-    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), index=True)
+    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), nullable=False, index=True)
     project: "ProjectORM" = relationship("ProjectORM", back_populates="codes")
 
     # hierarchy reference
@@ -55,20 +55,17 @@ class CurrentCodeORM(ORMBase):
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="current_code",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
-    code_id = Column(Integer, ForeignKey('code.id'), index=True)
+    code_id = Column(Integer, ForeignKey('code.id', ondelete="CASCADE"), nullable=False, index=True)
     code: "CodeORM" = relationship("CodeORM", back_populates="current_code")
 
     # one to many
     span_annotations: List["SpanAnnotationORM"] = relationship("SpanAnnotationORM",
                                                                back_populates="current_code",
-                                                               cascade="all, delete",
                                                                passive_deletes=True)
 
     # one to many
     bbox_annotations: List["BBoxAnnotationORM"] = relationship("BBoxAnnotationORM",
                                                                back_populates="current_code",
-                                                               cascade="all, delete",
                                                                passive_deletes=True)

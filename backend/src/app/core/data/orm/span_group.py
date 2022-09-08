@@ -21,11 +21,13 @@ class SpanGroupORM(ORMBase):
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="span_group",
-                                                    cascade="all, delete",
                                                     passive_deletes=True)
 
     # many to one
-    annotation_document_id = Column(Integer, ForeignKey('annotationdocument.id', ondelete="CASCADE"), index=True)
+    annotation_document_id = Column(Integer,
+                                    ForeignKey('annotationdocument.id', ondelete="CASCADE"),
+                                    nullable=False,
+                                    index=True)
     annotation_document: "AnnotationDocumentORM" = relationship("AnnotationDocumentORM", back_populates="span_groups")
 
     # many to many
@@ -35,5 +37,5 @@ class SpanGroupORM(ORMBase):
 
 
 class SpanAnnotationSpanGroupLinkTable(ORMBase):
-    span_annotation_id = Column(Integer, ForeignKey("spanannotation.id"), primary_key=True)
-    span_group_id = Column(Integer, ForeignKey("spangroup.id"), primary_key=True)
+    span_annotation_id = Column(Integer, ForeignKey("spanannotation.id", ondelete="CASCADE"), primary_key=True)
+    span_group_id = Column(Integer, ForeignKey("spangroup.id", ondelete="CASCADE"), primary_key=True)
