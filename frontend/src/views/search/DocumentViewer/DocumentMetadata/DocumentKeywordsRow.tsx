@@ -96,6 +96,7 @@ function DocumentKeywordsContent({ keywords }: { keywords: SourceDocumentKeyword
             freeSolo
             disableClearable
             fullWidth
+            limitTags={3}
             renderTags={(value: readonly string[], getTagProps) =>
               value.map((option: string, index: number) => (
                 <Chip style={{ borderRadius: "4px" }} variant="filled" label={option} {...getTagProps({ index })} />

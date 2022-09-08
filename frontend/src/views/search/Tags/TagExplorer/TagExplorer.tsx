@@ -42,7 +42,7 @@ function TagExplorer({
   // we handle all tags as if it were a list of ids! (even though it returns full tags!)
   const allTags = ProjectHooks.useGetAllTags(parseInt(projectId));
 
-  // context menu 2
+  // context menu
   const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
   const [contextMenuData, setContextMenuData] = React.useState<number | undefined>(undefined);
   const onContextMenu = (tagId: number) => (event: React.MouseEvent) => {

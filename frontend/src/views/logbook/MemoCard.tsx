@@ -1,26 +1,23 @@
 import React, { useMemo } from "react";
-import { Card, CardActions, CardContent, CardHeader, IconButton, Tooltip, Typography } from "@mui/material";
+import { Card, CardActions, CardContent, CardHeader, Typography } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import "./MemoCard.css";
 import { MemoColors, MemoNames, MemoShortnames } from "./MemoEnumUtils";
-import StarIcon from "@mui/icons-material/Star";
-import StarOutlineIcon from "@mui/icons-material/StarOutline";
-import EditIcon from "@mui/icons-material/Edit";
 import MemoHooks from "../../api/MemoHooks";
-import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
-import { QueryKey } from "../../api/QueryKey";
-import { useQueryClient } from "@tanstack/react-query";
-import MemoAPI from "../../features/memo-dialog/MemoAPI";
 import useGetMemosAttachedObject from "../../features/memo-dialog/useGetMemosAttachedObject";
 import AttachedObjectLink from "./AttachedObjectLink";
 import { AttachedObjectType } from "../../api/openapi";
+import MemoEditButton from "../../features/memo-dialog/MemoEditButton";
+import MemoStarButton from "../../features/memo-dialog/MemoStarButton";
+import { MemoCardContextMenuData } from "./MemoResults";
 
 interface MemoCardProps {
   memoId: number;
   filter: string | undefined;
+  onContextMenu: (data: MemoCardContextMenuData) => (event: React.MouseEvent) => void;
 }
 
-function MemoCard({ memoId, filter }: MemoCardProps) {
+function MemoCard({ memoId, filter, onContextMenu }: MemoCardProps) {
   // query
   const memo = MemoHooks.useGetMemo(memoId);
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
@@ -43,42 +40,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
     return MemoNames[memo.data.attached_object_type] !== filter;
   }, [memo.data, filter]);
 
-  // mutation
-  const queryClient = useQueryClient();
-  const updateMutation = MemoHooks.useUpdateMemo({
-    onError: (error: Error) => {
-      SnackbarAPI.openSnackbar({
-        text: error.message,
-        severity: "error",
-      });
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      SnackbarAPI.openSnackbar({
-        text: `Toggled favorite status of memo ${memo.data?.id}`,
-        severity: "success",
-      });
-    },
-  });
-
-  // ui events
-  const handleOpenMemo = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    event.stopPropagation();
-    if (memo.data) {
-      MemoAPI.openMemo({ memoId: memo.data.id });
-    }
-  };
-
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    updateMutation.mutate({
-      memoId: memo.data!.id,
-      requestBody: {
-        starred: !memo.data!.starred,
-      },
-    });
-  };
-
+  // ui event handlers
   const handleHoverEnter = () => {
     switch (memo.data?.attached_object_type) {
       case AttachedObjectType.SPAN_ANNOTATION:
@@ -112,6 +74,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
           className="myMemoCard"
           onMouseEnter={() => handleHoverEnter()}
           onMouseLeave={() => handleHoverLeave()}
+          onContextMenu={onContextMenu({ memoId: memo.data?.id, memoStarred: memo.data?.starred })}
         >
           {memo.isSuccess && attachedObject.isSuccess ? (
             <>
@@ -121,15 +84,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
                     {MemoShortnames[memo.data.attached_object_type]}
                   </Avatar>
                 }
-                action={
-                  <Tooltip title={memo.data.starred ? "Marked" : "Not marked"}>
-                    <span>
-                      <IconButton onClick={handleClick} disabled={updateMutation.isLoading}>
-                        {memo.data.starred ? <StarIcon /> : <StarOutlineIcon />}
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                }
+                action={<MemoStarButton memoId={memo.data.id} isStarred={memo.data.starred} />}
                 title={memo.data.title}
                 sx={{ pb: 0, pt: 1 }}
                 titleTypographyProps={{
@@ -146,13 +101,7 @@ function MemoCard({ memoId, filter }: MemoCardProps) {
                 <Typography variant="body1">{memo.data.content}</Typography>
               </CardContent>
               <CardActions sx={{ px: 0.5, pt: 0, pb: 0.5 }}>
-                <Tooltip title={"Edit memo"}>
-                  <span>
-                    <IconButton aria-label="settings" onClick={handleOpenMemo} size="small">
-                      <EditIcon fontSize="inherit" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
+                <MemoEditButton memoId={memo.data.id} />
               </CardActions>
             </>
           ) : memo.isError ? (
