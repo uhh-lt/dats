@@ -31,7 +31,7 @@ function SearchStatisticsContextMenu({
         e.preventDefault();
         handleClose();
       }}
-      PaperProps={{ sx: { width: 240, height: 300 } }}
+      PaperProps={{ sx: { width: 240, maxHeight: 300 } }}
     >
       <Box>
         {menuItems.map((value) => (
