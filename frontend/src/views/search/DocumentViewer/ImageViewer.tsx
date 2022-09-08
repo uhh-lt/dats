@@ -7,9 +7,10 @@ interface ImageViewerProps {
   sdoc: SourceDocumentRead;
   adoc: AnnotationDocumentRead | null;
   showEntities: boolean;
+  height: number;
 }
 
-function ImageViewer({ sdoc, adoc, showEntities }: ImageViewerProps) {
+function ImageViewer({ sdoc, adoc, showEntities, height }: ImageViewerProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const bboxRef = useRef<SVGGElement>(null);
@@ -83,7 +84,7 @@ function ImageViewer({ sdoc, adoc, showEntities }: ImageViewerProps) {
   return (
     <>
       {annotations.isError && <span>{annotations.error.message}</span>}
-      <svg ref={svgRef} width="100%" height="100%" style={{ cursor: "move" }}>
+      <svg ref={svgRef} width="100%" height={`${height}px`} style={{ cursor: "move" }}>
         <g ref={gRef}>
           <image href={sdoc.content} />
           <g ref={bboxRef}></g>

@@ -188,9 +188,16 @@ const useGetURL = (sdocId: number | undefined) =>
   );
 
 const useGetMetadata = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentMetadataRead[], Error>(
+  useQuery<Map<string, SourceDocumentMetadataRead>, Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
-    () => SourceDocumentService.getAllMetadataSdocSdocIdMetadataGet({ sdocId: sdocId! }),
+    async () => {
+      const metadatas = await SourceDocumentService.getAllMetadataSdocSdocIdMetadataGet({ sdocId: sdocId! });
+      const result = new Map<string, SourceDocumentMetadataRead>();
+      metadatas.forEach((metadata) => {
+        result.set(metadata.key, metadata);
+      });
+      return result;
+    },
     {
       enabled: !!sdocId,
     }

@@ -1,11 +1,10 @@
-import SdocHooks from "../../../api/SdocHooks";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { SourceDocumentMetadataRead } from "../../../api/openapi";
 import { Box, Grid, IconButtonProps, Stack, TextField } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import MetadataHooks from "../../../api/MetadataHooks";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import Tooltip from "@mui/material/Tooltip";
@@ -204,14 +203,17 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
 
 interface DocumentMetadataProps {
   sdocId: number | undefined;
+  metadata: UseQueryResult<Map<string, SourceDocumentMetadataRead>, Error>;
 }
 
-function DocumentMetadata({ sdocId }: DocumentMetadataProps) {
-  // query
-  const metadata = SdocHooks.useGetMetadata(sdocId);
-
+function DocumentMetadata({ sdocId, metadata }: DocumentMetadataProps) {
+  // computed
   const filteredMetadata = useMemo(() => {
-    return metadata.data ? metadata.data.filter((x) => x.key !== "word_frequencies") : [];
+    if (metadata.data) {
+      const metadatas = Array.from(metadata.data.values());
+      return metadatas.filter((x) => x.key !== "word_frequencies");
+    }
+    return [];
   }, [metadata.data]);
 
   return (

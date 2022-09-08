@@ -31,6 +31,7 @@ function DocumentViewer({
   const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sdocId);
   const { annotationDocuments, selectedAdoc, handleSelectAnnotationDocument } =
     useSelectableAnnotationDocuments(sdocId);
+  const metadata = SdocHooks.useGetMetadata(sdocId);
 
   // the queries are disabled if sdocId is undefined => show the idle content
   if (!sdocId) {
@@ -39,7 +40,7 @@ function DocumentViewer({
 
   return (
     <Box {...(props as BoxProps)}>
-      <Stack spacing={2} height={"100%"}>
+      <Stack spacing={2}>
         <Stack direction={"row"} spacing={1} sx={{ alignItems: "center" }}>
           {sdoc.isLoading && <h1 style={{ margin: 0 }}>Loading...</h1>}
           {sdoc.isError && <h1 style={{ margin: 0 }}>{sdoc.error.message}</h1>}
@@ -58,7 +59,7 @@ function DocumentViewer({
               />
             ))}
         </Stack>
-        <DocumentMetadata sdocId={sdocId} />
+        <DocumentMetadata sdocId={sdocId} metadata={metadata} />
         <Stack direction={"row"} alignItems="center">
           <b>Annotations:</b>
           {annotationDocuments.isLoading && <span>Loading tags...</span>}
@@ -83,9 +84,14 @@ function DocumentViewer({
                 <TextViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
               </>
             )}
-            {sdoc.data.doctype === DocType.IMAGE && (
+            {sdoc.data.doctype === DocType.IMAGE && metadata.isSuccess && (
               <>
-                <ImageViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
+                <ImageViewer
+                  sdoc={sdoc.data}
+                  adoc={selectedAdoc}
+                  showEntities={showEntities}
+                  height={parseInt(metadata.data.get("height")!.value)}
+                />
               </>
             )}
           </>
