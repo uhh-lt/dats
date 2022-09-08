@@ -88,6 +88,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 }
 
 interface CodeTreeViewProps {
+  openContextMenu?: (node: ICodeTree) => (event: any) => void;
   data: ICodeTree;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
@@ -99,6 +100,7 @@ function CodeTreeView({
   data,
   onExpandClick,
   onCollapseClick,
+  openContextMenu,
   ...props
 }: CodeTreeViewProps & TreeViewProps) {
   const renderTree = (nodes: ICodeTree[]) => {
@@ -127,6 +129,7 @@ function CodeTreeView({
         }
         labelIconColor={node.code.color}
         actions={renderActions(node)}
+        onContextMenu={openContextMenu ? openContextMenu(node) : undefined}
       >
         {Array.isArray(node.children) && node.children.length > 0 && (
           <React.Fragment> {renderTree(node.children)}</React.Fragment>

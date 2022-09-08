@@ -16,6 +16,8 @@ import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeEditButton from "./CodeEditButton";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
 import { useAuth } from "../../../auth/AuthProvider";
+import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
@@ -76,6 +78,15 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
     // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
   };
 
+  // context menu
+  const [contextMenuPosition, setContextMenuPosition] = React.useState<ContextMenuPosition | null>(null);
+  const [contextMenuData, setContextMenuData] = React.useState<ICodeTree>();
+  const onContextMenu = (node: ICodeTree) => (event: any) => {
+    event.preventDefault();
+    setContextMenuPosition({ x: event.clientX, y: event.clientY });
+    setContextMenuData(node);
+  };
+
   const content = (
     <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
@@ -98,8 +109,14 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
                 <MemoButton codeId={node.code.id} />
               </React.Fragment>
             )}
+            openContextMenu={onContextMenu}
           />
           <CodeEditDialog codes={allCodes.data} />
+          <CodeExplorerContextMenu
+            node={contextMenuData}
+            position={contextMenuPosition}
+            handleClose={() => setContextMenuPosition(null)}
+          />
         </>
       ) : user.isError ? (
         <>{user.error.message}</>
