@@ -6,8 +6,7 @@ import React from "react";
 import TextViewer from "./TextViewer";
 import DocumentTagChip from "./DocumentTagChip";
 import SdocHooks from "../../../api/SdocHooks";
-import DocumentMetadata from "./DocumentMetadata";
-import TextKeywords from "./TextKeywords";
+import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import ImageViewer from "./ImageViewer";
 import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
 import UserName from "../../../components/UserName";
@@ -80,7 +79,6 @@ function DocumentViewer({
           <>
             {sdoc.data.doctype === DocType.TEXT && (
               <>
-                <TextKeywords sdocId={sdocId} />
                 <TextViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
               </>
             )}
