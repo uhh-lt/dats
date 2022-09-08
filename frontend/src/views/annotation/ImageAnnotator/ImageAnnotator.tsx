@@ -1,6 +1,5 @@
 import {
   AnnotationDocumentRead,
-  AnnotationDocumentService,
   BBoxAnnotationReadResolvedCode,
   SourceDocumentRead,
   SpanAnnotationReadResolved,
@@ -10,25 +9,19 @@ import * as d3 from "d3";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import CodeContextMenu, { CodeSelectorHandle } from "../ContextMenu/CodeContextMenu";
 import { ICode } from "../TextAnnotator/ICode";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SVGBBox from "./SVGBBox";
 import SVGBBoxText from "./SVGBBoxText";
-import { flatten } from "lodash";
+import AdocHooks, { spanAnnoKeyFactory } from "../../../api/AdocHooks";
 
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentRead;
   adoc: AnnotationDocumentRead | null;
 }
-
-// todo: refactor this when applying react bulletproof architecture
-const keyFactory = {
-  all: ["visibleAdocBbox"] as const,
-  visible: (ids: number[]) => [...keyFactory.all, ids] as const,
-};
 
 function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
   // references to svg elements
@@ -44,23 +37,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = useQuery<
-    BBoxAnnotationReadResolvedCode[],
-    Error,
-    BBoxAnnotationReadResolvedCode[],
-    ReturnType<typeof keyFactory["visible"]>
-  >(keyFactory.visible(visibleAdocIds), async ({ queryKey }) => {
-    const ids = queryKey[1];
-    const queries = ids.map(
-      (adocId) =>
-        AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
-          adocId: adocId,
-          resolve: true,
-        }) as Promise<BBoxAnnotationReadResolvedCode[]>
-    );
-    const annotations = await Promise.all(queries);
-    return flatten(annotations);
-  });
+  const annotations = AdocHooks.useGetBboxAnnotationsBatch(visibleAdocIds);
 
   // computed
   const data = useMemo(() => {
@@ -83,14 +60,14 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
     // optimistic updates
     onMutate: async (newBbox) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(keyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(keyFactory.visible(visibleAdocIds));
+      const previousBboxes = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Optimistically update to the new value
       queryClient.setQueryData(
-        keyFactory.visible(visibleAdocIds),
+        spanAnnoKeyFactory.visible(visibleAdocIds),
         (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
           const bbox = {
             ...newBbox.requestBody,
@@ -113,7 +90,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       );
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: keyFactory.visible(visibleAdocIds) };
+      return { previousBboxes, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
       SnackbarAPI.openSnackbar({
@@ -197,14 +174,14 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
     // optimistic updates
     onMutate: async ({ bboxId }) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(keyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(keyFactory.visible(visibleAdocIds));
+      const previousBboxes = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Optimistically update to the new value
       queryClient.setQueryData(
-        keyFactory.visible(visibleAdocIds),
+        spanAnnoKeyFactory.visible(visibleAdocIds),
         (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
           if (old === undefined) {
             return undefined;
@@ -215,7 +192,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       );
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: keyFactory.visible(visibleAdocIds) };
+      return { previousBboxes, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
       SnackbarAPI.openSnackbar({

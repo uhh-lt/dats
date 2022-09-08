@@ -76,7 +76,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
       variables.sourceDocumentIds.forEach((sdocId) => {
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
       });
-      queryClient.invalidateQueries([QueryKey.SEARCH_RESULTS]);
+      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
       queryClient.invalidateQueries([QueryKey.SDOCS_DOCUMENT_TAGS, variables.sourceDocumentIds]);
       SnackbarAPI.openSnackbar({
         text: `Updated tags!`,
@@ -96,7 +96,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
       });
-      queryClient.invalidateQueries([QueryKey.SEARCH_RESULTS]);
+      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
       queryClient.invalidateQueries([QueryKey.SDOCS_DOCUMENT_TAGS, variables.requestBody.source_document_ids]);
       SnackbarAPI.openSnackbar({
         text: `Added tags!`,
@@ -116,7 +116,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
       variables.requestBody.source_document_ids.forEach((sdocId) => {
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
       });
-      queryClient.invalidateQueries([QueryKey.SEARCH_RESULTS]);
+      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
       queryClient.invalidateQueries([QueryKey.SDOCS_DOCUMENT_TAGS, variables.requestBody.source_document_ids]);
       SnackbarAPI.openSnackbar({
         text: `Removed tags!`,

@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
-import { DocumentTagRead, SourceDocumentRead, SourceDocumentService } from "../../../api/openapi";
+import { DocumentTagRead } from "../../../api/openapi";
 import { useCallback } from "react";
 import SdocHooks from "../../../api/SdocHooks";
 import { QueryKey } from "../../../api/QueryKey";
@@ -11,25 +11,22 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
 
   // mutations
   const queryClient = useQueryClient();
-  const removeTagMutation = useMutation<SourceDocumentRead, Error, { sdocId: number; tagId: number }>(
-    SourceDocumentService.unlinkTagSdocSdocIdTagTagIdDelete,
-    {
-      onError: (error: Error) => {
-        SnackbarAPI.openSnackbar({
-          text: error.message,
-          severity: "error",
-        });
-      },
-      onSuccess: (doc) => {
-        queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
-        queryClient.invalidateQueries([QueryKey.SEARCH_RESULTS]);
-        SnackbarAPI.openSnackbar({
-          text: `Removed tag from document ${doc.filename}!`,
-          severity: "success",
-        });
-      },
-    }
-  );
+  const removeTagMutation = SdocHooks.useRemoveDocumentTag({
+    onError: (error: Error) => {
+      SnackbarAPI.openSnackbar({
+        text: error.message,
+        severity: "error",
+      });
+    },
+    onSuccess: (doc) => {
+      queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
+      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
+      SnackbarAPI.openSnackbar({
+        text: `Removed tag from document ${doc.filename}!`,
+        severity: "success",
+      });
+    },
+  });
 
   const handleDeleteDocumentTag = useCallback(
     (tag: DocumentTagRead) => {

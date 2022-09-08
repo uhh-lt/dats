@@ -1,37 +1,13 @@
 import SdocHooks from "../../../api/SdocHooks";
-import { useQuery } from "@tanstack/react-query";
-import { AnnotationDocumentService, SpanAnnotationReadResolved } from "../../../api/openapi";
+import { SpanAnnotationReadResolved } from "../../../api/openapi";
 import { IToken } from "./IToken";
 import { useMemo } from "react";
-
-// todo: refactor this when applying react bulletproof architecture
-const keyFactory = {
-  all: ["visibleAdocSpan"] as const,
-  visible: (ids: number[]) => [...keyFactory.all, ids] as const,
-};
+import AdocHooks from "../../../api/AdocHooks";
 
 function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number; annotationDocumentIds: number[] }) {
   // global server state (react query)
   const tokens = SdocHooks.useGetDocumentTokens(sdocId);
-
-  const annotations = useQuery<
-    SpanAnnotationReadResolved[],
-    Error,
-    SpanAnnotationReadResolved[],
-    ReturnType<typeof keyFactory["visible"]>
-  >(keyFactory.visible(annotationDocumentIds), async ({ queryKey }) => {
-    const ids = queryKey[1];
-    const queries = ids.map(
-      (adocId) =>
-        AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
-          adocId: adocId,
-          resolve: true,
-          limit: 1000,
-        }) as Promise<SpanAnnotationReadResolved[]>
-    );
-    const annotations = await Promise.all(queries);
-    return annotations.flat();
-  });
+  const annotations = AdocHooks.useGetSpanAnnotationsBatch(annotationDocumentIds);
 
   // computed
   // todo: maybe implement with selector?

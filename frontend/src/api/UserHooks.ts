@@ -14,7 +14,7 @@ const useGetProjects = (userId: number | undefined) =>
 
 // user
 const useGetUser = (userId: number | undefined) =>
-  useQuery<UserRead, Error>(["user", userId], () => UserService.getByIdUserUserIdGet({ userId: userId! }), {
+  useQuery<UserRead, Error>([QueryKey.USER, userId], () => UserService.getByIdUserUserIdGet({ userId: userId! }), {
     enabled: !!userId,
   });
 
@@ -25,11 +25,15 @@ const useGetAll = () => useQuery<UserRead[], Error>([QueryKey.USERS], () => User
 
 // codes
 const useGetAllCodes = (userId: number) =>
-  useQuery<CodeRead[], Error>(["userCodes", userId], () => UserService.getUserCodesUserUserIdCodeGet({ userId }));
+  useQuery<CodeRead[], Error>([QueryKey.USER_CODES, userId], () =>
+    UserService.getUserCodesUserUserIdCodeGet({ userId })
+  );
 
 // memo
 const useGetAllMemos = (userId: number) =>
-  useQuery<MemoRead[], Error>(["userMemos", userId], () => UserService.getUserMemosUserUserIdMemoGet({ userId }));
+  useQuery<MemoRead[], Error>([QueryKey.USER_MEMOS, userId], () =>
+    UserService.getUserMemosUserUserIdMemoGet({ userId })
+  );
 
 const UserHooks = {
   useGetProjects,

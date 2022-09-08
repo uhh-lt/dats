@@ -22,8 +22,7 @@ import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import ProjectHooks from "../../api/ProjectHooks";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
-import { useQuery } from "@tanstack/react-query";
-import { DocType, SearchService } from "../../api/openapi";
+import { DocType } from "../../api/openapi";
 import { parseInt } from "lodash";
 import MemoButton from "../memo-dialog/MemoButton";
 import DocumentNavigation from "../../components/DocumentNavigation";
@@ -32,6 +31,7 @@ import ArticleIcon from "@mui/icons-material/Article";
 import ImageIcon from "@mui/icons-material/Image";
 import { ContextMenuPosition } from "../../views/projects/ProjectContextMenu2";
 import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
+import SearchHooks from "../../api/SearchHooks";
 
 function DocumentExplorer({ ...props }) {
   // router
@@ -43,19 +43,7 @@ function DocumentExplorer({ ...props }) {
 
   // server state (react query)
   const documentTags = ProjectHooks.useGetAllTags(parseInt(projectId));
-  const sdocs = useQuery<number[], Error>(
-    ["sdocsByTag", selectedDocumentTag],
-    () => {
-      return SearchService.searchSdocsSearchSdocPost({
-        requestBody: {
-          proj_id: parseInt(projectId),
-          tag_ids: [selectedDocumentTag!],
-          all_tags: true,
-        },
-      });
-    },
-    { enabled: !!selectedDocumentTag }
-  );
+  const sdocs = SearchHooks.useSearchDocumentsByProjectIdAndTagId(parseInt(projectId), selectedDocumentTag);
 
   // ui event handler
   const handleDocumentTagChange = (event: SelectChangeEvent) => {

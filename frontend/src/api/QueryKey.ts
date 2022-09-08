@@ -1,64 +1,99 @@
 export const QueryKey = {
-  PROJECTS: "projects", // all projects
-  PROJECT: "project", // a single project
+  // all projects
+  PROJECTS: "projects",
+  // a single project (by project id)
+  PROJECT: "project",
+  // all users of a project (by project id)
   PROJECT_USERS: "projectUsers",
+  // all documents of a project (by project id)
   PROJECT_DOCUMENTS: "projectDocuments",
+  // all codes of a project (by project id)
   PROJECT_CODES: "projectCodes",
+  // all tags of a project (by project id)
   PROJECT_TAGS: "projectTags",
-  // the logbook
+  // the logbook of a project (by project id, user id)
   PROJECT_MEMO: "projectMemo",
 
+  // a single user (by user id)
   USER: "user",
+  // all projects of a user (by user id)
   USER_PROJECTS: "userProjects",
+  // all users
   USERS: "users",
+  // all codes of a user (by user id)
   USER_CODES: "userCodes",
-  // get all memos by user id
+  // all memos of a user (by user id)
   USER_MEMOS: "userMemos",
 
-  // get memo by memo id
+  // a memo (by memo id)
   MEMO: "memo",
-  // get memo by code id
+  // all memos attached to a code (by code id) or a user's memo (by code id, user id)
   MEMO_CODE: "codeMemo",
-  // get memo by tag id
+  // all memos attached to a tag (by tag id) or a user's memo (by tag id, user id)
   MEMO_TAG: "tagMemo",
-  // get memo by sdoc id
+  // all memos attached to a document (by document id) or a user's memo (by document id, user id)
   MEMO_SDOC: "sdocMemo",
-  // get memo by span annotation id
+  // all memos attached to a span (by span id) or a user's memo (by span id, user id)
   MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
-  // get memo by bbox annotation id
+  // all memos attached to a bbox (by bbox id) or a user's memo (by bbox id, user id)
   MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
+  // all memos which content matches the query (by query string)
+  MEMOS_BY_CONTENT_SEARCH: "memosByContentSearch",
+  // all memos which title matches the query (by query string)
+  MEMOS_BY_TITLE_SEARCH: "memosByContentSearch",
 
+  // a single document (by document id)
   SDOC: "sdoc",
+  // a single document without content (by document id)
   SDOC_NO_CONTENT: "sdocNoContent",
+  // a single document (by adoc id)
   SDOC_BY_ADOC: "sdocByAdoc",
+  // all tags of a document (by document id)
   SDOC_TAGS: "sdocTags",
+  // all adocs of a document (by document id)
   SDOC_ADOCS: "sdocAdocs",
+  // all metadata of a document (by document id)
   SDOC_METADATAS: "sdocMetadatas",
+  // tokens of a document (by document id)
   SDOC_TOKENS: "sdocTokens",
+  // keywords of a document (by document id)
   SDOC_KEYWORDS: "sdocKeywords",
+  // url of a document (by document id)
   SDOC_URL: "sdocURL",
+  // all sdocs which are in the project (by project id) and tagged with given tag (by tag id)
+  SDOCS_BY_PROJECT_AND_TAG_SEARCH: "sdocsByProjectAndTagSearch",
+  // all sdocs which are in the project (by project id) and suffice the given filters (by filter list)
+  SDOCS_BY_PROJECT_AND_FILTERS_SEARCH: "searchResults",
 
-  SDOCS_DOCUMENT_TAGS: "sdocsDocumentTags",
-
-  ADOC: "adoc",
+  // all spans annotations of a adoc (by adoc id)
   ADOC_SPAN_ANNOTATIONS: "adocSpanAnnotations",
+  // all spans annotations of all given adocs (by asc list of adoc id)
+  ADOCS_SPAN_ANNOTATIONS: "adocsSpanAnnotations",
+  // all bbox annotations of a adoc (by adoc id)
   ADOC_BBOX_ANNOTATIONS: "adocBboxAnnotations",
+  // all bbox annotations of all given adocs (by asc list of adoc id)
+  ADOCS_BBOX_ANNOTATIONS: "adocsBboxAnnotations",
 
+  // a single code (by code id)
   CODE: "code",
+
+  // a single tag (by tag id)
   TAG: "tag",
+
+  // a single span annotation (by span annotation id)
   SPAN_ANNOTATION: "annotation",
+  // a single bbox annotation (by bbox annotation id)
   BBOX_ANNOTATION: "bboxAnnotation",
+
+  // a single metadata (by metadata id)
   METADATA: "metadata",
 
+  // a single feedback (by feedback id)
   FEEDBACK: "feedback",
+  // all feedbacks
   FEEDBACKS: "feedbacks",
 
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
-  SEARCH_RESULTS: "searchResults",
-
-  SEARCH_MEMO_CONTENT: "searchMemoContent",
-  SEARCH_MEMO_TITLE: "searchMemoTitle",
-
-  KEYWORDS: "keywords",
+  SDOCS_DOCUMENT_TAGS: "sdocsDocumentTags",
 };

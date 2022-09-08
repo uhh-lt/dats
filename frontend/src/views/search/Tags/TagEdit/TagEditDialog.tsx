@@ -1,10 +1,9 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
 import { useForm } from "react-hook-form";
 import eventBus from "../../../../EventBus";
-import { DocumentTagRead, DocumentTagService } from "../../../../api/openapi";
 import TagHooks from "../../../../api/TagHooks";
 import { QueryKey } from "../../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
@@ -36,13 +35,7 @@ function TagEditDialog() {
   const [color, setColor] = useState("#000000");
 
   // query
-  const tag = useQuery<DocumentTagRead, Error>(
-    [QueryKey.TAG, tagId],
-    () => DocumentTagService.getByIdDoctagTagIdGet({ tagId: tagId! }),
-    {
-      enabled: !!tagId,
-    }
-  );
+  const tag = TagHooks.useGetTag(tagId);
 
   // listen to event
   // create a (memoized) function that stays the same across re-renders

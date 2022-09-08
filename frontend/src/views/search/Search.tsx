@@ -10,23 +10,22 @@ import Portal from "@mui/material/Portal";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useForm } from "react-hook-form";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import { SearchService, SourceDocumentRead } from "../../api/openapi";
+import { SourceDocumentRead } from "../../api/openapi";
 import { isNumber, parseInt } from "lodash";
 import {
   createCodeFilter,
   createDocumentTagFilter,
   createKeywordFilter,
   createTextFilter,
-  orderFilter,
   SearchFilter,
 } from "./SearchFilter";
 import { SearchActions } from "./searchSlice";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { useQuery } from "@tanstack/react-query";
 import SearchFilterChip from "./SearchFilterChip";
 import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
 import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
 import Box from "@mui/material/Box";
+import SearchHooks from "../../api/SearchHooks";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -52,19 +51,7 @@ function Search() {
   const dispatch = useAppDispatch();
 
   // query (global server state)
-  const searchResults = useQuery<number[], Error>(["searchResults", filters], () => {
-    const { keywords, tags, codes, texts } = orderFilter(filters);
-    return SearchService.searchSdocsSearchSdocPost({
-      requestBody: {
-        proj_id: parseInt(projectId),
-        span_entities: codes.length > 0 ? codes : undefined,
-        tag_ids: tags.length > 0 ? tags : undefined,
-        keywords: keywords.length > 0 ? keywords : undefined,
-        search_terms: texts.length > 0 ? texts : undefined,
-        all_tags: true,
-      },
-    });
-  });
+  const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
 
   // computed (local client state)
   const searchResultIds = useMemo(() => searchResults.data || [], [searchResults.data]);

@@ -15,17 +15,12 @@ import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 import { ICode } from "./ICode";
 import useComputeTokenData from "./useComputeTokenData";
 import TextAnnotatorRenderer from "./TextAnnotatorRenderer";
+import { spanAnnoKeyFactory } from "../../../api/AdocHooks";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentRead;
   adoc: AnnotationDocumentRead;
 }
-
-// todo: refactor this when applying react bulletproof architecture
-const keyFactory = {
-  all: ["visibleAdocSpan"] as const,
-  visible: (ids: number[]) => [...keyFactory.all, ids] as const,
-};
 
 function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // local state
@@ -59,34 +54,37 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     // optimistic updates
     onMutate: async (newSpanAnnotation) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(keyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData(keyFactory.visible(visibleAdocIds));
+      const previousSpanAnnotations = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Optimistically update to the new value
-      queryClient.setQueryData(keyFactory.visible(visibleAdocIds), (old: SpanAnnotationReadResolved[] | undefined) => {
-        const bbox = {
-          ...newSpanAnnotation.requestBody,
-          id: -1,
-          code: {
-            name: "",
-            color: "",
-            description: "",
-            id: newSpanAnnotation.requestBody.current_code_id,
-            project_id: 0,
-            user_id: 0,
+      queryClient.setQueryData(
+        spanAnnoKeyFactory.visible(visibleAdocIds),
+        (old: SpanAnnotationReadResolved[] | undefined) => {
+          const bbox = {
+            ...newSpanAnnotation.requestBody,
+            id: -1,
+            code: {
+              name: "",
+              color: "",
+              description: "",
+              id: newSpanAnnotation.requestBody.current_code_id,
+              project_id: 0,
+              user_id: 0,
+              created: "",
+              updated: "",
+            },
             created: "",
             updated: "",
-          },
-          created: "",
-          updated: "",
-        };
-        return old === undefined ? [bbox] : [...old, bbox];
-      });
+          };
+          return old === undefined ? [bbox] : [...old, bbox];
+        }
+      );
 
       // Return a context object with the snapshotted value
-      return { previousSpanAnnotations, myCustomQueryKey: keyFactory.visible(visibleAdocIds) };
+      return { previousSpanAnnotations, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
       showErrorSnackbar(error);
@@ -106,13 +104,13 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       });
     },
     // optimistic update
-    // todo: this is not working yet, because optimistic update only updates the bbox annotation, not the list of bbox annotations
+    // todo: this is not working yet, because optimistic update only updates the span annotation, not the list of span annotations
     onMutate: async (newSpanAnnotation) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
       await queryClient.cancelQueries([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId]);
 
       // Snapshot the previous value
-      const previousBbox = queryClient.getQueryData([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId]);
+      const previousAnnos = queryClient.getQueryData([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId]);
 
       // Optimistically update to the new value
       queryClient.setQueryData(
@@ -138,24 +136,24 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       );
 
       // Return a context object with the snapshotted value
-      return { previousBbox };
+      return { previousAnnos };
     },
     onError: (error: Error, newSpanAnnotation, context: any) => {
       showErrorSnackbar(error);
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId], context.previousBbox);
+      queryClient.setQueryData([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId], context.previousAnnos);
     },
     // Always re-fetch after error or success:
     onSettled: (newSpanAnnotation) => {
       if (newSpanAnnotation) {
         queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.id]);
       }
-      queryClient.invalidateQueries(keyFactory.all); // todo: this should not be necessary, as the list does actually not change on update. Change the rendering.
+      queryClient.invalidateQueries(spanAnnoKeyFactory.visible(visibleAdocIds)); // todo: this should not be necessary, as the list does actually not change on update. Change the rendering.
     },
   });
   const deleteMutation = SpanAnnotationHooks.useDeleteSpan({
     onSuccess: (data) => {
-      queryClient.invalidateQueries(keyFactory.all); //todo: not all, but update all queries that contain the affected adoc! (check docs if this is possible)
+      queryClient.invalidateQueries(spanAnnoKeyFactory.visible(visibleAdocIds)); //todo: not all, but update all queries that contain the affected adoc! (check docs if this is possible)
       SnackbarAPI.openSnackbar({
         text: `Deleted Span Annotation ${data.id}`,
         severity: "success",
@@ -164,22 +162,25 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     // optimistic updates
     onMutate: async ({ spanId }) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(keyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData(keyFactory.visible(visibleAdocIds));
+      const previousSpanAnnotations = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
 
       // Optimistically update to the new value
-      queryClient.setQueryData(keyFactory.visible(visibleAdocIds), (old: SpanAnnotationReadResolved[] | undefined) => {
-        if (old === undefined) {
-          return undefined;
-        }
+      queryClient.setQueryData(
+        spanAnnoKeyFactory.visible(visibleAdocIds),
+        (old: SpanAnnotationReadResolved[] | undefined) => {
+          if (old === undefined) {
+            return undefined;
+          }
 
-        return old.filter((spanAnnotation) => spanAnnotation.id !== spanId);
-      });
+          return old.filter((spanAnnotation) => spanAnnotation.id !== spanId);
+        }
+      );
 
       // Return a context object with the snapshotted value
-      return { previousSpanAnnotations, myCustomQueryKey: keyFactory.visible(visibleAdocIds) };
+      return { previousSpanAnnotations, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
       showErrorSnackbar(error);

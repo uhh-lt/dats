@@ -118,7 +118,7 @@ const useGetAllDocumentsTags = (sdocIds: number[] | undefined) =>
 const useAddDocumentTag = (options: UseMutationOptions<SourceDocumentRead, Error, { sdocId: number; tagId: number }>) =>
   useMutation(SourceDocumentService.linkTagSdocSdocIdTagTagIdPatch, options);
 
-const useDeleteDocumentTag = (
+const useRemoveDocumentTag = (
   options: UseMutationOptions<SourceDocumentRead, Error, { sdocId: number; tagId: number }>
 ) => useMutation(SourceDocumentService.unlinkTagSdocSdocIdTagTagIdDelete, options);
 
@@ -135,12 +135,6 @@ const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
     }
   );
 };
-
-const useGetAnnotationDocumentByUserBatch = (sdocIds: number[], userId: number) =>
-  useQuery([QueryKey.SDOC_ADOCS, sdocIds], async () => {
-    let calls = sdocIds.map((sdocId) => SourceDocumentService.getAdocOfUserSdocSdocIdAdocUserIdGet({ sdocId, userId }));
-    return await Promise.all(calls);
-  });
 
 // memo
 const useGetMemos = (sdocId: number | undefined) =>
@@ -203,13 +197,6 @@ const useGetMetadata = (sdocId: number | undefined) =>
     }
   );
 
-// todo: we need backend method for this
-const useGetMetadatas = (sdocIds: number[]) =>
-  useQuery([QueryKey.KEYWORDS, sdocIds], async () => {
-    let calls = sdocIds.map((sdocId) => SourceDocumentService.getAllMetadataSdocSdocIdMetadataGet({ sdocId }));
-    return await Promise.all(calls);
-  });
-
 const SdocHooks = {
   // sdoc
   useGetDocument,
@@ -222,10 +209,9 @@ const SdocHooks = {
   useGetAllDocumentTags,
   useGetAllDocumentsTags,
   useAddDocumentTag,
-  useDeleteDocumentTag,
+  useRemoveDocumentTag,
   // adoc
   useGetAllAnnotationDocuments,
-  useGetAnnotationDocumentByUserBatch,
   // memo
   useGetMemos,
   useGetMemo,
@@ -233,7 +219,6 @@ const SdocHooks = {
   // metadata
   useGetURL,
   useGetMetadata,
-  useGetMetadatas,
 };
 
 export default SdocHooks;
