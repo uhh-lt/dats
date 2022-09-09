@@ -27,7 +27,7 @@ const fetchSdoc = async (sdocId: number) => {
       break;
     case DocType.IMAGE:
       const url = await SourceDocumentService.getFileUrlSdocSdocIdUrlGet({ sdocId: sdocId });
-      sdoc.content = process.env.REACT_APP_CONTENT + url.split(/:\d+/)[1]; // todo: replace once backend returns relative URL
+      sdoc.content = process.env.REACT_APP_CONTENT + '/' + url
       break;
   }
   return sdoc;
@@ -177,7 +177,7 @@ const useGetURL = (sdocId: number | undefined) =>
     () => SourceDocumentService.getFileUrlSdocSdocIdUrlGet({ sdocId: sdocId! }),
     {
       enabled: !!sdocId,
-      select: (data) => process.env.REACT_APP_CONTENT + data.split(/:\d+/)[1], // todo: replace once backend returns relative URL
+      select: (url) => process.env.REACT_APP_CONTENT + '/' + url
     }
   );
 
