@@ -176,9 +176,12 @@ class RepoService(metaclass=SingletonMeta):
 
         return dst_path
 
-    def get_sdoc_url(self, sdoc: SourceDocumentRead) -> Optional[str]:
+    def get_sdoc_url(self, sdoc: SourceDocumentRead, relative: bool = True) -> Optional[str]:
         dst_path = self.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
-        return url.urljoin(self.base_url, str(dst_path.relative_to(self.repo_root)))
+        relative_url = str(dst_path.relative_to(self.repo_root))
+        if relative:
+            return relative_url
+        return url.urljoin(self.base_url, relative_url)
 
     def store_and_extract_temporary_archive_file_in_project(self, proj_id: int, temporary_archive_file_path: Path) \
             -> List[Path]:

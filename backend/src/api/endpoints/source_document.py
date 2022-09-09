@@ -102,10 +102,11 @@ async def get_tokens(*,
             description="Returns the URL to the original file of the SourceDocument with the given ID if it exists.")
 async def get_file_url(*,
                        db: Session = Depends(get_db_session),
-                       sdoc_id: int) -> Optional[str]:
+                       sdoc_id: int,
+                       relative: Optional[bool] = True) -> Optional[str]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj), relative=relative)
 
 
 @router.get("/{sdoc_id}/metadata", tags=tags,
