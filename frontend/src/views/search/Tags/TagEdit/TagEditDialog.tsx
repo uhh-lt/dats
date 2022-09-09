@@ -53,11 +53,11 @@ function TagEditDialog() {
   // initialize form when tag changes
   useEffect(() => {
     if (tag.data) {
-      const c = ColorUtils.rgbStringToHex(tag.data.description) || tag.data.description;
+      const c = ColorUtils.rgbStringToHex(tag.data.color) || tag.data.color;
       reset({
         title: tag.data.title,
         description: tag.data.description,
-        color: c,
+        color: tag.data.color,
       });
       setColor(c);
     }
@@ -94,6 +94,7 @@ function TagEditDialog() {
         requestBody: {
           title: data.title,
           description: data.description,
+          color: data.color,
         },
         tagId: tag.data.id,
       });
@@ -135,7 +136,6 @@ function TagEditDialog() {
                 {...register("color", { required: "Color is required" })}
                 onChange={(e) => {
                   setColor(e.target.value);
-                  setValue("description", e.target.value); // todo: remove this hack once tag has color attribute
                 }}
                 error={Boolean(errors.color)}
                 helperText={<ErrorMessage errors={errors} name="color" />}
@@ -149,7 +149,6 @@ function TagEditDialog() {
               onChange={(newColor) => {
                 setValue("color", newColor); // set value of text input
                 setColor(newColor); // set value of color picker (and box)
-                setValue("description", newColor); // todo: remove this hack once tag has color attribute
               }}
             />
             <TextField

@@ -69,7 +69,7 @@ function SdocLink({ sdoc }: { sdoc: SourceDocumentRead }) {
 function TagLink({ tag }: { tag: DocumentTagRead }) {
   return (
     <Stack direction="row" alignItems="center" component="span">
-      attached to tag <LabelIcon sx={{ ml: 1.5, mr: 1, color: tag.description }} />
+      attached to tag <LabelIcon sx={{ ml: 1.5, mr: 1, color: tag.color }} />
       {tag.title}
     </Stack>
   );

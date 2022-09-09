@@ -23,10 +23,10 @@ function DocumentTagChip({ tagId, handleClick, handleDelete }: DocumentTagChipPr
           variant="outlined"
           onClick={() => handleClick(tag.data)}
           onDelete={() => handleDelete(tag.data)}
-          sx={{ borderColor: tag.data.description, color: tag.data.description }}
+          sx={{ borderColor: tag.data.color, color: tag.data.color }}
           deleteIcon={
             <Tooltip title="Remove tag">
-              <CancelIcon style={{ color: tag.data.description }} />
+              <CancelIcon style={{ color: tag.data.color }} />
             </Tooltip>
           }
         />

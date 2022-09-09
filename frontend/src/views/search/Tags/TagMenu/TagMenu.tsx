@@ -248,7 +248,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             onChange={handleSearchChange}
             variant="standard"
             fullWidth
-            placeholder="Add label..."
+            placeholder="Add tag..."
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
@@ -285,7 +285,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
               >
                 <ListItemButton onClick={() => handleClickTag(tag.id)} dense>
                   <ListItemIcon sx={{ minWidth: "32px" }}>
-                    <LabelIcon />
+                    <LabelIcon style={{ color: tag.color }} />
                   </ListItemIcon>
                   <ListItemText id={labelId} primary={tag.title} />
                 </ListItemButton>
