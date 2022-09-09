@@ -101,7 +101,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       // Return a context object with the snapshotted value
       return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
     },
-    onError: (error: Error, newBbox, context: any) => {
+    onError: (error: Error, newSpanAnnotation, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
     },
@@ -190,7 +190,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       }
 
       // when we delete a span annotation, we remove an annotation from a certain annotation document
-      // thus, we only affect the annotation document that we are removing from to
+      // thus, we only affect the annotation document that we are removing from
       const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, spanAnnotationToDelete.annotation_document_id];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)

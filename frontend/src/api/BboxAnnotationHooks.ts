@@ -4,10 +4,10 @@ import {
   BBoxAnnotationRead,
   BBoxAnnotationReadResolvedCode,
   BboxAnnotationService,
+  BBoxAnnotationUpdate,
   CancelablePromise,
   MemoCreate,
   MemoRead,
-  SpanAnnotationUpdate,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 
@@ -34,13 +34,34 @@ const useUpdate = (
   options: UseMutationOptions<
     BBoxAnnotationRead | BBoxAnnotationReadResolvedCode,
     Error,
-    { bboxId: number; requestBody: SpanAnnotationUpdate; resolve?: boolean | undefined }
+    {
+      bboxToUpdate: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode;
+      requestBody: BBoxAnnotationUpdate;
+      resolve?: boolean | undefined;
+    }
   >
-) => useMutation(BboxAnnotationService.updateByIdBboxBboxIdPatch, options);
+) =>
+  useMutation(
+    (variables) =>
+      BboxAnnotationService.updateByIdBboxBboxIdPatch({
+        bboxId: variables.bboxToUpdate.id,
+        requestBody: variables.requestBody,
+        resolve: variables.resolve,
+      }),
+    options
+  );
 
 const useDelete = (
-  options: UseMutationOptions<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode, Error, { bboxId: number }>
-) => useMutation(BboxAnnotationService.deleteByIdBboxBboxIdDelete, options);
+  options: UseMutationOptions<
+    BBoxAnnotationRead | BBoxAnnotationReadResolvedCode,
+    Error,
+    { bboxToDelete: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode }
+  >
+) =>
+  useMutation(
+    (variables) => BboxAnnotationService.deleteByIdBboxBboxIdDelete({ bboxId: variables.bboxToDelete.id }),
+    options
+  );
 
 // memo
 const useGetMemos = (bboxId: number | undefined) =>

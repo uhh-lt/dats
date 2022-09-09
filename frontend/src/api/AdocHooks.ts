@@ -7,7 +7,6 @@ import {
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import { useMutation, UseMutationOptions, useQueries, useQuery } from "@tanstack/react-query";
-import { flatten } from "lodash";
 
 const useCreateAdoc = (
   options: UseMutationOptions<AnnotationDocumentRead, Error, { requestBody: AnnotationDocumentCreate }>
@@ -38,29 +37,6 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) =>
     })),
   });
 
-// todo: refactor this when applying react bulletproof architecture
-export const bboxAnnoKeyFactory = {
-  visible: (ids: number[]) => [QueryKey.ADOCS_BBOX_ANNOTATIONS, ids.sort()] as const,
-};
-const useGetBboxAnnotationsBatch = (adocIds: number[]) =>
-  useQuery<
-    BBoxAnnotationReadResolvedCode[],
-    Error,
-    BBoxAnnotationReadResolvedCode[],
-    ReturnType<typeof bboxAnnoKeyFactory["visible"]>
-  >(bboxAnnoKeyFactory.visible(adocIds), async ({ queryKey }) => {
-    const ids = queryKey[1];
-    const queries = ids.map(
-      (adocId) =>
-        AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
-          adocId: adocId,
-          resolve: true,
-        }) as Promise<BBoxAnnotationReadResolvedCode[]>
-    );
-    const annotations = await Promise.all(queries);
-    return flatten(annotations);
-  });
-
 const useGetAllBboxAnnotations = (adocId: number | undefined) =>
   useQuery<BBoxAnnotationReadResolvedCode[], Error>(
     [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
@@ -74,12 +50,24 @@ const useGetAllBboxAnnotations = (adocId: number | undefined) =>
     }
   );
 
+const useGetAllBboxAnnotationsBatch = (adocIds: number[]) =>
+  useQueries({
+    queries: adocIds.map((adocId) => ({
+      queryKey: [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
+      queryFn: () =>
+        AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
+          adocId: adocId,
+          resolve: true,
+        }) as Promise<BBoxAnnotationReadResolvedCode[]>,
+    })),
+  });
+
 const AdocHooks = {
   useGetAllSpanAnnotations,
   useGetAllBboxAnnotations,
   useCreateAdoc,
   useGetAllSpanAnnotationsBatch,
-  useGetBboxAnnotationsBatch,
+  useGetAllBboxAnnotationsBatch,
 };
 
 export default AdocHooks;

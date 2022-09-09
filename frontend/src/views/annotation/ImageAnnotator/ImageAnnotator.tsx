@@ -16,7 +16,7 @@ import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SVGBBox from "./SVGBBox";
 import SVGBBoxText from "./SVGBBoxText";
-import AdocHooks, { bboxAnnoKeyFactory } from "../../../api/AdocHooks";
+import AdocHooks from "../../../api/AdocHooks";
 
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentRead;
@@ -37,12 +37,18 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
 
   // global server state (react query)
-  const annotations = AdocHooks.useGetBboxAnnotationsBatch(visibleAdocIds);
+  const annotationsBatch = AdocHooks.useGetAllBboxAnnotationsBatch(visibleAdocIds);
 
   // computed
+  const annotations = useMemo(() => {
+    const annotationsIsUndefined = annotationsBatch.some((a) => !a.data);
+    if (annotationsIsUndefined) return undefined;
+    return annotationsBatch.map((a) => a.data!).flat();
+  }, [annotationsBatch]);
+
   const data = useMemo(() => {
-    return (annotations.data || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
-  }, [annotations.data, hiddenCodeIds]);
+    return (annotations || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
+  }, [annotations, hiddenCodeIds]);
 
   // local client state
   const [isZooming, setIsZooming] = useState(true);
@@ -59,38 +65,39 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
     },
     // optimistic updates
     onMutate: async (newBbox) => {
+      // when we create a new bbox annotation, we add a new bbox to a certain annotation document
+      // thus, we only affect the annotation document that we are adding to
+      const affectedQueryKey = [QueryKey.ADOC_BBOX_ANNOTATIONS, newBbox.requestBody.annotation_document_id];
+
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(bboxAnnoKeyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(affectedQueryKey);
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(bboxAnnoKeyFactory.visible(visibleAdocIds));
+      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(
-        bboxAnnoKeyFactory.visible(visibleAdocIds),
-        (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
-          const bbox = {
-            ...newBbox.requestBody,
-            id: -1,
-            code: {
-              name: "",
-              color: "",
-              description: "",
-              id: newBbox.requestBody.current_code_id,
-              project_id: 0,
-              user_id: 0,
-              created: "",
-              updated: "",
-            },
+      queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+        const bbox = {
+          ...newBbox.requestBody,
+          id: -1,
+          code: {
+            name: "",
+            color: "",
+            description: "",
+            id: newBbox.requestBody.current_code_id,
+            project_id: 0,
+            user_id: 0,
             created: "",
             updated: "",
-          };
-          return old === undefined ? [bbox] : [...old, bbox];
-        }
-      );
+          },
+          created: "",
+          updated: "",
+        };
+        return old === undefined ? [bbox] : [...old, bbox];
+      });
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: bboxAnnoKeyFactory.visible(visibleAdocIds) };
+      return { previousBboxes, myCustomQueryKey: affectedQueryKey };
     },
     onError: (error: Error, newBbox, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
@@ -109,50 +116,53 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       });
     },
     // optimistic update
-    // todo: this is not working yet, because optimistic update only updates the bbox annotation, not the list of bbox annotations
-    onMutate: async (newBbox) => {
+    // todo: rework to only update QueryKey.BBOX_ANNOTATION (we need to change the rendering for this...)
+    onMutate: async (updateData) => {
+      // when we update a bbox annotation, we update a bbox of a certain annotation document
+      // thus, we only affect the annotation document that contains the bbox we update
+      const affectedQueryKey = [QueryKey.ADOC_BBOX_ANNOTATIONS, updateData.bboxToUpdate.annotation_document_id];
+
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries([QueryKey.BBOX_ANNOTATION, newBbox.bboxId]);
+      await queryClient.cancelQueries(affectedQueryKey);
 
       // Snapshot the previous value
-      const previousBbox = queryClient.getQueryData([QueryKey.BBOX_ANNOTATION, newBbox.bboxId]);
+      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(
-        [QueryKey.BBOX_ANNOTATION, newBbox.bboxId],
-        (old: BBoxAnnotationReadResolvedCode | undefined) => {
-          if (old === undefined) {
-            return undefined;
-          }
-          return {
-            ...old,
-            code: {
-              name: "",
-              color: "",
-              description: "",
-              id: newBbox.requestBody.current_code_id,
-              project_id: 0,
-              user_id: 0,
-              created: "",
-              updated: "",
-            },
-          };
+      queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+        if (!old) {
+          return undefined;
         }
-      );
+        const oldBboxAnnotation = old.find((anno) => anno.id === updateData.bboxToUpdate.id);
+        if (!oldBboxAnnotation) {
+          console.error("Could not find bbox annotation to update");
+          return old;
+        }
+        const oldBboxAnnotationIndex = old.indexOf(oldBboxAnnotation);
+        const result = Array.from(old);
+        result[oldBboxAnnotationIndex] = {
+          ...oldBboxAnnotation,
+          code: {
+            ...oldBboxAnnotation.code,
+            id: updateData.requestBody.current_code_id,
+          },
+        };
+        return result;
+      });
 
       // Return a context object with the snapshotted value
-      return { previousBbox };
+      return { previousBboxes, myCustomQueryKey: affectedQueryKey };
     },
-    onError: (error: Error, newBbox, context: any) => {
+    onError: (error: Error, updatedBboxAnnotation, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData([QueryKey.BBOX_ANNOTATION, newBbox.bboxId], context.previousBbox);
+      queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
     },
     // Always re-fetch after error or success:
-    onSettled: (newBbox, error, variables, context: any) => {
-      if (newBbox) {
-        queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, newBbox.id]);
+    onSettled: (updatedBboxAnnotation, error, variables, context: any) => {
+      if (updatedBboxAnnotation) {
+        queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, updatedBboxAnnotation.id]);
       }
-      queryClient.invalidateQueries(["visibleAdocBbox"]); // todo: this should not be necessary, as the list does actually not change on update. Change the rendering.
+      queryClient.invalidateQueries(context.myCustomQueryKey);
     },
   });
   const deleteMutation = BboxAnnotationHooks.useDelete({
@@ -164,27 +174,28 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       });
     },
     // optimistic updates
-    onMutate: async ({ bboxId }) => {
+    onMutate: async ({ bboxToDelete }) => {
+      // when we delete a bbox annotation, we remove a bbox from a certain annotation document
+      // thus, we only affect the annotation document that we are removing from
+      const affectedQueryKey = [QueryKey.ADOC_BBOX_ANNOTATIONS, bboxToDelete.annotation_document_id];
+
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(bboxAnnoKeyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(affectedQueryKey);
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(bboxAnnoKeyFactory.visible(visibleAdocIds));
+      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(
-        bboxAnnoKeyFactory.visible(visibleAdocIds),
-        (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
-          if (old === undefined) {
-            return undefined;
-          }
-
-          return old.filter((bbox) => bbox.id !== bboxId);
+      queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+        if (old === undefined) {
+          return undefined;
         }
-      );
+
+        return old.filter((bbox) => bbox.id !== bboxToDelete.id);
+      });
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: bboxAnnoKeyFactory.visible(visibleAdocIds) };
+      return { previousBboxes, myCustomQueryKey: affectedQueryKey };
     },
     onError: (error: Error, newBbox, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
@@ -363,7 +374,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
   ) => {
     if (selectedBbox) {
       updateMutation.mutate({
-        bboxId: selectedBbox.id,
+        bboxToUpdate: selectedBbox,
         resolve: true,
         requestBody: {
           current_code_id: code.id,
@@ -381,9 +392,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
 
   const onCodeSelectorDeleteCode = () => {
     if (selectedBbox) {
-      deleteMutation.mutate({
-        bboxId: selectedBbox.id,
-      });
+      deleteMutation.mutate({ bboxToDelete: selectedBbox });
       // console.log("Delete", code);
     } else {
       console.error("This should never happen! (onCodeSelectorDeleteCode)");
@@ -397,7 +406,6 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
 
   return (
     <>
-      {annotations.isError && <span>{annotations.error.message}</span>}
       <Toolbar variant="dense">
         <ButtonGroup>
           <Button onClick={() => toggleZoom()} variant={isZooming ? "contained" : "outlined"}>

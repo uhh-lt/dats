@@ -14,12 +14,12 @@ export const QueryKey = {
   // the logbook of a project (by project id, user id)
   PROJECT_MEMO: "projectMemo",
 
+  // all users
+  USERS: "users",
   // a single user (by user id)
   USER: "user",
   // all projects of a user (by user id)
   USER_PROJECTS: "userProjects",
-  // all users
-  USERS: "users",
   // all codes of a user (by user id)
   USER_CODES: "userCodes",
   // all memos of a user (by user id)
@@ -69,8 +69,6 @@ export const QueryKey = {
   ADOC_SPAN_ANNOTATIONS: "adocSpanAnnotations",
   // all bbox annotations of a adoc (by adoc id)
   ADOC_BBOX_ANNOTATIONS: "adocBboxAnnotations",
-  // all bbox annotations of all given adocs (by asc list of adoc id)
-  ADOCS_BBOX_ANNOTATIONS: "adocsBboxAnnotations",
 
   // a single code (by code id)
   CODE: "code",
