@@ -91,5 +91,4 @@ export const QueryKey = {
 
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
-  SDOCS_DOCUMENT_TAGS: "sdocsDocumentTags",
 };

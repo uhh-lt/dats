@@ -26,18 +26,23 @@ function computeTagFrequencies(data: DocumentTagRead[][]): { tagId: number; coun
 
 export default function useComputeDocumentTagStats(sdocIds: number[] | undefined) {
   // query DocumentTagRead for all provided source document ids
-  const sdocTags = SdocHooks.useGetAllDocumentsTags(sdocIds);
+  const sdocTags = SdocHooks.useGetAllDocumentTagsBatch(sdocIds || []);
+  const sdocTagsIsLoading = sdocTags.some((documentTags) => documentTags.isLoading);
+  const sdocTagsIsError = sdocTags.some((documentTags) => documentTags.isError);
+  const sdocTagsIsSuccess = sdocTags.every((documentTags) => documentTags.isSuccess);
 
   // use queried metadata to calculate the keywords
   const tagFrequencies = useMemo(() => {
-    return computeTagFrequencies(sdocTags.data || []);
-  }, [sdocTags.data]);
+    const isUndefined = sdocTags.some((documentTags) => !documentTags.data);
+    if (isUndefined) return computeTagFrequencies([]);
+    return computeTagFrequencies(sdocTags.map((documentTags) => documentTags.data!));
+  }, [sdocTags]);
 
   return {
-    isLoading: sdocTags.isLoading,
-    isError: sdocTags.isError,
-    isSuccess: sdocTags.isSuccess,
-    error: sdocTags.error,
+    isLoading: sdocTagsIsLoading,
+    isError: sdocTagsIsError,
+    isSuccess: sdocTagsIsSuccess,
+    error: "An Error occured",
     data: tagFrequencies,
   };
 }

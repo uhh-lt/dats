@@ -1,4 +1,4 @@
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
+import { useMutation, UseMutationOptions, useQueries, useQuery } from "@tanstack/react-query";
 
 import {
   AnnotationDocumentRead,
@@ -14,6 +14,7 @@ import {
   SourceDocumentTokens,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import useStableQueries from "../utils/useStableQueries";
 
 // sdoc
 const fetchSdoc = async (sdocId: number) => {
@@ -103,16 +104,17 @@ const useGetAllDocumentTags = (sdocId: number | undefined) =>
     }
   );
 
-const useGetAllDocumentsTags = (sdocIds: number[] | undefined) =>
-  useQuery<DocumentTagRead[][], Error>(
-    [QueryKey.SDOCS_DOCUMENT_TAGS, sdocIds],
-    async () => {
-      let calls = sdocIds!.map((sdocId) => SourceDocumentService.getAllTagsSdocSdocIdTagsGet({ sdocId }));
-      return await Promise.all(calls);
-    },
-    {
-      enabled: !!sdocIds,
-    }
+const useGetAllDocumentTagsBatch = (sdocIds: number[]) =>
+  useStableQueries(
+    useQueries({
+      queries: sdocIds.map((sdocId) => ({
+        queryKey: [QueryKey.SDOC_TAGS, sdocId],
+        queryFn: () =>
+          SourceDocumentService.getAllTagsSdocSdocIdTagsGet({
+            sdocId: sdocId,
+          }),
+      })),
+    })
   );
 
 const useAddDocumentTag = (options: UseMutationOptions<SourceDocumentRead, Error, { sdocId: number; tagId: number }>) =>
@@ -207,7 +209,7 @@ const SdocHooks = {
   useDeleteDocument,
   // tags
   useGetAllDocumentTags,
-  useGetAllDocumentsTags,
+  useGetAllDocumentTagsBatch,
   useAddDocumentTag,
   useRemoveDocumentTag,
   // adoc

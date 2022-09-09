@@ -10,6 +10,7 @@ import {
 import { QueryKey } from "./QueryKey";
 import { orderFilter, SearchFilter } from "../views/search/SearchFilter";
 
+// todo: merge useSearchDocumentsByProjectIdAndFilters and useSearchDocumentsByProjectIdAndTagId
 const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: SearchFilter[]) =>
   useQuery<number[], Error>([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filters], () => {
     const { keywords, tags, codes, texts } = orderFilter(filters);

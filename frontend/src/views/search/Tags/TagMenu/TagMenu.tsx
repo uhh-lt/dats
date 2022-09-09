@@ -47,7 +47,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   const { projectId, sdocId } = useParams() as { projectId: string; sdocId: string | undefined };
   const projId = parseInt(projectId);
 
-  // redux
+  // global client state (redux)
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
 
   // the document ids we manipulate are either the forced sdocId, the selected documents, or the currently viewed document
@@ -58,9 +58,9 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
     return selectedDocumentIds.length > 0 ? selectedDocumentIds : [parseInt(sdocId!)];
   }, [forceSdocId, selectedDocumentIds, sdocId]);
 
-  // queries
+  // global server state (react-query)
   const allTags = ProjectHooks.useGetAllTags(projId);
-  const documentsTags = SdocHooks.useGetAllDocumentsTags(documentIds);
+  const documentTagsBatch = SdocHooks.useGetAllDocumentTagsBatch(documentIds);
 
   // mutations
   const queryClient = useQueryClient();
@@ -71,7 +71,6 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
       });
       queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
-      queryClient.invalidateQueries([QueryKey.SDOCS_DOCUMENT_TAGS, variables.sourceDocumentIds]);
       SnackbarAPI.openSnackbar({
         text: `Updated tags!`,
         severity: "success",
@@ -85,7 +84,6 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
       });
       queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
-      queryClient.invalidateQueries([QueryKey.SDOCS_DOCUMENT_TAGS, variables.requestBody.source_document_ids]);
       SnackbarAPI.openSnackbar({
         text: `Added tags!`,
         severity: "success",
@@ -99,7 +97,6 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
         queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
       });
       queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
-      queryClient.invalidateQueries([QueryKey.SDOCS_DOCUMENT_TAGS, variables.requestBody.source_document_ids]);
       SnackbarAPI.openSnackbar({
         text: `Removed tags!`,
         severity: "success",
@@ -109,29 +106,33 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
   // state
   const open = Boolean(anchorEl);
-
   const [search, setSearch] = useState<string>("");
   const [checked, setChecked] = useState<Map<number, CheckboxState>>(new Map<number, CheckboxState>());
 
   // computed state
+  const documentTagsData = useMemo(() => {
+    const isUndefined = documentTagsBatch.some((a) => !a.data);
+    if (isUndefined) return undefined;
+    return documentTagsBatch.map((a) => a.data!);
+  }, [documentTagsBatch]);
+
   const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {
     return allTags.data?.filter((tag) => tag.title.toLowerCase().startsWith(search.toLowerCase()));
   }, [allTags.data, search]);
 
   const initialCheckedTags = useMemo(() => {
-    let result: Map<number, CheckboxState> = new Map<number, CheckboxState>();
-    if (allTags.data && documentsTags.data) {
-      const maxTags = documentsTags.data.length;
+    if (allTags.data && documentTagsData) {
+      const maxTags = documentTagsData.length;
       // init map with all tags
       const m = new Map<number, number>(allTags.data.map((t) => [t.id, 0]));
       // convert list of list of DocumentTags to list of DocumentTagIds
-      const x = flatMap(documentsTags.data, (docTagList: DocumentTagRead[]) => docTagList.map((t) => t.id));
+      const x = flatMap(documentTagsData, (docTagList) => docTagList.map((t) => t.id));
       // count the DocumentTagIds
       x.forEach((docTagId) => {
         m.set(docTagId, (m.get(docTagId) || 0) + 1);
       });
       // Depending on the count, set the CheckboxState
-      result = new Map(
+      return (result = new Map(
         Array.from(m).map(([docTagId, docTagCount]) => [
           docTagId,
           docTagCount === 0
@@ -140,14 +141,18 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             ? CheckboxState.INDETERMINATE
             : CheckboxState.CHECKED,
         ])
-      );
+      ));
     }
-    return result;
-  }, [documentsTags.data, allTags.data]);
+    return undefined;
+  }, [documentTagsData, allTags.data]);
 
-  // check all tags once document tags are loaded!
+  const hasChanged = useMemo(() => !isEqual(initialCheckedTags, checked), [initialCheckedTags, checked]);
+
+  // effects
   useEffect(() => {
-    setChecked(new Map(initialCheckedTags));
+    if (initialCheckedTags) {
+      setChecked(new Map(initialCheckedTags));
+    }
   }, [initialCheckedTags]);
 
   // actions
@@ -155,6 +160,8 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
     setAnchorEl(null);
   };
   const handleCheck = (tagId: number) => {
+    if (!checked) return;
+
     setChecked(
       new Map(
         checked.set(
@@ -170,7 +177,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
     setSearch(event.target.value);
   };
   const handleClickTag = (tagId: number) => {
-    if (initialCheckedTags.get(tagId) === CheckboxState.CHECKED) {
+    if (initialCheckedTags?.get(tagId) === CheckboxState.CHECKED) {
       removeTagsMutation.mutate({
         requestBody: {
           source_document_ids: documentIds,
@@ -185,17 +192,19 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
         },
       });
     }
+    handleClose();
   };
   const handleApplyTags = () => {
+    if (!initialCheckedTags || !checked) return;
     updateTagsMutation.mutate({
       sourceDocumentIds: documentIds,
       initialState: initialCheckedTags,
       newState: checked,
     });
+    handleClose();
   };
 
   // Display buttons depending on state
-  const hasChanged = useMemo(() => !isEqual(initialCheckedTags, checked), [initialCheckedTags, checked]);
   const actionMenu: React.ReactNode[] = [];
   if (hasChanged) {
     actionMenu.push(
@@ -265,11 +274,10 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
                   <Checkbox
                     edge="end"
                     onChange={() => handleCheck(tag.id)}
-                    checked={checked.get(tag.id) === CheckboxState.CHECKED}
-                    indeterminate={checked.get(tag.id) === CheckboxState.INDETERMINATE}
+                    checked={checked?.get(tag.id) === CheckboxState.CHECKED}
+                    indeterminate={checked?.get(tag.id) === CheckboxState.INDETERMINATE}
                     tabIndex={-1}
                     disableRipple
-                    disabled={!documentsTags.isSuccess}
                     inputProps={{ "aria-labelledby": labelId }}
                     style={{ padding: "0 8px 0 0" }}
                   />

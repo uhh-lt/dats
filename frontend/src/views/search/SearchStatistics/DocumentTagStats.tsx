@@ -15,7 +15,7 @@ function DocumentTagStats({ documentIds, handleClick }: DocumentTagStatsProps) {
   return (
     <>
       {tagStats.isLoading && <div>Loading!</div>}
-      {tagStats.isError && <div>Error: {tagStats.error!.message}</div>}
+      {tagStats.isError && <div>Error: {tagStats.error}</div>}
       {tagStats.isSuccess && (
         <Stack sx={{ whiteSpace: "nowrap" }} spacing={0.5}>
           {tagStats.data.map((tagStat) => (

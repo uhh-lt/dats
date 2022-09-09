@@ -7,6 +7,7 @@ import {
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import { useMutation, UseMutationOptions, useQueries, useQuery } from "@tanstack/react-query";
+import useStableQueries from "../utils/useStableQueries";
 
 const useCreateAdoc = (
   options: UseMutationOptions<AnnotationDocumentRead, Error, { requestBody: AnnotationDocumentCreate }>
@@ -26,16 +27,18 @@ const useGetAllSpanAnnotations = (adocId: number | undefined) =>
   );
 
 const useGetAllSpanAnnotationsBatch = (adocIds: number[]) =>
-  useQueries({
-    queries: adocIds.map((adocId) => ({
-      queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
-      queryFn: () =>
-        AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
-          adocId: adocId,
-          resolve: true,
-        }) as Promise<SpanAnnotationReadResolved[]>,
-    })),
-  });
+  useStableQueries(
+    useQueries({
+      queries: adocIds.map((adocId) => ({
+        queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
+        queryFn: () =>
+          AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
+            adocId: adocId,
+            resolve: true,
+          }) as Promise<SpanAnnotationReadResolved[]>,
+      })),
+    })
+  );
 
 const useGetAllBboxAnnotations = (adocId: number | undefined) =>
   useQuery<BBoxAnnotationReadResolvedCode[], Error>(
@@ -51,16 +54,18 @@ const useGetAllBboxAnnotations = (adocId: number | undefined) =>
   );
 
 const useGetAllBboxAnnotationsBatch = (adocIds: number[]) =>
-  useQueries({
-    queries: adocIds.map((adocId) => ({
-      queryKey: [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
-      queryFn: () =>
-        AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
-          adocId: adocId,
-          resolve: true,
-        }) as Promise<BBoxAnnotationReadResolvedCode[]>,
-    })),
-  });
+  useStableQueries(
+    useQueries({
+      queries: adocIds.map((adocId) => ({
+        queryKey: [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
+        queryFn: () =>
+          AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
+            adocId: adocId,
+            resolve: true,
+          }) as Promise<BBoxAnnotationReadResolvedCode[]>,
+      })),
+    })
+  );
 
 const AdocHooks = {
   useGetAllSpanAnnotations,
