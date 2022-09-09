@@ -15,6 +15,7 @@ class DocumentTagORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False, index=True)
     description = Column(String, nullable=True, index=True)
+    color = Column(String, nullable=True)
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
