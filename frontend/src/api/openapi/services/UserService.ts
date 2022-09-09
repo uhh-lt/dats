@@ -1,0 +1,266 @@
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { Body_login_user_login_post } from "../models/Body_login_user_login_post";
+import type { CodeRead } from "../models/CodeRead";
+import type { MemoRead } from "../models/MemoRead";
+import type { ProjectRead } from "../models/ProjectRead";
+import type { UserAuthorizationHeaderData } from "../models/UserAuthorizationHeaderData";
+import type { UserCreate } from "../models/UserCreate";
+import type { UserRead } from "../models/UserRead";
+import type { UserUpdate } from "../models/UserUpdate";
+
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
+
+export class UserService {
+  /**
+   * Returns all Users
+   * Returns all Users that exist in the system
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllUserGet({
+    skip,
+    limit = 100,
+  }: {
+    /**
+     * The number of elements to skip (offset)
+     */
+    skip?: number;
+    /**
+     * The maximum number of returned elements
+     */
+    limit?: number;
+  }): CancelablePromise<Array<UserRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user",
+      query: {
+        skip: skip,
+        limit: limit,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Registers a new User
+   * Registers a new User and returns it with the generated ID.
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static registerUserPut({ requestBody }: { requestBody: UserCreate }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/user",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the JWT access token for the provided user login data
+   * Returns the JWT access token for the provided user login data if the login was successful. This is usually only called from an OAuth2 client!
+   * @returns UserAuthorizationHeaderData Successful Response
+   * @throws ApiError
+   */
+  public static loginUserLoginPost({
+    formData,
+  }: {
+    formData: Body_login_user_login_post;
+  }): CancelablePromise<UserAuthorizationHeaderData> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/user/login",
+      formData: formData,
+      mediaType: "application/x-www-form-urlencoded",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the current user
+   * Returns the current (logged in) user
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getMeUserMeGet(): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/me",
+    });
+  }
+
+  /**
+   * Returns the User
+   * Returns the User with the given ID if it exists
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static getByIdUserUserIdGet({ userId }: { userId: number }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Removes the User
+   * Removes the User with the given ID if it exists
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteByIdUserUserIdDelete({ userId }: { userId: number }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/user/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Updates the User
+   * Updates the User with the given ID if it exists
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static updateByIdUserUserIdPatch({
+    userId,
+    requestBody,
+  }: {
+    userId: number;
+    requestBody: UserUpdate;
+  }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/user/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all Projects of the User
+   * Returns all Projects of the User with the given ID
+   * @returns ProjectRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserProjectsUserUserIdProjectGet({
+    userId,
+  }: {
+    userId: number;
+  }): CancelablePromise<Array<ProjectRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{user_id}/project",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all Codes of the User
+   * Returns all Codes of the User with the given ID
+   * @returns CodeRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserCodesUserUserIdCodeGet({ userId }: { userId: number }): CancelablePromise<Array<CodeRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{user_id}/code",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Removes all Codes of the User
+   * Removes all Codes of the User with the given ID if it exists
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static deleteUserCodesUserUserIdCodeDelete({ userId }: { userId: number }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/user/{user_id}/code",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all Memos of the User
+   * Returns all Memos of the User with the given ID
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserMemosUserUserIdMemoGet({ userId }: { userId: number }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{user_id}/memo",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Removes all Memos of the User
+   * Removes all Memos of the User with the given ID if it exists
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static deleteUserMemosUserUserIdMemoDelete({ userId }: { userId: number }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/user/{user_id}/memo",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+}

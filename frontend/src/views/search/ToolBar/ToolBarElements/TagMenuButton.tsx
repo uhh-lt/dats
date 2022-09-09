@@ -19,7 +19,7 @@ function TagMenuButton({ forceSdocId, popoverOrigin }: TagMenuButtonProps) {
 
   return (
     <>
-      <Tooltip title="Labels">
+      <Tooltip title="Tags">
         <IconButton onClick={handleClick}>
           <LabelIcon />
         </IconButton>

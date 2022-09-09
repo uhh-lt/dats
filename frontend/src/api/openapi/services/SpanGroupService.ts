@@ -1,0 +1,140 @@
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
+import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
+import type { SpanGroupCreate } from "../models/SpanGroupCreate";
+import type { SpanGroupRead } from "../models/SpanGroupRead";
+import type { SpanGroupUpdate } from "../models/SpanGroupUpdate";
+
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
+
+export class SpanGroupService {
+  /**
+   * Creates a new SpanGroup
+   * Creates a new SpanGroup and returns it with the generated ID.
+   * @returns SpanGroupRead Successful Response
+   * @throws ApiError
+   */
+  public static createNewSpanGroupSpangroupPut({
+    requestBody,
+  }: {
+    requestBody: SpanGroupCreate;
+  }): CancelablePromise<SpanGroupRead> {
+    return __request(OpenAPI, {
+      method: "PUT",
+      url: "/spangroup",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the SpanGroup
+   * Returns the SpanGroup with the given ID.
+   * @returns SpanGroupRead Successful Response
+   * @throws ApiError
+   */
+  public static getByIdSpangroupSpanGroupIdGet({
+    spanGroupId,
+  }: {
+    spanGroupId: number;
+  }): CancelablePromise<SpanGroupRead> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/spangroup/{span_group_id}",
+      path: {
+        span_group_id: spanGroupId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Deletes the SpanGroup
+   * Deletes the SpanGroup with the given ID.
+   * @returns SpanGroupRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteByIdSpangroupSpanGroupIdDelete({
+    spanGroupId,
+  }: {
+    spanGroupId: number;
+  }): CancelablePromise<SpanGroupRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/spangroup/{span_group_id}",
+      path: {
+        span_group_id: spanGroupId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Updates the SpanGroup
+   * Updates the SpanGroup with the given ID.
+   * @returns SpanGroupRead Successful Response
+   * @throws ApiError
+   */
+  public static updateByIdSpangroupSpanGroupIdPatch({
+    spanGroupId,
+    requestBody,
+  }: {
+    spanGroupId: number;
+    requestBody: SpanGroupUpdate;
+  }): CancelablePromise<SpanGroupRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/spangroup/{span_group_id}",
+      path: {
+        span_group_id: spanGroupId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all SpanAnnotations in the SpanGroup
+   * Returns all SpanAnnotations in the SpanGroup with the given ID if it exists
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static getAllAnnotationsSpangroupSpanGroupIdSpanAnnotationsGet({
+    spanGroupId,
+    resolve = true,
+  }: {
+    spanGroupId: number;
+    /**
+     * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
+     */
+    resolve?: boolean;
+  }): CancelablePromise<Array<SpanAnnotationRead | SpanAnnotationReadResolved>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/spangroup/{span_group_id}/span_annotations",
+      path: {
+        span_group_id: spanGroupId,
+      },
+      query: {
+        resolve: resolve,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+}

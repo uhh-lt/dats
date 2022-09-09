@@ -132,7 +132,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
         m.set(docTagId, (m.get(docTagId) || 0) + 1);
       });
       // Depending on the count, set the CheckboxState
-      return (result = new Map(
+      return new Map(
         Array.from(m).map(([docTagId, docTagCount]) => [
           docTagId,
           docTagCount === 0
@@ -141,7 +141,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             ? CheckboxState.INDETERMINATE
             : CheckboxState.CHECKED,
         ])
-      ));
+      );
     }
     return undefined;
   }, [documentTagsData, allTags.data]);
