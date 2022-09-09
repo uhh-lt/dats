@@ -11,7 +11,7 @@ function SearchResultTag({ tagId }: SearchResultTagProps) {
   return (
     <>
       {tag.isSuccess ? (
-        <span className={"myTag"} style={{ color: tag.data.description, borderColor: tag.data.description }}>
+        <span className={"myTag"} style={{ color: tag.data.color, borderColor: tag.data.color }}>
           {tag.data.title}
         </span>
       ) : null}

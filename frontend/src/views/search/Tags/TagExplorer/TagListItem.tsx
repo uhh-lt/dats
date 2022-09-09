@@ -31,7 +31,7 @@ function TagListItem({ tagId, selectedTagId, handleClick, ...props }: TagListIte
           {...props}
         >
           <ListItemButton selected={selectedTagId === tag.data.id} onClick={() => handleClick(tag.data.id)}>
-            <ListItemIcon style={{ color: tag.data.description }}>
+            <ListItemIcon style={{ color: tag.data.color }}>
               <LabelIcon />
             </ListItemIcon>
             <ListItemText primary={tag.data.title} />
