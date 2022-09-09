@@ -21,7 +21,7 @@ function TagMenuListButtton({ popoverOrigin }: TagMenuAsListProps) {
         <ListItemIcon>
           <LabelIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText>Change label to</ListItemText>
+        <ListItemText>Change tags</ListItemText>
         <Typography variant="body2" color="text.secondary" align={"center"}>
           <ArrowRightIcon />
         </Typography>

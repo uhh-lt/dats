@@ -239,7 +239,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             onChange={handleSearchChange}
             variant="standard"
             fullWidth
-            placeholder="Add label..."
+            placeholder="Add tag..."
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
