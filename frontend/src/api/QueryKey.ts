@@ -67,8 +67,6 @@ export const QueryKey = {
 
   // all spans annotations of a adoc (by adoc id)
   ADOC_SPAN_ANNOTATIONS: "adocSpanAnnotations",
-  // all spans annotations of all given adocs (by asc list of adoc id)
-  ADOCS_SPAN_ANNOTATIONS: "adocsSpanAnnotations",
   // all bbox annotations of a adoc (by adoc id)
   ADOC_BBOX_ANNOTATIONS: "adocBboxAnnotations",
   // all bbox annotations of all given adocs (by asc list of adoc id)

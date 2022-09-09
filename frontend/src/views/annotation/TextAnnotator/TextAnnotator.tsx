@@ -2,9 +2,10 @@ import {
   AnnotationDocumentRead,
   BBoxAnnotationReadResolvedCode,
   SourceDocumentRead,
+  SpanAnnotationCreate,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
-import React, { MouseEvent, useRef } from "react";
+import React, { MouseEvent, useRef, useState } from "react";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { selectionIsEmpty } from "./utils";
@@ -15,7 +16,6 @@ import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 import { ICode } from "./ICode";
 import useComputeTokenData from "./useComputeTokenData";
 import TextAnnotatorRenderer from "./TextAnnotatorRenderer";
-import { spanAnnoKeyFactory } from "../../../api/AdocHooks";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentRead;
@@ -25,6 +25,7 @@ interface AnnotatorRemasteredProps {
 function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // local state
   const codeSelectorRef = useRef<CodeSelectorHandle>(null);
+  const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
 
   // global client state (redux)
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
@@ -47,38 +48,58 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     },
     // optimistic updates
     onMutate: async (newSpanAnnotation) => {
+      // when we create a new span annotation, we add a new annotation to a certain annotation document
+      // thus, we only affect the annotation document that we are adding to
+      const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, newSpanAnnotation.requestBody.annotation_document_id];
+
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(affectedQueryKey);
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
+      const previousSpanAnnotations = queryClient.getQueryData(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(
-        spanAnnoKeyFactory.visible(visibleAdocIds),
-        (old: SpanAnnotationReadResolved[] | undefined) => {
-          const bbox = {
-            ...newSpanAnnotation.requestBody,
-            id: -1,
+      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+        const fakeAnnotation = old?.find((a) => a.id === -1);
+        const fakeAnnotationIndex = old?.findIndex((a) => a.id === -1);
+        if (fakeAnnotation && fakeAnnotationIndex && fakeAnnotationIndex !== -1) {
+          // we already created a fake annotation, that is correct as is
+          if (fakeAnnotation.code.id === newSpanAnnotation.requestBody.current_code_id) {
+            return old;
+          }
+          // we already created a fake annotation, but the code is different
+          const result = Array.from(old!);
+          result[fakeAnnotationIndex] = {
+            ...fakeAnnotation,
             code: {
-              name: "",
-              color: "",
-              description: "",
+              ...fakeAnnotation.code,
               id: newSpanAnnotation.requestBody.current_code_id,
-              project_id: 0,
-              user_id: 0,
-              created: "",
-              updated: "",
             },
+          };
+          return result;
+        }
+        // we have not created a fake annotation yet
+        const spanAnnotation = {
+          ...newSpanAnnotation.requestBody,
+          id: -1,
+          code: {
+            name: "",
+            color: "",
+            description: "",
+            id: newSpanAnnotation.requestBody.current_code_id,
+            project_id: 0,
+            user_id: 0,
             created: "",
             updated: "",
-          };
-          return old === undefined ? [bbox] : [...old, bbox];
-        }
-      );
+          },
+          created: "",
+          updated: "",
+        };
+        return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
+      });
 
       // Return a context object with the snapshotted value
-      return { previousSpanAnnotations, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
+      return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
     },
     onError: (error: Error, newBbox, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
@@ -89,6 +110,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       queryClient.invalidateQueries(context.myCustomQueryKey);
     },
   });
+  // todo: rework to only update QueryKey.SPAN_ANNOTATION (we need to change the rendering for this...)
   const updateMutation = SpanAnnotationHooks.useUpdateSpan({
     onSuccess: (data) => {
       SnackbarAPI.openSnackbar({
@@ -97,55 +119,63 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       });
     },
     // optimistic update
-    // todo: this is not working yet, because optimistic update only updates the span annotation, not the list of span annotations
-    onMutate: async (newSpanAnnotation) => {
+    onMutate: async (updatedSpanAnnotation) => {
+      const spanAnnotationToUpdate = annotationMap?.get(updatedSpanAnnotation.spanId);
+      if (spanAnnotationToUpdate === undefined) {
+        console.error("Could not find span annotation to update");
+        return;
+      }
+
+      // when we update a span annotation, we update an annotation of a certain annotation document
+      // thus, we only affect the annotation document that contains the annotation we update
+      const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, spanAnnotationToUpdate.annotation_document_id];
+
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId]);
+      await queryClient.cancelQueries(affectedQueryKey);
 
       // Snapshot the previous value
-      const previousAnnos = queryClient.getQueryData([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId]);
+      const previousAnnos = queryClient.getQueryData(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(
-        [QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId],
-        (old: SpanAnnotationReadResolved | undefined) => {
-          if (old === undefined) {
-            return undefined;
-          }
-          return {
-            ...old,
-            code: {
-              name: "",
-              color: "",
-              description: "",
-              id: newSpanAnnotation.requestBody.current_code_id,
-              project_id: 0,
-              user_id: 0,
-              created: "",
-              updated: "",
-            },
-          };
+      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+        if (!old) {
+          return undefined;
         }
-      );
+        const oldSpanAnnotation = old.find((anno) => anno.id === updatedSpanAnnotation.spanId);
+        if (!oldSpanAnnotation) {
+          console.error("Could not find span annotation to update");
+          return old;
+        }
+        const oldSpanAnnotationIndex = old.indexOf(oldSpanAnnotation);
+        const result = Array.from(old);
+        result[oldSpanAnnotationIndex] = {
+          ...oldSpanAnnotation,
+          code: {
+            ...oldSpanAnnotation.code,
+            id: updatedSpanAnnotation.requestBody.current_code_id,
+          },
+        };
+        return result;
+      });
 
       // Return a context object with the snapshotted value
-      return { previousAnnos };
+      return { previousAnnos, myCustomQueryKey: affectedQueryKey };
     },
-    onError: (error: Error, newSpanAnnotation, context: any) => {
+    onError: (error: Error, updatedSpanAnnotation, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
-      queryClient.setQueryData([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.spanId], context.previousAnnos);
+      queryClient.setQueryData(context.myCustomQueryKey, context.previousAnnos);
     },
     // Always re-fetch after error or success:
-    onSettled: (newSpanAnnotation) => {
-      if (newSpanAnnotation) {
-        queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, newSpanAnnotation.id]);
+    onSettled: (updatedSpanAnnotation, error, variables, context: any) => {
+      if (updatedSpanAnnotation) {
+        queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, updatedSpanAnnotation.id]);
       }
-      queryClient.invalidateQueries(spanAnnoKeyFactory.visible(visibleAdocIds)); // todo: this should not be necessary, as the list does actually not change on update. Change the rendering.
+      queryClient.invalidateQueries(context.myCustomQueryKey);
     },
   });
   const deleteMutation = SpanAnnotationHooks.useDeleteSpan({
     onSuccess: (data) => {
-      queryClient.invalidateQueries(spanAnnoKeyFactory.visible(visibleAdocIds)); //todo: not all, but update all queries that contain the affected adoc! (check docs if this is possible)
+      queryClient.invalidateQueries([QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id]);
       SnackbarAPI.openSnackbar({
         text: `Deleted Span Annotation ${data.id}`,
         severity: "success",
@@ -153,28 +183,35 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     },
     // optimistic updates
     onMutate: async ({ spanId }) => {
+      const spanAnnotationToDelete = annotationMap?.get(spanId);
+      if (spanAnnotationToDelete === undefined) {
+        console.error("Could not find span annotation to delete");
+        return;
+      }
+
+      // when we delete a span annotation, we remove an annotation from a certain annotation document
+      // thus, we only affect the annotation document that we are removing from to
+      const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, spanAnnotationToDelete.annotation_document_id];
+
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(affectedQueryKey);
 
       // Snapshot the previous value
-      const previousSpanAnnotations = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
+      const previousSpanAnnotations = queryClient.getQueryData(affectedQueryKey);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(
-        spanAnnoKeyFactory.visible(visibleAdocIds),
-        (old: SpanAnnotationReadResolved[] | undefined) => {
-          if (old === undefined) {
-            return undefined;
-          }
-
-          return old.filter((spanAnnotation) => spanAnnotation.id !== spanId);
+      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+        if (old === undefined) {
+          return undefined;
         }
-      );
+
+        return old.filter((spanAnnotation) => spanAnnotation.id !== spanId);
+      });
 
       // Return a context object with the snapshotted value
-      return { previousSpanAnnotations, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
+      return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
     },
-    onError: (error: Error, newBbox, context: any) => {
+    onError: (error: Error, spanAnnotationToDelete, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
     },
@@ -215,7 +252,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     }
   };
 
-  const handleMouseUp = (event: MouseEvent) => {
+  const handleMouseUp = async (event: MouseEvent) => {
     if (event.button === 2) return;
     if (!tokenData) return;
 
@@ -237,7 +274,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     const selectionEnd = selection?.focusNode?.parentElement?.parentElement?.getAttribute("data-tokenid");
     if (!selectionStart || !selectionEnd) return;
 
-    // create annotation
     const begin = parseInt(selectionStart);
     const end = parseInt(selectionEnd);
 
@@ -250,7 +286,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       .map((t) => t.text)
       .join(" ");
 
-    const requestBody = {
+    const requestBody: SpanAnnotationCreate = {
       current_code_id: selectedCodeId,
       annotation_document_id: adoc.id,
       begin: tokenData[begin_token].beginChar,
@@ -259,7 +295,51 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       end_token: end_token + 1,
       span_text: span_text,
     };
-    createMutation.mutate({ requestBody });
+
+    // create a fake annotation
+    setFakeAnnotation(requestBody);
+
+    // when we create a new span annotation, we add a new annotation to a certain annotation document
+    // thus, we only affect the annotation document that we are adding to
+    const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, requestBody.annotation_document_id];
+
+    // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+    await queryClient.cancelQueries(affectedQueryKey);
+
+    // Add a fake annotation
+    queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+      const spanAnnotation = {
+        ...requestBody,
+        id: -1,
+        code: {
+          name: "",
+          color: "",
+          description: "",
+          id: requestBody.current_code_id,
+          project_id: 0,
+          user_id: 0,
+          created: "",
+          updated: "",
+        },
+        created: "",
+        updated: "",
+      };
+      return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
+    });
+
+    // open code selector
+    const target = (event.target as HTMLElement).parentElement;
+    if (target) {
+      // calculate position of the code selector (based on selection end)
+      const boundingBox = target.getBoundingClientRect();
+      const position = {
+        left: boundingBox.left,
+        top: boundingBox.top + boundingBox.height,
+      };
+
+      // open code selector
+      codeSelectorRef.current!.open(position);
+    }
 
     // clear selection
     selection.empty();
@@ -282,11 +362,47 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       },
     });
   };
+  const handleCodeSelectorAddCode = (code: ICode) => {
+    if (!fakeAnnotation) return;
+
+    createMutation.mutate({
+      requestBody: {
+        ...fakeAnnotation,
+        current_code_id: code.id,
+      },
+    });
+  };
+  const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
+    // i am about to create an annotation
+    if (fakeAnnotation) {
+      // i clicked away because i like the annotation as is
+      if (reason === "backdropClick") {
+        // add the annotation as is
+        createMutation.mutate({ requestBody: fakeAnnotation });
+      }
+      // i clicked escape because i want to cancel the annotation
+      if (reason === "escapeKeyDown") {
+        // delete the fake annotation (that always has id -1)
+        queryClient.setQueryData(
+          [QueryKey.ADOC_SPAN_ANNOTATIONS, fakeAnnotation.annotation_document_id],
+          (old: SpanAnnotationReadResolved[] | undefined) => {
+            if (old === undefined) {
+              return undefined;
+            }
+            return old.filter((spanAnnotation) => spanAnnotation.id !== -1);
+          }
+        );
+      }
+    }
+    setFakeAnnotation(undefined);
+  };
 
   return (
     <>
       <CodeContextMenu
         ref={codeSelectorRef}
+        onAdd={handleCodeSelectorAddCode}
+        onClose={handleCodeSelectorClose}
         onEdit={handleCodeSelectorEditCode}
         onDelete={handleCodeSelectorDeleteAnnotation}
       />

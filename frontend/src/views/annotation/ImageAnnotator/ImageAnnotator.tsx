@@ -16,7 +16,7 @@ import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SVGBBox from "./SVGBBox";
 import SVGBBoxText from "./SVGBBoxText";
-import AdocHooks, { spanAnnoKeyFactory } from "../../../api/AdocHooks";
+import AdocHooks, { bboxAnnoKeyFactory } from "../../../api/AdocHooks";
 
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentRead;
@@ -60,14 +60,14 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
     // optimistic updates
     onMutate: async (newBbox) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(bboxAnnoKeyFactory.visible(visibleAdocIds));
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
+      const previousBboxes = queryClient.getQueryData(bboxAnnoKeyFactory.visible(visibleAdocIds));
 
       // Optimistically update to the new value
       queryClient.setQueryData(
-        spanAnnoKeyFactory.visible(visibleAdocIds),
+        bboxAnnoKeyFactory.visible(visibleAdocIds),
         (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
           const bbox = {
             ...newBbox.requestBody,
@@ -90,7 +90,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       );
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
+      return { previousBboxes, myCustomQueryKey: bboxAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back
@@ -166,14 +166,14 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
     // optimistic updates
     onMutate: async ({ bboxId }) => {
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(spanAnnoKeyFactory.visible(visibleAdocIds));
+      await queryClient.cancelQueries(bboxAnnoKeyFactory.visible(visibleAdocIds));
 
       // Snapshot the previous value
-      const previousBboxes = queryClient.getQueryData(spanAnnoKeyFactory.visible(visibleAdocIds));
+      const previousBboxes = queryClient.getQueryData(bboxAnnoKeyFactory.visible(visibleAdocIds));
 
       // Optimistically update to the new value
       queryClient.setQueryData(
-        spanAnnoKeyFactory.visible(visibleAdocIds),
+        bboxAnnoKeyFactory.visible(visibleAdocIds),
         (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
           if (old === undefined) {
             return undefined;
@@ -184,7 +184,7 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
       );
 
       // Return a context object with the snapshotted value
-      return { previousBboxes, myCustomQueryKey: spanAnnoKeyFactory.visible(visibleAdocIds) };
+      return { previousBboxes, myCustomQueryKey: bboxAnnoKeyFactory.visible(visibleAdocIds) };
     },
     onError: (error: Error, newBbox, context: any) => {
       // If the mutation fails, use the context returned from onMutate to roll back

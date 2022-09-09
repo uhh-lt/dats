@@ -6,7 +6,7 @@ import {
   SpanAnnotationReadResolved,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
+import { useMutation, UseMutationOptions, useQueries, useQuery } from "@tanstack/react-query";
 import { flatten } from "lodash";
 
 const useCreateAdoc = (
@@ -26,28 +26,16 @@ const useGetAllSpanAnnotations = (adocId: number | undefined) =>
     }
   );
 
-// todo: refactor this when applying react bulletproof architecture
-export const spanAnnoKeyFactory = {
-  visible: (ids: number[]) => [QueryKey.ADOCS_SPAN_ANNOTATIONS, ids.sort()] as const,
-};
-const useGetSpanAnnotationsBatch = (adocIds: number[]) =>
-  useQuery<
-    SpanAnnotationReadResolved[],
-    Error,
-    SpanAnnotationReadResolved[],
-    ReturnType<typeof spanAnnoKeyFactory["visible"]>
-  >(spanAnnoKeyFactory.visible(adocIds), async ({ queryKey }) => {
-    const ids = queryKey[1];
-    const queries = ids.map(
-      (adocId) =>
+const useGetAllSpanAnnotationsBatch = (adocIds: number[]) =>
+  useQueries({
+    queries: adocIds.map((adocId) => ({
+      queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
+      queryFn: () =>
         AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
           adocId: adocId,
           resolve: true,
-          limit: 1000,
-        }) as Promise<SpanAnnotationReadResolved[]>
-    );
-    const annotations = await Promise.all(queries);
-    return annotations.flat();
+        }) as Promise<SpanAnnotationReadResolved[]>,
+    })),
   });
 
 // todo: refactor this when applying react bulletproof architecture
@@ -90,7 +78,7 @@ const AdocHooks = {
   useGetAllSpanAnnotations,
   useGetAllBboxAnnotations,
   useCreateAdoc,
-  useGetSpanAnnotationsBatch,
+  useGetAllSpanAnnotationsBatch,
   useGetBboxAnnotationsBatch,
 };
 

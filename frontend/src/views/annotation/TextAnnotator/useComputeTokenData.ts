@@ -7,7 +7,7 @@ import AdocHooks from "../../../api/AdocHooks";
 function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number; annotationDocumentIds: number[] }) {
   // global server state (react query)
   const tokens = SdocHooks.useGetDocumentTokens(sdocId);
-  const annotations = AdocHooks.useGetSpanAnnotationsBatch(annotationDocumentIds);
+  const annotations = AdocHooks.useGetAllSpanAnnotationsBatch(annotationDocumentIds);
 
   // computed
   // todo: maybe implement with selector?
@@ -33,22 +33,26 @@ function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number
   // todo: maybe implement with selector?
   // this map stores annotationId -> SpanAnnotationReadResolved
   const annotationMap = useMemo(() => {
-    if (!annotations.data) return undefined;
+    const annotationsIsUndefined = annotations.some((a) => !a.data);
+    if (annotationsIsUndefined) return undefined;
 
+    const annotationsList = annotations.map((a) => a.data!).flat();
     console.time("annotationMap");
     const result = new Map<number, SpanAnnotationReadResolved>();
-    annotations.data.forEach((a) => result.set(a.id, a));
+    annotationsList.forEach((a) => result.set(a.id, a));
     console.timeEnd("annotationMap");
     return result;
-  }, [annotations.data]);
+  }, [annotations]);
 
   // this map stores tokenId -> spanAnnotationId[]
   const annotationsPerToken = useMemo(() => {
-    if (!annotations.data) return undefined;
+    const annotationsIsUndefined = annotations.some((a) => !a.data);
+    if (annotationsIsUndefined) return undefined;
 
+    const annotationsList = annotations.map((a) => a.data!).flat();
     console.time("annotationsPerToken");
     const result = new Map<number, number[]>();
-    annotations.data.forEach((annotation) => {
+    annotationsList.forEach((annotation) => {
       for (let i = annotation.begin_token; i <= annotation.end_token - 1; i++) {
         const tokenAnnotations = result.get(i) || [];
         tokenAnnotations.push(annotation.id);
@@ -57,7 +61,7 @@ function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number
     });
     console.timeEnd("annotationsPerToken");
     return result;
-  }, [annotations.data]);
+  }, [annotations]);
 
   return { tokenData, annotationsPerToken, annotationMap };
 }

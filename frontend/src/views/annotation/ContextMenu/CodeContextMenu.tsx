@@ -28,7 +28,7 @@ interface ICodeFilter extends ICode {
 const filter = createFilterOptions<ICodeFilter>();
 
 interface CodeSelectorProps {
-  onClose?: () => void;
+  onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
   onAdd?: (code: ICode) => void;
   onEdit?: (annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode, newCode: ICode) => void;
   onDelete?: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode) => void;
@@ -89,12 +89,12 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
       setPosition(position);
     };
 
-    const closeCodeSelector = () => {
+    const closeCodeSelector = (reason?: "backdropClick" | "escapeKeyDown") => {
       setShowCodeSelection(false);
       setIsPopoverOpen(false);
       setIsAutoCompleteOpen(false);
       setAutoCompleteValue(null);
-      if (onClose) onClose();
+      if (onClose) onClose(reason);
     };
 
     // effects
@@ -156,7 +156,7 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     return (
       <Popover
         open={isPopoverOpen}
-        onClose={closeCodeSelector}
+        onClose={(event, reason) => closeCodeSelector(reason)}
         anchorPosition={position}
         anchorReference="anchorPosition"
         anchorOrigin={{
@@ -221,10 +221,10 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
               autoHighlight
               selectOnFocus
               clearOnBlur
-              clearOnEscape
               handleHomeEndKeys
               freeSolo
               open={isAutoCompleteOpen}
+              onClose={(event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
             />
             <CodeCreationDialog ref={codeCreationDialogRef} onCreateSuccess={submit} />
           </>
