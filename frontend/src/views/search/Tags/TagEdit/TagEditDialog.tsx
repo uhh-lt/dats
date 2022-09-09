@@ -1,11 +1,9 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
 import { useForm } from "react-hook-form";
 import eventBus from "../../../../EventBus";
 import TagHooks from "../../../../api/TagHooks";
-import { QueryKey } from "../../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
@@ -64,40 +62,31 @@ function TagEditDialog() {
   }, [tag.data, reset]);
 
   // mutations
-  const queryClient = useQueryClient();
-  const updateTagMutation = TagHooks.useUpdateTag({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.TAG, data.id]);
-      setOpen(false); // close dialog
-      SnackbarAPI.openSnackbar({
-        text: `Updated tag with id ${data.id}`,
-        severity: "success",
-      });
-    },
-  });
-  const deleteTagMutation = TagHooks.useDeleteTag({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS]);
-      queryClient.invalidateQueries([QueryKey.SDOC_TAGS]);
-      setOpen(false); // close dialog
-      SnackbarAPI.openSnackbar({
-        text: `Deleted tag with id ${data.id}`,
-        severity: "success",
-      });
-    },
-  });
+  const updateTagMutation = TagHooks.useUpdateTag();
+  const deleteTagMutation = TagHooks.useDeleteTag();
 
   // form handling
   const handleTagUpdate = (data: any) => {
     if (tag.data) {
-      updateTagMutation.mutate({
-        requestBody: {
-          title: data.title,
-          description: data.description,
-          color: data.color,
+      updateTagMutation.mutate(
+        {
+          requestBody: {
+            title: data.title,
+            description: data.description,
+            color: data.color,
+          },
+          tagId: tag.data.id,
         },
-        tagId: tag.data.id,
-      });
+        {
+          onSuccess: (data) => {
+            setOpen(false); // close dialog
+            SnackbarAPI.openSnackbar({
+              text: `Updated tag with id ${data.id}`,
+              severity: "success",
+            });
+          },
+        }
+      );
     } else {
       throw new Error("Invalid invocation of method handleTagUpdate! Only call when tag.data is available!");
     }
@@ -105,7 +94,18 @@ function TagEditDialog() {
   const handleError = (data: any) => console.error(data);
   const handleDelete = () => {
     if (tag.data) {
-      deleteTagMutation.mutate({ tagId: tag.data.id });
+      deleteTagMutation.mutate(
+        { tagId: tag.data.id },
+        {
+          onSuccess: (data) => {
+            setOpen(false); // close dialog
+            SnackbarAPI.openSnackbar({
+              text: `Deleted tag with id ${data.id}`,
+              severity: "success",
+            });
+          },
+        }
+      );
     } else {
       throw new Error("Invalid invocation of method handleDelete! Only call when tag.data is available!");
     }

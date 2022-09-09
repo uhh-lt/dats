@@ -10,10 +10,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CloseIcon from "@mui/icons-material/Close";
 import ProjectDetails from "./ProjectDetails";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { QueryKey } from "../../../api/QueryKey";
 import { useAuth } from "../../../auth/AuthProvider";
 
 function ProjectUpdate() {
@@ -31,20 +29,21 @@ function ProjectUpdate() {
   };
 
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const removeProjectMutation = ProjectHooks.useDeleteProject({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
-      SnackbarAPI.openSnackbar({
-        text: "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
-        severity: "success",
-      });
-      navigate(`/projectsettings`);
-    },
-  });
+  const deleteProjectMutation = ProjectHooks.useDeleteProject();
   const handleClickRemoveProject = () => {
-    if (project.data) {
-      removeProjectMutation.mutate({ projId: project.data.id });
+    if (project.data && user.data) {
+      deleteProjectMutation.mutate(
+        { projId: project.data.id, userId: user.data.id },
+        {
+          onSuccess: (data) => {
+            SnackbarAPI.openSnackbar({
+              text: "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
+              severity: "success",
+            });
+            navigate(`/projectsettings`);
+          },
+        }
+      );
     }
   };
 
@@ -65,7 +64,7 @@ function ProjectUpdate() {
                 sx={{ mr: 1 }}
                 onClick={handleClickRemoveProject}
                 disabled={!project.isSuccess}
-                loading={removeProjectMutation.isLoading}
+                loading={deleteProjectMutation.isLoading}
                 loadingPosition="start"
               >
                 Delete

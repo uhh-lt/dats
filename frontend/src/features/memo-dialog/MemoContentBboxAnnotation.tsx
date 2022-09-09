@@ -1,9 +1,7 @@
 import React from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
 import { BBoxAnnotationReadResolvedCode, MemoRead } from "../../api/openapi";
 import MemoHooks from "../../api/MemoHooks";
-import { QueryKey } from "../../api/QueryKey";
 import { MemoForm } from "./MemoForm";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 import { useAuth } from "../../auth/AuthProvider";
@@ -25,68 +23,70 @@ export function MemoContentBboxAnnotation({
   const { user } = useAuth();
 
   // mutations
-  const queryClient = useQueryClient();
-  const createMutation = BboxAnnotationHooks.useCreateMemo({
-    onSuccess: () => {
-      queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
-      SnackbarAPI.openSnackbar({
-        text: `Created memo for bboxAnnotation ${bboxAnnotation.id}`,
-        severity: "success",
-      });
-      closeDialog();
-    },
-  });
-  const updateMutation = MemoHooks.useUpdateMemo({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id, data.user_id]);
-      SnackbarAPI.openSnackbar({
-        text: `Updated memo for bboxAnnotation ${bboxAnnotation.id}`,
-        severity: "success",
-      });
-      closeDialog();
-    },
-  });
-  const deleteMutation = MemoHooks.useDeleteMemo({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, bboxAnnotation.id, data.user_id]);
-      queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
-      SnackbarAPI.openSnackbar({
-        text: `Deleted memo for bboxAnnotation ${bboxAnnotation.id}`,
-        severity: "success",
-      });
-      closeDialog();
-    },
-  });
+  const createMutation = BboxAnnotationHooks.useCreateMemo();
+  const updateMutation = MemoHooks.useUpdateMemo();
+  const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
   const handleCreateOrUpdateBboxAnnotationMemo = (data: any) => {
     if (!user.data) return;
 
     if (memo) {
-      updateMutation.mutate({
-        memoId: memo.id,
-        requestBody: {
-          title: data.title,
-          content: data.content,
+      updateMutation.mutate(
+        {
+          memoId: memo.id,
+          requestBody: {
+            title: data.title,
+            content: data.content,
+          },
         },
-      });
+        {
+          onSuccess: (memo) => {
+            SnackbarAPI.openSnackbar({
+              text: `Updated memo for bboxAnnotation ${memo.attached_object_id}`,
+              severity: "success",
+            });
+            closeDialog();
+          },
+        }
+      );
     } else {
-      createMutation.mutate({
-        bboxId: bboxAnnotation.id,
-        requestBody: {
-          user_id: user.data.id,
-          project_id: bboxAnnotation.code.project_id,
-          title: data.title,
-          content: data.content,
+      createMutation.mutate(
+        {
+          bboxId: bboxAnnotation.id,
+          requestBody: {
+            user_id: user.data.id,
+            project_id: bboxAnnotation.code.project_id,
+            title: data.title,
+            content: data.content,
+          },
         },
-      });
+        {
+          onSuccess: () => {
+            SnackbarAPI.openSnackbar({
+              text: `Created memo for bboxAnnotation ${bboxAnnotation.id}`,
+              severity: "success",
+            });
+            closeDialog();
+          },
+        }
+      );
     }
   };
   const handleDeleteBboxAnnotationMemo = () => {
     if (memo) {
-      deleteMutation.mutate({ memoId: memo.id });
+      deleteMutation.mutate(
+        { memoId: memo.id },
+        {
+          onSuccess: (data) => {
+            SnackbarAPI.openSnackbar({
+              text: `Deleted memo for bboxAnnotation ${data.attached_object_id}`,
+              severity: "success",
+            });
+            closeDialog();
+          },
+        }
+      );
     } else {
       throw Error("Invalid invocation of handleDeleteBboxAnnotationMemo. No memo to delete.");
     }

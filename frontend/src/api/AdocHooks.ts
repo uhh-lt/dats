@@ -1,17 +1,15 @@
-import {
-  AnnotationDocumentCreate,
-  AnnotationDocumentRead,
-  AnnotationDocumentService,
-  BBoxAnnotationReadResolvedCode,
-  SpanAnnotationReadResolved,
-} from "./openapi";
+import { AnnotationDocumentService, BBoxAnnotationReadResolvedCode, SpanAnnotationReadResolved } from "./openapi";
 import { QueryKey } from "./QueryKey";
-import { useMutation, UseMutationOptions, useQueries, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import useStableQueries from "../utils/useStableQueries";
+import queryClient from "../plugins/ReactQueryClient";
 
-const useCreateAdoc = (
-  options: UseMutationOptions<AnnotationDocumentRead, Error, { requestBody: AnnotationDocumentCreate }>
-) => useMutation(AnnotationDocumentService.createAdocPut, options);
+const useCreateAdoc = () =>
+  useMutation(AnnotationDocumentService.createAdocPut, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.SDOC_ADOCS, data.source_document_id]);
+    },
+  });
 
 const useGetAllSpanAnnotations = (adocId: number | undefined) =>
   useQuery<SpanAnnotationReadResolved[], Error>(

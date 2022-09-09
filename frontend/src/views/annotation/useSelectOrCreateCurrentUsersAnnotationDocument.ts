@@ -2,10 +2,8 @@ import { useAuth } from "../../auth/AuthProvider";
 import SdocHooks from "../../api/SdocHooks";
 import { useEffect, useState } from "react";
 import { AnnotationDocumentRead } from "../../api/openapi";
-import { useQueryClient } from "@tanstack/react-query";
 import AdocHooks from "../../api/AdocHooks";
 import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
-import { QueryKey } from "../../api/QueryKey";
 
 /**
  * Given a SourceDocument (via sdocId), return the current user's AnnotationDocument for that SourceDocument.
@@ -24,16 +22,7 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
   const [annotationDocument, setAnnotationDocument] = useState<AnnotationDocumentRead | undefined>();
 
   // mutation
-  const queryClient = useQueryClient();
-  const createAdocMutation = AdocHooks.useCreateAdoc({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_ADOCS, data.source_document_id]);
-      SnackbarAPI.openSnackbar({
-        text: `Added annotation document for ${user.data!.first_name}`,
-        severity: "success",
-      });
-    },
-  });
+  const createAdocMutation = AdocHooks.useCreateAdoc();
 
   // create annotation document for user if no adoc exists
   useEffect(() => {
@@ -55,12 +44,22 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
       if (createAdocMutation.isLoading) return;
 
       // we are not creating an annotation document, but we need to create one
-      createAdocMutation.mutate({
-        requestBody: {
-          user_id: user.data.id,
-          source_document_id: sdocId!, // we ḱnow that sdocId is defined, because annotationDocuments.data exists
+      createAdocMutation.mutate(
+        {
+          requestBody: {
+            user_id: user.data.id,
+            source_document_id: sdocId!, // we ḱnow that sdocId is defined, because annotationDocuments.data exists
+          },
         },
-      });
+        {
+          onSuccess: (data) => {
+            SnackbarAPI.openSnackbar({
+              text: `Added annotation document for ${data.user_id} (${user.data!.first_name})`,
+              severity: "success",
+            });
+          },
+        }
+      );
     }
   }, [annotationDocument, user, annotationDocuments, createAdocMutation, sdocId]);
 

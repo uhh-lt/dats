@@ -1,9 +1,7 @@
 import React from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
 import { SpanAnnotationReadResolved } from "../../api/openapi";
 import MemoHooks from "../../api/MemoHooks";
-import { QueryKey } from "../../api/QueryKey";
 import { MemoForm } from "./MemoForm";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import { useAuth } from "../../auth/AuthProvider";
@@ -21,68 +19,70 @@ export function MemoContentSpanAnnotation({
   const { user } = useAuth();
 
   // mutations
-  const queryClient = useQueryClient();
-  const createMutation = SpanAnnotationHooks.useCreateMemo({
-    onSuccess: () => {
-      queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
-      SnackbarAPI.openSnackbar({
-        text: `Created memo for spanAnnotation ${spanAnnotation.id}`,
-        severity: "success",
-      });
-      closeDialog();
-    },
-  });
-  const updateMutation = MemoHooks.useUpdateMemo({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id, data.user_id]);
-      SnackbarAPI.openSnackbar({
-        text: `Updated memo for spanAnnotation ${spanAnnotation.id}`,
-        severity: "success",
-      });
-      closeDialog();
-    },
-  });
-  const deleteMutation = MemoHooks.useDeleteMemo({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, spanAnnotation.id, data.user_id]);
-      queryClient.invalidateQueries([QueryKey.USER_MEMOS, user.data?.id]);
-      SnackbarAPI.openSnackbar({
-        text: `Deleted memo for spanAnnotation ${spanAnnotation.id}`,
-        severity: "success",
-      });
-      closeDialog();
-    },
-  });
+  const createMutation = SpanAnnotationHooks.useCreateMemo();
+  const updateMutation = MemoHooks.useUpdateMemo();
+  const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
   const handleCreateOrUpdateSpanAnnotationMemo = (data: any) => {
     if (!user.data) return;
 
     if (memo) {
-      updateMutation.mutate({
-        memoId: memo.id,
-        requestBody: {
-          title: data.title,
-          content: data.content,
+      updateMutation.mutate(
+        {
+          memoId: memo.id,
+          requestBody: {
+            title: data.title,
+            content: data.content,
+          },
         },
-      });
+        {
+          onSuccess: (memo) => {
+            SnackbarAPI.openSnackbar({
+              text: `Updated memo for spanAnnotation ${memo.attached_object_id}`,
+              severity: "success",
+            });
+            closeDialog();
+          },
+        }
+      );
     } else {
-      createMutation.mutate({
-        spanId: spanAnnotation.id,
-        requestBody: {
-          user_id: user.data.id,
-          project_id: spanAnnotation.code.project_id,
-          title: data.title,
-          content: data.content,
+      createMutation.mutate(
+        {
+          spanId: spanAnnotation.id,
+          requestBody: {
+            user_id: user.data.id,
+            project_id: spanAnnotation.code.project_id,
+            title: data.title,
+            content: data.content,
+          },
         },
-      });
+        {
+          onSuccess: (memo) => {
+            SnackbarAPI.openSnackbar({
+              text: `Created memo for spanAnnotation ${memo.attached_object_id}`,
+              severity: "success",
+            });
+            closeDialog();
+          },
+        }
+      );
     }
   };
   const handleDeleteSpanAnnotationMemo = () => {
     if (memo) {
-      deleteMutation.mutate({ memoId: memo.id });
+      deleteMutation.mutate(
+        { memoId: memo.id },
+        {
+          onSuccess: (memo) => {
+            SnackbarAPI.openSnackbar({
+              text: `Deleted memo for spanAnnotation ${memo.attached_object_id}`,
+              severity: "success",
+            });
+            closeDialog();
+          },
+        }
+      );
     } else {
       throw Error("Invalid invocation of handleDeleteSpanAnnotationMemo. No memo to delete.");
     }

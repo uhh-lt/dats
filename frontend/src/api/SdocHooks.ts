@@ -1,11 +1,10 @@
-import { useMutation, UseMutationOptions, useQueries, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 
 import {
   AnnotationDocumentRead,
   AnnotationDocumentService,
   DocType,
   DocumentTagRead,
-  MemoCreate,
   MemoRead,
   SourceDocumentKeywords,
   SourceDocumentMetadataRead,
@@ -15,6 +14,7 @@ import {
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import useStableQueries from "../utils/useStableQueries";
+import queryClient from "../plugins/ReactQueryClient";
 
 // sdoc
 const fetchSdoc = async (sdocId: number) => {
@@ -28,7 +28,7 @@ const fetchSdoc = async (sdocId: number) => {
       break;
     case DocType.IMAGE:
       const url = await SourceDocumentService.getFileUrlSdocSdocIdUrlGet({ sdocId: sdocId });
-      sdoc.content = process.env.REACT_APP_CONTENT + '/' + url
+      sdoc.content = process.env.REACT_APP_CONTENT + "/" + url;
       break;
   }
   return sdoc;
@@ -88,8 +88,12 @@ const useGetDocumentKeywords = (sdocId: number | undefined) =>
     }
   );
 
-const useDeleteDocument = (options: UseMutationOptions<SourceDocumentRead, Error, { sdocId: number }>) =>
-  useMutation(SourceDocumentService.deleteByIdSdocSdocIdDelete, options);
+const useDeleteDocument = () =>
+  useMutation(SourceDocumentService.deleteByIdSdocSdocIdDelete, {
+    onSuccess: (sdoc) => {
+      queryClient.invalidateQueries([QueryKey.PROJECT_DOCUMENTS, sdoc.project_id]);
+    },
+  });
 
 // tags
 const useGetAllDocumentTags = (sdocId: number | undefined) =>
@@ -117,12 +121,13 @@ const useGetAllDocumentTagsBatch = (sdocIds: number[]) =>
     })
   );
 
-const useAddDocumentTag = (options: UseMutationOptions<SourceDocumentRead, Error, { sdocId: number; tagId: number }>) =>
-  useMutation(SourceDocumentService.linkTagSdocSdocIdTagTagIdPatch, options);
-
-const useRemoveDocumentTag = (
-  options: UseMutationOptions<SourceDocumentRead, Error, { sdocId: number; tagId: number }>
-) => useMutation(SourceDocumentService.unlinkTagSdocSdocIdTagTagIdDelete, options);
+const useRemoveDocumentTag = () =>
+  useMutation(SourceDocumentService.unlinkTagSdocSdocIdTagTagIdDelete, {
+    onSuccess: (sdoc) => {
+      queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdoc.id]);
+      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, sdoc.project_id]);
+    },
+  });
 
 // adoc
 const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
@@ -166,20 +171,21 @@ const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
     }
   );
 
-const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { sdocId: number; requestBody: MemoCreate }>) =>
-  useMutation(SourceDocumentService.addMemoSdocSdocIdMemoPut, options);
+const useCreateMemo = () =>
+  useMutation(SourceDocumentService.addMemoSdocSdocIdMemoPut, {
+    onSuccess: (memo) => {
+      queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
+    },
+  });
 
 // metadata
-// const useCreateMetadata = (options: UseMutationOptions<MemoRead, Error, { sdocId: number; requestBody: MemoCreate }>) =>
-//   useMutation(SourceDocumentService.meta, options);
-
 const useGetURL = (sdocId: number | undefined) =>
   useQuery<string, Error>(
     [QueryKey.SDOC_URL, sdocId],
     () => SourceDocumentService.getFileUrlSdocSdocIdUrlGet({ sdocId: sdocId! }),
     {
       enabled: !!sdocId,
-      select: (url) => process.env.REACT_APP_CONTENT + '/' + url
+      select: (url) => process.env.REACT_APP_CONTENT + "/" + url,
     }
   );
 
@@ -210,7 +216,6 @@ const SdocHooks = {
   // tags
   useGetAllDocumentTags,
   useGetAllDocumentTagsBatch,
-  useAddDocumentTag,
   useRemoveDocumentTag,
   // adoc
   useGetAllAnnotationDocuments,

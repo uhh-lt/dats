@@ -1,6 +1,7 @@
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
-import { CodeRead, MemoRead, ProjectRead, UserCreate, UserRead, UserService } from "./openapi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CodeRead, MemoRead, ProjectRead, UserRead, UserService } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
 // project
 const useGetProjects = (userId: number | undefined) =>
@@ -18,8 +19,12 @@ const useGetUser = (userId: number | undefined) =>
     enabled: !!userId,
   });
 
-const useRegister = (options: UseMutationOptions<UserRead, Error, { requestBody: UserCreate }>) =>
-  useMutation(UserService.registerUserPut, options);
+const useRegister = () =>
+  useMutation(UserService.registerUserPut, {
+    onSuccess: () => {
+      queryClient.invalidateQueries([QueryKey.USERS]);
+    },
+  });
 
 const useGetAll = () => useQuery<UserRead[], Error>([QueryKey.USERS], () => UserService.getAllUserGet({}));
 

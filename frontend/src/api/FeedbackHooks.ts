@@ -1,9 +1,14 @@
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
-import { FeedbackCreate, FeedbackRead, FeedbackService } from "./openapi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { FeedbackRead, FeedbackService } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
-const useCreateFeedback = (options: UseMutationOptions<FeedbackRead, Error, { requestBody: FeedbackCreate }>) =>
-  useMutation(FeedbackService.createFeedbackFeedbackPut, options);
+const useCreateFeedback = () =>
+  useMutation(FeedbackService.createFeedbackFeedbackPut, {
+    onSuccess: () => {
+      queryClient.invalidateQueries([QueryKey.FEEDBACKS]);
+    },
+  });
 
 const useGetFeedback = (feedbackId: string) =>
   useQuery<FeedbackRead, Error>(

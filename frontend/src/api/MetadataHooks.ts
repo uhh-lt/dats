@@ -1,15 +1,15 @@
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
-import {
-  MetadataService,
-  SourceDocumentMetadataCreate,
-  SourceDocumentMetadataRead,
-  SourceDocumentMetadataUpdate,
-} from "./openapi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { MetadataService, SourceDocumentMetadataRead } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
-const useCreateMetadata = (
-  options: UseMutationOptions<SourceDocumentMetadataRead, Error, { requestBody: SourceDocumentMetadataCreate }>
-) => useMutation(MetadataService.createNewMetadataMetadataPut, options);
+const useCreateMetadata = () =>
+  useMutation(MetadataService.createNewMetadataMetadataPut, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
+      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
+    },
+  });
 
 const useGetMetadata = (metadataId: number | undefined) =>
   useQuery<SourceDocumentMetadataRead, Error>(
@@ -20,16 +20,21 @@ const useGetMetadata = (metadataId: number | undefined) =>
     }
   );
 
-const useUpdateMetadata = (
-  options: UseMutationOptions<
-    SourceDocumentMetadataRead,
-    Error,
-    { metadataId: number; requestBody: SourceDocumentMetadataUpdate }
-  >
-) => useMutation(MetadataService.updateByIdMetadataMetadataIdPatch, options);
+const useUpdateMetadata = () =>
+  useMutation(MetadataService.updateByIdMetadataMetadataIdPatch, {
+    onSuccess: (metadata) => {
+      queryClient.invalidateQueries([QueryKey.METADATA, metadata.id]);
+      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, metadata.source_document_id]);
+    },
+  });
 
-const useDeleteMetadata = (options: UseMutationOptions<SourceDocumentMetadataRead, Error, { metadataId: number }>) =>
-  useMutation(MetadataService.deleteByIdMetadataMetadataIdDelete, options);
+const useDeleteMetadata = () =>
+  useMutation(MetadataService.deleteByIdMetadataMetadataIdDelete, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
+      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
+    },
+  });
 
 const MetadataHooks = {
   useCreateMetadata,

@@ -15,10 +15,8 @@ import { LoadingButton } from "@mui/lab";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../../auth/AuthProvider";
 import { useForm } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
 import CodeHooks from "../../../api/CodeHooks";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
-import { QueryKey } from "../../../api/QueryKey";
 import { CodeRead } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { HexColorPicker } from "react-colorful";
@@ -55,20 +53,7 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   } = useForm();
 
   // mutations
-  const queryClient = useQueryClient();
-  const createCodeMutation = CodeHooks.useCreateCode({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, parseInt(projectId, 10)]);
-      queryClient.invalidateQueries([QueryKey.USER_CODES, user.data!.id]);
-      SnackbarAPI.openSnackbar({
-        text: `Added new Code ${data.name}!`,
-        severity: "success",
-      });
-      closeCodeCreateDialog();
-      onCreateSuccess(data);
-    },
-  });
+  const createCodeMutation = CodeHooks.useCreateCode();
 
   // exposed methods (via forward ref)
   useImperativeHandle(ref, () => ({
@@ -97,16 +82,28 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   // react form handlers
   const handleSubmitCodeCreateDialog = (data: any) => {
     if (user.data) {
-      createCodeMutation.mutate({
-        requestBody: {
-          name: data.name,
-          description: data.description,
-          color: data.color,
-          project_id: parseInt(projectId),
-          user_id: user.data.id,
-          parent_code_id: parentCodeId,
+      createCodeMutation.mutate(
+        {
+          requestBody: {
+            name: data.name,
+            description: data.description,
+            color: data.color,
+            project_id: parseInt(projectId),
+            user_id: user.data.id,
+            parent_code_id: parentCodeId,
+          },
         },
-      });
+        {
+          onSuccess: (data) => {
+            SnackbarAPI.openSnackbar({
+              text: `Added new Code ${data.name}!`,
+              severity: "success",
+            });
+            closeCodeCreateDialog();
+            onCreateSuccess(data);
+          },
+        }
+      );
     }
   };
 

@@ -1,9 +1,6 @@
 import { IconButtonProps } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
 import MetadataHooks from "../../../../api/MetadataHooks";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
-import { SourceDocumentMetadataRead } from "../../../../api/openapi";
-import { QueryKey } from "../../../../api/QueryKey";
 import React, { useCallback } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
@@ -15,22 +12,22 @@ interface DocumentMetadataDeleteButtonProps {
 
 function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadataDeleteButtonProps & IconButtonProps) {
   // mutations
-  const queryClient = useQueryClient();
-  const deleteMutation = MetadataHooks.useDeleteMetadata({
-    onSuccess: (data: SourceDocumentMetadataRead) => {
-      queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
-      SnackbarAPI.openSnackbar({
-        text: `Deleted Metadata ${data.id} from SourceDocument ${data.source_document_id}`,
-        severity: "success",
-      });
-    },
-  });
+  const deleteMutation = MetadataHooks.useDeleteMetadata();
 
   const handleDeleteMetadata = useCallback(() => {
-    deleteMutation.mutate({
-      metadataId: metadataId,
-    });
+    deleteMutation.mutate(
+      {
+        metadataId: metadataId,
+      },
+      {
+        onSuccess: (data) => {
+          SnackbarAPI.openSnackbar({
+            text: `Deleted Metadata ${data.id} from SourceDocument ${data.source_document_id}`,
+            severity: "success",
+          });
+        },
+      }
+    );
   }, [deleteMutation, metadataId]);
 
   return (

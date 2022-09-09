@@ -39,28 +39,31 @@ function Register() {
   };
 
   // registration
-  const registerUserMutation = UserHooks.useRegister({
-    onSuccess: () => {
-      SnackbarAPI.openSnackbar({
-        text: "Registration success! Redirecting to login...",
-        severity: "success",
-      });
-      setTimeout(() => {
-        navigate("/login");
-      }, 3000);
-    },
-  });
+  const registerUserMutation = UserHooks.useRegister();
 
   // form handling
   const handleRegistration = (data: any) => {
-    registerUserMutation.mutate({
-      requestBody: {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        password: data.password,
-        email: data.mail,
+    registerUserMutation.mutate(
+      {
+        requestBody: {
+          first_name: data.firstName,
+          last_name: data.lastName,
+          password: data.password,
+          email: data.mail,
+        },
       },
-    });
+      {
+        onSuccess: () => {
+          SnackbarAPI.openSnackbar({
+            text: "Registration success! Redirecting to login...",
+            severity: "success",
+          });
+          setTimeout(() => {
+            navigate("/login");
+          }, 1000);
+        },
+      }
+    );
   };
   const handleError = (data: any) => console.error(data);
 

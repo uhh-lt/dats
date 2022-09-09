@@ -1,10 +1,8 @@
 import { SourceDocumentMetadataRead } from "../../../../api/openapi";
 import { useForm } from "react-hook-form";
 import React, { useCallback, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import MetadataHooks from "../../../../api/MetadataHooks";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
-import { QueryKey } from "../../../../api/QueryKey";
 import { Grid, Stack, TextField } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { ErrorMessage } from "@hookform/error-message";
@@ -32,30 +30,30 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
   }, [metadata, reset]);
 
   // mutation
-  const queryClient = useQueryClient();
-  const updateMutation = MetadataHooks.useUpdateMetadata({
-    onSuccess: (metadata: SourceDocumentMetadataRead) => {
-      queryClient.invalidateQueries([QueryKey.METADATA, metadata.id]);
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, metadata.source_document_id]);
-      SnackbarAPI.openSnackbar({
-        text: `Updated metadata ${metadata.id} for document ${metadata.source_document_id}`,
-        severity: "success",
-      });
-    },
-  });
+  const updateMutation = MetadataHooks.useUpdateMetadata();
 
   // form handling
   const handleUpdateMetadata = useCallback(
     (data: any) => {
       // only update if data has changed!
       if (metadata.key !== data.key || metadata.value !== data.value) {
-        updateMutation.mutate({
-          metadataId: metadata.id,
-          requestBody: {
-            key: data.key,
-            value: data.value,
+        updateMutation.mutate(
+          {
+            metadataId: metadata.id,
+            requestBody: {
+              key: data.key,
+              value: data.value,
+            },
           },
-        });
+          {
+            onSuccess: (metadata: SourceDocumentMetadataRead) => {
+              SnackbarAPI.openSnackbar({
+                text: `Updated metadata ${metadata.id} for document ${metadata.source_document_id}`,
+                severity: "success",
+              });
+            },
+          }
+        );
       }
     },
     [metadata.key, metadata.value, metadata.id, updateMutation]

@@ -1,10 +1,15 @@
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
-import { CodeCreate, CodeRead, CodeService, CodeUpdate, MemoCreate, MemoRead } from "./openapi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CodeRead, CodeService, MemoRead } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
 // memo
-const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { codeId: number; requestBody: MemoCreate }>) =>
-  useMutation(CodeService.addMemoCodeCodeIdMemoPut, options);
+const useCreateMemo = () =>
+  useMutation(CodeService.addMemoCodeCodeIdMemoPut, {
+    onSuccess: (createdMemo) => {
+      queryClient.invalidateQueries([QueryKey.USER_MEMOS, createdMemo.user_id]);
+    },
+  });
 
 const useGetMemos = (codeId: number | undefined) =>
   useQuery<MemoRead[], Error>(
@@ -32,14 +37,30 @@ const useGetCode = (codeId: number | undefined) =>
     enabled: !!codeId,
   });
 
-const useCreateCode = (options: UseMutationOptions<CodeRead, Error, { requestBody: CodeCreate }>) =>
-  useMutation(CodeService.createNewCodeCodePut, options);
+const useCreateCode = () =>
+  useMutation(CodeService.createNewCodeCodePut, {
+    onSuccess: (newCode, variables) => {
+      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, variables.requestBody.project_id]);
+      queryClient.invalidateQueries([QueryKey.USER_CODES, newCode.user_id]);
+    },
+  });
 
-const useUpdateCode = (options: UseMutationOptions<CodeRead, Error, { codeId: number; requestBody: CodeUpdate }>) =>
-  useMutation(CodeService.updateByIdCodeCodeIdPatch, options);
+const useUpdateCode = () =>
+  useMutation(CodeService.updateByIdCodeCodeIdPatch, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, data.project_id]);
+    },
+  });
 
-const useDeleteCode = (options: UseMutationOptions<CodeRead, Error, { codeId: number }>) =>
-  useMutation(CodeService.deleteByIdCodeCodeIdDelete, options);
+const useDeleteCode = () =>
+  useMutation(CodeService.deleteByIdCodeCodeIdDelete, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, data.project_id]);
+      queryClient.invalidateQueries([QueryKey.USER_CODES, data.user_id]);
+    },
+  });
 
 const CodeHooks = {
   useCreateMemo,

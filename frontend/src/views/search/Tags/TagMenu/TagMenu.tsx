@@ -24,10 +24,8 @@ import TagManageButton from "../TagManage/TagManageButton";
 import { DocumentTagRead } from "../../../../api/openapi";
 import ProjectHooks from "../../../../api/ProjectHooks";
 import SdocHooks from "../../../../api/SdocHooks";
-import { QueryKey } from "../../../../api/QueryKey";
 import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import TagHooks from "../../../../api/TagHooks";
-import { useQueryClient } from "@tanstack/react-query";
 
 export enum CheckboxState {
   NOT_CHECKED,
@@ -63,46 +61,9 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   const documentTagsBatch = SdocHooks.useGetAllDocumentTagsBatch(documentIds);
 
   // mutations
-  const queryClient = useQueryClient();
-  const updateTagsMutation = TagHooks.useBulkUpdateDocumentTags({
-    onSuccess: (data, variables) => {
-      // we need to invalidate the document tags for every document that we updated
-      variables.sourceDocumentIds.forEach((sdocId) => {
-        queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
-      });
-      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
-      SnackbarAPI.openSnackbar({
-        text: `Updated tags!`,
-        severity: "success",
-      });
-    },
-  });
-  const addTagsMutation = TagHooks.useBulkLinkDocumentTags({
-    onSuccess: (data, variables) => {
-      // we need to invalidate the document tags for every document that we updated
-      variables.requestBody.source_document_ids.forEach((sdocId) => {
-        queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
-      });
-      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
-      SnackbarAPI.openSnackbar({
-        text: `Added tags!`,
-        severity: "success",
-      });
-    },
-  });
-  const removeTagsMutation = TagHooks.useBulkUnlinkDocumentTags({
-    onSuccess: (data, variables) => {
-      // we need to invalidate the document tags for every document that we updated
-      variables.requestBody.source_document_ids.forEach((sdocId) => {
-        queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
-      });
-      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH]);
-      SnackbarAPI.openSnackbar({
-        text: `Removed tags!`,
-        severity: "success",
-      });
-    },
-  });
+  const updateTagsMutation = TagHooks.useBulkUpdateDocumentTags();
+  const addTagsMutation = TagHooks.useBulkLinkDocumentTags();
+  const removeTagsMutation = TagHooks.useBulkUnlinkDocumentTags();
 
   // state
   const open = Boolean(anchorEl);
@@ -178,29 +139,62 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   };
   const handleClickTag = (tagId: number) => {
     if (initialCheckedTags?.get(tagId) === CheckboxState.CHECKED) {
-      removeTagsMutation.mutate({
-        requestBody: {
-          source_document_ids: documentIds,
-          document_tag_ids: [tagId],
+      removeTagsMutation.mutate(
+        {
+          projectId: projId,
+          requestBody: {
+            source_document_ids: documentIds,
+            document_tag_ids: [tagId],
+          },
         },
-      });
+        {
+          onSuccess: () => {
+            SnackbarAPI.openSnackbar({
+              text: `Removed tags!`,
+              severity: "success",
+            });
+          },
+        }
+      );
     } else {
-      addTagsMutation.mutate({
-        requestBody: {
-          source_document_ids: documentIds,
-          document_tag_ids: [tagId],
+      addTagsMutation.mutate(
+        {
+          projectId: projId,
+          requestBody: {
+            source_document_ids: documentIds,
+            document_tag_ids: [tagId],
+          },
         },
-      });
+        {
+          onSuccess: () => {
+            SnackbarAPI.openSnackbar({
+              text: `Added tags!`,
+              severity: "success",
+            });
+          },
+        }
+      );
     }
     handleClose();
   };
   const handleApplyTags = () => {
     if (!initialCheckedTags || !checked) return;
-    updateTagsMutation.mutate({
-      sourceDocumentIds: documentIds,
-      initialState: initialCheckedTags,
-      newState: checked,
-    });
+    updateTagsMutation.mutate(
+      {
+        projectId: projId,
+        sourceDocumentIds: documentIds,
+        initialState: initialCheckedTags,
+        newState: checked,
+      },
+      {
+        onSuccess: () => {
+          SnackbarAPI.openSnackbar({
+            text: `Updated tags!`,
+            severity: "success",
+          });
+        },
+      }
+    );
     handleClose();
   };
 

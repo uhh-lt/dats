@@ -13,13 +13,11 @@ import {
   Typography,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
-import { QueryKey } from "../../../api/QueryKey";
 import { LoadingButton } from "@mui/lab";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
@@ -42,44 +40,47 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
       setFiles([]);
     }
   };
-  const queryClient = useQueryClient();
-  const uploadFileMutation = ProjectHooks.useUploadDocument({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_DOCUMENTS, project.id]);
-      SnackbarAPI.openSnackbar({
-        text: data,
-        severity: "success",
-      });
-      setFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.files = null;
-        fileInputRef.current.value = "";
-      }
-    },
-  });
+  const uploadDocumentMutation = ProjectHooks.useUploadDocument();
   const handleClickUploadFile = () => {
     if (files) {
-      uploadFileMutation.mutate({
-        projId: project.id,
-        formData: {
-          doc_files: Array.from(files),
+      uploadDocumentMutation.mutate(
+        {
+          projId: project.id,
+          formData: {
+            doc_files: Array.from(files),
+          },
         },
-      });
+        {
+          onSuccess: (data) => {
+            SnackbarAPI.openSnackbar({
+              text: data,
+              severity: "success",
+            });
+            setFiles([]);
+            if (fileInputRef.current) {
+              fileInputRef.current.files = null;
+              fileInputRef.current.value = "";
+            }
+          },
+        }
+      );
     }
   };
 
   // file deletion
-  const deleteFileMutation = SdocHooks.useDeleteDocument({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_DOCUMENTS, project.id]);
-      SnackbarAPI.openSnackbar({
-        text: "Successfully deleted file " + data.filename + "!",
-        severity: "success",
-      });
-    },
-  });
-  const handleClickDeleteFile = (sourceFileId: number) => {
-    deleteFileMutation.mutate({ sdocId: sourceFileId });
+  const deleteDocumentMutation = SdocHooks.useDeleteDocument();
+  const handleClickDeleteFile = (sdocId: number) => {
+    deleteDocumentMutation.mutate(
+      { sdocId },
+      {
+        onSuccess: (data) => {
+          SnackbarAPI.openSnackbar({
+            text: "Successfully deleted file " + data.filename + "!",
+            severity: "success",
+          });
+        },
+      }
+    );
   };
 
   // context menu
@@ -111,7 +112,7 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
           startIcon={<UploadFileIcon />}
           onClick={handleClickUploadFile}
           disabled={files.length === 0}
-          loading={uploadFileMutation.isLoading}
+          loading={uploadDocumentMutation.isLoading}
           loadingPosition="start"
         >
           Upload File{files.length > 1 ? "s" : ""}

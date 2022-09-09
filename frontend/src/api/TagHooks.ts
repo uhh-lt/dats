@@ -1,15 +1,8 @@
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
-import {
-  DocumentTagService,
-  MemoRead,
-  DocumentTagRead,
-  DocumentTagCreate,
-  DocumentTagUpdate,
-  MemoCreate,
-  SourceDocumentDocumentTagMultiLink,
-} from "./openapi";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { DocumentTagRead, DocumentTagService, MemoRead, SourceDocumentDocumentTagMultiLink } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import { CheckboxState } from "../views/search/Tags/TagMenu/TagMenu";
+import queryClient from "../plugins/ReactQueryClient";
 
 // tags
 const useGetTag = (tagId: number | undefined) =>
@@ -21,69 +14,113 @@ const useGetTag = (tagId: number | undefined) =>
     }
   );
 
-const useCreateTag = (options: UseMutationOptions<DocumentTagRead, Error, { requestBody: DocumentTagCreate }>) =>
-  useMutation(DocumentTagService.createNewDocTagDoctagPut, options);
+const useCreateTag = () =>
+  useMutation(DocumentTagService.createNewDocTagDoctagPut, {
+    onSuccess: (tag) => {
+      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, tag.project_id]);
+    },
+  });
 
-const useUpdateTag = (
-  options: UseMutationOptions<DocumentTagRead, Error, { tagId: number; requestBody: DocumentTagUpdate }>
-) => useMutation(DocumentTagService.updateByIdDoctagTagIdPatch, options);
+const useUpdateTag = () =>
+  useMutation(DocumentTagService.updateByIdDoctagTagIdPatch, {
+    onSuccess: (tag) => {
+      queryClient.invalidateQueries([QueryKey.TAG, tag.id]);
+    },
+  });
 
-const useDeleteTag = (options: UseMutationOptions<DocumentTagRead, Error, { tagId: number }>) =>
-  useMutation(DocumentTagService.deleteByIdDoctagTagIdDelete, options);
+const useDeleteTag = () =>
+  useMutation(DocumentTagService.deleteByIdDoctagTagIdDelete, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, data.project_id]);
+      queryClient.invalidateQueries([QueryKey.SDOC_TAGS]); // todo welche sdocs sind eigentlich genau affected?
+    },
+  });
 
-const useBulkLinkDocumentTags = (
-  options: UseMutationOptions<number, Error, { requestBody: SourceDocumentDocumentTagMultiLink }>
-) => useMutation(DocumentTagService.linkMultipleTagsDoctagBulkLinkPatch, options);
+const useBulkLinkDocumentTags = () =>
+  useMutation(
+    (variables: { projectId: number; requestBody: SourceDocumentDocumentTagMultiLink }) =>
+      DocumentTagService.linkMultipleTagsDoctagBulkLinkPatch({ requestBody: variables.requestBody }),
+    {
+      onSuccess: (data, variables) => {
+        // we need to invalidate the document tags for every document that we updated
+        variables.requestBody.source_document_ids.forEach((sdocId) => {
+          queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
+        });
+        queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
+      },
+    }
+  );
 
-const useBulkUnlinkDocumentTags = (
-  options: UseMutationOptions<number, Error, { requestBody: SourceDocumentDocumentTagMultiLink }>
-) => useMutation(DocumentTagService.unlinkMultipleTagsDoctagBulkUnlinkDelete, options);
+const useBulkUnlinkDocumentTags = () =>
+  useMutation(
+    (variables: { projectId: number; requestBody: SourceDocumentDocumentTagMultiLink }) =>
+      DocumentTagService.unlinkMultipleTagsDoctagBulkUnlinkDelete({ requestBody: variables.requestBody }),
+    {
+      onSuccess: (data, variables) => {
+        // we need to invalidate the document tags for every document that we updated
+        variables.requestBody.source_document_ids.forEach((sdocId) => {
+          queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
+        });
+        queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
+      },
+    }
+  );
 
-const useBulkUpdateDocumentTags = (
-  options: UseMutationOptions<
-    number[],
-    Error,
-    { sourceDocumentIds: number[]; initialState: Map<number, CheckboxState>; newState: Map<number, CheckboxState> }
-  >
-) =>
-  useMutation(async (variables) => {
-    let addTags: number[] = [];
-    let removeTags: number[] = [];
+const useBulkUpdateDocumentTags = () =>
+  useMutation(
+    async (variables: {
+      projectId: number;
+      sourceDocumentIds: number[];
+      initialState: Map<number, CheckboxState>;
+      newState: Map<number, CheckboxState>;
+    }) => {
+      let addTags: number[] = [];
+      let removeTags: number[] = [];
 
-    variables.initialState.forEach((value, key) => {
-      let newValue = variables.newState.get(key);
-      if (value === CheckboxState.CHECKED && newValue === CheckboxState.NOT_CHECKED) {
-        removeTags.push(key);
-      } else if (value === CheckboxState.NOT_CHECKED && newValue === CheckboxState.CHECKED) {
-        addTags.push(key);
-      } else if (value === CheckboxState.INDETERMINATE && newValue === CheckboxState.CHECKED) {
-        addTags.push(key);
-      } else if (value === CheckboxState.INDETERMINATE && newValue === CheckboxState.NOT_CHECKED) {
-        removeTags.push(key);
+      variables.initialState.forEach((value, key) => {
+        let newValue = variables.newState.get(key);
+        if (value === CheckboxState.CHECKED && newValue === CheckboxState.NOT_CHECKED) {
+          removeTags.push(key);
+        } else if (value === CheckboxState.NOT_CHECKED && newValue === CheckboxState.CHECKED) {
+          addTags.push(key);
+        } else if (value === CheckboxState.INDETERMINATE && newValue === CheckboxState.CHECKED) {
+          addTags.push(key);
+        } else if (value === CheckboxState.INDETERMINATE && newValue === CheckboxState.NOT_CHECKED) {
+          removeTags.push(key);
+        }
+      });
+
+      let calls = [];
+      if (addTags.length > 0) {
+        calls.push(
+          DocumentTagService.linkMultipleTagsDoctagBulkLinkPatch({
+            requestBody: {
+              source_document_ids: variables.sourceDocumentIds,
+              document_tag_ids: addTags,
+            },
+          })
+        );
       }
-    });
-
-    let calls = [];
-    if (addTags.length > 0) {
-      calls.push(
-        DocumentTagService.linkMultipleTagsDoctagBulkLinkPatch({
+      if (removeTags.length > 0) {
+        DocumentTagService.unlinkMultipleTagsDoctagBulkUnlinkDelete({
           requestBody: {
             source_document_ids: variables.sourceDocumentIds,
-            document_tag_ids: addTags,
+            document_tag_ids: removeTags,
           },
-        })
-      );
+        });
+      }
+      return await Promise.all(calls);
+    },
+    {
+      onSuccess: (data, variables) => {
+        // we need to invalidate the document tags for every document that we updated
+        variables.sourceDocumentIds.forEach((sdocId) => {
+          queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
+        });
+        queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
+      },
     }
-    if (removeTags.length > 0) {
-      DocumentTagService.unlinkMultipleTagsDoctagBulkUnlinkDelete({
-        requestBody: {
-          source_document_ids: variables.sourceDocumentIds,
-          document_tag_ids: removeTags,
-        },
-      });
-    }
-    return await Promise.all(calls);
-  }, options);
+  );
 
 // memos
 const useGetMemos = (tagId: number | undefined) =>
@@ -106,8 +143,12 @@ const useGetMemo = (tagId: number | undefined, userId: number | undefined) =>
     }
   );
 
-const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { tagId: number; requestBody: MemoCreate }>) =>
-  useMutation(DocumentTagService.addMemoDoctagTagIdMemoPut, options);
+const useCreateMemo = () =>
+  useMutation(DocumentTagService.addMemoDoctagTagIdMemoPut, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
+    },
+  });
 
 const TagHooks = {
   useGetTag,

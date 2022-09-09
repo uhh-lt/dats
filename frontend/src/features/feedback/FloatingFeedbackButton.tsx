@@ -1,7 +1,5 @@
 import FeedbackHooks from "../../api/FeedbackHooks";
 import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { QueryKey } from "../../api/QueryKey";
-import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, Stack, TextField } from "@mui/material";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import { useAuth } from "../../auth/AuthProvider";
@@ -28,17 +26,7 @@ function FloatingFeedbackButton() {
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
 
   // mutations
-  const queryClient = useQueryClient();
-  const createMutation = FeedbackHooks.useCreateFeedback({
-    onSuccess: () => {
-      queryClient.invalidateQueries([QueryKey.FEEDBACKS]);
-      SnackbarAPI.openSnackbar({
-        text: `Thanks for your feedback!`,
-        severity: "success",
-      });
-      closeFeedbackDialog();
-    },
-  });
+  const createMutation = FeedbackHooks.useCreateFeedback();
 
   // dialog event handlers
   const openFeedbackDialog = () => {
@@ -52,12 +40,23 @@ function FloatingFeedbackButton() {
   // form event handlers
   const handleSubmitFeedback = (data: any) => {
     if (user.data) {
-      createMutation.mutate({
-        requestBody: {
-          user_id: user.data.id,
-          user_content: `URL: ${location.pathname}\n${data.content}`,
+      createMutation.mutate(
+        {
+          requestBody: {
+            user_id: user.data.id,
+            user_content: `URL: ${location.pathname}\n${data.content}`,
+          },
         },
-      });
+        {
+          onSuccess: () => {
+            SnackbarAPI.openSnackbar({
+              text: `Thanks for your feedback!`,
+              severity: "success",
+            });
+            closeFeedbackDialog();
+          },
+        }
+      );
     }
   };
   const handleError = (data: any) => console.error(data);

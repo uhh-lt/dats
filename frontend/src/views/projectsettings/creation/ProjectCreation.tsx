@@ -14,12 +14,10 @@ import {
 import React from "react";
 import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import CloseIcon from "@mui/icons-material/Close";
 import { Link, useNavigate } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { useAuth } from "../../../auth/AuthProvider";
@@ -34,28 +32,29 @@ function ProjectCreation() {
   } = useForm();
 
   // mutations
-  const queryClient = useQueryClient();
-  const createProjectMutation = ProjectHooks.useCreateProject({
-    onSuccess: (project) => {
-      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
-      SnackbarAPI.openSnackbar({
-        text: "Successfully Created Project " + project.title + " with id " + project.id + "!",
-        severity: "success",
-      });
-      navigate(`/projectsettings/${project.id}`);
-    },
-  });
+  const createProjectMutation = ProjectHooks.useCreateProject();
 
   // form handling
   const handleProjectCreation = (data: any) => {
     if (!user.data) return;
-    createProjectMutation.mutate({
-      userId: user.data.id,
-      requestBody: {
-        title: data.name,
-        description: data.description,
+    createProjectMutation.mutate(
+      {
+        userId: user.data.id,
+        requestBody: {
+          title: data.name,
+          description: data.description,
+        },
       },
-    });
+      {
+        onSuccess: (project) => {
+          SnackbarAPI.openSnackbar({
+            text: "Successfully Created Project " + project.title + " with id " + project.id + "!",
+            severity: "success",
+          });
+          navigate(`/projectsettings/${project.id}`);
+        },
+      }
+    );
   };
   const handleError = (error: any) => {
     console.error(error);

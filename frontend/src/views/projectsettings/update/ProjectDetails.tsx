@@ -2,11 +2,9 @@ import { Box, CardActions, CardContent, Divider, Stack, TextField } from "@mui/m
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { useAuth } from "../../../auth/AuthProvider";
@@ -25,17 +23,7 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
   } = useForm();
 
   // mutations
-  const queryClient = useQueryClient();
-  const updateProjectMutation = ProjectHooks.useUpdateProject({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.data?.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT, data.id]);
-      SnackbarAPI.openSnackbar({
-        text: "Successfully Updated Project with id " + data.id + "!",
-        severity: "success",
-      });
-    },
-  });
+  const updateProjectMutation = ProjectHooks.useUpdateProject();
 
   // form default values (only changed when project changes!)
   useEffect(() => {
@@ -47,13 +35,24 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
   const handleProjectUpdate = (data: any) => {
     if (!user.data?.id) return;
 
-    updateProjectMutation.mutate({
-      projId: project.id,
-      requestBody: {
-        title: data.name,
-        description: data.description,
+    updateProjectMutation.mutate(
+      {
+        userId: user.data.id!,
+        projId: project.id,
+        requestBody: {
+          title: data.name,
+          description: data.description,
+        },
       },
-    });
+      {
+        onSuccess: (data) => {
+          SnackbarAPI.openSnackbar({
+            text: "Successfully Updated Project with id " + data.id + "!",
+            severity: "success",
+          });
+        },
+      }
+    );
   };
   const handleError = (error: any) => {
     console.error(error);

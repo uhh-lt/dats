@@ -1,12 +1,10 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
 import { CodeRead, CodeUpdate } from "../../../api/openapi";
 import CodeHooks from "../../../api/CodeHooks";
-import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
@@ -64,30 +62,8 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   }, [code, reset]);
 
   // mutations
-  const queryClient = useQueryClient();
-  const updateCodeMutation = CodeHooks.useUpdateCode({
-    onSuccess: (data: CodeRead) => {
-      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_CODES]);
-      setOpen(false); // close dialog
-      SnackbarAPI.openSnackbar({
-        text: `Updated code ${data.name}`,
-        severity: "success",
-      });
-    },
-  });
-  const deleteCodeMutation = CodeHooks.useDeleteCode({
-    onSuccess: (data: CodeRead) => {
-      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_CODES]);
-      queryClient.invalidateQueries([QueryKey.USER_CODES]);
-      setOpen(false); // close dialog
-      SnackbarAPI.openSnackbar({
-        text: `Deleted code ${data.name}`,
-        severity: "success",
-      });
-    },
-  });
+  const updateCodeMutation = CodeHooks.useUpdateCode();
+  const deleteCodeMutation = CodeHooks.useDeleteCode();
 
   // form handling
   const handleCodeUpdate = (data: any) => {
@@ -106,17 +82,39 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
         };
       }
 
-      updateCodeMutation.mutate({
-        requestBody,
-        codeId: code.id,
-      });
+      updateCodeMutation.mutate(
+        {
+          requestBody,
+          codeId: code.id,
+        },
+        {
+          onSuccess: (data: CodeRead) => {
+            setOpen(false); // close dialog
+            SnackbarAPI.openSnackbar({
+              text: `Updated code ${data.name}`,
+              severity: "success",
+            });
+          },
+        }
+      );
     }
   };
   const handleError = (data: any) => console.error(data);
   const handleCodeDelete = () => {
     // disallow deleting of SYSTEM CODES
     if (code && code.user_id !== SYSTEM_USER_ID) {
-      deleteCodeMutation.mutate({ codeId: code.id });
+      deleteCodeMutation.mutate(
+        { codeId: code.id },
+        {
+          onSuccess: (data: CodeRead) => {
+            setOpen(false); // close dialog
+            SnackbarAPI.openSnackbar({
+              text: `Deleted code ${data.name}`,
+              severity: "success",
+            });
+          },
+        }
+      );
     } else {
       throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");
     }

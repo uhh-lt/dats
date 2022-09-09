@@ -1,8 +1,5 @@
-import { useQueryClient } from "@tanstack/react-query";
 import MetadataHooks from "../../../../api/MetadataHooks";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
-import { SourceDocumentMetadataRead } from "../../../../api/openapi";
-import { QueryKey } from "../../../../api/QueryKey";
 import React, { useCallback } from "react";
 import { Grid } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
@@ -14,27 +11,27 @@ interface DocumentMetadataAddButtonProps {
 
 function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
   // mutations
-  const queryClient = useQueryClient();
-  const createMutation = MetadataHooks.useCreateMetadata({
-    onSuccess: (data: SourceDocumentMetadataRead) => {
-      queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
-      SnackbarAPI.openSnackbar({
-        text: `Added metadata to SourceDocument ${data.source_document_id}`,
-        severity: "success",
-      });
-    },
-  });
+  const createMutation = MetadataHooks.useCreateMetadata();
 
   const handleAddMetadata = useCallback(() => {
-    createMutation.mutate({
-      requestBody: {
-        source_document_id: sdocId,
-        read_only: false,
-        key: "Key",
-        value: "Value",
+    createMutation.mutate(
+      {
+        requestBody: {
+          source_document_id: sdocId,
+          read_only: false,
+          key: "Key",
+          value: "Value",
+        },
       },
-    });
+      {
+        onSuccess: (data) => {
+          SnackbarAPI.openSnackbar({
+            text: `Added metadata to SourceDocument ${data.source_document_id}`,
+            severity: "success",
+          });
+        },
+      }
+    );
   }, [createMutation, sdocId]);
 
   return (

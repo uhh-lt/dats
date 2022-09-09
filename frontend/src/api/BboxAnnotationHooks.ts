@@ -1,23 +1,64 @@
-import { useMutation, UseMutationOptions, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
-  BBoxAnnotationCreate,
   BBoxAnnotationRead,
   BBoxAnnotationReadResolvedCode,
   BboxAnnotationService,
   BBoxAnnotationUpdate,
   CancelablePromise,
-  MemoCreate,
   MemoRead,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
-const useCreateAnnotation = (
-  options: UseMutationOptions<
-    BBoxAnnotationRead | BBoxAnnotationReadResolvedCode,
-    Error,
-    { requestBody: BBoxAnnotationCreate; resolve?: boolean | undefined }
-  >
-) => useMutation(BboxAnnotationService.addBboxAnnotationBboxPut, options);
+export const FAKE_BBOX_ID = -1;
+
+const useCreateAnnotation = () =>
+  useMutation(BboxAnnotationService.addBboxAnnotationBboxPut, {
+    // optimistic updates
+    onMutate: async (newBbox) => {
+      // when we create a new bbox annotation, we add a new bbox to a certain annotation document
+      // thus, we only affect the annotation document that we are adding to
+      const affectedQueryKey = [QueryKey.ADOC_BBOX_ANNOTATIONS, newBbox.requestBody.annotation_document_id];
+
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries(affectedQueryKey);
+
+      // Snapshot the previous value
+      const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+        const bbox = {
+          ...newBbox.requestBody,
+          id: FAKE_BBOX_ID,
+          code: {
+            name: "",
+            color: "",
+            description: "",
+            id: newBbox.requestBody.current_code_id,
+            project_id: 0,
+            user_id: 0,
+            created: "",
+            updated: "",
+          },
+          created: "",
+          updated: "",
+        };
+        return old === undefined ? [bbox] : [...old, bbox];
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousBboxes, myCustomQueryKey: affectedQueryKey };
+    },
+    onError: (error: Error, newBbox, context: any) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
+    },
+    // Always re-fetch after error or success:
+    onSettled: (data, error, variables, context: any) => {
+      queryClient.invalidateQueries(context.myCustomQueryKey);
+    },
+  });
 
 const useGetAnnotation = (bboxId: number | undefined) =>
   useQuery<BBoxAnnotationReadResolvedCode, Error>(
@@ -30,37 +71,109 @@ const useGetAnnotation = (bboxId: number | undefined) =>
     { enabled: !!bboxId }
   );
 
-const useUpdate = (
-  options: UseMutationOptions<
-    BBoxAnnotationRead | BBoxAnnotationReadResolvedCode,
-    Error,
-    {
+const useUpdate = () =>
+  useMutation(
+    (variables: {
       bboxToUpdate: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode;
       requestBody: BBoxAnnotationUpdate;
       resolve?: boolean | undefined;
-    }
-  >
-) =>
-  useMutation(
-    (variables) =>
+    }) =>
       BboxAnnotationService.updateByIdBboxBboxIdPatch({
         bboxId: variables.bboxToUpdate.id,
         requestBody: variables.requestBody,
         resolve: variables.resolve,
       }),
-    options
+    {
+      // optimistic update
+      // todo: rework to only update QueryKey.BBOX_ANNOTATION (we need to change the rendering for this...)
+      onMutate: async (updateData) => {
+        // when we update a bbox annotation, we update a bbox of a certain annotation document
+        // thus, we only affect the annotation document that contains the bbox we update
+        const affectedQueryKey = [QueryKey.ADOC_BBOX_ANNOTATIONS, updateData.bboxToUpdate.annotation_document_id];
+
+        // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+        await queryClient.cancelQueries(affectedQueryKey);
+
+        // Snapshot the previous value
+        const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+
+        // Optimistically update to the new value
+        queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+          if (!old) {
+            return undefined;
+          }
+          const oldBboxAnnotation = old.find((anno) => anno.id === updateData.bboxToUpdate.id);
+          if (!oldBboxAnnotation) {
+            console.error("Could not find bbox annotation to update");
+            return old;
+          }
+          const oldBboxAnnotationIndex = old.indexOf(oldBboxAnnotation);
+          const result = Array.from(old);
+          result[oldBboxAnnotationIndex] = {
+            ...oldBboxAnnotation,
+            code: {
+              ...oldBboxAnnotation.code,
+              id: updateData.requestBody.current_code_id,
+            },
+          };
+          return result;
+        });
+
+        // Return a context object with the snapshotted value
+        return { previousBboxes, myCustomQueryKey: affectedQueryKey };
+      },
+      onError: (error: Error, updatedBboxAnnotation, context: any) => {
+        // If the mutation fails, use the context returned from onMutate to roll back
+        queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
+      },
+      // Always re-fetch after error or success:
+      onSettled: (updatedBboxAnnotation, error, variables, context: any) => {
+        if (updatedBboxAnnotation) {
+          queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, updatedBboxAnnotation.id]);
+        }
+        queryClient.invalidateQueries(context.myCustomQueryKey);
+      },
+    }
   );
 
-const useDelete = (
-  options: UseMutationOptions<
-    BBoxAnnotationRead | BBoxAnnotationReadResolvedCode,
-    Error,
-    { bboxToDelete: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode }
-  >
-) =>
+const useDelete = () =>
   useMutation(
-    (variables) => BboxAnnotationService.deleteByIdBboxBboxIdDelete({ bboxId: variables.bboxToDelete.id }),
-    options
+    (variables: { bboxToDelete: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode }) =>
+      BboxAnnotationService.deleteByIdBboxBboxIdDelete({ bboxId: variables.bboxToDelete.id }),
+    {
+      // optimistic updates
+      onMutate: async ({ bboxToDelete }) => {
+        // when we delete a bbox annotation, we remove a bbox from a certain annotation document
+        // thus, we only affect the annotation document that we are removing from
+        const affectedQueryKey = [QueryKey.ADOC_BBOX_ANNOTATIONS, bboxToDelete.annotation_document_id];
+
+        // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+        await queryClient.cancelQueries(affectedQueryKey);
+
+        // Snapshot the previous value
+        const previousBboxes = queryClient.getQueryData(affectedQueryKey);
+
+        // Optimistically update to the new value
+        queryClient.setQueryData(affectedQueryKey, (old: BBoxAnnotationReadResolvedCode[] | undefined) => {
+          if (old === undefined) {
+            return undefined;
+          }
+
+          return old.filter((bbox) => bbox.id !== bboxToDelete.id);
+        });
+
+        // Return a context object with the snapshotted value
+        return { previousBboxes, myCustomQueryKey: affectedQueryKey };
+      },
+      onError: (error: Error, newBbox, context: any) => {
+        // If the mutation fails, use the context returned from onMutate to roll back
+        queryClient.setQueryData(context.myCustomQueryKey, context.previousBboxes);
+      },
+      // Always re-fetch after error or success:
+      onSettled: (data, error, variables, context: any) => {
+        queryClient.invalidateQueries(context.myCustomQueryKey);
+      },
+    }
   );
 
 // memo
@@ -78,8 +191,12 @@ const useGetMemo = (bboxId: number | undefined, userId: number | undefined) =>
     { enabled: !!bboxId && !!userId, retry: false }
   );
 
-const useCreateMemo = (options: UseMutationOptions<MemoRead, Error, { bboxId: number; requestBody: MemoCreate }>) =>
-  useMutation(BboxAnnotationService.addMemoBboxBboxIdMemoPut, options);
+const useCreateMemo = () =>
+  useMutation(BboxAnnotationService.addMemoBboxBboxIdMemoPut, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
+    },
+  });
 
 const BboxAnnotationHooks = {
   useCreateAnnotation,

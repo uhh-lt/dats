@@ -11,8 +11,6 @@ export const QueryKey = {
   PROJECT_CODES: "projectCodes",
   // all tags of a project (by project id)
   PROJECT_TAGS: "projectTags",
-  // the logbook of a project (by project id, user id)
-  PROJECT_MEMO: "projectMemo",
 
   // all users
   USERS: "users",
@@ -37,6 +35,8 @@ export const QueryKey = {
   MEMO_SPAN_ANNOTATION: "spanAnnotationMemo",
   // all memos attached to a bbox (by bbox id) or a user's memo (by bbox id, user id)
   MEMO_BBOX_ANNOTATION: "bboxAnnotationMemo",
+  // all memos attached to a project (by project id) or a user's memo (by project id, user id)
+  MEMO_PROJECT: "projectMemo",
   // all memos which content matches the query (by query string)
   MEMOS_BY_CONTENT_SEARCH: "memosByContentSearch",
   // all memos which title matches the query (by query string)

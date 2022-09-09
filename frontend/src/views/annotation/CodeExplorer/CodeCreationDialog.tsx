@@ -11,12 +11,10 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import AddBoxIcon from "@mui/icons-material/AddBox";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { useForm } from "react-hook-form";
 import { CodeRead } from "../../../api/openapi";
 import CodeHooks from "../../../api/CodeHooks";
-import { QueryKey } from "../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
@@ -52,36 +50,36 @@ export default function CodeCreationDialog({ projectId, userId, codes }: CodeDia
   }, [setValue, reset]);
 
   // mutations
-  const queryClient = useQueryClient();
-  const createCodeMutation = CodeHooks.useCreateCode({
-    onSuccess: (data: CodeRead) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, projectId]);
-      queryClient.invalidateQueries([QueryKey.USER_CODES, userId]);
-      setOpen(false); // close dialog
-      SnackbarAPI.openSnackbar({
-        text: `Added code ${data.name}`,
-        severity: "success",
-      });
-
-      // reset
-      reset();
-      setColor("#000000");
-      setValue("color", "#000000");
-    },
-  });
+  const createCodeMutation = CodeHooks.useCreateCode();
 
   // form handling
   const handleCodeCreation = (data: any) => {
-    createCodeMutation.mutate({
-      requestBody: {
-        name: data.name,
-        description: data.description,
-        color: data.color,
-        project_id: projectId,
-        user_id: userId,
-        ...(selectedParent !== -1 && { parent_code_id: selectedParent }),
+    createCodeMutation.mutate(
+      {
+        requestBody: {
+          name: data.name,
+          description: data.description,
+          color: data.color,
+          project_id: projectId,
+          user_id: userId,
+          ...(selectedParent !== -1 && { parent_code_id: selectedParent }),
+        },
       },
-    });
+      {
+        onSuccess: (data: CodeRead) => {
+          setOpen(false); // close dialog
+          SnackbarAPI.openSnackbar({
+            text: `Added code ${data.name}`,
+            severity: "success",
+          });
+
+          // reset
+          reset();
+          setColor("#000000");
+          setValue("color", "#000000");
+        },
+      }
+    );
   };
   const handleError = (data: any) => console.error(data);
 

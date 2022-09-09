@@ -19,12 +19,10 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ProjectRead, UserRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { QueryKey } from "../../../api/QueryKey";
 import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
 import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
@@ -36,7 +34,6 @@ interface ProjectUsersProps {
 
 function ProjectUsers({ project }: ProjectUsersProps) {
   const [selectedUser, setSelectedUser] = useState<UserRead | null>(null);
-  const queryClient = useQueryClient();
 
   // query all users that belong to the project
   const allUsers = UserHooks.useGetAll();
@@ -54,41 +51,43 @@ function ProjectUsers({ project }: ProjectUsersProps) {
   }, [projectUsers.data, allUsers.data]);
 
   // add user
-  const addUserMutation = ProjectHooks.useAddUser({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_USERS, project.id]);
-      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, data.id]);
-      SnackbarAPI.openSnackbar({
-        text: "Successfully added user " + data.first_name + "!",
-        severity: "success",
-      });
-      setSelectedUser(null);
-    },
-  });
+  const addUserMutation = ProjectHooks.useAddUser();
   const handleClickAddUser = () => {
     if (!selectedUser) return;
-    addUserMutation.mutate({
-      projId: project.id,
-      userId: selectedUser.id,
-    });
+    addUserMutation.mutate(
+      {
+        projId: project.id,
+        userId: selectedUser.id,
+      },
+      {
+        onSuccess: (user) => {
+          SnackbarAPI.openSnackbar({
+            text: "Successfully added user " + user.first_name + "!",
+            severity: "success",
+          });
+          setSelectedUser(null);
+        },
+      }
+    );
   };
 
   // remove user
-  const removeUserMutation = ProjectHooks.useRemoveUser({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_USERS, project.id]);
-      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, data.id]);
-      SnackbarAPI.openSnackbar({
-        text: "Successfully removed user " + data.first_name + "!",
-        severity: "success",
-      });
-    },
-  });
+  const removeUserMutation = ProjectHooks.useRemoveUser();
   const handleClickRemoveUser = (userId: number) => {
-    removeUserMutation.mutate({
-      projId: project.id,
-      userId: userId,
-    });
+    removeUserMutation.mutate(
+      {
+        projId: project.id,
+        userId: userId,
+      },
+      {
+        onSuccess: (data) => {
+          SnackbarAPI.openSnackbar({
+            text: "Successfully removed user " + data.first_name + "!",
+            severity: "success",
+          });
+        },
+      }
+    );
   };
 
   const handleChangeSelectedUser = (event: React.SyntheticEvent, value: UserRead | null) => {

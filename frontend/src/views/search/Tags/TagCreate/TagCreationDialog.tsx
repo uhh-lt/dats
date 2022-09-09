@@ -1,13 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../../EventBus";
-import { Button, Dialog, DialogActions, DialogContent, Box, Stack, DialogTitle, TextField } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
-import { useQueryClient } from "@tanstack/react-query";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
 import { useParams } from "react-router-dom";
 import { HexColorPicker } from "react-colorful";
 import TagHooks from "../../../../api/TagHooks";
-import { QueryKey } from "../../../../api/QueryKey";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from "@mui/icons-material/Save";
@@ -56,29 +54,30 @@ function TagCreationDialog() {
   };
 
   // mutations
-  const queryClient = useQueryClient();
-  const createTagMutation = TagHooks.useCreateTag({
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, projectId]);
-      setOpen(false); // close dialog
-      SnackbarAPI.openSnackbar({
-        text: `Added tag ${data.title}`,
-        severity: "success",
-      });
-      reset(); // reset form
-    },
-  });
+  const createTagMutation = TagHooks.useCreateTag();
 
   // form actions
   const handleTagCreation = (data: any) => {
-    createTagMutation.mutate({
-      requestBody: {
-        title: data.title,
-        description: data.description || "",
-        color: data.color,
-        project_id: projectId,
+    createTagMutation.mutate(
+      {
+        requestBody: {
+          title: data.title,
+          description: data.description || "",
+          color: data.color,
+          project_id: projectId,
+        },
       },
-    });
+      {
+        onSuccess: (data) => {
+          setOpen(false); // close dialog
+          SnackbarAPI.openSnackbar({
+            text: `Added tag ${data.title}`,
+            severity: "success",
+          });
+          reset(); // reset form
+        },
+      }
+    );
   };
   const handleError = (data: any) => console.error(data);
 
