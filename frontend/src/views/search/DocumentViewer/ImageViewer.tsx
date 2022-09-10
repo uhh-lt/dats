@@ -72,7 +72,7 @@ function ImageViewer({ sdoc, adoc, showEntities, height }: ImageViewerProps) {
             .attr("fill", "white")
             .attr("stroke", "black")
             .attr("stroke-width", 0.75)
-            .attr("font-size", "21px")
+            .attr("font-size", `${Math.max(21, height / 17)}px`)
 
             .text((d) => d.code.name),
 

@@ -19,9 +19,10 @@ import AdocHooks from "../../../api/AdocHooks";
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentRead;
   adoc: AnnotationDocumentRead | null;
+  height: number;
 }
 
-function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
+function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
   // references to svg elements
   const svgRef = useRef<SVGSVGElement>(null);
   const gZoomRef = useRef<SVGGElement>(null);
@@ -335,7 +336,12 @@ function ImageAnnotator({ sdoc, adoc }: ImageAnnotatorProps) {
           </g>
           <g>
             {data.map((bbox) => (
-              <SVGBBoxText key={bbox.id} bbox={bbox} onContextMenu={handleRightClick} />
+              <SVGBBoxText
+                key={bbox.id}
+                bbox={bbox}
+                onContextMenu={handleRightClick}
+                fontSize={Math.max(21, height / 17)}
+              />
             ))}
           </g>
         </g>

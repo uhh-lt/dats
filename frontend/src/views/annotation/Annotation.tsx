@@ -22,6 +22,7 @@ function Annotation() {
 
   // global server state (react query)
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
+  const metadata = SdocHooks.useGetMetadata(sourceDocumentId);
   const annotationDocument = useSelectOrCreateCurrentUsersAnnotationDocument(sourceDocumentId);
 
   // ui event handler
@@ -45,10 +46,14 @@ function Annotation() {
           <AnnotationDocumentSelector sdocId={sourceDocumentId} />
           {sdocId ? (
             <>
-              {sourceDocument.isSuccess && annotationDocument ? (
+              {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
                 <>
                   {sourceDocument.data.doctype === DocType.IMAGE ? (
-                    <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
+                    <ImageAnnotator
+                      sdoc={sourceDocument.data}
+                      adoc={annotationDocument}
+                      height={parseInt(metadata.data.get("height")!.value)}
+                    />
                   ) : sourceDocument.data.doctype === DocType.TEXT ? (
                     <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
                   ) : (
