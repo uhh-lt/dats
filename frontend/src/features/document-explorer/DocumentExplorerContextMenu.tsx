@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { ContextMenuProps } from "../../views/projects/ProjectContextMenu2";
 import TagMenuListButtton from "../../views/search/SearchResults/TagMenuListButtton";
 import MemoMenuItem from "../memo-dialog/MemoMenuItem";
+import { AttachedObjectType } from "../../api/openapi";
 
 interface DocumentExplorerContextMenuProps extends ContextMenuProps {
   projectId: number;
@@ -37,7 +38,11 @@ function DocumentExplorerContextMenu({ position, projectId, sdocId, handleClose 
         </ListItemIcon>
         <ListItemText>Annotate document</ListItemText>
       </MenuItem>
-      <MemoMenuItem onClick={handleClose} sdocId={sdocId} />
+      <MemoMenuItem
+        onClick={handleClose}
+        attachedObjectId={sdocId}
+        attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
+      />
       <TagMenuListButtton popoverOrigin={{ vertical: "top", horizontal: "right" }} />
     </Menu>
   );

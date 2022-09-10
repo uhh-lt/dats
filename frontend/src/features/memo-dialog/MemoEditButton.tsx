@@ -1,16 +1,12 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import React from "react";
-import MemoAPI from "./MemoAPI";
+import MemoAPI, { MemoEvent } from "./MemoAPI";
 import EditIcon from "@mui/icons-material/Edit";
 
-interface MemoEditButtonProps {
-  memoId: number | undefined;
-}
-
-function MemoEditButton({ memoId, ...props }: MemoEditButtonProps & IconButtonProps) {
+function MemoEditButton({ memoId, attachedObjectType, attachedObjectId, ...props }: MemoEvent & IconButtonProps) {
   const handleClickOpen = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
-    MemoAPI.openMemo({ memoId });
+    MemoAPI.openMemo({ memoId, attachedObjectType, attachedObjectId });
   };
 
   return (

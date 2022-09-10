@@ -4,17 +4,14 @@ import CommentIcon from "@mui/icons-material/Comment";
 import MemoAPI, { MemoEvent } from "./MemoAPI";
 
 export default function MemoButton({
-  codeId,
-  sdocId,
-  tagId,
   memoId,
-  spanAnnotationId,
-  bboxId,
+  attachedObjectType,
+  attachedObjectId,
   ...props
 }: MemoEvent & IconButtonProps) {
   const handleClickOpen = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
-    MemoAPI.openMemo({ codeId, sdocId, tagId, memoId, spanAnnotationId, bboxId });
+    MemoAPI.openMemo({ memoId, attachedObjectType, attachedObjectId });
   };
 
   return (

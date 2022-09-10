@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import MemoCard from "./MemoCard";
 import { ContextMenuPosition } from "../projects/ProjectContextMenu2";
 import MemoResultsContextMenu from "./MemoResultsContextMenu";
+import { AttachedObjectType } from "../../api/openapi";
 
 interface MemoResultsProps {
   memoIds: number[];
@@ -13,6 +14,7 @@ interface MemoResultsProps {
 export interface MemoCardContextMenuData {
   memoId: number | undefined;
   memoStarred: boolean | undefined;
+  attachedObjectType: AttachedObjectType | undefined;
 }
 
 // todo: the filtering should happen in the backend?
@@ -21,6 +23,7 @@ function MemoResults({ noResultsText, memoIds, filter }: MemoResultsProps) {
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
   const [contextMenuData, setContextMenuData] = useState<MemoCardContextMenuData>({
     memoId: undefined,
+    attachedObjectType: undefined,
     memoStarred: undefined,
   });
   const onContextMenu = (data: MemoCardContextMenuData) => (event: React.MouseEvent) => {
@@ -40,6 +43,7 @@ function MemoResults({ noResultsText, memoIds, filter }: MemoResultsProps) {
       <MemoResultsContextMenu
         memoId={contextMenuData.memoId}
         memoStarred={contextMenuData.memoStarred}
+        attachedObjectType={contextMenuData.attachedObjectType!}
         position={contextMenuPosition}
         handleClose={() => setContextMenuPosition(null)}
       />

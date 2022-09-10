@@ -4,6 +4,7 @@ import MemoButton from "../../../../features/memo-dialog/MemoButton";
 import LabelIcon from "@mui/icons-material/Label";
 import React from "react";
 import TagHooks from "../../../../api/TagHooks";
+import { AttachedObjectType } from "../../../../api/openapi";
 
 interface TagListItemProps {
   tagId: number;
@@ -23,7 +24,11 @@ function TagListItem({ tagId, selectedTagId, handleClick, ...props }: TagListIte
           secondaryAction={
             <div className="myShowMoreMenu">
               <TagEditButton tagId={tag.data.id} />
-              <MemoButton edge="end" tagId={tag.data.id} />
+              <MemoButton
+                edge="end"
+                attachedObjectId={tag.data.id}
+                attachedObjectType={AttachedObjectType.DOCUMENT_TAG}
+              />
             </div>
           }
           disablePadding

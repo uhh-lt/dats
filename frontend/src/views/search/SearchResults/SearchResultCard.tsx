@@ -18,7 +18,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
 import SearchResultTag from "./SearchResultTag";
-import { DocType } from "../../../api/openapi";
+import { AttachedObjectType, DocType } from "../../../api/openapi";
 import Checkbox from "@mui/material/Checkbox";
 import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
 
@@ -108,7 +108,7 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
       </CardActionArea>
       <CardActions>
         <AnnotateButton projectId={projectId} sdocId={sdocId} />
-        <MemoButton sdocId={sdocId} edge="end" />
+        <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} edge="end" />
       </CardActions>
     </Card>
   );

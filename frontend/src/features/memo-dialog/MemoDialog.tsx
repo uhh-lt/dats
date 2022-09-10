@@ -22,6 +22,7 @@ import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation";
 import { useAuth } from "../../auth/AuthProvider";
+import { MemoEvent } from "./MemoAPI";
 
 const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   switch (type) {
@@ -40,35 +41,28 @@ const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   }
 };
 
-interface MemoGetData {
-  idToGetMemo: number | undefined;
-  attachedObjectId: number | undefined;
-  attachedObjectType: AttachedObjectType | undefined;
-}
-
 export default function MemoDialog() {
   const { user } = useAuth();
 
   // state
   const [open, setOpen] = useState(false);
-  const [memoGetData, setMemoGetData] = useState<MemoGetData>({
-    idToGetMemo: undefined,
-    attachedObjectId: undefined,
-    attachedObjectType: undefined,
-  });
+  const [memoEventData, setMemoEventData] = useState<MemoEvent>();
 
   // query
-  const memo = useGetMemoQuery(memoGetData.attachedObjectType)(memoGetData.idToGetMemo, user.data?.id);
-  const attachedObject = useGetMemosAttachedObject(memoGetData.attachedObjectType)(memoGetData.attachedObjectId);
+  // there are three cases (attachedObjectType is always set!):
+  // 1. memoId is set, attachedObjectId is set
+  // 2. memoId is not set, attachedObjectId is set
+  // 3. memoId is set, attachedObjectId is not set
+  const memo = useGetMemoQuery(memoEventData?.memoId ? undefined : memoEventData?.attachedObjectType)(
+    memoEventData?.memoId ? memoEventData.memoId : memoEventData?.attachedObjectId,
+    user.data?.id
+  );
+  const attachedObject = useGetMemosAttachedObject(memoEventData?.attachedObjectType)(memoEventData?.attachedObjectId);
 
   // listen to open-memo event and open the dialog
-  const openModal = useCallback((event: CustomEventInit) => {
+  const openModal = useCallback((event: CustomEventInit<MemoEvent>) => {
     setOpen(true);
-    setMemoGetData({
-      idToGetMemo: event.detail.data.id,
-      attachedObjectId: event.detail.memoType ? event.detail.data.id : undefined,
-      attachedObjectType: event.detail.memoType,
-    });
+    setMemoEventData(event.detail);
   }, []);
 
   useEffect(() => {
@@ -82,48 +76,43 @@ export default function MemoDialog() {
   useEffect(() => {
     if (memo.data) {
       if (
-        memo.data.attached_object_id !== memoGetData.attachedObjectId ||
-        memo.data.attached_object_type !== memoGetData.attachedObjectType
+        memo.data.attached_object_id !== memoEventData?.attachedObjectId ||
+        memo.data.attached_object_type !== memoEventData?.attachedObjectType
       ) {
-        setMemoGetData({
-          idToGetMemo: memo.data.attached_object_id,
+        setMemoEventData({
           attachedObjectId: memo.data.attached_object_id,
           attachedObjectType: memo.data.attached_object_type,
         });
       }
     }
-  }, [memo.data, memoGetData]);
+  }, [memo.data, memoEventData]);
 
   const handleClose = () => {
     setOpen(false);
-    setMemoGetData({
-      idToGetMemo: undefined,
-      attachedObjectId: undefined,
-      attachedObjectType: undefined,
-    });
+    setMemoEventData(undefined);
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && (
+      {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && memoEventData && (
         <>
-          {memoGetData.attachedObjectType === AttachedObjectType.CODE ? (
+          {memoEventData.attachedObjectType === AttachedObjectType.CODE ? (
             <MemoContentCode memo={memo.data} code={attachedObject.data as CodeRead} closeDialog={handleClose} />
-          ) : memoGetData.attachedObjectType === AttachedObjectType.SOURCE_DOCUMENT ? (
+          ) : memoEventData.attachedObjectType === AttachedObjectType.SOURCE_DOCUMENT ? (
             <MemoContentSourceDocument
               memo={memo.data}
               sdoc={attachedObject.data as SourceDocumentRead}
               closeDialog={handleClose}
             />
-          ) : memoGetData.attachedObjectType === AttachedObjectType.DOCUMENT_TAG ? (
+          ) : memoEventData.attachedObjectType === AttachedObjectType.DOCUMENT_TAG ? (
             <MemoContentTag memo={memo.data} tag={attachedObject.data as DocumentTagRead} closeDialog={handleClose} />
-          ) : memoGetData.attachedObjectType === AttachedObjectType.SPAN_ANNOTATION ? (
+          ) : memoEventData.attachedObjectType === AttachedObjectType.SPAN_ANNOTATION ? (
             <MemoContentSpanAnnotation
               memo={memo.data}
               spanAnnotation={attachedObject.data as SpanAnnotationReadResolved}
               closeDialog={handleClose}
             />
-          ) : memoGetData.attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
+          ) : memoEventData.attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
             <MemoContentBboxAnnotation
               memo={memo.data}
               bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolvedCode}

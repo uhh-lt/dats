@@ -5,6 +5,7 @@ import { ContextMenuProps } from "../../projects/ProjectContextMenu2";
 import CodeEditMenuItem from "./CodeEditMenuItem";
 import MemoMenuItem from "../../../features/memo-dialog/MemoMenuItem";
 import ICodeTree from "./ICodeTree";
+import { AttachedObjectType } from "../../../api/openapi";
 
 interface CodeExplorerContextMenuProps extends ContextMenuProps {
   node: ICodeTree | undefined;
@@ -27,7 +28,11 @@ function CodeExplorerContextMenu({ position, handleClose, node }: CodeExplorerCo
         <>
           <CodeToggleVisibilityMenuItem code={node} onClick={handleClose} />
           <CodeEditMenuItem code={node.code} onClick={handleClose} />
-          <MemoMenuItem codeId={node.code.id} onClick={handleClose} />
+          <MemoMenuItem
+            attachedObjectId={node.code.id}
+            attachedObjectType={AttachedObjectType.CODE}
+            onClick={handleClose}
+          />
         </>
       )}
     </Menu>

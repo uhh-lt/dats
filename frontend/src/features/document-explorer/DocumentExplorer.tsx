@@ -22,7 +22,7 @@ import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import ProjectHooks from "../../api/ProjectHooks";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
-import { DocType } from "../../api/openapi";
+import { AttachedObjectType, DocType } from "../../api/openapi";
 import { parseInt } from "lodash";
 import MemoButton from "../memo-dialog/MemoButton";
 import DocumentNavigation from "../../components/DocumentNavigation";
@@ -148,7 +148,7 @@ function DocumentExplorerListItem({
         key={sdocId}
         secondaryAction={
           <div className="myShowMoreMenu">
-            <MemoButton edge="end" sdocId={sdocId} />
+            <MemoButton edge="end" attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} />
           </div>
         }
         disablePadding

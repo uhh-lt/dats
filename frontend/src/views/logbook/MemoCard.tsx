@@ -74,7 +74,11 @@ function MemoCard({ memoId, filter, onContextMenu }: MemoCardProps) {
           className="myMemoCard"
           onMouseEnter={() => handleHoverEnter()}
           onMouseLeave={() => handleHoverLeave()}
-          onContextMenu={onContextMenu({ memoId: memo.data?.id, memoStarred: memo.data?.starred })}
+          onContextMenu={onContextMenu({
+            memoId: memo.data?.id,
+            memoStarred: memo.data?.starred,
+            attachedObjectType: memo.data?.attached_object_type,
+          })}
         >
           {memo.isSuccess && attachedObject.isSuccess ? (
             <>
@@ -101,7 +105,11 @@ function MemoCard({ memoId, filter, onContextMenu }: MemoCardProps) {
                 <Typography variant="body1">{memo.data.content}</Typography>
               </CardContent>
               <CardActions sx={{ px: 0.5, pt: 0, pb: 0.5 }}>
-                <MemoEditButton memoId={memo.data.id} />
+                <MemoEditButton
+                  memoId={memo.data.id}
+                  attachedObjectType={memo.data.attached_object_type}
+                  attachedObjectId={memo.data.attached_object_id}
+                />
               </CardActions>
             </>
           ) : memo.isError ? (

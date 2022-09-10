@@ -18,6 +18,7 @@ import MemoButton from "../../../features/memo-dialog/MemoButton";
 import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
+import { AttachedObjectType } from "../../../api/openapi";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
@@ -106,7 +107,7 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
               <React.Fragment>
                 <CodeToggleVisibilityButton code={node} />
                 <CodeEditButton code={node.code} />
-                <MemoButton codeId={node.code.id} />
+                <MemoButton attachedObjectId={node.code.id} attachedObjectType={AttachedObjectType.CODE} />
               </React.Fragment>
             )}
             openContextMenu={onContextMenu}

@@ -11,6 +11,7 @@ import SdocHooks from "../../../api/SdocHooks";
 import SearchResultTag from "./SearchResultTag";
 import { SearchResultItem } from "./SearchResultItem";
 import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
+import { AttachedObjectType } from "../../../api/openapi";
 
 function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnCheckboxChange }: SearchResultItem) {
   // router
@@ -82,7 +83,7 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
           </div>
           <Stack direction={"row"} component={"span"} className={"myQuickMenu"}>
             <AnnotateButton projectId={projectId} sdocId={sdocId} />
-            <MemoButton sdocId={sdocId} edge="end" />
+            <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} edge="end" />
           </Stack>
         </Stack>
       </TableCell>

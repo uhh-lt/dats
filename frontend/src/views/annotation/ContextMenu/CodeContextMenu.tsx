@@ -19,7 +19,12 @@ import EditIcon from "@mui/icons-material/Edit";
 import CodeCreationDialog, { CodeCreationDialogHandle } from "./CodeCreationDialog";
 import CodeHooks from "../../../api/CodeHooks";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
-import { BBoxAnnotationReadResolvedCode, CodeRead, SpanAnnotationReadResolved } from "../../../api/openapi";
+import {
+  AttachedObjectType,
+  BBoxAnnotationReadResolvedCode,
+  CodeRead,
+  SpanAnnotationReadResolved,
+} from "../../../api/openapi";
 
 interface ICodeFilter extends ICode {
   title: string;
@@ -263,9 +268,17 @@ function CodeSelectorListItem({ codeId, annotation, handleEdit, handleDelete }: 
           <Box style={{ width: 20, height: 20, backgroundColor: code.data.color, marginRight: 8 }} />
           <ListItemText primary={code.data.name} />
           {isBboxAnnotation(annotation) ? (
-            <MemoButton bboxId={annotation.id} sx={{ ml: 1 }} />
+            <MemoButton
+              attachedObjectId={annotation.id}
+              attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
+              sx={{ ml: 1 }}
+            />
           ) : (
-            <MemoButton spanAnnotationId={annotation.id} sx={{ ml: 1 }} />
+            <MemoButton
+              attachedObjectId={annotation.id}
+              attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+              sx={{ ml: 1 }}
+            />
           )}
           <Tooltip title="Delete">
             <IconButton onClick={() => handleDelete(annotation)}>

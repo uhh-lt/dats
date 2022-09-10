@@ -8,18 +8,15 @@ interface MemoMenuItemProps {
 }
 
 export default function MemoMenuItem({
-  codeId,
-  sdocId,
-  tagId,
   memoId,
-  spanAnnotationId,
-  bboxId,
+  attachedObjectId,
+  attachedObjectType,
   onClick,
 }: MemoEvent & MemoMenuItemProps) {
   const handleClickOpen = (event: React.MouseEvent) => {
     event.stopPropagation();
     onClick();
-    MemoAPI.openMemo({ codeId, sdocId, tagId, memoId, spanAnnotationId, bboxId });
+    MemoAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
   };
 
   return (

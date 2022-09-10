@@ -6,6 +6,7 @@ import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link } from "react-router-dom";
 import MemoMenuItem from "../../../features/memo-dialog/MemoMenuItem";
+import { AttachedObjectType } from "../../../api/openapi";
 
 interface SearchResultContextMenuProps {
   position: ContextMenuPosition | null;
@@ -39,7 +40,11 @@ function SearchResultContextMenu({ position, projectId, sdocId, handleClose }: S
         </ListItemIcon>
         <ListItemText>Annotate document</ListItemText>
       </MenuItem>
-      <MemoMenuItem onClick={handleClose} sdocId={sdocId} />
+      <MemoMenuItem
+        onClick={handleClose}
+        attachedObjectId={sdocId}
+        attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
+      />
       <TagMenuListButtton popoverOrigin={{ vertical: "top", horizontal: "right" }} />
     </Menu>
   );

@@ -3,6 +3,7 @@ import React from "react";
 import MemoMenuItem from "../../../../features/memo-dialog/MemoMenuItem";
 import { ContextMenuProps } from "../../../projects/ProjectContextMenu2";
 import TagEditMenuItem from "../TagEdit/TagEditMenuItem";
+import { AttachedObjectType } from "../../../../api/openapi";
 
 interface TagExplorerContextMenuProps extends ContextMenuProps {
   tagId: number | undefined;
@@ -21,7 +22,11 @@ function TagExplorerContextMenu({ tagId, position, handleClose }: TagExplorerCon
       }}
     >
       {tagId && <TagEditMenuItem tagId={tagId} onClick={handleClose} />}
-      <MemoMenuItem onClick={handleClose} tagId={tagId} />
+      <MemoMenuItem
+        onClick={handleClose}
+        attachedObjectId={tagId}
+        attachedObjectType={AttachedObjectType.DOCUMENT_TAG}
+      />
     </Menu>
   );
 }
