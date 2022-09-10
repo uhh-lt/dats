@@ -1,23 +1,21 @@
 import React from "react";
-import { AppBar, Grid, Toolbar, Typography } from "@mui/material";
-import DocumentExplorer from "../../features/document-explorer/DocumentExplorer";
+import { Box, Container, Grid } from "@mui/material";
+import AnalysisCard from "./AnalysisCard";
+import { range } from "lodash";
 
 function Analysis() {
   return (
-    <Grid container columnSpacing={2} className="h100">
-      <Grid item md={3} className="h100">
-        <DocumentExplorer sx={{ height: "100%" }} />
-      </Grid>
-      <Grid item md={9}>
-        <AppBar position="relative" color="secondary" sx={{ paddingRight: 0 }}>
-          <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
-            <Typography variant="h6" color="inherit" component="div">
-              Analysis
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      </Grid>
-    </Grid>
+    <Box className="h100" style={{ overflowY: "auto" }}>
+      <Container maxWidth="lg" className="h100">
+        <Grid container spacing={2} mt={0}>
+          {range(0, 30).map((i) => (
+            <Grid item key={i}>
+              <AnalysisCard />
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    </Box>
   );
 }
 
