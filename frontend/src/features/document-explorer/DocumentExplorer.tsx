@@ -32,6 +32,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import { ContextMenuPosition } from "../../views/projects/ProjectContextMenu2";
 import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
 import SearchHooks from "../../api/SearchHooks";
+import LabelIcon from "@mui/icons-material/Label";
 
 function DocumentExplorer({ ...props }) {
   // router
@@ -82,10 +83,13 @@ function DocumentExplorer({ ...props }) {
                   sx={{ backgroundColor: "white" }}
                   value={selectedDocumentTag?.toString() || "-1"}
                   onChange={handleDocumentTagChange}
+                  style={{}}
+                  SelectDisplayProps={{ style: { display: "inline-flex", alignItems: "center" } }}
                 >
                   <MenuItem value="-1">Select a tag...</MenuItem>
                   {documentTags.data.map((tag) => (
                     <MenuItem key={tag.id} value={tag.id.toString()}>
+                      <LabelIcon fontSize="small" style={{ color: tag.color, marginRight: "8px" }} />
                       {tag.title}
                     </MenuItem>
                   ))}
@@ -105,6 +109,7 @@ function DocumentExplorer({ ...props }) {
             <List className="myFlexFillAllContainer">
               {sdocs.data.map((sId) => (
                 <DocumentExplorerListItem
+                  key={sId}
                   sdocId={sId}
                   selectedSdocId={parseInt(sdocId || "")}
                   onContextMenu={openContextMenu(sId)}
