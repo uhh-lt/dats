@@ -35,15 +35,15 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
 
   // init
   useEffect(() => {
-    if (user.isSuccess && visibleUserIds === undefined) {
+    if (user.data && visibleUserIds === undefined) {
       dispatch(AnnoActions.setVisibleUserIds([user.data.id]));
     }
-  }, [visibleUserIds, dispatch, user]);
+  }, [visibleUserIds, dispatch, user.data]);
 
   // effects
   // ensure that visible adocs, visible user ids and source document id are in sync
   useEffect(() => {
-    if (!annotationDocuments.isSuccess) {
+    if (!annotationDocuments.data) {
       dispatch(AnnoActions.setVisibleAdocIds([]));
       return;
     }
@@ -53,7 +53,7 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
       .map((adoc) => adoc.id);
 
     dispatch(AnnoActions.setVisibleAdocIds(adocIds));
-  }, [dispatch, annotationDocuments, sdocId, visibleUserIds]);
+  }, [dispatch, annotationDocuments.data, sdocId, visibleUserIds]);
 
   // render
   return (

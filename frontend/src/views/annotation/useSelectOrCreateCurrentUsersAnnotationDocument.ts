@@ -26,7 +26,7 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
 
   // create annotation document for user if no adoc exists
   useEffect(() => {
-    if (annotationDocuments.isSuccess && user.isSuccess) {
+    if (annotationDocuments.data && user.data) {
       const adoc = annotationDocuments.data.find((ad) => ad.user_id === user.data.id);
 
       if (adoc) {
@@ -61,7 +61,7 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
         }
       );
     }
-  }, [annotationDocument, user, annotationDocuments, createAdocMutation, sdocId]);
+  }, [annotationDocument, user.data, annotationDocuments.data, createAdocMutation, sdocId]);
 
   // only return an annotation document if it matches with the source document
   return annotationDocument?.source_document_id === sdocId ? annotationDocument : undefined;

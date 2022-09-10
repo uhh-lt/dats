@@ -46,7 +46,7 @@ function SearchStatistics({
       });
     }
     return result;
-  }, [projectCodes]);
+  }, [projectCodes.data]);
 
   // stats
   const [validStats, setValidStats] = useState(new Map<number, Map<string, number>>());

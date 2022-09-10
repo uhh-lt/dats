@@ -58,7 +58,7 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
     } else {
       dispatch(AnnoActions.setCodesForSelection(allCodes.data || []));
     }
-  }, [dispatch, selectedCodeId, allCodes, codeTree]);
+  }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
 
   // handle ui events
   const handleSelectCode = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
