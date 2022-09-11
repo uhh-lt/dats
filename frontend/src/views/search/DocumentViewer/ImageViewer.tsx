@@ -79,7 +79,7 @@ function ImageViewer({ sdoc, adoc, showEntities, height }: ImageViewerProps) {
         (update) => update.attr("x", (d) => d.x_min),
         (exit) => exit.remove()
       );
-  }, [annotations.data, showEntities]);
+  }, [height, annotations.data, showEntities]);
 
   return (
     <>

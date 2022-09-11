@@ -10,6 +10,7 @@
     "@mui/icons-material": "^5.8.3",
     "@mui/lab": "^5.0.0-alpha.85",
     "@mui/material": "^5.8.3",
+    "@mui/x-data-grid": "^5.17.2",
     "@reduxjs/toolkit": "^1.8.2",
     "@tanstack/react-query": "^4.0.10",
     "@tanstack/react-query-devtools": "^4.0.10",
@@ -25,6 +26,7 @@
     "react-redux": "^8.0.2",
     "react-router-dom": "^6.3.0",
     "react-scripts": "^5.0.1",
+    "recharts": "^2.1.14",
     "ts-tree-structure": "^1.0.2",
     "typescript": "^4.7.3"
   },

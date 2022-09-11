@@ -18,6 +18,7 @@ import Search from "../views/search/Search";
 import RequireAuth from "../auth/RequireAuth";
 import User from "../views/User";
 import Feedback from "../views/Feedback";
+import CodeFrequency from "../views/analysis/CodeFrequency/CodeFrequency";
 
 const routes: RouteObject[] = [
   {
@@ -112,6 +113,10 @@ const routes: RouteObject[] = [
       {
         path: "/project/:projectId/analysis",
         element: <Analysis />,
+      },
+      {
+        path: "/project/:projectId/analysis/frequency",
+        element: <CodeFrequency />,
       },
       {
         path: "/project/:projectId/logbook",

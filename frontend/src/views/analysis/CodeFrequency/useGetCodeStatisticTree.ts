@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { CodeRead, DocType, ProjectService, SearchService } from "../../../api/openapi";
+import { CodeRead, DocType, ProjectService, SearchService, SourceDocumentRead } from "../../../api/openapi";
 
 export interface Statistic {
-  sdocId: number;
-  codeId: number;
+  id: number;
+  sdoc: SourceDocumentRead | undefined;
+  code: CodeRead | undefined;
   text: string;
   count: number;
 }
 
 export interface CodeStatistics {
-  codeId: number;
   code: CodeRead | undefined;
+  name: string;
   aggregatedCount: number;
   count: number;
   spans: Statistic[];
@@ -24,6 +25,15 @@ export const useGetCodeStatisticTree = (projectId: number) =>
       projId: projectId,
       limit: 1000,
     });
+    const documentMap = new Map<number, SourceDocumentRead>();
+    allProjectDocuments.forEach((sdoc) => documentMap.set(sdoc.id, sdoc));
+
+    // get all codes
+    const allProjectCodes = await ProjectService.getProjectCodesProjectProjIdCodeGet({
+      projId: projectId,
+    });
+    const codeMap = new Map<number, CodeRead>();
+    allProjectCodes.forEach((code) => codeMap.set(code.id, code));
 
     // get stats for all documents
     const statQueries = allProjectDocuments
@@ -35,37 +45,40 @@ export const useGetCodeStatisticTree = (projectId: number) =>
         })
       );
     const temp = (await Promise.all(statQueries)).flat();
-    const stats: Statistic[] = temp.map((stat) => ({
-      sdocId: stat.sdoc_id,
-      codeId: stat.span_entity.code_id,
+
+    // map query results to own data type
+    const stats: Statistic[] = temp.map((stat, index) => ({
+      id: index, // todo that is not a good id!
+      sdoc: documentMap.get(stat.sdoc_id),
+      code: codeMap.get(stat.span_entity.code_id),
       text: stat.span_entity.span_text,
       count: stat.count,
     }));
 
-    // get all codes
-    const allProjectCodes = await ProjectService.getProjectCodesProjectProjIdCodeGet({
-      projId: projectId,
-    });
-
     // create a map of codeId -> Statistic
     const codeIdToStatsMap = new Map<number, CodeStatistics>();
+
+    // init map
+    allProjectCodes.forEach((code) => {
+      codeIdToStatsMap.set(code.id, {
+        code,
+        aggregatedCount: 0,
+        count: 0,
+        spans: [],
+        children: [],
+        name: code.name,
+      });
+    });
+
+    // fill map
     stats.forEach((stat) => {
-      if (!codeIdToStatsMap.has(stat.codeId)) {
-        codeIdToStatsMap.set(stat.codeId, {
-          codeId: stat.codeId,
-          code: undefined,
-          aggregatedCount: 0,
-          count: 0,
-          spans: [],
-          children: [],
-        });
-      }
-      codeIdToStatsMap.get(stat.codeId)!.spans.push(stat);
+      codeIdToStatsMap.get(stat.code!.id)!.spans.push(stat);
     });
 
     // compute counts for each code (sum of all spans)
     codeIdToStatsMap.forEach((value) => {
       value.count = value.spans.reduce((acc, cur) => acc + cur.count, 0);
+      value.aggregatedCount = value.count;
     });
 
     // aggregate counts with the code hierarchy: e.g. if named entity occurs 3 times, and PER occurs 2 times, then named entity aggregated count = 5
@@ -77,10 +90,16 @@ export const useGetCodeStatisticTree = (projectId: number) =>
     });
 
     // convert codeIdToStatsMap to a tree
-    const root: CodeStatistics = { aggregatedCount: 0, codeId: 0, count: 0, spans: [], children: [], code: undefined };
+    const root: CodeStatistics = {
+      aggregatedCount: 0,
+      count: 0,
+      spans: [],
+      children: [],
+      code: undefined,
+      name: "root",
+    };
     allProjectCodes.forEach((code) => {
       const codeStatistic = codeIdToStatsMap.get(code.id)!;
-      codeStatistic.code = code;
       if (code.parent_code_id) {
         codeIdToStatsMap.get(code.parent_code_id)!.children.push(codeStatistic);
       } else {

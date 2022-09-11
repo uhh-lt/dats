@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardActionArea,
@@ -15,27 +15,19 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Link } from "react-router-dom";
 import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import ProjectContextMenu, { ProjectContextMenuHandle } from "./ProjectContextMenu";
 import ProjectContextMenu2, { ContextMenuPosition } from "./ProjectContextMenu2";
 
 function Projects() {
   const { user } = useAuth();
   const projects = UserHooks.useGetProjects(user.data?.id);
 
-  // context menu 2
+  // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
   const [contextMenuData, setContextMenuData] = useState<number>();
-  const onContextMenu2 = (projectId: number) => (event: React.MouseEvent) => {
+  const onContextMenu = (projectId: number) => (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });
     setContextMenuData(projectId);
-  };
-
-  // context menu
-  const contextMenuRef = useRef<ProjectContextMenuHandle>(null);
-  const onContextMenu = (projectId: number) => (event: React.MouseEvent) => {
-    event.preventDefault();
-    contextMenuRef.current?.openContextMenu(projectId, { x: event.clientX, y: event.clientY });
   };
 
   return (
@@ -77,7 +69,7 @@ function Projects() {
             </Grid>
             {projects.data.map((project) => (
               <Grid item key={project.id}>
-                <Card sx={{ width: 420 }} onContextMenu={onContextMenu2(project.id)}>
+                <Card sx={{ width: 420 }} onContextMenu={onContextMenu(project.id)}>
                   <CardActionArea component={Link} to={`/project/${project.id}/search`}>
                     <CardContent sx={{ padding: "0px !important" }}>
                       <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={200}>
@@ -106,7 +98,6 @@ function Projects() {
               </Grid>
             ))}
           </Grid>
-          <ProjectContextMenu ref={contextMenuRef} />
           <ProjectContextMenu2
             projectId={contextMenuData}
             position={contextMenuPosition}
