@@ -40,12 +40,12 @@ function DocumentViewer({
   return (
     <Box {...(props as BoxProps)}>
       <Stack spacing={2}>
-        <Stack direction={"row"} spacing={1} sx={{ alignItems: "center" }}>
-          {sdoc.isLoading && <h1 style={{ margin: 0 }}>Loading...</h1>}
-          {sdoc.isError && <h1 style={{ margin: 0 }}>{sdoc.error.message}</h1>}
-          {sdoc.isSuccess && (
-            <DocumentLinkToOriginal sdocId={sdocId} title={sdoc.data.filename} variant={"h3"} style={{ margin: 0 }} />
-          )}
+        {sdoc.isLoading && <h1 style={{ margin: 0 }}>Loading...</h1>}
+        {sdoc.isError && <h1 style={{ margin: 0 }}>{sdoc.error.message}</h1>}
+        {sdoc.isSuccess && (
+          <DocumentLinkToOriginal sdocId={sdocId} title={sdoc.data.filename} variant={"h3"} style={{ margin: 0 }} />
+        )}
+        <div>
           {documentTags.isLoading && <span>Loading tags...</span>}
           {documentTags.isError && <span>{documentTags.error.message}</span>}
           {documentTags.isSuccess &&
@@ -57,7 +57,7 @@ function DocumentViewer({
                 handleDelete={handleDeleteDocumentTag}
               />
             ))}
-        </Stack>
+        </div>
         <DocumentMetadata sdocId={sdocId} metadata={metadata} />
         <Stack direction={"row"} alignItems="center">
           <b>Annotations:</b>
