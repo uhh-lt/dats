@@ -8,9 +8,9 @@ import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 function calculateValue(path: string) {
-  if (path.match(/project\/\d+\/annotation.*/i)) {
+  if (path.match(/project\/\d+\/search.*/i)) {
     return 0;
-  } else if (path.match(/project\/\d+\/search.*/i)) {
+  } else if (path.match(/project\/\d+\/annotation.*/i)) {
     return 1;
   } else if (path.match(/project\/\d+\/analysis.*/i)) {
     return 2;
@@ -27,17 +27,17 @@ function BottomBar(props: BottomNavigationProps) {
   return (
     <BottomNavigation showLabels value={value} {...props}>
       <BottomNavigationAction
-        label="Annotation"
-        icon={<FormatColorTextIcon />}
-        component={Link}
-        to={`/project/${projectId}/annotation`}
-      />
-
-      <BottomNavigationAction
         label="Search"
         icon={<SearchIcon />}
         component={Link}
         to={`/project/${projectId}/search`}
+      />
+
+      <BottomNavigationAction
+        label="Annotation"
+        icon={<FormatColorTextIcon />}
+        component={Link}
+        to={`/project/${projectId}/annotation`}
       />
 
       <BottomNavigationAction
