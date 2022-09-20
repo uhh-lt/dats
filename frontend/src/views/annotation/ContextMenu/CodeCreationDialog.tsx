@@ -5,8 +5,8 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
+  MenuItem,
   Stack,
   TextField,
 } from "@mui/material";
@@ -20,16 +20,17 @@ import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { CodeRead } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { HexColorPicker } from "react-colorful";
+import SaveIcon from "@mui/icons-material/Save";
+import ProjectHooks from "../../../api/ProjectHooks";
 
 interface CodeCreationDialogProps {
-  onCreateSuccess: (code: CodeRead) => void;
+  onCreateSuccess?: (code: CodeRead) => void;
 }
 
 export interface CodeCreationDialogHandle {
   open: (name?: string) => void;
 }
 
-// todo: refactor, this is basically the same as CodeExplorer/CodeCreationDialog.tsx
 const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDialogProps>(({ onCreateSuccess }, ref) => {
   // global state
   const { projectId } = useParams() as { projectId: string };
@@ -37,10 +38,11 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
 
   // global state (redux)
   const parentCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
-  const parentCode = CodeHooks.useGetCode(parentCodeId);
+  const codes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
   // local state
   const [isCodeCreateDialogOpen, setIsCodeCreateDialogOpen] = useState(false);
+  const [selectedParent, setSelectedParent] = useState(parentCodeId);
   const [color, setColor] = useState("#000000");
 
   // react form
@@ -68,6 +70,7 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
     setValue("color", "#000000");
     setColor("#000000");
     setIsCodeCreateDialogOpen(true);
+    setSelectedParent(parentCodeId);
   };
 
   const closeCodeCreateDialog = () => {
@@ -90,7 +93,7 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
             color: data.color,
             project_id: parseInt(projectId),
             user_id: user.data.id,
-            parent_code_id: parentCodeId,
+            parent_code_id: selectedParent,
           },
         },
         {
@@ -100,7 +103,7 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
               severity: "success",
             });
             closeCodeCreateDialog();
-            onCreateSuccess(data);
+            if (onCreateSuccess) onCreateSuccess(data);
           },
         }
       );
@@ -111,18 +114,27 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
 
   // rendering
   return (
-    <Dialog open={isCodeCreateDialogOpen} onClose={handleCloseCodeCreateDialog}>
+    <Dialog open={isCodeCreateDialogOpen} onClose={handleCloseCodeCreateDialog} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleSubmitCodeCreateDialog, handleErrorCodeCreateDialog)}>
         <DialogTitle>Create a new code</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
-            {parentCodeId && parentCode.isSuccess ? (
-              <DialogContentText>
-                Add your new code. It will be added as a child of {parentCode.data.name}.
-              </DialogContentText>
-            ) : (
-              <DialogContentText>Add your new code. It will be added to the root.</DialogContentText>
-            )}
+            <TextField
+              fullWidth
+              select
+              label="Parent Code"
+              variant="filled"
+              value={selectedParent}
+              onChange={(e) => setSelectedParent(parseInt(e.target.value))}
+            >
+              <MenuItem value={undefined}>No parent</MenuItem>
+              {codes.data &&
+                codes.data.map((codeSet) => (
+                  <MenuItem key={codeSet.id} value={codeSet.id}>
+                    {codeSet.name}
+                  </MenuItem>
+                ))}
+            </TextField>
             <TextField
               label="Name"
               fullWidth
@@ -158,15 +170,25 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
               label="Description"
               fullWidth
               variant="standard"
-              {...register("description", { required: "Description is required" })}
+              {...register("description")}
               error={Boolean(errors.description)}
               helperText={<ErrorMessage errors={errors} name="description" />}
             />
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseCodeCreateDialog}>Cancel</Button>
-          <LoadingButton type="submit" loading={createCodeMutation.isLoading}>
+          <Button variant="contained" onClick={handleCloseCodeCreateDialog}>
+            Cancel
+          </Button>
+          <LoadingButton
+            variant="contained"
+            color="success"
+            startIcon={<SaveIcon />}
+            fullWidth
+            type="submit"
+            loading={createCodeMutation.isLoading}
+            loadingPosition="start"
+          >
             Create Code
           </LoadingButton>
         </DialogActions>

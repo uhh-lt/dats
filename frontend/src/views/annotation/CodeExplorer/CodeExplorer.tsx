@@ -1,7 +1,7 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
-import { AppBar, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
+import { AppBar, Button, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
 import { useParams } from "react-router-dom";
 import CodeTreeView from "./CodeTreeView";
 import ICodeTree from "./ICodeTree";
@@ -10,7 +10,6 @@ import { codesToTree, flatTreeWithRoot } from "./TreeUtils";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import Tree, { Node } from "ts-tree-structure";
 import { AnnoActions } from "../annoSlice";
-import CodeCreationDialog from "./CodeCreationDialog";
 import CodeEditDialog from "./CodeEditDialog";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeEditButton from "./CodeEditButton";
@@ -19,6 +18,8 @@ import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 import { AttachedObjectType } from "../../../api/openapi";
+import CodeCreationDialog, { CodeCreationDialogHandle } from "../ContextMenu/CodeCreationDialog";
+import AddBoxIcon from "@mui/icons-material/AddBox";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
@@ -37,6 +38,9 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
   const dispatch = useAppDispatch();
+
+  // local state
+  const codeCreationDialogRef = useRef<CodeCreationDialogHandle>(null);
 
   // computed
   const codeTree: Node<ICodeTree> | null = useMemo(() => {
@@ -92,7 +96,14 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
     <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
         <>
-          <CodeCreationDialog codes={allCodes.data} projectId={projId} userId={user.data.id} />
+          <Button
+            variant="contained"
+            onClick={() => codeCreationDialogRef.current!.open()}
+            startIcon={<AddBoxIcon />}
+            sx={{ my: 0.5, mx: 2 }}
+          >
+            Add Code
+          </Button>
           <Divider />
           <CodeTreeView
             className="myFlexFillAllContainer"
@@ -113,6 +124,7 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
             openContextMenu={onContextMenu}
           />
           <CodeEditDialog codes={allCodes.data} />
+          <CodeCreationDialog ref={codeCreationDialogRef} />
           <CodeExplorerContextMenu
             node={contextMenuData}
             position={contextMenuPosition}
