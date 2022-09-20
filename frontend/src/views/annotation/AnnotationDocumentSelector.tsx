@@ -1,5 +1,15 @@
 import SdocHooks from "../../api/SdocHooks";
-import { AppBar, FormControl, MenuItem, Select, SelectChangeEvent, Stack, Toolbar } from "@mui/material";
+import {
+  AppBar,
+  Checkbox,
+  FormControl,
+  ListItemText,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  Stack,
+  Toolbar,
+} from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { AnnoActions } from "./annoSlice";
 import * as React from "react";
@@ -71,11 +81,22 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
               value={visibleUserIds || []}
               onChange={handleChange}
               disabled={!annotationDocuments.isSuccess}
+              renderValue={(selected) =>
+                selected.map((x, index) => (
+                  <React.Fragment key={x}>
+                    <UserName userId={x} />
+                    {index < selected.length - 1 && ", "}
+                  </React.Fragment>
+                ))
+              }
             >
               {annotationDocuments.isSuccess &&
                 annotationDocuments.data.map((adoc) => (
                   <MenuItem key={adoc.user_id} value={adoc.user_id}>
-                    <UserName userId={adoc.user_id} />
+                    <Checkbox checked={visibleUserIds?.indexOf(adoc.user_id) !== -1} />
+                    <ListItemText>
+                      <UserName userId={adoc.user_id} />
+                    </ListItemText>
                   </MenuItem>
                 ))}
             </Select>
