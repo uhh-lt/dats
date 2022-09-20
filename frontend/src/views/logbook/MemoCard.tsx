@@ -84,18 +84,22 @@ function MemoCard({ memoId, filter, onContextMenu }: MemoCardProps) {
             <>
               <CardHeader
                 avatar={
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: MemoColors[memo.data.attached_object_type] }}>
+                  <Avatar sx={{ bgcolor: MemoColors[memo.data.attached_object_type] }}>
                     {MemoShortnames[memo.data.attached_object_type]}
                   </Avatar>
                 }
                 action={<MemoStarButton memoId={memo.data.id} isStarred={memo.data.starred} />}
                 title={memo.data.title}
+                subheader={`Created: ${new Date(memo.data.created).toLocaleDateString("en-CA")} Updated: ${new Date(
+                  memo.data.updated
+                ).toLocaleDateString("en-CA")}`}
                 sx={{ pb: 0, pt: 1 }}
                 titleTypographyProps={{
                   variant: "h5",
                 }}
               />
               <CardContent sx={{ py: 0, my: 1, maxHeight: 300, overflowY: "hidden" }}>
+                <Typography color="text.secondary"></Typography>
                 <Typography sx={{ mb: 1.5 }} color="text.secondary">
                   <AttachedObjectLink
                     attachedObject={attachedObject.data}
