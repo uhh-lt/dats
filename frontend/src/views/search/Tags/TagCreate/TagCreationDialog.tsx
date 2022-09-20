@@ -36,7 +36,7 @@ function TagCreationDialog() {
   const openModal = useCallback(
     (data: CustomEventInit) => {
       setOpen(true);
-      setValue("name", data.detail.tagName);
+      setValue("title", data.detail.tagName);
     },
     [setValue]
   );
