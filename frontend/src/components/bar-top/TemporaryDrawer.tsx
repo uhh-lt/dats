@@ -14,6 +14,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import InfoIcon from "@mui/icons-material/Info";
 import GavelIcon from "@mui/icons-material/Gavel";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 
@@ -63,6 +64,14 @@ export default function TemporaryDrawer() {
               </ListItemButton>
             </ListItem>
             <Divider />
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to="/settings">
+                <ListItemIcon>
+                  <SettingsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Settings" />
+              </ListItemButton>
+            </ListItem>
           </>
         )}
 

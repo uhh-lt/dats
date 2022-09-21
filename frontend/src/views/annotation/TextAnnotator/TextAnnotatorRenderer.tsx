@@ -6,6 +6,7 @@ import { IToken } from "./IToken";
 import { Box, BoxProps, Divider } from "@mui/material";
 import { range } from "lodash";
 import PageNavigation from "./PageNavigation";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 
 interface TextAnnotationRendererProps {
   sdocId: number; // todo: is this necessary???
@@ -25,12 +26,19 @@ function TextAnnotationRenderer({
   ...props
 }: TextAnnotationRendererProps & BoxProps) {
   const tokenCount = tokenData?.length || 0;
+
+  // global client state (redux)
+  const tagStyle = useAppSelector((state) => state.settings.annotator.tagStyle);
+
+  // local state
   const [currentPage, setCurrentPage] = useState<number>(0);
 
+  // ui events
   const onPageChange = (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
     setCurrentPage(newPage);
   };
 
+  // rendering
   const renderedTokens = useMemo(() => {
     if (!annotationsPerToken || !tokenData || !annotationMap) {
       return <div>Loading...</div>;
@@ -60,7 +68,7 @@ function TextAnnotationRenderer({
   }, [annotationsPerToken, tokenData, annotationMap, currentPage, tokenCount]);
 
   return (
-    <Box {...props}>
+    <Box {...props} style={{ lineHeight: tagStyle === "inline" ? "26px" : "36px" }}>
       <PageNavigation
         elementCount={tokenCount}
         elementsPerPage={tokensPerPage}

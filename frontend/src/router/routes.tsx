@@ -19,6 +19,7 @@ import RequireAuth from "../auth/RequireAuth";
 import User from "../views/User";
 import Feedback from "../views/Feedback";
 import CodeFrequency from "../views/analysis/CodeFrequency/CodeFrequency";
+import Settings from "../views/settings/Settings";
 
 const routes: RouteObject[] = [
   {
@@ -62,6 +63,14 @@ const routes: RouteObject[] = [
           { index: true, element: <ProjectCreation /> },
           { path: "/projectsettings/:projectId", element: <ProjectUpdate /> },
         ],
+      },
+      {
+        path: "/settings",
+        element: (
+          <RequireAuth>
+            <Settings />
+          </RequireAuth>
+        ),
       },
       {
         path: "/about",

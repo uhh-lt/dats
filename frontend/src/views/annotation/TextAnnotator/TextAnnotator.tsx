@@ -270,7 +270,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       />
       <TextAnnotatorRenderer
         className="myFlexFillAllContainer"
-        style={{ lineHeight: "26px" }}
         onContextMenu={handleContextMenu}
         onMouseUp={handleMouseUp}
         sdocId={sdoc.id}

@@ -2,12 +2,14 @@ import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
 import annoReducer from "../views/annotation/annoSlice";
 import searchReducer from "../views/search/searchSlice";
 import logbookReducer from "../views/logbook/logbookSlice";
+import settingsReducer from "../views/settings/settingsSlice";
 
 export const store = configureStore({
   reducer: {
     annotations: annoReducer,
     search: searchReducer,
     logbook: logbookReducer,
+    settings: settingsReducer,
   },
 });
 

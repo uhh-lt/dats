@@ -20,14 +20,12 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
   });
 
   return (
-    <div style={{ lineHeight: "26px" }}>
-      <TextAnnotatorRenderer
-        sdocId={sdoc.id}
-        tokenData={tokenData}
-        annotationsPerToken={annotationsPerToken}
-        annotationMap={annotationMap}
-      />
-    </div>
+    <TextAnnotatorRenderer
+      sdocId={sdoc.id}
+      tokenData={tokenData}
+      annotationsPerToken={annotationsPerToken}
+      annotationMap={annotationMap}
+    />
   );
 }
 
