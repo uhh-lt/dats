@@ -146,6 +146,18 @@ class ElasticSearchService(metaclass=SingletonMeta):
         logger.debug(f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to Index '{proj.doc_index}'!")
         return res['_id']
 
+    def update_esdoc_keywords(self,
+                              *,
+                              proj: ProjectRead,
+                              keywords: SourceDocumentKeywords) -> SourceDocumentKeywords:
+        res = self.__client.update(index=proj.doc_index,
+                                   id=str(keywords.source_document_id),
+                                   body={"doc": {"keywords": keywords.keywords}})
+
+        logger.debug(res)
+        logger.debug(f"Updated Keywords of Document '{keywords.source_document_id}' in Index '{proj.doc_index}'!")
+        return keywords
+
     def get_esdocs_by_sdoc_ids(self,
                                *,
                                proj: ProjectRead,

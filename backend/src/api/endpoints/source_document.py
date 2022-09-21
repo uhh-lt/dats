@@ -96,6 +96,19 @@ async def get_tokens(*,
                                                                proj=ProjectRead.from_orm(sdoc_db_obj.project))
 
 
+@router.patch("/{sdoc_id}/keywords", tags=tags,
+              response_model=Optional[SourceDocumentKeywords],
+              summary="Updates the keywords of the SourceDocument.",
+              description="Updates the keywords of the SourceDocument.")
+async def update_keywords(*,
+                          db: Session = Depends(get_db_session),
+                          keywords: SourceDocumentKeywords) -> Optional[SourceDocumentKeywords]:
+    # TODO Flo: only if the user has access?
+    sdoc_db_obj = crud_sdoc.read(db=db, id=keywords.source_document_id)
+    return ElasticSearchService().update_esdoc_keywords(keywords=keywords,
+                                                        proj=ProjectRead.from_orm(sdoc_db_obj.project))
+
+
 @router.get("/{sdoc_id}/url", tags=tags,
             response_model=Optional[str],
             summary="Returns the URL to the original file of the SourceDocument",
