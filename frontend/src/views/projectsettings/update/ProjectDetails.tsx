@@ -68,7 +68,7 @@ function ProjectDetails({ project }: ProjectDetailsProps) {
             fullWidth
             {...register("name", {
               required: "Project name is required",
-              validate: (value: string) => !/\s/g.test(value) || "Project name must not contain spaces",
+              // validate: (value: string) => !/\s/g.test(value) || "Project name must not contain spaces",
             })}
             error={Boolean(errors.name)}
             helperText={<ErrorMessage errors={errors} name="name" />}
