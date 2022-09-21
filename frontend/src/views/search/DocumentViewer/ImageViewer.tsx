@@ -22,7 +22,7 @@ function ImageViewer({ sdoc, adoc, showEntities, height }: ImageViewerProps) {
     d3.select(gRef.current).attr("transform", e.transform.toString());
   };
 
-  const zoom = useMemo(() => d3.zoom<SVGSVGElement, unknown>().on("zoom", handleZoom), []);
+  const zoom = useMemo(() => d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.5, 5]).on("zoom", handleZoom), []);
 
   // init zoom
   useEffect(() => {

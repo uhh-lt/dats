@@ -153,7 +153,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
   };
 
   // zoom handling
-  const zoom = useMemo(() => d3.zoom<SVGSVGElement, unknown>(), []);
+  const zoom = useMemo(() => d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.5, 5]), []);
 
   const handleZoom = useCallback((e: d3.D3ZoomEvent<any, any>) => {
     d3.select(gZoomRef.current).attr("transform", e.transform.toString());
