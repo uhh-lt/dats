@@ -20,6 +20,10 @@
     position: relative;
 }
 
+.text {
+    white-space: nowrap;
+}
+
 .hovered .text {
     font-weight: bold;
 }
