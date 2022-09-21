@@ -93,14 +93,17 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     }
 
     // get the selected begin and end token
-    const selectionStart = selection?.anchorNode?.parentElement?.parentElement?.getAttribute("data-tokenid");
-    const selectionEnd = selection?.focusNode?.parentElement?.parentElement?.getAttribute("data-tokenid");
+    let selectionStartElement = selection?.anchorNode?.parentElement?.parentElement;
+    let selectionEndElement = selection?.focusNode?.parentElement?.parentElement;
+    const selectionStart = selectionStartElement?.getAttribute("data-tokenid");
+    const selectionEnd = selectionEndElement?.getAttribute("data-tokenid");
     if (!selectionStart || !selectionEnd) return;
 
     const begin = parseInt(selectionStart);
     const end = parseInt(selectionEnd);
 
     // swap begin and end if necessary (left to right, right to left annotation)
+    selectionStartElement = end < begin ? selectionEndElement : selectionStartElement;
     const begin_token = end < begin ? end : begin;
     const end_token = end < begin ? begin : end;
 
@@ -151,7 +154,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     });
 
     // open code selector
-    const target = (event.target as HTMLElement).parentElement;
+    const target = selectionStartElement;
     if (target) {
       // calculate position of the code selector (based on selection end)
       const boundingBox = target.getBoundingClientRect();
