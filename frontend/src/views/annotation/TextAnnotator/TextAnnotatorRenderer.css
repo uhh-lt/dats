@@ -31,6 +31,7 @@ rect.hovered {
 .spangroup {
     user-select: none;
     font-size: 14px;
+    white-space: nowrap;
 }
 
 .spangroup.inline {

@@ -24,13 +24,14 @@ function Token({ token, spanAnnotations }: TokenProps) {
   const marks = useMemo(() => {
     const markCount = spans.length;
     const h = 100 / markCount + "%";
-    const end = token.index + 1;
+    const isStart = spans.every((annotation) => annotation.begin_token === token.index);
+    const isEnd = spans.every((annotation) => annotation.end_token === token.index + 1);
     return spans.map((spanAnnotation, index) => (
       <Mark
         key={spanAnnotation.id}
         codeId={spanAnnotation.code.id}
-        isStart={markCount === 1 && spanAnnotation.begin_token === token.index}
-        isEnd={markCount === 1 && spanAnnotation.end_token === end}
+        isStart={isStart}
+        isEnd={isEnd}
         height={h}
         top={(100 / markCount) * index + "%"}
       />
