@@ -6,6 +6,7 @@ import SdocHooks from "../../../../api/SdocHooks";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import ClearIcon from "@mui/icons-material/Clear";
+import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
 
 interface DocumentKeywordsProps {
   sdocId: number | undefined;
@@ -16,8 +17,8 @@ function DocumentKeywordsRow({ sdocId }: DocumentKeywordsProps) {
 
   return (
     <>
-      {keywords.isSuccess ? (
-        <DocumentKeywordsContent keywords={keywords.data} />
+      {sdocId && keywords.isSuccess ? (
+        <DocumentKeywordsContent sdocId={sdocId} keywords={keywords.data} />
       ) : keywords.isError ? (
         <Grid item md={12}>
           {keywords.error.message}
@@ -33,7 +34,7 @@ function DocumentKeywordsRow({ sdocId }: DocumentKeywordsProps) {
 
 export default DocumentKeywordsRow;
 
-function DocumentKeywordsContent({ keywords }: { keywords: SourceDocumentKeywords }) {
+function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumentKeywords; sdocId: number }) {
   // keyword input
   const [keywordInput, setKeywordInput] = useState<any>(keywords.keywords);
 
@@ -43,32 +44,52 @@ function DocumentKeywordsContent({ keywords }: { keywords: SourceDocumentKeyword
   }, [keywords]);
 
   // mutation
-  // const queryClient = useQueryClient();
-  // const updateMutation = MetadataHooks.useUpdateMetadata({
-  //   onSuccess: (metadata: SourceDocumentMetadataRead) => {
-  //     queryClient.invalidateQueries([QueryKey.METADATA, metadata.id]);
-  //     queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, metadata.source_document_id]);
-  //     SnackbarAPI.openSnackbar({
-  //       text: `Updated metadata ${metadata.id} for document ${metadata.source_document_id}`,
-  //       severity: "success",
-  //     });
-  //   },
-  // });
+  const updateMutation = SdocHooks.useUpdateDocumentKeywords();
 
   // form handling
   const handleUpdate = useCallback(() => {
     // only update if data has changed!
     if (keywords.keywords !== keywordInput) {
-      console.log("new keywords!", keywordInput);
-      // updateMutation.mutate({
-      //   metadataId: metadata.id,
-      //   requestBody: {
-      //     key: data.key,
-      //     value: data.value,
-      //   },
-      // });
+      updateMutation.mutate(
+        {
+          requestBody: {
+            source_document_id: sdocId,
+            keywords: keywordInput,
+          },
+        },
+        {
+          onSuccess: (keywords) => {
+            SnackbarAPI.openSnackbar({
+              text: "Successfully updated keywords of document " + keywords.source_document_id,
+              severity: "success",
+            });
+          },
+        }
+      );
     }
   }, [keywords, keywordInput]);
+
+  const handleClear = useCallback(() => {
+    // only update if data has changed!
+    if (keywords.keywords.length > 0) {
+      updateMutation.mutate(
+        {
+          requestBody: {
+            source_document_id: sdocId,
+            keywords: [],
+          },
+        },
+        {
+          onSuccess: (keywords) => {
+            SnackbarAPI.openSnackbar({
+              text: "Successfully cleared keywords of document " + keywords.source_document_id,
+              severity: "success",
+            });
+          },
+        }
+      );
+    }
+  }, [keywords]);
 
   return (
     <>
@@ -102,10 +123,7 @@ function DocumentKeywordsContent({ keywords }: { keywords: SourceDocumentKeyword
           />
           <Tooltip title="Clear">
             <span>
-              <IconButton
-              // onClick={handleClear()}
-              // disabled={updateMutation.isLoading}
-              >
+              <IconButton onClick={() => handleClear()} disabled={updateMutation.isLoading}>
                 <ClearIcon />
               </IconButton>
             </span>

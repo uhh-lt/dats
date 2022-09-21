@@ -133,26 +133,39 @@ export class SourceDocumentService {
   }
 
   /**
+   * Updates the keywords of the SourceDocument.
+   * Updates the keywords of the SourceDocument.
+   * @returns SourceDocumentKeywords Successful Response
+   * @throws ApiError
+   */
+  public static updateKeywordsSdocSdocIdKeywordsPatch({
+    requestBody,
+  }: {
+    requestBody: SourceDocumentKeywords;
+  }): CancelablePromise<SourceDocumentKeywords> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/sdoc/{sdoc_id}/keywords",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns the URL to the original file of the SourceDocument
    * Returns the URL to the original file of the SourceDocument with the given ID if it exists.
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static getFileUrlSdocSdocIdUrlGet({
-    sdocId,
-    relative = true,
-  }: {
-    sdocId: number;
-    relative?: boolean;
-  }): CancelablePromise<string> {
+  public static getFileUrlSdocSdocIdUrlGet({ sdocId }: { sdocId: number }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/url",
       path: {
         sdoc_id: sdocId,
-      },
-      query: {
-        relative: relative,
       },
       errors: {
         422: `Validation Error`,

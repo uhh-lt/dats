@@ -88,6 +88,13 @@ const useGetDocumentKeywords = (sdocId: number | undefined) =>
     }
   );
 
+const useUpdateDocumentKeywords = () =>
+  useMutation(SourceDocumentService.updateKeywordsSdocSdocIdKeywordsPatch, {
+    onSuccess: (sdoc) => {
+      queryClient.invalidateQueries([QueryKey.SDOC_KEYWORDS, sdoc.source_document_id]);
+    },
+  });
+
 const useDeleteDocument = () =>
   useMutation(SourceDocumentService.deleteByIdSdocSdocIdDelete, {
     onSuccess: (sdoc) => {
@@ -212,6 +219,7 @@ const SdocHooks = {
   useGetDocumentNoContent,
   useGetDocumentTokens,
   useGetDocumentKeywords,
+  useUpdateDocumentKeywords,
   useDeleteDocument,
   // tags
   useGetAllDocumentTags,
