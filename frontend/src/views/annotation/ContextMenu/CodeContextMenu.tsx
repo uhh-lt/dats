@@ -113,6 +113,11 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     }, [showCodeSelection]);
 
     // event handlers
+    const handleContextMenu = (event: any) => {
+      event.preventDefault();
+      closeCodeSelector("backdropClick");
+    };
+
     const handleChange = (event: SyntheticEvent<Element, Event>, newValue: ICodeFilter | string | null) => {
       if (typeof newValue === "string") {
         alert("HOW DID YOU DO THIS? (Please tell Tim)");
@@ -172,6 +177,7 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
           vertical: "top",
           horizontal: "left",
         }}
+        onContextMenu={handleContextMenu}
       >
         {!showCodeSelection && annotationsToEdit ? (
           <List dense>

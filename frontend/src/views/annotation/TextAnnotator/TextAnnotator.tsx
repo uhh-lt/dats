@@ -49,17 +49,18 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     if (!annotationMap) return;
 
     const target = (event.target as HTMLElement).parentElement;
-    if (target && target.classList.contains("tok") && target.childElementCount > 0) {
+    const span = target && target.classList.contains("spangroup") ? target.parentElement : target;
+    if (span && span.classList.contains("tok") && span.childElementCount > 0) {
       event.preventDefault();
 
       // get all annotations that span this token
-      const tokenIndex = parseInt(target.getAttribute("data-tokenid")!);
+      const tokenIndex = parseInt(span.getAttribute("data-tokenid")!);
       const annos = annotationsPerToken.get(tokenIndex);
 
       // open code selector if there are annotations
       if (annos) {
         // calculate position of the code selector (based on selection end)
-        const boundingBox = target.getBoundingClientRect();
+        const boundingBox = span.getBoundingClientRect();
         const position = {
           left: boundingBox.left,
           top: boundingBox.top + boundingBox.height,
