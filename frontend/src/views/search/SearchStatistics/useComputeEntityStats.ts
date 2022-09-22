@@ -11,11 +11,13 @@ function computeCodeFrequencies(codeStats: SpanEntityStat[]): Map<number, Map<st
     let entityMap = aggregatedCodeStats.get(stat.span_entity.code_id);
     if (!entityMap) {
       entityMap = new Map<string, number>();
-      entityMap.set(stat.span_entity.span_text, stat.count);
+      // count is the number of times the entity occurs in the document
+      // however, we only want to count whether the entity occcurs in the document or not
+      entityMap.set(stat.span_entity.span_text, 1);
       aggregatedCodeStats.set(stat.span_entity.code_id, entityMap);
     } else {
       let entityCount = entityMap.get(stat.span_entity.span_text) || 0;
-      entityMap.set(stat.span_entity.span_text, entityCount + stat.count);
+      entityMap.set(stat.span_entity.span_text, entityCount + 1);
     }
   });
 
