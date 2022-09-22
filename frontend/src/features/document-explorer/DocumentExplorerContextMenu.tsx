@@ -7,7 +7,9 @@ import { ContextMenuProps } from "../../views/projects/ProjectContextMenu2";
 import TagMenuMenuItem from "../../views/search/ToolBar/ToolBarElements/TagMenuMenuItem";
 import MemoMenuItem from "../memo-dialog/MemoMenuItem";
 import { AttachedObjectType } from "../../api/openapi";
+import DeleteMenuItem from "../../views/search/ToolBar/ToolBarElements/DeleteMenuItem";
 
+// todo: refactor, this is basically the same as SearchResultContextMenu
 interface DocumentExplorerContextMenuProps extends ContextMenuProps {
   projectId: number;
   sdocId: number | undefined;
@@ -44,6 +46,7 @@ function DocumentExplorerContextMenu({ position, projectId, sdocId, handleClose 
         attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
       />
       <TagMenuMenuItem popoverOrigin={{ vertical: "top", horizontal: "right" }} />
+      <DeleteMenuItem onClick={handleClose} sdocId={sdocId} />
     </Menu>
   );
 }
