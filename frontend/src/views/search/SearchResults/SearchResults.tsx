@@ -5,7 +5,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableContainer, { TableContainerProps } from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
-import { Box, Typography } from "@mui/material";
+import { Box, TableHead, Typography } from "@mui/material";
 import SearchResultContextMenu from "./SearchResultContextMenu";
 import "./SearchResults.css";
 import { SourceDocumentRead } from "../../../api/openapi";
@@ -15,6 +15,7 @@ import SearchResultRow from "./SearchResultRow";
 import SearchResultCard from "./SearchResultCard";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import { useParams } from "react-router-dom";
+import ToggleAllDocumentsButton from "../ToolBar/ToolBarElements/ToggleAllDocumentsButton";
 
 interface SearchResultsProps {
   documentIds: number[];
@@ -69,6 +70,26 @@ export default function SearchResults({
     [dispatch]
   );
 
+  // handle resize
+  const [width, setWidth] = useState(80);
+  const [isResizing, setIsResizing] = useState(false);
+  const handleMouseMove = useCallback(
+    (event: any) => {
+      setWidth((prevWidth) => prevWidth + event.movementX);
+    },
+    [setWidth]
+  );
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+  }, [setIsResizing]);
+  const handleMouseDown = useCallback(() => {
+    setIsResizing(true);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  }, [setIsResizing]);
+
   return (
     <>
       {documentIds.length === 0 ? (
@@ -78,6 +99,18 @@ export default function SearchResults({
           {isListView ? (
             <TableContainer sx={{ width: "100%", overflowX: "hidden" }} className={className}>
               <Table sx={{ tableLayout: "fixed", whiteSpace: "nowrap" }} aria-labelledby="tableTitle" size={"medium"}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell padding="checkbox" style={{ width: "48px" }}>
+                      <ToggleAllDocumentsButton searchResultIds={documentIds} />
+                    </TableCell>
+                    <TableCell style={{ position: "relative", width: `${width}px` }}>
+                      Title
+                      <div onMouseDown={handleMouseDown} className={`resizer ${isResizing ? "isResizing" : ""}`}></div>
+                    </TableCell>
+                    <TableCell>Content</TableCell>
+                  </TableRow>
+                </TableHead>
                 <TableBody>
                   {documentIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((sdocId) => (
                     <SearchResultRow

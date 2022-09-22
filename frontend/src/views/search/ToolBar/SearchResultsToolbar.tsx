@@ -1,5 +1,4 @@
-import { Box, Toolbar, ToolbarProps } from "@mui/material";
-import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
+import { Box, Toolbar, ToolbarProps, Typography } from "@mui/material";
 import TagMenuButton from "./ToolBarElements/TagMenuButton";
 import DeleteButton from "./ToolBarElements/DeleteButton";
 import TableNavigation from "./ToolBarElements/TableNavigation";
@@ -22,9 +21,11 @@ function SearchResultsToolbar({ searchResultIds, ...props }: SearchResultsToolba
 
   return (
     <Toolbar disableGutters variant="dense" sx={{ minHeight: "52px", p: "0px 4px" }} {...props}>
-      <ToggleAllDocumentsButton searchResultIds={searchResultIds} />
       {numSelectedDocuments > 0 && (
         <>
+          <Typography color="inherit" variant="subtitle1" component="div">
+            {numSelectedDocuments} selected
+          </Typography>
           <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
           <DeleteButton disabled />
         </>

@@ -185,7 +185,7 @@ function Search() {
                 {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
                 {searchResults.isSuccess && (
                   <SearchResults
-                    documentIds={searchResults.data}
+                    documentIds={searchResultIds}
                     handleResultClick={handleResultClick}
                     className="myFlexFillAllContainer"
                   />

@@ -1,5 +1,4 @@
 import Checkbox from "@mui/material/Checkbox";
-import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { useEffect, useMemo } from "react";
 import { SearchActions } from "../../searchSlice";
@@ -50,11 +49,6 @@ function ToggleAllDocumentsButton({ searchResultIds }: ToggleAllDocumentsButtonP
           "aria-label": "select all desserts",
         }}
       />
-      {numSelectedDocuments > 0 && (
-        <Typography color="inherit" variant="subtitle1" component="div">
-          {numSelectedDocuments} selected
-        </Typography>
-      )}
     </>
   );
 }

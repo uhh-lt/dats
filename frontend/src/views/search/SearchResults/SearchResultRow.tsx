@@ -41,7 +41,7 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
       onContextMenu={handleOnContextMenu(sdocId)}
       className={"myTableRow"}
     >
-      <TableCell padding="checkbox" style={{ width: "48px" }}>
+      <TableCell padding="checkbox">
         <Checkbox
           color="primary"
           checked={isSelected}
@@ -58,11 +58,9 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
           component="th"
           id={labelId}
           scope="row"
-          padding="none"
           style={{
             overflow: "hidden",
             textOverflow: "ellipsis",
-            width: "80px",
           }}
         >
           {sdoc.isLoading && <>Loading</>}
@@ -76,7 +74,7 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
           {tags.isError && <>{tags.error.message}</>}
           {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}
 
-          <div style={{ overflow: "hidden", textOverflow: "ellipsis", flexGrow: 1 }}>
+          <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
             {sdoc.isLoading && <>...</>}
             {sdoc.isError && <>{sdoc.error.message}</>}
             {sdoc.isSuccess && <>{sdoc.data.content}</>}
