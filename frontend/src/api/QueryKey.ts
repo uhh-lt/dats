@@ -6,7 +6,7 @@ export const QueryKey = {
   // all users of a project (by project id)
   PROJECT_USERS: "projectUsers",
   // all documents of a project (by project id)
-  PROJECT_DOCUMENTS: "projectDocuments",
+  PROJECT_SDOCS: "projectDocuments",
   // all codes of a project (by project id)
   PROJECT_CODES: "projectCodes",
   // all tags of a project (by project id)

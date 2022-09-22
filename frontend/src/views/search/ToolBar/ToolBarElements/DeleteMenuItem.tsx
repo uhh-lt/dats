@@ -1,21 +1,20 @@
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import * as React from "react";
-import { IconButtonProps } from "@mui/material";
-import SdocHooks from "../../../../api/SdocHooks";
 import { useCallback } from "react";
+import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
+import SdocHooks from "../../../../api/SdocHooks";
 import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI";
 import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../../../../plugins/ReduxHooks";
 import { SearchActions } from "../../searchSlice";
+import { useAppDispatch } from "../../../../plugins/ReduxHooks";
 
-interface DeleteButtonProps {
-  sdocId: number;
+interface DeleteMenuItemProps {
+  sdocId: number | undefined;
+  onClick?: () => void;
 }
 
-function DeleteButton({ sdocId, ...props }: DeleteButtonProps & IconButtonProps) {
+function DeleteMenuItem({ sdocId, onClick, ...props }: DeleteMenuItemProps & MenuItemProps) {
   // react router
   const navigate = useNavigate();
 
@@ -26,7 +25,11 @@ function DeleteButton({ sdocId, ...props }: DeleteButtonProps & IconButtonProps)
   const dispatch = useAppDispatch();
 
   // ui events
-  const onClick = useCallback(() => {
+  const handleClick = useCallback(() => {
+    if (!sdocId) return;
+
+    if (onClick) onClick();
+
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete document ${sdocId}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
@@ -50,14 +53,13 @@ function DeleteButton({ sdocId, ...props }: DeleteButtonProps & IconButtonProps)
   }, []);
 
   return (
-    <Tooltip title="Delete">
-      <span>
-        <IconButton onClick={onClick} {...props}>
-          <DeleteIcon />
-        </IconButton>
-      </span>
-    </Tooltip>
+    <MenuItem onClick={handleClick} {...props} disabled={!sdocId}>
+      <ListItemIcon>
+        <DeleteIcon fontSize="small" />
+      </ListItemIcon>
+      <ListItemText>Delete document</ListItemText>
+    </MenuItem>
   );
 }
 
-export default DeleteButton;
+export default DeleteMenuItem;

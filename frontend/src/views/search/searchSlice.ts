@@ -49,6 +49,9 @@ export const searchSlice = createSlice({
     clearSelectedDocuments: (state) => {
       state.selectedDocumentIds = [];
     },
+    updateSelectedDocumentsOnDelete: (state, action: PayloadAction<number>) => {
+      state.selectedDocumentIds = state.selectedDocumentIds.filter((sdocId) => sdocId !== action.payload);
+    },
 
     // filtering
     addFilter: (state, action: PayloadAction<SearchFilter>) => {

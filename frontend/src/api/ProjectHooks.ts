@@ -44,12 +44,12 @@ const useGetProject = (projectId: number) =>
 const useUploadDocument = () =>
   useMutation(ProjectService.uploadProjectSdocProjectProjIdSdocPut, {
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_DOCUMENTS, variables.projId]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, variables.projId]);
     },
   });
 
 const useGetProjectDocuments = (projectId: number) =>
-  useQuery<SourceDocumentRead[], Error>([QueryKey.PROJECT_DOCUMENTS, projectId], () =>
+  useQuery<SourceDocumentRead[], Error>([QueryKey.PROJECT_SDOCS, projectId], () =>
     ProjectService.getProjectSdocsProjectProjIdSdocGet({
       projId: projectId,
     })

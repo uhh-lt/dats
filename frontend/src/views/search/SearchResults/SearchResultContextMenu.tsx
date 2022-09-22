@@ -1,12 +1,13 @@
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import React from "react";
-import TagMenuListButtton from "./TagMenuListButtton";
+import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenuMenuItem";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link } from "react-router-dom";
 import MemoMenuItem from "../../../features/memo-dialog/MemoMenuItem";
 import { AttachedObjectType } from "../../../api/openapi";
+import DeleteMenuItem from "../ToolBar/ToolBarElements/DeleteMenuItem";
 
 interface SearchResultContextMenuProps {
   position: ContextMenuPosition | null;
@@ -45,7 +46,8 @@ function SearchResultContextMenu({ position, projectId, sdocId, handleClose }: S
         attachedObjectId={sdocId}
         attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
       />
-      <TagMenuListButtton popoverOrigin={{ vertical: "top", horizontal: "right" }} />
+      <TagMenuMenuItem popoverOrigin={{ vertical: "top", horizontal: "right" }} />
+      <DeleteMenuItem onClick={handleClose} sdocId={sdocId} />
     </Menu>
   );
 }

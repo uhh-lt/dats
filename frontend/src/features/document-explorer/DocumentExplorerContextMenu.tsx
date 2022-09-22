@@ -4,7 +4,7 @@ import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link } from "react-router-dom";
 import { ContextMenuProps } from "../../views/projects/ProjectContextMenu2";
-import TagMenuListButtton from "../../views/search/SearchResults/TagMenuListButtton";
+import TagMenuMenuItem from "../../views/search/ToolBar/ToolBarElements/TagMenuMenuItem";
 import MemoMenuItem from "../memo-dialog/MemoMenuItem";
 import { AttachedObjectType } from "../../api/openapi";
 
@@ -43,7 +43,7 @@ function DocumentExplorerContextMenu({ position, projectId, sdocId, handleClose 
         attachedObjectId={sdocId}
         attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
       />
-      <TagMenuListButtton popoverOrigin={{ vertical: "top", horizontal: "right" }} />
+      <TagMenuMenuItem popoverOrigin={{ vertical: "top", horizontal: "right" }} />
     </Menu>
   );
 }

@@ -25,7 +25,7 @@ function DocumentViewerToolbar({ sdocId, searchResultIds }: DocumentViewerToolba
       <AnnotateButton projectId={projectId} sdocId={sdocId} />
       <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} />
       <TagMenuButton forceSdocId={sdocId} popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
-      <DeleteButton disabled />
+      <DeleteButton sdocId={sdocId} />
       <ToggleShowEntitiesButton />
 
       <Box sx={{ flexGrow: 1 }} />

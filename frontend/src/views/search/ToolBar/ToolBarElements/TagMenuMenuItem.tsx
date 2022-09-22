@@ -1,6 +1,6 @@
 import { ListItemIcon, ListItemText, MenuItem, PopoverOrigin, Typography } from "@mui/material";
 import React, { useState } from "react";
-import TagMenu from "../Tags/TagMenu/TagMenu";
+import TagMenu from "../../Tags/TagMenu/TagMenu";
 import LabelIcon from "@mui/icons-material/Label";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 
@@ -8,7 +8,7 @@ interface TagMenuAsListProps {
   popoverOrigin: PopoverOrigin | undefined;
 }
 
-function TagMenuListButtton({ popoverOrigin }: TagMenuAsListProps) {
+function TagMenuMenuItem({ popoverOrigin }: TagMenuAsListProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
@@ -31,4 +31,4 @@ function TagMenuListButtton({ popoverOrigin }: TagMenuAsListProps) {
   );
 }
 
-export default TagMenuListButtton;
+export default TagMenuMenuItem;

@@ -98,7 +98,9 @@ const useUpdateDocumentKeywords = () =>
 const useDeleteDocument = () =>
   useMutation(SourceDocumentService.deleteByIdSdocSdocIdDelete, {
     onSuccess: (sdoc) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_DOCUMENTS, sdoc.project_id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, sdoc.project_id]);
+      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, sdoc.project_id]);
+      queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, sdoc.project_id]);
     },
   });
 
