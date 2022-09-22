@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Dict, Any, Optional, Set, List
 
@@ -105,14 +106,24 @@ class ElasticSearchService(metaclass=SingletonMeta):
             logger.info(
                 f"Created ElasticSearch Index '{index}' with Mappings: {mappings} and Settings: {settings}!")
 
+    def __get_index_name(self, proj: ProjectRead, index_type: str = 'doc') -> str:
+        t = re.sub(r'\s+', '_', proj.title.lower().strip())
+        if 'doc' in index_type:
+            return f"dwts_{t}_docs"
+        elif 'memo' in index_type:
+            return f"dwts_{t}_memos"
+        else:
+            raise NotImplementedError('Only Document and Memo indices exist!')
+
     def create_project_indices(self,
-                               *, proj: ProjectRead) -> None:
+                               *,
+                               proj: ProjectRead) -> None:
         # create the ES Index for Documents
         doc_settings = conf.elasticsearch.index_settings.docs
         if doc_settings is not None:
             doc_settings = srsly.read_json(doc_settings)
 
-        self.__create_index(index=proj.doc_index,
+        self.__create_index(index=self.__get_index_name(proj=proj, index_type='doc'),
                             mappings=self.doc_mappings,
                             settings=doc_settings,
                             replace_if_exists=True)
@@ -121,29 +132,30 @@ class ElasticSearchService(metaclass=SingletonMeta):
         memo_settings = conf.elasticsearch.index_settings.memos
         if memo_settings is not None:
             memo_settings = srsly.read_json(memo_settings)
-        self.__create_index(index=proj.memo_index,
+        self.__create_index(index=self.__get_index_name(proj=proj, index_type='memo'),
                             mappings=self.memo_mappings,
                             settings=memo_settings,
                             replace_if_exists=True)
 
     def remove_project_indices(self,
                                *, proj: ProjectRead) -> None:
-        self.__delete_index(index=proj.doc_index)
-        self.__delete_index(index=proj.memo_index)
+        self.__delete_index(index=self.__get_index_name(proj=proj, index_type='doc'))
+        self.__delete_index(index=self.__get_index_name(proj=proj, index_type='memo'))
 
     def add_document_to_index(self,
                               *,
                               proj: ProjectRead,
                               esdoc: ElasticSearchDocumentCreate) -> int:
         # TODO Flo: what to do when this fails!? How to keep the SQL and ES consistent
-        res = self.__client.index(index=proj.doc_index,
+        res = self.__client.index(index=self.__get_index_name(proj=proj, index_type='doc'),
                                   id=str(esdoc.sdoc_id),
                                   document=esdoc.json())
         if not res['_id'] == esdoc.sdoc_id:
             # FIXME Flo: What to do?!
             logger.error(f"ElasticSearch Document ID and SQL Document ID of Document {esdoc.filename} do not match!")
 
-        logger.debug(f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to Index '{proj.doc_index}'!")
+        logger.debug(
+            f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to Index '{self.__get_index_name(proj=proj, index_type='doc')}'!")
         return res['_id']
 
     def update_esdoc_keywords(self,
@@ -164,8 +176,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                sdoc_ids: Set[int],
                                fields: Set[str] = None) -> Optional[List[ElasticSearchDocumentRead]]:
         if not fields.union(self.doc_index_fields):
-            raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
-        results = self.__client.mget(index=proj.doc_index,
+            raise NoSuchFieldInIndexError(index=self.__get_index_name(proj=proj, index_type='doc'), fields=fields,
+                                          index_fields=self.doc_index_fields)
+        results = self.__client.mget(index=self.__get_index_name(proj=proj, index_type='doc'),
                                      _source=list(fields),
                                      body={'ids': list(sdoc_ids)})
 
@@ -183,8 +196,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
                              sdoc_id: int,
                              fields: Set[str] = None) -> Optional[ElasticSearchDocumentRead]:
         if not fields.union(self.doc_index_fields):
-            raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
-        res = self.__client.get(index=proj.doc_index,
+            raise NoSuchFieldInIndexError(index=self.__get_index_name(proj=proj, index_type='doc'), fields=fields,
+                                          index_fields=self.doc_index_fields)
+        res = self.__client.get(index=self.__get_index_name(proj=proj, index_type='doc'),
                                 id=str(sdoc_id),
                                 _source=list(fields))
         if not res["found"]:
@@ -237,19 +251,21 @@ class ElasticSearchService(metaclass=SingletonMeta):
     def delete_document_from_index(self,
                                    proj: ProjectRead,
                                    sdoc_id: int) -> None:
-        self.__client.delete(index=proj.doc_index, id=str(sdoc_id))
-        logger.info(f"Deleted Document with ID={sdoc_id} from Index '{proj.doc_index}'!")
+        self.__client.delete(index=self.__get_index_name(proj=proj, index_type='doc'), id=str(sdoc_id))
+        logger.info(
+            f"Deleted Document with ID={sdoc_id} from Index '{self.__get_index_name(proj=proj, index_type='doc')}'!")
 
     def add_memo_to_index(self,
                           proj: ProjectRead,
                           esmemo: ElasticSearchMemoCreate) -> int:
-        res = self.__client.index(index=proj.memo_index,
+        res = self.__client.index(index=self.__get_index_name(proj=proj, index_type='memo'),
                                   id=str(esmemo.memo_id),
                                   document=esmemo.json())
         if not res['_id'] == esmemo.memo_id:
             # FIXME Flo: What to do?!
             logger.error(f"ElasticSearch Memo ID and SQL Memo ID of Memo {esmemo.title} do not match!")
-        logger.debug(f"Added Memo '{esmemo.title}' with ID '{res['_id']}' to Index '{proj.doc_index}'!")
+        logger.debug(
+            f"Added Memo '{esmemo.title}' with ID '{res['_id']}' to Index '{self.__get_index_name(proj=proj, index_type='doc')}'!")
         return res['_id']
 
     def get_esmemo_by_memo_id(self,
@@ -258,8 +274,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
                               memo_id: int,
                               fields: Set[str] = None) -> Optional[ElasticSearchMemoRead]:
         if not fields.union(self.doc_index_fields):
-            raise NoSuchFieldInIndexError(index=proj.doc_index, fields=fields, index_fields=self.doc_index_fields)
-        res = self.__client.get(index=proj.memo_index,
+            raise NoSuchFieldInIndexError(index=self.__get_index_name(proj=proj, index_type='doc'), fields=fields,
+                                          index_fields=self.doc_index_fields)
+        res = self.__client.get(index=self.__get_index_name(proj=proj, index_type='memo'),
                                 id=str(memo_id),
                                 _source=list(fields))
         if not res["found"]:
@@ -271,8 +288,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                *,
                                proj: ProjectRead,
                                memo_id: int) -> None:
-        self.__client.delete(index=proj.memo_index, id=str(memo_id))
-        logger.info(f"Deleted Memo with ID={memo_id} from Index '{proj.memo_index}'!")
+        self.__client.delete(index=self.__get_index_name(proj=proj, index_type='memo'), id=str(memo_id))
+        logger.info(
+            f"Deleted Memo with ID={memo_id} from Index '{self.__get_index_name(proj=proj, index_type='memo')}'!")
 
     def __search(self,
                  *,
@@ -290,9 +308,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
         :rtype: List[DocumentElasticSearchHit]
         """
         if sdoc:
-            idx = proj.doc_index
+            idx = self.__get_index_name(proj=proj, index_type='doc')
         else:
-            idx = proj.memo_index
+            idx = self.__get_index_name(proj=proj, index_type='memo')
 
         if not self.__client.indices.exists(index=idx):
             raise ValueError(f"ElasticSearch Index '{idx}' does not exist!")

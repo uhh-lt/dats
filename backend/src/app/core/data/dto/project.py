@@ -31,11 +31,3 @@ class ProjectRead(ProjectBaseDTO):
 
     class Config:
         orm_mode = True
-
-    @property
-    def doc_index(self):
-        return f"dwts_{self.title}_docs"
-
-    @property
-    def memo_index(self):
-        return f"dwts_{self.title}_memos"
