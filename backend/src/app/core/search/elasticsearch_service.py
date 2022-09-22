@@ -150,7 +150,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         res = self.__client.index(index=self.__get_index_name(proj=proj, index_type='doc'),
                                   id=str(esdoc.sdoc_id),
                                   document=esdoc.json())
-        if not res['_id'] == esdoc.sdoc_id:
+        if not int(res['_id']) == esdoc.sdoc_id:
             # FIXME Flo: What to do?!
             logger.error(f"ElasticSearch Document ID and SQL Document ID of Document {esdoc.filename} do not match!")
 
@@ -162,12 +162,12 @@ class ElasticSearchService(metaclass=SingletonMeta):
                               *,
                               proj: ProjectRead,
                               keywords: SourceDocumentKeywords) -> SourceDocumentKeywords:
-        res = self.__client.update(index=proj.doc_index,
-                                   id=str(keywords.source_document_id),
-                                   body={"doc": {"keywords": keywords.keywords}})
+        self.__client.update(index=self.__get_index_name(proj=proj, index_type='doc'),
+                             id=str(keywords.source_document_id),
+                             body={"doc": {"keywords": keywords.keywords}})
 
-        logger.debug(res)
-        logger.debug(f"Updated Keywords of Document '{keywords.source_document_id}' in Index '{proj.doc_index}'!")
+        logger.debug((f"Updated Keywords of Document '{keywords.source_document_id}' in Index "
+                      f"'{self.__get_index_name(proj=proj, index_type='doc')}'!"))
         return keywords
 
     def get_esdocs_by_sdoc_ids(self,
@@ -261,7 +261,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         res = self.__client.index(index=self.__get_index_name(proj=proj, index_type='memo'),
                                   id=str(esmemo.memo_id),
                                   document=esmemo.json())
-        if not res['_id'] == esmemo.memo_id:
+        if not int(res['_id']) == esmemo.memo_id:
             # FIXME Flo: What to do?!
             logger.error(f"ElasticSearch Memo ID and SQL Memo ID of Memo {esmemo.title} do not match!")
         logger.debug(
