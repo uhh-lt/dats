@@ -32,9 +32,10 @@ class DocumentTagORM(ORMBase):
     # many to many
     source_documents: List["SourceDocumentORM"] = relationship("SourceDocumentORM",
                                                                secondary="SourceDocumentDocumentTagLinkTable".lower(),
-                                                               back_populates="document_tags")
+                                                               back_populates="document_tags",
+                                                               passive_deletes=True)
 
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):
-    source_document_id = Column(Integer, ForeignKey("sourcedocument.id"), primary_key=True)
-    document_tag_id = Column(Integer, ForeignKey("documenttag.id"), primary_key=True)
+    source_document_id = Column(Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), primary_key=True)
+    document_tag_id = Column(Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), primary_key=True)

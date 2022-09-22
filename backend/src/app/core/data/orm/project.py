@@ -33,12 +33,10 @@ class ProjectORM(ORMBase):
 
     source_documents: List["SourceDocumentORM"] = relationship("SourceDocumentORM",
                                                                back_populates="project",
-                                                               cascade="all, delete",
                                                                passive_deletes=True)
 
     memos: List["MemoORM"] = relationship("MemoORM",
                                           back_populates="project",
-                                          cascade="all, delete",
                                           passive_deletes=True)
 
     document_tags: List["DocumentTagORM"] = relationship("DocumentTagORM",
@@ -46,7 +44,8 @@ class ProjectORM(ORMBase):
                                                          passive_deletes=True)
 
     # many to many
-    users: List["UserORM"] = relationship("UserORM", secondary="ProjectUserLinkTable".lower(),
+    users: List["UserORM"] = relationship("UserORM",
+                                          secondary="ProjectUserLinkTable".lower(),
                                           back_populates="projects")
 
     @property
