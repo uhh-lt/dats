@@ -9,6 +9,7 @@ import BottomBar from "../components/bar-bottom/BottomBar";
 import TopBar from "../components/bar-top/TopBar";
 import "./Layout.css";
 import FloatingFeedbackButton from "../features/feedback/FloatingFeedbackButton";
+import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog";
 
 export const AppBarContext = React.createContext<React.MutableRefObject<any> | null>(null);
 
@@ -35,6 +36,7 @@ function TwoBarLayout() {
           <ImportDocumentDialog />
           <SnackbarDialog />
           <TagCreationDialog />
+          <ConfirmationDialog />
         </AppBarContext.Provider>
       </React.Fragment>
     );
