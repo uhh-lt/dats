@@ -1,9 +1,9 @@
 import { AppBar, Paper, PaperProps, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import UserHooks from "../../../api/UserHooks";
 import { useAuth } from "../../../auth/AuthProvider";
 import MemoResults from "../../logbook/MemoResults";
+import SdocHooks from "../../../api/SdocHooks";
 
 interface MemoExplorerProps {
   sdocId: number | undefined;
@@ -15,9 +15,8 @@ function MemoExplorer({ sdocId, showToolbar, ...props }: MemoExplorerProps & Pap
   const { user } = useAuth();
 
   // queries
-  // todo: this query should return all memos that are associated with this document
   // document Memo, span annotation memo, bbox memo
-  const memos = UserHooks.useGetAllMemos(user.data!.id);
+  const memos = SdocHooks.useGetRelatedMemos(sdocId, user.data?.id);
 
   const content = (
     <>

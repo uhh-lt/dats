@@ -160,12 +160,21 @@ export class SourceDocumentService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static getFileUrlSdocSdocIdUrlGet({ sdocId }: { sdocId: number }): CancelablePromise<string> {
+  public static getFileUrlSdocSdocIdUrlGet({
+    sdocId,
+    relative = true,
+  }: {
+    sdocId: number;
+    relative?: boolean;
+  }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/url",
       path: {
         sdoc_id: sdocId,
+      },
+      query: {
+        relative: relative,
       },
       errors: {
         422: `Validation Error`,
@@ -476,6 +485,32 @@ export class SourceDocumentService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/memo/{user_id}",
+      path: {
+        sdoc_id: sdocId,
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.
+   * Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getRelatedUserMemosSdocSdocIdRelatedmemosUserIdGet({
+    sdocId,
+    userId,
+  }: {
+    sdocId: number;
+    userId: number;
+  }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/relatedmemos/{user_id}",
       path: {
         sdoc_id: sdocId,
         user_id: userId,

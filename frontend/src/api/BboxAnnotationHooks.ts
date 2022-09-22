@@ -172,6 +172,7 @@ const useDelete = () =>
       // Always re-fetch after error or success:
       onSettled: (data, error, variables, context: any) => {
         queryClient.invalidateQueries(context.myCustomQueryKey);
+        queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED]); // todo: this is not optimal
       },
     }
   );
@@ -195,6 +196,7 @@ const useCreateMemo = () =>
   useMutation(BboxAnnotationService.addMemoBboxBboxIdMemoPut, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, data.user_id]); // todo: this is not optimal
     },
   });
 

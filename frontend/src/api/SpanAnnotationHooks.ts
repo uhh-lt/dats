@@ -193,6 +193,7 @@ const useDeleteSpan = () =>
       // Always re-fetch after error or success:
       onSettled: (data, error, variables, context: any) => {
         queryClient.invalidateQueries(context.myCustomQueryKey);
+        queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED]); // todo: this is not optimal
       },
     }
   );
@@ -216,6 +217,7 @@ const useCreateMemo = () =>
   useMutation(SpanAnnotationService.addMemoSpanSpanIdMemoPut, {
     onSuccess: (memo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id]); // todo: this is not optimal
     },
   });
 

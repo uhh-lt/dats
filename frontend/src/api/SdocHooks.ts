@@ -178,10 +178,25 @@ const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
     }
   );
 
+const useGetRelatedMemos = (sdocId: number | undefined, userId: number | undefined) =>
+  useQuery<MemoRead[], Error>(
+    [QueryKey.MEMO_SDOC_RELATED, userId, sdocId],
+    () =>
+      SourceDocumentService.getRelatedUserMemosSdocSdocIdRelatedmemosUserIdGet({
+        sdocId: sdocId!,
+        userId: userId!,
+      }),
+    {
+      retry: false,
+      enabled: !!sdocId && !!userId,
+    }
+  );
+
 const useCreateMemo = () =>
   useMutation(SourceDocumentService.addMemoSdocSdocIdMemoPut, {
     onSuccess: (memo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id, memo.attached_object_id]);
     },
   });
 
@@ -230,6 +245,7 @@ const SdocHooks = {
   // memo
   useGetMemos,
   useGetMemo,
+  useGetRelatedMemos,
   useCreateMemo,
   // metadata
   useGetURL,

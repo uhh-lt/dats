@@ -44,13 +44,13 @@ const useUpdateMemo = () =>
 const useDeleteMemo = () =>
   useMutation(MemoService.deleteByIdMemoMemoIdDelete, {
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
       switch (data.attached_object_type) {
         case AttachedObjectType.PROJECT:
           break;
         case AttachedObjectType.SOURCE_DOCUMENT:
           queryClient.invalidateQueries([QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id]);
+          queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, data.user_id, data.attached_object_id]);
           break;
         case AttachedObjectType.DOCUMENT_TAG:
           queryClient.invalidateQueries([QueryKey.MEMO_TAG, data.attached_object_id, data.user_id]);
@@ -60,9 +60,11 @@ const useDeleteMemo = () =>
           break;
         case AttachedObjectType.SPAN_ANNOTATION:
           queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id, data.user_id]);
+          queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, data.user_id]); // todo: this is not optimal
           break;
         case AttachedObjectType.BBOX_ANNOTATION:
           queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id]);
+          queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, data.user_id]); // todo: this is not optimal
           break;
         case AttachedObjectType.ANNOTATION_DOCUMENT:
           console.error("Annotation document memo update not implemented");
