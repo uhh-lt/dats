@@ -44,5 +44,6 @@ async def delete_by_id(*,
                        db: Session = Depends(get_db_session),
                        memo_id: int) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_memo.remove(db=db, id=memo_id)
-    return crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
+    memo = await get_by_id(db=db, memo_id=memo_id)
+    crud_memo.remove(db=db, id=memo_id)
+    return memo
