@@ -188,6 +188,7 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                 annotation={annotation}
                 handleDelete={handleDelete}
                 handleEdit={handleEdit}
+                handleOpenMemo={closeCodeSelector}
               />
             ))}
           </List>
@@ -250,6 +251,7 @@ export default CodeContextMenu;
 interface CodeSelectorListItemProps {
   codeId: number;
   annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode;
+  handleOpenMemo: () => void;
   handleDelete: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode) => void;
   handleEdit: (
     annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
@@ -263,7 +265,13 @@ const isBboxAnnotation = (
   return (annotation as BBoxAnnotationReadResolvedCode).x_min !== undefined;
 };
 
-function CodeSelectorListItem({ codeId, annotation, handleEdit, handleDelete }: CodeSelectorListItemProps) {
+function CodeSelectorListItem({
+  codeId,
+  annotation,
+  handleOpenMemo,
+  handleEdit,
+  handleDelete,
+}: CodeSelectorListItemProps) {
   // global server state (react query)
   const code = CodeHooks.useGetCode(codeId);
 
@@ -278,12 +286,14 @@ function CodeSelectorListItem({ codeId, annotation, handleEdit, handleDelete }: 
               attachedObjectId={annotation.id}
               attachedObjectType={AttachedObjectType.BBOX_ANNOTATION}
               sx={{ ml: 1 }}
+              onClick={() => handleOpenMemo()}
             />
           ) : (
             <MemoButton
               attachedObjectId={annotation.id}
               attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
               sx={{ ml: 1 }}
+              onClick={() => handleOpenMemo()}
             />
           )}
           <Tooltip title="Delete">
