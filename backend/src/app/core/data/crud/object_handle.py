@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.crud.current_code import crud_current_code
@@ -17,6 +18,7 @@ from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.object_handle import ObjectHandleORM
@@ -39,6 +41,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "source_document_id": crud_sdoc,
         "source_document_metadata_id": crud_sdoc_meta,
         "span_annotation_id": crud_span_anno,
+        "bbox_annotation_id": crud_bbox_anno,
         "span_group_id": crud_span_group,
         "user_id": crud_user
     }
@@ -52,6 +55,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "source_document_id": SourceDocumentORM,
         "source_document_metadata_id": SourceDocumentMetadataORM,
         "span_annotation_id": SpanAnnotationORM,
+        "bbox_annotation_id": BBoxAnnotationORM,
         "span_group_id": SpanGroupORM,
         "user_id": UserORM
     }
@@ -95,6 +99,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
                                                                                     SourceDocumentORM,
                                                                                     SourceDocumentMetadataORM,
                                                                                     SpanAnnotationORM,
+                                                                                    BBoxAnnotationORM,
                                                                                     SpanGroupORM,
                                                                                     UserORM,
                                                                                     None]:
