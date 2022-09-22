@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import delete
+from sqlalchemy import delete, and_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
@@ -40,6 +40,47 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
 
         return db.query(self.model).filter(self.model.user_id == user_id,
                                            self.model.project_id == proj_id).all()
+
+    def read_by_user_and_sdoc(self,
+                              db: Session,
+                              user_id: int,
+                              sdoc_id: int) -> List[MemoORM]:
+        # SELECT m
+        # FROM memo m
+        #     JOIN objecthandle o on o.id = m.attached_to_id
+        #     JOIN spanannotation span on span.id = o.span_annotation_id
+        #     JOIN annotationdocument a on a.id = span.annotation_document_id
+        # WHERE a.user_id = 1 AND a.source_document_id = 1
+
+        query = db.query(self.model) \
+            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id) \
+            .join(SpanAnnotationORM, SpanAnnotationORM.id == ObjectHandleORM.span_annotation_id) \
+            .join(AnnotationDocumentORM, AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id)
+
+        query = query.filter(and_(AnnotationDocumentORM.user_id == user_id,
+                                  AnnotationDocumentORM.source_document_id == sdoc_id))
+
+        span_memos = query.all()
+
+        query = db.query(self.model) \
+            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id) \
+            .join(BBoxAnnotationORM, BBoxAnnotationORM.id == ObjectHandleORM.bbox_annotation_id) \
+            .join(AnnotationDocumentORM, AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id)
+
+        query = query.filter(and_(AnnotationDocumentORM.user_id == user_id,
+                                  AnnotationDocumentORM.source_document_id == sdoc_id))
+
+        bbox_memos = query.all()
+
+        query = db.query(self.model) \
+            .join(ObjectHandleORM, ObjectHandleORM.id == MemoORM.attached_to_id) \
+            .join(SourceDocumentORM, SourceDocumentORM.id == ObjectHandleORM.source_document_id)
+
+        query = query.filter(and_(SourceDocumentORM.id == sdoc_id, self.model.user_id == user_id))
+
+        sdoc_memo = query.all()
+
+        return span_memos + bbox_memos + sdoc_memo
 
     def remove_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[int]:
         statement = delete(self.model).where(self.model.user_id == user_id,

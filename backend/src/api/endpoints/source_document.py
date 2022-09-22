@@ -285,3 +285,16 @@ async def get_user_memo(*,
                         user_id: int) -> Optional[MemoRead]:
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
+
+
+@router.get("/{sdoc_id}/relatedmemos/{user_id}", tags=tags,
+            response_model=List[MemoRead],
+            summary="Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.",
+            description="Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.")
+async def get_related_user_memos(*,
+                                 db: Session = Depends(get_db_session),
+                                 sdoc_id: int,
+                                 user_id: int) -> List[MemoRead]:
+    db_objs = crud_memo.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id)
+    memos = [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs]
+    return memos
