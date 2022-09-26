@@ -23,10 +23,10 @@ def text_document_preprocessing_apply_async(doc_file: UploadFile, project_id: in
     return text_document_preprocessing.apply_async()
 
 
-def pptd_preprocessing_apply_async(pptds: List[PreProTextDoc]) -> Any:
-    pptd_preprocessing = (
+def text_document_preprocessing_without_import_apply_async(pptds: List[PreProTextDoc]) -> Any:
+    text_document_preprocessing = (
             Signature(generate_automatic_span_annotations, kwargs={"pptds": pptds}) |
             Signature(persist_automatic_span_annotations) |
             Signature(add_document_to_elasticsearch_index)
     )
-    return pptd_preprocessing.apply_async()
+    return text_document_preprocessing.apply_async()

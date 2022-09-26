@@ -8,9 +8,10 @@ from app.core.data.doc_type import DocType
 from app.core.data.repo.repo_service import RepoService, UnsupportedDocTypeForSourceDocument, \
     FileNotFoundInRepositoryError
 from app.core.db.sql_service import SQLService
-from app.docprepro.archive import preproimagedoc_multi_apply_async, preprotextdoc_multi_apply_async
 from app.docprepro.celery.celery_worker import celery_prepro_worker
+from app.docprepro.image import image_document_preprocessing_without_import_apply_async
 from app.docprepro.image.util import generate_preproimagedoc
+from app.docprepro.text import text_document_preprocessing_without_import_apply_async
 from app.docprepro.text.util import generate_preprotextdoc
 from config import conf
 
@@ -54,12 +55,12 @@ def import_uploaded_archive(temporary_archive_file_path: Path,
 
         # send the preprodocs to the responsible workers batch-wise
         if len(pptds) >= conf.docprepro.celery.batch_size.text:
-            preprotextdoc_multi_apply_async(pptds=pptds)
+            text_document_preprocessing_without_import_apply_async(pptds=pptds)
             pptds = []
         if len(ppids) >= conf.docprepro.celery.batch_size.image:
-            preproimagedoc_multi_apply_async(ppids=ppids)
+            image_document_preprocessing_without_import_apply_async(ppids=ppids)
             ppids = []
 
     # send the last batch of preprodocs to the responsible workers
-    preprotextdoc_multi_apply_async(pptds=pptds)
-    preproimagedoc_multi_apply_async(ppids=ppids)
+    text_document_preprocessing_without_import_apply_async(pptds=pptds)
+    image_document_preprocessing_without_import_apply_async(ppids=ppids)

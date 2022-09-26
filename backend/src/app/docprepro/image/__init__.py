@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
@@ -20,6 +20,21 @@ def image_document_preprocessing_apply_async(doc_file: UploadFile, project_id: i
     image_document_preprocessing = (
             Signature(import_uploaded_image_document, kwargs={"doc_file": doc_file, "project_id": project_id}) |
             Signature(generate_automatic_bbox_annotations) |
+            Signature(generate_automatic_captions) |
+            Signature(persist_automatic_bbox_annotations) |
+            # Flo: the following calls are to generate and store automatically generated textual info as in text docs
+            Signature(create_pptds_from_automatic_caption) |
+            Signature(generate_automatic_span_annotations) |
+            Signature(persist_automatic_span_annotations) |
+            Signature(add_document_to_elasticsearch_index)
+
+    )
+    return image_document_preprocessing.apply_async()
+
+
+def image_document_preprocessing_without_import_apply_async(ppids: List[PreProImageDoc]) -> Any:
+    image_document_preprocessing = (
+            Signature(generate_automatic_bbox_annotations, kwargs={"ppids": ppids}) |
             Signature(generate_automatic_captions) |
             Signature(persist_automatic_bbox_annotations) |
             # Flo: the following calls are to generate and store automatically generated textual info as in text docs
