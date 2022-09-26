@@ -77,11 +77,11 @@ class SQLService(metaclass=SingletonMeta):
         if not database_exists(self.__engine.url):
             # create the DB
             create_database(self.__engine.url)
-            logger.warning("Created DB!")
+            logger.debug("Created DB!")
 
             # create all tables from SQLAlchemy ORM Models
             ORMBase.metadata.create_all(self.__engine)
-            logger.warning("Created Tables!")
+            logger.debug("Created Tables!")
 
         logger.info("Done setting up PostgresSQL DB and tables!")
 
