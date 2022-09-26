@@ -55,12 +55,18 @@ def import_uploaded_archive(temporary_archive_file_path: Path,
 
         # send the preprodocs to the responsible workers batch-wise
         if len(pptds) >= conf.docprepro.celery.batch_size.text:
+            logger.debug(f"Sending batch of {len(pptds)} text documents to text preprocessing celery worker!")
             text_document_preprocessing_without_import_apply_async(pptds=pptds)
             pptds = []
         if len(ppids) >= conf.docprepro.celery.batch_size.image:
+            logger.debug(f"Sending batch of {len(pptds)} image documents to image preprocessing celery worker!")
             image_document_preprocessing_without_import_apply_async(ppids=ppids)
             ppids = []
 
     # send the last batch of preprodocs to the responsible workers
-    text_document_preprocessing_without_import_apply_async(pptds=pptds)
-    image_document_preprocessing_without_import_apply_async(ppids=ppids)
+    if len(pptds) > 0:
+        logger.debug(f"Sending batch of {len(pptds)} text documents to text preprocessing celery worker!")
+        text_document_preprocessing_without_import_apply_async(pptds=pptds)
+    if len(ppids) > 0:
+        logger.debug(f"Sending batch of {len(pptds)} image documents to image preprocessing celery worker!")
+        image_document_preprocessing_without_import_apply_async(ppids=ppids)

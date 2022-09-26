@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, Set, List
 
 import srsly
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch, helpers
 from loguru import logger
 from omegaconf import OmegaConf
 
@@ -157,6 +157,27 @@ class ElasticSearchService(metaclass=SingletonMeta):
         logger.debug(
             f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to Index '{self.__get_index_name(proj=proj, index_type='doc')}'!")
         return res['_id']
+
+    def bulk_add_documents_to_index(self,
+                                    *,
+                                    proj: ProjectRead,
+                                    esdocs: List[ElasticSearchDocumentCreate]) -> int:
+        idx_name = self.__get_index_name(proj=proj, index_type='doc')
+
+        def generate_actions_for_bulk_index():
+            for esdoc in esdocs:
+                doc = {
+                    "_index": idx_name,
+                    "_id": esdoc.sdoc_id,
+                    "_source": esdoc.dict(),
+                }
+                yield doc
+
+        num_indexed, num_errors = helpers.bulk(client=self.__client,
+                                               actions=generate_actions_for_bulk_index(),
+                                               stats_only=True)
+        logger.debug(f"Added {num_indexed} Documents to ElasticSearch Index {idx_name} with {num_errors} Errors!")
+        return num_indexed
 
     def update_esdoc_keywords(self,
                               *,

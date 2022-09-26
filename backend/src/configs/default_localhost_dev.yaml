@@ -287,11 +287,11 @@ docprepro:
   text:
     spacy:
       # note that the spacy models have to be installed in the env to use it! (docker!)
-      pipe_threshold: 100
       default_model: "en_core_web_trf"
       english_model: "en_core_web_trf"
       german_model: "de_core_news_lg"
       device: cpu
+    bulk_threshold: 100
   image:
     object_detection:
       model: "facebook/detr-resnet-101"
@@ -305,7 +305,7 @@ docprepro:
 
   celery:
     batch_size:
-      text: 50
+      text: 200
       image: 10
     backend:
       host: ${oc.env:REDIS_HOST, localhost}

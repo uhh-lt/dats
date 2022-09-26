@@ -59,7 +59,7 @@ def __load_spacy_models() -> Dict[str, Language]:
 
 nlp = __load_spacy_models()
 
-SPACY_PIPE_THRESHOLD = conf.docprepro.text.spacy.pipe_threshold
+BULK_THRESHOLD = conf.docprepro.text.bulk_threshold
 
 # TODO Flo: maybe we want to break all process tasks up in smaller functions for better readability and modularity...
 #  However, this would be _little_ less efficient
@@ -86,7 +86,7 @@ def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreP
     global nlp
 
     # Flo: SDoc Status is updated in util methods
-    if len(pptds) < SPACY_PIPE_THRESHOLD:
+    if len(pptds) < BULK_THRESHOLD:
         return generate_automatic_span_annotations_sequentially(pptds, nlp)
     return generate_automatic_span_annotations_pipeline(pptds, nlp)
 
@@ -149,22 +149,34 @@ def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PrePr
 
 @celery_prepro_worker.task(acks_late=True)
 def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
-    for pptd in tqdm(pptds, desc="Adding documents to ElasticSearch... "):
-        with SQLService().db_session() as db:
-            proj = ProjectRead.from_orm(crud_project.read(db=db, id=pptd.project_id))
+    if len(pptds) == 0:
+        return pptds
+    # Flo: we assume that every pptd originates from the same project!
+    with SQLService().db_session() as db:
+        proj = ProjectRead.from_orm(crud_project.read(db=db, id=pptds[0].project_id))
 
-        esdoc = ElasticSearchDocumentCreate(filename=pptd.filename,
-                                            content=pptd.raw_text,
-                                            tokens=pptd.tokens,
-                                            token_character_offsets=[ElasticSearchIntegerRange(gte=o[0], lt=o[1])
-                                                                     for o in pptd.token_character_offsets],
-                                            keywords=pptd.keywords,
-                                            sdoc_id=pptd.sdoc_id,
-                                            project_id=pptd.project_id)
+    esdocs = list(map(lambda pptd: ElasticSearchDocumentCreate(filename=pptd.filename,
+                                                               content=pptd.raw_text,
+                                                               tokens=pptd.tokens,
+                                                               token_character_offsets=[
+                                                                   ElasticSearchIntegerRange(gte=o[0], lt=o[1])
+                                                                   for o in pptd.token_character_offsets
+                                                               ],
+                                                               keywords=pptd.keywords,
+                                                               sdoc_id=pptd.sdoc_id,
+                                                               project_id=pptd.project_id), pptds))
+    if len(pptds) <= BULK_THRESHOLD:
+        for esdoc in tqdm(esdocs, desc="Adding documents to ElasticSearch... "):
+            es.add_document_to_index(proj=proj, esdoc=esdoc)
 
-        es.add_document_to_index(proj=proj, esdoc=esdoc)
+            # Flo: update sdoc status
+            update_sdoc_status(sdoc_id=esdoc.sdoc_id, sdoc_status=SDocStatus.added_document_to_elasticsearch_index)
+    else:
+
+        es.bulk_add_documents_to_index(proj=proj, esdocs=esdocs)
 
         # Flo: update sdoc status
-        update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.added_document_to_elasticsearch_index)
+        for pptd in pptds:
+            update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.added_document_to_elasticsearch_index)
 
     return pptds
