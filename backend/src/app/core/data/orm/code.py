@@ -44,7 +44,8 @@ class CodeORM(ORMBase):
     parent_code: "CodeORM" = relationship("CodeORM", remote_side=[id])
 
     __table_args__ = (
-        UniqueConstraint('user_id', 'project_id', 'name', name='UC_name_unique_per_user_and_project'),
+        UniqueConstraint('user_id', 'project_id', 'name', 'parent_code_id',
+                         name='UC_name_unique_per_user_parent_and_project'),
     )
 
 
