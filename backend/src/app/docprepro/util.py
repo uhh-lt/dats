@@ -6,6 +6,7 @@ from fastapi import UploadFile, HTTPException
 
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import get_doc_type, DocType, is_archive_file
+from app.core.data.dto.source_document import SDocStatus
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
@@ -62,4 +63,14 @@ def persist_as_sdoc(doc_file: UploadFile,
     # persist SourceDocument
     with sql.db_session() as db:
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
+
     return dst, sdoc_db_obj
+
+
+def update_sdoc_status(sdoc_id: int, sdoc_status: SDocStatus) -> SourceDocumentORM:
+    # update status
+    with sql.db_session() as db:
+        sdoc_db_obj = crud_sdoc.update_status(db=db,
+                                              sdoc_id=sdoc_id,
+                                              sdoc_status=sdoc_status)
+    return sdoc_db_obj

@@ -15,6 +15,7 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate, AnnotationDocumentRead
 from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
+from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
@@ -23,7 +24,7 @@ from app.docprepro.image.autobbox import AutoBBox
 from app.docprepro.image.preproimagedoc import PreProImageDoc
 from app.docprepro.image.util import generate_preproimagedoc
 from app.docprepro.text.preprotextdoc import PreProTextDoc
-from app.docprepro.util import persist_as_sdoc
+from app.docprepro.util import persist_as_sdoc, update_sdoc_status
 from config import conf
 
 # Flo: This is important! Otherwise it will not work with celery thread management and just hang!!!
@@ -67,6 +68,10 @@ def import_uploaded_image_document(doc_file: UploadFile,
                                    project_id: int) -> List[PreProImageDoc]:
     dst, sdoc_db_obj = persist_as_sdoc(doc_file, project_id)
     ppid = generate_preproimagedoc(filepath=dst, sdoc_db_obj=sdoc_db_obj)
+
+    # Flo: update sdoc status
+    update_sdoc_status(sdoc_id=ppid.sdoc_id, sdoc_status=SDocStatus.imported_uploaded_image_document)
+
     # Flo: We return a list here so that we can use text PrePro also with archives which contain multiple docs
     return [ppid]
 
@@ -99,6 +104,8 @@ def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[Pre
         for (x_min, y_min, x_max, y_max), code in zip(bboxes, labels):
             bbox = AutoBBox(code=code, x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max)
             ppid.bboxes.append(bbox)
+
+        update_sdoc_status(sdoc_id=ppid.sdoc_id, sdoc_status=SDocStatus.generated_automatic_bbox_annotations)
 
     return ppids
 
@@ -146,6 +153,7 @@ def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PrePr
 
             ppid.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
 
+            update_sdoc_status(sdoc_id=ppid.sdoc_id, sdoc_status=SDocStatus.generated_automatic_image_captions)
             pbar.update(1)
 
     return ppids
@@ -184,6 +192,7 @@ def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreP
                                                   annotation_document_id=adoc_read.id)
 
                 crud_bbox_anno.create(db, create_dto=create_dto)
+        update_sdoc_status(sdoc_id=ppid.sdoc_id, sdoc_status=SDocStatus.persisted_automatic_bbox_annotations)
     return ppids
 
 
@@ -197,4 +206,6 @@ def create_pptds_from_automatic_caption(ppids: List[PreProImageDoc]) -> List[Pre
                                 raw_text=ppid.metadata["caption"],
                                 metadata={"language": "en"})
                   for ppid in ppids]
+    for fake_pptd in fake_pptds:
+        update_sdoc_status(sdoc_id=fake_pptd.sdoc_id, sdoc_status=SDocStatus.created_pptds_from_automatic_caption)
     return fake_pptds

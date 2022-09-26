@@ -9,13 +9,14 @@ from spacy.tokens import Doc
 from tqdm import tqdm
 
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.text.autospan import AutoSpan
 from app.docprepro.text.preprotextdoc import PreProTextDoc
+from app.docprepro.util import update_sdoc_status
 
 sql = SQLService(echo=False)
 repo = RepoService()
@@ -89,6 +90,9 @@ def generate_automatic_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDo
                         start_token=ne.start,
                         end_token=ne.end)
         pptd.spans["NER"].append(auto)
+
+    # Flo: update sdoc status
+    update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.generated_automatic_span_annotations)
 
     return pptd
 

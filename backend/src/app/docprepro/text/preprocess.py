@@ -17,6 +17,7 @@ from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchIntegerRange
+from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.repo.repo_service import RepoService
@@ -26,7 +27,7 @@ from app.docprepro.celery.celery_worker import celery_prepro_worker
 from app.docprepro.text.preprotextdoc import PreProTextDoc
 from app.docprepro.text.util import generate_preprotextdoc, generate_automatic_span_annotations_sequentially, \
     generate_automatic_span_annotations_pipeline
-from app.docprepro.util import persist_as_sdoc
+from app.docprepro.util import persist_as_sdoc, update_sdoc_status
 from config import conf
 
 # https://github.com/explosion/spaCy/issues/8678
@@ -74,6 +75,8 @@ def import_uploaded_text_document(doc_file: UploadFile,
                                   project_id: int) -> List[PreProTextDoc]:
     dst, sdoc_db_obj = persist_as_sdoc(doc_file, project_id)
     pptd = generate_preprotextdoc(filepath=dst, sdoc_db_obj=sdoc_db_obj)
+
+    update_sdoc_status(sdoc_id=sdoc_db_obj.id, sdoc_status=SDocStatus.imported_uploaded_text_document)
     # Flo: We return a list here so that we can use text PrePro also with archives which contain multiple docs
     return [pptd]
 
@@ -82,6 +85,7 @@ def import_uploaded_text_document(doc_file: UploadFile,
 def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     global nlp
 
+    # Flo: SDoc Status is updated in util methods
     if len(pptds) < SPACY_PIPE_THRESHOLD:
         return generate_automatic_span_annotations_sequentially(pptds, nlp)
     return generate_automatic_span_annotations_pipeline(pptds, nlp)
@@ -137,6 +141,9 @@ def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PrePr
                                                                 read_only=True)
             sdoc_meta_db_obj = crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
 
+        # Flo: update sdoc status
+        update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.persisted_automatic_span_annotations)
+
     return pptds
 
 
@@ -156,5 +163,8 @@ def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreP
                                             project_id=pptd.project_id)
 
         es.add_document_to_index(proj=proj, esdoc=esdoc)
+
+        # Flo: update sdoc status
+        update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.added_document_to_elasticsearch_index)
 
     return pptds
