@@ -1,9 +1,24 @@
 from datetime import datetime
+from enum import Enum
 from typing import List, Tuple, Optional
 
 from pydantic import BaseModel, Field
 
 from app.core.data.doc_type import DocType
+
+
+class SDocStatus(int, Enum):
+    undefined_or_erroneous = -1  # "undefined_or_erroneous"
+    imported_uploaded_text_document = 0  # "imported uploaded text document"
+    imported_uploaded_image_document = 1  # "imported uploaded image document"
+    generated_automatic_span_annotations = 2  # "generated automatic span annotations"
+    persisted_automatic_span_annotations = 3  # "persisted automatic span annotations"
+    generated_automatic_bbox_annotations = 4  # "generated automatic bbox annotations"
+    persisted_automatic_bbox_annotations = 5  # "persisted automatic bbox annotations"
+    generated_automatic_image_captions = 6  # "generated automatic image captions"
+    created_pptds_from_automatic_caption = 7  # "created pptds from automatic caption"
+    added_document_to_elasticsearch_index = 8  # "added document to elasticsearch index"
+
 
 """
  TODO Flo: 
@@ -17,6 +32,7 @@ class SourceDocumentBaseDTO(BaseModel):
     filename: str = Field(description="Filename of the SourceDocument")
     content: str = Field(description="Content of the SourceDocument")
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
+    status: SDocStatus = Field(description="Status of the SourceDocument")
     project_id: int = Field(description="Project the SourceDocument belongs to")
 
 
@@ -36,6 +52,7 @@ class SourceDocumentCreate(SourceDocumentBaseDTO):
 class SourceDocumentRead(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
     created: datetime = Field(description="The created timestamp of the SourceDocument")
+    updated: datetime = Field(description="Updated timestamp of the Memo")
 
     class Config:
         orm_mode = True

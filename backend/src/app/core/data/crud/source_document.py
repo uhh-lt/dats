@@ -7,7 +7,7 @@ from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.search import SpanEntity, SpanEntityStat
-from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead
+from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM, SourceDocumentDocumentTagLinkTable
@@ -21,6 +21,14 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
     def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> ORMModelType:
         # Flo: We no not want to update SourceDocument
         raise NotImplementedError()
+
+    def update_status(self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus) -> ORMModelType:
+        sdoc_db_obj = self.read(db=db, id=sdoc_id)
+        sdoc_db_obj.status = sdoc_status.value
+        db.add(sdoc_db_obj)
+        db.commit()
+        db.refresh(sdoc_db_obj)
+        return sdoc_db_obj
 
     def link_document_tag(self, db: Session, *, sdoc_id: int, tag_id: int) -> SourceDocumentORM:
         sdoc_db_obj = self.read(db=db, id=sdoc_id)

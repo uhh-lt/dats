@@ -12,7 +12,7 @@ from fastapi import UploadFile
 from loguru import logger
 
 from app.core.data.doc_type import get_doc_type
-from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead
+from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -227,5 +227,6 @@ class RepoService(metaclass=SingletonMeta):
         create_dto = SourceDocumentCreate(content="CONTENT IS NOW IN ElasticSearch!!!",
                                           filename=filename,
                                           doctype=doctype,
-                                          project_id=proj_id)
+                                          project_id=proj_id,
+                                          status=SDocStatus.undefined_or_erroneous)
         return dst_path, create_dto
