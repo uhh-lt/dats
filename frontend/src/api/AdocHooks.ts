@@ -33,6 +33,7 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) =>
           AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
             adocId: adocId,
             resolve: true,
+            limit: 1000,
           }) as Promise<SpanAnnotationReadResolved[]>,
       })),
     })
