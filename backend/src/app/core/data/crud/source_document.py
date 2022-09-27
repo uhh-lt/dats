@@ -1,12 +1,12 @@
 from typing import List, Set, Optional
 
-from sqlalchemy import delete, func, and_, or_
+from sqlalchemy import delete, func, and_, or_, desc
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.search import SpanEntity, SpanEntityStat
+from app.core.data.dto.search import SpanEntity, SpanEntityStat, TagStat
 from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
@@ -179,6 +179,28 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                span_entity=SpanEntity(code_id=code_id,
                                                       span_text=text),
                                count=count) for (sdoc_id, code_id, text, count) in res]
+
+    def collect_tag_stats(self,
+                          db: Session,
+                          *,
+                          sdoc_ids: Set[int] = None) -> List[TagStat]:
+
+        # SELECT t.title, count(t.id) FROM documenttag t
+        # JOIN sourcedocumentdocumenttaglinktable lt ON lt.document_tag_id = t.id
+        # WHERE lt.source_document_id in (1, 2, 3)
+        # GROUP BY t.id, t.title
+        count = func.count().label("count")
+        query = db.query(DocumentTagORM, count) \
+            .join(SourceDocumentDocumentTagLinkTable,
+                  SourceDocumentDocumentTagLinkTable.document_tag_id == DocumentTagORM.id)
+
+        # noinspection PyUnresolvedReferences
+        query = query.filter(SourceDocumentDocumentTagLinkTable.source_document_id.in_(list(sdoc_ids)))
+        query = query.group_by(DocumentTagORM.id)
+        query = query.order_by(desc(count))
+
+        res = query.all()
+        return [TagStat(tag=tag, count=count) for (tag, count) in res]
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

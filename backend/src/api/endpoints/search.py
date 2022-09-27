@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.dto import ProjectRead
 from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityStatsQueryParameters, SpanEntityStat, \
     PaginatedSourceDocumentSearchResults, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
-    PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat
+    PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat, TagStat, TagStatsQueryParameters
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.data.dto import ProjectRead
 
 router = APIRouter(prefix="/search")
 tags = ["search"]
@@ -99,6 +99,16 @@ async def search_keyword_stats(*,
                                                                     proj=ProjectRead.from_orm(proj))
     keyword_counts = Counter([kw for x in keywords for kw in x.keywords])
     return [KeywordStat(keyword=keyword, count=count) for keyword, count in keyword_counts.items()]
+
+
+@router.post("/tag_stats", tags=tags,
+             response_model=List[TagStat],
+             summary="Returns TagStat for the given SourceDocuments.",
+             description="Returns Stat for the given SourceDocuments.")
+async def search_tag_stats(*,
+                           db: Session = Depends(get_db_session),
+                           query_params: TagStatsQueryParameters) -> List[TagStat]:
+    return crud_sdoc.collect_tag_stats(db=db, sdoc_ids=query_params.sdoc_ids)
 
 
 @router.post("/lexical/sdoc/content", tags=tags,

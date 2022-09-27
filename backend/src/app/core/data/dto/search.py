@@ -4,6 +4,7 @@ from typing import Set, Optional, List
 from pydantic import BaseModel, Field
 
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
 
@@ -24,8 +25,17 @@ class KeywordStat(BaseModel):
     count: int = Field(description="Number of occurrences of the keyword.")
 
 
+class TagStat(BaseModel):
+    tag: DocumentTagRead = Field(description="The counted document tag.")
+    count: int = Field(description="Number of occurrences of the document tag.")
+
+
 class SpanEntityStatsQueryParameters(BaseModel):
     proj_id: int = Field(description="The ID of the Project the SourceDocuments have to belong to.")
+    sdoc_ids: Set[int] = Field(description="List of IDs of SourceDocuments the stats are computed for.")
+
+
+class TagStatsQueryParameters(BaseModel):
     sdoc_ids: Set[int] = Field(description="List of IDs of SourceDocuments the stats are computed for.")
 
 
