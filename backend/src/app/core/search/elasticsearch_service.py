@@ -6,12 +6,11 @@ from elasticsearch import Elasticsearch, helpers
 from loguru import logger
 from omegaconf import OmegaConf
 
-from app.core.data.doc_type import DocType
 from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
-    ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedSourceDocumentSearchResults, PaginatedMemoSearchResults, \
+    ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedElasticSearchDocumentHits, PaginatedMemoSearchResults, \
     ElasticMemoHit
-from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens, \
+from app.core.data.dto.source_document import SourceDocumentContent, SourceDocumentTokens, \
     SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
 from config import conf
@@ -316,8 +315,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                  proj_id: int,
                  query: Dict[str, Any],
                  limit: Optional[int] = 10,
-                 skip: Optional[int] = 0,
-                 only_ids: bool = False) -> Dict[str, Any]:
+                 skip: Optional[int] = 0) -> Dict[str, Any]:
         """
         Helper function that can be reused to find SDocs or Memos with different queries.
         :param query: The ElasticSearch query object in ES Query DSL
@@ -345,38 +343,35 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                     query=query,
                                     size=limit,
                                     from_=skip,
-                                    filter_path=["hits.hits._id"] if only_ids else ["hits"])
+                                    # only return content for memos else IDs for SDocs
+                                    filter_path=["hits.hits._id", "hits.hits._score", "hits.total"] if sdoc else [
+                                        "hits"])
 
     def __search_sdocs(self,
                        *,
                        proj_id: int,
                        query: Dict[str, Any],
                        limit: Optional[int] = 10,
-                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+                       skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
         res = self.__search(sdoc=True, proj_id=proj_id, query=query, limit=limit, skip=skip)
         # Flo: for convenience only...
         res = OmegaConf.create(res)
         if len(res) == 0:
-            return PaginatedSourceDocumentSearchResults(sdocs=[],
-                                                        has_more=False,
-                                                        current_page_offset=skip,
-                                                        next_page_offset=0)
+            return PaginatedElasticSearchDocumentHits(hits=[],
+                                                      total=0,
+                                                      has_more=False,
+                                                      current_page_offset=skip,
+                                                      next_page_offset=0)
 
-        esdocs = [ElasticSearchDocumentHit(**OmegaConf.to_container(doc["_source"]), score=doc["_score"])
+        esdocs = [ElasticSearchDocumentHit(sdoc_id=doc["_id"], score=doc["_score"])
                   for doc in res.hits.hits]
-        sdocs = [SourceDocumentRead(filename=esdoc.filename,
-                                    content=esdoc.content,
-                                    doctype=DocType.text,
-                                    project_id=esdoc.project_id,
-                                    id=esdoc.sdoc_id,
-                                    created=esdoc.created,
-                                    updated=esdoc.created,
-                                    status=8) for esdoc in esdocs]
+
         has_more = res.hits.total.value > limit
-        return PaginatedSourceDocumentSearchResults(sdocs=sdocs,
-                                                    has_more=has_more,
-                                                    current_page_offset=skip,
-                                                    next_page_offset=(skip + limit) if has_more else 0)
+        return PaginatedElasticSearchDocumentHits(hits=esdocs,
+                                                  total=res.hits.total.value,
+                                                  has_more=has_more,
+                                                  current_page_offset=skip,
+                                                  next_page_offset=(skip + limit) if has_more else 0)
 
     def __search_memos(self,
                        *,
@@ -404,8 +399,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
                     }
                 }
             )
-
-        print(str(query).replace("'", '"'))
 
         res = self.__search(sdoc=False, proj_id=proj_id, query=query, limit=limit, skip=skip)
         # Flo: for convenience only...
@@ -440,7 +433,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                        proj_id: int,
                                        exact_filename: str,
                                        limit: Optional[int] = 10,
-                                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+                                       skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
         # Flo: Using term query since filename is a keyword field
         return self.__search_sdocs(proj_id=proj_id, query={
             "term": {
@@ -453,7 +446,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                         proj_id: int,
                                         filename_prefix: str,
                                         limit: Optional[int] = 10,
-                                        skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+                                        skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
         return self.__search_sdocs(proj_id=proj_id, query={
             "prefix": {
                 "filename": filename_prefix
@@ -465,7 +458,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                       proj_id: int,
                                       query: str,
                                       limit: Optional[int] = 10,
-                                      skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+                                      skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
         return self.__search_sdocs(proj_id=proj_id, query={
             "match": {
                 "content": {
@@ -480,7 +473,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                        proj_id: int,
                                        keywords: List[str],
                                        limit: Optional[int] = 10,
-                                       skip: Optional[int] = 0) -> PaginatedSourceDocumentSearchResults:
+                                       skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
         query: Dict[str, any] = {
             "bool": {
                 "must": []

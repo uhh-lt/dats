@@ -85,20 +85,18 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                         limit: int = 100) -> List[SourceDocumentORM]:
         return db.query(self.model).filter(self.model.project_id == proj_id).offset(skip).limit(limit).all()
 
-    def read_by_project_and_document_tags(self,
-                                          db: Session,
-                                          *,
-                                          proj_id: int,
-                                          tag_ids: List[int],
-                                          all_tags: bool = False,
-                                          skip: int = 0,
-                                          limit: int = 100) -> List[SourceDocumentORM]:
+    def get_ids_by_document_tags(self,
+                                 db: Session,
+                                 *,
+                                 tag_ids: List[int],
+                                 all_tags: bool = False,
+                                 skip: int = 0,
+                                 limit: int = 100) -> List[int]:
         if not all_tags:
             # all docs that have ANY of the tags
             # noinspection PyUnresolvedReferences
-            return db.query(self.model).join(SourceDocumentORM, DocumentTagORM.source_documents) \
-                .filter(self.model.project_id == proj_id,
-                        DocumentTagORM.id.in_(tag_ids)).offset(skip).limit(limit).all()
+            return db.query(self.model.id).join(SourceDocumentORM, DocumentTagORM.source_documents) \
+                .filter(DocumentTagORM.id.in_(tag_ids)).offset(skip).limit(limit).all()
         else:
             # all docs that have ALL the tags
             """
@@ -111,27 +109,27 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                 GROUP BY sourcedocument.id
                 HAVING COUNT(*) = len(TAG_IDS)
             """
-            query = db.query(self.model).join(SourceDocumentDocumentTagLinkTable,
-                                              self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
+            query = db.query(self.model.id).join(SourceDocumentDocumentTagLinkTable,
+                                                 self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
             # noinspection PyUnresolvedReferences
             query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
             query = query.group_by(self.model.id)
             query = query.having(func.count(self.model.id) == len(tag_ids))
             return query.offset(skip).limit(limit).all()
 
-    def read_by_span_entities(self,
-                              db: Session,
-                              *,
-                              user_ids: Set[int] = None,
-                              proj_id: int,
-                              span_entities: List[SpanEntity],
-                              skip: int = 0,
-                              limit: int = 100) -> List[SourceDocumentORM]:
+    def get_ids_by_span_entities(self,
+                                 db: Session,
+                                 *,
+                                 user_ids: Set[int] = None,
+                                 proj_id: int,
+                                 span_entities: List[SpanEntity],
+                                 skip: int = 0,
+                                 limit: int = 100) -> List[int]:
         # Flo: we always want ADocs from the SYSTEM_USER
         if not user_ids:
             user_ids = set()
         user_ids.add(SYSTEM_USER_ID)
-        inner_query = db.query(self.model) \
+        inner_query = db.query(self.model.id) \
             .join(AnnotationDocumentORM) \
             .join(SpanAnnotationORM) \
             .join(CurrentCodeORM) \
