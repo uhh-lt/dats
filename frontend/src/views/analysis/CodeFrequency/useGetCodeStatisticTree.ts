@@ -39,7 +39,7 @@ export const useGetCodeStatisticTree = (projectId: number) =>
     const statQueries = allProjectDocuments
       .filter((sdoc) => sdoc.doctype === DocType.TEXT)
       .map((sdoc) =>
-        SearchService.searchStatsSearchStatsPost({
+        SearchService.searchSpanEntityStatsSearchEntityStatsPost({
           requestBody: { proj_id: projectId, sdoc_ids: [sdoc.id] },
           limit: 1000,
         })

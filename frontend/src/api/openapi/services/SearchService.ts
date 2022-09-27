@@ -61,7 +61,7 @@ export class SearchService {
    * @returns SpanEntityStat Successful Response
    * @throws ApiError
    */
-  public static searchStatsSearchStatsPost({
+  public static searchSpanEntityStatsSearchEntityStatsPost({
     requestBody,
     skip,
     limit = 100,
@@ -78,7 +78,7 @@ export class SearchService {
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/stats",
+      url: "/search/entity_stats",
       query: {
         skip: skip,
         limit: limit,

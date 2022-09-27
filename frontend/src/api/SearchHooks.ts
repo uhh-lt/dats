@@ -47,7 +47,7 @@ const useSearchEntityStats = (projectId: number, sdocIds: number[] | undefined) 
   useQuery<SpanEntityStat[], Error>(
     [QueryKey.SEARCH_ENTITY_STATISTICS, sdocIds?.sort((a, b) => a - b)],
     () =>
-      SearchService.searchStatsSearchStatsPost({
+      SearchService.searchSpanEntityStatsSearchEntityStatsPost({
         requestBody: {
           proj_id: projectId,
           sdoc_ids: sdocIds!,
