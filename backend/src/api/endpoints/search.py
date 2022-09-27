@@ -73,14 +73,14 @@ async def search_sdocs(*,
         return list(set.intersection(*map(set, sdocs)))
 
 
-@router.post("/stats", tags=tags,
+@router.post("/entity_stats", tags=tags,
              response_model=List[SpanEntityStat],
              summary="Returns SpanEntityStats for the given SourceDocuments.",
              description="Returns SpanEntityStats for the given SourceDocuments.")
-async def search_stats(*,
-                       db: Session = Depends(get_db_session),
-                       query_params: SpanEntityStatsQueryParameters,
-                       skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanEntityStat]:
+async def search_span_entity_stats(*,
+                                   db: Session = Depends(get_db_session),
+                                   query_params: SpanEntityStatsQueryParameters,
+                                   skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanEntityStat]:
     return crud_sdoc.collect_entity_stats(db=db, sdoc_ids=query_params.sdoc_ids, proj_id=query_params.proj_id,
                                           **skip_limit)
 
