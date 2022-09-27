@@ -50,7 +50,7 @@ function DeleteMenuItem({ sdocId, onClick, ...props }: DeleteMenuItemProps & Men
         );
       },
     });
-  }, []);
+  }, [deleteMutation, dispatch, navigate, onClick, sdocId]);
 
   return (
     <MenuItem onClick={handleClick} {...props} disabled={!sdocId}>

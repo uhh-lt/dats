@@ -83,12 +83,12 @@ export default function SearchResults({
     setIsResizing(false);
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
-  }, [setIsResizing]);
+  }, [handleMouseMove]);
   const handleMouseDown = useCallback(() => {
     setIsResizing(true);
     document.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mouseup", handleMouseUp);
-  }, [setIsResizing]);
+  }, [handleMouseMove, handleMouseUp]);
 
   return (
     <>

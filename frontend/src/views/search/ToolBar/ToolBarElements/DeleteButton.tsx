@@ -47,7 +47,7 @@ function DeleteButton({ sdocId, ...props }: DeleteButtonProps & IconButtonProps)
         );
       },
     });
-  }, []);
+  }, [deleteMutation, dispatch, navigate, sdocId]);
 
   return (
     <Tooltip title="Delete">

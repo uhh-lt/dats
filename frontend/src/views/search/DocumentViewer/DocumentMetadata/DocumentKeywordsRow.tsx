@@ -67,7 +67,7 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
         }
       );
     }
-  }, [keywords, keywordInput]);
+  }, [keywords.keywords, keywordInput, updateMutation, sdocId]);
 
   const handleClear = useCallback(() => {
     // only update if data has changed!
@@ -89,7 +89,7 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
         }
       );
     }
-  }, [keywords]);
+  }, [keywords.keywords.length, sdocId, updateMutation]);
 
   return (
     <>

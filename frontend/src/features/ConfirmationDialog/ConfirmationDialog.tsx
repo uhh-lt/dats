@@ -30,7 +30,7 @@ export default function ConfirmationDialog() {
   const handleAccept = useCallback(() => {
     handleClose();
     if (confirmationEventData?.onAccept) confirmationEventData.onAccept();
-  }, [confirmationEventData]);
+  }, [confirmationEventData, handleClose]);
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
