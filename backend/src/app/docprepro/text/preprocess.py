@@ -10,12 +10,10 @@ from tqdm import tqdm
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
-from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchIntegerRange
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
@@ -152,8 +150,7 @@ def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreP
     if len(pptds) == 0:
         return pptds
     # Flo: we assume that every pptd originates from the same project!
-    with SQLService().db_session() as db:
-        proj = ProjectRead.from_orm(crud_project.read(db=db, id=pptds[0].project_id))
+    proj_id = pptds[0].project_id
 
     esdocs = list(map(lambda pptd: ElasticSearchDocumentCreate(filename=pptd.filename,
                                                                content=pptd.raw_text,
@@ -167,13 +164,13 @@ def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreP
                                                                project_id=pptd.project_id), pptds))
     if len(pptds) <= BULK_THRESHOLD:
         for esdoc in tqdm(esdocs, desc="Adding documents to ElasticSearch... "):
-            es.add_document_to_index(proj=proj, esdoc=esdoc)
+            es.add_document_to_index(proj_id=proj_id, esdoc=esdoc)
 
             # Flo: update sdoc status
             update_sdoc_status(sdoc_id=esdoc.sdoc_id, sdoc_status=SDocStatus.added_document_to_elasticsearch_index)
     else:
 
-        es.bulk_add_documents_to_index(proj=proj, esdocs=esdocs)
+        es.bulk_add_documents_to_index(proj_id=proj_id, esdocs=esdocs)
 
         # Flo: update sdoc status
         for pptd in pptds:

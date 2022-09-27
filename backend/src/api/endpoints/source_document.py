@@ -10,7 +10,6 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.doc_type import DocType
-from app.core.data.dto import ProjectRead
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, MemoRead, AttachedObjectType
@@ -61,7 +60,7 @@ async def get_content(*,
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
         return ElasticSearchService().get_sdoc_content_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
-                                                                  proj=ProjectRead.from_orm(sdoc_db_obj.project))
+                                                                  proj_id=sdoc_db_obj.project_id)
     return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
 
 
@@ -79,7 +78,7 @@ async def get_tokens(*,
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_tokens_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
-                                                             proj=ProjectRead.from_orm(sdoc_db_obj.project),
+                                                             proj_id=sdoc_db_obj.project_id,
                                                              character_offsets=character_offsets)
 
 
@@ -93,7 +92,7 @@ async def get_tokens(*,
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
-                                                               proj=ProjectRead.from_orm(sdoc_db_obj.project))
+                                                               proj_id=sdoc_db_obj.project_id)
 
 
 @router.patch("/{sdoc_id}/keywords", tags=tags,
@@ -106,7 +105,7 @@ async def update_keywords(*,
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=keywords.source_document_id)
     return ElasticSearchService().update_esdoc_keywords(keywords=keywords,
-                                                        proj=ProjectRead.from_orm(sdoc_db_obj.project))
+                                                        proj_id=sdoc_db_obj.project_id)
 
 
 @router.get("/{sdoc_id}/url", tags=tags,

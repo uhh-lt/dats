@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.object_handle import crud_object_handle
-from app.core.data.dto import ProjectRead
 from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.dto.search import ElasticSearchMemoCreate
@@ -234,7 +233,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
                                          user_id=memo_orm.user_id,
                                          attached_object_id=attached_object_id,
                                          attached_object_type=attached_object_type)
-        ElasticSearchService().add_memo_to_index(proj=ProjectRead.from_orm(memo_orm.project), esmemo=esmemo)
+        ElasticSearchService().add_memo_to_index(proj_id=memo_orm.project_id, esmemo=esmemo)
 
 
 crud_memo = CRUDMemo(MemoORM)
