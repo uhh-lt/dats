@@ -85,6 +85,7 @@ function CodeFrequency() {
 
   // local state
   const [selectedStatistic, setSelectedStatistic] = useState<CodeStatistics>();
+  const [page, setPage] = useState<number>(0);
 
   // computed
   const tableData = useMemo(() => (selectedStatistic ? allSpans(selectedStatistic) : []), [selectedStatistic]);
@@ -96,6 +97,10 @@ function CodeFrequency() {
       setSelectedStatistic(data.data);
     }
   }, [data.data]);
+  // reset page to 0 when selected statistics change
+  useEffect(() => {
+    setPage(0);
+  }, [selectedStatistic]);
 
   return (
     <Grid container columnSpacing={1} className="h100" px={2} pt={2}>
@@ -134,6 +139,8 @@ function CodeFrequency() {
                   autoPageSize
                   sx={{ border: "none" }}
                   disableSelectionOnClick
+                  page={page}
+                  onPageChange={(page) => setPage(page)}
                 />
               </CardContent>
             </Card>
