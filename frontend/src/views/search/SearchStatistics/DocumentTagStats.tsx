@@ -1,7 +1,7 @@
 import { Button, ButtonProps, Stack } from "@mui/material";
 import React from "react";
-import useComputeDocumentTagStats from "./useComputeDocumentTagStats";
 import TagHooks from "../../../api/TagHooks";
+import SearchHooks from "../../../api/SearchHooks";
 
 interface DocumentTagStatsProps {
   documentIds: number[] | undefined;
@@ -9,22 +9,26 @@ interface DocumentTagStatsProps {
 }
 
 function DocumentTagStats({ documentIds, handleClick }: DocumentTagStatsProps) {
-  const tagStats = useComputeDocumentTagStats(documentIds);
-  const maxValue = tagStats.data.length > 0 ? tagStats.data[0].count : 0;
+  const tagStats = SearchHooks.useSearchTagStats(documentIds);
+  const maxValue = tagStats.data && tagStats.data.length > 0 ? tagStats.data[0].count : 0;
 
   return (
     <>
       {tagStats.isLoading && <div>Loading!</div>}
-      {tagStats.isError && <div>Error: {tagStats.error}</div>}
+      {tagStats.isError && (
+        <div>
+          <>Error: {tagStats.error}</>
+        </div>
+      )}
       {tagStats.isSuccess && (
         <Stack sx={{ whiteSpace: "nowrap" }} spacing={0.5}>
           {tagStats.data.map((tagStat) => (
             <DocumentTagStatButtonContent
-              key={tagStat.tagId}
+              key={tagStat.tag.id}
               sx={{ width: `${(tagStat.count / maxValue) * 100}%`, justifyContent: "left" }}
               variant="outlined"
-              onClick={() => handleClick(tagStat.tagId)}
-              tagId={tagStat.tagId}
+              onClick={() => handleClick(tagStat.tag.id)}
+              tagId={tagStat.tag.id}
               count={tagStat.count}
             />
           ))}

@@ -93,4 +93,5 @@ export const QueryKey = {
 
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
+  SEARCH_TAG_STATISTICS: "searchTagStatistics",
 };

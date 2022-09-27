@@ -6,9 +6,11 @@ import {
   PaginatedMemoSearchResults,
   SearchService,
   SpanEntityStat,
+  TagStat,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import { orderFilter, SearchFilter } from "../views/search/SearchFilter";
+import queryClient from "../plugins/ReactQueryClient";
 
 // TODO: merge useSearchDocumentsByProjectIdAndFilters and useSearchDocumentsByProjectIdAndTagId
 const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: SearchFilter[]) =>
@@ -73,6 +75,27 @@ const useSearchKeywordStats = (projectId: number, sdocIds: number[]) =>
     }
   );
 
+const useSearchTagStats = (sdocIds: number[] | undefined) => {
+  return useQuery<TagStat[], Error>(
+    [QueryKey.SEARCH_TAG_STATISTICS, sdocIds?.sort((a, b) => a - b)],
+    () =>
+      SearchService.searchTagStatsSearchTagStatsPost({
+        requestBody: {
+          sdoc_ids: sdocIds!,
+        },
+      }),
+    {
+      enabled: sdocIds && sdocIds.length > 0,
+      // todo: check if this really works
+      onSuccess: (data) => {
+        data.forEach((tagStat) => {
+          queryClient.setQueryData([QueryKey.TAG, tagStat.tag.id], tagStat.tag);
+        });
+      },
+    }
+  );
+};
+
 const useSearchMemoContent = (params: MemoContentQuery) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMOS_BY_CONTENT_SEARCH, params.content_query],
@@ -103,6 +126,7 @@ const useSearchMemoTitle = (params: MemoContentQuery) =>
 const SearchHooks = {
   useSearchEntityStats,
   useSearchKeywordStats,
+  useSearchTagStats,
   useSearchMemoTitle,
   useSearchMemoContent,
   useSearchDocumentsByProjectIdAndTagId,

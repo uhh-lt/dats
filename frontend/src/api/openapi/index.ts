@@ -36,6 +36,7 @@ export type { PaginatedSourceDocumentSearchResults } from "./models/PaginatedSou
 export type { ProjectCreate } from "./models/ProjectCreate";
 export type { ProjectRead } from "./models/ProjectRead";
 export type { ProjectUpdate } from "./models/ProjectUpdate";
+export { SDocStatus } from "./models/SDocStatus";
 export type { SearchSDocsQueryParameters } from "./models/SearchSDocsQueryParameters";
 export type { SourceDocumentContent } from "./models/SourceDocumentContent";
 export type { SourceDocumentContentQuery } from "./models/SourceDocumentContentQuery";
@@ -57,6 +58,8 @@ export type { SpanEntityStatsQueryParameters } from "./models/SpanEntityStatsQue
 export type { SpanGroupCreate } from "./models/SpanGroupCreate";
 export type { SpanGroupRead } from "./models/SpanGroupRead";
 export type { SpanGroupUpdate } from "./models/SpanGroupUpdate";
+export type { TagStat } from "./models/TagStat";
+export type { TagStatsQueryParameters } from "./models/TagStatsQueryParameters";
 export type { UserAuthorizationHeaderData } from "./models/UserAuthorizationHeaderData";
 export type { UserCreate } from "./models/UserCreate";
 export type { UserRead } from "./models/UserRead";

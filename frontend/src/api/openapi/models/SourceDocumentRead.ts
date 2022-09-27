@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 import type { DocType } from "./DocType";
+import type { SDocStatus } from "./SDocStatus";
 
 export type SourceDocumentRead = {
   /**
@@ -18,6 +19,10 @@ export type SourceDocumentRead = {
    */
   doctype: DocType;
   /**
+   * Status of the SourceDocument
+   */
+  status: SDocStatus;
+  /**
    * Project the SourceDocument belongs to
    */
   project_id: number;
@@ -29,4 +34,8 @@ export type SourceDocumentRead = {
    * The created timestamp of the SourceDocument
    */
   created: string;
+  /**
+   * Updated timestamp of the Memo
+   */
+  updated: string;
 };

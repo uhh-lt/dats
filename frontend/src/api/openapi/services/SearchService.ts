@@ -11,6 +11,8 @@ import type { SourceDocumentContentQuery } from "../models/SourceDocumentContent
 import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
 import type { SpanEntityStat } from "../models/SpanEntityStat";
 import type { SpanEntityStatsQueryParameters } from "../models/SpanEntityStatsQueryParameters";
+import type { TagStat } from "../models/TagStat";
+import type { TagStatsQueryParameters } from "../models/TagStatsQueryParameters";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -117,6 +119,28 @@ export class SearchService {
         skip: skip,
         limit: limit,
       },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns TagStat for the given SourceDocuments.
+   * Returns Stat for the given SourceDocuments.
+   * @returns TagStat Successful Response
+   * @throws ApiError
+   */
+  public static searchTagStatsSearchTagStatsPost({
+    requestBody,
+  }: {
+    requestBody: TagStatsQueryParameters;
+  }): CancelablePromise<Array<TagStat>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/tag_stats",
       body: requestBody,
       mediaType: "application/json",
       errors: {

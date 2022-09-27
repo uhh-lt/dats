@@ -47,6 +47,7 @@ const useBulkLinkDocumentTags = () =>
           queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
         });
         queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
+        queryClient.invalidateQueries([QueryKey.SEARCH_TAG_STATISTICS]); // todo: zu unspezifisch!
       },
     }
   );
@@ -62,6 +63,7 @@ const useBulkUnlinkDocumentTags = () =>
           queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
         });
         queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
+        queryClient.invalidateQueries([QueryKey.SEARCH_TAG_STATISTICS]); // todo: zu unspezifisch!
       },
     }
   );
@@ -118,6 +120,7 @@ const useBulkUpdateDocumentTags = () =>
           queryClient.invalidateQueries([QueryKey.SDOC_TAGS, sdocId]);
         });
         queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
+        queryClient.invalidateQueries([QueryKey.SEARCH_TAG_STATISTICS]); // todo: zu unspezifisch!
       },
     }
   );
