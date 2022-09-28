@@ -95,8 +95,11 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         if not all_tags:
             # all docs that have ANY of the tags
             # noinspection PyUnresolvedReferences
-            return db.query(self.model.id).join(SourceDocumentORM, DocumentTagORM.source_documents) \
-                .filter(DocumentTagORM.id.in_(tag_ids)).offset(skip).limit(limit).all()
+            query = db.query(self.model.id) \
+                .join(SourceDocumentORM, DocumentTagORM.source_documents) \
+                .filter(DocumentTagORM.id.in_(tag_ids)).offset(skip).limit(limit)
+
+            return list(map(lambda row: row.id, query.all()))
         else:
             # all docs that have ALL the tags
             """
@@ -121,7 +124,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         if limit is not None:
             query = query.limit(limit)
 
-        return query.all()
+        return list(map(lambda row: row.id, query.all()))
 
     def get_ids_by_span_entities(self,
                                  db: Session,
@@ -142,13 +145,13 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             .join(CodeORM) \
             .join(SpanTextORM)
         # noinspection PyUnresolvedReferences
-        inner_query = inner_query.filter(and_(SourceDocumentORM.project_id == proj_id,
+        inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
                                               AnnotationDocumentORM.user_id.in_(list(user_ids)),
                                               or_(*[(CodeORM.id == se.code_id) & (SpanTextORM.text == se.span_text)
                                                     for se in span_entities])))
         inner_query = inner_query.group_by(self.model.id, CurrentCodeORM.id, SpanTextORM.id).from_self()
 
-        outer_query = inner_query.group_by(self.model)
+        outer_query = inner_query.group_by(self.model.id)
         outer_query = outer_query.having(func.count(self.model.id) == len(span_entities))
 
         if skip is not None:
@@ -156,7 +159,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         if limit is not None:
             outer_query = outer_query.limit(limit)
 
-        return outer_query.all()
+        return list(map(lambda row: row.id, outer_query.all()))
 
     def collect_entity_stats(self,
                              db: Session,
