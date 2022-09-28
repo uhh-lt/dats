@@ -116,13 +116,20 @@ class RepoService(metaclass=SingletonMeta):
                 self.repo_root.mkdir(parents=True)
                 logger.info(f"Created DWTS repository at {str(self.repo_root)}")
 
+            # make sure projtemp_files_root exists
+            if not self.temp_files_root.exists():
+                self.temp_files_root.mkdir(parents=True)
+                logger.info(f"Created DWTS temp files root at {str(self.temp_files_root)}")
+
             # make sure logs dir exists
             if not self.logs_root.exists():
                 self.logs_root.mkdir()
+                logger.info(f"Created DWTS logs root at {str(self.logs_root)}")
 
             # make sure projects dir exists
             if not self.proj_root.exists():
                 self.proj_root.mkdir()
+                logger.info(f"Created DWTS project root at {str(self.proj_root)}")
 
         except Exception as e:
             msg = f"Cannot create repository directory structure at {conf.repo.root_directory}"
@@ -188,7 +195,7 @@ class RepoService(metaclass=SingletonMeta):
         try:
             dst = self._create_directory_structure_for_project_file(proj_id=proj_id,
                                                                     filename=temporary_archive_file_path.name)
-            shutil.move(temporary_archive_file_path, dst)
+            shutil.move(self.temp_files_root.joinpath(temporary_archive_file_path.name), dst)
 
             return self._extract_archive(archive_path=dst)
         except Exception as e:
