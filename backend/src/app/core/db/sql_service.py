@@ -50,6 +50,7 @@ class SQLService(metaclass=SingletonMeta):
                 user=conf.postgres.user,
                 password=conf.postgres.password,
                 host=conf.postgres.host,
+                port=conf.postgres.port,
                 path=f"/{conf.postgres.db}",
             )
 
