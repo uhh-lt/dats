@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Set, Optional, List
+from typing import Set, Optional, List, Dict
 
 from pydantic import BaseModel, Field
 
@@ -13,10 +13,18 @@ class SpanEntity(BaseModel):
     span_text: str = Field(description="The SpanText the SpanAnnotation spans")
 
 
-class SpanEntityStat(BaseModel):
+class SpanEntityFrequency(SpanEntity):
     sdoc_id: int = Field(description="The ID of the SourceDocument.")
-    span_entity: SpanEntity = Field(description="The counted SpanEntity.")
     count: int = Field(description="Number of occurrences of the SpanEntity in the SourceDocument.")
+
+
+class SpanEntityDocumentFrequency(SpanEntity):
+    count: int = Field(description="Number of occurrences of the SpanEntity in a collection of SourceDocuments.")
+
+
+class SpanEntityDocumentFrequencyResult(BaseModel):
+    stats: Dict[int, List[SpanEntityDocumentFrequency]] = Field(
+        description="Map of Code ID to SpanEntityDocumentFrequency")
 
 
 class KeywordStat(BaseModel):

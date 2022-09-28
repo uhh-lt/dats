@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.search import SpanEntity, SpanEntityStat, TagStat
+from app.core.data.dto.search import SpanEntity, SpanEntityFrequency, TagStat, SpanEntityDocumentFrequency, \
+    SpanEntityDocumentFrequencyResult
 from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
@@ -102,16 +103,16 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             return list(map(lambda row: row.id, query.all()))
         else:
             # all docs that have ALL the tags
-            """
-            We want this: 
-                SELECT *
-                FROM sourcedocument
-                INNER JOIN sourcedocumentdocumenttaglinktable
-                    ON sourcedocument.id = sourcedocumentdocumenttaglinktable.source_document_id
-                WHERE sourcedocumentdocumenttaglinktable.document_tag_id IN ( TAG_IDS )
-                GROUP BY sourcedocument.id
-                HAVING COUNT(*) = len(TAG_IDS)
-            """
+
+            # We want this:
+            #     SELECT *
+            #     FROM sourcedocument
+            #     INNER JOIN sourcedocumentdocumenttaglinktable
+            #         ON sourcedocument.id = sourcedocumentdocumenttaglinktable.source_document_id
+            #     WHERE sourcedocumentdocumenttaglinktable.document_tag_id IN ( TAG_IDS )
+            #     GROUP BY sourcedocument.id
+            #     HAVING COUNT(*) = len(TAG_IDS)
+
             query = db.query(self.model.id).join(SourceDocumentDocumentTagLinkTable,
                                                  self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
             # noinspection PyUnresolvedReferences
@@ -168,7 +169,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                              sdoc_ids: Set[int] = None,
                              proj_id: int,
                              skip: Optional[int] = None,
-                             limit: Optional[int] = None) -> List[SpanEntityStat]:
+                             limit: Optional[int] = None) -> List[SpanEntityFrequency]:
         # Flo: we always want ADocs from the SYSTEM_USER
         if not user_ids:
             user_ids = set()
@@ -193,10 +194,67 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         res = query.all()
 
-        return [SpanEntityStat(sdoc_id=sdoc_id,
-                               span_entity=SpanEntity(code_id=code_id,
-                                                      span_text=text),
-                               count=count) for (sdoc_id, code_id, text, count) in res]
+        return [SpanEntityFrequency(sdoc_id=sdoc_id,
+                                    code_id=code_id,
+                                    span_text=text,
+                                    count=count) for (sdoc_id, code_id, text, count) in res]
+
+    def collect_entity_document_stats(self,
+                                      db: Session,
+                                      *,
+                                      user_ids: Set[int] = None,
+                                      sdoc_ids: Set[int] = None,
+                                      proj_id: int,
+                                      skip: Optional[int] = None,
+                                      limit: Optional[int] = None) -> SpanEntityDocumentFrequencyResult:
+        # Flo: we always want ADocs from the SYSTEM_USER
+        if not user_ids:
+            user_ids = set()
+        user_ids.add(SYSTEM_USER_ID)
+
+        # we want this:
+        # SELECT code_id, text, count(sdoc_id) FROM (SELECT DISTINCT sourcedocument.id AS sdoc_id, code.id AS code_id, spantext.text AS text
+        #        FROM sourcedocument
+        #                 JOIN annotationdocument ON sourcedocument.id = annotationdocument.source_document_id
+        #                 JOIN spanannotation ON annotationdocument.id = spanannotation.annotation_document_id
+        #                 JOIN currentcode ON currentcode.id = spanannotation.current_code_id
+        #                 JOIN code ON code.id = currentcode.code_id
+        #                 JOIN spantext ON spantext.id = spanannotation.span_text_id
+        #        WHERE sourcedocument.project_id = 1
+        #          AND sourcedocument.id IN (1, 2, 3, 4, 5, 7, 8, 9, 999)
+        #          AND annotationdocument.user_id IN (1) ) AS TMP
+        # GROUP BY text, code_id
+
+        inner_query = db.query(self.model.id.label("sdoc_id"), CodeORM.id.label("code_id"),
+                               SpanTextORM.text.label("text")).distinct() \
+            .join(AnnotationDocumentORM) \
+            .join(SpanAnnotationORM) \
+            .join(CurrentCodeORM) \
+            .join(CodeORM) \
+            .join(SpanTextORM)
+        inner_query = inner_query.filter(and_(SourceDocumentORM.project_id == proj_id,
+                                              SourceDocumentORM.id.in_(list(sdoc_ids)),
+                                              AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
+
+        doc_freq = func.count(inner_query.c.sdoc_id).label("doc_freq")
+        outer_query = db.query(inner_query.c.code_id, inner_query.c.text, doc_freq)
+        outer_query = outer_query.group_by(inner_query.c.code_id, inner_query.c.text)
+        outer_query = outer_query.order_by(doc_freq.desc())
+
+        if skip is not None:
+            outer_query = outer_query.offset(skip)
+        if limit is not None:
+            outer_query = outer_query.limit(limit)
+
+        res = outer_query.all()
+
+        stats = dict()
+        for r in res:
+            doc_freqs = stats.get(r.code_id, [])
+            doc_freqs.append(SpanEntityDocumentFrequency(code_id=r.code_id, count=r.doc_freq, span_text=r.text))
+            stats[r.code_id] = doc_freqs
+
+        return SpanEntityDocumentFrequencyResult(stats=stats)
 
     def collect_tag_stats(self,
                           db: Session,

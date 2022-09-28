@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityStat, \
+from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityFrequency, \
     PaginatedElasticSearchDocumentHits, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
-    PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat, TagStat
+    PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat, TagStat, SpanEntityDocumentFrequencyResult
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
 
@@ -27,14 +27,25 @@ async def search_sdocs(*,
 
 
 @router.post("/entity_stats", tags=tags,
-             response_model=List[SpanEntityStat],
+             response_model=List[SpanEntityFrequency],
              summary="Returns SpanEntityStats for the given SourceDocuments.",
              description="Returns SpanEntityStats for the given SourceDocuments.")
 async def search_span_entity_stats(*,
                                    db: Session = Depends(get_db_session),
-                                   query_params: SearchSDocsQueryParameters) -> List[SpanEntityStat]:
+                                   query_params: SearchSDocsQueryParameters) -> List[SpanEntityFrequency]:
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
     return crud_sdoc.collect_entity_stats(db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id)
+
+
+@router.post("/entity_document_stats", tags=tags,
+             response_model=SpanEntityDocumentFrequencyResult,
+             summary="Returns SpanEntityStats for the given SourceDocuments.",
+             description="Returns SpanEntityStats for the given SourceDocuments.")
+async def search_span_entity_stats(*,
+                                   db: Session = Depends(get_db_session),
+                                   query_params: SearchSDocsQueryParameters) -> SpanEntityDocumentFrequencyResult:
+    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
+    return crud_sdoc.collect_entity_document_stats(db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id)
 
 
 @router.post("/keyword_stats", tags=tags,
