@@ -157,7 +157,6 @@ function Search() {
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
-            sdocIds={searchResultIds}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}

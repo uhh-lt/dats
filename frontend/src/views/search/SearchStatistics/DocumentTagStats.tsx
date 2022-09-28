@@ -2,14 +2,24 @@ import { Button, ButtonProps, Stack } from "@mui/material";
 import React from "react";
 import TagHooks from "../../../api/TagHooks";
 import SearchHooks from "../../../api/SearchHooks";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { useParams } from "react-router-dom";
 
 interface DocumentTagStatsProps {
-  documentIds: number[] | undefined;
   handleClick: (tagId: number) => void;
 }
 
-function DocumentTagStats({ documentIds, handleClick }: DocumentTagStatsProps) {
-  const tagStats = SearchHooks.useSearchTagStats(documentIds);
+function DocumentTagStats({ handleClick }: DocumentTagStatsProps) {
+  // router
+  const projectId = parseInt((useParams() as {projectId: string;}).projectId);
+
+  // redux (global client state)
+  const filters = useAppSelector((state) => state.search.filters);
+
+  // query (global server state)
+  const tagStats = SearchHooks.useSearchTagStats(projectId, filters);
+
+  // computed
   const maxValue = tagStats.data && tagStats.data.length > 0 ? tagStats.data[0].count : 0;
 
   return (

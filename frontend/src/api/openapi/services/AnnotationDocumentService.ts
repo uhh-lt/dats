@@ -87,7 +87,7 @@ export class AnnotationDocumentService {
   public static getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
     adocId,
     skip,
-    limit = 100,
+    limit,
     resolve = true,
   }: {
     adocId: number;
@@ -153,7 +153,7 @@ export class AnnotationDocumentService {
   public static getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
     adocId,
     skip,
-    limit = 100,
+    limit,
     resolve = true,
   }: {
     adocId: number;
@@ -219,7 +219,7 @@ export class AnnotationDocumentService {
   public static getAllSpanGroupsAdocAdocIdSpanGroupsGet({
     adocId,
     skip,
-    limit = 100,
+    limit,
   }: {
     adocId: number;
     /**

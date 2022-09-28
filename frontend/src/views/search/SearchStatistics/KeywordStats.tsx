@@ -3,17 +3,23 @@ import React, { useMemo } from "react";
 import SearchHooks from "../../../api/SearchHooks";
 import { useParams } from "react-router-dom";
 import { KeywordStat } from "../../../api/openapi";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 
 interface KeywordStatsProps {
-  documentIds: number[];
   handleClick: (keyword: string) => void;
 }
 
-function KeywordStats({ documentIds, handleClick }: KeywordStatsProps) {
+function KeywordStats({ handleClick }: KeywordStatsProps) {
   // get the current project id
   const { projectId } = useParams() as { projectId: string };
 
-  const keywords = SearchHooks.useSearchKeywordStats(parseInt(projectId), documentIds);
+  // redux (global client state)
+  const filters = useAppSelector((state) => state.search.filters);
+
+  // query
+  const keywords = SearchHooks.useSearchKeywordStats(parseInt(projectId), filters);
+
+  // computed
   const maxValue = useMemo(() => (keywords.isSuccess ? Math.max(...keywords.data.map((x) => x.count)) : 0), [keywords]);
 
   // render

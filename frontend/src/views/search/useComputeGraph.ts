@@ -4,6 +4,7 @@ import { CodeRead, SpanEntityStat } from "../../api/openapi";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
 import { EntityData, LinkData } from "./SearchResultsGraph";
+import { useAppSelector } from "../../plugins/ReduxHooks";
 
 function computeGraph(projectCodes: CodeRead[], codeStats: SpanEntityStat[]) {
   // create a mapping codeId -> CodeRead for all projectCodes
@@ -81,7 +82,10 @@ function computeGraph(projectCodes: CodeRead[], codeStats: SpanEntityStat[]) {
   };
 }
 
-export default function useComputeGraph(sdocIds: number[] | undefined) {
+export default function useComputeGraph() {
+  // redux (global client state)
+  const filters = useAppSelector((state) => state.search.filters);
+
   // get the current project id
   const { projectId } = useParams() as { projectId: string };
 
@@ -89,7 +93,7 @@ export default function useComputeGraph(sdocIds: number[] | undefined) {
   const projectCodes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
   // query code statistics for all provided sdocIds
-  const codeStats = SearchHooks.useSearchEntityStats(parseInt(projectId), sdocIds);
+  const codeStats = SearchHooks.useSearchEntityStats(parseInt(projectId), filters);
 
   // aggregate the query result, creating a mapping of code -> text -> count
   const { nodeResult, linkResult } = useMemo(() => {

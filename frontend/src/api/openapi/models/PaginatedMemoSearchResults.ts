@@ -10,6 +10,10 @@ export type PaginatedMemoSearchResults = {
    */
   has_more: boolean;
   /**
+   * The total number of results.
+   */
+  total: number;
+  /**
    * The offset that returns the current results.
    */
   current_page_offset: number;

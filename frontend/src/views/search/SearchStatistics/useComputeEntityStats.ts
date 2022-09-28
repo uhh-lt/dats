@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { SpanEntityStat } from "../../../api/openapi";
 import SearchHooks from "../../../api/SearchHooks";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 
 function computeCodeFrequencies(codeStats: SpanEntityStat[]): Map<number, Map<string, number>> {
   // aggregate the query result, creating a mapping of codeId -> text -> count
@@ -24,14 +25,17 @@ function computeCodeFrequencies(codeStats: SpanEntityStat[]): Map<number, Map<st
   return aggregatedCodeStats;
 }
 
-export default function useComputeEntityStats(sdocIds: number[] | undefined) {
+export default function useComputeEntityStats() {
+  // redux (global client state)
+  const filters = useAppSelector((state) => state.search.filters);
+
   const [data, setData] = useState(computeCodeFrequencies([]));
 
   // get the current project id
   const { projectId } = useParams() as { projectId: string };
 
   // query code statistics for all provided sdocIds
-  const codeStats = SearchHooks.useSearchEntityStats(parseInt(projectId), sdocIds);
+  const codeStats = SearchHooks.useSearchEntityStats(parseInt(projectId), filters);
 
   // compute new code frequencies, when the data changes
   useEffect(() => {

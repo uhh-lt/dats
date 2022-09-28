@@ -36,15 +36,9 @@ export const useGetCodeStatisticTree = (projectId: number) =>
     allProjectCodes.forEach((code) => codeMap.set(code.id, code));
 
     // get stats for all documents
-    const statQueries = allProjectDocuments
-      .filter((sdoc) => sdoc.doctype === DocType.TEXT)
-      .map((sdoc) =>
-        SearchService.searchSpanEntityStatsSearchEntityStatsPost({
-          requestBody: { proj_id: projectId, sdoc_ids: [sdoc.id] },
-          limit: 1000,
-        })
-      );
-    const temp = (await Promise.all(statQueries)).flat();
+    const temp = await SearchService.searchSpanEntityStatsSearchEntityStatsPost({
+      requestBody: { proj_id: projectId },
+    })
 
     // map query results to own data type
     const stats: Statistic[] = temp.map((stat, index) => ({

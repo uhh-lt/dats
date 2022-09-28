@@ -42,7 +42,7 @@ function SearchResultsGraph({ sdocIds, nodeStrength, linkStrength }: SearchResul
   const linkRef = useRef<SVGSVGElement>(null);
   const nodeRef = useRef<SVGSVGElement>(null);
 
-  const { nodeResult: nodeData, linkResult: linkData } = useComputeGraph(sdocIds);
+  const { nodeResult: nodeData, linkResult: linkData } = useComputeGraph();
 
   // const [nodeData, setNodeData] = useState<EntityData[]>([
   //   { id: "10", text: "Tim", type: "PER", frequency: 5 },

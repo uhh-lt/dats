@@ -4,15 +4,13 @@
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
 import type { MemoTitleQuery } from "../models/MemoTitleQuery";
+import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
-import type { PaginatedSourceDocumentSearchResults } from "../models/PaginatedSourceDocumentSearchResults";
 import type { SearchSDocsQueryParameters } from "../models/SearchSDocsQueryParameters";
 import type { SourceDocumentContentQuery } from "../models/SourceDocumentContentQuery";
 import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
 import type { SpanEntityStat } from "../models/SpanEntityStat";
-import type { SpanEntityStatsQueryParameters } from "../models/SpanEntityStatsQueryParameters";
 import type { TagStat } from "../models/TagStat";
-import type { TagStatsQueryParameters } from "../models/TagStatsQueryParameters";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -20,33 +18,19 @@ import { request as __request } from "../core/request";
 
 export class SearchService {
   /**
-   * Returns all SourceDocuments of the given Project that match the query parameters
-   * Returns all SourceDocuments of the given Project with the given ID that match the query parameters
+   * Returns all SourceDocument IDs that match the query parameters.
+   * Returns all SourceDocument Ids that match the query parameters.
    * @returns number Successful Response
    * @throws ApiError
    */
   public static searchSdocsSearchSdocPost({
     requestBody,
-    skip,
-    limit = 100,
   }: {
     requestBody: SearchSDocsQueryParameters;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number;
   }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/sdoc",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -63,26 +47,12 @@ export class SearchService {
    */
   public static searchSpanEntityStatsSearchEntityStatsPost({
     requestBody,
-    skip,
-    limit = 100,
   }: {
-    requestBody: SpanEntityStatsQueryParameters;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number;
+    requestBody: SearchSDocsQueryParameters;
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/entity_stats",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -99,26 +69,12 @@ export class SearchService {
    */
   public static searchKeywordStatsSearchKeywordStatsPost({
     requestBody,
-    skip,
-    limit = 100,
   }: {
-    requestBody: SpanEntityStatsQueryParameters;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number;
+    requestBody: SearchSDocsQueryParameters;
   }): CancelablePromise<Array<KeywordStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/keyword_stats",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -136,7 +92,7 @@ export class SearchService {
   public static searchTagStatsSearchTagStatsPost({
     requestBody,
   }: {
-    requestBody: TagStatsQueryParameters;
+    requestBody: SearchSDocsQueryParameters;
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -152,13 +108,13 @@ export class SearchService {
   /**
    * Returns all SourceDocuments where the content matches the query via lexical search
    * Returns all SourceDocuments where the content matches the query via lexical search
-   * @returns PaginatedSourceDocumentSearchResults Successful Response
+   * @returns PaginatedElasticSearchDocumentHits Successful Response
    * @throws ApiError
    */
   public static searchSdocsByContentQuerySearchLexicalSdocContentPost({
     requestBody,
     skip,
-    limit = 100,
+    limit,
   }: {
     requestBody: SourceDocumentContentQuery;
     /**
@@ -169,7 +125,7 @@ export class SearchService {
      * The maximum number of returned elements
      */
     limit?: number;
-  }): CancelablePromise<PaginatedSourceDocumentSearchResults> {
+  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/lexical/sdoc/content",
@@ -188,13 +144,13 @@ export class SearchService {
   /**
    * Returns all SourceDocuments where the filename matches the query via lexical search
    * Returns all SourceDocuments where the filename matches the query via lexical search
-   * @returns PaginatedSourceDocumentSearchResults Successful Response
+   * @returns PaginatedElasticSearchDocumentHits Successful Response
    * @throws ApiError
    */
   public static searchSdocsByFilenameQuerySearchLexicalSdocFilenamePost({
     requestBody,
     skip,
-    limit = 100,
+    limit,
   }: {
     requestBody: SourceDocumentFilenameQuery;
     /**
@@ -205,7 +161,7 @@ export class SearchService {
      * The maximum number of returned elements
      */
     limit?: number;
-  }): CancelablePromise<PaginatedSourceDocumentSearchResults> {
+  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/lexical/sdoc/filename",
@@ -230,7 +186,7 @@ export class SearchService {
   public static searchMemosByContentQuerySearchLexicalMemoContentPost({
     requestBody,
     skip,
-    limit = 100,
+    limit,
   }: {
     requestBody: MemoContentQuery;
     /**
@@ -266,7 +222,7 @@ export class SearchService {
   public static searchMemosByTitleQuerySearchLexicalMemoTitlePost({
     requestBody,
     skip,
-    limit = 100,
+    limit,
   }: {
     requestBody: MemoTitleQuery;
     /**

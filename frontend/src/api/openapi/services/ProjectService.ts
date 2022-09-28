@@ -25,7 +25,7 @@ export class ProjectService {
    */
   public static readAllProjectGet({
     skip,
-    limit = 100,
+    limit,
   }: {
     /**
      * The number of elements to skip (offset)
@@ -145,7 +145,7 @@ export class ProjectService {
   public static getProjectSdocsProjectProjIdSdocGet({
     projId,
     skip,
-    limit = 100,
+    limit,
   }: {
     projId: number;
     /**

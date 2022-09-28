@@ -23,7 +23,7 @@ export class UserService {
    */
   public static getAllUserGet({
     skip,
-    limit = 100,
+    limit,
   }: {
     /**
      * The number of elements to skip (offset)

@@ -12,14 +12,12 @@ import { CodeRead } from "../../../api/openapi";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 
 interface SearchStatisticsProps {
-  sdocIds: number[];
   handleKeywordClick: (keyword: string) => void;
   handleTagClick: (tagId: number) => void;
   handleCodeClick: (codeId: number, text: string) => void;
 }
 
 function SearchStatistics({
-  sdocIds,
   handleCodeClick,
   handleKeywordClick,
   handleTagClick,
@@ -50,7 +48,7 @@ function SearchStatistics({
 
   // stats
   const [validStats, setValidStats] = useState(new Map<number, Map<string, number>>());
-  const stats = useComputeEntityStats(sdocIds);
+  const stats = useComputeEntityStats();
 
   // computed
   const filteredProjectCodes = useMemo(() => {
@@ -97,10 +95,10 @@ function SearchStatistics({
         </Box>
         <Box className="myFlexFillAllContainer">
           <TabPanel value="keywords" sx={{ p: 2 }}>
-            <KeywordStats documentIds={sdocIds} handleClick={handleKeywordClick} />
+            <KeywordStats handleClick={handleKeywordClick} />
           </TabPanel>
           <TabPanel value="tags" sx={{ p: 2 }}>
-            <DocumentTagStats documentIds={sdocIds} handleClick={handleTagClick} />
+            <DocumentTagStats handleClick={handleTagClick} />
           </TabPanel>
           {Array.from(validStats.entries()).map(([codeId, data]) => (
             <TabPanel key={codeId} value={`${codeId}`} sx={{ p: 2 }}>

@@ -43,49 +43,52 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
     { enabled: !!tagId && !!projectId }
   );
 
-const useSearchEntityStats = (projectId: number, sdocIds: number[] | undefined) =>
-  useQuery<SpanEntityStat[], Error>(
-    [QueryKey.SEARCH_ENTITY_STATISTICS, sdocIds?.sort((a, b) => a - b)],
-    () =>
-      SearchService.searchSpanEntityStatsSearchEntityStatsPost({
+const useSearchEntityStats = (projectId: number, filters: SearchFilter[]) =>
+  useQuery<SpanEntityStat[], Error>([QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters], () => {
+      const { keywords, tags, codes, texts } = orderFilter(filters);
+      return SearchService.searchSpanEntityStatsSearchEntityStatsPost({
         requestBody: {
           proj_id: projectId,
-          sdoc_ids: sdocIds!,
+          span_entities: codes.length > 0 ? codes : undefined,
+          tag_ids: tags.length > 0 ? tags : undefined,
+          keywords: keywords.length > 0 ? keywords : undefined,
+          search_terms: texts.length > 0 ? texts : undefined,
+          all_tags: true,
         },
-        limit: 1000,
-      }),
-    {
-      enabled: !!sdocIds && sdocIds.length > 0,
-    }
-  );
+      })
+  });
 
-const useSearchKeywordStats = (projectId: number, sdocIds: number[]) =>
+const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) =>
   useQuery<KeywordStat[], Error>(
-    [QueryKey.SEARCH_KEYWORD_STATISTICS, sdocIds?.sort((a, b) => a - b)],
-    () =>
-      SearchService.searchKeywordStatsSearchKeywordStatsPost({
+    [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, filters], () => {
+      const { keywords, tags, codes, texts } = orderFilter(filters);
+      return SearchService.searchKeywordStatsSearchKeywordStatsPost({
         requestBody: {
           proj_id: projectId,
-          sdoc_ids: sdocIds!,
+          span_entities: codes.length > 0 ? codes : undefined,
+          tag_ids: tags.length > 0 ? tags : undefined,
+          keywords: keywords.length > 0 ? keywords : undefined,
+          search_terms: texts.length > 0 ? texts : undefined,
+          all_tags: true,
         },
-        limit: 1000,
-      }),
-    {
-      enabled: sdocIds.length > 0,
-    }
-  );
+      })
+    });
 
-const useSearchTagStats = (sdocIds: number[] | undefined) => {
-  return useQuery<TagStat[], Error>(
-    [QueryKey.SEARCH_TAG_STATISTICS, sdocIds?.sort((a, b) => a - b)],
-    () =>
-      SearchService.searchTagStatsSearchTagStatsPost({
+const useSearchTagStats = (projectId: number, filters: SearchFilter[]) =>
+  useQuery<TagStat[], Error>(
+    [QueryKey.SEARCH_TAG_STATISTICS, projectId, filters], () => {
+      const { keywords, tags, codes, texts } = orderFilter(filters);
+      return SearchService.searchTagStatsSearchTagStatsPost({
         requestBody: {
-          sdoc_ids: sdocIds!,
+          proj_id: projectId,
+          span_entities: codes.length > 0 ? codes : undefined,
+          tag_ids: tags.length > 0 ? tags : undefined,
+          keywords: keywords.length > 0 ? keywords : undefined,
+          search_terms: texts.length > 0 ? texts : undefined,
+          all_tags: true,
         },
-      }),
+      })},
     {
-      enabled: sdocIds && sdocIds.length > 0,
       // todo: check if this really works
       onSuccess: (data) => {
         data.forEach((tagStat) => {
@@ -94,7 +97,6 @@ const useSearchTagStats = (sdocIds: number[] | undefined) => {
       },
     }
   );
-};
 
 const useSearchMemoContent = (params: MemoContentQuery) =>
   useQuery<MemoRead[], Error>(
