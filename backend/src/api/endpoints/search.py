@@ -18,15 +18,12 @@ tags = ["search"]
 
 @router.post("/sdoc", tags=tags,
              response_model=List[int],
-             summary="Returns all SourceDocuments of the given Project that match the query parameters",
-             description=("Returns all SourceDocuments of the given Project with the given ID that match the "
-                          "query parameters"))
+             summary="Returns all SourceDocument IDs that match the query parameters.",
+             description="Returns all SourceDocument Ids that match the query parameters.")
 async def search_sdocs(*,
-                       query_params: SearchSDocsQueryParameters,
-                       skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[int]:
+                       query_params: SearchSDocsQueryParameters) -> List[int]:
     # TODO Flo: only if the user has access?
-    # TODO Flo: combine both queries
-    return SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params, skip_limit=skip_limit)
+    return SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
 
 
 @router.post("/entity_stats", tags=tags,
@@ -35,12 +32,9 @@ async def search_sdocs(*,
              description="Returns SpanEntityStats for the given SourceDocuments.")
 async def search_span_entity_stats(*,
                                    db: Session = Depends(get_db_session),
-                                   query_params: SearchSDocsQueryParameters,
-                                   skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SpanEntityStat]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params,
-                                                                        skip_limit=skip_limit)
-    return crud_sdoc.collect_entity_stats(db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id,
-                                          **skip_limit)
+                                   query_params: SearchSDocsQueryParameters) -> List[SpanEntityStat]:
+    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
+    return crud_sdoc.collect_entity_stats(db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id)
 
 
 @router.post("/keyword_stats", tags=tags,
@@ -48,11 +42,8 @@ async def search_span_entity_stats(*,
              summary="Returns SpanEntityStats for the given SourceDocuments.",
              description="Returns SpanEntityStats for the given SourceDocuments.")
 async def search_keyword_stats(*,
-                               query_params: SearchSDocsQueryParameters,
-                               skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[KeywordStat]:
-    # todo: How to use skip_limit?
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params,
-                                                                        skip_limit=skip_limit)
+                               query_params: SearchSDocsQueryParameters) -> List[KeywordStat]:
+    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
     keywords = ElasticSearchService().get_sdoc_keywords_by_sdoc_ids(sdoc_ids=set(sdoc_ids),
                                                                     proj_id=query_params.proj_id)
     keyword_counts = Counter([kw for x in keywords for kw in x.keywords])
@@ -65,10 +56,8 @@ async def search_keyword_stats(*,
              description="Returns Stat for the given SourceDocuments.")
 async def search_tag_stats(*,
                            db: Session = Depends(get_db_session),
-                           query_params: SearchSDocsQueryParameters,
-                           skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[TagStat]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params,
-                                                                        skip_limit=skip_limit)
+                           query_params: SearchSDocsQueryParameters) -> List[TagStat]:
+    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
     return crud_sdoc.collect_tag_stats(db=db, sdoc_ids=sdoc_ids)
 
 
@@ -95,7 +84,8 @@ async def search_sdocs_by_filename_query(*,
         -> PaginatedElasticSearchDocumentHits:
     if filename_query.prefix:
         return ElasticSearchService().search_sdocs_by_prefix_filename(proj_id=filename_query.proj_id,
-                                                                      filename_prefix=filename_query.filename_query)
+                                                                      filename_prefix=filename_query.filename_query,
+                                                                      **skip_limit)
     else:
         return ElasticSearchService().search_sdocs_by_exact_filename(proj_id=filename_query.proj_id,
                                                                      exact_filename=filename_query.filename_query,

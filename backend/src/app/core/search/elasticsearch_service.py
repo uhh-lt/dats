@@ -314,8 +314,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                  sdoc: bool = True,
                  proj_id: int,
                  query: Dict[str, Any],
-                 limit: Optional[int] = 10,
-                 skip: Optional[int] = 0) -> Dict[str, Any]:
+                 limit: Optional[int] = None,
+                 skip: Optional[int] = None) -> Dict[str, Any]:
         """
         Helper function that can be reused to find SDocs or Memos with different queries.
         :param query: The ElasticSearch query object in ES Query DSL
@@ -329,49 +329,69 @@ class ElasticSearchService(metaclass=SingletonMeta):
         else:
             idx = self.__get_index_name(proj_id=proj_id, index_type='memo')
 
+        # only return content for memos else IDs for SDocs
+        filter_path = ["hits.hits._id", "hits.hits._score"] if sdoc else ["hits"]
+
         if not self.__client.indices.exists(index=idx):
             raise ValueError(f"ElasticSearch Index '{idx}' does not exist!")
 
         if query is None or len(query) < 1:
             raise ValueError("Query DSL object must not be None or empty!")
-        if (not isinstance(limit, int)) or limit > 10000 or limit < 1:
-            raise ValueError("Limit must be a positive Integer smaller than 10000!")
-        elif (not isinstance(skip, int)) or skip > 10000 or limit < 1:
-            raise ValueError("Skip must be a positive Integer smaller than 10000!")
 
+        if isinstance(limit, int) and (limit > 10000 or limit < 1):
+            raise ValueError("Limit must be a positive Integer smaller than 10000!")
+        elif isinstance(skip, int) and (skip > 10000 or limit < 1):
+            raise ValueError("Skip must be a positive Integer smaller than 10000!")
+        elif limit is None or skip is None:
+            # use scroll api
+            res = list(helpers.scan(index=idx,
+                                    query={"query": query},
+                                    client=self.__client,
+                                    scroll='3m',
+                                    size=10000,
+                                    preserve_order=True,
+                                    filter_path=["_scroll_id", "_shards", "_type", "_index"] + filter_path))
+            return {
+                "hits": {
+                    "total": {
+                        "value": len(res),
+                        "relation": "eq",
+                    },
+                    "hits": res
+                }
+            }
+
+        # use search api
         return self.__client.search(index=idx,
                                     query=query,
                                     size=limit,
                                     from_=skip,
-                                    # only return content for memos else IDs for SDocs
-                                    filter_path=["hits.hits._id", "hits.hits._score", "hits.total"] if sdoc else [
-                                        "hits"])
+                                    filter_path=filter_path + ["hits.total"])
 
     def __search_sdocs(self,
                        *,
                        proj_id: int,
                        query: Dict[str, Any],
-                       limit: Optional[int] = 10,
-                       skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
+                       limit: Optional[int] = None,
+                       skip: Optional[int] = None) -> PaginatedElasticSearchDocumentHits:
         res = self.__search(sdoc=True, proj_id=proj_id, query=query, limit=limit, skip=skip)
         # Flo: for convenience only...
         res = OmegaConf.create(res)
-        if len(res) == 0:
+        if res.hits.total.value == 0:
             return PaginatedElasticSearchDocumentHits(hits=[],
                                                       total=0,
                                                       has_more=False,
-                                                      current_page_offset=skip,
+                                                      current_page_offset=skip if skip is not None else 0,
                                                       next_page_offset=0)
 
-        esdocs = [ElasticSearchDocumentHit(sdoc_id=doc["_id"], score=doc["_score"])
-                  for doc in res.hits.hits]
+        esdocs = [ElasticSearchDocumentHit(sdoc_id=doc["_id"], score=doc["_score"]) for doc in res.hits.hits]
 
-        has_more = res.hits.total.value > limit
+        has_more = limit is not None and res.hits.total.value > limit
         return PaginatedElasticSearchDocumentHits(hits=esdocs,
                                                   total=res.hits.total.value,
                                                   has_more=has_more,
-                                                  current_page_offset=skip,
-                                                  next_page_offset=(skip + limit) if has_more else 0)
+                                                  current_page_offset=skip if skip is not None else 0,
+                                                  next_page_offset=(skip + limit) if skip is not None and limit is not None and has_more else 0)
 
     def __search_memos(self,
                        *,
@@ -379,8 +399,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                        query: Dict[str, Any],
                        user_id: int,
                        starred: Optional[bool] = None,
-                       limit: Optional[int] = 10,
-                       skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+                       limit: Optional[int] = None,
+                       skip: Optional[int] = None) -> PaginatedMemoSearchResults:
 
         # add user to query
         query["bool"]["must"].append(
@@ -403,14 +423,16 @@ class ElasticSearchService(metaclass=SingletonMeta):
         res = self.__search(sdoc=False, proj_id=proj_id, query=query, limit=limit, skip=skip)
         # Flo: for convenience only...
         res = OmegaConf.create(res)
-        if len(res) == 0:
+        if res.hits.total.value == 0:
             return PaginatedMemoSearchResults(memos=[],
                                               has_more=False,
-                                              current_page_offset=skip,
+                                              total=0,
+                                              current_page_offset=skip if skip is not None else 0,
                                               next_page_offset=0)
 
         esmemos = [ElasticMemoHit(**OmegaConf.to_container(doc["_source"]), score=doc["_score"])
                    for doc in res.hits.hits]
+
         memos = [MemoRead(title=esmemo.title,
                           content=esmemo.content,
                           starred=esmemo.starred,
@@ -422,18 +444,21 @@ class ElasticSearchService(metaclass=SingletonMeta):
                           attached_object_id=esmemo.attached_object_id,
                           attached_object_type=esmemo.attached_object_type)
                  for esmemo in esmemos]
-        has_more = res.hits.total.value > limit
+
+        has_more = limit is not None and res.hits.total.value > limit
+
         return PaginatedMemoSearchResults(memos=memos,
                                           has_more=has_more,
-                                          current_page_offset=skip,
-                                          next_page_offset=(skip + limit) if has_more else 0)
+                                          total=res.hits.total.value,
+                                          current_page_offset=skip if skip is not None else 0,
+                                          next_page_offset=(skip + limit) if skip is not None and limit is not None and has_more else 0)
 
     def search_sdocs_by_exact_filename(self,
                                        *,
                                        proj_id: int,
                                        exact_filename: str,
-                                       limit: Optional[int] = 10,
-                                       skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
+                                       limit: Optional[int] = None,
+                                       skip: Optional[int] = None) -> PaginatedElasticSearchDocumentHits:
         # Flo: Using term query since filename is a keyword field
         return self.__search_sdocs(proj_id=proj_id, query={
             "term": {
@@ -445,8 +470,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                         *,
                                         proj_id: int,
                                         filename_prefix: str,
-                                        limit: Optional[int] = 10,
-                                        skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
+                                        limit: Optional[int] = None,
+                                        skip: Optional[int] = None) -> PaginatedElasticSearchDocumentHits:
         return self.__search_sdocs(proj_id=proj_id, query={
             "prefix": {
                 "filename": filename_prefix
@@ -457,8 +482,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                       *,
                                       proj_id: int,
                                       query: str,
-                                      limit: Optional[int] = 10,
-                                      skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
+                                      limit: Optional[int] = None,
+                                      skip: Optional[int] = None) -> PaginatedElasticSearchDocumentHits:
         return self.__search_sdocs(proj_id=proj_id, query={
             "match": {
                 "content": {
@@ -472,8 +497,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                        *,
                                        proj_id: int,
                                        keywords: List[str],
-                                       limit: Optional[int] = 10,
-                                       skip: Optional[int] = 0) -> PaginatedElasticSearchDocumentHits:
+                                       limit: Optional[int] = None,
+                                       skip: Optional[int] = None) -> PaginatedElasticSearchDocumentHits:
         query: Dict[str, any] = {
             "bool": {
                 "must": []
@@ -496,8 +521,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                     user_id: int,
                                     exact_title: str,
                                     starred: Optional[bool] = None,
-                                    limit: Optional[int] = 10,
-                                    skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+                                    limit: Optional[int] = None,
+                                    skip: Optional[int] = None) -> PaginatedMemoSearchResults:
         # Flo: Using term query since title is a keyword field
         return self.__search_memos(proj_id=proj_id, query={
             "bool": {
@@ -517,8 +542,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                      user_id: int,
                                      title_prefix: str,
                                      starred: Optional[bool] = None,
-                                     limit: Optional[int] = 10,
-                                     skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+                                     limit: Optional[int] = None,
+                                     skip: Optional[int] = None) -> PaginatedMemoSearchResults:
         return self.__search_memos(proj_id=proj_id, query={
             "bool": {
                 "must": [
@@ -537,8 +562,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                       user_id: int,
                                       query: str,
                                       starred: Optional[bool] = None,
-                                      limit: Optional[int] = 10,
-                                      skip: Optional[int] = 0) -> PaginatedMemoSearchResults:
+                                      limit: Optional[int] = None,
+                                      skip: Optional[int] = None) -> PaginatedMemoSearchResults:
         return self.__search_memos(proj_id=proj_id, query={
             "bool": {
                 "must": [

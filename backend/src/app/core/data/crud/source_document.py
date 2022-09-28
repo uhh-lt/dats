@@ -90,8 +90,8 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                  *,
                                  tag_ids: List[int],
                                  all_tags: bool = False,
-                                 skip: int = 0,
-                                 limit: int = 100) -> List[int]:
+                                 skip: Optional[int] = None,
+                                 limit: Optional[int] = None) -> List[int]:
         if not all_tags:
             # all docs that have ANY of the tags
             # noinspection PyUnresolvedReferences
@@ -115,7 +115,13 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
             query = query.group_by(self.model.id)
             query = query.having(func.count(self.model.id) == len(tag_ids))
-            return query.offset(skip).limit(limit).all()
+
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return query.all()
 
     def get_ids_by_span_entities(self,
                                  db: Session,
@@ -123,8 +129,8 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                  user_ids: Set[int] = None,
                                  proj_id: int,
                                  span_entities: List[SpanEntity],
-                                 skip: int = 0,
-                                 limit: int = 100) -> List[int]:
+                                 skip: Optional[int] = None,
+                                 limit: Optional[int] = None) -> List[int]:
         # Flo: we always want ADocs from the SYSTEM_USER
         if not user_ids:
             user_ids = set()
@@ -143,7 +149,12 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         inner_query = inner_query.group_by(self.model.id, CurrentCodeORM.id, SpanTextORM.id).from_self()
 
         outer_query = inner_query.group_by(self.model)
-        outer_query = outer_query.having(func.count(self.model.id) == len(span_entities)).offset(skip).limit(limit)
+        outer_query = outer_query.having(func.count(self.model.id) == len(span_entities))
+
+        if skip is not None:
+            outer_query = outer_query.offset(skip)
+        if limit is not None:
+            outer_query = outer_query.limit(limit)
 
         return outer_query.all()
 
@@ -153,8 +164,8 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                              user_ids: Set[int] = None,
                              sdoc_ids: Set[int] = None,
                              proj_id: int,
-                             skip: int = 0,
-                             limit: int = 100) -> List[SpanEntityStat]:
+                             skip: Optional[int] = None,
+                             limit: Optional[int] = None) -> List[SpanEntityStat]:
         # Flo: we always want ADocs from the SYSTEM_USER
         if not user_ids:
             user_ids = set()
@@ -172,7 +183,13 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                   AnnotationDocumentORM.user_id.in_(list(user_ids))))
         query = query.group_by(self.model.id, CodeORM.id, SpanTextORM.id)
 
-        res = query.offset(skip).limit(limit).all()
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        res = query.all()
+
         return [SpanEntityStat(sdoc_id=sdoc_id,
                                span_entity=SpanEntity(code_id=code_id,
                                                       span_text=text),

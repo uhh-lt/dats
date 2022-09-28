@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
@@ -15,8 +15,8 @@ class SearchService(metaclass=SingletonMeta):
         return super(SearchService, cls).__new__(cls)
 
     def search_sdoc_ids_by_sdoc_query_parameters(self,
-                                                 query_params: SearchSDocsQueryParameters,
-                                                 skip_limit: Dict[str, str]) -> List[int]:
+                                                 query_params: SearchSDocsQueryParameters) -> List[int]:
+        skip_limit = {"skip": None, "limit": None}
 
         with self.sqls.db_session() as db:
             sdocs_ids = []
