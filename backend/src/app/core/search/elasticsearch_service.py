@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any, Optional, Set, List
+from typing import Dict, Any, Optional, Set, List, Union
 
 import srsly
 from elasticsearch import Elasticsearch, helpers
@@ -312,6 +312,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
     def __search(self,
                  *,
                  sdoc: bool = True,
+                 source_fields: Union[bool, List[str]] = False,
                  proj_id: int,
                  query: Dict[str, Any],
                  limit: Optional[int] = None,
@@ -329,9 +330,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
         else:
             idx = self.__get_index_name(proj_id=proj_id, index_type='memo')
 
-        # only return content for memos else IDs for SDocs
-        filter_path = ["hits.hits._id", "hits.hits._score"] if sdoc else ["hits"]
-
         if not self.__client.indices.exists(index=idx):
             raise ValueError(f"ElasticSearch Index '{idx}' does not exist!")
 
@@ -345,12 +343,13 @@ class ElasticSearchService(metaclass=SingletonMeta):
         elif limit is None or skip is None:
             # use scroll api
             res = list(helpers.scan(index=idx,
-                                    query={"query": query},
+                                    query={"query": query, "_source": source_fields},
                                     client=self.__client,
-                                    scroll='3m',
+                                    scroll='10m',
                                     size=10000,
-                                    preserve_order=True,
-                                    filter_path=["_scroll_id", "_shards", "_type", "_index"] + filter_path))
+                                    preserve_order=True))
+
+            # build the exact same return data structure as if we would call search directly
             return {
                 "hits": {
                     "total": {
@@ -366,7 +365,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                     query=query,
                                     size=limit,
                                     from_=skip,
-                                    filter_path=filter_path + ["hits.total"])
+                                    _source=source_fields)
 
     def __search_sdocs(self,
                        *,
@@ -374,7 +373,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                        query: Dict[str, Any],
                        limit: Optional[int] = None,
                        skip: Optional[int] = None) -> PaginatedElasticSearchDocumentHits:
-        res = self.__search(sdoc=True, proj_id=proj_id, query=query, limit=limit, skip=skip)
+        res = self.__search(sdoc=True, proj_id=proj_id, query=query, limit=limit, skip=skip, source_fields=False)
         # Flo: for convenience only...
         res = OmegaConf.create(res)
         if res.hits.total.value == 0:
@@ -420,7 +419,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 }
             )
 
-        res = self.__search(sdoc=False, proj_id=proj_id, query=query, limit=limit, skip=skip)
+        res = self.__search(sdoc=False, proj_id=proj_id, query=query, limit=limit, skip=skip, source_fields=True)
         # Flo: for convenience only...
         res = OmegaConf.create(res)
         if res.hits.total.value == 0:
