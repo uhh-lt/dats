@@ -16,7 +16,7 @@ from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
-from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document import SourceDocumentRead, PaginatedSourceDocumentReads
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.util import preprocess_uploaded_file
@@ -101,16 +101,26 @@ async def delete_project(*,
 
 
 @router.get("/{proj_id}/sdoc", tags=tags,
-            response_model=List[SourceDocumentRead],
+            response_model=PaginatedSourceDocumentReads,
             summary="Returns all SourceDocuments of the Project.",
             description="Returns all SourceDocuments of the Project with the given ID.")
 async def get_project_sdocs(*,
                             proj_id: int,
                             db: Session = Depends(get_db_session),
-                            skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> List[SourceDocumentRead]:
+                            skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> PaginatedSourceDocumentReads:
     # TODO Flo: only if the user has access?
-    sdocs = crud_sdoc.read_by_project(db=db, proj_id=proj_id, **skip_limit)
-    return [SourceDocumentRead.from_orm(sdoc) for sdoc in sdocs]
+    sdocs_on_page = [SourceDocumentRead.from_orm(sdoc)
+                     for sdoc in crud_sdoc.read_by_project(db=db, proj_id=proj_id, **skip_limit)]
+    total_sdocs = crud_sdoc.count_by_project(db=db, proj_id=proj_id)
+    has_more = len(sdocs_on_page) < total_sdocs
+    skip, limit = skip_limit.values()
+    return PaginatedSourceDocumentReads(sdocs=sdocs_on_page,
+                                        has_more=len(sdocs_on_page) < total_sdocs,
+                                        total=total_sdocs,
+                                        current_page_offset=skip if skip is not None else 0,
+                                        next_page_offset=(skip + limit) if skip is not None
+                                                                           and limit is not None
+                                                                           and has_more else 0)
 
 
 @router.put("/{proj_id}/sdoc", tags=tags,

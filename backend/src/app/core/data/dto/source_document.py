@@ -5,6 +5,7 @@ from typing import List, Tuple, Optional
 from pydantic import BaseModel, Field
 
 from app.core.data.doc_type import DocType
+from app.core.data.dto.util import PaginatedResults
 
 
 class SDocStatus(int, Enum):
@@ -56,6 +57,10 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
 
     class Config:
         orm_mode = True
+
+
+class PaginatedSourceDocumentReads(PaginatedResults):
+    sdocs: List[SourceDocumentRead] = Field(description="The SourceDocuments on this page")
 
 
 class SourceDocumentContent(BaseModel):

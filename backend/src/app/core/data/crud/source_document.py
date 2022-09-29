@@ -86,6 +86,12 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                         limit: int = 100) -> List[SourceDocumentORM]:
         return db.query(self.model).filter(self.model.project_id == proj_id).offset(skip).limit(limit).all()
 
+    def count_by_project(self,
+                         db: Session,
+                         *,
+                         proj_id: int) -> int:
+        return db.query(func.count(self.model.id)).filter(self.model.project_id == proj_id).scalar()
+
     def get_ids_by_document_tags(self,
                                  db: Session,
                                  *,
