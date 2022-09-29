@@ -35,7 +35,7 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
 
   // automatically fetch new documents when button is visible
   useEffect(() => {
-    if (inView) {
+    if (inView && projectDocuments.hasNextPage) {
       projectDocuments.fetchNextPage();
     }
   }, [inView, projectDocuments]);

@@ -66,7 +66,7 @@ const useGetProjectDocumentsInfinite = (projectId: number) =>
         limit: 10,
       }),
     {
-      getNextPageParam: (lastPage) => lastPage.next_page_offset,
+      getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.next_page_offset : undefined),
     }
   );
 
