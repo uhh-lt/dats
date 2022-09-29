@@ -1,28 +1,25 @@
 import { Button, Stack } from "@mui/material";
-import React, { useMemo } from "react";
+import React from "react";
+import { SpanEntityDocumentFrequency } from "../../../api/openapi";
 
 interface CodeStatsProps {
-  codeId: number;
-  data: Map<string, number>;
-  handleClick: (codeId: number, text: string) => void;
+  data: SpanEntityDocumentFrequency[];
+  handleClick: (stat: SpanEntityDocumentFrequency) => void;
 }
 
-function CodeStats({ codeId, data, handleClick }: CodeStatsProps) {
-  const sortedData = useMemo(() => {
-    return Array.from(data.entries()).sort((a, b) => b[1] - a[1]);
-  }, [data]);
-  const maxValue = sortedData.length > 0 ? sortedData[0][1] : 0;
+function CodeStats({ data, handleClick }: CodeStatsProps) {
+  const maxValue = data.length > 0 ? data[0].count : 0;
 
   return (
     <Stack sx={{ whiteSpace: "nowrap" }} spacing={0.5}>
-      {sortedData.map(([text, count]) => (
+      {data.map((stat) => (
         <Button
-          key={text}
-          sx={{ width: `${(count / maxValue) * 100}%`, justifyContent: "left" }}
+          key={stat.span_text}
+          sx={{ width: `${(stat.count / maxValue) * 100}%`, justifyContent: "left" }}
           variant="outlined"
-          onClick={() => handleClick(codeId, text)}
+          onClick={() => handleClick(stat)}
         >
-          {text}: {count}
+          {stat.span_text}: {stat.count}
         </Button>
       ))}
     </Stack>

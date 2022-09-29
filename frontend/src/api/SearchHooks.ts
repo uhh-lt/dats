@@ -5,7 +5,8 @@ import {
   MemoRead,
   PaginatedMemoSearchResults,
   SearchService,
-  SpanEntityStat,
+  SpanEntityDocumentFrequency,
+  SpanEntityFrequency,
   TagStat,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
@@ -44,25 +45,26 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
   );
 
 const useSearchEntityStats = (projectId: number, filters: SearchFilter[]) =>
-  useQuery<SpanEntityStat[], Error>([QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters], () => {
-      const { keywords, tags, codes, texts } = orderFilter(filters);
-      return SearchService.searchSpanEntityStatsSearchEntityStatsPost({
-        requestBody: {
-          proj_id: projectId,
-          span_entities: codes.length > 0 ? codes : undefined,
-          tag_ids: tags.length > 0 ? tags : undefined,
-          keywords: keywords.length > 0 ? keywords : undefined,
-          search_terms: texts.length > 0 ? texts : undefined,
-          all_tags: true,
-        },
-      })
+  useQuery<SpanEntityFrequency[], Error>([QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters], () => {
+    const { keywords, tags, codes, texts } = orderFilter(filters);
+    return SearchService.searchSpanEntityFrequencysSearchEntityStatsPost({
+      requestBody: {
+        proj_id: projectId,
+        span_entities: codes.length > 0 ? codes : undefined,
+        tag_ids: tags.length > 0 ? tags : undefined,
+        keywords: keywords.length > 0 ? keywords : undefined,
+        search_terms: texts.length > 0 ? texts : undefined,
+        all_tags: true,
+      },
+    });
   });
 
-const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) =>
-  useQuery<KeywordStat[], Error>(
-    [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, filters], () => {
+const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]) =>
+  useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
+    [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters],
+    async () => {
       const { keywords, tags, codes, texts } = orderFilter(filters);
-      return SearchService.searchKeywordStatsSearchKeywordStatsPost({
+      const data = await SearchService.searchSpanEntityFrequencysSearchEntityDocumentStatsPost({
         requestBody: {
           proj_id: projectId,
           span_entities: codes.length > 0 ? codes : undefined,
@@ -71,12 +73,30 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) =>
           search_terms: texts.length > 0 ? texts : undefined,
           all_tags: true,
         },
-      })
+      });
+      return new Map(Object.entries(data.stats).map((x) => [parseInt(x[0]), x[1]]));
+    }
+  );
+
+const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) =>
+  useQuery<KeywordStat[], Error>([QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, filters], () => {
+    const { keywords, tags, codes, texts } = orderFilter(filters);
+    return SearchService.searchKeywordStatsSearchKeywordStatsPost({
+      requestBody: {
+        proj_id: projectId,
+        span_entities: codes.length > 0 ? codes : undefined,
+        tag_ids: tags.length > 0 ? tags : undefined,
+        keywords: keywords.length > 0 ? keywords : undefined,
+        search_terms: texts.length > 0 ? texts : undefined,
+        all_tags: true,
+      },
     });
+  });
 
 const useSearchTagStats = (projectId: number, filters: SearchFilter[]) =>
   useQuery<TagStat[], Error>(
-    [QueryKey.SEARCH_TAG_STATISTICS, projectId, filters], () => {
+    [QueryKey.SEARCH_TAG_STATISTICS, projectId, filters],
+    () => {
       const { keywords, tags, codes, texts } = orderFilter(filters);
       return SearchService.searchTagStatsSearchTagStatsPost({
         requestBody: {
@@ -87,7 +107,8 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) =>
           search_terms: texts.length > 0 ? texts : undefined,
           all_tags: true,
         },
-      })},
+      });
+    },
     {
       // todo: check if this really works
       onSuccess: (data) => {
@@ -127,6 +148,7 @@ const useSearchMemoTitle = (params: MemoContentQuery) =>
 
 const SearchHooks = {
   useSearchEntityStats,
+  useSearchEntityDocumentStats,
   useSearchKeywordStats,
   useSearchTagStats,
   useSearchMemoTitle,

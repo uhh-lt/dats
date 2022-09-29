@@ -4,7 +4,7 @@ import { Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3";
 import { Button } from "@mui/material";
 import SearchHooks from "../../api/SearchHooks";
 import { useParams } from "react-router-dom";
-import { SpanEntity, SpanEntityStat } from "../../api/openapi";
+import { SpanEntity, SpanEntityFrequency } from "../../api/openapi";
 import useComputeGraph from "./useComputeGraph";
 
 export interface EntityData {

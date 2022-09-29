@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { CodeRead, SpanEntityStat } from "../../api/openapi";
+import { CodeRead, SpanEntityFrequency } from "../../api/openapi";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
 import { EntityData, LinkData } from "./SearchResultsGraph";
 import { useAppSelector } from "../../plugins/ReduxHooks";
 
-function computeGraph(projectCodes: CodeRead[], codeStats: SpanEntityStat[]) {
+function computeGraph(projectCodes: CodeRead[], codeStats: SpanEntityFrequency[]) {
   // create a mapping codeId -> CodeRead for all projectCodes
   const projectCodeMap = new Map<number, CodeRead>();
   projectCodes.forEach((code) => {
@@ -19,7 +19,7 @@ function computeGraph(projectCodes: CodeRead[], codeStats: SpanEntityStat[]) {
   const nodeData = new Map<string, number>(); // node -> frequency
   const sdocData = new Map<number, Set<string>>(); // sdoc -> nodes
   codeStats.forEach((stat) => {
-    let nodeKey = `${stat.span_entity.code_id}-${stat.span_entity.span_text}`;
+    let nodeKey = `${stat.code_id}-${stat.span_text}`;
     let nodeFrequency = nodeData.get(nodeKey) || 0;
     nodeData.set(nodeKey, nodeFrequency + stat.count);
 

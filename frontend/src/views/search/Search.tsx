@@ -10,7 +10,7 @@ import Portal from "@mui/material/Portal";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useForm } from "react-hook-form";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import { SourceDocumentRead } from "../../api/openapi";
+import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
 import { isNumber, parseInt } from "lodash";
 import {
   createCodeFilter,
@@ -96,8 +96,8 @@ function Search() {
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
-    (codeId: number, text: string) => {
-      dispatch(SearchActions.addFilter(createCodeFilter(codeId, text)));
+    (stat: SpanEntityDocumentFrequency) => {
+      dispatch(SearchActions.addFilter(createCodeFilter(stat.code_id, stat.span_text)));
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
@@ -157,6 +157,7 @@ function Search() {
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
+            filter={filters}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}

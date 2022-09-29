@@ -9,7 +9,8 @@ import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchRe
 import type { SearchSDocsQueryParameters } from "../models/SearchSDocsQueryParameters";
 import type { SourceDocumentContentQuery } from "../models/SourceDocumentContentQuery";
 import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
-import type { SpanEntityStat } from "../models/SpanEntityStat";
+import type { SpanEntityDocumentFrequencyResult } from "../models/SpanEntityDocumentFrequencyResult";
+import type { SpanEntityFrequency } from "../models/SpanEntityFrequency";
 import type { TagStat } from "../models/TagStat";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -40,16 +41,16 @@ export class SearchService {
   }
 
   /**
-   * Returns SpanEntityStats for the given SourceDocuments.
-   * Returns SpanEntityStats for the given SourceDocuments.
-   * @returns SpanEntityStat Successful Response
+   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * @returns SpanEntityFrequency Successful Response
    * @throws ApiError
    */
-  public static searchSpanEntityStatsSearchEntityStatsPost({
+  public static searchSpanEntityFrequencysSearchEntityStatsPost({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
-  }): CancelablePromise<Array<SpanEntityStat>> {
+  }): CancelablePromise<Array<SpanEntityFrequency>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/entity_stats",
@@ -62,8 +63,30 @@ export class SearchService {
   }
 
   /**
-   * Returns SpanEntityStats for the given SourceDocuments.
-   * Returns SpanEntityStats for the given SourceDocuments.
+   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * @returns SpanEntityDocumentFrequencyResult Successful Response
+   * @throws ApiError
+   */
+  public static searchSpanEntityFrequencysSearchEntityDocumentStatsPost({
+    requestBody,
+  }: {
+    requestBody: SearchSDocsQueryParameters;
+  }): CancelablePromise<SpanEntityDocumentFrequencyResult> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/entity_document_stats",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * Returns SpanEntityFrequencys for the given SourceDocuments.
    * @returns KeywordStat Successful Response
    * @throws ApiError
    */

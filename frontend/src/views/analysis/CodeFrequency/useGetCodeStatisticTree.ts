@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { CodeRead, DocType, ProjectService, SearchService, SourceDocumentRead } from "../../../api/openapi";
+import { CodeRead, ProjectService, SearchService, SourceDocumentRead } from "../../../api/openapi";
 
 export interface Statistic {
   id: number;
@@ -36,16 +36,16 @@ export const useGetCodeStatisticTree = (projectId: number) =>
     allProjectCodes.forEach((code) => codeMap.set(code.id, code));
 
     // get stats for all documents
-    const temp = await SearchService.searchSpanEntityStatsSearchEntityStatsPost({
+    const temp = await SearchService.searchSpanEntityFrequencysSearchEntityStatsPost({
       requestBody: { proj_id: projectId },
-    })
+    });
 
     // map query results to own data type
     const stats: Statistic[] = temp.map((stat, index) => ({
       id: index, // todo that is not a good id!
       sdoc: documentMap.get(stat.sdoc_id),
-      code: codeMap.get(stat.span_entity.code_id),
-      text: stat.span_entity.span_text,
+      code: codeMap.get(stat.code_id),
+      text: stat.span_text,
       count: stat.count,
     }));
 
