@@ -1,28 +1,58 @@
-import { Button, Stack } from "@mui/material";
-import React from "react";
+import { Button } from "@mui/material";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import React, { useMemo } from "react";
 import { SpanEntityDocumentFrequency } from "../../../api/openapi";
+import { TabPanel } from "@mui/lab";
 
 interface CodeStatsProps {
-  data: SpanEntityDocumentFrequency[];
+  codeId: number;
+  codeStats: SpanEntityDocumentFrequency[];
   handleClick: (stat: SpanEntityDocumentFrequency) => void;
+  parentRef: React.MutableRefObject<undefined>;
 }
 
-function CodeStats({ data, handleClick }: CodeStatsProps) {
-  const maxValue = data.length > 0 ? data[0].count : 0;
+function CodeStats({ codeId, codeStats, handleClick, parentRef }: CodeStatsProps) {
+  // The virtualizer
+  const rowVirtualizer = useVirtualizer({
+    count: codeStats.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 40,
+  });
 
+  // computed
+  const maxValue = useMemo(() => Math.max(...codeStats.map((x) => x.count)), [codeStats]);
+
+  // render
   return (
-    <Stack sx={{ whiteSpace: "nowrap" }} spacing={0.5}>
-      {data.map((stat) => (
+    <TabPanel
+      value={`${codeId}`}
+      style={{
+        whiteSpace: "nowrap",
+        height: `${rowVirtualizer.getTotalSize()}px`,
+        width: "100%",
+        position: "relative",
+      }}
+    >
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => (
         <Button
-          key={stat.span_text}
-          sx={{ width: `${(stat.count / maxValue) * 100}%`, justifyContent: "left" }}
+          key={virtualItem.key}
+          sx={{
+            width: `${(codeStats[virtualItem.index].count / maxValue) * 100}%`,
+            justifyContent: "left",
+          }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            transform: `translateY(${virtualItem.start}px)`,
+          }}
           variant="outlined"
-          onClick={() => handleClick(stat)}
+          onClick={() => handleClick(codeStats[virtualItem.index])}
         >
-          {stat.span_text}: {stat.count}
+          {codeStats[virtualItem.index].span_text}: {codeStats[virtualItem.index].count}
         </Button>
       ))}
-    </Stack>
+    </TabPanel>
   );
 }
 

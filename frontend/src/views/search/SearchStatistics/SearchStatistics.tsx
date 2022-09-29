@@ -1,6 +1,6 @@
-import { TabContext, TabPanel } from "@mui/lab";
+import { TabContext } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import KeywordStats from "./KeywordStats";
 import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";
@@ -88,6 +88,9 @@ function SearchStatistics({
     setTab(`${code.id}`);
   }, []);
 
+  // The scrollable element for the lists
+  const parentRef = useRef();
+
   return (
     <Box className="myFlexContainer" {...(props as BoxProps)}>
       <TabContext value={tab}>
@@ -100,33 +103,17 @@ function SearchStatistics({
             ))}
           </Tabs>
         </Box>
-        <Box className="myFlexFillAllContainer">
-          <TabPanel value="keywords" sx={{ p: 2 }}>
-            {keywordStats.isSuccess ? (
-              <KeywordStats data={keywordStats.data} handleClick={handleKeywordClick} />
-            ) : keywordStats.isError ? (
-              <div>Error: {keywordStats.error.message}</div>
-            ) : keywordStats.isLoading && keywordStats.isFetching ? (
-              <div>Loading...</div>
-            ) : (
-              <></>
-            )}
-          </TabPanel>
-          <TabPanel value="tags" sx={{ p: 2 }}>
-            {tagStats.isSuccess ? (
-              <DocumentTagStats data={tagStats.data} handleClick={handleTagClick} />
-            ) : tagStats.isError ? (
-              <div>Error: {tagStats.error.message}</div>
-            ) : tagStats.isLoading && keywordStats.isFetching ? (
-              <div>Loading...</div>
-            ) : (
-              <></>
-            )}
-          </TabPanel>
+        <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
+          <KeywordStats keywordStats={keywordStats} handleClick={handleKeywordClick} parentRef={parentRef} />
+          <DocumentTagStats tagStats={tagStats} handleClick={handleTagClick} parentRef={parentRef} />
           {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
-            <TabPanel key={codeId} value={`${codeId}`} sx={{ p: 2 }}>
-              <CodeStats key={codeId} data={data} handleClick={handleCodeClick} />
-            </TabPanel>
+            <CodeStats
+              key={codeId}
+              codeId={codeId}
+              codeStats={data}
+              handleClick={handleCodeClick}
+              parentRef={parentRef}
+            />
           ))}
         </Box>
       </TabContext>
