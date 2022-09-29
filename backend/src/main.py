@@ -22,7 +22,7 @@ from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryEr
 from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
     NoSuchMemoInElasticSearchError  # noqa E402
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
-    span_annotation, document_tag, span_group, bbox_annotation, search, metadata, feedback  # noqa E402
+    span_annotation, document_tag, span_group, bbox_annotation, search, metadata, feedback, analysis  # noqa E402
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from config import conf  # noqa E402
 
@@ -114,6 +114,7 @@ app.include_router(memo.router)
 app.include_router(search.router)
 app.include_router(metadata.router)
 app.include_router(feedback.router)
+app.include_router(analysis.router)
 
 
 def main() -> None:

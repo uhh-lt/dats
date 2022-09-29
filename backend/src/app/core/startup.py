@@ -90,6 +90,9 @@ def __init_services__(create_database_and_tables: bool = False,
     # import and init RedisService
     from app.core.db.redis_service import RedisService
     RedisService()
+    # import and init AnalysisService
+    from app.core.analysis.analysis_service import AnalysisService
+    AnalysisService()
 
 
 def __create_system_user__() -> None:
