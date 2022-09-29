@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import * as React from "react";
-import { useCallback, useContext, useMemo } from "react";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import { Divider, Grid, Stack, Typography } from "@mui/material";
 import DocumentViewer from "./DocumentViewer/DocumentViewer";
 import SearchResults from "./SearchResults/SearchResults";
@@ -62,6 +62,12 @@ function Search() {
     }
     return undefined;
   }, [filters]);
+
+  // effects
+  // reset table navigation page to 0, when the filters change
+  useEffect(() => {
+    dispatch(SearchActions.setPage(0));
+  }, [dispatch, filters]);
 
   // handle navigation
   const navigateIfNecessary = useCallback(
