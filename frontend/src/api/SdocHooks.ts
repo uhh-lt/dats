@@ -10,7 +10,7 @@ import {
   SourceDocumentMetadataRead,
   SourceDocumentRead,
   SourceDocumentService,
-  SourceDocumentTokens,
+  SourceDocumentTokens
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import useStableQueries from "../utils/useStableQueries";
@@ -99,6 +99,7 @@ const useDeleteDocument = () =>
   useMutation(SourceDocumentService.deleteByIdSdocSdocIdDelete, {
     onSuccess: (sdoc) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, sdoc.project_id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS_INFINITE, sdoc.project_id]);
       queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, sdoc.project_id]);
       queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, sdoc.project_id]);
     },

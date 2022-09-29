@@ -1,13 +1,13 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
   CodeRead,
   DocumentTagRead,
   MemoRead,
+  PaginatedSourceDocumentReads,
   ProjectCreate,
   ProjectRead,
   ProjectService,
   ProjectUpdate,
-  SourceDocumentRead,
   UserRead,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
@@ -45,14 +45,29 @@ const useUploadDocument = () =>
   useMutation(ProjectService.uploadProjectSdocProjectProjIdSdocPut, {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, variables.projId]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS_INFINITE, variables.projId]);
     },
   });
 
 const useGetProjectDocuments = (projectId: number) =>
-  useQuery<SourceDocumentRead[], Error>([QueryKey.PROJECT_SDOCS, projectId], () =>
+  useQuery<PaginatedSourceDocumentReads, Error>([QueryKey.PROJECT_SDOCS, projectId], () =>
     ProjectService.getProjectSdocsProjectProjIdSdocGet({
       projId: projectId,
     })
+  );
+
+const useGetProjectDocumentsInfinite = (projectId: number) =>
+  useInfiniteQuery(
+    [QueryKey.PROJECT_SDOCS_INFINITE, projectId],
+    async ({ pageParam = 0 }) =>
+      await ProjectService.getProjectSdocsProjectProjIdSdocGet({
+        projId: projectId,
+        skip: pageParam,
+        limit: 10,
+      }),
+    {
+      getNextPageParam: (lastPage) => lastPage.next_page_offset,
+    }
   );
 
 const useCreateProject = () =>
@@ -169,6 +184,7 @@ const ProjectHooks = {
   // sdoc
   useUploadDocument,
   useGetProjectDocuments,
+  useGetProjectDocumentsInfinite,
   useCreateProject,
   useUpdateProject,
   useDeleteProject,

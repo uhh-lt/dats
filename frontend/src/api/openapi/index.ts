@@ -34,6 +34,7 @@ export type { MemoTitleQuery } from "./models/MemoTitleQuery";
 export type { MemoUpdate } from "./models/MemoUpdate";
 export type { PaginatedElasticSearchDocumentHits } from "./models/PaginatedElasticSearchDocumentHits";
 export type { PaginatedMemoSearchResults } from "./models/PaginatedMemoSearchResults";
+export type { PaginatedSourceDocumentReads } from "./models/PaginatedSourceDocumentReads";
 export type { ProjectCreate } from "./models/ProjectCreate";
 export type { ProjectRead } from "./models/ProjectRead";
 export type { ProjectUpdate } from "./models/ProjectUpdate";

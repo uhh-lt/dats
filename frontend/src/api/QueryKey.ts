@@ -7,6 +7,8 @@ export const QueryKey = {
   PROJECT_USERS: "projectUsers",
   // all documents of a project (by project id)
   PROJECT_SDOCS: "projectDocuments",
+  // all documents of a project (by project id) for infinite scrolling
+  PROJECT_SDOCS_INFINITE: "projectDocumentsInfinite",
   // all codes of a project (by project id)
   PROJECT_CODES: "projectCodes",
   // all tags of a project (by project id)

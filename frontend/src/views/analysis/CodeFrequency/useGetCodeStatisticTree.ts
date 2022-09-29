@@ -26,7 +26,7 @@ export const useGetCodeStatisticTree = (projectId: number) =>
       limit: 1000,
     });
     const documentMap = new Map<number, SourceDocumentRead>();
-    allProjectDocuments.forEach((sdoc) => documentMap.set(sdoc.id, sdoc));
+    allProjectDocuments.sdocs.forEach((sdoc) => documentMap.set(sdoc.id, sdoc));
 
     // get all codes
     const allProjectCodes = await ProjectService.getProjectCodesProjectProjIdCodeGet({
@@ -36,7 +36,7 @@ export const useGetCodeStatisticTree = (projectId: number) =>
     allProjectCodes.forEach((code) => codeMap.set(code.id, code));
 
     // get stats for all documents
-    const temp = await SearchService.searchSpanEntityFrequencysSearchEntityStatsPost({
+    const temp = await SearchService.searchSpanEntityStatsSearchEntityStatsPost({
       requestBody: { proj_id: projectId },
     });
 

@@ -47,7 +47,7 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
 const useSearchEntityStats = (projectId: number, filters: SearchFilter[]) =>
   useQuery<SpanEntityFrequency[], Error>([QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters], () => {
     const { keywords, tags, codes, texts } = orderFilter(filters);
-    return SearchService.searchSpanEntityFrequencysSearchEntityStatsPost({
+    return SearchService.searchSpanEntityStatsSearchEntityStatsPost({
       requestBody: {
         proj_id: projectId,
         span_entities: codes.length > 0 ? codes : undefined,
@@ -64,7 +64,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
     [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters],
     async () => {
       const { keywords, tags, codes, texts } = orderFilter(filters);
-      const data = await SearchService.searchSpanEntityFrequencysSearchEntityDocumentStatsPost({
+      const data = await SearchService.searchEntityDocumentStatsSearchEntityDocumentStatsPost({
         requestBody: {
           proj_id: projectId,
           span_entities: codes.length > 0 ? codes : undefined,

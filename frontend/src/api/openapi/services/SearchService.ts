@@ -41,12 +41,12 @@ export class SearchService {
   }
 
   /**
-   * Returns SpanEntityFrequencys for the given SourceDocuments.
-   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * Returns SpanEntityStats for the given SourceDocuments.
+   * Returns SpanEntityStats for the given SourceDocuments.
    * @returns SpanEntityFrequency Successful Response
    * @throws ApiError
    */
-  public static searchSpanEntityFrequencysSearchEntityStatsPost({
+  public static searchSpanEntityStatsSearchEntityStatsPost({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
@@ -63,12 +63,12 @@ export class SearchService {
   }
 
   /**
-   * Returns SpanEntityFrequencys for the given SourceDocuments.
-   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * Returns SpanEntityStats for the given SourceDocuments.
+   * Returns SpanEntityStats for the given SourceDocuments.
    * @returns SpanEntityDocumentFrequencyResult Successful Response
    * @throws ApiError
    */
-  public static searchSpanEntityFrequencysSearchEntityDocumentStatsPost({
+  public static searchEntityDocumentStatsSearchEntityDocumentStatsPost({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
@@ -85,8 +85,8 @@ export class SearchService {
   }
 
   /**
-   * Returns SpanEntityFrequencys for the given SourceDocuments.
-   * Returns SpanEntityFrequencys for the given SourceDocuments.
+   * Returns KeywordStats for the given SourceDocuments.
+   * Returns KeywordStats for the given SourceDocuments.
    * @returns KeywordStat Successful Response
    * @throws ApiError
    */

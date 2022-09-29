@@ -6,10 +6,10 @@ import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
+import type { PaginatedSourceDocumentReads } from "../models/PaginatedSourceDocumentReads";
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
-import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { UserRead } from "../models/UserRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -139,7 +139,7 @@ export class ProjectService {
   /**
    * Returns all SourceDocuments of the Project.
    * Returns all SourceDocuments of the Project with the given ID.
-   * @returns SourceDocumentRead Successful Response
+   * @returns PaginatedSourceDocumentReads Successful Response
    * @throws ApiError
    */
   public static getProjectSdocsProjectProjIdSdocGet({
@@ -156,7 +156,7 @@ export class ProjectService {
      * The maximum number of returned elements
      */
     limit?: number;
-  }): CancelablePromise<Array<SourceDocumentRead>> {
+  }): CancelablePromise<PaginatedSourceDocumentReads> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/sdoc",

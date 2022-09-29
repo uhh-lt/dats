@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useRef, useState } from "react";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import {
   Box,
   CardContent,
@@ -21,14 +21,24 @@ import SdocHooks from "../../../api/SdocHooks";
 import { LoadingButton } from "@mui/lab";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
+import { useInView } from "react-intersection-observer";
 
 interface ProjectDocumentsProps {
   project: ProjectRead;
 }
 
 function ProjectDocuments({ project }: ProjectDocumentsProps) {
-  // query all documents that belong to the project
-  const projectDocuments = ProjectHooks.useGetProjectDocuments(project.id);
+  const { ref, inView } = useInView();
+
+  // global server state (react-query)
+  const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(project.id);
+
+  // automatically fetch new documents when button is visible
+  useEffect(() => {
+    if (inView) {
+      projectDocuments.fetchNextPage();
+    }
+  }, [inView, projectDocuments]);
 
   // file upload
   const [files, setFiles] = useState<File[]>([]);
@@ -125,26 +135,46 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
       )}
       {projectDocuments.isSuccess && (
         <List>
-          {projectDocuments.data.map((document) => (
-            <ListItem
-              disablePadding
-              key={document.id}
-              onContextMenu={onContextMenu(document.id)}
-              secondaryAction={
-                <Tooltip title={"Delete document"}>
-                  <span>
-                    <IconButton onClick={() => handleClickDeleteFile(document.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              }
-            >
-              <ListItemButton>
-                <ListItemText primary={document.filename} />
-              </ListItemButton>
-            </ListItem>
+          {projectDocuments.data.pages.map((paginatedDocuments, i) => (
+            <React.Fragment key={i}>
+              {paginatedDocuments.sdocs.map((document) => (
+                <ListItem
+                  disablePadding
+                  key={document.id}
+                  onContextMenu={onContextMenu(document.id)}
+                  secondaryAction={
+                    <Tooltip title={"Delete document"}>
+                      <span>
+                        <IconButton onClick={() => handleClickDeleteFile(document.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                  }
+                >
+                  <ListItemButton>
+                    <ListItemText primary={document.filename} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </React.Fragment>
           ))}
+          <ListItem disablePadding ref={ref}>
+            <ListItemButton
+              onClick={() => projectDocuments.fetchNextPage()}
+              disabled={!projectDocuments.hasNextPage || projectDocuments.isFetchingNextPage}
+            >
+              <ListItemText
+                primary={
+                  projectDocuments.isFetchingNextPage
+                    ? "Loading more..."
+                    : projectDocuments.hasNextPage
+                    ? "Load More"
+                    : "Nothing more to load"
+                }
+              />
+            </ListItemButton>
+          </ListItem>
         </List>
       )}
       <ProjectDocumentsContextMenu
