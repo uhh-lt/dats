@@ -29,6 +29,7 @@ torch = {version = "^1.11.0", platform = "linux"}
 timm = {version = "^0.5.4", platform = "linux"}
 elasticsearch = "7.17"
 python-magic = "^0.4.25"
+tika = "^1.24"
 
 [tool.poetry.dev-dependencies]
 
