@@ -7,13 +7,13 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn import Config, Server
 
-from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, FileNotFoundInRepositoryError
-from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
-    NoSuchMemoInElasticSearchError
 from app.core.startup import startup
 
 startup(reset_data=False)
 
+from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, FileNotFoundInRepositoryError  # noqa E402
+from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
+    NoSuchMemoInElasticSearchError  # noqa E402
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
     span_annotation, document_tag, span_group, bbox_annotation, search, metadata, feedback  # noqa E402
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
