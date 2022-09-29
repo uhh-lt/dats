@@ -38,6 +38,11 @@ class FileAlreadyExistsInRepositoryError(Exception):
                          f"same name in the DWTS Repository at {dst}")
 
 
+class ProjectAlreadyExistsInRepositoryError(Exception):
+    def __init__(self, proj_id: int):
+        super().__init__(f"Cannot create directory structure for Project {proj_id} because it already exists!")
+
+
 class UnsupportedDocTypeForSourceDocument(Exception):
     def __init__(self, dst_path: Path):
         super().__init__(f"Unsupported DocType! Cannot create SourceDocument from file {dst_path}.")
@@ -168,6 +173,19 @@ class RepoService(metaclass=SingletonMeta):
 
     def _generate_dst_path_for_project_file(self, proj_id: int, filename: str) -> Path:
         return self._generate_project_repo_sdocs_root_path(proj_id=proj_id).joinpath(f"{filename}")
+
+    def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
+        dst_path = self._generate_project_repo_sdocs_root_path(proj_id=proj_id)
+        try:
+            if dst_path.exists():
+                logger.warning("Cannot create project directory structure because it already exists!")
+                raise ProjectAlreadyExistsInRepositoryError(proj_id=proj_id)
+            dst_path.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            # FIXME Flo: Throw or what?!
+            logger.error(f"Cannot create project directory structure! {e}")
+
+        return dst_path
 
     def _create_directory_structure_for_project_file(self, proj_id: int, filename: str) -> Optional[Path]:
         dst_path = self._generate_dst_path_for_project_file(proj_id=proj_id, filename=filename)

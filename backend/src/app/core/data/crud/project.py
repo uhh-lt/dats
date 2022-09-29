@@ -29,6 +29,9 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 3) create system codes
         crud_code.create_system_codes_for_project(db=db, proj_id=db_obj.id)
 
+        # 4) create repo directory structure
+        RepoService().create_directory_structure_for_project(proj_id=db_obj.id)
+
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> Optional[ProjectORM]:
