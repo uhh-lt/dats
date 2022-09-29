@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -9,7 +11,12 @@ from uvicorn import Config, Server
 
 from app.core.startup import startup
 
-startup(reset_data=False)
+# Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
+# file once more manually, so it would be executed twice.
+STARTUP_DONE = bool(int(os.environ.get('STARTUP_DONE', '0')))
+if not STARTUP_DONE:
+    startup(reset_data=False)
+    os.environ['STARTUP_DONE'] = "1"
 
 from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, FileNotFoundInRepositoryError  # noqa E402
 from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
