@@ -1,5 +1,4 @@
 import { Link as RouterLink, useParams } from "react-router-dom";
-import { CodeStatistics, Statistic, useGetCodeStatisticTree } from "./useGetCodeStatisticTree";
 import { Bar, BarChart, Cell, Legend, Pie, PieChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import React, { Dispatch, SetStateAction, useContext, useEffect, useMemo, useState } from "react";
 import {
@@ -21,6 +20,7 @@ import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { renderTextCellExpand } from "./renderTextCellExpand";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
+import AnalysisHooks, { ICodeFrequencies, ICodeOccurrence } from "../../../api/AnalysisHooks";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", hide: true },
@@ -65,8 +65,8 @@ const columns: GridColDef[] = [
   { field: "count", headerName: "Count", type: "number" },
 ];
 
-function allSpans(codeStatistics: CodeStatistics): Statistic[] {
-  const result = Array.from(codeStatistics.spans);
+function allSpans(codeStatistics: ICodeFrequencies): ICodeOccurrence[] {
+  const result = Array.from(codeStatistics.occurrences);
   for (const child of codeStatistics.children) {
     result.push(...allSpans(child));
   }
@@ -81,10 +81,10 @@ function CodeFrequency() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // custom hook
-  const data = useGetCodeStatisticTree(projectId);
+  const data = AnalysisHooks.useAnalyseCodeFrequencies(projectId);
 
   // local state
-  const [selectedStatistic, setSelectedStatistic] = useState<CodeStatistics>();
+  const [selectedStatistic, setSelectedStatistic] = useState<ICodeFrequencies>();
   const [page, setPage] = useState<number>(0);
 
   // computed
@@ -126,9 +126,7 @@ function CodeFrequency() {
                   </IconButton>
                 }
                 title={
-                  selectedStatistic.name !== "root"
-                    ? `Occurrences of code ${selectedStatistic.code?.name}`
-                    : "All code occurrences"
+                  selectedStatistic.code ? `Occurrences of code ${selectedStatistic.code.name}` : "All code occurrences"
                 }
                 subheader="A description of this table"
               />
@@ -141,6 +139,7 @@ function CodeFrequency() {
                   disableSelectionOnClick
                   page={page}
                   onPageChange={(page) => setPage(page)}
+                  getRowId={(row) => `sdoc-${row.sdoc.id}-code/${row.code.id}-${row.text}`}
                 />
               </CardContent>
             </Card>
@@ -177,17 +176,19 @@ const renderCustomizedLabel = (data: any) => {
 };
 
 interface CodeFrequencyViewProps {
-  setStatistics: Dispatch<SetStateAction<CodeStatistics | undefined>>;
-  data: CodeStatistics;
+  setStatistics: Dispatch<SetStateAction<ICodeFrequencies | undefined>>;
+  data: ICodeFrequencies;
 }
 
 function CodeFrequencyView({ data, setStatistics }: CodeFrequencyViewProps) {
   // local state
-  const [selectedData, setSelectedData] = useState<CodeStatistics>();
+  const [selectedData, setSelectedData] = useState<ICodeFrequencies>();
   const [showPieChart, toggleShowPieChart] = React.useReducer((previous) => !previous, false);
 
   // computed
-  const chartData = useMemo(() => data.children.filter((x) => x.aggregatedCount > 0), [data]);
+  const chartData = useMemo(() => data.children.filter((x) => x.aggregated_count > 0), [data]);
+
+  console.log(chartData);
 
   // effects
   // reset selection when data changes
@@ -210,7 +211,7 @@ function CodeFrequencyView({ data, setStatistics }: CodeFrequencyViewProps) {
               <IconButton onClick={toggleShowPieChart}>{showPieChart ? <BarChartIcon /> : <PieChartIcon />}</IconButton>
             </Tooltip>
           }
-          title={data.name === "root" ? "Top-level codes" : data.name}
+          title={data.code ? data.code.name : "Top-level codes"}
           subheader={
             data.children.length > 0
               ? "Click on a bar to see the code's subcategories and add it as a filter"
@@ -224,8 +225,8 @@ function CodeFrequencyView({ data, setStatistics }: CodeFrequencyViewProps) {
                 <PieChart>
                   <Pie
                     data={chartData}
-                    dataKey="aggregatedCount"
-                    nameKey="name"
+                    dataKey={(obj) => obj.aggregated_count}
+                    nameKey={(obj) => obj.code.name}
                     cx="50%"
                     cy="50%"
                     fill="#8884d8"
@@ -246,7 +247,7 @@ function CodeFrequencyView({ data, setStatistics }: CodeFrequencyViewProps) {
                 </PieChart>
               ) : (
                 <BarChart data={chartData}>
-                  <Bar dataKey="aggregatedCount" fill="#8884d8" onClick={handleClick}>
+                  <Bar dataKey={(obj) => obj.aggregated_count} fill="#8884d8" onClick={handleClick}>
                     {chartData.map((entry) => (
                       <Cell
                         key={`codecell-${entry.code!.id}`}
@@ -258,7 +259,7 @@ function CodeFrequencyView({ data, setStatistics }: CodeFrequencyViewProps) {
                     ))}
                   </Bar>
                   {/*<CartesianGrid stroke="#ccc" />*/}
-                  <XAxis dataKey="name" />
+                  <XAxis dataKey={(obj) => obj.code.name} />
                   <YAxis />
                 </BarChart>
               )}

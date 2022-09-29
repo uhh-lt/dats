@@ -6,6 +6,7 @@ export { CancelablePromise, CancelError } from "./core/CancelablePromise";
 export { OpenAPI } from "./core/OpenAPI";
 export type { OpenAPIConfig } from "./core/OpenAPI";
 
+export type { AnalysisQueryParameters } from "./models/AnalysisQueryParameters";
 export type { AnnotationDocumentCreate } from "./models/AnnotationDocumentCreate";
 export type { AnnotationDocumentRead } from "./models/AnnotationDocumentRead";
 export { AttachedObjectType } from "./models/AttachedObjectType";
@@ -68,6 +69,7 @@ export type { UserRead } from "./models/UserRead";
 export type { UserUpdate } from "./models/UserUpdate";
 export type { ValidationError } from "./models/ValidationError";
 
+export { AnalysisService } from "./services/AnalysisService";
 export { AnnotationDocumentService } from "./services/AnnotationDocumentService";
 export { BboxAnnotationService } from "./services/BboxAnnotationService";
 export { CodeService } from "./services/CodeService";
