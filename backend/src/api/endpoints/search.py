@@ -41,24 +41,24 @@ async def search_span_entity_stats(*,
              response_model=SpanEntityDocumentFrequencyResult,
              summary="Returns SpanEntityStats for the given SourceDocuments.",
              description="Returns SpanEntityStats for the given SourceDocuments.")
-async def search_span_entity_stats(*,
-                                   db: Session = Depends(get_db_session),
-                                   query_params: SearchSDocsQueryParameters) -> SpanEntityDocumentFrequencyResult:
+async def search_entity_document_stats(*,
+                                       db: Session = Depends(get_db_session),
+                                       query_params: SearchSDocsQueryParameters) -> SpanEntityDocumentFrequencyResult:
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
     return crud_sdoc.collect_entity_document_stats(db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id)
 
 
 @router.post("/keyword_stats", tags=tags,
              response_model=List[KeywordStat],
-             summary="Returns SpanEntityStats for the given SourceDocuments.",
-             description="Returns SpanEntityStats for the given SourceDocuments.")
+             summary="Returns KeywordStats for the given SourceDocuments.",
+             description="Returns KeywordStats for the given SourceDocuments.")
 async def search_keyword_stats(*,
                                query_params: SearchSDocsQueryParameters) -> List[KeywordStat]:
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
     keywords = ElasticSearchService().get_sdoc_keywords_by_sdoc_ids(sdoc_ids=set(sdoc_ids),
                                                                     proj_id=query_params.proj_id)
     keyword_counts = Counter([kw for x in keywords for kw in x.keywords])
-    return [KeywordStat(keyword=keyword, count=count) for keyword, count in keyword_counts.items()]
+    return [KeywordStat(keyword=keyword, count=count) for keyword, count in keyword_counts.most_common()]
 
 
 @router.post("/tag_stats", tags=tags,
