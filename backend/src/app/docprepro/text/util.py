@@ -38,7 +38,7 @@ def create_document_content_text_file_via_tika(filepath: Path,
         logger.warning(f"Couldn't get textual content via Tika from {filepath}!")
         content = ""
     else:
-        content = parsed['content']
+        content = parsed['content'].strip()
 
     # create a text file with the textual content
     text_filename = filepath.parent.joinpath(f"{filepath.stem}.txt")

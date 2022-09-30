@@ -32,6 +32,16 @@ from config import conf
 torch.set_num_threads(1)
 
 
+def __start_apache_tika_server() -> None:
+    logger.debug("Starting Apache Tika Server!")
+    # start by parsing a random text file (hacky, I know...)
+    from tika import parser
+    tika_starter_dummy = "/tmp/tika_starter_dummy.txt"
+    with open(tika_starter_dummy, 'w') as f:
+        f.write("tika_starter_dummy")
+    parser.from_file(tika_starter_dummy)
+
+
 def __load_spacy_models() -> Dict[str, Language]:
     logger.info(f"Starting to load spaCy Models...")
     logger.info(f"Loading spaCy Model '{conf.docprepro.text.spacy.german_model}' ...")
@@ -56,12 +66,12 @@ def __load_spacy_models() -> Dict[str, Language]:
 
 
 nlp = __load_spacy_models()
+__start_apache_tika_server()
 
 BULK_THRESHOLD = conf.docprepro.text.bulk_threshold
 
 # TODO Flo: maybe we want to break all process tasks up in smaller functions for better readability and modularity...
 #  However, this would be _little_ less efficient
-
 
 sql = SQLService(echo=False)
 repo = RepoService()
