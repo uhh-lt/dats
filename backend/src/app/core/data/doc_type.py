@@ -12,7 +12,9 @@ class DocType(str, Enum):
 
 
 __doc_type_to_mime_type_map = frozendict({
-    DocType.text: ["text/plain"],
+    DocType.text: ["text/plain",
+                   "application/pdf",
+                   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],  # docx
     DocType.image: ["image/jpeg", "image/png"],
     DocType.video: [],
     DocType.audio: []

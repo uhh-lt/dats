@@ -6,6 +6,7 @@ from langdetect import detect_langs
 from loguru import logger
 from spacy import Language
 from spacy.tokens import Doc
+from tika import parser
 from tqdm import tqdm
 
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -21,9 +22,39 @@ from app.docprepro.util import update_sdoc_status
 sql = SQLService(echo=False)
 repo = RepoService()
 
+# TODO Flo: Do we want this in the config ?
+TIKA_SUPPORTED_FILE_EXTENSIONS = ['.docx', '.doc', '.pdf']
+
+
+def create_document_content_text_file_via_tika(filepath: Path,
+                                               sdoc_db_obj: SourceDocumentORM) -> Tuple[Path, SourceDocumentORM]:
+    logger.info(f"Extracting textual content via Tika from {filepath.name} for SourceDocument {sdoc_db_obj.id}...")
+    if filepath.suffix not in TIKA_SUPPORTED_FILE_EXTENSIONS:
+        raise NotImplementedError(f"File Extension {filepath.suffix} are not supported!")
+
+    parsed = parser.from_file(filename=str(filepath))
+    print(type(parsed['content']))
+    if not int(parsed['status']) == 200:
+        logger.warning(f"Couldn't get textual content via Tika from {filepath}!")
+        content = ""
+    else:
+        content = parsed['content']
+
+    # create a text file with the textual content
+    text_filename = filepath.parent.joinpath(f"{filepath.stem}.txt")
+    with open(text_filename, 'w') as text_file:
+        text_file.write(content)
+    logger.info(f"Created text file with content from {filepath.name} for SourceDocument {sdoc_db_obj.id}!")
+
+    return text_filename, sdoc_db_obj
+
 
 def generate_preprotextdoc(filepath: Path,
                            sdoc_db_obj: SourceDocumentORM) -> PreProTextDoc:
+    # if it's not a raw text file, try to extract the content with Apache Tika and store it in a new raw text file
+    if filepath.suffix in TIKA_SUPPORTED_FILE_EXTENSIONS:
+        filepath, sdoc_db_obj = create_document_content_text_file_via_tika(filepath=filepath, sdoc_db_obj=sdoc_db_obj)
+
     # read the content from disk
     with open(filepath, "r") as f:
         content = f.read()
