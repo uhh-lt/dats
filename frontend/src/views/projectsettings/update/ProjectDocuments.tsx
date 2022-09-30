@@ -102,6 +102,16 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
     setContextMenuData(sdocId);
   };
 
+  // allowed mime types
+  const allowedMimeTypes : Array<string> = new Array<string>()
+  allowedMimeTypes.push("text/plain")
+  allowedMimeTypes.push("image/jpeg")
+  allowedMimeTypes.push("image/png")
+  allowedMimeTypes.push("application/zip")
+  allowedMimeTypes.push("application/pdf")
+  allowedMimeTypes.push("application/msword")
+  allowedMimeTypes.push("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
   return (
     <React.Fragment>
       <Toolbar variant="dense">
@@ -114,7 +124,7 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
           ref={fileInputRef}
           onChange={handleChange}
           multiple
-          accept="text/plain,image/jpeg,image/png,application/zip"
+          accept={allowedMimeTypes.toString()}
         />
         <LoadingButton
           variant="contained"
