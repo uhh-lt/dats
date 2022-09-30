@@ -1,4 +1,5 @@
 import json
+import os
 from typing import List, Dict
 
 import spacy
@@ -40,6 +41,7 @@ def __start_apache_tika_server() -> None:
     with open(tika_starter_dummy, 'w') as f:
         f.write("tika_starter_dummy")
     parser.from_file(tika_starter_dummy)
+    os.remove(tika_starter_dummy)
 
 
 def __load_spacy_models() -> Dict[str, Language]:
