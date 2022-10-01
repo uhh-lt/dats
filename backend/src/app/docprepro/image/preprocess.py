@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 import torch
@@ -64,9 +65,9 @@ image_captioning_tokenizer = AutoTokenizer.from_pretrained(conf.docprepro.image.
 
 
 @celery_prepro_worker.task(acks_late=True)
-def import_uploaded_image_document(doc_file: UploadFile,
+def import_uploaded_image_document(doc_file_path: Path,
                                    project_id: int) -> List[PreProImageDoc]:
-    dst, sdoc_db_obj = persist_as_sdoc(doc_file, project_id)
+    dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
     ppid = generate_preproimagedoc(filepath=dst, sdoc_db_obj=sdoc_db_obj)
 
     # Flo: update sdoc status

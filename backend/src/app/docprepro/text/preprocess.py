@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 from typing import List, Dict
 
 import spacy
@@ -81,9 +82,9 @@ es = ElasticSearchService()
 
 
 @celery_prepro_worker.task(acks_late=True)
-def import_uploaded_text_document(doc_file: UploadFile,
+def import_uploaded_text_document(doc_file_path: Path,
                                   project_id: int) -> List[PreProTextDoc]:
-    dst, sdoc_db_obj = persist_as_sdoc(doc_file, project_id)
+    dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
     pptd = generate_preprotextdoc(filepath=dst, sdoc_db_obj=sdoc_db_obj)
 
     update_sdoc_status(sdoc_id=sdoc_db_obj.id, sdoc_status=SDocStatus.imported_uploaded_text_document)

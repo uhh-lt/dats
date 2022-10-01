@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, List
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -13,9 +14,9 @@ persist_automatic_span_annotations = "app.docprepro.text.preprocess.persist_auto
 add_document_to_elasticsearch_index = "app.docprepro.text.preprocess.add_document_to_elasticsearch_index"
 
 
-def text_document_preprocessing_apply_async(doc_file: UploadFile, project_id: int) -> Any:
+def text_document_preprocessing_apply_async(doc_file_path: Path, project_id: int) -> Any:
     text_document_preprocessing = (
-            Signature(import_uploaded_text_document, kwargs={"doc_file": doc_file, "project_id": project_id}) |
+            Signature(import_uploaded_text_document, kwargs={"doc_file_path": doc_file_path, "project_id": project_id}) |
             Signature(generate_automatic_span_annotations) |
             Signature(persist_automatic_span_annotations) |
             Signature(add_document_to_elasticsearch_index)

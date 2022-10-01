@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, List
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -16,9 +17,9 @@ persist_automatic_bbox_annotations = "app.docprepro.image.preprocess.persist_aut
 create_pptds_from_automatic_caption = "app.docprepro.image.preprocess.create_pptds_from_automatic_caption"
 
 
-def image_document_preprocessing_apply_async(doc_file: UploadFile, project_id: int) -> Any:
+def image_document_preprocessing_apply_async(doc_file_path: Path, project_id: int) -> Any:
     image_document_preprocessing = (
-            Signature(import_uploaded_image_document, kwargs={"doc_file": doc_file, "project_id": project_id}) |
+            Signature(import_uploaded_image_document, kwargs={"doc_file_path": doc_file_path, "project_id": project_id}) |
             Signature(generate_automatic_bbox_annotations) |
             Signature(generate_automatic_image_captions) |
             Signature(persist_automatic_bbox_annotations) |

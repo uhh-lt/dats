@@ -8,7 +8,7 @@ from typing import Tuple, Optional, List
 from zipfile import ZipFile
 
 import magic
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from loguru import logger
 
 from app.core.data.doc_type import get_doc_type
@@ -99,8 +99,8 @@ class RepoService(metaclass=SingletonMeta):
         logger.info("Extracting archive... Done!")
         return [dst.joinpath(file) for file in extracted_files]
 
-    def store_temporary_file(self, temp: NamedTemporaryFile) -> Path:
-        return Path(shutil.move(temp.name, self.temp_files_root))
+    def store_temporary_file(self, temp_file: NamedTemporaryFile, original_file_name: str) -> Path:
+        return Path(shutil.move(temp_file.name, self.temp_files_root))
 
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
         try:
@@ -220,20 +220,28 @@ class RepoService(metaclass=SingletonMeta):
             # FIXME Flo: Throw or what?!
             logger.warning(f"Cannot store temporary archive file in project repo! Error:\n {e}")
 
-    def store_uploaded_file_in_project(self, proj_id: int, uploaded_file: UploadFile) -> Path:
+    def store_uploaded_file_in_project_repo(self, proj_id: int, uploaded_file: UploadFile) -> Path:
         try:
-            dst = self._create_directory_structure_for_project_file(proj_id=proj_id, filename=uploaded_file.filename)
+            in_project_dst = self._create_directory_structure_for_project_file(proj_id=proj_id,
+                                                                               filename=uploaded_file.filename)
+            logger.info(f"Storing Uploaded File {uploaded_file.filename} in Project {proj_id} Repo at {in_project_dst}")
+            real_file_size = 0
+            with open(in_project_dst, "wb") as f:
+                for chunk in uploaded_file.file:
+                    real_file_size += len(chunk)
+                    if real_file_size > conf.api.max_upload_file_size:
+                        raise HTTPException(status_code=413,
+                                            detail=(f"File {uploaded_file.filename} is too large!"
+                                                    f" Maximum allowed size in bytes: {conf.api.max_upload_file_size}"))
+                    f.write(chunk)
+                f.close()
 
-            with dst.open("wb") as buffer:
-                shutil.copyfileobj(uploaded_file.file, buffer)
-                logger.debug(f"Stored uploaded file at {str(dst)}")
-            return dst
-
+            return in_project_dst
+        except HTTPException as e:
+            raise e
         except Exception as e:
             # FIXME Flo: Throw or what?!
             logger.warning(f"Cannot store uploaded file! Error:\n  {e}")
-        finally:
-            uploaded_file.file.close()
 
     def generate_source_document_create_dto_from_file(self, proj_id: int, filename: str) -> Tuple[Path,
                                                                                                   SourceDocumentCreate]:
