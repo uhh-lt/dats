@@ -65,6 +65,9 @@ def __load_spacy_models() -> Dict[str, Language]:
     else:
         nlp["default"] = spacy.load(conf.docprepro.text.spacy.default_model)
 
+    for lang in nlp.values():
+        lang.max_length = conf.docprepro.text.spacy.max_text_length
+
     return nlp
 
 
