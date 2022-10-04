@@ -1,6 +1,12 @@
 FROM python:3.9.7 as dev_build
 MAINTAINER Florian Schneider florian.schneider-1@uni-hamburg.de
 
+COPY --from=openjdk:8-jre-slim /usr/local/openjdk-8 /usr/local/openjdk-8
+
+ENV JAVA_HOME /usr/local/openjdk-8
+
+RUN update-alternatives --install /usr/bin/java java /usr/local/openjdk-8/bin/java 1
+
 ARG DWTS_ENV
 
 ENV DWTS_ENV=${DWTS_ENV} \
@@ -43,6 +49,8 @@ WORKDIR /dwts_code
 
 # Copy only requirements, to cache them in docker layer
 COPY ./poetry.lock ./pyproject.toml /dwts_code/
+
+RUN python3 -m pip install --upgrade pip setuptools wheel
 
 RUN echo "$DWTS_ENV" && poetry version \
   && poetry install --no-interaction --no-ansi \
