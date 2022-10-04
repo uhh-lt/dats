@@ -33,7 +33,7 @@ def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
     elif doc_type == DocType.image:
         image_document_preprocessing_apply_async(doc_file_path=file_path, project_id=proj_id)
     elif is_archive_file(uploaded_file.content_type):
-        import_uploaded_archive_apply_async(temporary_archive_file_path=file_path, project_id=proj_id)
+        import_uploaded_archive_apply_async(archive_file_path=file_path, project_id=proj_id)
 
 
 def persist_as_sdoc(doc_file_path: Path,

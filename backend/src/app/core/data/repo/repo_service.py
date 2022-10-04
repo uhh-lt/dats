@@ -3,7 +3,6 @@ import shutil
 import urllib.parse as url
 import zipfile
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import Tuple, Optional, List
 from zipfile import ZipFile
 
@@ -69,38 +68,6 @@ class RepoService(metaclass=SingletonMeta):
         cls.base_url = base_url
 
         return super(RepoService, cls).__new__(cls)
-
-    @staticmethod
-    def _extract_archive(archive_path: Path) -> List[Path]:
-        logger.info("Extracting archive...")
-        if not zipfile.is_zipfile(archive_path):
-            raise ErroneousArchiveException(archive_path=archive_path)
-        dst = archive_path.parent
-        # taken from: https://stackoverflow.com/a/4917469
-        # flattens the extracted file hierarchy
-        try:
-            with ZipFile(archive_path, "r") as zip_archive:
-                extracted_files = zip_archive.namelist()
-                for member in extracted_files:
-                    filename = os.path.basename(member)
-                    # skip directories
-                    if not filename:
-                        # TODO Flo: what to do with nested subdirectories
-                        continue
-
-                    # copy file (taken from zipfile's extract)
-                    source = zip_archive.open(member)
-                    target = open(os.path.join(dst, filename), "wb")
-                    with source, target:
-                        shutil.copyfileobj(source, target)
-        except Exception as e:
-            raise ErroneousArchiveException(archive_path=archive_path)
-
-        logger.info("Extracting archive... Done!")
-        return [dst.joinpath(file) for file in extracted_files]
-
-    def store_temporary_file(self, temp_file: NamedTemporaryFile, original_file_name: str) -> Path:
-        return Path(shutil.move(temp_file.name, self.temp_files_root))
 
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
         try:
@@ -208,17 +175,40 @@ class RepoService(metaclass=SingletonMeta):
             return relative_url
         return url.urljoin(self.base_url, relative_url)
 
-    def store_and_extract_temporary_archive_file_in_project(self, proj_id: int, temporary_archive_file_path: Path) \
+    def extract_archive_in_project(self, proj_id: int, archive_path: Path) \
             -> List[Path]:
-        try:
-            dst = self._create_directory_structure_for_project_file(proj_id=proj_id,
-                                                                    filename=temporary_archive_file_path.name)
-            shutil.move(self.temp_files_root.joinpath(temporary_archive_file_path.name), dst)
+        archive_path_in_project = self._generate_dst_path_for_project_file(proj_id=proj_id,
+                                                                           filename=archive_path.name)
+        dst = archive_path_in_project.parent
 
-            return self._extract_archive(archive_path=dst)
+        logger.debug(f"Extracting archive at {archive_path_in_project} ...")
+        if not zipfile.is_zipfile(archive_path_in_project):
+            raise ErroneousArchiveException(archive_path=archive_path_in_project)
+        logger.debug(f"Extracting archive {archive_path_in_project.name} to {dst} ...")
+        # taken from: https://stackoverflow.com/a/4917469
+        # flattens the extracted file hierarchy
+        try:
+            with ZipFile(archive_path_in_project, "r") as zip_archive:
+                extracted_files = zip_archive.namelist()
+                logger.debug(f"Archive {archive_path_in_project.name} contains {len(extracted_files)} files...")
+                for member in extracted_files:
+                    filename = os.path.basename(member)
+                    # skip directories
+                    if not filename:
+                        # TODO Flo: what to do with nested subdirectories
+                        continue
+
+                    # copy file (taken from zipfile's extract)
+                    source = zip_archive.open(member)
+                    target = open(os.path.join(dst, filename), "wb")
+                    with source, target:
+                        shutil.copyfileobj(source, target)
         except Exception as e:
-            # FIXME Flo: Throw or what?!
-            logger.warning(f"Cannot store temporary archive file in project repo! Error:\n {e}")
+            logger.error(f"Cannot extract Archive {archive_path_in_project.name}! Error: {e}")
+            raise ErroneousArchiveException(archive_path=archive_path_in_project)
+
+        logger.debug(f"Extracting archive at {archive_path_in_project}... Done!")
+        return [dst.joinpath(file) for file in extracted_files]
 
     def store_uploaded_file_in_project_repo(self, proj_id: int, uploaded_file: UploadFile) -> Path:
         try:
