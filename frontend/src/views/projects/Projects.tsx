@@ -9,17 +9,21 @@ import {
   IconButton,
   Toolbar,
   Tooltip,
-  Typography,
+  Typography
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { Link } from "react-router-dom";
 import UserHooks from "../../api/UserHooks";
+import PreProHooks from "../../api/PreProHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import ProjectContextMenu2, { ContextMenuPosition } from "./ProjectContextMenu2";
 
 function Projects() {
   const { user } = useAuth();
   const projects = UserHooks.useGetProjects(user.data?.id);
+
+  // FIXME Flo: how to do this dynamically for each project??
+  const preProStatus = PreProHooks.useGetPreProProjectStatus(1).data;
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
@@ -48,7 +52,7 @@ function Projects() {
                 sx={{
                   width: 420,
                   border: "3px dashed lightgray",
-                  boxShadow: 0,
+                  boxShadow: 0
                 }}
               >
                 <CardActionArea component={Link} to="/projectsettings">
@@ -57,7 +61,7 @@ function Projects() {
                       height: 250,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      justifyContent: "center"
                     }}
                   >
                     <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
@@ -72,8 +76,16 @@ function Projects() {
                 <Card sx={{ width: 420 }} onContextMenu={onContextMenu(project.id)}>
                   <CardActionArea component={Link} to={`/project/${project.id}/search`}>
                     <CardContent sx={{ padding: "0px !important" }}>
-                      <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={200}>
+                      <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
                         {project.description}
+                      </Typography>
+                    </CardContent>
+                    <CardContent sx={{ padding: "0px !important" }}>
+                      <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
+                        {/*FIXME Flo: How to make this nice?!*/}
+                        Number of preprocessing Documents: {preProStatus?.num_sdocs_in_progress}
+                        <br />
+                        Number of preprocessed Documents: {preProStatus?.num_sdocs_finished}
                       </Typography>
                     </CardContent>
                   </CardActionArea>
