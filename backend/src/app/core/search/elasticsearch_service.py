@@ -453,9 +453,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                           has_more=has_more,
                                           total=res.hits.total.value,
                                           current_page_offset=skip if skip is not None else 0,
-                                          next_page_offset=(skip + limit) if skip is not None
-                                                                             and limit is not None
-                                                                             and has_more else 0)
+                                          next_page_offset=(skip + limit) if skip is not None and
+                                                                             limit is not None and
+                                                                             has_more else 0)
 
     def search_sdocs_by_exact_filename(self,
                                        *,

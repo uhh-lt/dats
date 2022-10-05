@@ -103,9 +103,21 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         else:
             query = query.filter(self.model.project_id == proj_id, DocumentTagORM.id == tag_id)
 
-        query = query.offset(skip).limit(limit)
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
 
         return query.all()
+
+    def get_number_of_sdocs_in_project_by_status(self,
+                                                 db: Session,
+                                                 *,
+                                                 proj_id: int,
+                                                 status: SDocStatus) -> int:
+        return db.query(self.model).filter(self.model.project_id == proj_id,
+                                           self.model.status == status) \
+            .with_entities(func.count()).scalar()
 
     def read_by_project(self,
                         db: Session,
