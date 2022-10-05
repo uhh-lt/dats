@@ -23,12 +23,21 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getByIdSdocSdocIdGet({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
+  public static getByIdSdocSdocIdGet({
+    sdocId,
+    onlyIfFinished = true,
+  }: {
+    sdocId: number;
+    onlyIfFinished?: boolean;
+  }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}",
       path: {
         sdoc_id: sdocId,
+      },
+      query: {
+        only_if_finished: onlyIfFinished,
       },
       errors: {
         422: `Validation Error`,
@@ -63,14 +72,19 @@ export class SourceDocumentService {
    */
   public static getContentSdocSdocIdContentGet({
     sdocId,
+    onlyFinished = true,
   }: {
     sdocId: number;
+    onlyFinished?: boolean;
   }): CancelablePromise<SourceDocumentContent> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/content",
       path: {
         sdoc_id: sdocId,
+      },
+      query: {
+        only_finished: onlyFinished,
       },
       errors: {
         422: `Validation Error`,
@@ -86,9 +100,11 @@ export class SourceDocumentService {
    */
   public static getTokensSdocSdocIdTokensGet({
     sdocId,
+    onlyFinished = true,
     characterOffsets = false,
   }: {
     sdocId: number;
+    onlyFinished?: boolean;
     /**
      * If True include the character offsets.
      */
@@ -101,6 +117,7 @@ export class SourceDocumentService {
         sdoc_id: sdocId,
       },
       query: {
+        only_finished: onlyFinished,
         character_offsets: characterOffsets,
       },
       errors: {
@@ -117,14 +134,19 @@ export class SourceDocumentService {
    */
   public static getTokensSdocSdocIdKeywordsGet({
     sdocId,
+    onlyFinished = true,
   }: {
     sdocId: number;
+    onlyFinished?: boolean;
   }): CancelablePromise<SourceDocumentKeywords> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/keywords",
       path: {
         sdoc_id: sdocId,
+      },
+      query: {
+        only_finished: onlyFinished,
       },
       errors: {
         422: `Validation Error`,

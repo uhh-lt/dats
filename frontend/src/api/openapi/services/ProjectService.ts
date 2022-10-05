@@ -144,10 +144,12 @@ export class ProjectService {
    */
   public static getProjectSdocsProjectProjIdSdocGet({
     projId,
+    onlyFinished = true,
     skip,
     limit,
   }: {
     projId: number;
+    onlyFinished?: boolean;
     /**
      * The number of elements to skip (offset)
      */
@@ -164,6 +166,7 @@ export class ProjectService {
         proj_id: projId,
       },
       query: {
+        only_finished: onlyFinished,
         skip: skip,
         limit: limit,
       },
