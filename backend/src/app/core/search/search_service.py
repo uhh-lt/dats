@@ -1,6 +1,5 @@
 from typing import List
 
-from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import SearchSDocsQueryParameters
 from app.core.db.sql_service import SQLService
@@ -48,7 +47,10 @@ class SearchService(metaclass=SingletonMeta):
 
             if len(sdocs_ids) == 0:
                 # no search results, so we return all documents!
-                return [sdoc.id for sdoc in crud_project.read(db=db, id=query_params.proj_id).source_documents]
+
+                return [sdoc.id for sdoc in crud_sdoc.read_by_project(db=db,
+                                                                      proj_id=query_params.proj_id,
+                                                                      only_finished=True)]
             else:
                 # we have search results, now we combine!
                 return list(set.intersection(*map(set, sdocs_ids)))

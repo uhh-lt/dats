@@ -18,6 +18,11 @@ from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
 
 
+class SourceDocumentPreprocessingUnfinishedError(Exception):
+    def __init__(self, sdoc_id: int):
+        super().__init__(f"SourceDocument {sdoc_id} is still getting preprocessed!")
+
+
 class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]):
     def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> ORMModelType:
         # Flo: We no not want to update SourceDocument
@@ -30,6 +35,14 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         db.commit()
         db.refresh(sdoc_db_obj)
         return sdoc_db_obj
+
+    def get_status(self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False) -> SDocStatus:
+        if not self.exists(db=db, id=sdoc_id, raise_error=raise_error_on_unfinished):
+            return SDocStatus.undefined_or_erroneous
+        status = SDocStatus(db.query(self.model.status).filter(self.model.id == sdoc_id).scalar())
+        if not status == SDocStatus.finished and raise_error_on_unfinished:
+            raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
+        return status
 
     def link_document_tag(self, db: Session, *, sdoc_id: int, tag_id: int) -> SourceDocumentORM:
         sdoc_db_obj = self.read(db=db, id=sdoc_id)
@@ -74,39 +87,75 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         return removed_ids
 
-    def read_by_project_and_document_tag(self, db: Session, *, proj_id: int, tag_id: int) -> List[SourceDocumentORM]:
-        return db.query(self.model).join(SourceDocumentORM, DocumentTagORM.source_documents) \
-            .filter(self.model.project_id == proj_id, DocumentTagORM.id == tag_id).all()
+    def read_by_project_and_document_tag(self,
+                                         db: Session,
+                                         *,
+                                         proj_id: int,
+                                         tag_id: int,
+                                         only_finished: bool = True,
+                                         skip: Optional[int] = None,
+                                         limit: Optional[int] = None) -> List[SourceDocumentORM]:
+        query = db.query(self.model).join(SourceDocumentORM, DocumentTagORM.source_documents)
+        if only_finished:
+            query = query.filter(self.model.project_id == proj_id,
+                                 self.model.status == SDocStatus.finished,
+                                 DocumentTagORM.id == tag_id)
+        else:
+            query = query.filter(self.model.project_id == proj_id, DocumentTagORM.id == tag_id)
+
+        query = query.offset(skip).limit(limit)
+
+        return query.all()
 
     def read_by_project(self,
                         db: Session,
                         *,
                         proj_id: int,
-                        skip: int = 0,
-                        limit: int = 100) -> List[SourceDocumentORM]:
-        return db.query(self.model).filter(self.model.project_id == proj_id).offset(skip).limit(limit).all()
+                        only_finished: bool = True,
+                        skip: Optional[int] = None,
+                        limit: Optional[int] = None) -> List[SourceDocumentORM]:
+        query = db.query(self.model)
+
+        if only_finished:
+            query = query.filter(self.model.project_id == proj_id,
+                                 self.model.status == SDocStatus.finished)
+        else:
+            query = query.filter(self.model.project_id == proj_id)
+
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return query.all()
 
     def count_by_project(self,
                          db: Session,
                          *,
-                         proj_id: int) -> int:
-        return db.query(func.count(self.model.id)).filter(self.model.project_id == proj_id).scalar()
+                         proj_id: int,
+                         only_finished: bool = True) -> int:
+        query = db.query(func.count(self.model.id))
+        if only_finished:
+            return query.filter(self.model.project_id == proj_id, self.model.status == SDocStatus.finished).scalar()
+        else:
+            return query.filter(self.model.project_id == proj_id).scalar()
 
     def get_ids_by_document_tags(self,
                                  db: Session,
                                  *,
                                  tag_ids: List[int],
                                  all_tags: bool = False,
+                                 only_finished: bool = True,
                                  skip: Optional[int] = None,
                                  limit: Optional[int] = None) -> List[int]:
         if not all_tags:
             # all docs that have ANY of the tags
-            # noinspection PyUnresolvedReferences
             query = db.query(self.model.id) \
-                .join(SourceDocumentORM, DocumentTagORM.source_documents) \
-                .filter(DocumentTagORM.id.in_(tag_ids)).offset(skip).limit(limit)
-
-            return list(map(lambda row: row.id, query.all()))
+                .join(SourceDocumentORM, DocumentTagORM.source_documents)
+            if only_finished:
+                query = query.filter(and_(DocumentTagORM.id.in_(tag_ids), self.model.status == SDocStatus.finished))
+            else:
+                query = query.filter(DocumentTagORM.id.in_(tag_ids))
         else:
             # all docs that have ALL the tags
 
@@ -121,8 +170,12 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
             query = db.query(self.model.id).join(SourceDocumentDocumentTagLinkTable,
                                                  self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
-            # noinspection PyUnresolvedReferences
-            query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
+
+            if only_finished:
+                query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
+            else:
+                query = query.filter(and_(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids),
+                                          self.model.status == SDocStatus.finished))
             query = query.group_by(self.model.id)
             query = query.having(func.count(self.model.id) == len(tag_ids))
 
@@ -138,6 +191,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                  *,
                                  user_ids: Set[int] = None,
                                  proj_id: int,
+                                 only_finished: bool = True,
                                  span_entities: List[SpanEntity],
                                  skip: Optional[int] = None,
                                  limit: Optional[int] = None) -> List[int]:
@@ -151,11 +205,19 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             .join(CurrentCodeORM) \
             .join(CodeORM) \
             .join(SpanTextORM)
-        # noinspection PyUnresolvedReferences
-        inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
-                                              AnnotationDocumentORM.user_id.in_(list(user_ids)),
-                                              or_(*[(CodeORM.id == se.code_id) & (SpanTextORM.text == se.span_text)
-                                                    for se in span_entities])))
+
+        if only_finished:
+            inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
+                                                  self.model.status == SDocStatus.finished,
+                                                  AnnotationDocumentORM.user_id.in_(list(user_ids)),
+                                                  or_(*[(CodeORM.id == se.code_id) & (SpanTextORM.text == se.span_text)
+                                                        for se in span_entities])))
+        else:
+            inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
+                                                  AnnotationDocumentORM.user_id.in_(list(user_ids)),
+                                                  or_(*[(CodeORM.id == se.code_id) & (SpanTextORM.text == se.span_text)
+                                                        for se in span_entities])))
+
         inner_query = inner_query.group_by(self.model.id, CurrentCodeORM.id, SpanTextORM.id).from_self()
 
         outer_query = inner_query.group_by(self.model.id)
@@ -174,6 +236,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                              user_ids: Set[int] = None,
                              sdoc_ids: Set[int] = None,
                              proj_id: int,
+                             only_finished: bool = True,
                              skip: Optional[int] = None,
                              limit: Optional[int] = None) -> List[SpanEntityFrequency]:
         # Flo: we always want ADocs from the SYSTEM_USER
@@ -187,10 +250,17 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             .join(CurrentCodeORM) \
             .join(CodeORM) \
             .join(SpanTextORM)
-        # noinspection PyUnresolvedReferences
-        query = query.filter(and_(SourceDocumentORM.project_id == proj_id,
-                                  SourceDocumentORM.id.in_(list(sdoc_ids)),
-                                  AnnotationDocumentORM.user_id.in_(list(user_ids))))
+
+        if only_finished:
+            query = query.filter(and_(self.model.project_id == proj_id,
+                                      self.model.id.in_(list(sdoc_ids)),
+                                      self.model.status == SDocStatus.finished,
+                                      AnnotationDocumentORM.user_id.in_(list(user_ids))))
+        else:
+            query = query.filter(and_(self.model.project_id == proj_id,
+                                      self.model.id.in_(list(sdoc_ids)),
+                                      AnnotationDocumentORM.user_id.in_(list(user_ids))))
+
         query = query.group_by(self.model.id, CodeORM.id, SpanTextORM.id)
 
         if skip is not None:
@@ -205,12 +275,14 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                     span_text=text,
                                     count=count) for (sdoc_id, code_id, text, count) in res]
 
+    # noinspection PyUnresolvedReferences
     def collect_entity_document_stats(self,
                                       db: Session,
                                       *,
                                       user_ids: Set[int] = None,
                                       sdoc_ids: Set[int] = None,
                                       proj_id: int,
+                                      only_finished: bool = True,
                                       skip: Optional[int] = None,
                                       limit: Optional[int] = None) -> SpanEntityDocumentFrequencyResult:
         # Flo: we always want ADocs from the SYSTEM_USER
@@ -238,9 +310,16 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             .join(CurrentCodeORM) \
             .join(CodeORM) \
             .join(SpanTextORM)
-        inner_query = inner_query.filter(and_(SourceDocumentORM.project_id == proj_id,
-                                              SourceDocumentORM.id.in_(list(sdoc_ids)),
-                                              AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
+
+        if only_finished:
+            inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
+                                                  self.model.id.in_(list(sdoc_ids)),
+                                                  self.model.status == SDocStatus.finished,
+                                                  AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
+        else:
+            inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
+                                                  self.model.id.in_(list(sdoc_ids)),
+                                                  AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
 
         doc_freq = func.count(inner_query.c.sdoc_id).label("doc_freq")
         outer_query = db.query(inner_query.c.code_id, inner_query.c.text, doc_freq)

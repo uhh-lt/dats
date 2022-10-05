@@ -106,16 +106,20 @@ async def delete_project(*,
             description="Returns all SourceDocuments of the Project with the given ID.")
 async def get_project_sdocs(*,
                             proj_id: int,
+                            only_finished: Optional[bool] = True,
                             db: Session = Depends(get_db_session),
                             skip_limit: Dict[str, str] = Depends(skip_limit_params)) -> PaginatedSourceDocumentReads:
     # TODO Flo: only if the user has access?
     sdocs_on_page = [SourceDocumentRead.from_orm(sdoc)
-                     for sdoc in crud_sdoc.read_by_project(db=db, proj_id=proj_id, **skip_limit)]
-    total_sdocs = crud_sdoc.count_by_project(db=db, proj_id=proj_id)
-    has_more = len(sdocs_on_page) < total_sdocs
+                     for sdoc in crud_sdoc.read_by_project(db=db,
+                                                           proj_id=proj_id,
+                                                           only_finished=only_finished,
+                                                           **skip_limit)]
+    total_sdocs = crud_sdoc.count_by_project(db=db, proj_id=proj_id, only_finished=only_finished)
+    has_more = (int(skip_limit['skip']) + len(sdocs_on_page)) < total_sdocs
     skip, limit = skip_limit.values()
     return PaginatedSourceDocumentReads(sdocs=sdocs_on_page,
-                                        has_more=len(sdocs_on_page) < total_sdocs,
+                                        has_more=has_more,
                                         total=total_sdocs,
                                         current_page_offset=skip if skip is not None else 0,
                                         next_page_offset=(skip + limit) if skip is not None

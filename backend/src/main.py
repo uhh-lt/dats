@@ -9,6 +9,7 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn import Config, Server
 
+from app.core.data.crud.source_document import SourceDocumentPreprocessingUnfinishedError
 from app.core.startup import startup
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
@@ -18,7 +19,8 @@ if not STARTUP_DONE:
     startup(reset_data=False)
     os.environ['STARTUP_DONE'] = "1"
 
-from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, FileNotFoundInRepositoryError  # noqa E402
+from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, \
+    FileNotFoundInRepositoryError  # noqa E402
 from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
     NoSuchMemoInElasticSearchError  # noqa E402
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
@@ -72,6 +74,11 @@ async def no_such_memo_in_es_error_handler(_, exc: NoSuchMemoInElasticSearchErro
 
 @app.exception_handler(SourceDocumentNotFoundInRepositoryError)
 async def source_document_not_found_in_repository_error_handler(_, exc: SourceDocumentNotFoundInRepositoryError):
+    return PlainTextResponse(str(exc), status_code=500)
+
+
+@app.exception_handler(SourceDocumentPreprocessingUnfinishedError)
+async def source_document_preprocessing_unfinished_error_handler(_, exc: SourceDocumentPreprocessingUnfinishedError):
     return PlainTextResponse(str(exc), status_code=500)
 
 

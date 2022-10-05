@@ -29,9 +29,13 @@ tags = ["sourceDocument"]
             description="Returns the SourceDocument with the given ID if it exists")
 async def get_by_id(*,
                     db: Session = Depends(get_db_session),
-                    sdoc_id: int) -> Optional[SourceDocumentRead]:
+                    sdoc_id: int,
+                    only_if_finished: bool = True) \
+        -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    #  What about the content?!
+    if not only_if_finished:
+        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return SourceDocumentRead.from_orm(db_obj)
 
@@ -55,8 +59,12 @@ async def delete_by_id(*,
                          "not a text file, there is no content but an URL to the file content."))
 async def get_content(*,
                       db: Session = Depends(get_db_session),
-                      sdoc_id: int) -> Optional[SourceDocumentContent]:
+                      sdoc_id: int,
+                      only_finished: Optional[bool] = True) -> Optional[SourceDocumentContent]:
     # TODO Flo: only if the user has access?
+    if only_finished:
+        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
         return ElasticSearchService().get_sdoc_content_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
@@ -71,10 +79,13 @@ async def get_content(*,
 async def get_tokens(*,
                      db: Session = Depends(get_db_session),
                      sdoc_id: int,
+                     only_finished: Optional[bool] = True,
                      character_offsets: Optional[bool] = Query(title="Include Character Offsets",
                                                                description="If True include the character offsets.",
                                                                default=False)) \
         -> Optional[SourceDocumentTokens]:
+    if not only_finished:
+        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_tokens_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
@@ -88,8 +99,11 @@ async def get_tokens(*,
             description="Returns the keywords of the SourceDocument if it is a text document.")
 async def get_tokens(*,
                      db: Session = Depends(get_db_session),
-                     sdoc_id: int) -> Optional[SourceDocumentKeywords]:
+                     sdoc_id: int,
+                     only_finished: Optional[bool] = True) -> Optional[SourceDocumentKeywords]:
     # TODO Flo: only if the user has access?
+    if not only_finished:
+        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
                                                                proj_id=sdoc_db_obj.project_id)
@@ -288,8 +302,10 @@ async def get_user_memo(*,
 
 @router.get("/{sdoc_id}/relatedmemos/{user_id}", tags=tags,
             response_model=List[MemoRead],
-            summary="Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.",
-            description="Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.")
+            summary=("Returns the Memo attached to the SourceDocument of the User with the given ID and all memos "
+                     "attached to its annotations."),
+            description=("Returns the Memo attached to the SourceDocument of the User with the given ID and all memos"
+                         " attached to its annotations."))
 async def get_related_user_memos(*,
                                  db: Session = Depends(get_db_session),
                                  sdoc_id: int,
