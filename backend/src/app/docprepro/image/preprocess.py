@@ -20,7 +20,7 @@ from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.docprepro.celery.celery_worker import celery_prepro_worker
+from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.autobbox import AutoBBox
 from app.docprepro.image.preproimagedoc import PreProImageDoc
 from app.docprepro.image.util import generate_preproimagedoc
@@ -64,7 +64,7 @@ image_captioning_model = VisionEncoderDecoderModel.from_pretrained(conf.docprepr
 image_captioning_tokenizer = AutoTokenizer.from_pretrained(conf.docprepro.image.image_captioning.model)
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def import_uploaded_image_document(doc_file_path: Path,
                                    project_id: int) -> List[PreProImageDoc]:
     dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
@@ -77,7 +77,7 @@ def import_uploaded_image_document(doc_file_path: Path,
     return [ppid]
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     global object_detection_feature_extractor
     global object_detection_model
@@ -111,7 +111,7 @@ def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[Pre
     return ppids
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     global image_captioning_feature_extractor
     global image_captioning_model
@@ -160,7 +160,7 @@ def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PrePr
     return ppids
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     for ppid in tqdm(ppids, desc="Persisting automatic BBox Annotations..."):
         # create AnnoDoc for system user
@@ -197,7 +197,7 @@ def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreP
     return ppids
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def create_pptds_from_automatic_caption(ppids: List[PreProImageDoc]) -> List[PreProTextDoc]:
     # Flo: create fake PPTDs to send them to the text worker to generate textual information and store in ES
     #  Note that this has to be in its own async callable function to enable modular celery calls w/o dependencies

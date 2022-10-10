@@ -23,7 +23,7 @@ from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.docprepro.celery.celery_worker import celery_prepro_worker
+from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.text.preprotextdoc import PreProTextDoc
 from app.docprepro.text.util import generate_preprotextdoc, generate_automatic_span_annotations_sequentially, \
     generate_automatic_span_annotations_pipeline
@@ -84,7 +84,7 @@ repo = RepoService()
 es = ElasticSearchService()
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def import_uploaded_text_document(doc_file_path: Path,
                                   project_id: int) -> List[PreProTextDoc]:
     dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
@@ -95,7 +95,7 @@ def import_uploaded_text_document(doc_file_path: Path,
     return [pptd]
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     global nlp
 
@@ -105,7 +105,7 @@ def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreP
     return generate_automatic_span_annotations_pipeline(pptds, nlp)
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     for pptd in tqdm(pptds, desc="Persisting Automatic SpanAnnotations... "):
         # create AnnoDoc for system user
@@ -161,7 +161,7 @@ def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PrePr
     return pptds
 
 
-@celery_prepro_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True)
 def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     if len(pptds) == 0:
         return pptds
