@@ -38,6 +38,13 @@ async def resolve_code_param(resolve: Optional[bool] = Query(title="Resolve Code
     return resolve
 
 
+async def include_sentence_spans(include_sentences: Optional[bool] = Query(title="Include Sentence Spans",
+                                                                           description="If true, the sentence span annotations "
+                                                                                       "are also returned",
+                                                                           default=False)) -> bool:
+    return include_sentences
+
+
 async def get_db_session() -> Generator:
     try:
         session = SQLService().session_maker()
