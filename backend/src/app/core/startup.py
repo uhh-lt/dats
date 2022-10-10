@@ -73,7 +73,7 @@ def __init_services__(create_database_and_tables: bool = False,
                       reset_repo: bool = False,
                       reset_elasticsearch: bool = False) -> None:
     # import celery workers to configure
-    from app.docprepro.celery.celery_worker import celery_prepro_worker
+    from app.docprepro.celery.celery_worker import celery_worker
     # import and init RepoService
     from app.core.data.repo.repo_service import RepoService
     repos = RepoService()

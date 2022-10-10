@@ -86,5 +86,36 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
         db.refresh(span_db_obj)
         return span_db_obj
 
+    def get_all_system_sentence_span_annotations_of_sdoc(self,
+                                                         db: Session,
+                                                         *,
+                                                         sdoc_id: int,
+                                                         skip: int = 0,
+                                                         limit: int = 100) -> List[SpanAnnotationORM]:
+        """
+        SELECT spanannotation.id AS span_id,
+            annotationdocument.source_document_id as sdoc_id,
+            code.name as name,
+            currentcode.id as ccid
+        FROM spanannotation
+            JOIN annotationdocument ON annotationdocument.id = spanannotation.annotation_document_id
+            JOIN currentcode ON spanannotation.current_code_id = currentcode.id
+            JOIN code ON currentcode.code_id = code.id
+        WHERE code.name LIKE 'SENTENCE' AND
+            annotationdocument.user_id = 1 AND
+            annotationdocument.source_document_id == X
+        """
+
+        query = db.query(SpanAnnotationORM) \
+            .join(AnnotationDocumentORM, AnnotationDocumentORM.id == SpanAnnotationORM.id) \
+            .join(CurrentCodeORM, CurrentCodeORM.id == SpanAnnotationORM.current_code_id) \
+            .join(CodeORM.id, CodeORM.id == CurrentCodeORM.code_id)
+
+        query = query.filter(and_(CodeORM.name == "SENTENCE",
+                                  AnnotationDocumentORM.user_id == SYSTEM_USER_ID,
+                                  AnnotationDocumentORM.source_document_id == sdoc_id))
+
+        return query.offset(skip).limit(limit).all()
+
 
 crud_span_anno = CRUDSpanAnnotation(SpanAnnotationORM)
