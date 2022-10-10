@@ -122,6 +122,17 @@ def generate_automatic_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDo
                         end_token=ne.end)
         pptd.spans["NER"].append(auto)
 
+    # create AutoSpans for Sentences
+    pptd.spans["SENTENCE"] = list()
+    for s in doc.sents:
+        auto = AutoSpan(code="SENTENCE",
+                        start=s.start_char,
+                        end=s.end_char,
+                        text=s.text,
+                        start_token=s.start,
+                        end_token=s.end)
+        pptd.spans["SENTENCE"].append(auto)
+
     # Flo: update sdoc status
     update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.generated_automatic_span_annotations)
 
