@@ -33,7 +33,7 @@ def create_document_content_text_file_via_tika(filepath: Path,
         raise NotImplementedError(f"File Extension {filepath.suffix} are not supported!")
 
     parsed = parser.from_file(filename=str(filepath))
-    print(type(parsed['content']))
+
     if not int(parsed['status']) == 200:
         logger.warning(f"Couldn't get textual content via Tika from {filepath}!")
         content = ""
