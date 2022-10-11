@@ -33,8 +33,8 @@ def import_uploaded_archive(archive_file_path: Path,
                          desc="Processing files in archive... "):
         try:
             # generate create dto
-            dst, create_dto = repo.generate_source_document_create_dto_from_file(proj_id=project_id,
-                                                                                 filename=filename)
+            dst, create_dto = repo.build_source_document_create_dto_from_file(proj_id=project_id,
+                                                                              filename=filename)
 
             # persist SDoc
             with sql.db_session() as db:
