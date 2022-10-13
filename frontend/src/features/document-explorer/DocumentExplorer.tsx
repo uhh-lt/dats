@@ -23,7 +23,6 @@ import ProjectHooks from "../../api/ProjectHooks";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
 import { AttachedObjectType, DocType } from "../../api/openapi";
-import { parseInt } from "lodash";
 import MemoButton from "../memo-dialog/MemoButton";
 import DocumentNavigation from "../../components/DocumentNavigation";
 import { AnnoActions } from "../../views/annotation/annoSlice";

@@ -11,7 +11,7 @@ import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useForm } from "react-hook-form";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
 import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
-import { isNumber, parseInt } from "lodash";
+import { isNumber } from "lodash";
 import {
   createCodeFilter,
   createDocumentTagFilter,

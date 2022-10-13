@@ -4,14 +4,17 @@
 # STAGE 1: BUILD REACT APP
 
 # pull image
-FROM node:17-alpine as build
+FROM node:lts-alpine as build
 
 # Add a work directory
 WORKDIR /app
 
+# Set production build
+ENV NODE_ENV production
+
 # Install dependencies
-COPY package.json .
-RUN npm install --force --silent
+COPY package.json package-lock.json ./
+RUN npm ci --omit optional --legacy-peer-deps
 
 # Copy app files
 COPY . .
