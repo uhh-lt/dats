@@ -120,6 +120,29 @@ def test_create_remove_project(session):
         with session.db_session() as sess:
             r = crud_project.remove(db=sess, id=id)
 
+# project codes
+
+
+def test_get_remove_project_codes(session, project):
+    id, *_ = project
+
+    with session.db_session() as sess:
+        proj_db_obj = crud_project.read(db=sess, id=id)
+
+        s = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
+
+    assert len(s) == 123  # TODO: Not sure if 123 hardcoded is a good idea
+
+    # removes all project codes
+
+    with session.db_session() as sess:
+        crud_code.remove_by_project(db=sess, proj_id=id)
+
+        proj_db_obj = crud_project.read(db=sess, id=id)
+        s = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
+
+    assert len(s) == 0
+
 # project tags
 
 
