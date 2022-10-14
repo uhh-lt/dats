@@ -17,6 +17,7 @@ import UserHooks from "../../api/UserHooks";
 import PreProHooks from "../../api/PreProHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import ProjectContextMenu2, { ContextMenuPosition } from "./ProjectContextMenu2";
+import { ProjectRead } from "../../api/openapi";
 
 function Projects() {
   const { user } = useAuth();
@@ -71,44 +72,7 @@ function Projects() {
                 </CardActionArea>
               </Card>
             </Grid>
-            {projects.data.map((project) => (
-              <Grid item key={project.id}>
-                <Card sx={{ width: 420 }} onContextMenu={onContextMenu(project.id)}>
-                  <CardActionArea component={Link} to={`/project/${project.id}/search`}>
-                    <CardContent sx={{ padding: "0px !important" }}>
-                      <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
-                        {project.description}
-                      </Typography>
-                    </CardContent>
-                    <CardContent sx={{ padding: "0px !important" }}>
-                      <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
-                        {/*FIXME Flo: How to make this nice?!*/}
-                        Number of preprocessing Documents: {preProStatus?.num_sdocs_in_progress}
-                        <br />
-                        Number of preprocessed Documents: {preProStatus?.num_sdocs_finished}
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                  <CardActions>
-                    <Typography
-                      variant="subtitle1"
-                      component={Link}
-                      to={`/project/${project.id}/search`}
-                      sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
-                    >
-                      {project.title}
-                    </Typography>
-                    <Tooltip title={"Project settings"}>
-                      <span>
-                        <IconButton color="inherit" component={Link} to={`/projectsettings/${project.id}`}>
-                          <EditIcon />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
+            {projects.data.map((project) => ProjectCard({project, onContextMenu}))}
           </Grid>
           <ProjectContextMenu2
             projectId={contextMenuData}
@@ -119,6 +83,52 @@ function Projects() {
       )}
     </Container>
   );
+}
+
+interface ProjectCardProps {
+  project: ProjectRead,
+  onContextMenu: any
+}
+
+function ProjectCard({project, onContextMenu}: ProjectCardProps) {
+  const preProStatus = PreProHooks.useGetPreProProjectStatus(project.id);
+  return (
+    <Grid item key={project.id}>
+    <Card sx={{ width: 420 }} onContextMenu={onContextMenu(project.id)}>
+      <CardActionArea component={Link} to={`/project/${project.id}/search`}>
+        <CardContent sx={{ padding: "0px !important" }}>
+          <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
+            {project.description}
+          </Typography>
+        </CardContent>
+        {preProStatus.isSuccess && <CardContent sx={{ padding: "0px !important" }}>
+          <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
+            {/*FIXME Flo: How to make this nice?!*/}
+            Number of preprocessing Documents: {preProStatus.data.num_sdocs_in_progress}
+            <br />
+            Number of preprocessed Documents: {preProStatus.data.num_sdocs_finished}
+          </Typography>
+        </CardContent>}
+      </CardActionArea>
+      <CardActions>
+        <Typography
+          variant="subtitle1"
+          component={Link}
+          to={`/project/${project.id}/search`}
+          sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
+        >
+          {project.title}
+        </Typography>
+        <Tooltip title={"Project settings"}>
+          <span>
+            <IconButton color="inherit" component={Link} to={`/projectsettings/${project.id}`}>
+              <EditIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </CardActions>
+    </Card>
+  </Grid>)
 }
 
 export default Projects;
