@@ -5,9 +5,11 @@ import random
 import string
 
 from api.util import get_object_memos
+from app.core.data.crud.code import crud_code
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.source_document import SourceDocumentRead
@@ -116,6 +118,27 @@ def test_create_remove_project(session):
     with pytest.raises(Exception) as e_info:  # TODO: Catch correct Exception
         with session.db_session() as sess:
             r = crud_project.remove(db=sess, id=id)
+
+# user codes
+
+
+def test_get_remove_project_user_codes(session, project):
+    id, *_ = project
+
+    with session.db_session() as sess:
+        s = [CodeRead.from_orm(code_db_obj) for code_db_obj in
+             crud_code.read_by_user_and_project(db=sess, user_id=1, proj_id=id)]  # TODO: UserID
+
+    assert len(s) == 123
+
+    # remove user codes
+
+    with session.db_session() as sess:
+        crud_code.remove_by_user_and_project(db=sess, user_id=1, proj_id=id)
+        s = [CodeRead.from_orm(code_db_obj) for code_db_obj in
+             crud_code.read_by_user_and_project(db=sess, user_id=1, proj_id=id)]  # TODO: UserID
+
+    assert len(s) == 0
 
 # user memos
 
