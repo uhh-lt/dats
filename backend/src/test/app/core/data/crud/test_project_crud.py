@@ -120,6 +120,20 @@ def test_create_remove_project(session):
         with session.db_session() as sess:
             r = crud_project.remove(db=sess, id=id)
 
+# project user
+
+
+def test_get_project_users(session, project):
+    # TODO: Add/remove user
+    id, *_ = project
+
+    with session.db_session() as sess:
+        users = crud_project.read(db=sess, id=id)
+
+        s = [UserRead.from_orm(user) for user in users.users]
+
+    assert len(s) == 1
+
 # project codes
 
 
