@@ -11,6 +11,7 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
+from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import UserRead
@@ -118,6 +119,19 @@ def test_create_remove_project(session):
     with pytest.raises(Exception) as e_info:  # TODO: Catch correct Exception
         with session.db_session() as sess:
             r = crud_project.remove(db=sess, id=id)
+
+# project tags
+
+
+def test_get_project_tags(session, project):
+    id, *_ = project
+
+    with session.db_session() as sess:
+        proj_db_obj = crud_project.read(db=sess, id=id)
+        s = [DocumentTagRead.from_orm(tag)
+             for tag in proj_db_obj.document_tags]
+
+    assert len(s) == 0
 
 # user codes
 
