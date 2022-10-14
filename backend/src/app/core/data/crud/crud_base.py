@@ -35,6 +35,9 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
             raise NoSuchElementError(self.model, id=id)
         return db_obj
 
+    def read_by_ids(self, db: Session, ids: List[int]) -> List[ORMModelType]:
+        return db.query(self.model).filter(self.model.id.in_(ids)).all()
+
     def read_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
