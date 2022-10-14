@@ -21,7 +21,8 @@ class CeleryConfig:
     task_routes = {
         "app.docprepro.text.preprocess.*": {"queue": "textQ"},
         "app.docprepro.image.preprocess.*": {"queue": "imageQ"},
-        "app.docprepro.archive.preprocess.*": {"queue": "archiveQ"}
+        "app.docprepro.archive.preprocess.*": {"queue": "archiveQ"},
+        "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"}
     }
 
     def to_dict(self) -> Dict:
