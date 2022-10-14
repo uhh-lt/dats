@@ -1,8 +1,9 @@
-from typing import List, Union
+from typing import List, Union, Dict
 
 import numpy as np
 import torch
 from PIL import Image
+from loguru import logger
 from sentence_transformers import SentenceTransformer
 
 from app.core.data.crud.source_document import crud_sdoc
@@ -22,16 +23,27 @@ torch.set_num_threads(1)
 sqls = SQLService()
 faisss = FaissIndexService()
 
+
 # loading the encoder models
-encoders = {
-    IndexType.IMAGE: SentenceTransformer(conf.docprepro.simsearch.image_encoder.model,
-                                         device=conf.docprepro.simsearch.image_encoder.device),
-    IndexType.TEXT: SentenceTransformer(conf.docprepro.simsearch.text_encoder.model,
-                                        device=conf.docprepro.simsearch.text_encoder.device)
-}
+def _load_encoders() -> Dict[IndexType, SentenceTransformer]:
+    encoders = dict()
+
+    image_encoder = conf.docprepro.simsearch.image_encoder.model
+    logger.debug(f"Loading image encoder model {image_encoder} ...")
+    encoders[IndexType.IMAGE] = SentenceTransformer(conf.docprepro.simsearch.image_encoder.model,
+                                                    device=conf.docprepro.simsearch.image_encoder.device)
+
+    text_encoder = conf.docprepro.simsearch.image_encoder.model
+    logger.debug(f"Loading text encoder model {text_encoder} ...")
+    encoders[IndexType.TEXT]: SentenceTransformer(conf.docprepro.simsearch.text_encoder.model,
+                                                  device=conf.docprepro.simsearch.text_encoder.device)
+
+    return encoders
+
+
+encoders = _load_encoders()
 text_encoder_batch_size = conf.docprepro.simsearch.text_encoder.batch_size
 text_encoder_min_sentence_length = conf.docprepro.simsearch.text_encoder.min_sentence_length
-
 image_encoder_batch_size = conf.docprepro.simsearch.image_encoder.batch_size
 
 
@@ -54,6 +66,7 @@ def index_text_document(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
                 sentence_span_ids.append(span.id)
 
     # encode
+    logger.debug(f"Encoding {len(sentence_texts)} sentences from {len(pptds)} documents!")
     encoded_sentences = encoders[IndexType.TEXT].encode(sentences=sentence_texts,
                                                         batch_size=text_encoder_batch_size,
                                                         show_progress_bar=True,
@@ -85,6 +98,7 @@ def index_image_document(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     sdoc_ids = [ppid.sdoc_id for ppid in ppids]
 
     # load the images (and keep the files open!)
+    logger.debug(f"Loading {len(ppids)} images...")
     image_files = [ppid.image_dst for ppid in ppids]
     images: List[Image] = list()
     for f in image_files:
@@ -94,6 +108,7 @@ def index_image_document(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
         images.append(img)
 
     # encode
+    logger.debug(f"Encoding {len(ppids)} images...")
     encoded_images = encoders[IndexType.IMAGE].encode(sentences=images,
                                                       batch_size=text_encoder_batch_size,
                                                       show_progress_bar=True,
