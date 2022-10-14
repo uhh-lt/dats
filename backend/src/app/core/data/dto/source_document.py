@@ -20,7 +20,7 @@ class SDocStatus(int, Enum):
     created_pptds_from_automatic_caption = 7  # "created pptds from automatic caption"
     added_document_to_elasticsearch_index = 8  # "added document to elasticsearch index"
     added_document_to_faiss_index = 9  # "added document to faiss index"
-    finished = 8  # "added document to elasticsearch index"
+    finished = 9  # "added document to faiss index"
 
 
 """
