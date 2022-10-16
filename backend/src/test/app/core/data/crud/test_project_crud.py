@@ -56,13 +56,13 @@ def test_update_project(session, project):
     assert p.description == description2
 
     # try update title to None
-    with pytest.raises(Exception) as e_info:  # TODO: Catch correct Exception
+    with pytest.raises(IntegrityError):
         with session.db_session() as sess:
             crud_project.update(
                 db=sess, id=id, update_dto=ProjectUpdate(title=None))
 
     # try update description to None
-    with pytest.raises(Exception) as e_info:  # TODO: Catch correct Exception
+    with pytest.raises(IntegrityError):
         with session.db_session() as sess:
             crud_project.update(
                 db=sess, id=id, update_dto=ProjectUpdate(description=None))
@@ -116,7 +116,7 @@ def test_create_remove_project(session):
     assert len(p) == 0
 
     # try remove project second time
-    with pytest.raises(Exception) as e_info:  # TODO: Catch correct Exception
+    with pytest.raises(NoSuchElementError):
         with session.db_session() as sess:
             r = crud_project.remove(db=sess, id=id)
 
