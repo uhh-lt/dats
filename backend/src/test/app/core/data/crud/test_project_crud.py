@@ -4,8 +4,11 @@ import pytest
 import random
 import string
 
+from sqlalchemy.exc import IntegrityError
+
 from api.util import get_object_memos
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
