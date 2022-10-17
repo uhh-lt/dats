@@ -12,13 +12,13 @@ from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjec
 
 
 @pytest.fixture
-def code(session, project):
+def code(session, project, user):
     project_id, *_ = project
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
     code = CodeCreate(name=name, color=color,
-                      description=description, project_id=project_id, user_id=1)
+                      description=description, project_id=project_id, user_id=user)
 
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
@@ -30,14 +30,14 @@ def code(session, project):
         crud_code.remove(db=sess, id=code_obj.id)
 
 
-def test_create_get_delete_code(session, project):
+def test_create_get_delete_code(session, project, user):
     id, *_ = project
 
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
     code = CodeCreate(name=name, color=color,
-                      description=description, project_id=id, user_id=1)
+                      description=description, project_id=id, user_id=user)
 
     # create code
     with session.db_session() as sess:
@@ -96,7 +96,7 @@ def test_update_code(session, code):
     assert get_code2[0].color == color
 
 
-def test_add_get_memo(session, code):
+def test_add_get_memo(session, code, user):
     code_obj, project_id = code
     code_id = code_obj.id
 
@@ -104,7 +104,7 @@ def test_add_get_memo(session, code):
     content = "".join(random.choices(string.ascii_letters, k=30))
     starred = False
 
-    memo = MemoCreate(title=title, content=content, user_id=1,
+    memo = MemoCreate(title=title, content=content, user_id=user,
                       project_id=project_id, starred=starred)
     with session.db_session() as sess:
         db_obj = crud_memo.create_for_code(
@@ -139,7 +139,7 @@ def test_add_get_memo(session, code):
     # get user memo
     with session.db_session() as sess:
         db_obj = crud_code.read(db=sess, id=code_id)
-        memos_user = [get_object_memos(db_obj=db_obj, user_id=1)]
+        memos_user = [get_object_memos(db_obj=db_obj, user_id=user)]
 
     assert len(memos_user) == 1
     assert memos_user[0].title == title
