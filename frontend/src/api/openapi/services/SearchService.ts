@@ -7,6 +7,7 @@ import type { MemoTitleQuery } from "../models/MemoTitleQuery";
 import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
 import type { SearchSDocsQueryParameters } from "../models/SearchSDocsQueryParameters";
+import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SourceDocumentContentQuery } from "../models/SourceDocumentContentQuery";
 import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
 import type { SpanEntityDocumentFrequencyResult } from "../models/SpanEntityDocumentFrequencyResult";
@@ -266,6 +267,35 @@ export class SearchService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns similar sentence SpanAnnotation according to a textual or visual query.
+   * Returns similar sentence SpanAnnotation according to a textual or visual query.
+   * @returns SimSearchSentenceHit Successful Response
+   * @throws ApiError
+   */
+  public static findSimilarSentencesSearchSimsearchSentencesPost({
+    projId,
+    query,
+    topK = 10,
+  }: {
+    projId: number;
+    query: string | number;
+    topK?: number;
+  }): CancelablePromise<Array<SimSearchSentenceHit>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/simsearch/sentences",
+      query: {
+        proj_id: projId,
+        query: query,
+        top_k: topK,
+      },
       errors: {
         422: `Validation Error`,
       },

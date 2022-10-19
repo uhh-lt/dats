@@ -42,6 +42,7 @@ export type { ProjectRead } from "./models/ProjectRead";
 export type { ProjectUpdate } from "./models/ProjectUpdate";
 export { SDocStatus } from "./models/SDocStatus";
 export type { SearchSDocsQueryParameters } from "./models/SearchSDocsQueryParameters";
+export type { SimSearchSentenceHit } from "./models/SimSearchSentenceHit";
 export type { SourceDocumentContent } from "./models/SourceDocumentContent";
 export type { SourceDocumentContentQuery } from "./models/SourceDocumentContentQuery";
 export type { SourceDocumentDocumentTagMultiLink } from "./models/SourceDocumentDocumentTagMultiLink";
