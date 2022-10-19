@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogTitle,
   MenuItem,
+  rgbToHex,
   Stack,
   TextField,
 } from "@mui/material";
@@ -22,6 +23,7 @@ import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { HexColorPicker } from "react-colorful";
 import SaveIcon from "@mui/icons-material/Save";
 import ProjectHooks from "../../../api/ProjectHooks";
+import { contrastiveColors } from "../colors";
 
 interface CodeCreationDialogProps {
   onCreateSuccess?: (code: CodeRead) => void;
@@ -65,10 +67,11 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   // methods
   const openCodeCreateDialog = (name?: string) => {
     // reset
+    const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
     reset();
     setValue("name", name ? name : "");
-    setValue("color", "#000000");
-    setColor("#000000");
+    setValue("color", randomHexColor);
+    setColor(randomHexColor);
     setIsCodeCreateDialogOpen(true);
     setSelectedParent(parentCodeId);
   };
