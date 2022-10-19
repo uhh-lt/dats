@@ -69,6 +69,14 @@ export const annoSlice = createSlice({
     setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
       state.visibleUserIds = action.payload;
     },
+    moveCodeToTop: (state, action: PayloadAction<ICode>) => {
+      // makes most recently used order
+      const codeId = action.payload.id;
+      const idx = state.codesForSelection.findIndex((t) => t.id === codeId);
+      const code = state.codesForSelection[idx];
+      state.codesForSelection.splice(idx, 1);
+      state.codesForSelection.unshift(code);
+    },
   },
 });
 

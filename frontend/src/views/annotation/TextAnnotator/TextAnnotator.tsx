@@ -6,7 +6,7 @@ import {
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
 import React, { MouseEvent, useRef, useState } from "react";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { selectionIsEmpty } from "./utils";
 import CodeContextMenu, { CodeSelectorHandle } from "../ContextMenu/CodeContextMenu";
@@ -16,6 +16,7 @@ import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnota
 import { ICode } from "./ICode";
 import useComputeTokenData from "./useComputeTokenData";
 import TextAnnotatorRenderer from "./TextAnnotatorRenderer";
+import { AnnoActions } from "../annoSlice";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentRead;
@@ -30,6 +31,8 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // global client state (redux)
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
   const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
+  const codes = useAppSelector((state) => state.annotations.codesForSelection);
+  const dispatch = useAppDispatch();
 
   // computed / custom hooks
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
@@ -95,14 +98,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     const selection = window.getSelection();
     if (!selection || selectionIsEmpty(selection)) return;
 
-    // make sure a code is selected (in the Code Explorer)
-    if (!selectedCodeId) {
-      SnackbarAPI.openSnackbar({
-        text: `Please select a Code in the Code Explorer`,
-        severity: "error",
-      });
-      return;
-    }
 
     // get the selected begin and end token
     let selectionStartElement = selection?.anchorNode?.parentElement?.parentElement;
@@ -125,7 +120,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       .join(" ");
 
     const requestBody: SpanAnnotationCreate = {
-      current_code_id: selectedCodeId,
+      current_code_id: codes[0].id,
       annotation_document_id: adoc.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,
@@ -222,7 +217,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   };
   const handleCodeSelectorAddCode = (code: ICode) => {
     if (!fakeAnnotation) return;
-
     createMutation.mutate(
       {
         requestBody: {
@@ -232,6 +226,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       },
       {
         onSuccess: (spanAnnotation) => {
+          dispatch(AnnoActions.moveCodeToTop(code));
           SnackbarAPI.openSnackbar({
             text: `Created Span Annotation ${spanAnnotation.id}`,
             severity: "success",

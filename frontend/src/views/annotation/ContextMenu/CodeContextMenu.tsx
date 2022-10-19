@@ -223,7 +223,7 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                 return option.name;
               }}
               renderOption={(props, option) => (
-                <li {...props}>
+                <li {...props} key={option.id}>
                   <Box style={{ width: 20, height: 20, backgroundColor: option.color, marginRight: 8 }}></Box>{" "}
                   {option.title}
                 </li>

@@ -66,8 +66,8 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
 
   // handle ui events
   const handleSelectCode = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
-    const id = Array.isArray(nodeIds) ? nodeIds[0] : nodeIds;
-    dispatch(AnnoActions.setSelectedParentCodeId(parseInt(id)));
+    const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
+    dispatch(AnnoActions.setSelectedParentCodeId(selectedCodeId === id ? undefined : id));
   };
   const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
