@@ -102,6 +102,11 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     // get the selected begin and end token
     let selectionStartElement = selection?.anchorNode?.parentElement?.parentElement;
     let selectionEndElement = selection?.focusNode?.parentElement?.parentElement;
+    if (selectionEndElement?.tagName !== "SPAN") {
+      selectionEndElement = selection.focusNode?.childNodes[selection.focusOffset] as HTMLElement;
+      while (selectionEndElement?.tagName !== "SPAN")
+        selectionEndElement = selectionEndElement?.previousElementSibling as HTMLElement;
+    }
     const selectionStart = selectionStartElement?.getAttribute("data-tokenid");
     const selectionEnd = selectionEndElement?.getAttribute("data-tokenid");
     if (!selectionStart || !selectionEnd) return;
