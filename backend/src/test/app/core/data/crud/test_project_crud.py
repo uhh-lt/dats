@@ -12,13 +12,15 @@ from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.user import crud_user
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.user import UserRead
+from app.core.data.dto.user import UserRead, UserCreate
 from app.docprepro.util import preprocess_uploaded_file
+
 
 def test_update_project(session, project):
     title2 = "".join(random.choices(string.ascii_letters, k=15))
@@ -126,16 +128,46 @@ def test_create_remove_project(session):
 # project user
 
 
-def test_get_project_users(session, project):
-    # TODO: Add/remove user
-    id, *_ = project
+def test_project_users(session, project, user):
+    project_id, *_ = project
 
     with session.db_session() as sess:
-        users = crud_project.read(db=sess, id=id)
+        users = crud_project.read(db=sess, id=project_id)
 
-        s = [UserRead.from_orm(user) for user in users.users]
+        project_users = [UserRead.from_orm(user) for user in users.users]
 
-    assert len(s) == 1
+    assert len(project_users) == 2
+
+    # create third user
+    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+    first_name = "".join(random.choices(string.ascii_letters, k=15))
+    last_name = "".join(random.choices(string.ascii_letters, k=15))
+    password = "".join(random.choices(string.ascii_letters, k=15))
+
+    user_three = UserCreate(email=email, first_name=first_name,
+                      last_name=last_name, password=password)
+
+    with session.db_session() as sess:
+        db_user = crud_user.create(db=sess, create_dto=user_three)
+        user_three_orm = UserRead.from_orm(db_user)
+
+    with session.db_session() as sess:
+        crud_project.associate_user(db=sess, id=project_id, user_id=user_three_orm.id)
+
+        proj_db_obj = crud_project.read(db=sess, id=project_id)
+        project_users = [UserRead.from_orm(user) for user in proj_db_obj.users]
+
+    assert len(project_users) == 3
+    assert project_users[2].id == user_three_orm.id
+
+    with session.db_session() as sess:
+        crud_user.remove(db=sess, id=user_three_orm.id)
+
+        proj_db_obj = crud_project.read(db=sess, id=project_id)
+        project_users = [UserRead.from_orm(user) for user in proj_db_obj.users]
+
+    assert len(project_users) == 2
+    assert project_users[1].id == user
 
 # project codes
 
