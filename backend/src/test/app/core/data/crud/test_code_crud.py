@@ -11,25 +11,6 @@ from app.core.data.dto.code import CodeRead, CodeUpdate, CodeCreate
 from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 
 
-@pytest.fixture
-def code(session, project, user):
-    project_id, *_ = project
-    name = "".join(random.choices(string.ascii_letters, k=15))
-    description = "".join(random.choices(string.ascii_letters, k=30))
-    color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
-    code = CodeCreate(name=name, color=color,
-                      description=description, project_id=project_id, user_id=user)
-
-    with session.db_session() as sess:
-        db_code = crud_code.create(db=sess, create_dto=code)
-        code_obj = CodeRead.from_orm(db_code)
-
-    yield code_obj, project_id
-
-    with session.db_session() as sess:
-        crud_code.remove(db=sess, id=code_obj.id)
-
-
 def test_create_get_delete_code(session, project, user):
     id, *_ = project
 
@@ -66,7 +47,7 @@ def test_create_get_delete_code(session, project, user):
 
 
 def test_update_code(session, code):
-    code_obj, _ = code
+    code_obj = code
     code_id = code_obj.id
 
     name = "".join(random.choices(string.ascii_letters, k=15))
@@ -96,8 +77,9 @@ def test_update_code(session, code):
     assert get_code2[0].color == color
 
 
-def test_add_get_memo(session, code, user):
-    code_obj, project_id = code
+def test_add_get_memo(session, code, project, user):
+    code_obj = code
+    project_id, *_ = project
     code_id = code_obj.id
 
     title = "".join(random.choices(string.ascii_letters, k=15))
