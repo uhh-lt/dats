@@ -2,11 +2,32 @@ import pytest
 import random
 import string
 
+from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import crud_user
+from app.core.data.dto.code import CodeRead, CodeCreate
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserRead, UserCreate
 from app.core.db.sql_service import SQLService
+
+
+@pytest.fixture
+def code(session, project, user):
+    project_id, *_ = project
+    name = "".join(random.choices(string.ascii_letters, k=15))
+    description = "".join(random.choices(string.ascii_letters, k=30))
+    color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
+    code = CodeCreate(name=name, color=color,
+                      description=description, project_id=project_id, user_id=user)
+
+    with session.db_session() as sess:
+        db_code = crud_code.create(db=sess, create_dto=code)
+        code_obj = CodeRead.from_orm(db_code)
+
+    yield code_obj
+
+    with session.db_session() as sess:
+        crud_code.remove(db=sess, id=code_obj.id)
 
 
 @pytest.fixture
