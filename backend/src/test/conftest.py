@@ -36,13 +36,14 @@ def session():
 
 
 @pytest.fixture
-def project(session):
+def project(session, user):
     title = "".join(random.choices(string.ascii_letters, k=15))
     description = "Test description"
 
     with session.db_session() as sess:
         id = crud_project.create(db=sess,
                                  create_dto=ProjectCreate(title=title, description=description)).id
+        crud_project.associate_user(db=sess, id=id, user_id=user)
 
     yield id, title, description
 
