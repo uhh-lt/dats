@@ -197,12 +197,12 @@ def test_get_remove_project_user_codes(session, project):
 # user memos
 
 
-def test_get_add_remove_memos_project(session, project):
-    id, *_ = project
+def test_get_add_remove_memos_project(session, project, user):
+    project_id, *_ = project
 
     with session.db_session() as sess:
         db_objs = crud_memo.read_by_user_and_project(
-            db=sess, user_id=1, proj_id=id, only_starred=False)
+            db=sess, user_id=user, proj_id=project_id, only_starred=False)
         memo_list = [crud_memo.get_memo_read_dto_from_orm(
             db=sess, db_obj=db_obj) for db_obj in db_objs]
 
@@ -213,14 +213,14 @@ def test_get_add_remove_memos_project(session, project):
     content1 = "".join(random.choices(string.ascii_letters, k=30))
     starred1 = False
     memo1 = MemoCreate(title=title1, content=content1,
-                       user_id=1, project_id=id, starred=starred1)
+                       user_id=user, project_id=project_id, starred=starred1)
 
     with session.db_session() as sess:
         db_obj = crud_memo.create_for_project(
-            db=sess, project_id=id, create_dto=memo1)
+            db=sess, project_id=project_id, create_dto=memo1)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         memo1_obj = MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                             attached_object_id=id,
+                             attached_object_id=project_id,
                              attached_object_type=AttachedObjectType.project)
 
     print(f'{memo1_obj=}')
@@ -230,25 +230,25 @@ def test_get_add_remove_memos_project(session, project):
     content2 = "".join(random.choices(string.ascii_letters, k=30))
     starred2 = True
     memo2 = MemoCreate(title=title2, content=content2,
-                       user_id=1, project_id=id, starred=starred2)
+                       user_id=user, project_id=project_id, starred=starred2)
 
     with session.db_session() as sess:
         db_obj = crud_memo.create_for_project(
-            db=sess, project_id=id, create_dto=memo2)
+            db=sess, project_id=project_id, create_dto=memo2)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         memo2_obj = MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                             attached_object_id=id,
+                             attached_object_id=project_id,
                              attached_object_type=AttachedObjectType.project)
 
     print(f'{memo2_obj=}')
 
     with session.db_session() as sess:
         db_objs_unstarred = crud_memo.read_by_user_and_project(
-            db=sess, user_id=1, proj_id=id, only_starred=False)
+            db=sess, user_id=user, proj_id=project_id, only_starred=False)
         memo_list_unstarred = [crud_memo.get_memo_read_dto_from_orm(
             db=sess, db_obj=db_obj) for db_obj in db_objs_unstarred]
         db_objs_starred = crud_memo.read_by_user_and_project(
-            db=sess, user_id=1, proj_id=id, only_starred=True)
+            db=sess, user_id=user, proj_id=project_id, only_starred=True)
         memo_list_starred = [crud_memo.get_memo_read_dto_from_orm(
             db=sess, db_obj=db_obj) for db_obj in db_objs_starred]
 
@@ -259,9 +259,10 @@ def test_get_add_remove_memos_project(session, project):
     # remove memos
 
     with session.db_session() as sess:
-        crud_memo.remove_by_user_and_project(db=sess, user_id=1, proj_id=id)
+        crud_memo.remove_by_user_and_project(
+            db=sess, user_id=user, proj_id=project_id)
         db_objs = crud_memo.read_by_user_and_project(
-            db=sess, user_id=1, proj_id=id, only_starred=False)
+            db=sess, user_id=user, proj_id=project_id, only_starred=False)
         memo_list = [crud_memo.get_memo_read_dto_from_orm(
             db=sess, db_obj=db_obj) for db_obj in db_objs]
 
