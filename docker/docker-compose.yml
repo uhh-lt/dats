@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   postgres:
-    image: "postgres:latest"
+    image: "postgres:14-alpine"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dwtsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwts123}
@@ -14,7 +14,7 @@ services:
       - dwts_demo_network
 
   rabbitmq:
-    image: "rabbitmq:management"
+    image: "rabbitmq:3-management-alpine"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-dwtsuser}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dwts123}
@@ -29,7 +29,7 @@ services:
       - dwts_demo_network
 
   redis:
-    image: "redis:latest"
+    image: "redis:7-alpine"
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-dwts123}
     ports:
