@@ -33,7 +33,7 @@ def create_document_content_text_file_via_tika(filepath: Path,
         raise NotImplementedError(f"File Extension {filepath.suffix} are not supported!")
 
     parsed = parser.from_file(filename=str(filepath))
-    print(type(parsed['content']))
+
     if not int(parsed['status']) == 200:
         logger.warning(f"Couldn't get textual content via Tika from {filepath}!")
         content = ""
@@ -121,6 +121,17 @@ def generate_automatic_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDo
                         start_token=ne.start,
                         end_token=ne.end)
         pptd.spans["NER"].append(auto)
+
+    # create AutoSpans for Sentences
+    pptd.spans["SENTENCE"] = list()
+    for s in doc.sents:
+        auto = AutoSpan(code="SENTENCE",
+                        start=s.start_char,
+                        end=s.end_char,
+                        text=s.text,
+                        start_token=s.start,
+                        end_token=s.end)
+        pptd.spans["SENTENCE"].append(auto)
 
     # Flo: update sdoc status
     update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.generated_automatic_span_annotations)

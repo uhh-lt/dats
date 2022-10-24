@@ -39,8 +39,8 @@ def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
 def persist_as_sdoc(doc_file_path: Path,
                     project_id: int) -> Tuple[Path, SourceDocumentORM]:
     # generate the create_dto
-    dst, create_dto = repo.generate_source_document_create_dto_from_file(proj_id=project_id,
-                                                                         filename=doc_file_path.name)
+    dst, create_dto = repo.build_source_document_create_dto_from_file(proj_id=project_id,
+                                                                      filename=doc_file_path.name)
     # persist SourceDocument
     with sql.db_session() as db:
         sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)

@@ -21,7 +21,8 @@ class CeleryConfig:
     task_routes = {
         "app.docprepro.text.preprocess.*": {"queue": "textQ"},
         "app.docprepro.image.preprocess.*": {"queue": "imageQ"},
-        "app.docprepro.archive.preprocess.*": {"queue": "archiveQ"}
+        "app.docprepro.archive.preprocess.*": {"queue": "archiveQ"},
+        "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"}
     }
 
     def to_dict(self) -> Dict:
@@ -34,11 +35,11 @@ class CeleryConfig:
 
 
 # Flo: Setup the celery worker with Redis backend (for results) and RabbitMQ broker (for message passing)
-celery_prepro_worker = Celery(
-    "celery_prepro_worker",
+celery_worker = Celery(
+    "celery_worker",
     backend=f"redis://:{cc.backend.password}@{cc.backend.host}:{cc.backend.port}/{cc.backend.db}",
     broker=f"amqp://{cc.broker.user}:{cc.broker.password}@{cc.broker.host}:{cc.broker.port}//"
 )
 
 # Flo: config the celery worker with the CommonConfig (serialization and event format etc)
-celery_prepro_worker.config_from_object(CeleryConfig)
+celery_worker.config_from_object(CeleryConfig)

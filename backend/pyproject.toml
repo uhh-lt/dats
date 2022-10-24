@@ -30,6 +30,8 @@ timm = {version = "^0.5.4", platform = "linux"}
 elasticsearch = "7.17"
 python-magic = "^0.4.25"
 tika = "^1.24"
+faiss-cpu = "^1.7.2"
+sentence-transformers = "^2.2.2"
 
 [tool.poetry.dev-dependencies]
 

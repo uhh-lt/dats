@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PS3="Which image? "
-select image in backend_api celery_text_worker celery_image_worker celery_archive_worker; do
+select image in backend_api celery_text_worker celery_image_worker celery_archive_worker celery_simsearch_worker; do
   case $image in
   backend_api)
     break
@@ -13,6 +13,9 @@ select image in backend_api celery_text_worker celery_image_worker celery_archiv
     break
     ;;
   celery_archive_worker)
+    break
+    ;;
+  celery_simsearch_worker)
     break
     ;;
   *)
@@ -43,12 +46,12 @@ echo
 PS3="Which is the target platform? "
 select platform in mac_m1 debian; do
   case $platform in
-  mac_m1)
-    tini="tini-arm64"
-    break
-    ;;
   debian)
     tini="tini"
+    break
+    ;;
+  mac_m1)
+    tini="tini-arm64"
     break
     ;;
   *)
@@ -113,6 +116,12 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 
     if [ $push == true ]; then
       docker login && docker push uhhlt/dwts_backend_celery_archive:"${docker_tag}"
+    fi
+  elif [ $image == celery_simsearch_worker ]; then
+    docker build -f Dockerfile_celery_simsearch_worker --build-arg INSTALL_JUPYTER="${jupyter}" --build-arg TINI_BINARY="${tini}" -t uhhlt/dwts_backend_celery_simsearch:"${docker_tag}" .
+
+    if [ $push == true ]; then
+      docker login && docker push uhhlt/dwts_backend_celery_simsearch:"${docker_tag}"
     fi
   fi
 fi

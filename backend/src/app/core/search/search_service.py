@@ -1,9 +1,15 @@
-from typing import List
+from typing import List, Union
+
+from PIL.Image import Image
 
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.search import SearchSDocsQueryParameters
+from app.core.data.crud.span_annotation import crud_span_anno
+from app.core.data.dto.search import SearchSDocsQueryParameters, SimSearchSentenceHit
+from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
+from app.docprepro.simsearch import find_similar_sentences_apply_async, find_similar_images_apply_async
 from app.util.singleton_meta import SingletonMeta
 
 
@@ -54,3 +60,30 @@ class SearchService(metaclass=SingletonMeta):
             else:
                 # we have search results, now we combine!
                 return list(set.intersection(*map(set, sdocs_ids)))
+
+    def find_similar_sentences(self, proj_id: int, query: Union[str, Image], top_k: int = 10) \
+            -> List[SimSearchSentenceHit]:
+
+        # perform the simsearch and get the span anno ids
+        top_k_similar_sentence_span_ids: List[int] = find_similar_sentences_apply_async(proj_id=proj_id, query=query,
+                                                                                        top_k=top_k).get()
+
+        with self.sqls.db_session() as db:
+            span_orms = crud_span_anno.read_by_ids(db=db, ids=top_k_similar_sentence_span_ids)
+
+            return [SimSearchSentenceHit(sdoc_id=span_orm.annotation_document.source_document_id,
+                                         sentence_text=span_orm.span_text.text,
+                                         sentence_span=SpanAnnotationRead.from_orm(span_orm)) for span_orm in span_orms]
+
+    def find_similar_images(self, proj_id: int, query: Union[str, Image], top_k: int = 10) \
+            -> List[SourceDocumentRead]:
+
+        # perform the simsearch and get the sdoc ids
+        top_k_similar_sdoc_ids: List[int] = find_similar_images_apply_async(proj_id=proj_id,
+                                                                            query=query,
+                                                                            top_k=top_k).get()
+
+        with self.sqls.db_session() as db:
+            sdoc_orms = crud_sdoc.read_by_ids(db=db, ids=top_k_similar_sdoc_ids)
+
+        return [SourceDocumentRead.from_orm(sdoc_orm) for sdoc_orm in sdoc_orms]

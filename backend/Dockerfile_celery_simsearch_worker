@@ -1,0 +1,76 @@
+FROM python:3.9.7 as dev_build
+MAINTAINER Florian Schneider florian.schneider-1@uni-hamburg.de
+
+ARG DWTS_ENV
+
+ENV DWTS_ENV=${DWTS_ENV} \
+  # python:
+  PYTHONFAULTHANDLER=1 \
+  PYTHONUNBUFFERED=1 \
+  PYTHONHASHSEED=random \
+  PYTHONDONTWRITEBYTECODE=1 \
+  # pip:
+  PIP_NO_CACHE_DIR=off \
+  PIP_DISABLE_PIP_VERSION_CHECK=on \
+  PIP_DEFAULT_TIMEOUT=100 \
+  # poetry:
+  POETRY_VERSION=1.1.11 \
+  POETRY_NO_INTERACTION=1 \
+  POETRY_VIRTUALENVS_CREATE=false \
+  POETRY_CACHE_DIR='/var/cache/pypoetry' \
+  PATH="$PATH:/root/.local/bin:/root/.cargo/bin"
+
+# System deps:
+RUN apt-get update && apt-get upgrade -y \
+      && apt-get install --no-install-recommends -y \
+        bash \
+        build-essential \
+        curl \
+        gettext \
+        git \
+        libpq-dev \
+        wget \
+        # Installing `poetry` package manager:
+      # https://github.com/python-poetry/poetry
+      && curl -sSL 'https://install.python-poetry.org' | python - \
+      && poetry --version \
+        # Install rust
+      && curl -sSf 'https://sh.rustup.rs' | bash -s -- -y \
+      && echo 'source $HOME/.cargo/env' >> $HOME/.bashrc \
+      && rustup --version
+
+WORKDIR /dwts_code
+
+# Copy only requirements, to cache them in docker layer
+COPY ./poetry.lock ./pyproject.toml /dwts_code/
+
+RUN python3 -m pip install --upgrade pip setuptools wheel
+
+RUN echo "$DWTS_ENV" && poetry version \
+  && poetry install --no-interaction --no-ansi \
+  # Upgrading pip, it is insecure, remove after `pip@21.1`
+  && poetry run pip install -U pip
+
+# For development, Jupyter remote kernel
+# Using inside the container:
+# jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
+ARG INSTALL_JUPYTER=false
+RUN bash -c "if [ $INSTALL_JUPYTER == 'true' ] ; then pip install jupyterlab ; fi"
+
+# Add Tini
+ARG TINI_VERSION=v0.19.0
+# for Mac M1: tini-arm64 otherwise just tini
+ARG TINI_BINARY=tini
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/${TINI_BINARY} /tini
+RUN chmod +x /tini
+
+FROM dev_build as prod_build
+
+COPY . /dwts_code
+WORKDIR /dwts_code/src
+
+ENV C_FORCE_ROOT=1
+
+RUN chmod +x "celery_simsearch_worker_entrypoint.sh"
+
+CMD ["/tini", "--", "/dwts_code/src/celery_simsearch_worker_entrypoint.sh"]

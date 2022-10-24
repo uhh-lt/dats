@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -8,7 +8,9 @@ from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityFrequency, \
     PaginatedElasticSearchDocumentHits, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
-    PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat, TagStat, SpanEntityDocumentFrequencyResult
+    PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat, TagStat, SpanEntityDocumentFrequencyResult, \
+    SimSearchSentenceHit
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
 
@@ -138,3 +140,23 @@ async def search_memos_by_title_query(*,
                                                                   exact_title=title_query.title_query,
                                                                   starred=title_query.starred,
                                                                   **skip_limit)
+
+
+@router.post("/simsearch/sentences", tags=tags,
+             response_model=List[SimSearchSentenceHit],
+             summary="Returns similar sentence SpanAnnotation according to a textual or visual query.",
+             description="Returns similar sentence SpanAnnotation according to a textual or visual query.")
+async def find_similar_sentences(proj_id: int, query: Union[str, int], top_k: int = 10) \
+        -> List[SimSearchSentenceHit]:
+    # FIXME: Image query type not a valid pydantic type --> use uploaded image file or sdoc_id!
+    return SearchService().find_similar_sentences(proj_id=proj_id, query=query, top_k=top_k)
+
+
+@router.post("/simsearch/images", tags=tags,
+             response_model=List[SourceDocumentRead],
+             summary="Returns similar Image SourceDocuments according to a textual or visual query.",
+             description="Returns similar Image SourceDocuments according to a textual or visual query.")
+async def find_similar_images(proj_id: int, query: Union[str, int], top_k: int = 10) \
+        -> List[SourceDocumentRead]:
+    # FIXME: Image query type not a valid pydantic type --> use uploaded image file or sdoc_id!
+    return SearchService().find_similar_images(proj_id=proj_id, query=query, top_k=top_k)

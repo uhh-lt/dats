@@ -89,6 +89,7 @@ export class AnnotationDocumentService {
     skip,
     limit,
     resolve = true,
+    includeSentences = false,
   }: {
     adocId: number;
     /**
@@ -103,6 +104,10 @@ export class AnnotationDocumentService {
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
+    /**
+     * If true, the sentence span annotations are also returned
+     */
+    includeSentences?: boolean;
   }): CancelablePromise<Array<SpanAnnotationRead | SpanAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -114,6 +119,7 @@ export class AnnotationDocumentService {
         skip: skip,
         limit: limit,
         resolve: resolve,
+        include_sentences: includeSentences,
       },
       errors: {
         422: `Validation Error`,

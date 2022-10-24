@@ -293,6 +293,7 @@ docprepro:
       device: cpu
       max_text_length: 2000000 # in characters (1000000 is spaCy default)
     bulk_threshold: 100
+
   image:
     object_detection:
       model: "facebook/detr-resnet-101"
@@ -303,6 +304,18 @@ docprepro:
       max_caption_length: 16
       num_beams: 4
       device: cpu
+
+  simsearch:
+    # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
+    image_encoder:
+      model: "clip-ViT-B-32"
+      batch_size: 32
+      device: cpu
+    text_encoder:
+      model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+      batch_size: 32
+      device: cpu
+      min_sentence_length: 5
 
   celery:
     batch_size:
@@ -353,3 +366,10 @@ elasticsearch:
   index_settings:
     docs:
     memos:
+
+faiss:
+  # see https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
+  index_factory_string: "IDMap,Flat"
+  index_search_metric: IP # or L2
+  index_dimension: 512 # has to match the encoder dimensions!
+  device: cpu
