@@ -70,7 +70,7 @@ function Projects() {
                 </CardActionArea>
               </Card>
             </Grid>
-            {projects.data.map((project) => <ProjectCard project={project} onContextMenu={onContextMenu}></ProjectCard>)}
+            {projects.data.map((project) => <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>)}
           </Grid>
           <ProjectContextMenu2
             projectId={contextMenuData}
@@ -91,7 +91,7 @@ interface ProjectCardProps {
 function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
   const preProStatus = PreProHooks.useGetPreProProjectStatus(project.id);
   return (
-    <Grid item key={project.id}>
+    <Grid item>
       <Card sx={{ width: 420 }} onContextMenu={onContextMenu(project.id)}>
         <CardActionArea component={Link} to={`/project/${project.id}/search`}>
           <CardContent sx={{ padding: "0px !important" }}>
@@ -104,7 +104,7 @@ function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
               Number of preprocessed Documents: {preProStatus.data.num_sdocs_finished}
               <br />
               {preProStatus.data.in_progress && <>Document preprocessing is in progress </>}
-              {preProStatus.data.in_progress && <CircularProgress />}
+              {preProStatus.data.in_progress && <>{preProStatus.data.num_sdocs_in_progress} <CircularProgress/></>}
             </Typography>
           </CardContent>}
         </CardActionArea>
