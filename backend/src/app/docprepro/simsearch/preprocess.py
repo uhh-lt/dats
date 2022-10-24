@@ -33,10 +33,10 @@ def _load_encoders() -> Dict[IndexType, SentenceTransformer]:
     encoders[IndexType.IMAGE] = SentenceTransformer(conf.docprepro.simsearch.image_encoder.model,
                                                     device=conf.docprepro.simsearch.image_encoder.device)
 
-    text_encoder = conf.docprepro.simsearch.image_encoder.model
+    text_encoder = conf.docprepro.simsearch.text_encoder.model
     logger.debug(f"Loading text encoder model {text_encoder} ...")
-    encoders[IndexType.TEXT]: SentenceTransformer(conf.docprepro.simsearch.text_encoder.model,
-                                                  device=conf.docprepro.simsearch.text_encoder.device)
+    encoders[IndexType.TEXT] = SentenceTransformer(conf.docprepro.simsearch.text_encoder.model,
+                                                   device=conf.docprepro.simsearch.text_encoder.device)
 
     return encoders
 
