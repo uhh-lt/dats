@@ -6,7 +6,9 @@ set -e
 chmod +x ./test_es.sh
 bash ./test_es.sh
 
-MODEL_ROOT=/image_models
+MODEL_ROOT=/models_cache
+export TRANSFORMERS_CACHE="$MODEL_ROOT"
+export TORCH_HOME="$MODEL_ROOT"
 
 mkdir -p $MODEL_ROOT
 
