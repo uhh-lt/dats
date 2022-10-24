@@ -22,6 +22,10 @@ class FaissIndexEmptyError(Exception):
         super().__init__(f"The FAISS Index of type {index_type} for Project {proj_id} is empty!")
 
 
+# TODO Flo: handle race conditions for celery multi process
+#  Implement in a similar fashion as the startup with a lockfile on disk shared across the processes.
+#  Didn't implement now because it requires special celery-based load balancing. Otherwise it could be that a single
+#  insert or remove could cause all processes to reload the entire index file.
 class FaissIndexService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.repo = RepoService()
