@@ -3,6 +3,7 @@ backend_repo
 sample_data
 spacy_models
 image_models
+models_cache
 
 # backend logs
 backend/src/logs
