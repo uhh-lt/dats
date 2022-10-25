@@ -40,6 +40,7 @@ class FaissIndexService(metaclass=SingletonMeta):
         else:
             cls._index_search_metric = faiss.METRIC_L2
 
+        # TODO use GPU if set!
         cls._device = conf.faiss.device
 
         cls._index_in_memory_cache: Dict[Tuple[int, str], IndexIDMap] = dict()
