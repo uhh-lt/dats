@@ -17,8 +17,8 @@ def index_text_documents_apply_async(pptds: List[PreProTextDoc]) -> Any:
     return Signature(index_text_document, kwargs={"pptds": pptds}).apply_async()
 
 
-def index_image_documents_apply_async(pptds: List[PreProTextDoc]) -> Any:
-    return Signature(index_image_document, kwargs={"ppids": pptds}).apply_async()
+def index_image_documents_apply_async(ppids: List[PreProTextDoc]) -> Any:
+    return Signature(index_image_document, kwargs={"ppids": ppids}).apply_async()
 
 
 def find_similar_sentences_apply_async(proj_id: int, query: Union[str, Image], top_k: int = 10) -> Any:
