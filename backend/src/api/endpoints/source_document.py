@@ -97,7 +97,7 @@ async def get_tokens(*,
             response_model=Optional[SourceDocumentKeywords],
             summary="Returns the keywords of the SourceDocument if it is a text document.",
             description="Returns the keywords of the SourceDocument if it is a text document.")
-async def get_tokens(*,
+async def get_keywords(*,
                      db: Session = Depends(get_db_session),
                      sdoc_id: int,
                      only_finished: Optional[bool] = True) -> Optional[SourceDocumentKeywords]:
