@@ -133,6 +133,8 @@ services:
       HUGGINGFACE_HUB_CACHE: /models_cache
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
+      NVIDIA_DRIVER_CAPABILITIES: all
+      NVIDIA_VISIBLE_DEVICES: all
     volumes:
       - ./src:/dwts_code/src
       - ./backend_repo:/tmp/dwts
@@ -152,6 +154,12 @@ services:
       - elasticsearch
     networks:
       - dwts_backend_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [ gpu ]
 
   celery-image-worker:
     image: uhhlt/dwts_backend_celery_image:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
@@ -179,6 +187,8 @@ services:
       HUGGINGFACE_HUB_CACHE: /models_cache
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
+      NVIDIA_DRIVER_CAPABILITIES: all
+      NVIDIA_VISIBLE_DEVICES: all
     volumes:
       - ./src:/dwts_code/src
       - ./backend_repo:/tmp/dwts
@@ -196,6 +206,12 @@ services:
       - rabbitmq
     networks:
       - dwts_backend_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [ gpu ]
 
   celery-archive-worker:
     image: uhhlt/dwts_backend_celery_archive:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
@@ -267,6 +283,8 @@ services:
       HUGGINGFACE_HUB_CACHE: /models_cache
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
+      NVIDIA_DRIVER_CAPABILITIES: all
+      NVIDIA_VISIBLE_DEVICES: all
     volumes:
       - ./src:/dwts_code/src
       - ./backend_repo:/tmp/dwts
@@ -284,6 +302,12 @@ services:
       - rabbitmq
     networks:
       - dwts_backend_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [ gpu ]
 
   dwts-backend-api:
     image: uhhlt/dwts_backend_api:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
