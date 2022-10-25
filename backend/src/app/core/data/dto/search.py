@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoRead
-from app.core.data.dto.span_annotation import SpanAnnotationReadResolved, SpanAnnotationRead
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.dto.util import PaginatedResults
 
 
@@ -180,7 +180,15 @@ class PaginatedMemoSearchResults(PaginatedResults):
     memos: List[MemoRead] = Field(description="The Memo search results on the requested page.")
 
 
-class SimSearchSentenceHit(BaseModel):
+class SimSearchHit(BaseModel):
     sdoc_id: int = Field(description="The ID of the SourceDocument the sentence appears in.")
+    score: float = Field(description="The similarity score.")
+
+
+class SimSearchSentenceHit(SimSearchHit):
     sentence_text: str = Field(description="The sentence returned by the similarity search.")
     sentence_span: SpanAnnotationRead = Field(description="The sentence SpanAnnotation holding the retrieved sentence")
+
+
+class SimSearchImageHit(SimSearchHit):
+    pass

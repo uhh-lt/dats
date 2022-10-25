@@ -133,18 +133,23 @@ def index_image_document(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
 # TODO Flo: move search stuff to other file
 
 @celery_worker.task(acks_late=True)
-def find_similar_images(proj_id: int, query: Union[str, Image.Image], top_k: int = 10) -> List[int]:
+def find_similar_images(proj_id: int, query: Union[str, Image.Image], top_k: int = 10) -> Dict[int, float]:
     encoded_query = _encode_query(query=query)
-    sdoc_ids = faisss.search_index(proj_id=proj_id, index_type=IndexType.IMAGE, query=encoded_query, top_k=top_k)
-    return sdoc_ids
+    sdoc_ids_with_dists = faisss.search_index(proj_id=proj_id,
+                                              index_type=IndexType.IMAGE,
+                                              query=encoded_query,
+                                              top_k=top_k)
+    return sdoc_ids_with_dists
 
 
 @celery_worker.task(acks_late=True)
-def find_similar_sentences(proj_id: int, query: Union[str, Image.Image], top_k: int = 10) \
-        -> List[int]:
+def find_similar_sentences(proj_id: int, query: Union[str, Image.Image], top_k: int = 10) -> Dict[int, float]:
     encoded_query = _encode_query(query=query)
-    span_anno_ids = faisss.search_index(proj_id=proj_id, index_type=IndexType.TEXT, query=encoded_query, top_k=top_k)
-    return span_anno_ids
+    span_anno_ids_with_dists = faisss.search_index(proj_id=proj_id,
+                                                   index_type=IndexType.TEXT,
+                                                   query=encoded_query,
+                                                   top_k=top_k)
+    return span_anno_ids_with_dists
 
 
 def _encode_query(query: Union[str, Image.Image]) -> np.ndarray:

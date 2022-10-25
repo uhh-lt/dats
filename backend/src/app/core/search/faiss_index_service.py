@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple
 
 import faiss
 import numpy as np
@@ -123,7 +123,7 @@ class FaissIndexService(metaclass=SingletonMeta):
                      proj_id: int,
                      index_type: IndexType,
                      query: np.ndarray,
-                     top_k: int = 10) -> List[int]:
+                     top_k: int = 10) -> Dict[int, float]:
         if query.ndim == 1:
             query = query[np.newaxis]
         if not self.index_exists(proj_id=proj_id, index_type=index_type):
@@ -139,6 +139,7 @@ class FaissIndexService(metaclass=SingletonMeta):
 
         # noinspection PyArgumentList
         dists, ids = index.search(query, top_k)
-        ids: np.ndarray(dtype=int, shape=(1,)) = ids.squeeze()
+        dists: np.ndarray(dtype=float, shape=(1,)) = dists.squeeze().tolist()
+        ids: np.ndarray(dtype=int, shape=(1,)) = ids.squeeze().tolist()
 
-        return ids.tolist()
+        return dict(zip(ids, dists))
