@@ -9,7 +9,6 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn import Config, Server
 
-from app.core.data.crud.source_document import SourceDocumentPreprocessingUnfinishedError
 from app.core.startup import startup
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
@@ -19,6 +18,7 @@ if not STARTUP_DONE:
     startup(reset_data=False)
     os.environ['STARTUP_DONE'] = "1"
 
+from app.core.data.crud.source_document import SourceDocumentPreprocessingUnfinishedError
 from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, \
     FileNotFoundInRepositoryError  # noqa E402
 from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
