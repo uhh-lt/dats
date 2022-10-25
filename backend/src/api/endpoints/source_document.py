@@ -17,7 +17,7 @@ from app.core.data.dto.memo import MemoInDB, MemoCreate, MemoRead, AttachedObjec
 from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens, \
     SourceDocumentKeywords
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataUpdate, SourceDocumentMetadataRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead
+from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationReadResolvedText
 from app.core.data.repo.repo_service import RepoService
 from app.core.search.elasticsearch_service import ElasticSearchService
 
@@ -96,19 +96,22 @@ async def get_tokens(*,
 
 
 @router.get("/{sdoc_id}/sentences", tags=tags,
-            response_model=List[SpanAnnotationRead],
+            response_model=List[SpanAnnotationReadResolvedText],
             summary="Returns the textual tokens of the SourceDocument if it is a text document.",
             description="Returns the textual tokens of the SourceDocument if it is a text document.")
 async def get_sentences(*,
                         db: Session = Depends(get_db_session),
                         sdoc_id: int,
                         only_finished: Optional[bool] = True) \
-        -> List[SpanAnnotationRead]:
+        -> List[SpanAnnotationReadResolvedText]:
     if not only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sent_spans = crud_span_anno.get_all_system_sentence_span_annotations_for_sdocs(db=db, sdoc_ids=[sdoc_id])
-    return [SpanAnnotationRead.from_orm(sent_span) for sent_span in sent_spans]
+    span_read_dto = [SpanAnnotationRead.from_orm(span) for span in sent_spans]
+    return [SpanAnnotationReadResolvedText(**span_dto.dict(exclude={"span_text_id"}),
+                                           span_text=span_orm.span_text.text)
+            for span_orm, span_dto in zip(sent_spans, span_read_dto)]
 
 
 @router.get("/{sdoc_id}/keywords", tags=tags,
