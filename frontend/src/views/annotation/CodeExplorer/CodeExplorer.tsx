@@ -18,7 +18,7 @@ import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 import { AttachedObjectType } from "../../../api/openapi";
-import CodeCreationDialog, { CodeCreationDialogHandle } from "../ContextMenu/CodeCreationDialog";
+import SpanCreationDialog, { CodeCreationDialogHandle } from "../SpanContextMenu/SpanCreationDialog";
 import AddBoxIcon from "@mui/icons-material/AddBox";
 
 interface CodeExplorerProps {
@@ -124,7 +124,7 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
             openContextMenu={onContextMenu}
           />
           <CodeEditDialog codes={allCodes.data} />
-          <CodeCreationDialog ref={codeCreationDialogRef} />
+          <SpanCreationDialog ref={codeCreationDialogRef} />
           <CodeExplorerContextMenu
             node={contextMenuData}
             position={contextMenuPosition}

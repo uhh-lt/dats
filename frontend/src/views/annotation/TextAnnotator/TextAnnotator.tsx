@@ -9,7 +9,7 @@ import React, { MouseEvent, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { selectionIsEmpty } from "./utils";
-import CodeContextMenu, { CodeSelectorHandle } from "../CodeContextMenu/CodeContextMenu";
+import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
@@ -277,7 +277,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
   return (
     <>
-      <CodeContextMenu
+      <SpanContextMenu
         ref={codeSelectorRef}
         onAdd={handleCodeSelectorAddCode}
         onClose={handleCodeSelectorClose}

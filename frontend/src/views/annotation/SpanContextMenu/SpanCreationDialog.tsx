@@ -33,7 +33,7 @@ export interface CodeCreationDialogHandle {
   open: (name?: string) => void;
 }
 
-const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDialogProps>(({ onCreateSuccess }, ref) => {
+const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDialogProps>(({ onCreateSuccess }, ref) => {
   // global state
   const { projectId } = useParams() as { projectId: string };
   const { user } = useAuth();
@@ -200,4 +200,4 @@ const CodeCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   );
 });
 
-export default CodeCreationDialog;
+export default SpanCreationDialog;

@@ -16,7 +16,7 @@ import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { ICode } from "../TextAnnotator/ICode";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-import CodeCreationDialog, { CodeCreationDialogHandle } from "./CodeCreationDialog";
+import SpanCreationDialog, { CodeCreationDialogHandle } from "./SpanCreationDialog";
 import CodeHooks from "../../../api/CodeHooks";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
 import {
@@ -46,7 +46,7 @@ export interface CodeSelectorHandle {
   ) => void;
 }
 
-const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
+const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
   ({ onClose, onAdd, onEdit, onDelete }, ref) => {
     // global client state (redux)
     const codes = useAppSelector((state) => state.annotations.codesForSelection);
@@ -238,7 +238,7 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
               open={isAutoCompleteOpen}
               onClose={(event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
             />
-            <CodeCreationDialog ref={codeCreationDialogRef} onCreateSuccess={submit} />
+            <SpanCreationDialog ref={codeCreationDialogRef} onCreateSuccess={submit} />
           </>
         )}
       </Popover>
@@ -246,7 +246,7 @@ const CodeContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
   }
 );
 
-export default CodeContextMenu;
+export default SpanContextMenu;
 
 interface CodeSelectorListItemProps {
   codeId: number;

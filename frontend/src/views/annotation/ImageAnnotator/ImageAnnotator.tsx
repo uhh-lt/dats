@@ -7,7 +7,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
-import CodeContextMenu, { CodeSelectorHandle } from "../ContextMenu/CodeContextMenu";
+import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
 import { ICode } from "../TextAnnotator/ICode";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
@@ -307,7 +307,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
         </Typography>
       </Toolbar>
 
-      <CodeContextMenu
+      <SpanContextMenu
         ref={codeSelectorRef}
         onAdd={onCodeSelectorAddCode}
         onEdit={onCodeSelectorEditCode}
