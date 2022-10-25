@@ -96,9 +96,10 @@ export const QueryKey = {
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
   SEARCH_TAG_STATISTICS: "searchTagStatistics",
+  SEARCH_SENTENCE_SIMILARITY: "searchSentenceSimilarity",
 
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
 
   // preprocessing status of the project (by project id)
-  PREPRO_PROJECT_STATUS: "preproProjectStatus"
+  PREPRO_PROJECT_STATUS: "preproProjectStatus",
 };

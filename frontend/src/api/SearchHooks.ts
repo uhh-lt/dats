@@ -5,6 +5,7 @@ import {
   MemoRead,
   PaginatedMemoSearchResults,
   SearchService,
+  SimSearchSentenceHit,
   SpanEntityDocumentFrequency,
   SpanEntityFrequency,
   TagStat,
@@ -146,6 +147,20 @@ const useSearchMemoTitle = (params: MemoContentQuery) =>
     }
   );
 
+const useSentenceSimilaritySearch = (projId: number, query: string, topK?: number) =>
+  useQuery<SimSearchSentenceHit[], Error>(
+    [QueryKey.SEARCH_SENTENCE_SIMILARITY, projId, query, topK],
+    () =>
+      SearchService.findSimilarSentencesSearchSimsearchSentencesPost({
+        projId,
+        query,
+        topK,
+      }),
+    {
+      enabled: query.length > 0,
+    }
+  );
+
 const SearchHooks = {
   useSearchEntityStats,
   useSearchEntityDocumentStats,
@@ -155,6 +170,7 @@ const SearchHooks = {
   useSearchMemoContent,
   useSearchDocumentsByProjectIdAndTagId,
   useSearchDocumentsByProjectIdAndFilters,
+  useSentenceSimilaritySearch,
 };
 
 export default SearchHooks;

@@ -10,6 +10,7 @@ import type { SearchSDocsQueryParameters } from "../models/SearchSDocsQueryParam
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SourceDocumentContentQuery } from "../models/SourceDocumentContentQuery";
 import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
+import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SpanEntityDocumentFrequencyResult } from "../models/SpanEntityDocumentFrequencyResult";
 import type { SpanEntityFrequency } from "../models/SpanEntityFrequency";
 import type { TagStat } from "../models/TagStat";
@@ -291,6 +292,35 @@ export class SearchService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/simsearch/sentences",
+      query: {
+        proj_id: projId,
+        query: query,
+        top_k: topK,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns similar Image SourceDocuments according to a textual or visual query.
+   * Returns similar Image SourceDocuments according to a textual or visual query.
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static findSimilarImagesSearchSimsearchImagesPost({
+    projId,
+    query,
+    topK = 10,
+  }: {
+    projId: number;
+    query: string | number;
+    topK?: number;
+  }): CancelablePromise<Array<SourceDocumentRead>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/simsearch/images",
       query: {
         proj_id: projId,
         query: query,
