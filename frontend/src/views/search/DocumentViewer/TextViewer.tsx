@@ -25,6 +25,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
       tokenData={tokenData}
       annotationsPerToken={annotationsPerToken}
       annotationMap={annotationMap}
+      sentenceSearch
     />
   );
 }

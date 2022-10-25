@@ -9,7 +9,7 @@ import React, { MouseEvent, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { selectionIsEmpty } from "./utils";
-import CodeContextMenu, { CodeSelectorHandle } from "../ContextMenu/CodeContextMenu";
+import CodeContextMenu, { CodeSelectorHandle } from "../CodeContextMenu/CodeContextMenu";
 import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
@@ -17,6 +17,7 @@ import { ICode } from "./ICode";
 import useComputeTokenData from "./useComputeTokenData";
 import TextAnnotatorRenderer from "./TextAnnotatorRenderer";
 import { AnnoActions } from "../annoSlice";
+import SdocHooks from "../../../api/SdocHooks";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentRead;
@@ -97,7 +98,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     // make sure that selection is valid
     const selection = window.getSelection();
     if (!selection || selectionIsEmpty(selection)) return;
-
 
     // get the selected begin and end token
     let selectionStartElement = selection?.anchorNode?.parentElement?.parentElement;
@@ -292,6 +292,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
+        sentenceSearch={false}
       />
     </>
   );
