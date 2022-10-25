@@ -113,6 +113,8 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
                                   AnnotationDocumentORM.user_id == SYSTEM_USER_ID,
                                   AnnotationDocumentORM.source_document_id.in_(sdoc_ids)))
 
+        query = query.order_by(self.model.begin_token)
+
         return query.all()
 
 
