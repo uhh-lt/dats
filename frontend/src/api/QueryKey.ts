@@ -62,6 +62,8 @@ export const QueryKey = {
   SDOC_TOKENS: "sdocTokens",
   // keywords of a document (by document id)
   SDOC_KEYWORDS: "sdocKeywords",
+  // sentences of a document (by document id)
+  SDOC_SENTENCES: "sdocSentences",
   // url of a document (by document id)
   SDOC_URL: "sdocURL",
   // all sdocs which are in the project (by project id) and tagged with given tag (by tag id)

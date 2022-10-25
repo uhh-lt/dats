@@ -10,7 +10,8 @@ import {
   SourceDocumentMetadataRead,
   SourceDocumentRead,
   SourceDocumentService,
-  SourceDocumentTokens
+  SourceDocumentTokens,
+  SpanAnnotationRead,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import useStableQueries from "../utils/useStableQueries";
@@ -80,7 +81,7 @@ const useGetDocumentKeywords = (sdocId: number | undefined) =>
   useQuery<SourceDocumentKeywords, Error>(
     [QueryKey.SDOC_KEYWORDS, sdocId],
     () =>
-      SourceDocumentService.getTokensSdocSdocIdKeywordsGet({
+      SourceDocumentService.getKeywordsSdocSdocIdKeywordsGet({
         sdocId: sdocId!,
       }),
     {
@@ -94,6 +95,18 @@ const useUpdateDocumentKeywords = () =>
       queryClient.invalidateQueries([QueryKey.SDOC_KEYWORDS, sdoc.source_document_id]);
     },
   });
+
+const useGetDocumentSentences = (sdocId: number | undefined) =>
+  useQuery<SpanAnnotationRead[], Error>(
+    [QueryKey.SDOC_SENTENCES, sdocId],
+    () =>
+      SourceDocumentService.getSentencesSdocSdocIdSentencesGet({
+        sdocId: sdocId!,
+      }),
+    {
+      enabled: !!sdocId,
+    }
+  );
 
 const useDeleteDocument = () =>
   useMutation(SourceDocumentService.deleteByIdSdocSdocIdDelete, {
@@ -238,6 +251,7 @@ const SdocHooks = {
   useGetDocumentTokens,
   useGetDocumentKeywords,
   useUpdateDocumentKeywords,
+  useGetDocumentSentences,
   useDeleteDocument,
   // tags
   useGetAllDocumentTags,

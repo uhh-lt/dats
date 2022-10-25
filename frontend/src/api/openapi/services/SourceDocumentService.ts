@@ -11,6 +11,7 @@ import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadat
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentTokens } from "../models/SourceDocumentTokens";
+import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -127,12 +128,40 @@ export class SourceDocumentService {
   }
 
   /**
+   * Returns the textual tokens of the SourceDocument if it is a text document.
+   * Returns the textual tokens of the SourceDocument if it is a text document.
+   * @returns SpanAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getSentencesSdocSdocIdSentencesGet({
+    sdocId,
+    onlyFinished = true,
+  }: {
+    sdocId: number;
+    onlyFinished?: boolean;
+  }): CancelablePromise<Array<SpanAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/sentences",
+      path: {
+        sdoc_id: sdocId,
+      },
+      query: {
+        only_finished: onlyFinished,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns the keywords of the SourceDocument if it is a text document.
    * Returns the keywords of the SourceDocument if it is a text document.
    * @returns SourceDocumentKeywords Successful Response
    * @throws ApiError
    */
-  public static getTokensSdocSdocIdKeywordsGet({
+  public static getKeywordsSdocSdocIdKeywordsGet({
     sdocId,
     onlyFinished = true,
   }: {
