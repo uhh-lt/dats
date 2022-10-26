@@ -10,10 +10,13 @@ import {
   FormGroup,
   FormLabel,
   Popover,
+  Radio,
+  RadioGroup,
 } from "@mui/material";
 import TuneIcon from "@mui/icons-material/Tune";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../searchSlice";
+import { SearchType } from "../SearchType";
 
 interface SearchBarAdvancedProps {
   anchorElRef: React.MutableRefObject<HTMLFormElement | null>;
@@ -26,6 +29,7 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
   // global client state (redux)
   const findTextModality = useAppSelector((state) => state.search.findTextModality);
   const findImageModality = useAppSelector((state) => state.search.findImageModality);
+  const searchType = useAppSelector((state) => state.search.searchType);
   const dispatch = useAppDispatch();
 
   // ui events
@@ -65,7 +69,7 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
       >
         <Card>
           <CardContent>
-            <FormControl component="fieldset" variant="standard">
+            <FormControl component="fieldset" variant="standard" sx={{ mr: 3 }}>
               <FormLabel component="legend">Result modalities</FormLabel>
               <FormGroup>
                 <FormControlLabel
@@ -89,6 +93,19 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
                   label="Image"
                 />
               </FormGroup>
+            </FormControl>
+            <FormControl>
+              <FormLabel id="radio-buttons-group-query">Query Type</FormLabel>
+              <RadioGroup
+                aria-labelledby="radio-buttons-group-query"
+                value={searchType}
+                onChange={(event, value) => dispatch(SearchActions.setSearchType(value as SearchType))}
+                name="radio-buttons-group"
+              >
+                <FormControlLabel value={SearchType.KEYWORD} control={<Radio />} label="Keyword" />
+                <FormControlLabel value={SearchType.SENTENCE} control={<Radio />} label="Sentence" />
+                <FormControlLabel value={SearchType.FILE} control={<Radio />} label="File name" />
+              </RadioGroup>
             </FormControl>
           </CardContent>
         </Card>

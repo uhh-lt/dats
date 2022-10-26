@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SearchFilter, SearchFilterType } from "./SearchFilter";
+import { SearchType } from "./SearchType";
 
 interface SearchState {
   selectedDocumentIds: number[];
@@ -12,6 +13,7 @@ interface SearchState {
   rowsPerPage: number;
   findTextModality: boolean;
   findImageModality: boolean;
+  searchType: SearchType;
 }
 
 const initialState: SearchState = {
@@ -25,6 +27,7 @@ const initialState: SearchState = {
   rowsPerPage: 10,
   findTextModality: true,
   findImageModality: true,
+  searchType: SearchType.KEYWORD,
 };
 
 export const searchSlice = createSlice({
@@ -111,6 +114,9 @@ export const searchSlice = createSlice({
     },
     setFindImageModality: (state, action: PayloadAction<boolean>) => {
       state.findImageModality = action.payload;
+    },
+    setSearchType: (state, action: PayloadAction<SearchType>) => {
+      state.searchType = action.payload;
     },
   },
 });
