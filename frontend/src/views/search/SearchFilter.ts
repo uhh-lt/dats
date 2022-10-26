@@ -11,6 +11,7 @@ export enum SearchFilterType {
   KEYWORD,
   TEXT,
   SENTENCE,
+  FILE,
 }
 
 export type SearchFilter = {
@@ -59,12 +60,21 @@ export function createSentenceFilter(sentence: string): SearchFilter {
   };
 }
 
+export function createFileFilter(filename: string): SearchFilter {
+  return {
+    id: `file-${filename}`,
+    data: filename,
+    type: SearchFilterType.FILE,
+  };
+}
+
 export function orderFilter(filters: SearchFilter[]) {
   const keywords: string[] = [];
   const tags: number[] = [];
   const codes: SpanEntity[] = [];
   const texts: string[] = [];
   const sentences: string[] = [];
+  const files: string[] = [];
   filters.forEach((filter) => {
     switch (filter.type) {
       case SearchFilterType.CODE:
@@ -82,7 +92,10 @@ export function orderFilter(filters: SearchFilter[]) {
       case SearchFilterType.SENTENCE:
         sentences.push(filter.data as string);
         break;
+      case SearchFilterType.FILE:
+        files.push(filter.data as string);
+        break;
     }
   });
-  return { keywords, tags, codes, texts, sentences };
+  return { keywords, tags, codes, texts, sentences, files };
 }

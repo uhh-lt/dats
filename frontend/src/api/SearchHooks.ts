@@ -47,7 +47,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
   return useQuery<SearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filters, findTextModality],
     async () => {
-      const { keywords, tags, codes, texts, sentences } = orderFilter(filters);
+      const { keywords, tags, codes, texts, sentences, files } = orderFilter(filters);
       if (sentences.length === 1) {
         if (findTextModality) {
           const result = await SearchService.findSimilarSentencesSearchSimsearchSentencesPost({
@@ -85,6 +85,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
             tag_ids: tags.length > 0 ? tags : undefined,
             keywords: keywords.length > 0 ? keywords : undefined,
             search_terms: texts.length > 0 ? texts : undefined,
+            file_name: files.length > 0 ? files[0] : undefined,
             all_tags: true,
           },
         });

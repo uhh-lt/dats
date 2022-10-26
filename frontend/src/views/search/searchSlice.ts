@@ -27,7 +27,7 @@ const initialState: SearchState = {
   rowsPerPage: 10,
   findTextModality: true,
   findImageModality: true,
-  searchType: SearchType.KEYWORD,
+  searchType: SearchType.CONTENT,
 };
 
 export const searchSlice = createSlice({
@@ -67,6 +67,12 @@ export const searchSlice = createSlice({
         state.filters = [];
       } else if (state.filters.find((f) => f.type === SearchFilterType.SENTENCE)) {
         state.filters = [];
+      }
+
+      // it is only allowed to have a single file filter
+      // therefore, remove existing file filters before adding a new one
+      if (action.payload.type === SearchFilterType.FILE) {
+        state.filters = state.filters.filter((f) => f.type !== SearchFilterType.FILE);
       }
 
       // only add the filter, if it does not exist already

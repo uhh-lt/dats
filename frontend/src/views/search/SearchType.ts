@@ -1,5 +1,5 @@
 export enum SearchType {
-  KEYWORD = "keyword",
+  CONTENT = "content",
   FILE = "file",
   SENTENCE = "sentence",
 }

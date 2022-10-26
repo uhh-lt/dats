@@ -15,7 +15,9 @@ import { isNumber } from "lodash";
 import {
   createCodeFilter,
   createDocumentTagFilter,
+  createFileFilter,
   createKeywordFilter,
+  createSentenceFilter,
   createTextFilter,
   SearchFilter,
 } from "./SearchFilter";
@@ -26,6 +28,7 @@ import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
 import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
 import Box from "@mui/material/Box";
 import SearchHooks, { getSearchResultIds } from "../../api/SearchHooks";
+import { SearchType } from "./SearchType";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -47,6 +50,7 @@ function Search() {
   // redux (global client state)
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
+  const searchType = useAppSelector((state) => state.search.searchType);
   const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
 
@@ -90,10 +94,19 @@ function Search() {
 
   // handle search form
   const handleSearch = (data: any) => {
-    if (data.query.trim().length > 0) {
-      handleAddTextFilter(data.query);
-      reset();
+    if (data.query.trim().length === 0) return;
+    switch (searchType) {
+      case SearchType.CONTENT:
+        handleAddTextFilter(data.query);
+        break;
+      case SearchType.FILE:
+        handleAddFileFilter(data.query);
+        break;
+      case SearchType.SENTENCE:
+        handleAddSentenceFilter(data.query);
+        break;
     }
+    reset();
   };
   const handleSearchError = (data: any) => console.error(data);
   const handleClearSearch = () => {
@@ -131,6 +144,22 @@ function Search() {
   const handleAddTextFilter = useCallback(
     (text: string) => {
       dispatch(SearchActions.addFilter(createTextFilter(text)));
+      dispatch(SearchActions.clearSelectedDocuments());
+      navigateIfNecessary(`/project/${projectId}/search/`);
+    },
+    [dispatch, navigateIfNecessary, projectId]
+  );
+  const handleAddFileFilter = useCallback(
+    (filename: string) => {
+      dispatch(SearchActions.addFilter(createFileFilter(filename)));
+      dispatch(SearchActions.clearSelectedDocuments());
+      navigateIfNecessary(`/project/${projectId}/search/`);
+    },
+    [dispatch, navigateIfNecessary, projectId]
+  );
+  const handleAddSentenceFilter = useCallback(
+    (sentence: string) => {
+      dispatch(SearchActions.addFilter(createSentenceFilter(sentence)));
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },

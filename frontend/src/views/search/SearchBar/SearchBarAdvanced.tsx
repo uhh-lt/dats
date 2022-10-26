@@ -102,7 +102,7 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
                 onChange={(event, value) => dispatch(SearchActions.setSearchType(value as SearchType))}
                 name="radio-buttons-group"
               >
-                <FormControlLabel value={SearchType.KEYWORD} control={<Radio />} label="Keyword" />
+                <FormControlLabel value={SearchType.CONTENT} control={<Radio />} label="Content" />
                 <FormControlLabel value={SearchType.SENTENCE} control={<Radio />} label="Sentence" />
                 <FormControlLabel value={SearchType.FILE} control={<Radio />} label="File name" />
               </RadioGroup>

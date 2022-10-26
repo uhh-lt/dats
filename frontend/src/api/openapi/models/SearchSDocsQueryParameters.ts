@@ -22,6 +22,10 @@ export type SearchSDocsQueryParameters = {
    */
   search_terms?: Array<string>;
   /**
+   * FileName that have to be present in the SourceDocuments FileName (via Elasticsearch)
+   */
+  file_name?: string;
+  /**
    * List of SpanEntities that have to be present in the SourceDocuments
    */
   span_entities?: Array<SpanEntity>;
