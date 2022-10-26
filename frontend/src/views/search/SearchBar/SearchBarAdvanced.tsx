@@ -1,42 +1,63 @@
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import React, { useState } from "react";
-import { Button, Card, CardActions, CardContent, Popover, Stack, TextField } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  Checkbox,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  Popover,
+} from "@mui/material";
 import TuneIcon from "@mui/icons-material/Tune";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { SearchActions } from "../searchSlice";
 
 interface SearchBarAdvancedProps {
-  anchorEl: HTMLFormElement | null;
+  anchorElRef: React.MutableRefObject<HTMLFormElement | null>;
 }
 
-function SearchBarAdvanced({ anchorEl }: SearchBarAdvancedProps) {
-  // state
-  const [open, setOpen] = useState<boolean>(false);
+function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
+  // local state
+  const [open, setOpen] = useState<HTMLFormElement | null>(null);
 
+  // global client state (redux)
+  const findTextModality = useAppSelector((state) => state.search.findTextModality);
+  const findImageModality = useAppSelector((state) => state.search.findImageModality);
+  const dispatch = useAppDispatch();
+
+  // ui events
   const handleOpen = () => {
-    setOpen(true);
+    setOpen(anchorElRef.current);
   };
   const handleClose = () => {
-    setOpen(false);
+    setOpen(null);
   };
 
   return (
     <>
       <Tooltip title="Advanced search options">
         <span>
-          <IconButton sx={{ p: "10px" }} onClick={handleOpen} disabled>
+          <IconButton sx={{ p: "10px" }} onClick={handleOpen}>
             <TuneIcon />
           </IconButton>
         </span>
       </Tooltip>
       <Popover
-        container={anchorEl}
+        container={open}
         id="search-menu"
-        open={open}
-        anchorEl={anchorEl}
+        open={open !== null}
+        anchorEl={open}
         onClose={handleClose}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
         anchorOrigin={{
           vertical: "bottom",
-          horizontal: "left",
+          horizontal: "right",
         }}
         elevation={8}
         PaperProps={{}}
@@ -44,15 +65,32 @@ function SearchBarAdvanced({ anchorEl }: SearchBarAdvancedProps) {
       >
         <Card>
           <CardContent>
-            <Stack>
-              <TextField label="Von" variant="standard" />
-              <TextField label="An" variant="standard" />
-              <TextField label="B" variant="standard" />
-            </Stack>
+            <FormControl component="fieldset" variant="standard">
+              <FormLabel component="legend">Result modalities</FormLabel>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="Text"
+                      onChange={() => dispatch(SearchActions.toggleFindTextModality())}
+                      checked={findTextModality}
+                    />
+                  }
+                  label="Text"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="Image"
+                      onChange={() => dispatch(SearchActions.toggleFindImageModality())}
+                      checked={findImageModality}
+                    />
+                  }
+                  label="Image"
+                />
+              </FormGroup>
+            </FormControl>
           </CardContent>
-          <CardActions>
-            <Button size="small">Learn More</Button>
-          </CardActions>
         </Card>
       </Popover>
     </>

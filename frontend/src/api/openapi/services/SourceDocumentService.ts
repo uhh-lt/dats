@@ -11,7 +11,7 @@ import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadat
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentTokens } from "../models/SourceDocumentTokens";
-import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
+import type { SpanAnnotationReadResolvedText } from "../models/SpanAnnotationReadResolvedText";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -130,7 +130,7 @@ export class SourceDocumentService {
   /**
    * Returns the textual tokens of the SourceDocument if it is a text document.
    * Returns the textual tokens of the SourceDocument if it is a text document.
-   * @returns SpanAnnotationRead Successful Response
+   * @returns SpanAnnotationReadResolvedText Successful Response
    * @throws ApiError
    */
   public static getSentencesSdocSdocIdSentencesGet({
@@ -139,7 +139,7 @@ export class SourceDocumentService {
   }: {
     sdocId: number;
     onlyFinished?: boolean;
-  }): CancelablePromise<Array<SpanAnnotationRead>> {
+  }): CancelablePromise<Array<SpanAnnotationReadResolvedText>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/sentences",

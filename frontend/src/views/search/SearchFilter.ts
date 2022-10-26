@@ -10,6 +10,7 @@ export enum SearchFilterType {
   TAG,
   KEYWORD,
   TEXT,
+  SENTENCE,
 }
 
 export type SearchFilter = {
@@ -50,11 +51,20 @@ export function createTextFilter(text: string): SearchFilter {
   };
 }
 
+export function createSentenceFilter(sentence: string): SearchFilter {
+  return {
+    id: `sentence-${sentence}`,
+    data: sentence,
+    type: SearchFilterType.SENTENCE,
+  };
+}
+
 export function orderFilter(filters: SearchFilter[]) {
   const keywords: string[] = [];
   const tags: number[] = [];
   const codes: SpanEntity[] = [];
   const texts: string[] = [];
+  const sentences: string[] = [];
   filters.forEach((filter) => {
     switch (filter.type) {
       case SearchFilterType.CODE:
@@ -69,7 +79,10 @@ export function orderFilter(filters: SearchFilter[]) {
       case SearchFilterType.TEXT:
         texts.push(filter.data as string);
         break;
+      case SearchFilterType.SENTENCE:
+        sentences.push(filter.data as string);
+        break;
     }
   });
-  return { keywords, tags, codes, texts };
+  return { keywords, tags, codes, texts, sentences };
 }

@@ -3,7 +3,7 @@ import * as React from "react";
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { Divider, Grid, Stack, Typography } from "@mui/material";
 import DocumentViewer from "./DocumentViewer/DocumentViewer";
-import SearchResults from "./SearchResults/SearchResults";
+import SearchResultsView from "./SearchResults/SearchResultsView";
 import TagExplorer from "./Tags/TagExplorer/TagExplorer";
 import SearchBar from "./SearchBar/SearchBar";
 import Portal from "@mui/material/Portal";
@@ -25,7 +25,7 @@ import SearchFilterChip from "./SearchFilterChip";
 import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
 import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
 import Box from "@mui/material/Box";
-import SearchHooks from "../../api/SearchHooks";
+import SearchHooks, { getSearchResultIds } from "../../api/SearchHooks";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -54,7 +54,10 @@ function Search() {
   const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
 
   // computed (local client state)
-  const searchResultIds = useMemo(() => searchResults.data || [], [searchResults.data]);
+  const searchResultIds = useMemo(() => {
+    if (!searchResults.data) return [];
+    return getSearchResultIds(searchResults.data);
+  }, [searchResults.data]);
   const viewDocument = Boolean(sdocId);
   const selectedTag = useMemo(() => {
     if (filters.length === 1 && isNumber(filters[0].data)) {
@@ -190,8 +193,8 @@ function Search() {
                 {searchResults.isLoading && <div>Loading!</div>}
                 {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
                 {searchResults.isSuccess && (
-                  <SearchResults
-                    documentIds={searchResultIds}
+                  <SearchResultsView
+                    searchResults={searchResults.data}
                     handleResultClick={handleResultClick}
                     className="myFlexFillAllContainer"
                   />

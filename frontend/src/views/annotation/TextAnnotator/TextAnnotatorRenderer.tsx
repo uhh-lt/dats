@@ -65,6 +65,7 @@ function TextAnnotationRenderer({
         ).map((sentenceId) => (
           <Sentence
             key={sentenceId}
+            sentence={sentences.data[sentenceId].span_text}
             sentenceMenuRef={sentenceContextMenuRef}
             disableHighlighting={!sentenceSearch}
             disableInteraction={!sentenceSearch}

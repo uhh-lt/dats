@@ -56,6 +56,7 @@ export type { SourceDocumentTokens } from "./models/SourceDocumentTokens";
 export type { SpanAnnotationCreate } from "./models/SpanAnnotationCreate";
 export type { SpanAnnotationRead } from "./models/SpanAnnotationRead";
 export type { SpanAnnotationReadResolved } from "./models/SpanAnnotationReadResolved";
+export type { SpanAnnotationReadResolvedText } from "./models/SpanAnnotationReadResolvedText";
 export type { SpanAnnotationUpdate } from "./models/SpanAnnotationUpdate";
 export type { SpanEntity } from "./models/SpanEntity";
 export type { SpanEntityDocumentFrequency } from "./models/SpanEntityDocumentFrequency";

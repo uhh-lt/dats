@@ -31,6 +31,8 @@ function SearchFilterChip({ filter, handleDelete }: SearchFilterChipProps) {
       return <KeywordFilterChip keyword={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
     case SearchFilterType.TEXT:
       return <TextFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
+    case SearchFilterType.SENTENCE:
+      return <SentenceFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
     default:
       return <>ERROR!!</>;
   }
@@ -56,6 +58,10 @@ function KeywordFilterChip({ keyword, ...props }: { keyword: string } & ChipProp
 
 function TextFilterChip({ text, ...props }: { text: string } & ChipProps) {
   return <Chip label={text} {...props} />;
+}
+
+function SentenceFilterChip({ text, ...props }: { text: string } & ChipProps) {
+  return <Chip label={`Sentence: ${text}`} {...props} />;
 }
 
 function CodeFilterChip({ spanEntity, ...props }: { spanEntity: SpanEntity } & ChipProps) {

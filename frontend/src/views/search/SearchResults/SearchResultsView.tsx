@@ -8,7 +8,7 @@ import TableRow from "@mui/material/TableRow";
 import { Box, TableHead, Typography } from "@mui/material";
 import SearchResultContextMenu from "./SearchResultContextMenu";
 import "./SearchResults.css";
-import { SourceDocumentRead } from "../../../api/openapi";
+import { SimSearchSentenceHit, SourceDocumentRead } from "../../../api/openapi";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../searchSlice";
 import SearchResultRow from "./SearchResultRow";
@@ -16,15 +16,17 @@ import SearchResultCard from "./SearchResultCard";
 import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
 import { useParams } from "react-router-dom";
 import ToggleAllDocumentsButton from "../ToolBar/ToolBarElements/ToggleAllDocumentsButton";
+import { getSearchResultIds, SearchResults, SearchResultsType } from "../../../api/SearchHooks";
+import SentenceResultCard from "./SentenceResultCard";
 
 interface SearchResultsProps {
-  documentIds: number[];
+  searchResults: SearchResults;
   handleResultClick: (sdoc: SourceDocumentRead) => void;
   className?: string;
 }
 
-export default function SearchResults({
-  documentIds,
+export default function SearchResultsView({
+  searchResults,
   handleResultClick,
   className,
 }: SearchResultsProps & TableContainerProps) {
@@ -56,9 +58,11 @@ export default function SearchResults({
   }, []);
 
   // computed
+  const searchResultIds = useMemo(() => getSearchResultIds(searchResults), [searchResults]);
+
   const emptyRows = useMemo(
-    () => (documentIds ? (page > 0 ? Math.max(0, (1 + page) * rowsPerPage - documentIds.length) : 0) : 0),
-    [documentIds, page, rowsPerPage]
+    () => (page > 0 ? Math.max(0, (1 + page) * rowsPerPage - searchResultIds.length) : 0),
+    [searchResultIds, page, rowsPerPage]
   );
 
   // handle selection
@@ -92,28 +96,63 @@ export default function SearchResults({
 
   return (
     <>
-      {documentIds.length === 0 ? (
+      {searchResultIds.length === 0 ? (
         <Typography>No search results for this query...</Typography>
       ) : (
         <>
-          {isListView ? (
-            <TableContainer sx={{ width: "100%", overflowX: "hidden" }} className={className}>
-              <Table sx={{ tableLayout: "fixed", whiteSpace: "nowrap" }} aria-labelledby="tableTitle" size={"medium"}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox" style={{ width: "48px" }}>
-                      <ToggleAllDocumentsButton searchResultIds={documentIds} />
-                    </TableCell>
-                    <TableCell style={{ position: "relative", width: `${width}px` }}>
-                      Title
-                      <div onMouseDown={handleMouseDown} className={`resizer ${isResizing ? "isResizing" : ""}`}></div>
-                    </TableCell>
-                    <TableCell>Content</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {documentIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((sdocId) => (
-                    <SearchResultRow
+          {searchResults.type === SearchResultsType.DOCUMENTS ? (
+            <>
+              {isListView ? (
+                <TableContainer sx={{ width: "100%", overflowX: "hidden" }} className={className}>
+                  <Table
+                    sx={{ tableLayout: "fixed", whiteSpace: "nowrap" }}
+                    aria-labelledby="tableTitle"
+                    size={"medium"}
+                  >
+                    <TableHead>
+                      <TableRow>
+                        <TableCell padding="checkbox" style={{ width: "48px" }}>
+                          <ToggleAllDocumentsButton searchResultIds={searchResultIds} />
+                        </TableCell>
+                        <TableCell style={{ position: "relative", width: `${width}px` }}>
+                          Title
+                          <div
+                            onMouseDown={handleMouseDown}
+                            className={`resizer ${isResizing ? "isResizing" : ""}`}
+                          ></div>
+                        </TableCell>
+                        <TableCell>Content</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {searchResultIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((sdocId) => (
+                        <SearchResultRow
+                          key={sdocId}
+                          sdocId={sdocId}
+                          handleClick={handleResultClick}
+                          handleOnContextMenu={openContextMenu}
+                          handleOnCheckboxChange={handleChange}
+                        />
+                      ))}
+                      {emptyRows > 0 && (
+                        <TableRow
+                          style={{
+                            height: 53 * emptyRows,
+                          }}
+                        >
+                          <TableCell colSpan={3} />
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Box
+                  sx={{ display: "flex", flexWrap: "wrap", gap: "16px", overflowY: "auto", p: 2 }}
+                  className={className}
+                >
+                  {searchResultIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((sdocId) => (
+                    <SearchResultCard
                       key={sdocId}
                       sdocId={sdocId}
                       handleClick={handleResultClick}
@@ -121,30 +160,26 @@ export default function SearchResults({
                       handleOnCheckboxChange={handleChange}
                     />
                   ))}
-                  {emptyRows > 0 && (
-                    <TableRow
-                      style={{
-                        height: 53 * emptyRows,
-                      }}
-                    >
-                      <TableCell colSpan={3} />
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          ) : (
+                </Box>
+              )}
+            </>
+          ) : searchResults.type === SearchResultsType.SENTENCES ? (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: "16px", overflowY: "auto", p: 2 }} className={className}>
-              {documentIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((sdocId) => (
-                <SearchResultCard
-                  key={sdocId}
-                  sdocId={sdocId}
-                  handleClick={handleResultClick}
-                  handleOnContextMenu={openContextMenu}
-                  handleOnCheckboxChange={handleChange}
-                />
-              ))}
+              {Array.from((searchResults.data as Map<number, SimSearchSentenceHit[]>).entries())
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map(([sdocId, hits]) => (
+                  <SentenceResultCard
+                    key={sdocId}
+                    sdocId={sdocId}
+                    sentenceHits={hits}
+                    handleClick={handleResultClick}
+                    handleOnContextMenu={openContextMenu}
+                    handleOnCheckboxChange={handleChange}
+                  />
+                ))}
             </Box>
+          ) : (
+            <>Search Result Type is not supported :(</>
           )}
         </>
       )}

@@ -38,7 +38,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
           </IconButton>
         </span>
       </Tooltip>
-      <SearchBarAdvanced anchorEl={container.current} />
+      <SearchBarAdvanced anchorElRef={container} />
     </Paper>
   );
 }

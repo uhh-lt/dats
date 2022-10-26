@@ -4,12 +4,13 @@ import { SentenceContextMenuHandle } from "../SentenceContextMenu/SentenceContex
 
 interface SentenceProps {
   sentenceMenuRef: React.RefObject<SentenceContextMenuHandle>;
+  sentence: string;
   disableHighlighting: boolean;
   disableInteraction: boolean;
   children?: React.ReactNode;
 }
 
-function Sentence({ sentenceMenuRef, children, disableHighlighting, disableInteraction }: SentenceProps) {
+function Sentence({ sentenceMenuRef, sentence, children, disableHighlighting, disableInteraction }: SentenceProps) {
   // ui events
   const handleClick = (event: React.MouseEvent) => {
     if (disableInteraction) return;
@@ -20,7 +21,7 @@ function Sentence({ sentenceMenuRef, children, disableHighlighting, disableInter
       left: boundingBox.left,
       top: boundingBox.top + boundingBox.height,
     };
-    sentenceMenuRef.current?.open(position);
+    sentenceMenuRef.current?.open(position, sentence);
   };
 
   return (

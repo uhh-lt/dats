@@ -10,6 +10,10 @@ export type SimSearchSentenceHit = {
    */
   sdoc_id: number;
   /**
+   * The similarity score.
+   */
+  score: number;
+  /**
    * The sentence returned by the similarity search.
    */
   sentence_text: string;

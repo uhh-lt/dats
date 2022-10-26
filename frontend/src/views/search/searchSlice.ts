@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { SearchFilter } from "./SearchFilter";
+import { SearchFilter, SearchFilterType } from "./SearchFilter";
 
 interface SearchState {
   selectedDocumentIds: number[];
@@ -10,6 +10,8 @@ interface SearchState {
   isListView: boolean;
   page: number;
   rowsPerPage: number;
+  findTextModality: boolean;
+  findImageModality: boolean;
 }
 
 const initialState: SearchState = {
@@ -21,6 +23,8 @@ const initialState: SearchState = {
   isListView: false,
   page: 0,
   rowsPerPage: 10,
+  findTextModality: true,
+  findImageModality: true,
 };
 
 export const searchSlice = createSlice({
@@ -55,6 +59,13 @@ export const searchSlice = createSlice({
 
     // filtering
     addFilter: (state, action: PayloadAction<SearchFilter>) => {
+      // it is only allowed to have either a single sentence filter, or multiple other filters
+      if (action.payload.type === SearchFilterType.SENTENCE) {
+        state.filters = [];
+      } else if (state.filters.find((f) => f.type === SearchFilterType.SENTENCE)) {
+        state.filters = [];
+      }
+
       // only add the filter, if it does not exist already
       if (!state.filters.find((f) => f.id === action.payload!.id)) {
         state.filters.push(action.payload);
@@ -88,6 +99,18 @@ export const searchSlice = createSlice({
     },
     setPage: (state, action: PayloadAction<number>) => {
       state.page = action.payload;
+    },
+    toggleFindTextModality: (state) => {
+      state.findTextModality = !state.findTextModality;
+    },
+    setFindTextModality: (state, action: PayloadAction<boolean>) => {
+      state.findTextModality = action.payload;
+    },
+    toggleFindImageModality: (state) => {
+      state.findImageModality = !state.findImageModality;
+    },
+    setFindImageModality: (state, action: PayloadAction<boolean>) => {
+      state.findImageModality = action.payload;
     },
   },
 });
