@@ -45,6 +45,12 @@ class SearchService(metaclass=SingletonMeta):
                                                                                            query_params.search_terms),
                                                                                        **skip_limit).hits])
 
+            if query_params.file_name:
+                sdocs_ids.append([hit.sdoc_id for hit in
+                                  ElasticSearchService().search_sdocs_by_prefix_filename(proj_id=query_params.proj_id,
+                                                                                         filename_prefix=query_params.file_name,
+                                                                                         **skip_limit).hits])
+
             if query_params.keywords:
                 sdocs_ids.append([hit.sdoc_id for hit in
                                   ElasticSearchService().search_sdocs_by_keywords_query(proj_id=query_params.proj_id,

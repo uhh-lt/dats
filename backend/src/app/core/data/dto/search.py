@@ -62,6 +62,10 @@ class SearchSDocsQueryParameters(BaseModel):
                                                            " the SourceDocuments content (via Elasticsearch)"),
                                               default=None)
 
+    file_name: Optional[str] = Field(description=("FileName that have to be present in"
+                                                  " the SourceDocuments FileName (via Elasticsearch)"),
+                                     default=None)
+
     span_entities: Optional[List[SpanEntity]] = Field(description=("List of SpanEntities that have to be present in"
                                                                    " the SourceDocuments"), default=None)
 
