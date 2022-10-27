@@ -1,11 +1,10 @@
 import json
 import os
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import spacy
 import torch
-from fastapi import UploadFile
 from loguru import logger
 from spacy import Language
 from tqdm import tqdm
@@ -24,10 +23,11 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.celery.celery_worker import celery_worker
+from app.docprepro.image import PreProImageDoc
 from app.docprepro.text.preprotextdoc import PreProTextDoc
 from app.docprepro.text.util import generate_preprotextdoc, generate_automatic_span_annotations_sequentially, \
     generate_automatic_span_annotations_pipeline
-from app.docprepro.util import persist_as_sdoc, update_sdoc_status
+from app.docprepro.util import persist_as_sdoc, update_sdoc_status, finish_preprocessing_status
 from config import conf
 
 # https://github.com/explosion/spaCy/issues/8678
@@ -193,3 +193,8 @@ def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreP
             update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.added_document_to_elasticsearch_index)
 
     return pptds
+
+
+@celery_worker.task(acks_late=True)
+def finish_preprocessing(ppds: List[Union[PreProTextDoc, PreProImageDoc]]) -> None:
+    finish_preprocessing_status(ppds=ppds)

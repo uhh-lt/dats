@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, Union, List
 
 from fastapi import UploadFile
 
@@ -10,8 +10,8 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.archive import import_uploaded_archive_apply_async
-from app.docprepro.image import image_document_preprocessing_apply_async
-from app.docprepro.text import text_document_preprocessing_apply_async
+from app.docprepro.image import image_document_preprocessing_apply_async, PreProImageDoc
+from app.docprepro.text import text_document_preprocessing_apply_async, PreProTextDoc
 from config import conf
 
 cc = conf.docprepro.celery
@@ -55,3 +55,12 @@ def update_sdoc_status(sdoc_id: int, sdoc_status: SDocStatus) -> SourceDocumentO
                                               sdoc_id=sdoc_id,
                                               sdoc_status=sdoc_status)
     return sdoc_db_obj
+
+
+def finish_preprocessing_status(ppds: List[Union[PreProTextDoc, PreProImageDoc]]) -> None:
+    # update status
+    with sql.db_session() as db:
+        for ppd in ppds:
+            crud_sdoc.update_status(db=db,
+                                    sdoc_id=ppd.sdoc_id,
+                                    sdoc_status=SDocStatus.finished)

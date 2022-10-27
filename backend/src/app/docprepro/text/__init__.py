@@ -12,6 +12,7 @@ import_uploaded_text_document = "app.docprepro.text.preprocess.import_uploaded_t
 generate_automatic_span_annotations = "app.docprepro.text.preprocess.generate_automatic_span_annotations"
 persist_automatic_span_annotations = "app.docprepro.text.preprocess.persist_automatic_span_annotations"
 add_document_to_elasticsearch_index = "app.docprepro.text.preprocess.add_document_to_elasticsearch_index"
+finish_preprocessing = "app.docprepro.text.preprocess.finish_preprocessing"
 
 
 def text_document_preprocessing_apply_async(doc_file_path: Path, project_id: int) -> Any:
@@ -21,7 +22,8 @@ def text_document_preprocessing_apply_async(doc_file_path: Path, project_id: int
             Signature(generate_automatic_span_annotations) |
             Signature(persist_automatic_span_annotations) |
             Signature(add_document_to_elasticsearch_index) |
-            Signature(index_text_document)
+            Signature(index_text_document) |
+            Signature(finish_preprocessing)
     )
     return text_document_preprocessing.apply_async()
 
@@ -31,6 +33,7 @@ def text_document_preprocessing_without_import_apply_async(pptds: List[PreProTex
             Signature(generate_automatic_span_annotations, kwargs={"pptds": pptds}) |
             Signature(persist_automatic_span_annotations) |
             Signature(add_document_to_elasticsearch_index) |
-            Signature(index_text_document)
+            Signature(index_text_document) |
+            Signature(finish_preprocessing)
     )
     return text_document_preprocessing.apply_async()
