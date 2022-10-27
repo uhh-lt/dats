@@ -13,15 +13,39 @@ interface DocumentTagStatsProps {
 }
 
 function DocumentTagStats({ tagStats, handleClick, parentRef }: DocumentTagStatsProps) {
+  return (
+    <>
+      {tagStats.isSuccess ? (
+        <DocumentTagStatsContent tagStats={tagStats.data} handleClick={handleClick} parentRef={parentRef} />
+      ) : tagStats.isError ? (
+        <TabPanel value="tags">Error: {tagStats.error.message}</TabPanel>
+      ) : tagStats.isLoading && tagStats.isFetching ? (
+        <TabPanel value="tags">Loading...</TabPanel>
+      ) : (
+        <></>
+      )}
+    </>
+  );
+}
+
+export default DocumentTagStats;
+
+interface DocumentTagStatsContentProps {
+  tagStats: TagStat[];
+  handleClick: (tagId: number) => void;
+  parentRef: React.MutableRefObject<undefined>;
+}
+
+function DocumentTagStatsContent({ tagStats, handleClick, parentRef }: DocumentTagStatsContentProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
-    count: tagStats.data?.length || 0,
+    count: tagStats.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 40,
   });
 
   // computed
-  const maxValue = useMemo(() => (tagStats.data ? Math.max(...tagStats.data.map((x) => x.count)) : 0), [tagStats.data]);
+  const maxValue = useMemo(() => (tagStats ? Math.max(...tagStats.map((x) => x.count)) : 0), [tagStats]);
 
   return (
     <TabPanel
@@ -33,38 +57,26 @@ function DocumentTagStats({ tagStats, handleClick, parentRef }: DocumentTagStats
         position: "relative",
       }}
     >
-      {tagStats.isSuccess ? (
-        <>
-          {rowVirtualizer.getVirtualItems().map((virtualItem) => (
-            <DocumentTagStatButtonContent
-              key={virtualItem.key}
-              style={{
-                width: `${(tagStats.data[virtualItem.index].count / maxValue) * 100}%`,
-                justifyContent: "left",
-                position: "absolute",
-                top: 0,
-                left: 0,
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-              variant="outlined"
-              onClick={() => handleClick(tagStats.data[virtualItem.index].tag.id)}
-              tagId={tagStats.data[virtualItem.index].tag.id}
-              count={tagStats.data[virtualItem.index].count}
-            />
-          ))}
-        </>
-      ) : tagStats.isError ? (
-        <div>Error: {tagStats.error.message}</div>
-      ) : tagStats.isLoading && tagStats.isFetching ? (
-        <div>Loading...</div>
-      ) : (
-        <></>
-      )}
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => (
+        <DocumentTagStatButtonContent
+          key={virtualItem.key}
+          style={{
+            width: `${(tagStats[virtualItem.index].count / maxValue) * 100}%`,
+            justifyContent: "left",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            transform: `translateY(${virtualItem.start}px)`,
+          }}
+          variant="outlined"
+          onClick={() => handleClick(tagStats[virtualItem.index].tag.id)}
+          tagId={tagStats[virtualItem.index].tag.id}
+          count={tagStats[virtualItem.index].count}
+        />
+      ))}
     </TabPanel>
   );
 }
-
-export default DocumentTagStats;
 
 function DocumentTagStatButtonContent({ tagId, count, ...props }: { tagId: number; count: number } & ButtonProps) {
   const tag = TagHooks.useGetTag(tagId);
