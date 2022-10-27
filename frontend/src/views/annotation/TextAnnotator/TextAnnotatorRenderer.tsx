@@ -1,22 +1,20 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Token from "./Token";
 import "./TextAnnotatorRenderer.css";
-import { SpanAnnotationRead, SpanAnnotationReadResolved } from "../../../api/openapi";
+import { SpanAnnotationReadResolved, SpanAnnotationReadResolvedText } from "../../../api/openapi";
 import { IToken } from "./IToken";
 import { Box, BoxProps, Divider } from "@mui/material";
 import { range } from "lodash";
 import PageNavigation from "./PageNavigation";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
-import Sentence from "./Sentence";
-import SentenceContextMenu, { SentenceContextMenuHandle } from "../SentenceContextMenu/SentenceContextMenu";
-import SdocHooks from "../../../api/SdocHooks";
 
 interface TextAnnotationRendererProps {
   sdocId: number; // todo: is this necessary???
   tokenData: IToken[] | undefined;
   annotationsPerToken: Map<number, number[]> | undefined;
   annotationMap: Map<number, SpanAnnotationReadResolved> | undefined;
-  sentenceSearch: boolean;
+  sentences: SpanAnnotationReadResolvedText[];
+  hoverSentences: boolean;
 }
 
 const sentencesPerPage = 10;
@@ -27,21 +25,18 @@ function TextAnnotationRenderer({
   tokenData,
   annotationsPerToken,
   annotationMap,
-  sentenceSearch,
+  sentences,
+  hoverSentences,
   ...props
 }: TextAnnotationRendererProps & BoxProps) {
   // global client state (redux)
   const tagStyle = useAppSelector((state) => state.settings.annotator.tagStyle);
 
-  // global server state (react-query)
-  const sentences = SdocHooks.useGetDocumentSentences(sdocId);
-
   // local state
   const [currentPage, setCurrentPage] = useState<number>(0);
-  const sentenceContextMenuRef = useRef<SentenceContextMenuHandle>(null);
 
   // computed
-  const sentenceCount = sentences.data?.length || 0;
+  const sentenceCount = sentences.length;
 
   // ui events
   const onPageChange = (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
@@ -50,7 +45,7 @@ function TextAnnotationRenderer({
 
   // rendering
   const renderedTokens = useMemo(() => {
-    if (!annotationsPerToken || !tokenData || !annotationMap || !sentences.data) {
+    if (!annotationsPerToken || !tokenData || !annotationMap) {
       return <div>Loading...</div>;
     }
 
@@ -63,14 +58,12 @@ function TextAnnotationRenderer({
             ? currentPage * sentencesPerPage + sentencesPerPage
             : sentenceCount
         ).map((sentenceId) => (
-          <Sentence
+          <span
             key={sentenceId}
-            sentence={sentences.data[sentenceId].span_text}
-            sentenceMenuRef={sentenceContextMenuRef}
-            disableHighlighting={!sentenceSearch}
-            disableInteraction={!sentenceSearch}
+            className={"sentence " + (hoverSentences ? "hoversentence" : "")}
+            data-sentenceid={sentenceId}
           >
-            {range(sentences.data[sentenceId].begin_token, sentences.data[sentenceId].end_token).map((tokenId) => (
+            {range(sentences[sentenceId].begin_token, sentences[sentenceId].end_token).map((tokenId) => (
               <Token
                 key={tokenId}
                 token={tokenData[tokenId]}
@@ -79,13 +72,13 @@ function TextAnnotationRenderer({
                 )}
               />
             ))}
-          </Sentence>
+          </span>
         ))}
       </>
     );
     console.timeEnd("renderTokens");
     return result;
-  }, [annotationsPerToken, tokenData, annotationMap, sentences.data, currentPage, sentenceCount, sentenceSearch]);
+  }, [annotationsPerToken, tokenData, annotationMap, sentences, currentPage, sentenceCount, hoverSentences]);
 
   return (
     <Box {...props} style={{ lineHeight: tagStyle === "inline" ? "26px" : "36px" }}>
@@ -104,7 +97,6 @@ function TextAnnotationRenderer({
         currentPage={currentPage}
         onPageChange={onPageChange}
       />
-      {sentenceSearch && <SentenceContextMenu ref={sentenceContextMenuRef} />}
     </Box>
   );
 }

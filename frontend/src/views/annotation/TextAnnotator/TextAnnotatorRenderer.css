@@ -61,3 +61,8 @@ rect.hovered {
     border: 1px solid black;
     border-radius: 4px;
 }
+
+.hoversentence:hover {
+    background-color: rgba(0, 255, 255, 0.5);
+    cursor: pointer;
+}

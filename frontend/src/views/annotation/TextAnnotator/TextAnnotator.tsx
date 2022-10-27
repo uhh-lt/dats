@@ -26,7 +26,7 @@ interface AnnotatorRemasteredProps {
 
 function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // local state
-  const codeSelectorRef = useRef<CodeSelectorHandle>(null);
+  const spanContextMenuRef = useRef<CodeSelectorHandle>(null);
   const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
 
   // global client state (redux)
@@ -36,6 +36,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   const dispatch = useAppDispatch();
 
   // computed / custom hooks
+  const sentences = SdocHooks.useGetDocumentSentences(sdoc.id);
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocId: sdoc.id,
     annotationDocumentIds: visibleAdocIds,
@@ -84,7 +85,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       };
 
       // open code selector
-      codeSelectorRef.current!.open(
+      spanContextMenuRef.current!.open(
         position,
         annos.map((a) => annotationMap.get(a)!)
       );
@@ -176,7 +177,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       };
 
       // open code selector
-      codeSelectorRef.current!.open(position);
+      spanContextMenuRef.current!.open(position);
     }
 
     // clear selection
@@ -278,7 +279,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   return (
     <>
       <SpanContextMenu
-        ref={codeSelectorRef}
+        ref={spanContextMenuRef}
         onAdd={handleCodeSelectorAddCode}
         onClose={handleCodeSelectorClose}
         onEdit={handleCodeSelectorEditCode}
@@ -292,7 +293,8 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
-        sentenceSearch={false}
+        sentences={sentences.data || []}
+        hoverSentences={false}
       />
     </>
   );
