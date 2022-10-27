@@ -1,4 +1,4 @@
-import { Box, ListItemText, Menu, MenuItem } from "@mui/material";
+import { Box, Divider, ListItemText, Menu, MenuItem } from "@mui/material";
 import React from "react";
 import { CodeRead } from "../../../api/openapi";
 
@@ -11,7 +11,7 @@ interface SearchContextMenuProps {
   contextMenuData: ContextMenuData | null;
   handleClose: () => void;
   menuItems: CodeRead[];
-  handleMenuItemClick: (code: CodeRead) => void;
+  handleMenuItemClick: (navigateTo: string) => void;
 }
 
 function SearchStatisticsContextMenu({
@@ -34,16 +34,33 @@ function SearchStatisticsContextMenu({
       PaperProps={{ sx: { width: 240, maxHeight: 300 } }}
     >
       <Box>
-        {menuItems.map((value) => (
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            handleMenuItemClick("keywords");
+          }}
+        >
+          <ListItemText>Keywords</ListItemText>
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            handleClose();
+            handleMenuItemClick("tags");
+          }}
+        >
+          <ListItemText>Tags</ListItemText>
+        </MenuItem>
+        {menuItems.length > 0 && <Divider />}
+        {menuItems.map((code) => (
           <MenuItem
-            key={value.id}
+            key={code.id}
             onClick={() => {
               handleClose();
-              handleMenuItemClick(value);
+              handleMenuItemClick(`${code.id}`);
             }}
           >
-            <Box width={20} height={20} bgcolor={value.color} mr={2} />
-            <ListItemText>{value.name}</ListItemText>
+            <Box width={20} height={20} bgcolor={code.color} mr={2} />
+            <ListItemText>{code.name}</ListItemText>
           </MenuItem>
         ))}
       </Box>

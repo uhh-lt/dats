@@ -84,8 +84,8 @@ function SearchStatistics({
   const closeContextMenu = useCallback(() => {
     setContextMenuPosition(null);
   }, []);
-  const handleMenuItemClick = useCallback((code: CodeRead) => {
-    setTab(`${code.id}`);
+  const handleMenuItemClick = useCallback((navigateTo: string) => {
+    setTab(navigateTo);
   }, []);
 
   // The scrollable element for the lists
