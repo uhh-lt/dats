@@ -129,6 +129,8 @@ def index_image_document(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
                                     sdoc_id=sdoc_id,
                                     sdoc_status=SDocStatus.added_document_to_faiss_index)
 
+    return ppids
+
 
 # TODO Flo: move search stuff to other file
 
