@@ -27,9 +27,8 @@ from app.docprepro.text.preprotextdoc import PreProTextDoc
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
 from config import conf
 
-# Flo: This is important! Otherwise it will not work with celery thread management and just hang!!!
+# Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)
-torch.backends.cudnn.benchmark = True
 
 sql = SQLService(echo=False)
 repo = RepoService()
@@ -106,7 +105,7 @@ def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[Pre
         # Flo: apply the confidence threshold
         confidence_threshold = conf.docprepro.image.object_detection.confidence_threshold
         keep = output_dict["scores"] > confidence_threshold
-        # TODO Flo: do we want to persist confidences? Yes!l
+        # TODO Flo: do we want to persist confidences? Yes!
         confidences = output_dict["scores"][keep].tolist()
         bboxes = output_dict["boxes"][keep].int().tolist()
         label_ids = output_dict["labels"][keep].tolist()
