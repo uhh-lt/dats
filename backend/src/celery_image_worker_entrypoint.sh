@@ -3,8 +3,7 @@
 set -e
 
 # assert that ES is healthy!
-chmod +x ./test_es.sh
-bash ./test_es.sh
+./test_es.sh
 
 MODEL_ROOT=/models_cache
 export TRANSFORMERS_CACHE="$MODEL_ROOT"
