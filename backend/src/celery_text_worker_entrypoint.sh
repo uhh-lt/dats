@@ -8,66 +8,53 @@
 set -e
 
 # assert that ES is healthy!
-chmod +x ./test_es.sh
-bash ./test_es.sh
+./test_es.sh
 
 MODEL_ROOT=/spacy_models
 
 mkdir -p $MODEL_ROOT
 
 # Flo: checksums and model names from https://github.com/explosion/spacy-models/releases/
-DE_MODEL=de_core_news_lg-3.2.0
-EN_MODEL=en_core_web_trf-3.2.0
+DE_MODEL_BASE=de_core_news_lg
+EN_MODEL_BASE=en_core_web_trf
+DE_MODEL="${DE_MODEL_BASE}-3.4.0"
+EN_MODEL="${EN_MODEL_BASE}-3.4.1"
 
-DE_MODEL_WHL="${DE_MODEL}-py3-none-any.whl"
-EN_MODEL_WHL="${EN_MODEL}-py3-none-any.whl"
+DE_MODEL_TGZ="${DE_MODEL}.tar.gz"
+EN_MODEL_TGZ="${EN_MODEL}.tar.gz"
 
-CHECKSUM_SHA_256_EN_WHL=c6be2ccfc1c30edb5690f5e2baecf2a0cabd23529c0abb84c67aedcf0dac86a2
-CHECKSUM_SHA_256_DE_WHL=90f927a648949d13289ccc3b6b6967d16507b8836a32d2780d20863f26a8fa4e
+CHECKSUM_SHA_256_EN_TGZ=cdb170a2651bfa8f72cd2d281cb1e0a52d4abad372dbbcb11d72531ccef10658
+CHECKSUM_SHA_256_DE_TGZ=797b0f5d709e5cbc446c70c15b21a20a5af004f49920c6b21ccf89c3f5501600
 
-# Flo: checksum must match or file is corrupt
-if [ -f "${MODEL_ROOT}/${DE_MODEL_WHL}" ] && [ ! "$(shasum -a 256 ${MODEL_ROOT}/${DE_MODEL_WHL} | awk '{print$1}')" == "${CHECKSUM_SHA_256_DE_WHL}" ]; then
-  echo "spaCy model '${DE_MODEL}' is corrupt! Removing existing model!"
-  rm "${MODEL_ROOT}/${DE_MODEL_WHL}"
-fi
-
-if [ ! -f "${MODEL_ROOT}/${DE_MODEL_WHL}" ]; then
-  wget -P ${MODEL_ROOT} "https://github.com/explosion/spacy-models/releases/download/${DE_MODEL}/${DE_MODEL_WHL}" &
-  WGET_DE_PID=$!
+if [ ! -d "${MODEL_ROOT}/${DE_MODEL}" ]; then
+  wget -q -P ${MODEL_ROOT} "https://github.com/explosion/spacy-models/releases/download/${DE_MODEL}/${DE_MODEL_TGZ}"
+  if [ ! "$(sha256sum ${MODEL_ROOT}/${DE_MODEL_TGZ} | awk '{print$1}')" == "${CHECKSUM_SHA_256_DE_TGZ}" ]; then
+    echo "spaCy model '${DE_MODEL}' downloaded is corrupt!"
+    exit 1
+  fi
+  tar -xzf ${MODEL_ROOT}/${DE_MODEL_TGZ} -C ${MODEL_ROOT} --strip-components=2 ${DE_MODEL}/${DE_MODEL_BASE}/${DE_MODEL}
+  rm ${MODEL_ROOT}/${DE_MODEL_TGZ}
 else
-  echo "spaCy model '${DE_MODEL}' already downloaded!"
+  echo "spaCy model '${DE_MODEL}' already installed!"
 fi
 
-# Flo: checksum must match or file is corrupt
-if [ -f "${MODEL_ROOT}/${EN_MODEL_WHL}" ] && [ ! "$(shasum -a 256 ${MODEL_ROOT}/${EN_MODEL_WHL} | awk '{print$1}')" == "${CHECKSUM_SHA_256_EN_WHL}" ]; then
-  echo "spaCy model '${EN_MODEL}' is corrupt! Removing existing model!"
-  rm -f "${MODEL_ROOT}/${EN_MODEL_WHL}"
-fi
-
-if [ ! -f ${MODEL_ROOT}/${EN_MODEL_WHL} ]; then
-  wget -P ${MODEL_ROOT} "https://github.com/explosion/spacy-models/releases/download/${EN_MODEL}/${EN_MODEL_WHL}" &
-  WGET_EN_PID=$!
+if [ ! -d "${MODEL_ROOT}/${EN_MODEL}" ]; then
+  wget -q -P ${MODEL_ROOT} "https://github.com/explosion/spacy-models/releases/download/${EN_MODEL}/${EN_MODEL_TGZ}"
+  if [ ! "$(sha256sum ${MODEL_ROOT}/${EN_MODEL_TGZ} | awk '{print$1}')" == "${CHECKSUM_SHA_256_EN_TGZ}" ]; then
+    echo "spaCy model '${EN_MODEL}' downloaded is corrupt!"
+    exit 1
+  fi
+  tar -xzf ${MODEL_ROOT}/${EN_MODEL_TGZ} -C ${MODEL_ROOT} --strip-components=2 ${EN_MODEL}/${EN_MODEL_BASE}/${EN_MODEL}
+  rm ${MODEL_ROOT}/${EN_MODEL_TGZ}
 else
-  echo "spaCy model '${EN_MODEL}' already downloaded!"
-fi
-
-# Flo: Since we download the models in the background, we have to wait for them
-wait $WGET_DE_PID
-wait $WGET_EN_PID
-
-# Flo: Now start installing
-if [ ! -d /usr/local/lib/python3.9/site-packages/de_core_news_lg ]; then
-  pip install "${MODEL_ROOT}/${DE_MODEL_WHL}"
-fi
-if [ ! -d /usr/local/lib/python3.9/site-packages/en_core_web_trf ]; then
-  pip install "${MODEL_ROOT}/${EN_MODEL_WHL}"
+  echo "spaCy model '${EN_MODEL}' already installed!"
 fi
 
 LOG_LEVEL=${LOG_LEVEL:-debug}
 CELERY_TEXT_WORKER_CONCURRENCY=${CELERY_TEXT_WORKER_CONCURRENCY:-1}
 
 if [ "$CELERY_TEXT_WORKER_CONCURRENCY" -le 1 ]; then
-  poetry run celery -A app.docprepro.text.preprocess worker -Q textQ,celery -l "$LOG_LEVEL" -P solo
+  celery -A app.docprepro.text.preprocess worker -Q textQ,celery -l "$LOG_LEVEL" -P solo
 else
-  poetry run celery -A app.docprepro.text.preprocess worker -Q textQ,celery -l "$LOG_LEVEL" -c "$CELERY_TEXT_WORKER_CONCURRENCY"
+  celery -A app.docprepro.text.preprocess worker -Q textQ,celery -l "$LOG_LEVEL" -c "$CELERY_TEXT_WORKER_CONCURRENCY"
 fi

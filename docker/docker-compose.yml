@@ -76,7 +76,9 @@ services:
       - dwts_demo_network
 
   celery-text-worker:
-    image: uhhlt/dwts_backend_celery_text:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    image: uhhlt/dwts_backend:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    command: /dwts_code/src/celery_text_worker_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
     environment:
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
@@ -106,6 +108,7 @@ services:
       - ./backend_repo:/tmp/dwts
       - ./spacy_models:/spacy_models
       - ./models_cache:/models_cache
+      - ./tika:/tika
     depends_on:
       - rabbitmq
       - redis
@@ -120,9 +123,16 @@ services:
       - elasticsearch
     networks:
       - dwts_demo_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
 
   celery-image-worker:
-    image: uhhlt/dwts_backend_celery_image:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    image: uhhlt/dwts_backend:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    command: /dwts_code/src/celery_image_worker_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
     environment:
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
@@ -164,9 +174,16 @@ services:
       - rabbitmq
     networks:
       - dwts_demo_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
 
   celery-archive-worker:
-    image: uhhlt/dwts_backend_celery_archive:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    image: uhhlt/dwts_backend:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    command: /dwts_code/src/celery_archive_worker_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
     environment:
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
@@ -208,8 +225,16 @@ services:
       - rabbitmq
     networks:
       - dwts_demo_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
   celery-simsearch-worker:
-    image: uhhlt/dwts_backend_celery_simsearch:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    image: uhhlt/dwts_backend:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    command: /dwts_code/src/celery_simsearch_worker_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
     environment:
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
@@ -251,9 +276,16 @@ services:
       - rabbitmq
     networks:
       - dwts_demo_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
 
   dwts-backend-api:
-    image: uhhlt/dwts_backend_api:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    image: uhhlt/dwts_backend:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    command: /dwts_code/src/backend_api_entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
     environment:
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}

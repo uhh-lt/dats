@@ -56,7 +56,7 @@ class SQLService(metaclass=SingletonMeta):
 
             engine = create_engine(db_uri,
                                    pool_pre_ping=True,
-                                   echo=kwargs["echo"] if "echo" in kwargs else True)
+                                   echo=kwargs["echo"] if "echo" in kwargs else False)
             logger.info("Successfully established connection to PostgresSQL!")
 
             cls.__engine: Engine = engine

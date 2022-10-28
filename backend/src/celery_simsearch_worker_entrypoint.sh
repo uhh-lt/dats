@@ -17,4 +17,4 @@ LOG_LEVEL=${LOG_LEVEL:-debug}
 # TODO Flo: handle race conditions for celery multi process in FaissIndexService!
 CELERY_SIMSERACH_WORKER_CONCURRENCY=1 #${CELERY_SIMSERACH_WORKER_CONCURRENCY:-1}
 
-poetry run celery -A app.docprepro.simsearch.preprocess worker -Q simsearchQ,celery -l "$LOG_LEVEL" -c "$CELERY_SIMSERACH_WORKER_CONCURRENCY" # TODO Flo: Env vars for parameters
+celery -A app.docprepro.simsearch.preprocess worker -Q simsearchQ,celery -l "$LOG_LEVEL" -c "$CELERY_SIMSERACH_WORKER_CONCURRENCY" # TODO Flo: Env vars for parameters

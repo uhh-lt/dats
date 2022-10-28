@@ -16,7 +16,7 @@ LOG_LEVEL=${LOG_LEVEL:-debug}
 CELERY_IMAGE_WORKER_CONCURRENCY=${CELERY_IMAGE_WORKER_CONCURRENCY:-1}
 
 if [ "$CELERY_IMAGE_WORKER_CONCURRENCY" -le 1 ]; then
-  poetry run celery -A app.docprepro.image.preprocess worker -Q imageQ,celery -l "$LOG_LEVEL" -P solo
+  celery -A app.docprepro.image.preprocess worker -Q imageQ,celery -l "$LOG_LEVEL" -P solo
 else
-  poetry run celery -A app.docprepro.image.preprocess worker -Q imageQ,celery -l "$LOG_LEVEL" -c "$CELERY_IMAGE_WORKER_CONCURRENCY"
+  celery -A app.docprepro.image.preprocess worker -Q imageQ,celery -l "$LOG_LEVEL" -c "$CELERY_IMAGE_WORKER_CONCURRENCY"
 fi

@@ -1,3 +1,4 @@
-/spacy_models
-/backend_repo
-/image_models
+/spacy_models/*
+/backend_repo/*
+/models_cache/*
+/tika/*
