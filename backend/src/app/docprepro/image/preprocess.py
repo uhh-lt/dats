@@ -3,7 +3,6 @@ from typing import List
 
 import torch
 from PIL import Image
-from fastapi import UploadFile
 from loguru import logger
 from tqdm import tqdm
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
@@ -30,15 +29,30 @@ from config import conf
 
 # Flo: This is important! Otherwise it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)
+torch.backends.cudnn.benchmark = True
 
 sql = SQLService(echo=False)
 repo = RepoService()
 
-# FIXME Flo: Use the cached model! --> set HUGGINGFACE_CACHE to /image_models (in the container)
-# TODO Flo currently only use CPU... adding gpu device needs nvidia-docker for GPU support
-object_detection_feature_extractor = DetrFeatureExtractor.from_pretrained(conf.docprepro.image.object_detection.model)
+logger.debug(f"Loading DetrFeatureExtractor {conf.docprepro.image.object_detection.model} ...")
+object_detection_feature_extractor = DetrFeatureExtractor.from_pretrained(conf.docprepro.image.object_detection.model,
+                                                                          device=conf.docprepro.image.image_captioning.device)
+
+logger.debug(f"Loading DetrForObjectDetection {conf.docprepro.image.object_detection.model} ...")
 object_detection_model = DetrForObjectDetection.from_pretrained(conf.docprepro.image.object_detection.model)
+object_detection_model.to(conf.docprepro.image.object_detection.device)
+
 object_detection_model.eval()
+
+logger.debug(f"Loading ViTFeatureExtractor {conf.docprepro.image.image_captioning.model} ...")
+image_captioning_feature_extractor = ViTFeatureExtractor.from_pretrained(conf.docprepro.image.image_captioning.model)
+
+logger.debug(f"Loading VisionEncoderDecoderModel {conf.docprepro.image.image_captioning.model} ...")
+image_captioning_model = VisionEncoderDecoderModel.from_pretrained(conf.docprepro.image.image_captioning.model)
+image_captioning_model.to(conf.docprepro.image.image_captioning.device)
+image_captioning_model.eval()
+
+image_captioning_tokenizer = AutoTokenizer.from_pretrained(conf.docprepro.image.image_captioning.model)
 
 # Flo: This has to be in order!!! (for object detection with DETR)
 coco2017_labels = ['background', 'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus',
@@ -58,11 +72,6 @@ coco2017_labels = ['background', 'person', 'bicycle', 'car', 'motorcycle', 'airp
                    'clock', 'vase', 'scissors', 'teddy bear', 'hair drier',
                    'toothbrush']
 
-# TODO Flo currently only use CPU... adding gpu device needs nvidia-docker for GPU support
-image_captioning_feature_extractor = ViTFeatureExtractor.from_pretrained(conf.docprepro.image.image_captioning.model)
-image_captioning_model = VisionEncoderDecoderModel.from_pretrained(conf.docprepro.image.image_captioning.model)
-image_captioning_tokenizer = AutoTokenizer.from_pretrained(conf.docprepro.image.image_captioning.model)
-
 
 @celery_worker.task(acks_late=True)
 def import_uploaded_image_document(doc_file_path: Path,
@@ -81,6 +90,7 @@ def import_uploaded_image_document(doc_file_path: Path,
 def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     global object_detection_feature_extractor
     global object_detection_model
+    device = conf.docprepro.image.object_detection.device
 
     for ppid in tqdm(ppids, desc="Generating Automatic BBox Annotations... "):
         # Flo: let the DETR detect and classify objects in the image
@@ -88,14 +98,15 @@ def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[Pre
             if img.mode != "RGB":
                 img = img.convert("RGB")
             inputs = object_detection_feature_extractor(img, return_tensors="pt")
+            inputs.to(device)
             outputs = object_detection_model(**inputs)
-            img_size = torch.tensor([tuple(reversed(img.size))])
+            img_size = torch.tensor([tuple(reversed(img.size))]).to(device)
             output_dict = object_detection_feature_extractor.post_process(outputs, img_size)[0]
 
         # Flo: apply the confidence threshold
         confidence_threshold = conf.docprepro.image.object_detection.confidence_threshold
         keep = output_dict["scores"] > confidence_threshold
-        # TODO Flo: do we want to persist confidences? Yes!
+        # TODO Flo: do we want to persist confidences? Yes!l
         confidences = output_dict["scores"][keep].tolist()
         bboxes = output_dict["boxes"][keep].int().tolist()
         label_ids = output_dict["labels"][keep].tolist()
@@ -116,6 +127,7 @@ def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PrePr
     global image_captioning_feature_extractor
     global image_captioning_model
     global image_captioning_tokenizer
+    device = conf.docprepro.image.image_captioning.device
 
     with tqdm(total=len(ppids), desc="Generating automatic image captions...") as pbar:
         images: List[Image] = []
@@ -126,14 +138,11 @@ def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PrePr
                 img = img.convert("RGB")
             images.append(img)
 
-        pixel_values = image_captioning_feature_extractor(images=images, return_tensors="pt").pixel_values
+        pixel_values = image_captioning_feature_extractor(images=images, return_tensors="pt").pixel_values.to(device)
 
         # Flo: close the images again
         for img in images:
             img.close()
-
-        # TODO Flo currently only use CPU... needs nvidia-docker for GPU support
-        # pixel_values = pixel_values.to(image_captioning_device)
 
         max_caption_length = conf.docprepro.image.image_captioning.max_caption_length
         num_beams = conf.docprepro.image.image_captioning.num_beams
