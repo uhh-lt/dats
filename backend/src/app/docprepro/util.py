@@ -57,8 +57,7 @@ def update_sdoc_status(sdoc_id: int, sdoc_status: SDocStatus) -> SourceDocumentO
     return sdoc_db_obj
 
 
-def finish_preprocessing_status(ppds: List[Union[PreProTextDoc, PreProImageDoc]]) -> None:
-    # update status
+def finish_prepro_process(ppds: List[Union[PreProImageDoc, PreProTextDoc]]) -> None:
     with sql.db_session() as db:
         for ppd in ppds:
             crud_sdoc.update_status(db=db,

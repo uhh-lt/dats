@@ -27,7 +27,7 @@ from app.docprepro.image import PreProImageDoc
 from app.docprepro.text.preprotextdoc import PreProTextDoc
 from app.docprepro.text.util import generate_preprotextdoc, generate_automatic_span_annotations_sequentially, \
     generate_automatic_span_annotations_pipeline
-from app.docprepro.util import persist_as_sdoc, update_sdoc_status, finish_preprocessing_status
+from app.docprepro.util import persist_as_sdoc, update_sdoc_status, finish_prepro_process
 from config import conf
 
 # https://github.com/explosion/spaCy/issues/8678
@@ -46,6 +46,9 @@ def __start_apache_tika_server() -> None:
 
 
 def __load_spacy_models() -> Dict[str, Language]:
+    if conf.docprepro.text.spacy.device == "cuda":
+        spacy.prefer_gpu()
+
     logger.info(f"Starting to load spaCy Models...")
     logger.info(f"Loading spaCy Model '{conf.docprepro.text.spacy.german_model}' ...")
     spacy_german = spacy.load(conf.docprepro.text.spacy.german_model)
@@ -197,4 +200,4 @@ def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreP
 
 @celery_worker.task(acks_late=True)
 def finish_preprocessing(ppds: List[Union[PreProTextDoc, PreProImageDoc]]) -> None:
-    finish_preprocessing_status(ppds=ppds)
+    finish_prepro_process(ppds)
