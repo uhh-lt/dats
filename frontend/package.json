@@ -37,7 +37,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "generate": "rm -rf src/api/openapi; openapi --input http://localhost:5500/openapi.json --useOptions --output src/api/openapi; prettier -w src/api/openapi"
+    "update-api": "rm src/openapi.json; curl http://localhost:5500/openapi.json | prettier --stdin-filepath openapi.json > src/openapi.json",
+    "generate": "openapi --input src/openapi.json --useOptions --output src/api/openapi",
+    "generate-dev": "rm -rf src/api/openapi; openapi --input src/openapi.json --useOptions --output src/api/openapi; prettier -w src/api/openapi"
   },
   "eslintConfig": {
     "extends": "react-app"
