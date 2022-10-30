@@ -2,18 +2,15 @@ import pytest
 import random
 import string
 
-from api.dependencies import get_current_user
 from app.core.data.crud.crud_base import NoSuchElementError
-from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import MemoRead
-from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin, UserAuthorizationHeaderData
-from app.core.security import generate_jwt
 from app.core.data.dto import ProjectRead
+from app.core.data.dto.code import CodeRead
+from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin, UserAuthorizationHeaderData
+from app.core.db.sql_service import SQLService
 
 
-def test_create_delete_user(session):
+def test_create_delete_user(session: SQLService) -> None:
     email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
@@ -46,7 +43,7 @@ def test_create_delete_user(session):
             crud_user.read(db=sess, id=user_new.id)
 
 
-def test_update_user(session, user):
+def test_update_user(session: SQLService, user: int) -> None:
     email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
@@ -66,12 +63,21 @@ def test_update_user(session, user):
     assert user_read.last_name == last_name
     assert user_read.password != password  # password is hashed
 
-def get_user_projects(session, project):
-    pass
-    
 
-def test_get_delete_user_codes(session, code, user):
-    _ = code
+def test_get_user_projects(session: SQLService, project: int, user: int) -> None:
+
+    with session.db_session() as sess:
+        db_obj = crud_user.read(db=sess, id=user)
+        user_projects = [ProjectRead.from_orm(
+            proj) for proj in db_obj.projects]
+
+    assert len(user_projects) == 1
+    assert user_projects[0].id == project
+
+
+# TODO: Fails
+def test_get_delete_user_codes(session: SQLService, code: int, user: int) -> None:
+
     with session.db_session() as sess:
         db_obj = crud_user.read(db=sess, id=user)
         user_codes = [CodeRead.from_orm(code) for code in db_obj.codes]
@@ -88,20 +94,23 @@ def test_get_delete_user_codes(session, code, user):
     # assert len(user_codes) == 0
 
 
-def test_delete_user_codes(session, user, code):
+# TODO: Fails
+def test_delete_user_codes(session: SQLService, user: int, code: int) -> None:
 
     with session.db_session() as sess:
-        pass
+        db_obj = crud_user.read(db=sess, id=user)
+        codes = [CodeRead.from_orm(code) for code in db_obj.codes]
 
+    assert len(codes) == 1
 
-def test_get_me(session):  # TODO:
-    with session.db_session() as sess:
-        user_db = get_current_user(db=sess)
-        # user = UserRead.from_orm(user_db)
-    print(f'{user_db=}')
+    # with session.db_session() as sess:
+        # crud_user.remove_all_codes(db=sess, id=user)
+        # db_obj = crud_user.read(db=sess, id=user)
+        # codes = [CodeRead.from_orm(code) for code in db_obj.codes]
 
+    # assert len(codes) == 0
 
-def test_get_all_user(session, user):
+def test_get_all_user(session: SQLService, user: int) -> None:
 
     with session.db_session() as sess:
         db_objs = crud_user.read_multi(db=sess)

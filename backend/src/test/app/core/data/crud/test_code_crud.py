@@ -3,22 +3,21 @@ import random
 import string
 
 from api.util import get_object_memos
-from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.code import crud_code
-# from app.core.data.crud.current_code import crud_current_code # TODO
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.code import CodeRead, CodeUpdate, CodeCreate
 from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
+from app.core.db.sql_service import SQLService
 
 
-def test_create_get_delete_code(session, project, user):
-    id, *_ = project
+def test_create_get_delete_code(session: SQLService, project: int, user: int) -> None:
 
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
     code = CodeCreate(name=name, color=color,
-                      description=description, project_id=id, user_id=user)
+                      description=description, project_id=project, user_id=user)
 
     # create code
     with session.db_session() as sess:
@@ -46,9 +45,7 @@ def test_create_get_delete_code(session, project, user):
             db_obj = crud_code.read(db=sess, id=code_id)
 
 
-def test_update_code(session, code):
-    code_obj = code
-    code_id = code_obj.id
+def test_update_code(session: SQLService, code: int) -> None:
 
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
@@ -57,7 +54,7 @@ def test_update_code(session, code):
     # update all fields
     code_new = CodeUpdate(name=name, description=description, color=color)
     with session.db_session() as sess:
-        db_obj = crud_code.update(db=sess, id=code_id, update_dto=code_new)
+        db_obj = crud_code.update(db=sess, id=code, update_dto=code_new)
         get_code = [CodeRead.from_orm(db_obj)]
 
     assert len(get_code) == 1
@@ -68,7 +65,7 @@ def test_update_code(session, code):
     # update nothing
     code_new2 = CodeUpdate()
     with session.db_session() as sess:
-        db_obj = crud_code.update(db=sess, id=code_id, update_dto=code_new2)
+        db_obj = crud_code.update(db=sess, id=code, update_dto=code_new2)
         get_code2 = [CodeRead.from_orm(db_obj)]
 
     assert len(get_code2) == 1
@@ -77,20 +74,17 @@ def test_update_code(session, code):
     assert get_code2[0].color == color
 
 
-def test_add_get_memo(session, code, project, user):
-    code_obj = code
-    project_id, *_ = project
-    code_id = code_obj.id
+def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -> None:
 
     title = "".join(random.choices(string.ascii_letters, k=15))
     content = "".join(random.choices(string.ascii_letters, k=30))
     starred = False
 
     memo = MemoCreate(title=title, content=content, user_id=user,
-                      project_id=project_id, starred=starred)
+                      project_id=project, starred=starred)
     with session.db_session() as sess:
         db_obj = crud_memo.create_for_code(
-            db=sess, code_id=code_id, create_dto=memo)
+            db=sess, code_id=code, create_dto=memo)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         memo_new = [MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
                     attached_object_id=db_obj.id,
@@ -103,7 +97,7 @@ def test_add_get_memo(session, code, project, user):
 
     # get memo
     with session.db_session() as sess:
-        db_obj = crud_code.read(db=sess, id=code_id)
+        db_obj = crud_code.read(db=sess, id=code)
         memos = get_object_memos(db_obj=db_obj)
 
     print(f'{memos=}')
@@ -120,7 +114,7 @@ def test_add_get_memo(session, code, project, user):
 
     # get user memo
     with session.db_session() as sess:
-        db_obj = crud_code.read(db=sess, id=code_id)
+        db_obj = crud_code.read(db=sess, id=code)
         memos_user = [get_object_memos(db_obj=db_obj, user_id=user)]
 
     assert len(memos_user) == 1

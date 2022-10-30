@@ -12,31 +12,31 @@ from app.core.db.sql_service import SQLService
 
 
 @pytest.fixture
-def code(session, project, user):
-    project_id, *_ = project
+def code(session: SQLService, project: int, user: int) -> int:
+
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
     code = CodeCreate(name=name, color=color,
-                      description=description, project_id=project_id, user_id=user)
+                      description=description, project_id=project, user_id=user)
 
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
         code_obj = CodeRead.from_orm(db_code)
 
-    yield code_obj
+    yield code_obj.id
 
     with session.db_session() as sess:
         crud_code.remove(db=sess, id=code_obj.id)
 
 
 @pytest.fixture
-def session():
+def session() -> SQLService:
     return SQLService()
 
 
 @pytest.fixture
-def project(session, user):
+def project(session: int, user: int) -> int:
     title = "".join(random.choices(string.ascii_letters, k=15))
     description = "Test description"
 
@@ -45,14 +45,14 @@ def project(session, user):
                                  create_dto=ProjectCreate(title=title, description=description)).id
         crud_project.associate_user(db=sess, id=id, user_id=user)
 
-    yield id, title, description
+    yield id
 
     with session.db_session() as sess:
         crud_project.remove(db=sess, id=id)
 
 
 @pytest.fixture
-def user(session):
+def user(session: SQLService) -> int:
     email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))

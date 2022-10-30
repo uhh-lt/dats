@@ -2,11 +2,11 @@ import pytest
 import random
 import string
 
-from app.core.data.dto.feedback import FeedbackRead, FeedbackCreate
+from app.core.data.dto.feedback import FeedbackCreate
 from app.core.db.redis_service import RedisService
 
 
-def test_get_all_create_get_feedback():
+def test_get_all_create_get_feedback() -> None:
     user_content = "".join(random.choices(string.ascii_letters, k=15))
     user_id = 1
     feedback = FeedbackCreate(user_content=user_content, user_id=user_id)
