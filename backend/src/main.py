@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import PlainTextResponse
+from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
@@ -29,11 +30,17 @@ from api.endpoints import general, project, user, source_document, code, annotat
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from config import conf  # noqa E402
 
+
+# custom method to generate OpenApi function names
+def custom_generate_unique_id(route: APIRoute):
+    return f"{route.tags[0]}-{route.name}"
+
 # create the FastAPI app
 app = FastAPI(
     title="D-WISE Tool Suite Backend API",
     description="The REST API for the D-WISE Tool Suite Backend",
-    version="alpha_mwp_1"
+    version="alpha_mwp_1",
+    generate_unique_id_function=custom_generate_unique_id
 )
 
 # Handle CORS
