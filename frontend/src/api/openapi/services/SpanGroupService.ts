@@ -18,7 +18,7 @@ export class SpanGroupService {
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static createNewSpanGroupSpangroupPut({
+  public static createNewSpanGroup({
     requestBody,
   }: {
     requestBody: SpanGroupCreate;
@@ -40,11 +40,7 @@ export class SpanGroupService {
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static getByIdSpangroupSpanGroupIdGet({
-    spanGroupId,
-  }: {
-    spanGroupId: number;
-  }): CancelablePromise<SpanGroupRead> {
+  public static getById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/spangroup/{span_group_id}",
@@ -63,11 +59,7 @@ export class SpanGroupService {
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static deleteByIdSpangroupSpanGroupIdDelete({
-    spanGroupId,
-  }: {
-    spanGroupId: number;
-  }): CancelablePromise<SpanGroupRead> {
+  public static deleteById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/spangroup/{span_group_id}",
@@ -86,7 +78,7 @@ export class SpanGroupService {
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static updateByIdSpangroupSpanGroupIdPatch({
+  public static updateById({
     spanGroupId,
     requestBody,
   }: {
@@ -113,7 +105,7 @@ export class SpanGroupService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static getAllAnnotationsSpangroupSpanGroupIdSpanAnnotationsGet({
+  public static getAllAnnotations({
     spanGroupId,
     resolve = true,
   }: {

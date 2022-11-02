@@ -20,7 +20,7 @@ export class BboxAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static addBboxAnnotationBboxPut({
+  public static addBboxAnnotation({
     requestBody,
     resolve = true,
   }: {
@@ -50,7 +50,7 @@ export class BboxAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static getByIdBboxBboxIdGet({
+  public static getById({
     bboxId,
     resolve = true,
   }: {
@@ -81,7 +81,7 @@ export class BboxAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static deleteByIdBboxBboxIdDelete({
+  public static deleteById({
     bboxId,
   }: {
     bboxId: number;
@@ -104,7 +104,7 @@ export class BboxAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static updateByIdBboxBboxIdPatch({
+  public static updateById({
     bboxId,
     requestBody,
     resolve = true,
@@ -139,7 +139,7 @@ export class BboxAnnotationService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getCodeBboxBboxIdCodeGet({ bboxId }: { bboxId: number }): CancelablePromise<CodeRead> {
+  public static getCode({ bboxId }: { bboxId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/bbox/{bbox_id}/code",
@@ -158,7 +158,7 @@ export class BboxAnnotationService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getMemosBboxBboxIdMemoGet({ bboxId }: { bboxId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getMemos({ bboxId }: { bboxId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/bbox/{bbox_id}/memo",
@@ -177,7 +177,7 @@ export class BboxAnnotationService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemoBboxBboxIdMemoPut({
+  public static addMemo({
     bboxId,
     requestBody,
   }: {
@@ -204,13 +204,7 @@ export class BboxAnnotationService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemoBboxBboxIdMemoUserIdGet({
-    bboxId,
-    userId,
-  }: {
-    bboxId: number;
-    userId: number;
-  }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ bboxId, userId }: { bboxId: number; userId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/bbox/{bbox_id}/memo/{user_id}",

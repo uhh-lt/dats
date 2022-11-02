@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_upload_project_sdoc_project__proj_id__sdoc_put } from "../models/Body_upload_project_sdoc_project__proj_id__sdoc_put";
+import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
@@ -23,7 +23,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static readAllProjectGet({
+  public static readAll({
     skip,
     limit,
   }: {
@@ -55,11 +55,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static createNewProjectProjectPut({
-    requestBody,
-  }: {
-    requestBody: ProjectCreate;
-  }): CancelablePromise<ProjectRead> {
+  public static createNewProject({ requestBody }: { requestBody: ProjectCreate }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/project",
@@ -77,7 +73,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static readProjectProjectProjIdGet({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static readProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}",
@@ -96,7 +92,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static deleteProjectProjectProjIdDelete({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static deleteProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/project/{proj_id}",
@@ -115,7 +111,7 @@ export class ProjectService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static updateProjectProjectProjIdPatch({
+  public static updateProject({
     projId,
     requestBody,
   }: {
@@ -142,7 +138,7 @@ export class ProjectService {
    * @returns PaginatedSourceDocumentReads Successful Response
    * @throws ApiError
    */
-  public static getProjectSdocsProjectProjIdSdocGet({
+  public static getProjectSdocs({
     projId,
     onlyFinished = true,
     skip,
@@ -182,12 +178,12 @@ export class ProjectService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static uploadProjectSdocProjectProjIdSdocPut({
+  public static uploadProjectSdoc({
     projId,
     formData,
   }: {
     projId: number;
-    formData: Body_upload_project_sdoc_project__proj_id__sdoc_put;
+    formData: Body_project_upload_project_sdoc;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "PUT",
@@ -209,11 +205,7 @@ export class ProjectService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static deleteProjectSdocsProjectProjIdSdocDelete({
-    projId,
-  }: {
-    projId: number;
-  }): CancelablePromise<Array<number>> {
+  public static deleteProjectSdocs({ projId }: { projId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/project/{proj_id}/sdoc",
@@ -232,7 +224,7 @@ export class ProjectService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static dissociateUserFromProjectProjectProjIdUserUserIdDelete({
+  public static dissociateUserFromProject({
     projId,
     userId,
   }: {
@@ -258,7 +250,7 @@ export class ProjectService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static associateUserToProjectProjectProjIdUserUserIdPatch({
+  public static associateUserToProject({
     projId,
     userId,
   }: {
@@ -284,11 +276,7 @@ export class ProjectService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static getProjectUsersProjectProjIdUserGet({
-    projId,
-  }: {
-    projId: number;
-  }): CancelablePromise<Array<UserRead>> {
+  public static getProjectUsers({ projId }: { projId: number }): CancelablePromise<Array<UserRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/user",
@@ -307,11 +295,7 @@ export class ProjectService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getProjectCodesProjectProjIdCodeGet({
-    projId,
-  }: {
-    projId: number;
-  }): CancelablePromise<Array<CodeRead>> {
+  public static getProjectCodes({ projId }: { projId: number }): CancelablePromise<Array<CodeRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/code",
@@ -330,11 +314,7 @@ export class ProjectService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static deleteProjectCodesProjectProjIdCodeDelete({
-    projId,
-  }: {
-    projId: number;
-  }): CancelablePromise<Array<number>> {
+  public static deleteProjectCodes({ projId }: { projId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/project/{proj_id}/code",
@@ -353,11 +333,7 @@ export class ProjectService {
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static getProjectTagsProjectProjIdTagGet({
-    projId,
-  }: {
-    projId: number;
-  }): CancelablePromise<Array<DocumentTagRead>> {
+  public static getProjectTags({ projId }: { projId: number }): CancelablePromise<Array<DocumentTagRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/tag",
@@ -376,11 +352,7 @@ export class ProjectService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static deleteProjectTagsProjectProjIdTagDelete({
-    projId,
-  }: {
-    projId: number;
-  }): CancelablePromise<Array<number>> {
+  public static deleteProjectTags({ projId }: { projId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/project/{proj_id}/tag",
@@ -399,7 +371,7 @@ export class ProjectService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getUserCodesOfProjectProjectProjIdUserUserIdCodeGet({
+  public static getUserCodesOfProject({
     projId,
     userId,
   }: {
@@ -425,7 +397,7 @@ export class ProjectService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static removeUserCodesOfProjectProjectProjIdUserUserIdCodeDelete({
+  public static removeUserCodesOfProject({
     projId,
     userId,
   }: {
@@ -451,7 +423,7 @@ export class ProjectService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemosOfProjectProjectProjIdUserUserIdMemoGet({
+  public static getUserMemosOfProject({
     projId,
     userId,
     onlyStarred = false,
@@ -485,7 +457,7 @@ export class ProjectService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static removeUserMemosOfProjectProjectProjIdUserUserIdMemoDelete({
+  public static removeUserMemosOfProject({
     projId,
     userId,
   }: {
@@ -511,7 +483,7 @@ export class ProjectService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getMemosProjectProjIdMemoGet({ projId }: { projId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getMemos({ projId }: { projId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/memo",
@@ -530,7 +502,7 @@ export class ProjectService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemoProjectProjIdMemoPut({
+  public static addMemo({
     projId,
     requestBody,
   }: {
@@ -557,13 +529,7 @@ export class ProjectService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemoProjectProjIdMemoUserIdGet({
-    projId,
-    userId,
-  }: {
-    projId: number;
-    userId: number;
-  }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ projId, userId }: { projId: number; userId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/project/{proj_id}/memo/{user_id}",

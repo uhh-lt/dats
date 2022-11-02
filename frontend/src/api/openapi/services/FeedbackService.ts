@@ -15,7 +15,7 @@ export class FeedbackService {
    * @returns FeedbackRead Successful Response
    * @throws ApiError
    */
-  public static getAllFeedbackGet(): CancelablePromise<Array<FeedbackRead>> {
+  public static getAll(): CancelablePromise<Array<FeedbackRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/feedback",
@@ -28,11 +28,7 @@ export class FeedbackService {
    * @returns FeedbackRead Successful Response
    * @throws ApiError
    */
-  public static createFeedbackFeedbackPut({
-    requestBody,
-  }: {
-    requestBody: FeedbackCreate;
-  }): CancelablePromise<FeedbackRead> {
+  public static createFeedback({ requestBody }: { requestBody: FeedbackCreate }): CancelablePromise<FeedbackRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/feedback",
@@ -50,7 +46,7 @@ export class FeedbackService {
    * @returns FeedbackRead Successful Response
    * @throws ApiError
    */
-  public static getByIdFeedbackFeedbackIdGet({ feedbackId }: { feedbackId: string }): CancelablePromise<FeedbackRead> {
+  public static getById({ feedbackId }: { feedbackId: string }): CancelablePromise<FeedbackRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/feedback/{feedback_id}",

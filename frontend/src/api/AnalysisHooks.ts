@@ -21,7 +21,7 @@ export interface ICodeFrequencies {
 
 const useAnalyseCodeFrequencies = (projectId: number) =>
   useQuery<ICodeFrequencies, Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId], () =>
-    AnalysisService.frequencyAnalysisAnalysisFrequencyAnalysisPost({
+    AnalysisService.frequencyAnalysis({
       requestBody: {
         proj_id: projectId,
         user_ids: [SYSTEM_USER_ID],

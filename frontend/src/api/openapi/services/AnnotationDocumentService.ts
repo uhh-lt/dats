@@ -20,7 +20,7 @@ export class AnnotationDocumentService {
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */
-  public static createAdocPut({
+  public static create({
     requestBody,
   }: {
     requestBody: AnnotationDocumentCreate;
@@ -42,7 +42,7 @@ export class AnnotationDocumentService {
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getByAdocIdAdocAdocIdGet({ adocId }: { adocId: number }): CancelablePromise<AnnotationDocumentRead> {
+  public static getByAdocId({ adocId }: { adocId: number }): CancelablePromise<AnnotationDocumentRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/adoc/{adoc_id}",
@@ -61,11 +61,7 @@ export class AnnotationDocumentService {
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */
-  public static deleteByAdocIdAdocAdocIdDelete({
-    adocId,
-  }: {
-    adocId: number;
-  }): CancelablePromise<AnnotationDocumentRead> {
+  public static deleteByAdocId({ adocId }: { adocId: number }): CancelablePromise<AnnotationDocumentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/adoc/{adoc_id}",
@@ -84,7 +80,7 @@ export class AnnotationDocumentService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
+  public static getAllSpanAnnotations({
     adocId,
     skip,
     limit,
@@ -133,11 +129,7 @@ export class AnnotationDocumentService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static deleteAllSpanAnnotationsAdocAdocIdSpanAnnotationsDelete({
-    adocId,
-  }: {
-    adocId: number;
-  }): CancelablePromise<Array<number>> {
+  public static deleteAllSpanAnnotations({ adocId }: { adocId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/adoc/{adoc_id}/span_annotations",
@@ -156,7 +148,7 @@ export class AnnotationDocumentService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
+  public static getAllBboxAnnotations({
     adocId,
     skip,
     limit,
@@ -199,11 +191,7 @@ export class AnnotationDocumentService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static deleteAllBboxAnnotationsAdocAdocIdBboxAnnotationsDelete({
-    adocId,
-  }: {
-    adocId: number;
-  }): CancelablePromise<Array<number>> {
+  public static deleteAllBboxAnnotations({ adocId }: { adocId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/adoc/{adoc_id}/bbox_annotations",
@@ -222,7 +210,7 @@ export class AnnotationDocumentService {
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static getAllSpanGroupsAdocAdocIdSpanGroupsGet({
+  public static getAllSpanGroups({
     adocId,
     skip,
     limit,

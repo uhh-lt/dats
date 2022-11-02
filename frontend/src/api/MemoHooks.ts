@@ -4,12 +4,12 @@ import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
 
 const useGetMemo = (memoId: number | undefined) =>
-  useQuery<MemoRead, Error>([QueryKey.MEMO, memoId], () => MemoService.getByIdMemoMemoIdGet({ memoId: memoId! }), {
+  useQuery<MemoRead, Error>([QueryKey.MEMO, memoId], () => MemoService.getById({ memoId: memoId! }), {
     enabled: !!memoId,
   });
 
 const useUpdateMemo = () =>
-  useMutation(MemoService.updateByIdMemoMemoIdPatch, {
+  useMutation(MemoService.updateById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
       switch (data.attached_object_type) {
@@ -42,7 +42,7 @@ const useUpdateMemo = () =>
   });
 
 const useDeleteMemo = () =>
-  useMutation(MemoService.deleteByIdMemoMemoIdDelete, {
+  useMutation(MemoService.deleteById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
       switch (data.attached_object_type) {

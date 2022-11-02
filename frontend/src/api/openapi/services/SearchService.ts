@@ -26,7 +26,7 @@ export class SearchService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static searchSdocsSearchSdocPost({
+  public static searchSdocs({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
@@ -48,7 +48,7 @@ export class SearchService {
    * @returns SpanEntityFrequency Successful Response
    * @throws ApiError
    */
-  public static searchSpanEntityStatsSearchEntityStatsPost({
+  public static searchSpanEntityStats({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
@@ -70,7 +70,7 @@ export class SearchService {
    * @returns SpanEntityDocumentFrequencyResult Successful Response
    * @throws ApiError
    */
-  public static searchEntityDocumentStatsSearchEntityDocumentStatsPost({
+  public static searchEntityDocumentStats({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
@@ -92,7 +92,7 @@ export class SearchService {
    * @returns KeywordStat Successful Response
    * @throws ApiError
    */
-  public static searchKeywordStatsSearchKeywordStatsPost({
+  public static searchKeywordStats({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
@@ -114,7 +114,7 @@ export class SearchService {
    * @returns TagStat Successful Response
    * @throws ApiError
    */
-  public static searchTagStatsSearchTagStatsPost({
+  public static searchTagStats({
     requestBody,
   }: {
     requestBody: SearchSDocsQueryParameters;
@@ -136,7 +136,7 @@ export class SearchService {
    * @returns PaginatedElasticSearchDocumentHits Successful Response
    * @throws ApiError
    */
-  public static searchSdocsByContentQuerySearchLexicalSdocContentPost({
+  public static searchSdocsByContentQuery({
     requestBody,
     skip,
     limit,
@@ -172,7 +172,7 @@ export class SearchService {
    * @returns PaginatedElasticSearchDocumentHits Successful Response
    * @throws ApiError
    */
-  public static searchSdocsByFilenameQuerySearchLexicalSdocFilenamePost({
+  public static searchSdocsByFilenameQuery({
     requestBody,
     skip,
     limit,
@@ -208,7 +208,7 @@ export class SearchService {
    * @returns PaginatedMemoSearchResults Successful Response
    * @throws ApiError
    */
-  public static searchMemosByContentQuerySearchLexicalMemoContentPost({
+  public static searchMemosByContentQuery({
     requestBody,
     skip,
     limit,
@@ -244,7 +244,7 @@ export class SearchService {
    * @returns PaginatedMemoSearchResults Successful Response
    * @throws ApiError
    */
-  public static searchMemosByTitleQuerySearchLexicalMemoTitlePost({
+  public static searchMemosByTitleQuery({
     requestBody,
     skip,
     limit,
@@ -280,7 +280,7 @@ export class SearchService {
    * @returns SimSearchSentenceHit Successful Response
    * @throws ApiError
    */
-  public static findSimilarSentencesSearchSimsearchSentencesPost({
+  public static findSimilarSentences({
     projId,
     query,
     topK = 10,
@@ -309,7 +309,7 @@ export class SearchService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static findSimilarImagesSearchSimsearchImagesPost({
+  public static findSimilarImages({
     projId,
     query,
     topK = 10,

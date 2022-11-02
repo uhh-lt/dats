@@ -6,7 +6,7 @@ import queryClient from "../plugins/ReactQueryClient";
 import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils";
 
 const useCreateAdoc = () =>
-  useMutation(AnnotationDocumentService.createAdocPut, {
+  useMutation(AnnotationDocumentService.create, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.SDOC_ADOCS, data.source_document_id]);
     },
@@ -18,7 +18,7 @@ const useGetAllSpanAnnotations = (adocId: number | undefined) => {
   return useQuery<SpanAnnotationReadResolved[], Error>(
     [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
     () =>
-      AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
+      AnnotationDocumentService.getAllSpanAnnotations({
         adocId: adocId!,
         resolve: true,
       }) as Promise<SpanAnnotationReadResolved[]>,
@@ -37,7 +37,7 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) => {
       queries: adocIds.map((adocId) => ({
         queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
         queryFn: () =>
-          AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
+          AnnotationDocumentService.getAllSpanAnnotations({
             adocId: adocId,
             resolve: true,
             includeSentences: true,
@@ -54,7 +54,7 @@ const useGetAllBboxAnnotations = (adocId: number | undefined) => {
   return useQuery<BBoxAnnotationReadResolvedCode[], Error>(
     [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
     () =>
-      AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
+      AnnotationDocumentService.getAllBboxAnnotations({
         adocId: adocId!,
         resolve: true,
       }) as Promise<BBoxAnnotationReadResolvedCode[]>,
@@ -73,7 +73,7 @@ const useGetAllBboxAnnotationsBatch = (adocIds: number[]) => {
       queries: adocIds.map((adocId) => ({
         queryKey: [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
         queryFn: () =>
-          AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
+          AnnotationDocumentService.getAllBboxAnnotations({
             adocId: adocId,
             resolve: true,
           }) as Promise<BBoxAnnotationReadResolvedCode[]>,

@@ -4,7 +4,7 @@ import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
 
 const useCreateFeedback = () =>
-  useMutation(FeedbackService.createFeedbackFeedbackPut, {
+  useMutation(FeedbackService.createFeedback, {
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.FEEDBACKS]);
     },
@@ -13,14 +13,13 @@ const useCreateFeedback = () =>
 const useGetFeedback = (feedbackId: string) =>
   useQuery<FeedbackRead, Error>(
     [QueryKey.FEEDBACK, feedbackId],
-    () => FeedbackService.getByIdFeedbackFeedbackIdGet({ feedbackId: feedbackId! }),
+    () => FeedbackService.getById({ feedbackId: feedbackId! }),
     {
       enabled: !!feedbackId && feedbackId.length > 0,
     }
   );
 
-const useGetAllFeedback = () =>
-  useQuery<FeedbackRead[], Error>([QueryKey.FEEDBACKS], () => FeedbackService.getAllFeedbackGet());
+const useGetAllFeedback = () => useQuery<FeedbackRead[], Error>([QueryKey.FEEDBACKS], () => FeedbackService.getAll());
 
 const FeedbackHooks = {
   useCreateFeedback,

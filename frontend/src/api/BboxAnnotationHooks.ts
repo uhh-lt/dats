@@ -13,7 +13,7 @@ import queryClient from "../plugins/ReactQueryClient";
 export const FAKE_BBOX_ID = -1;
 
 const useCreateAnnotation = () =>
-  useMutation(BboxAnnotationService.addBboxAnnotationBboxPut, {
+  useMutation(BboxAnnotationService.addBboxAnnotation, {
     // optimistic updates
     onMutate: async (newBbox) => {
       // when we create a new bbox annotation, we add a new bbox to a certain annotation document
@@ -64,7 +64,7 @@ const useGetAnnotation = (bboxId: number | undefined) =>
   useQuery<BBoxAnnotationReadResolvedCode, Error>(
     [QueryKey.BBOX_ANNOTATION, bboxId],
     () =>
-      BboxAnnotationService.getByIdBboxBboxIdGet({
+      BboxAnnotationService.getById({
         bboxId: bboxId!,
         resolve: true,
       }) as CancelablePromise<BBoxAnnotationReadResolvedCode>,
@@ -78,7 +78,7 @@ const useUpdate = () =>
       requestBody: BBoxAnnotationUpdate;
       resolve?: boolean | undefined;
     }) =>
-      BboxAnnotationService.updateByIdBboxBboxIdPatch({
+      BboxAnnotationService.updateById({
         bboxId: variables.bboxToUpdate.id,
         requestBody: variables.requestBody,
         resolve: variables.resolve,
@@ -139,7 +139,7 @@ const useUpdate = () =>
 const useDelete = () =>
   useMutation(
     (variables: { bboxToDelete: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode }) =>
-      BboxAnnotationService.deleteByIdBboxBboxIdDelete({ bboxId: variables.bboxToDelete.id }),
+      BboxAnnotationService.deleteById({ bboxId: variables.bboxToDelete.id }),
     {
       // optimistic updates
       onMutate: async ({ bboxToDelete }) => {
@@ -181,19 +181,19 @@ const useDelete = () =>
 const useGetMemos = (bboxId: number | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_BBOX_ANNOTATION, bboxId],
-    () => BboxAnnotationService.getMemosBboxBboxIdMemoGet({ bboxId: bboxId! }),
+    () => BboxAnnotationService.getMemos({ bboxId: bboxId! }),
     { enabled: !!bboxId, retry: false }
   );
 
 const useGetMemo = (bboxId: number | undefined, userId: number | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_BBOX_ANNOTATION, bboxId, userId],
-    () => BboxAnnotationService.getUserMemoBboxBboxIdMemoUserIdGet({ bboxId: bboxId!, userId: userId! }),
+    () => BboxAnnotationService.getUserMemo({ bboxId: bboxId!, userId: userId! }),
     { enabled: !!bboxId && !!userId, retry: false }
   );
 
 const useCreateMemo = () =>
-  useMutation(BboxAnnotationService.addMemoBboxBboxIdMemoPut, {
+  useMutation(BboxAnnotationService.addMemo, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, data.user_id]); // todo: this is not optimal

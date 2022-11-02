@@ -12,7 +12,7 @@ import queryClient from "../plugins/ReactQueryClient";
 export const FAKE_ANNOTATION_ID = -1;
 
 const useCreateAnnotation = () =>
-  useMutation(SpanAnnotationService.addSpanAnnotationSpanPut, {
+  useMutation(SpanAnnotationService.addSpanAnnotation, {
     // optimistic updates
     onMutate: async (newSpanAnnotation) => {
       // when we create a new span annotation, we add a new annotation to a certain annotation document
@@ -82,7 +82,7 @@ const useGetAnnotation = (spanId: number | undefined) =>
   useQuery<SpanAnnotationReadResolved, Error>(
     [QueryKey.SPAN_ANNOTATION, spanId],
     () =>
-      SpanAnnotationService.getByIdSpanSpanIdGet({
+      SpanAnnotationService.getById({
         spanId: spanId!,
         resolve: true,
       }) as Promise<SpanAnnotationReadResolved>,
@@ -96,7 +96,7 @@ const useUpdateSpan = () =>
       requestBody: SpanAnnotationUpdate;
       resolve?: boolean | undefined;
     }) =>
-      SpanAnnotationService.updateByIdSpanSpanIdPatch({
+      SpanAnnotationService.updateById({
         spanId: variables.spanAnnotationToUpdate.id,
         requestBody: variables.requestBody,
         resolve: variables.resolve,
@@ -160,7 +160,7 @@ const useUpdateSpan = () =>
 const useDeleteSpan = () =>
   useMutation(
     (variables: { spanAnnotationToDelete: SpanAnnotationRead | SpanAnnotationReadResolved }) =>
-      SpanAnnotationService.deleteByIdSpanSpanIdDelete({ spanId: variables.spanAnnotationToDelete.id }),
+      SpanAnnotationService.deleteById({ spanId: variables.spanAnnotationToDelete.id }),
     {
       // optimistic updates
       onMutate: async ({ spanAnnotationToDelete }) => {
@@ -202,19 +202,19 @@ const useDeleteSpan = () =>
 const useGetMemos = (spanId: number | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
-    () => SpanAnnotationService.getMemosSpanSpanIdMemoGet({ spanId: spanId! }),
+    () => SpanAnnotationService.getMemos({ spanId: spanId! }),
     { enabled: !!spanId, retry: false }
   );
 
 const useGetMemo = (spanId: number | undefined, userId: number | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_SPAN_ANNOTATION, spanId, userId],
-    () => SpanAnnotationService.getUserMemoSpanSpanIdMemoUserIdGet({ spanId: spanId!, userId: userId! }),
+    () => SpanAnnotationService.getUserMemo({ spanId: spanId!, userId: userId! }),
     { enabled: !!spanId && !!userId, retry: false }
   );
 
 const useCreateMemo = () =>
-  useMutation(SpanAnnotationService.addMemoSpanSpanIdMemoPut, {
+  useMutation(SpanAnnotationService.addMemo, {
     onSuccess: (memo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id]); // todo: this is not optimal

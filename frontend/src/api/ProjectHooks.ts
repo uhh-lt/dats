@@ -19,7 +19,7 @@ const useGetAllTags = (projectId: number) =>
   useQuery<DocumentTagRead[], Error>(
     [QueryKey.PROJECT_TAGS, projectId],
     () =>
-      ProjectService.getProjectTagsProjectProjIdTagGet({
+      ProjectService.getProjectTags({
         projId: projectId,
       }),
     {
@@ -31,19 +31,18 @@ const useGetAllTags = (projectId: number) =>
   );
 
 // project
-const useGetAllProjects = () =>
-  useQuery<ProjectRead[], Error>([QueryKey.PROJECTS], () => ProjectService.readAllProjectGet({}));
+const useGetAllProjects = () => useQuery<ProjectRead[], Error>([QueryKey.PROJECTS], () => ProjectService.readAll({}));
 
 const useGetProject = (projectId: number) =>
   useQuery<ProjectRead, Error>([QueryKey.PROJECT, projectId], () =>
-    ProjectService.readProjectProjectProjIdGet({
+    ProjectService.readProject({
       projId: projectId,
     })
   );
 
 // sdoc
 const useUploadDocument = () =>
-  useMutation(ProjectService.uploadProjectSdocProjectProjIdSdocPut, {
+  useMutation(ProjectService.uploadProjectSdoc, {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, variables.projId]);
       queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS_INFINITE, variables.projId]);
@@ -52,7 +51,7 @@ const useUploadDocument = () =>
 
 const useGetProjectDocuments = (projectId: number) =>
   useQuery<PaginatedSourceDocumentReads, Error>([QueryKey.PROJECT_SDOCS, projectId], () =>
-    ProjectService.getProjectSdocsProjectProjIdSdocGet({
+    ProjectService.getProjectSdocs({
       projId: projectId,
     })
   );
@@ -61,7 +60,7 @@ const useGetProjectDocumentsInfinite = (projectId: number) =>
   useInfiniteQuery(
     [QueryKey.PROJECT_SDOCS_INFINITE, projectId],
     async ({ pageParam = 0 }) =>
-      await ProjectService.getProjectSdocsProjectProjIdSdocGet({
+      await ProjectService.getProjectSdocs({
         projId: projectId,
         skip: pageParam,
         limit: 10,
@@ -74,8 +73,8 @@ const useGetProjectDocumentsInfinite = (projectId: number) =>
 const useCreateProject = () =>
   useMutation(
     async ({ userId, requestBody }: { userId: number; requestBody: ProjectCreate }) => {
-      const project = await ProjectService.createNewProjectProjectPut({ requestBody });
-      await ProjectService.associateUserToProjectProjectProjIdUserUserIdPatch({
+      const project = await ProjectService.createNewProject({ requestBody });
+      await ProjectService.associateUserToProject({
         projId: project.id,
         userId,
       });
@@ -91,7 +90,7 @@ const useCreateProject = () =>
 const useUpdateProject = () =>
   useMutation(
     (variables: { userId: number; projId: number; requestBody: ProjectUpdate }) => {
-      return ProjectService.updateProjectProjectProjIdPatch({
+      return ProjectService.updateProject({
         projId: variables.projId,
         requestBody: variables.requestBody,
       });
@@ -106,8 +105,7 @@ const useUpdateProject = () =>
 
 const useDeleteProject = () =>
   useMutation(
-    (variables: { userId: number; projId: number }) =>
-      ProjectService.deleteProjectProjectProjIdDelete({ projId: variables.projId }),
+    (variables: { userId: number; projId: number }) => ProjectService.deleteProject({ projId: variables.projId }),
     {
       onSuccess: (data, variables) => {
         queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
@@ -118,12 +116,12 @@ const useDeleteProject = () =>
 // users
 const useGetAllUsers = (projectId: number) =>
   useQuery<UserRead[], Error>([QueryKey.PROJECT_USERS, projectId], () =>
-    ProjectService.getProjectUsersProjectProjIdUserGet({
+    ProjectService.getProjectUsers({
       projId: projectId,
     })
   );
 const useAddUser = () =>
-  useMutation(ProjectService.associateUserToProjectProjectProjIdUserUserIdPatch, {
+  useMutation(ProjectService.associateUserToProject, {
     onSuccess: (user, variables) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_USERS, variables.projId]);
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.id]);
@@ -131,7 +129,7 @@ const useAddUser = () =>
   });
 
 const useRemoveUser = () =>
-  useMutation(ProjectService.dissociateUserFromProjectProjectProjIdUserUserIdDelete, {
+  useMutation(ProjectService.dissociateUserFromProject, {
     onSuccess: (user, variables) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_USERS, variables.projId]);
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.id]);
@@ -144,7 +142,7 @@ const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
   return useQuery<CodeRead[], Error>(
     [QueryKey.PROJECT_CODES, projectId],
     () =>
-      ProjectService.getProjectCodesProjectProjIdCodeGet({
+      ProjectService.getProjectCodes({
         projId: projectId,
       }),
     {
@@ -158,7 +156,7 @@ const useGetMemo = (projectId: number | undefined, userId: number | undefined) =
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_PROJECT, projectId, userId],
     () =>
-      ProjectService.getUserMemoProjectProjIdMemoUserIdGet({
+      ProjectService.getUserMemo({
         projId: projectId!,
         userId: userId!,
       }),
@@ -169,7 +167,7 @@ const useGetMemo = (projectId: number | undefined, userId: number | undefined) =
   );
 
 const useCreateMemo = () =>
-  useMutation(ProjectService.addMemoProjectProjIdMemoPut, {
+  useMutation(ProjectService.addMemo, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO_PROJECT, data.project_id, data.user_id]);
     },

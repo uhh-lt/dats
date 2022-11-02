@@ -14,11 +14,7 @@ export class AnalysisService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static frequencyAnalysisAnalysisFrequencyAnalysisPost({
-    requestBody,
-  }: {
-    requestBody: AnalysisQueryParameters;
-  }): CancelablePromise<any> {
+  public static frequencyAnalysis({ requestBody }: { requestBody: AnalysisQueryParameters }): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/frequency_analysis",

@@ -18,7 +18,7 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static createNewCodeCodePut({ requestBody }: { requestBody: CodeCreate }): CancelablePromise<CodeRead> {
+  public static createNewCode({ requestBody }: { requestBody: CodeCreate }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/code",
@@ -36,11 +36,7 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getCodeByCurrentCodeIdCodeCurrentCurrentCodeIdGet({
-    currentCodeId,
-  }: {
-    currentCodeId: number;
-  }): CancelablePromise<CodeRead> {
+  public static getCodeByCurrentCodeId({ currentCodeId }: { currentCodeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/code/current/{current_code_id}",
@@ -59,7 +55,7 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getByIdCodeCodeIdGet({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
+  public static getById({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/code/{code_id}",
@@ -78,7 +74,7 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static deleteByIdCodeCodeIdDelete({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
+  public static deleteById({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/code/{code_id}",
@@ -97,7 +93,7 @@ export class CodeService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static updateByIdCodeCodeIdPatch({
+  public static updateById({
     codeId,
     requestBody,
   }: {
@@ -124,7 +120,7 @@ export class CodeService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getMemosCodeCodeIdMemoGet({ codeId }: { codeId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getMemos({ codeId }: { codeId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/code/{code_id}/memo",
@@ -143,7 +139,7 @@ export class CodeService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemoCodeCodeIdMemoPut({
+  public static addMemo({
     codeId,
     requestBody,
   }: {
@@ -170,13 +166,7 @@ export class CodeService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemoCodeCodeIdMemoUserIdGet({
-    codeId,
-    userId,
-  }: {
-    codeId: number;
-    userId: number;
-  }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ codeId, userId }: { codeId: number; userId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/code/{code_id}/memo/{user_id}",

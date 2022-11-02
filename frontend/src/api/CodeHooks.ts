@@ -5,26 +5,22 @@ import queryClient from "../plugins/ReactQueryClient";
 
 // memo
 const useCreateMemo = () =>
-  useMutation(CodeService.addMemoCodeCodeIdMemoPut, {
+  useMutation(CodeService.addMemo, {
     onSuccess: (createdMemo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, createdMemo.user_id]);
     },
   });
 
 const useGetMemos = (codeId: number | undefined) =>
-  useQuery<MemoRead[], Error>(
-    [QueryKey.MEMO_CODE, codeId],
-    () => CodeService.getMemosCodeCodeIdMemoGet({ codeId: codeId! }),
-    {
-      retry: false,
-      enabled: !!codeId,
-    }
-  );
+  useQuery<MemoRead[], Error>([QueryKey.MEMO_CODE, codeId], () => CodeService.getMemos({ codeId: codeId! }), {
+    retry: false,
+    enabled: !!codeId,
+  });
 
 const useGetMemo = (codeId: number | undefined, userId: number | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_CODE, codeId, userId],
-    () => CodeService.getUserMemoCodeCodeIdMemoUserIdGet({ codeId: codeId!, userId: userId! }),
+    () => CodeService.getUserMemo({ codeId: codeId!, userId: userId! }),
     {
       retry: false,
       enabled: !!codeId && !!userId,
@@ -33,12 +29,12 @@ const useGetMemo = (codeId: number | undefined, userId: number | undefined) =>
 
 // code
 const useGetCode = (codeId: number | undefined) =>
-  useQuery<CodeRead, Error>([QueryKey.CODE, codeId], () => CodeService.getByIdCodeCodeIdGet({ codeId: codeId! }), {
+  useQuery<CodeRead, Error>([QueryKey.CODE, codeId], () => CodeService.getById({ codeId: codeId! }), {
     enabled: !!codeId,
   });
 
 const useCreateCode = () =>
-  useMutation(CodeService.createNewCodeCodePut, {
+  useMutation(CodeService.createNewCode, {
     onSuccess: (newCode, variables) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES, variables.requestBody.project_id]);
       queryClient.invalidateQueries([QueryKey.USER_CODES, newCode.user_id]);
@@ -46,7 +42,7 @@ const useCreateCode = () =>
   });
 
 const useUpdateCode = () =>
-  useMutation(CodeService.updateByIdCodeCodeIdPatch, {
+  useMutation(CodeService.updateById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.CODE, data.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES, data.project_id]);
@@ -54,7 +50,7 @@ const useUpdateCode = () =>
   });
 
 const useDeleteCode = () =>
-  useMutation(CodeService.deleteByIdCodeCodeIdDelete, {
+  useMutation(CodeService.deleteById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.CODE, data.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_CODES, data.project_id]);

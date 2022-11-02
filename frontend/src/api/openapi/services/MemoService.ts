@@ -15,7 +15,7 @@ export class MemoService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getByIdMemoMemoIdGet({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static getById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/memo/{memo_id}",
@@ -34,7 +34,7 @@ export class MemoService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static deleteByIdMemoMemoIdDelete({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+  public static deleteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/memo/{memo_id}",
@@ -53,7 +53,7 @@ export class MemoService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static updateByIdMemoMemoIdPatch({
+  public static updateById({
     memoId,
     requestBody,
   }: {

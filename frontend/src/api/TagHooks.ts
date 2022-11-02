@@ -6,30 +6,26 @@ import queryClient from "../plugins/ReactQueryClient";
 
 // tags
 const useGetTag = (tagId: number | undefined) =>
-  useQuery<DocumentTagRead, Error>(
-    [QueryKey.TAG, tagId],
-    () => DocumentTagService.getByIdDoctagTagIdGet({ tagId: tagId! }),
-    {
-      enabled: !!tagId,
-    }
-  );
+  useQuery<DocumentTagRead, Error>([QueryKey.TAG, tagId], () => DocumentTagService.getById({ tagId: tagId! }), {
+    enabled: !!tagId,
+  });
 
 const useCreateTag = () =>
-  useMutation(DocumentTagService.createNewDocTagDoctagPut, {
+  useMutation(DocumentTagService.createNewDocTag, {
     onSuccess: (tag) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, tag.project_id]);
     },
   });
 
 const useUpdateTag = () =>
-  useMutation(DocumentTagService.updateByIdDoctagTagIdPatch, {
+  useMutation(DocumentTagService.updateById, {
     onSuccess: (tag) => {
       queryClient.invalidateQueries([QueryKey.TAG, tag.id]);
     },
   });
 
 const useDeleteTag = () =>
-  useMutation(DocumentTagService.deleteByIdDoctagTagIdDelete, {
+  useMutation(DocumentTagService.deleteById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, data.project_id]);
       queryClient.invalidateQueries([QueryKey.SDOC_TAGS]); // todo welche sdocs sind eigentlich genau affected?
@@ -39,7 +35,7 @@ const useDeleteTag = () =>
 const useBulkLinkDocumentTags = () =>
   useMutation(
     (variables: { projectId: number; requestBody: SourceDocumentDocumentTagMultiLink }) =>
-      DocumentTagService.linkMultipleTagsDoctagBulkLinkPatch({ requestBody: variables.requestBody }),
+      DocumentTagService.linkMultipleTags({ requestBody: variables.requestBody }),
     {
       onSuccess: (data, variables) => {
         // we need to invalidate the document tags for every document that we updated
@@ -55,7 +51,7 @@ const useBulkLinkDocumentTags = () =>
 const useBulkUnlinkDocumentTags = () =>
   useMutation(
     (variables: { projectId: number; requestBody: SourceDocumentDocumentTagMultiLink }) =>
-      DocumentTagService.unlinkMultipleTagsDoctagBulkUnlinkDelete({ requestBody: variables.requestBody }),
+      DocumentTagService.unlinkMultipleTags({ requestBody: variables.requestBody }),
     {
       onSuccess: (data, variables) => {
         // we need to invalidate the document tags for every document that we updated
@@ -95,7 +91,7 @@ const useBulkUpdateDocumentTags = () =>
       let calls = [];
       if (addTags.length > 0) {
         calls.push(
-          DocumentTagService.linkMultipleTagsDoctagBulkLinkPatch({
+          DocumentTagService.linkMultipleTags({
             requestBody: {
               source_document_ids: variables.sourceDocumentIds,
               document_tag_ids: addTags,
@@ -104,7 +100,7 @@ const useBulkUpdateDocumentTags = () =>
         );
       }
       if (removeTags.length > 0) {
-        DocumentTagService.unlinkMultipleTagsDoctagBulkUnlinkDelete({
+        DocumentTagService.unlinkMultipleTags({
           requestBody: {
             source_document_ids: variables.sourceDocumentIds,
             document_tag_ids: removeTags,
@@ -127,19 +123,15 @@ const useBulkUpdateDocumentTags = () =>
 
 // memos
 const useGetMemos = (tagId: number | undefined) =>
-  useQuery<MemoRead[], Error>(
-    [QueryKey.MEMO_TAG, tagId],
-    () => DocumentTagService.getMemosDoctagTagIdMemoGet({ tagId: tagId! }),
-    {
-      retry: false,
-      enabled: !!tagId,
-    }
-  );
+  useQuery<MemoRead[], Error>([QueryKey.MEMO_TAG, tagId], () => DocumentTagService.getMemos({ tagId: tagId! }), {
+    retry: false,
+    enabled: !!tagId,
+  });
 
 const useGetMemo = (tagId: number | undefined, userId: number | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_TAG, tagId, userId],
-    () => DocumentTagService.getUserMemoDoctagTagIdMemoUserIdGet({ tagId: tagId!, userId: userId! }),
+    () => DocumentTagService.getUserMemo({ tagId: tagId!, userId: userId! }),
     {
       retry: false,
       enabled: !!tagId && !!userId,
@@ -147,7 +139,7 @@ const useGetMemo = (tagId: number | undefined, userId: number | undefined) =>
   );
 
 const useCreateMemo = () =>
-  useMutation(DocumentTagService.addMemoDoctagTagIdMemoPut, {
+  useMutation(DocumentTagService.addMemo, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
     },

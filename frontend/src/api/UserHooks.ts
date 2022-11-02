@@ -8,7 +8,7 @@ import { useSelectEnabledCodes } from "./utils";
 const useGetProjects = (userId: number | undefined) =>
   useQuery<ProjectRead[], Error>(
     [QueryKey.USER_PROJECTS, userId],
-    () => UserService.getUserProjectsUserUserIdProjectGet({ userId: userId! }),
+    () => UserService.getUserProjects({ userId: userId! }),
     {
       enabled: !!userId,
     }
@@ -16,36 +16,30 @@ const useGetProjects = (userId: number | undefined) =>
 
 // user
 const useGetUser = (userId: number | undefined) =>
-  useQuery<UserRead, Error>([QueryKey.USER, userId], () => UserService.getByIdUserUserIdGet({ userId: userId! }), {
+  useQuery<UserRead, Error>([QueryKey.USER, userId], () => UserService.getById({ userId: userId! }), {
     enabled: !!userId,
   });
 
 const useRegister = () =>
-  useMutation(UserService.registerUserPut, {
+  useMutation(UserService.register, {
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.USERS]);
     },
   });
 
-const useGetAll = () => useQuery<UserRead[], Error>([QueryKey.USERS], () => UserService.getAllUserGet({}));
+const useGetAll = () => useQuery<UserRead[], Error>([QueryKey.USERS], () => UserService.getAll({}));
 
 // codes
 const useGetAllCodes = (userId: number) => {
   const selectEnabledCodes = useSelectEnabledCodes();
-  return useQuery<CodeRead[], Error>(
-    [QueryKey.USER_CODES, userId],
-    () => UserService.getUserCodesUserUserIdCodeGet({ userId }),
-    {
-      select: selectEnabledCodes,
-    }
-  );
+  return useQuery<CodeRead[], Error>([QueryKey.USER_CODES, userId], () => UserService.getUserCodes({ userId }), {
+    select: selectEnabledCodes,
+  });
 };
 
 // memo
 const useGetAllMemos = (userId: number) =>
-  useQuery<MemoRead[], Error>([QueryKey.USER_MEMOS, userId], () =>
-    UserService.getUserMemosUserUserIdMemoGet({ userId })
-  );
+  useQuery<MemoRead[], Error>([QueryKey.USER_MEMOS, userId], () => UserService.getUserMemos({ userId }));
 
 const UserHooks = {
   useGetProjects,

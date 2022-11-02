@@ -16,7 +16,7 @@ export class MetadataService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static createNewMetadataMetadataPut({
+  public static createNewMetadata({
     requestBody,
   }: {
     requestBody: SourceDocumentMetadataCreate;
@@ -38,11 +38,7 @@ export class MetadataService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getByIdMetadataMetadataIdGet({
-    metadataId,
-  }: {
-    metadataId: number;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
+  public static getById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/metadata/{metadata_id}",
@@ -61,11 +57,7 @@ export class MetadataService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static deleteByIdMetadataMetadataIdDelete({
-    metadataId,
-  }: {
-    metadataId: number;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
+  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/metadata/{metadata_id}",
@@ -84,7 +76,7 @@ export class MetadataService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static updateByIdMetadataMetadataIdPatch({
+  public static updateById({
     metadataId,
     requestBody,
   }: {

@@ -21,7 +21,7 @@ export class SpanAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static addSpanAnnotationSpanPut({
+  public static addSpanAnnotation({
     requestBody,
     resolve = true,
   }: {
@@ -51,7 +51,7 @@ export class SpanAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static getByIdSpanSpanIdGet({
+  public static getById({
     spanId,
     resolve = true,
   }: {
@@ -82,7 +82,7 @@ export class SpanAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static deleteByIdSpanSpanIdDelete({
+  public static deleteById({
     spanId,
   }: {
     spanId: number;
@@ -105,7 +105,7 @@ export class SpanAnnotationService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static updateByIdSpanSpanIdPatch({
+  public static updateById({
     spanId,
     requestBody,
     resolve = true,
@@ -140,7 +140,7 @@ export class SpanAnnotationService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getCodeSpanSpanIdCodeGet({ spanId }: { spanId: number }): CancelablePromise<CodeRead> {
+  public static getCode({ spanId }: { spanId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/span/{span_id}/code",
@@ -159,11 +159,7 @@ export class SpanAnnotationService {
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
    */
-  public static getAllGroupsSpanSpanIdGroupsGet({
-    spanId,
-  }: {
-    spanId: number;
-  }): CancelablePromise<Array<SpanGroupRead>> {
+  public static getAllGroups({ spanId }: { spanId: number }): CancelablePromise<Array<SpanGroupRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/span/{span_id}/groups",
@@ -182,11 +178,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static removeFromAllGroupsSpanSpanIdGroupsDelete({
-    spanId,
-  }: {
-    spanId: number;
-  }): CancelablePromise<SpanAnnotationRead> {
+  public static removeFromAllGroups({ spanId }: { spanId: number }): CancelablePromise<SpanAnnotationRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/span/{span_id}/groups",
@@ -205,7 +197,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static removeFromGroupSpanSpanIdGroupGroupIdDelete({
+  public static removeFromGroup({
     spanId,
     groupId,
   }: {
@@ -231,7 +223,7 @@ export class SpanAnnotationService {
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
-  public static addToGroupSpanSpanIdGroupGroupIdPatch({
+  public static addToGroup({
     spanId,
     groupId,
   }: {
@@ -257,7 +249,7 @@ export class SpanAnnotationService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getMemosSpanSpanIdMemoGet({ spanId }: { spanId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getMemos({ spanId }: { spanId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/span/{span_id}/memo",
@@ -276,7 +268,7 @@ export class SpanAnnotationService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemoSpanSpanIdMemoPut({
+  public static addMemo({
     spanId,
     requestBody,
   }: {
@@ -303,13 +295,7 @@ export class SpanAnnotationService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemoSpanSpanIdMemoUserIdGet({
-    spanId,
-    userId,
-  }: {
-    spanId: number;
-    userId: number;
-  }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ spanId, userId }: { spanId: number; userId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/span/{span_id}/memo/{user_id}",

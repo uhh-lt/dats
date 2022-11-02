@@ -3,6 +3,7 @@ import {
   KeywordStat,
   MemoContentQuery,
   MemoRead,
+  MemoTitleQuery,
   PaginatedMemoSearchResults,
   SearchService,
   SimSearchSentenceHit,
@@ -50,7 +51,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
       const { keywords, tags, codes, texts, sentences, files } = orderFilter(filters);
       if (sentences.length === 1) {
         if (findTextModality) {
-          const result = await SearchService.findSimilarSentencesSearchSimsearchSentencesPost({
+          const result = await SearchService.findSimilarSentences({
             projId: projectId,
             query: filters[0].data as string,
             topK: 10,
@@ -70,7 +71,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
           };
         } else {
           // todo: please only return number[]
-          const imageSdocs = await SearchService.findSimilarImagesSearchSimsearchImagesPost({
+          const imageSdocs = await SearchService.findSimilarImages({
             projId: projectId,
             query: filters[0].data as string,
             topK: 10,
@@ -78,7 +79,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
           return { data: imageSdocs.map((img) => img.id), type: SearchResultsType.DOCUMENTS };
         }
       } else if (sentences.length === 0) {
-        const sdocIds = await SearchService.searchSdocsSearchSdocPost({
+        const sdocIds = await SearchService.searchSdocs({
           requestBody: {
             proj_id: projectId,
             user_ids: user.data ? [user.data.id] : undefined,
@@ -103,7 +104,7 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
   useQuery<number[], Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, projectId, tagId],
     () => {
-      return SearchService.searchSdocsSearchSdocPost({
+      return SearchService.searchSdocs({
         requestBody: {
           proj_id: projectId!,
           tag_ids: [tagId!],
@@ -120,7 +121,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
     [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, user.data?.id, filters],
     async () => {
       const { keywords, tags, codes, texts } = orderFilter(filters);
-      const data = await SearchService.searchEntityDocumentStatsSearchEntityDocumentStatsPost({
+      const data = await SearchService.searchEntityDocumentStats({
         requestBody: {
           proj_id: projectId,
           user_ids: user.data ? [user.data.id] : undefined,
@@ -140,7 +141,7 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
   const { user } = useAuth();
   return useQuery<KeywordStat[], Error>([QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, user.data?.id, filters], () => {
     const { keywords, tags, codes, texts } = orderFilter(filters);
-    return SearchService.searchKeywordStatsSearchKeywordStatsPost({
+    return SearchService.searchKeywordStats({
       requestBody: {
         proj_id: projectId,
         user_ids: user.data ? [user.data.id] : undefined,
@@ -160,7 +161,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
     [QueryKey.SEARCH_TAG_STATISTICS, projectId, user.data?.id, filters],
     () => {
       const { keywords, tags, codes, texts } = orderFilter(filters);
-      return SearchService.searchTagStatsSearchTagStatsPost({
+      return SearchService.searchTagStats({
         requestBody: {
           proj_id: projectId,
           user_ids: user.data ? [user.data.id] : undefined,
@@ -187,7 +188,7 @@ const useSearchMemoContent = (params: MemoContentQuery) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMOS_BY_CONTENT_SEARCH, params.content_query],
     async () => {
-      const result = await SearchService.searchMemosByContentQuerySearchLexicalMemoContentPost({
+      const result = await SearchService.searchMemosByContentQuery({
         requestBody: params,
       });
 
@@ -198,15 +199,15 @@ const useSearchMemoContent = (params: MemoContentQuery) =>
     }
   );
 
-const useSearchMemoTitle = (params: MemoContentQuery) =>
+const useSearchMemoTitle = (params: MemoTitleQuery) =>
   useQuery<PaginatedMemoSearchResults, Error>(
-    [QueryKey.MEMOS_BY_TITLE_SEARCH, params.content_query],
+    [QueryKey.MEMOS_BY_TITLE_SEARCH, params.title_query],
     () =>
-      SearchService.searchMemosByContentQuerySearchLexicalMemoContentPost({
+      SearchService.searchMemosByTitleQuery({
         requestBody: params,
       }),
     {
-      enabled: params.content_query.length > 0,
+      enabled: params.title_query.length > 0,
     }
   );
 
@@ -214,7 +215,7 @@ const useSentenceSimilaritySearch = (projectId: number, filters: SearchFilter[])
   useQuery<SearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filters],
     async () => {
-      const result = await SearchService.findSimilarSentencesSearchSimsearchSentencesPost({
+      const result = await SearchService.findSimilarSentences({
         projId: projectId,
         query: filters[0].data as string,
         topK: 10,

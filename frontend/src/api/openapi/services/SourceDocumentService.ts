@@ -24,7 +24,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getByIdSdocSdocIdGet({
+  public static getById({
     sdocId,
     onlyIfFinished = true,
   }: {
@@ -52,7 +52,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static deleteByIdSdocSdocIdDelete({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
+  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/sdoc/{sdoc_id}",
@@ -71,7 +71,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentContent Successful Response
    * @throws ApiError
    */
-  public static getContentSdocSdocIdContentGet({
+  public static getContent({
     sdocId,
     onlyFinished = true,
   }: {
@@ -99,7 +99,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentTokens Successful Response
    * @throws ApiError
    */
-  public static getTokensSdocSdocIdTokensGet({
+  public static getTokens({
     sdocId,
     onlyFinished = true,
     characterOffsets = false,
@@ -133,7 +133,7 @@ export class SourceDocumentService {
    * @returns SpanAnnotationReadResolvedText Successful Response
    * @throws ApiError
    */
-  public static getSentencesSdocSdocIdSentencesGet({
+  public static getSentences({
     sdocId,
     onlyFinished = true,
   }: {
@@ -161,7 +161,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentKeywords Successful Response
    * @throws ApiError
    */
-  public static getKeywordsSdocSdocIdKeywordsGet({
+  public static getKeywords({
     sdocId,
     onlyFinished = true,
   }: {
@@ -189,7 +189,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentKeywords Successful Response
    * @throws ApiError
    */
-  public static updateKeywordsSdocSdocIdKeywordsPatch({
+  public static updateKeywords({
     requestBody,
   }: {
     requestBody: SourceDocumentKeywords;
@@ -211,7 +211,7 @@ export class SourceDocumentService {
    * @returns string Successful Response
    * @throws ApiError
    */
-  public static getFileUrlSdocSdocIdUrlGet({
+  public static getFileUrl({
     sdocId,
     relative = true,
   }: {
@@ -239,11 +239,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getAllMetadataSdocSdocIdMetadataGet({
-    sdocId,
-  }: {
-    sdocId: number;
-  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+  public static getAllMetadata({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata",
@@ -262,7 +258,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static readMetadataByKeySdocSdocIdMetadataMetadataKeyGet({
+  public static readMetadataByKey({
     sdocId,
     metadataKey,
   }: {
@@ -288,7 +284,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static updateMetadataByIdSdocSdocIdMetadataMetadataIdPatch({
+  public static updateMetadataById({
     sdocId,
     metadataId,
     requestBody,
@@ -318,7 +314,7 @@ export class SourceDocumentService {
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getAdocOfUserSdocSdocIdAdocUserIdGet({
+  public static getAdocOfUser({
     sdocId,
     userId,
   }: {
@@ -344,11 +340,7 @@ export class SourceDocumentService {
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getAllAdocsSdocSdocIdAdocGet({
-    sdocId,
-  }: {
-    sdocId: number;
-  }): CancelablePromise<Array<AnnotationDocumentRead>> {
+  public static getAllAdocs({ sdocId }: { sdocId: number }): CancelablePromise<Array<AnnotationDocumentRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/adoc",
@@ -367,7 +359,7 @@ export class SourceDocumentService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static removeAllAdocsSdocSdocIdAdocDelete({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
+  public static removeAllAdocs({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/sdoc/{sdoc_id}/adoc",
@@ -386,7 +378,7 @@ export class SourceDocumentService {
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static getAllTagsSdocSdocIdTagsGet({ sdocId }: { sdocId: number }): CancelablePromise<Array<DocumentTagRead>> {
+  public static getAllTags({ sdocId }: { sdocId: number }): CancelablePromise<Array<DocumentTagRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/tags",
@@ -405,11 +397,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static unlinksAllTagsSdocSdocIdTagsDelete({
-    sdocId,
-  }: {
-    sdocId: number;
-  }): CancelablePromise<SourceDocumentRead> {
+  public static unlinksAllTags({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/sdoc/{sdoc_id}/tags",
@@ -428,13 +416,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static unlinkTagSdocSdocIdTagTagIdDelete({
-    sdocId,
-    tagId,
-  }: {
-    sdocId: number;
-    tagId: number;
-  }): CancelablePromise<SourceDocumentRead> {
+  public static unlinkTag({ sdocId, tagId }: { sdocId: number; tagId: number }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/sdoc/{sdoc_id}/tag/{tag_id}",
@@ -454,13 +436,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static linkTagSdocSdocIdTagTagIdPatch({
-    sdocId,
-    tagId,
-  }: {
-    sdocId: number;
-    tagId: number;
-  }): CancelablePromise<SourceDocumentRead> {
+  public static linkTag({ sdocId, tagId }: { sdocId: number; tagId: number }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/sdoc/{sdoc_id}/tag/{tag_id}",
@@ -480,7 +456,7 @@ export class SourceDocumentService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getMemosSdocSdocIdMemoGet({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getMemos({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/memo",
@@ -499,7 +475,7 @@ export class SourceDocumentService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemoSdocSdocIdMemoPut({
+  public static addMemo({
     sdocId,
     requestBody,
   }: {
@@ -526,13 +502,7 @@ export class SourceDocumentService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemoSdocSdocIdMemoUserIdGet({
-    sdocId,
-    userId,
-  }: {
-    sdocId: number;
-    userId: number;
-  }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ sdocId, userId }: { sdocId: number; userId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/memo/{user_id}",
@@ -552,7 +522,7 @@ export class SourceDocumentService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getRelatedUserMemosSdocSdocIdRelatedmemosUserIdGet({
+  public static getRelatedUserMemos({
     sdocId,
     userId,
   }: {

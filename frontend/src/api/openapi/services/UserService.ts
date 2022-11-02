@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_login_user_login_post } from "../models/Body_login_user_login_post";
+import type { Body_user_login } from "../models/Body_user_login";
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoRead } from "../models/MemoRead";
 import type { ProjectRead } from "../models/ProjectRead";
@@ -21,7 +21,7 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static getAllUserGet({
+  public static getAll({
     skip,
     limit,
   }: {
@@ -53,7 +53,7 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static registerUserPut({ requestBody }: { requestBody: UserCreate }): CancelablePromise<UserRead> {
+  public static register({ requestBody }: { requestBody: UserCreate }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/user",
@@ -71,11 +71,7 @@ export class UserService {
    * @returns UserAuthorizationHeaderData Successful Response
    * @throws ApiError
    */
-  public static loginUserLoginPost({
-    formData,
-  }: {
-    formData: Body_login_user_login_post;
-  }): CancelablePromise<UserAuthorizationHeaderData> {
+  public static login({ formData }: { formData: Body_user_login }): CancelablePromise<UserAuthorizationHeaderData> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/user/login",
@@ -93,7 +89,7 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static getMeUserMeGet(): CancelablePromise<UserRead> {
+  public static getMe(): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/me",
@@ -106,7 +102,7 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static getByIdUserUserIdGet({ userId }: { userId: number }): CancelablePromise<UserRead> {
+  public static getById({ userId }: { userId: number }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}",
@@ -125,7 +121,7 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static deleteByIdUserUserIdDelete({ userId }: { userId: number }): CancelablePromise<UserRead> {
+  public static deleteById({ userId }: { userId: number }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/user/{user_id}",
@@ -144,7 +140,7 @@ export class UserService {
    * @returns UserRead Successful Response
    * @throws ApiError
    */
-  public static updateByIdUserUserIdPatch({
+  public static updateById({
     userId,
     requestBody,
   }: {
@@ -171,11 +167,7 @@ export class UserService {
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static getUserProjectsUserUserIdProjectGet({
-    userId,
-  }: {
-    userId: number;
-  }): CancelablePromise<Array<ProjectRead>> {
+  public static getUserProjects({ userId }: { userId: number }): CancelablePromise<Array<ProjectRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}/project",
@@ -194,7 +186,7 @@ export class UserService {
    * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getUserCodesUserUserIdCodeGet({ userId }: { userId: number }): CancelablePromise<Array<CodeRead>> {
+  public static getUserCodes({ userId }: { userId: number }): CancelablePromise<Array<CodeRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}/code",
@@ -213,7 +205,7 @@ export class UserService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static deleteUserCodesUserUserIdCodeDelete({ userId }: { userId: number }): CancelablePromise<Array<number>> {
+  public static deleteUserCodes({ userId }: { userId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/user/{user_id}/code",
@@ -232,7 +224,7 @@ export class UserService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemosUserUserIdMemoGet({ userId }: { userId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getUserMemos({ userId }: { userId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}/memo",
@@ -251,7 +243,7 @@ export class UserService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static deleteUserMemosUserUserIdMemoDelete({ userId }: { userId: number }): CancelablePromise<Array<number>> {
+  public static deleteUserMemos({ userId }: { userId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/user/{user_id}/memo",

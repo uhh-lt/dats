@@ -11,7 +11,7 @@ export class GeneralService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static heartbeatHeartbeatGet(): CancelablePromise<any> {
+  public static heartbeat(): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/heartbeat",
@@ -24,7 +24,7 @@ export class GeneralService {
    * @returns any Successful Response
    * @throws ApiError
    */
-  public static rootToDocsGet(): CancelablePromise<any> {
+  public static rootToDocs(): CancelablePromise<any> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/",

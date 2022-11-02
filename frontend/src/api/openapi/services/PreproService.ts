@@ -14,11 +14,7 @@ export class PreproService {
    * @returns PreProProjectStatus Successful Response
    * @throws ApiError
    */
-  public static getProjectPreproStatusPreproProjectProjIdStatusGet({
-    projId,
-  }: {
-    projId: number;
-  }): CancelablePromise<PreProProjectStatus> {
+  public static getProjectPreproStatus({ projId }: { projId: number }): CancelablePromise<PreProProjectStatus> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/prepro/project/{proj_id}/status",

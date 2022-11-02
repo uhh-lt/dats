@@ -19,7 +19,7 @@ export class DocumentTagService {
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static createNewDocTagDoctagPut({
+  public static createNewDocTag({
     requestBody,
   }: {
     requestBody: DocumentTagCreate;
@@ -41,7 +41,7 @@ export class DocumentTagService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static linkMultipleTagsDoctagBulkLinkPatch({
+  public static linkMultipleTags({
     requestBody,
   }: {
     requestBody: SourceDocumentDocumentTagMultiLink;
@@ -63,7 +63,7 @@ export class DocumentTagService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static unlinkMultipleTagsDoctagBulkUnlinkDelete({
+  public static unlinkMultipleTags({
     requestBody,
   }: {
     requestBody: SourceDocumentDocumentTagMultiLink;
@@ -85,7 +85,7 @@ export class DocumentTagService {
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static getByIdDoctagTagIdGet({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
+  public static getById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/doctag/{tag_id}",
@@ -104,7 +104,7 @@ export class DocumentTagService {
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static deleteByIdDoctagTagIdDelete({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
+  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/doctag/{tag_id}",
@@ -123,7 +123,7 @@ export class DocumentTagService {
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static updateByIdDoctagTagIdPatch({
+  public static updateById({
     tagId,
     requestBody,
   }: {
@@ -150,7 +150,7 @@ export class DocumentTagService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getMemosDoctagTagIdMemoGet({ tagId }: { tagId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getMemos({ tagId }: { tagId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/doctag/{tag_id}/memo",
@@ -169,7 +169,7 @@ export class DocumentTagService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static addMemoDoctagTagIdMemoPut({
+  public static addMemo({
     tagId,
     requestBody,
   }: {
@@ -196,13 +196,7 @@ export class DocumentTagService {
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
-  public static getUserMemoDoctagTagIdMemoUserIdGet({
-    tagId,
-    userId,
-  }: {
-    tagId: number;
-    userId: number;
-  }): CancelablePromise<MemoRead> {
+  public static getUserMemo({ tagId, userId }: { tagId: number; userId: number }): CancelablePromise<MemoRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/doctag/{tag_id}/memo/{user_id}",
