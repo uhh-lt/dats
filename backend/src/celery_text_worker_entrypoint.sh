@@ -50,6 +50,9 @@ else
   echo "spaCy model '${EN_MODEL}' already installed!"
 fi
 
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
 LOG_LEVEL=${LOG_LEVEL:-debug}
 CELERY_TEXT_WORKER_CONCURRENCY=${CELERY_TEXT_WORKER_CONCURRENCY:-1}
 
