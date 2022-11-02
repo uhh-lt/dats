@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CodeRead, MemoRead, ProjectRead, UserRead, UserService } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
+import { useSelectEnabledCodes } from "./utils";
 
 // project
 const useGetProjects = (userId: number | undefined) =>
@@ -29,10 +30,16 @@ const useRegister = () =>
 const useGetAll = () => useQuery<UserRead[], Error>([QueryKey.USERS], () => UserService.getAllUserGet({}));
 
 // codes
-const useGetAllCodes = (userId: number) =>
-  useQuery<CodeRead[], Error>([QueryKey.USER_CODES, userId], () =>
-    UserService.getUserCodesUserUserIdCodeGet({ userId })
+const useGetAllCodes = (userId: number) => {
+  const selectEnabledCodes = useSelectEnabledCodes();
+  return useQuery<CodeRead[], Error>(
+    [QueryKey.USER_CODES, userId],
+    () => UserService.getUserCodesUserUserIdCodeGet({ userId }),
+    {
+      select: selectEnabledCodes,
+    }
   );
+};
 
 // memo
 const useGetAllMemos = (userId: number) =>

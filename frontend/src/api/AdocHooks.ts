@@ -3,6 +3,7 @@ import { QueryKey } from "./QueryKey";
 import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import useStableQueries from "../utils/useStableQueries";
 import queryClient from "../plugins/ReactQueryClient";
+import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils";
 
 const useCreateAdoc = () =>
   useMutation(AnnotationDocumentService.createAdocPut, {
@@ -11,8 +12,10 @@ const useCreateAdoc = () =>
     },
   });
 
-const useGetAllSpanAnnotations = (adocId: number | undefined) =>
-  useQuery<SpanAnnotationReadResolved[], Error>(
+const useGetAllSpanAnnotations = (adocId: number | undefined) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
+  return useQuery<SpanAnnotationReadResolved[], Error>(
     [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
     () =>
       AnnotationDocumentService.getAllSpanAnnotationsAdocAdocIdSpanAnnotationsGet({
@@ -21,11 +24,15 @@ const useGetAllSpanAnnotations = (adocId: number | undefined) =>
       }) as Promise<SpanAnnotationReadResolved[]>,
     {
       enabled: !!adocId,
+      select: selectEnabledAnnotations,
     }
   );
+};
 
-const useGetAllSpanAnnotationsBatch = (adocIds: number[]) =>
-  useStableQueries(
+const useGetAllSpanAnnotationsBatch = (adocIds: number[]) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
+  return useStableQueries(
     useQueries({
       queries: adocIds.map((adocId) => ({
         queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
@@ -35,12 +42,16 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) =>
             resolve: true,
             includeSentences: true,
           }) as Promise<SpanAnnotationReadResolved[]>,
+        select: selectEnabledAnnotations,
       })),
     })
   );
+};
 
-const useGetAllBboxAnnotations = (adocId: number | undefined) =>
-  useQuery<BBoxAnnotationReadResolvedCode[], Error>(
+const useGetAllBboxAnnotations = (adocId: number | undefined) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
+  return useQuery<BBoxAnnotationReadResolvedCode[], Error>(
     [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
     () =>
       AnnotationDocumentService.getAllBboxAnnotationsAdocAdocIdBboxAnnotationsGet({
@@ -49,11 +60,15 @@ const useGetAllBboxAnnotations = (adocId: number | undefined) =>
       }) as Promise<BBoxAnnotationReadResolvedCode[]>,
     {
       enabled: !!adocId,
+      select: selectEnabledAnnotations,
     }
   );
+};
 
-const useGetAllBboxAnnotationsBatch = (adocIds: number[]) =>
-  useStableQueries(
+const useGetAllBboxAnnotationsBatch = (adocIds: number[]) => {
+  // filter out all disabled code ids
+  const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
+  return useStableQueries(
     useQueries({
       queries: adocIds.map((adocId) => ({
         queryKey: [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
@@ -62,9 +77,11 @@ const useGetAllBboxAnnotationsBatch = (adocIds: number[]) =>
             adocId: adocId,
             resolve: true,
           }) as Promise<BBoxAnnotationReadResolvedCode[]>,
+        select: selectEnabledAnnotations,
       })),
     })
   );
+};
 
 const AdocHooks = {
   useGetAllSpanAnnotations,

@@ -10,7 +10,7 @@ import Portal from "@mui/material/Portal";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useForm } from "react-hook-form";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
+import { SimSearchSentenceHit, SpanEntityDocumentFrequency } from "../../api/openapi";
 import { isNumber } from "lodash";
 import {
   createCodeFilter,
@@ -27,7 +27,7 @@ import SearchFilterChip from "./SearchFilterChip";
 import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
 import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
 import Box from "@mui/material/Box";
-import SearchHooks, { getSearchResultIds } from "../../api/SearchHooks";
+import SearchHooks, { getSearchResultIds, SearchResultsType } from "../../api/SearchHooks";
 import { SearchType } from "./SearchType";
 
 export function removeTrailingSlash(text: string): string {
@@ -49,6 +49,7 @@ function Search() {
 
   // redux (global client state)
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
+  const isListView = useAppSelector((state) => state.search.isListView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
   const searchType = useAppSelector((state) => state.search.searchType);
   const filters = useAppSelector((state) => state.search.filters);
@@ -58,10 +59,21 @@ function Search() {
   const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
 
   // computed (local client state)
-  const searchResultIds = useMemo(() => {
+  const searchResultDocumentIds = useMemo(() => {
     if (!searchResults.data) return [];
     return getSearchResultIds(searchResults.data);
   }, [searchResults.data]);
+  const numSearchResults = useMemo(() => {
+    if (!searchResults.data) return 0;
+    // in list view we show every single sentence
+    if (searchResults.data.type === SearchResultsType.SENTENCES && isListView) {
+      return Array.from((searchResults.data.data as Map<number, SimSearchSentenceHit[]>).values()).flat().length;
+    } else if (searchResults.data.type === SearchResultsType.SENTENCES) {
+      return (searchResults.data.data as Map<number, SimSearchSentenceHit[]>).size;
+    } else {
+      return (searchResults.data.data as number[]).length;
+    }
+  }, [isListView, searchResults.data]);
   const viewDocument = Boolean(sdocId);
   const selectedTag = useMemo(() => {
     if (filters.length === 1 && isNumber(filters[0].data)) {
@@ -85,10 +97,10 @@ function Search() {
     },
     [location.pathname, navigate]
   );
-  const handleResultClick = (sdoc: SourceDocumentRead) => {
+  const handleResultClick = (sdocId: number) => {
     // remove doc/:docId from url (if it exists) then add new doc id
     let url = removeTrailingSlash(location.pathname.split("/doc")[0]);
-    navigate(`${url}/doc/${sdoc.id}`);
+    navigate(`${url}/doc/${sdocId}`);
     dispatch(SearchActions.clearSelectedDocuments());
   };
 
@@ -217,13 +229,19 @@ function Search() {
               display={isSplitView || !viewDocument ? "flex" : "none"}
               className="myFlexContainer h100"
             >
-              <SearchResultsToolbar searchResultIds={searchResultIds} className="myFlexFitContentContainer" />
+              <SearchResultsToolbar
+                searchResultDocumentIds={searchResultDocumentIds}
+                numSearchResults={numSearchResults}
+                className="myFlexFitContentContainer"
+              />
               <React.Fragment>
                 {searchResults.isLoading && <div>Loading!</div>}
                 {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
                 {searchResults.isSuccess && (
                   <SearchResultsView
                     searchResults={searchResults.data}
+                    searchResultDocumentIds={searchResultDocumentIds}
+                    numSearchResults={numSearchResults}
                     handleResultClick={handleResultClick}
                     className="myFlexFillAllContainer"
                   />
@@ -236,7 +254,7 @@ function Search() {
               display={isSplitView || viewDocument ? "flex" : "none"}
               className="myFlexContainer h100"
             >
-              {sdocId && <DocumentViewerToolbar sdocId={parseInt(sdocId)} searchResultIds={searchResultIds} />}
+              {sdocId && <DocumentViewerToolbar sdocId={parseInt(sdocId)} searchResultIds={searchResultDocumentIds} />}
               <DocumentViewer
                 sdocId={sdocId ? parseInt(sdocId) : undefined}
                 handleTagClick={handleAddTagFilter}

@@ -1,15 +1,29 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Popover,
+  PopoverPosition,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../../search/searchSlice";
-import { createSentenceFilter } from "../../search/SearchFilter";
+import { createCodeFilter, createSentenceFilter } from "../../search/SearchFilter";
 import { useNavigate } from "react-router-dom";
+import { SpanAnnotationReadResolved } from "../../../api/openapi";
 
 interface SentenceContextMenuProps {}
 
 export interface SentenceContextMenuHandle {
-  open: (position: PopoverPosition, sentence: string) => void;
+  open: (
+    position: PopoverPosition,
+    sentence: string | undefined,
+    annotations: SpanAnnotationReadResolved[] | undefined
+  ) => void;
   close: () => void;
 }
 
@@ -20,6 +34,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [sentence, setSentence] = useState<string>();
+  const [annotations, setAnnotations] = useState<SpanAnnotationReadResolved[]>();
 
   // global client state (redux)
   const dispatch = useAppDispatch();
@@ -31,10 +46,15 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   }));
 
   // methods
-  const openContextMenu = (position: PopoverPosition, sentence: string) => {
+  const openContextMenu = (
+    position: PopoverPosition,
+    sentence: string | undefined,
+    annotations: SpanAnnotationReadResolved[] | undefined
+  ) => {
     setIsPopoverOpen(true);
     setPosition(position);
     setSentence(sentence);
+    setAnnotations(annotations);
   };
 
   const closeContextMenu = (reason?: "backdropClick" | "escapeKeyDown") => {
@@ -63,6 +83,12 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
     navigate("../search");
   };
 
+  const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
+    dispatch(SearchActions.addFilter(createCodeFilter(anno.code.id, anno.span_text)));
+    closeContextMenu();
+    navigate("../search");
+  };
+
   return (
     <Popover
       open={isPopoverOpen}
@@ -79,7 +105,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
       }}
       onContextMenu={handleContextMenu}
     >
-      <List>
+      <List dense>
         <ListItem disablePadding>
           <ListItemButton onClick={handleSentenceSimilaritySearch} disabled={!sentence}>
             <ListItemIcon>
@@ -96,6 +122,21 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
             <ListItemText primary="Find similar images" />
           </ListItemButton>
         </ListItem>
+        {annotations &&
+          annotations.map((anno) => (
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleAddFilter(anno)}>
+                <ListItemIcon>
+                  <SearchIcon />
+                </ListItemIcon>
+                <ListItemText primary="Add filter: " />
+                <Box
+                  style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 8 }}
+                />
+                <ListItemText primary={`${anno.code.name}: ${anno.span_text}`} />
+              </ListItemButton>
+            </ListItem>
+          ))}
       </List>
     </Popover>
   );

@@ -8,10 +8,11 @@ import {
   ProjectRead,
   ProjectService,
   ProjectUpdate,
-  UserRead,
+  UserRead
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
+import { useSelectEnabledCodes } from "./utils";
 
 //tags
 const useGetAllTags = (projectId: number) =>
@@ -138,20 +139,19 @@ const useRemoveUser = () =>
   });
 
 // codes
-const useGetAllCodes = (projectId: number) =>
-  useQuery<CodeRead[], Error>(
+const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
+  const selectEnabledCodes = useSelectEnabledCodes();
+  return useQuery<CodeRead[], Error>(
     [QueryKey.PROJECT_CODES, projectId],
     () =>
       ProjectService.getProjectCodesProjectProjIdCodeGet({
         projId: projectId,
       }),
     {
-      select: (codes) => {
-        const arrayForSort = [...codes];
-        return arrayForSort.sort((a, b) => a.id - b.id);
-      },
+      select: returnAll ? undefined : selectEnabledCodes,
     }
   );
+};
 
 // memo
 const useGetMemo = (projectId: number | undefined, userId: number | undefined) =>

@@ -13,7 +13,12 @@ import { SearchResultItem } from "./SearchResultItem";
 import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
 import { AttachedObjectType } from "../../../api/openapi";
 
-function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnCheckboxChange }: SearchResultItem) {
+function SearchResultDocumentTableRow({
+  sdocId,
+  handleClick,
+  handleOnContextMenu,
+  handleOnCheckboxChange,
+}: SearchResultItem) {
   // router
   const { projectId, sdocId: urlSdocId } = useParams() as { projectId: string; sdocId: string | undefined };
 
@@ -33,7 +38,7 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
   return (
     <TableRow
       hover
-      onClick={() => sdoc.isSuccess && handleClick(sdoc.data)}
+      onClick={() => sdoc.isSuccess && handleClick(sdoc.data.id)}
       role="checkbox"
       aria-checked={isSelected}
       tabIndex={-1}
@@ -89,4 +94,4 @@ function SearchResultRow({ sdocId, handleClick, handleOnContextMenu, handleOnChe
   );
 }
 
-export default SearchResultRow;
+export default SearchResultDocumentTableRow;

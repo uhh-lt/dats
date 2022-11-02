@@ -10,20 +10,22 @@ import { useAppSelector } from "../../../plugins/ReduxHooks";
 import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
 
 interface SearchResultsToolbarProps {
-  searchResultIds: number[];
+  searchResultDocumentIds: number[];
+  numSearchResults: number;
 }
 
-function SearchResultsToolbar({ searchResultIds, ...props }: SearchResultsToolbarProps & ToolbarProps) {
+function SearchResultsToolbar({
+  searchResultDocumentIds,
+  numSearchResults,
+  ...props
+}: SearchResultsToolbarProps & ToolbarProps) {
   // global client state (redux)
   const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
   const isListView = useAppSelector((state) => state.search.isListView);
 
-  // computed
-  const numSearchResults = searchResultIds.length;
-
   return (
     <Toolbar disableGutters variant="dense" sx={{ minHeight: "52px", p: "0px 4px" }} {...props}>
-      {!isListView && <ToggleAllDocumentsButton searchResultIds={searchResultIds} />}
+      {!isListView && <ToggleAllDocumentsButton sdocIds={searchResultDocumentIds} />}
       {numSelectedDocuments > 0 && (
         <>
           <Typography color="inherit" variant="subtitle1" component="div">

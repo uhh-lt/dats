@@ -7,13 +7,13 @@ import {
   SearchService,
   SimSearchSentenceHit,
   SpanEntityDocumentFrequency,
-  SpanEntityFrequency,
   TagStat,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import { orderFilter, SearchFilter } from "../views/search/SearchFilter";
 import queryClient from "../plugins/ReactQueryClient";
 import { useAppSelector } from "../plugins/ReduxHooks";
+import { useAuth } from "../auth/AuthProvider";
 
 export enum SearchResultsType {
   // type DOCUMENTS returns data: number[]
@@ -40,12 +40,12 @@ export function getSearchResultIds(results: SearchResults) {
   }
 }
 
-// TODO: merge useSearchDocumentsByProjectIdAndFilters and useSearchDocumentsByProjectIdAndTagId
 const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: SearchFilter[]) => {
+  const { user } = useAuth();
   const findTextModality = useAppSelector((state) => state.search.findTextModality);
   // const findImageModality = useAppSelector((state) => state.search.findImageModality);
   return useQuery<SearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filters, findTextModality],
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, user.data?.id, filters, findTextModality],
     async () => {
       const { keywords, tags, codes, texts, sentences, files } = orderFilter(filters);
       if (sentences.length === 1) {
@@ -81,6 +81,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
         const sdocIds = await SearchService.searchSdocsSearchSdocPost({
           requestBody: {
             proj_id: projectId,
+            user_ids: user.data ? [user.data.id] : undefined,
             span_entities: codes.length > 0 ? codes : undefined,
             tag_ids: tags.length > 0 ? tags : undefined,
             keywords: keywords.length > 0 ? keywords : undefined,
@@ -113,29 +114,16 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
     { enabled: !!tagId && !!projectId }
   );
 
-const useSearchEntityStats = (projectId: number, filters: SearchFilter[]) =>
-  useQuery<SpanEntityFrequency[], Error>([QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters], () => {
-    const { keywords, tags, codes, texts } = orderFilter(filters);
-    return SearchService.searchSpanEntityStatsSearchEntityStatsPost({
-      requestBody: {
-        proj_id: projectId,
-        span_entities: codes.length > 0 ? codes : undefined,
-        tag_ids: tags.length > 0 ? tags : undefined,
-        keywords: keywords.length > 0 ? keywords : undefined,
-        search_terms: texts.length > 0 ? texts : undefined,
-        all_tags: true,
-      },
-    });
-  });
-
-const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]) =>
-  useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
-    [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, filters],
+const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]) => {
+  const { user } = useAuth();
+  return useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
+    [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, user.data?.id, filters],
     async () => {
       const { keywords, tags, codes, texts } = orderFilter(filters);
       const data = await SearchService.searchEntityDocumentStatsSearchEntityDocumentStatsPost({
         requestBody: {
           proj_id: projectId,
+          user_ids: user.data ? [user.data.id] : undefined,
           span_entities: codes.length > 0 ? codes : undefined,
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
@@ -146,13 +134,16 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
       return new Map(Object.entries(data.stats).map((x) => [parseInt(x[0]), x[1]]));
     }
   );
+};
 
-const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) =>
-  useQuery<KeywordStat[], Error>([QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, filters], () => {
+const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
+  const { user } = useAuth();
+  return useQuery<KeywordStat[], Error>([QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, user.data?.id, filters], () => {
     const { keywords, tags, codes, texts } = orderFilter(filters);
     return SearchService.searchKeywordStatsSearchKeywordStatsPost({
       requestBody: {
         proj_id: projectId,
+        user_ids: user.data ? [user.data.id] : undefined,
         span_entities: codes.length > 0 ? codes : undefined,
         tag_ids: tags.length > 0 ? tags : undefined,
         keywords: keywords.length > 0 ? keywords : undefined,
@@ -161,15 +152,18 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) =>
       },
     });
   });
+};
 
-const useSearchTagStats = (projectId: number, filters: SearchFilter[]) =>
-  useQuery<TagStat[], Error>(
-    [QueryKey.SEARCH_TAG_STATISTICS, projectId, filters],
+const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
+  const { user } = useAuth();
+  return useQuery<TagStat[], Error>(
+    [QueryKey.SEARCH_TAG_STATISTICS, projectId, user.data?.id, filters],
     () => {
       const { keywords, tags, codes, texts } = orderFilter(filters);
       return SearchService.searchTagStatsSearchTagStatsPost({
         requestBody: {
           proj_id: projectId,
+          user_ids: user.data ? [user.data.id] : undefined,
           span_entities: codes.length > 0 ? codes : undefined,
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
@@ -187,6 +181,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) =>
       },
     }
   );
+};
 
 const useSearchMemoContent = (params: MemoContentQuery) =>
   useQuery<MemoRead[], Error>(
@@ -236,7 +231,6 @@ const useSentenceSimilaritySearch = (projectId: number, filters: SearchFilter[])
   );
 
 const SearchHooks = {
-  useSearchEntityStats,
   useSearchEntityDocumentStats,
   useSearchKeywordStats,
   useSearchTagStats,

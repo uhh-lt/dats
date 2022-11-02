@@ -129,7 +129,7 @@ function SentenceResultCard({
       onContextMenu={handleOnContextMenu(sdocId)}
       raised={isSelected || (parseInt(urlSdocId || "") === sdocId && selectedDocumentIds.length === 0)}
     >
-      <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data)}>
+      <CardActionArea onClick={() => handleClick(sdocId)}>
         <StyledCardHeader
           title={
             <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>

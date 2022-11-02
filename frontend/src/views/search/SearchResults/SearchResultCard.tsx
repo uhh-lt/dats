@@ -57,7 +57,7 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
       onContextMenu={handleOnContextMenu(sdocId)}
       raised={isSelected || (parseInt(urlSdocId || "") === sdocId && selectedDocumentIds.length === 0)}
     >
-      <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data)}>
+      <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data.id)}>
         <StyledCardHeader
           title={
             <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>

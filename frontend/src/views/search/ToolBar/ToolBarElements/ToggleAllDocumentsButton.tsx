@@ -5,10 +5,10 @@ import { SearchActions } from "../../searchSlice";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
 
 interface ToggleAllDocumentsButtonProps {
-  searchResultIds: number[];
+  sdocIds: number[];
 }
 
-function ToggleAllDocumentsButton({ searchResultIds }: ToggleAllDocumentsButtonProps) {
+function ToggleAllDocumentsButton({ sdocIds }: ToggleAllDocumentsButtonProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
   const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
@@ -17,8 +17,8 @@ function ToggleAllDocumentsButton({ searchResultIds }: ToggleAllDocumentsButtonP
 
   // computed
   const numTotalDocuments = useMemo(
-    () => searchResultIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length,
-    [page, rowsPerPage, searchResultIds]
+    () => sdocIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length,
+    [page, rowsPerPage, sdocIds]
   );
 
   // effects
@@ -30,9 +30,7 @@ function ToggleAllDocumentsButton({ searchResultIds }: ToggleAllDocumentsButtonP
   // ui event handlers
   const handleToggleAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      dispatch(
-        SearchActions.setSelectedDocuments(searchResultIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage))
-      );
+      dispatch(SearchActions.setSelectedDocuments(sdocIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)));
       return;
     }
     dispatch(SearchActions.clearSelectedDocuments());

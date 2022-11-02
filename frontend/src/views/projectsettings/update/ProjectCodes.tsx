@@ -8,6 +8,7 @@ import Tree, { Node } from "ts-tree-structure";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
 import CodeEditDialog from "../../annotation/CodeExplorer/CodeEditDialog";
+import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton";
 
 interface ProjectCodesProps {
   project: ProjectRead;
@@ -18,7 +19,7 @@ function ProjectCodes({ project }: ProjectCodesProps) {
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
 
   // global server state (react query)
-  const projectCodes = ProjectHooks.useGetAllCodes(project.id);
+  const projectCodes = ProjectHooks.useGetAllCodes(project.id, true);
 
   // computed
   const codeTree: Node<ICodeTree> | null = useMemo(() => {
@@ -59,7 +60,12 @@ function ProjectCodes({ project }: ProjectCodesProps) {
             expanded={expandedCodeIds}
             onExpandClick={handleExpandClick}
             onCollapseClick={handleCollapseClick}
-            renderActions={(node) => <CodeEditButton code={node.code} />}
+            renderActions={(node) => (
+              <>
+                <CodeToggleEnabledButton code={node} />
+                <CodeEditButton code={node.code} />
+              </>
+            )}
           />
           <CodeEditDialog codes={projectCodes.data} />
         </>

@@ -1,8 +1,6 @@
-import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { CodeRead, SpanEntityFrequency } from "../../api/openapi";
 import ProjectHooks from "../../api/ProjectHooks";
-import SearchHooks from "../../api/SearchHooks";
 import { EntityData, LinkData } from "./SearchResultsGraph";
 import { useAppSelector } from "../../plugins/ReduxHooks";
 
@@ -93,15 +91,16 @@ export default function useComputeGraph() {
   const projectCodes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
   // query code statistics for all provided sdocIds
-  const codeStats = SearchHooks.useSearchEntityStats(parseInt(projectId), filters);
+  // const codeStats = SearchHooks.useSearchEntityStats(parseInt(projectId), filters);
 
   // aggregate the query result, creating a mapping of code -> text -> count
-  const { nodeResult, linkResult } = useMemo(() => {
-    if (codeStats.data && projectCodes.data) {
-      return computeGraph(projectCodes.data, codeStats.data);
-    }
-    return computeGraph([], []);
-  }, [codeStats.data, projectCodes.data]);
+  const { nodeResult, linkResult } = computeGraph([], []);
+  // const { nodeResult, linkResult } = useMemo(() => {
+  //   if (codeStats.data && projectCodes.data) {
+  //     return computeGraph(projectCodes.data, codeStats.data);
+  //   }
+  //   return computeGraph([], []);
+  // }, [codeStats.data, projectCodes.data]);
 
   return { nodeResult, linkResult };
 }
