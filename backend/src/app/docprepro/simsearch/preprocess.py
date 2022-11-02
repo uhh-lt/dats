@@ -70,7 +70,9 @@ def index_text_document(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     encoded_sentences = encoders[IndexType.TEXT].encode(sentences=sentence_texts,
                                                         batch_size=text_encoder_batch_size,
                                                         show_progress_bar=True,
-                                                        normalize_embeddings=True)
+                                                        normalize_embeddings=True,
+                                                        convert_to_numpy=True,
+                                                        device=conf.docprepro.simsearch.text_encoder.device)
 
     # add to index (with the IDs of the SpanAnnotation IDs)
     faisss.add_to_index(embeddings=encoded_sentences,
@@ -112,7 +114,9 @@ def index_image_document(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     encoded_images = encoders[IndexType.IMAGE].encode(sentences=images,
                                                       batch_size=text_encoder_batch_size,
                                                       show_progress_bar=True,
-                                                      normalize_embeddings=True)
+                                                      normalize_embeddings=True,
+                                                      convert_to_numpy=True,
+                                                      device=conf.docprepro.simsearch.text_encoder.device)
 
     # close the image files again
     map(lambda image: image.close(), images)
@@ -159,14 +163,16 @@ def _encode_query(query: Union[str, Image.Image]) -> np.ndarray:
         encoded_query = encoders[IndexType.TEXT].encode(sentences=query,
                                                         batch_size=1,
                                                         show_progress_bar=False,
-                                                        normalize_embeddings=True)
+                                                        normalize_embeddings=True,
+                                                        device="cpu")
 
     elif isinstance(query, Image.Image):
         # noinspection PyTypeChecker
         encoded_query = encoders[IndexType.IMAGE].encode(sentences=query,
                                                          batch_size=1,
                                                          show_progress_bar=False,
-                                                         normalize_embeddings=True)
+                                                         normalize_embeddings=True,
+                                                         device="cpu")
     else:
         raise NotImplementedError("Only Strings or Images are supported as Query!")
 
