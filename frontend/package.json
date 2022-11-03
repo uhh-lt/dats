@@ -37,8 +37,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "update-api": "rm src/openapi.json; curl http://localhost:14140/openapi.json | prettier --stdin-filepath openapi.json > src/openapi.json",
-    "clean-api": "node postprocessOpenapi.js",
+    "update-api": "rm src/openapi.json; curl http://localhost:2120/openapi.json | node postprocessOpenapi.js > src/openapi.json && prettier -w src/openapi.json",
     "generate": "openapi --input src/openapi.json --useOptions --output src/api/openapi",
     "generate-dev": "rm -rf src/api/openapi; openapi --input src/openapi.json --useOptions --output src/api/openapi; prettier -w src/api/openapi"
   },

@@ -1,8 +1,7 @@
 const fs = require("fs");
-const path = "src/openapi.json";
 
 // read openapi file
-let openapi = JSON.parse(fs.readFileSync(path));
+let openapi = JSON.parse(fs.readFileSync(0));
 
 Object.values(openapi.paths).forEach((pathData) => {
   Object.values(pathData).forEach((operation) => {
@@ -14,7 +13,4 @@ Object.values(openapi.paths).forEach((pathData) => {
   });
 });
 
-console.log(openapi.paths);
-
-// write openapi file
-fs.writeFileSync(path, JSON.stringify(openapi));
+fs.writeSync(process.stdout.fd, JSON.stringify(openapi));

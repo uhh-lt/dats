@@ -23,7 +23,7 @@ interface AuthContextProps {
 export const AuthProvider = ({ children }: AuthContextProps): any => {
   // state
   const [accessToken, setAccessToken] = useState<string | undefined>(localStorage.getItem("dwts-access") || undefined);
-  const user = useQuery<UserRead, Error>(["me", accessToken], UserService.getMeUserMeGet, {
+  const user = useQuery<UserRead, Error>(["me", accessToken], UserService.getMe, {
     enabled: !!accessToken,
     retry: false,
   });
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
    * @throws ApiError
    */
   const login = async (username: string, password: string) => {
-    const authData = await UserService.loginUserLoginPost({ formData: { username, password } });
+    const authData = await UserService.login({ formData: { username, password } });
     localStorage.setItem("dwts-access", authData.access_token);
     OpenAPI.TOKEN = authData.access_token;
     setAccessToken(authData.access_token);
