@@ -326,11 +326,13 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         if only_finished:
             inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
                                                   self.model.id.in_(list(sdoc_ids)),
+                                                  CodeORM.name != "SENTENCE",
                                                   self.model.status == SDocStatus.finished,
                                                   AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
         else:
             inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
                                                   self.model.id.in_(list(sdoc_ids)),
+                                                  CodeORM.name != "SENTENCE",
                                                   AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
 
         doc_freq = func.count(inner_query.c.sdoc_id).label("doc_freq")
