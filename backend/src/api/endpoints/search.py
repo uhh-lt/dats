@@ -1,4 +1,3 @@
-from collections import Counter
 from typing import List, Dict, Union
 
 from fastapi import APIRouter, Depends
@@ -55,12 +54,11 @@ async def search_entity_document_stats(*,
              summary="Returns KeywordStats for the given SourceDocuments.",
              description="Returns KeywordStats for the given SourceDocuments.")
 async def search_keyword_stats(*,
-                               query_params: SearchSDocsQueryParameters) -> List[KeywordStat]:
+                               query_params: SearchSDocsQueryParameters,
+                               top_k: int = 50) -> List[KeywordStat]:
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
-    keywords = ElasticSearchService().get_sdoc_keywords_by_sdoc_ids(sdoc_ids=set(sdoc_ids),
-                                                                    proj_id=query_params.proj_id)
-    keyword_counts = Counter([kw for x in keywords for kw in x.keywords])
-    return [KeywordStat(keyword=keyword, count=count) for keyword, count in keyword_counts.most_common()]
+    return ElasticSearchService().get_sdoc_keyword_counts_by_sdoc_ids(proj_id=query_params.proj_id,
+                                                                      sdoc_ids=set(sdoc_ids), top_k=top_k)
 
 
 @router.post("/tag_stats", tags=tags,

@@ -9,7 +9,7 @@ from omegaconf import OmegaConf
 from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchDocumentRead, ElasticSearchMemoCreate, \
     ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedElasticSearchDocumentHits, PaginatedMemoSearchResults, \
-    ElasticMemoHit
+    ElasticMemoHit, KeywordStat
 from app.core.data.dto.source_document import SourceDocumentContent, SourceDocumentTokens, \
     SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
@@ -264,6 +264,32 @@ class ElasticSearchService(metaclass=SingletonMeta):
         return [SourceDocumentKeywords(source_document_id=esdoc.sdoc_id, keywords=esdoc.keywords)
                 for esdoc
                 in self.get_esdocs_by_sdoc_ids(proj_id=proj_id, sdoc_ids=sdoc_ids, fields=fields)]
+
+    def get_sdoc_keyword_counts_by_sdoc_ids(self,
+                                            *,
+                                            proj_id: int,
+                                            sdoc_ids: Set[int],
+                                            top_k: int = 50) -> List[KeywordStat]:
+        # TODO Flo: build a generic aggregation function like __search
+        res = self.__client.search(index=self.__get_index_name(proj_id=proj_id),
+                                   size=0,
+                                   query={
+                                       "terms": {
+                                           "sdoc_id": list(sdoc_ids)
+                                       }
+                                   },
+                                   aggs={
+                                       "keyword_counts":
+                                           {
+                                               "terms":
+                                                   {
+                                                       "field": "keywords",
+                                                       "size": top_k
+                                                   }
+                                           }
+                                   })
+        stats = OmegaConf.create(res).aggregations.keyword_counts.buckets
+        return [KeywordStat(keyword=s["key"], count=s["doc_count"]) for s in stats]
 
     def delete_document_from_index(self,
                                    proj_id: int,
