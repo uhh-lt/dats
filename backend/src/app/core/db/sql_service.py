@@ -37,6 +37,9 @@ from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.span_group import SpanGroupORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.action import ActionORM
+
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from sqlalchemy.orm import sessionmaker, Session

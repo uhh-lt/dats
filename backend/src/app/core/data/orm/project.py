@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.user import UserORM
+    from app.core.data.orm.action import ActionORM
 
 
 class ProjectORM(ORMBase):
@@ -43,6 +44,9 @@ class ProjectORM(ORMBase):
                                                          back_populates="project",
                                                          passive_deletes=True)
 
+    actions: List["ActionORM"] = relationship("ActionORM",
+                                              back_populates="project",
+                                              passive_deletes=True)
     # many to many
     users: List["UserORM"] = relationship("UserORM",
                                           secondary="ProjectUserLinkTable".lower(),
