@@ -26,7 +26,8 @@ class ObjectHandleORM(ORMBase):
     # one to many
     attached_memos: List["MemoORM"] = relationship("MemoORM",
                                                    back_populates="attached_to",
-                                                   passive_deletes=True)
+                                                   passive_deletes=True,
+                                                   foreign_keys="memo.c.attached_to_id")
 
     # one to one (ObjectHandle is child)
     user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), index=True)
@@ -35,9 +36,9 @@ class ObjectHandleORM(ORMBase):
     project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), index=True)
     project: "ProjectORM" = relationship("ProjectORM", back_populates="object_handle")
 
-    # FIXME Flo: SQLAlchemy ambiguous FK issue...
-    # memo_id = Column(Integer, ForeignKey('memo.id', ondelete="CASCADE"), index=True)
-    # memo = relationship("MemoORM", back_populates="object_handle", foreign_keys=[memo_id])
+    memo_id = Column(Integer, ForeignKey('memo.id', ondelete="CASCADE"), index=True)
+    memo = relationship("MemoORM", back_populates="object_handle",
+                        foreign_keys="objecthandle.c.memo_id")
 
     code_id = Column(Integer, ForeignKey('code.id', ondelete="CASCADE"), index=True)
     code: "CodeORM" = relationship("CodeORM", back_populates="object_handle")
@@ -84,13 +85,12 @@ class ObjectHandleORM(ORMBase):
           unique=True)
 
     __table_args__ = (
-        # FIXME Flo: SQLAlchemy ambiguous FK issue...
-        #  + CASE WHEN memo_id IS NULL THEN 0 ELSE 1 END
         # CHECK constraint that asserts that exactly one of the IDs is NOT NULL
         CheckConstraint("""(
                         CASE WHEN user_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN project_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN code_id IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN memo_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN current_code_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN source_document_id IS NULL THEN 0 ELSE 1 END
                         + CASE WHEN source_document_metadata_id IS NULL THEN 0 ELSE 1 END

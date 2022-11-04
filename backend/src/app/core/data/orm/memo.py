@@ -20,15 +20,18 @@ class MemoORM(ORMBase):
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
-    attached_to_id = Column(Integer, ForeignKey('objecthandle.id', ondelete="CASCADE"), nullable=False, index=True)
-    attached_to: "ObjectHandleORM" = relationship("ObjectHandleORM", uselist=False, back_populates="attached_memos")
-
     # FIXME Flo: SQLAlchemy ambiguous FK issue...
-    # object_handle = relationship("ObjectHandleORM",
-    #                              uselist=False,
-    #                              back_populates="memo",
-    #                              cascade="all, delete",
-    #                              passive_deletes=True)
+    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
+                                                    uselist=False,
+                                                    back_populates="memo",
+                                                    passive_deletes=True,
+                                                    foreign_keys="objecthandle.c.memo_id")
+
+    attached_to_id = Column(Integer, ForeignKey('objecthandle.id', ondelete="CASCADE"), nullable=False, index=True)
+    attached_to: "ObjectHandleORM" = relationship("ObjectHandleORM",
+                                                  uselist=False,
+                                                  back_populates="attached_memos",
+                                                  foreign_keys="memo.c.attached_to_id")
 
     # many to one
     project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), nullable=False, index=True)
