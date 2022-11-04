@@ -3200,6 +3200,14 @@
         "summary": "Returns KeywordStats for the given SourceDocuments.",
         "description": "Returns KeywordStats for the given SourceDocuments.",
         "operationId": "search_keyword_stats",
+        "parameters": [
+          {
+            "required": false,
+            "schema": { "title": "Top K", "type": "integer", "default": 50 },
+            "name": "top_k",
+            "in": "query"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }

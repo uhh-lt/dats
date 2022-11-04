@@ -94,12 +94,17 @@ export class SearchService {
    */
   public static searchKeywordStats({
     requestBody,
+    topK = 50,
   }: {
     requestBody: SearchSDocsQueryParameters;
+    topK?: number;
   }): CancelablePromise<Array<KeywordStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/keyword_stats",
+      query: {
+        top_k: topK,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
