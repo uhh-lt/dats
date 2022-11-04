@@ -3,7 +3,10 @@ from typing import Optional, List
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
+from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType, NoSuchElementError
+from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.dto.action import ActionType, ActionTargetObjectType
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 
@@ -33,7 +36,19 @@ class CRUDAnnotationDocument(CRUDBase[AnnotationDocumentORM, AnnotationDocumentC
         statement = delete(self.model).where(self.model.source_document_id == sdoc_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
-        return list(map(lambda t: t[0], removed_ids))
+
+        removed_ids = list(map(lambda t: t[0], removed_ids))
+
+        from app.core.data.crud.source_document import crud_sdoc
+        proj_id = crud_sdoc.read(db=db, id=sdoc_id).project_id
+
+        for rid in removed_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=SYSTEM_USER_ID,
+                                          action_type=ActionType.DELETE,
+                                          target=ActionTargetObjectType.annotation_document,
+                                          target_id=rid)
+        return removed_ids
 
 
 crud_adoc = CRUDAnnotationDocument(AnnotationDocumentORM)

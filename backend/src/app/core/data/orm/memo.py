@@ -20,7 +20,6 @@ class MemoORM(ORMBase):
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
     # one to one
-    # FIXME Flo: SQLAlchemy ambiguous FK issue...
     object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
                                                     uselist=False,
                                                     back_populates="memo",

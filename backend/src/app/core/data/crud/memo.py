@@ -4,8 +4,9 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete, and_
 from sqlalchemy.orm import Session
 
+from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.crud.object_handle import crud_object_handle
+from app.core.data.dto.action import ActionType, ActionTargetObjectType
 from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.dto.search import ElasticSearchMemoCreate
@@ -86,7 +87,16 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
                                              self.model.project_id == proj_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
-        return list(map(lambda t: t[0], removed_ids))
+
+        removed_ids = list(map(lambda t: t[0], removed_ids))
+
+        for rid in removed_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=user_id,
+                                          action_type=ActionType.DELETE,
+                                          target=ActionTargetObjectType.bbox_annotation,
+                                          target_id=rid)
+        return removed_ids
 
     def exists_for_user_and_object_handle(self, db: Session, *, user_id: int, attached_to_id: int) -> bool:
         return db.query(self.model.id).filter(self.model.user_id == user_id,
@@ -101,9 +111,17 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+
+        ActionService().create_action(proj_id=create_dto.project_id,
+                                      user_id=create_dto.user_id,
+                                      action_type=ActionType.CREATE,
+                                      target=ActionTargetObjectType.memo,
+                                      target_id=db_obj.id)
         return db_obj
 
     def create_for_code(self, db: Session, code_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the Code
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(code_id=code_id))
@@ -114,6 +132,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return db_obj
 
     def create_for_project(self, db: Session, project_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the Project
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(project_id=project_id))
@@ -124,6 +144,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return db_obj
 
     def create_for_sdoc(self, db: Session, sdoc_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the SourceDocument
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(source_document_id=sdoc_id))
@@ -134,6 +156,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return db_obj
 
     def create_for_adoc(self, db: Session, adoc_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the AnnotationDocument
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(annotation_document_id=adoc_id))
@@ -144,6 +168,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return db_obj
 
     def create_for_span_annotation(self, db: Session, span_anno_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the SpanAnnotation
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(span_annotation_id=span_anno_id))
@@ -154,6 +180,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return db_obj
 
     def create_for_span_group(self, db: Session, span_group_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the SpanGroup
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(span_group_id=span_group_id))
@@ -164,6 +192,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return db_obj
 
     def create_for_bbox_annotation(self, db: Session, bbox_anno_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the BBoxAnnotation
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(bbox_annotation_id=bbox_anno_id))
@@ -174,6 +204,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return db_obj
 
     def create_for_document_tag(self, db: Session, doc_tag_id: int, create_dto: MemoCreate) -> MemoORM:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         # create an ObjectHandle for the DocumentTag
         oh_db_obj = crud_object_handle.create(db=db,
                                               create_dto=ObjectHandleCreate(document_tag_id=doc_tag_id))
@@ -186,6 +218,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
     # TODO Flo: Not sure if this actually belongs here...
     @staticmethod
     def get_memo_read_dto_from_orm(db: Session, db_obj: MemoORM) -> MemoRead:
+        # Flo: this is necessary to avoid circular imports.
+        from app.core.data.crud.object_handle import crud_object_handle
         attached_to = crud_object_handle.resolve_handled_object(db=db, handle=db_obj.attached_to)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         if isinstance(attached_to, CodeORM):

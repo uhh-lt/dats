@@ -88,6 +88,7 @@ class ObjectHandleORM(ORMBase):
           coalesce(span_group_id, 0),
           coalesce(document_tag_id, 0),
           coalesce(action_id, 0),
+          coalesce(memo_id, 0),
           unique=True)
 
     __table_args__ = (
@@ -119,5 +120,6 @@ class ObjectHandleORM(ORMBase):
                          "span_group_id",
                          "document_tag_id",
                          "action_id",
+                         "memo_id",
                          name="UC_only_one_object_handle_per_instance"),
     )

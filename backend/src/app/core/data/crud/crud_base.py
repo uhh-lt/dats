@@ -4,6 +4,7 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.core.data.dto.action import ActionType
 from app.core.data.orm.orm_base import ORMBase
 
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
@@ -53,6 +54,9 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+
+        self.__create_action(db_obj, ActionType.CREATE)
+
         return db_obj
 
     def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> Optional[ORMModelType]:
@@ -65,10 +69,34 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+
+        self.__create_action(db_obj=db_obj, action_type=ActionType.UPDATE)
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
         db_obj = self.read(db=db, id=id)
+
+        self.__create_action(db_obj=db_obj, action_type=ActionType.DELETE)
+
+        # delete the ORM after the action created so that we can read its ID
         db.delete(db_obj)
         db.commit()
         return db_obj
+
+    @staticmethod
+    def __create_action(db_obj: ORMModelType, action_type: ActionType) -> None:
+        # local import to avoid circular dependency
+        from app.core.data.crud.user import SYSTEM_USER_ID
+        from app.core.data.orm.util import get_parent_project_id, get_action_target_type
+        from app.core.data.action_service import ActionService
+
+        action_target_type = get_action_target_type(db_obj)
+        if action_target_type is not None:
+
+            proj_id = get_parent_project_id(db_obj)
+            if proj_id is not None:
+                ActionService().create_action(proj_id=proj_id,
+                                              user_id=SYSTEM_USER_ID,  # FIXME use correct user
+                                              action_type=action_type,
+                                              target=action_target_type,
+                                              target_id=db_obj.id)

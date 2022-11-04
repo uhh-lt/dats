@@ -16,6 +16,7 @@ class ObjectHandleBaseDTO(BaseModel):
     span_group_id: Optional[int] = None
     bbox_annotation_id: Optional[int] = None
     document_tag_id: Optional[int] = None
+    memo_id: Optional[int] = None
 
     # noinspection PyMethodParameters
     @root_validator

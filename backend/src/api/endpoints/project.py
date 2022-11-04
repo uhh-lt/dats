@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import skip_limit_params, get_db_session
 from api.util import get_object_memos
+from app.core.data.action_service import ActionService
+from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
@@ -13,6 +15,7 @@ from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import mime_type_supported
 from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
+from app.core.data.dto.action import ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
@@ -285,6 +288,18 @@ async def get_user_memos_of_project(*,
     # TODO Flo: only if the user has access?
     db_objs = crud_memo.read_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id, only_starred=only_starred)
     return [crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs]
+
+
+@router.get("/{proj_id}/user/{user_id}/action", tags=tags,
+            response_model=List[ActionRead],
+            summary="Returns all Actions of the Project from a User",
+            description="Returns all Actions of the Project from a User")
+async def get_user_actions_of_project(*,
+                                      proj_id: int,
+                                      user_id: int,
+                                      db: Session = Depends(get_db_session)) -> List[ActionRead]:
+    # TODO Flo: only if the user has access?
+    return ActionService().get_user_actions_of_project(db=db, proj_id=proj_id, user_id=user_id)
 
 
 @router.delete("/{proj_id}/user/{user_id}/memo", tags=tags,

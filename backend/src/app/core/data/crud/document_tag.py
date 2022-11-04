@@ -3,7 +3,10 @@ from typing import List
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
+from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.dto.action import ActionType, ActionTargetObjectType
 from app.core.data.dto.document_tag import DocumentTagCreate, DocumentTagUpdate
 from app.core.data.orm.document_tag import DocumentTagORM, SourceDocumentDocumentTagLinkTable
 
@@ -13,10 +16,18 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         statement = delete(self.model).where(self.model.project_id == proj_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
-        return list(map(lambda t: t[0], removed_ids))
 
-    @staticmethod
-    def link_multiple_document_tags(db: Session, *, sdoc_ids: List[int], tag_ids: List[int]) -> int:
+        removed_ids = list(map(lambda t: t[0], removed_ids))
+
+        for rid in removed_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=SYSTEM_USER_ID,
+                                          action_type=ActionType.DELETE,
+                                          target=ActionTargetObjectType.document_tag,
+                                          target_id=rid)
+        return removed_ids
+
+    def link_multiple_document_tags(self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]) -> int:
         """
         Links all SDocs with all DocTags
         """
@@ -39,11 +50,19 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             insert_values).fetchall()
         db.commit()
 
+        # get the project id (assuming all doc tags and sdocs are in the same project!)
+        proj_id = self.read(db, tag_ids[0]).project_id
+
+        for sid in sdoc_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=SYSTEM_USER_ID,  # FIXME use correct user
+                                          action_type=ActionType.UPDATE,
+                                          target=ActionTargetObjectType.code,
+                                          target_id=sid)
+
         return len(new_rows)
 
-    # noinspection PyUnresolvedReferences
-    @staticmethod
-    def unlink_multiple_document_tags(db: Session, *, sdoc_ids: List[int], tag_ids: List[int]) -> int:
+    def unlink_multiple_document_tags(self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]) -> int:
         """
         Unlinks all DocTags with all SDocs
         """
@@ -54,6 +73,16 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             ).returning(SourceDocumentDocumentTagLinkTable.source_document_id)
         ).fetchall()
         db.commit()
+
+        # get the project id (assuming all doc tags and sdocs are in the same project!)
+        proj_id = self.read(db, tag_ids[0]).project_id
+
+        for sid in sdoc_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=SYSTEM_USER_ID,  # FIXME use correct user
+                                          action_type=ActionType.UPDATE,
+                                          target=ActionTargetObjectType.code,
+                                          target_id=sid)
 
         return len(del_rows)
 

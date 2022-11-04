@@ -4,12 +4,14 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.data.crud.action import crud_action
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.document_tag import crud_document_tag
+from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -17,10 +19,12 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.object_handle import ObjectHandleCreate
+from app.core.data.orm.action import ActionORM
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
+from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -43,7 +47,9 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "span_annotation_id": crud_span_anno,
         "bbox_annotation_id": crud_bbox_anno,
         "span_group_id": crud_span_group,
-        "user_id": crud_user
+        "user_id": crud_user,
+        "action_id": crud_action,
+        "memo_id": crud_memo
     }
 
     __obj_id_orm_type_map = {
@@ -57,7 +63,9 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "span_annotation_id": SpanAnnotationORM,
         "bbox_annotation_id": BBoxAnnotationORM,
         "span_group_id": SpanGroupORM,
-        "user_id": UserORM
+        "user_id": UserORM,
+        "action_id": ActionORM,
+        "memo_id": MemoORM
     }
 
     def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
@@ -102,11 +110,15 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
                                                                                     BBoxAnnotationORM,
                                                                                     SpanGroupORM,
                                                                                     UserORM,
+                                                                                    MemoORM,
+                                                                                    ActionORM,
                                                                                     None]:
-
+        target_id = None
         for target_id in self.__obj_id_crud_map.keys():
             if getattr(handle, target_id):
                 return self.__obj_id_crud_map[target_id].read(db=db, id=getattr(handle, target_id))
+
+        raise KeyError(f"Unknown target_id: {target_id}!")
 
 
 crud_object_handle = CRUDObjectHandle(ObjectHandleORM)

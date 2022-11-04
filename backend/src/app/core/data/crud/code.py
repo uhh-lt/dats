@@ -4,9 +4,11 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
+from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.dto.action import ActionType, ActionTargetObjectType
 from app.core.data.dto.code import CodeCreate, CodeUpdate
 from app.core.data.dto.current_code import CurrentCodeCreate
 from app.core.data.orm.code import CodeORM
@@ -29,6 +31,13 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         cc_db_obj = crud_current_code.create(db=db, create_dto=ccc)
 
         db.refresh(db_obj)
+
+        ActionService().create_action(proj_id=create_dto.project_id,
+                                      user_id=create_dto.user_id,
+                                      action_type=ActionType.UPDATE,
+                                      target=ActionTargetObjectType.code,
+                                      target_id=db_obj.id)
+
         return db_obj
 
     def create_system_codes_for_project(self, db: Session, proj_id: int) -> List[CodeORM]:
@@ -98,13 +107,30 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                                              self.model.project_id == proj_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
-        return list(map(lambda t: t[0], removed_ids))
+
+        removed_ids = list(map(lambda t: t[0], removed_ids))
+
+        for rid in removed_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=user_id,
+                                          action_type=ActionType.CREATE,
+                                          target=ActionTargetObjectType.code,
+                                          target_id=rid)
+        return removed_ids
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         statement = delete(self.model).where(self.model.project_id == proj_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
-        return list(map(lambda t: t[0], removed_ids))
+        removed_ids = list(map(lambda t: t[0], removed_ids))
+
+        for rid in removed_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=SYSTEM_USER_ID,
+                                          action_type=ActionType.CREATE,
+                                          target=ActionTargetObjectType.code,
+                                          target_id=rid)
+        return removed_ids
 
 
 crud_code = CRUDCode(CodeORM)

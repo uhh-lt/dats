@@ -4,10 +4,12 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete, and_
 from sqlalchemy.orm import Session
 
+from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.dto.action import ActionType, ActionTargetObjectType
 from app.core.data.dto.span_annotation import SpanAnnotationCreate, SpanAnnotationUpdate
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -30,6 +32,13 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
         db.commit()
 
         db.refresh(db_obj)
+
+        ActionService().create_action(proj_id=db_obj.annotation_document.source_document.project_id,
+                                      user_id=SYSTEM_USER_ID,  # FIXME use correct user
+                                      action_type=ActionType.CREATE,
+                                      target=ActionTargetObjectType.span_annotation,
+                                      target_id=db_obj.id)
+
         return db_obj
 
     def read_by_adoc(self,
@@ -60,7 +69,18 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
         statement = delete(self.model).where(self.model.annotation_document_id == adoc_id).returning(self.model.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
-        return list(map(lambda t: t[0], removed_ids))
+        removed_ids = list(map(lambda t: t[0], removed_ids))
+
+        from app.core.data.crud.annotation_document import crud_adoc
+        proj_id = crud_adoc.read(db=db, id=adoc_id).source_document.project_id
+
+        for rid in removed_ids:
+            ActionService().create_action(proj_id=proj_id,
+                                          user_id=SYSTEM_USER_ID,
+                                          action_type=ActionType.DELETE,
+                                          target=ActionTargetObjectType.span_annotation,
+                                          target_id=rid)
+        return removed_ids
 
     def remove_from_all_span_groups(self, db: Session, span_id: int) -> Optional[SpanAnnotationORM]:
         db_obj = self.read(db=db, id=span_id)
