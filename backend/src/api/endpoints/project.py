@@ -116,8 +116,9 @@ async def get_project_sdocs(*,
                                                            only_finished=only_finished,
                                                            **skip_limit)]
     total_sdocs = crud_sdoc.count_by_project(db=db, proj_id=proj_id, only_finished=only_finished)
-    has_more = (int(skip_limit['skip']) + len(sdocs_on_page)) < total_sdocs
     skip, limit = skip_limit.values()
+    # FIXME skip can be None
+    has_more = (int(skip) + len(sdocs_on_page)) < total_sdocs
     return PaginatedSourceDocumentReads(sdocs=sdocs_on_page,
                                         has_more=has_more,
                                         total=total_sdocs,
