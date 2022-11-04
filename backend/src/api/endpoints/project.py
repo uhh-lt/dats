@@ -171,7 +171,7 @@ async def associate_user_to_project(*,
                                     user_id: int,
                                     db: Session = Depends(get_db_session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.associate_user(db=db, id=proj_id, user_id=user_id)
+    user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
@@ -184,7 +184,7 @@ async def dissociate_user_from_project(*,
                                        user_id: int,
                                        db: Session = Depends(get_db_session)) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.dissociate_user(db=db, id=proj_id, user_id=user_id)
+    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 

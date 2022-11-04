@@ -24,7 +24,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         db.refresh(db_obj)
 
         # 2) associate the system user
-        self.associate_user(db=db, id=db_obj.id, user_id=SYSTEM_USER_ID)
+        self.associate_user(db=db, proj_id=project_id, user_id=SYSTEM_USER_ID)
 
         # 3) create system codes
         crud_code.create_system_codes_for_project(db=db, proj_id=db_obj.id)
@@ -42,16 +42,16 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return proj_db_obj
 
-    def associate_user(self, db: Session, *, id: int, user_id: int) -> UserORM:
-        proj_db_obj = self.read(db=db, id=id)
+    def associate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+        proj_db_obj = self.read(db=db, id=proj_id)
         user_db_obj = crud_user.read(db=db, id=user_id)
         proj_db_obj.users.append(user_db_obj)
         db.add(proj_db_obj)
         db.commit()
         return user_db_obj
 
-    def dissociate_user(self, db: Session, *, id: int, user_id: int) -> UserORM:
-        proj_db_obj = self.read(db=db, id=id)
+    def dissociate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+        proj_db_obj = self.read(db=db, id=proj_id)
         user_db_obj = crud_user.read(db=db, id=user_id)
         proj_db_obj.users.remove(user_db_obj)
         db.add(proj_db_obj)
