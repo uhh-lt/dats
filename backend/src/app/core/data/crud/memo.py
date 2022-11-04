@@ -89,7 +89,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         return list(map(lambda t: t[0], removed_ids))
 
     def exists_for_user_and_object_handle(self, db: Session, *, user_id: int, attached_to_id: int) -> bool:
-        return db.query(self.model.id).filter(self.model.user_idr == user_id,
+        return db.query(self.model.id).filter(self.model.user_id == user_id,
                                               self.model.attached_to_id == attached_to_id).first() is not None
 
     def __create_memo(self, create_dto: MemoCreate, db: Session, oh_db_obj: ObjectHandleORM):
