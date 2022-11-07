@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func
+from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class SourceDocumentORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String, unique=True, nullable=False, index=True)
+    filename = Column(String, nullable=False, index=True)
     content = Column(String, nullable=False, index=False)  # TODO Flo: This will go to ES soon!
     doctype = Column(String, nullable=False, index=True)
     status = Column(Integer, nullable=False, index=True)
@@ -46,3 +46,8 @@ class SourceDocumentORM(ORMBase):
                                                          secondary="SourceDocumentDocumentTagLinkTable".lower(),
                                                          back_populates="source_documents",
                                                          passive_deletes=True)
+    __table_args__ = (
+            UniqueConstraint("project_id",
+                             "filename",
+                             name="UC_unique_filename_in_project"),
+        )
