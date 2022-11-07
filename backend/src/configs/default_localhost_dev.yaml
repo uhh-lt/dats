@@ -9,7 +9,7 @@ api:
       secret: ${oc.env:JWT_SECRET, ""}
 
 repo:
-  root_directory: /home/7schneid/gitrepos/dwts/backend/backend_repo
+  root_directory: /home/7schneid/gitrepos/dwts/docker/backend_repo
   content_server:
     https: False
     host: ${oc.env:CONTENT_SERVER_HOST, 127.0.0.1}

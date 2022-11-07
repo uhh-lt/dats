@@ -50,23 +50,18 @@ def __load_spacy_models() -> Dict[str, Language]:
         spacy.prefer_gpu()
 
     logger.info(f"Starting to load spaCy Models...")
-    logger.info(f"Loading spaCy Model '{conf.docprepro.text.spacy.german_model}' ...")
-    spacy_german = spacy.load(conf.docprepro.text.spacy.german_model)
-    logger.info(f"Loading spaCy Model '{conf.docprepro.text.spacy.english_model}' ...")
-    spacy_english = spacy.load(conf.docprepro.text.spacy.english_model)
+
+    nlp: Dict[str, Language] = dict()
+
+    for lang, model in conf.docprepro.text.spacy.models.items():
+        if lang == "default":
+            continue
+        logger.info(f"Loading spaCy Model '{model}' ...")
+        nlp[lang] = spacy.load(model)
+
     logger.info(f"Starting to load spaCy Models... Done!")
 
-    nlp: Dict[str, Language] = {
-        "de": spacy_german,
-        "en": spacy_english
-    }
-
-    if conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.english_model:
-        nlp["default"] = nlp["en"]
-    elif conf.docprepro.text.spacy.default_model == conf.docprepro.text.spacy.german_model:
-        nlp["default"] = nlp["de"]
-    else:
-        nlp["default"] = spacy.load(conf.docprepro.text.spacy.default_model)
+    nlp["default"] = nlp[conf.docprepro.text.spacy.models.default]
 
     for lang in nlp.values():
         lang.max_length = conf.docprepro.text.spacy.max_text_length
@@ -74,7 +69,7 @@ def __load_spacy_models() -> Dict[str, Language]:
     return nlp
 
 
-nlp = __load_spacy_models()
+spacy_models = __load_spacy_models()
 __start_apache_tika_server()
 
 BULK_THRESHOLD = conf.docprepro.text.bulk_threshold
@@ -100,12 +95,12 @@ def import_uploaded_text_document(doc_file_path: Path,
 
 @celery_worker.task(acks_late=True)
 def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
-    global nlp
+    global spacy_models
 
     # Flo: SDoc Status is updated in util methods
     if len(pptds) < BULK_THRESHOLD:
-        return generate_automatic_span_annotations_sequentially(pptds, nlp)
-    return generate_automatic_span_annotations_pipeline(pptds, nlp)
+        return generate_automatic_span_annotations_sequentially(pptds, spacy_models)
+    return generate_automatic_span_annotations_pipeline(pptds, spacy_models)
 
 
 @celery_worker.task(acks_late=True)
