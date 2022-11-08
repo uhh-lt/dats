@@ -7,6 +7,7 @@ import { Grid, Stack, TextField } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { ErrorMessage } from "@hookform/error-message";
 import DocumentMetadataDeleteButton from "./DocumentMetadataDeleteButton";
+import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton";
 
 interface DocumentMetadataRowProps {
   metadata: SourceDocumentMetadataRead;
@@ -89,6 +90,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
             disabled={metadata.read_only}
             onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
           />
+          <DocumentMetadataAddFilterButton metadata={metadata} />
           <DocumentMetadataDeleteButton metadataId={metadata.id} size="small" disabled={metadata.read_only} />
         </Stack>
       </Grid>

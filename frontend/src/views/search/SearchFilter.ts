@@ -12,11 +12,12 @@ export enum SearchFilterType {
   TEXT,
   SENTENCE,
   FILE,
+  METADATA,
 }
 
 export type SearchFilter = {
   id: string;
-  data: SpanEntity | number | string;
+  data: SpanEntity | number | string | { key: string; value: string };
   type: SearchFilterType;
 };
 
@@ -68,6 +69,14 @@ export function createFileFilter(filename: string): SearchFilter {
   };
 }
 
+export function createMetadataFilter(key: string, value: string): SearchFilter {
+  return {
+    id: `metadata-${key}-${value}`,
+    data: { key: key, value: value },
+    type: SearchFilterType.METADATA,
+  };
+}
+
 export function orderFilter(filters: SearchFilter[]) {
   const keywords: string[] = [];
   const tags: number[] = [];
@@ -75,6 +84,7 @@ export function orderFilter(filters: SearchFilter[]) {
   const texts: string[] = [];
   const sentences: string[] = [];
   const files: string[] = [];
+  const metadata: { key: string; value: string }[] = [];
   filters.forEach((filter) => {
     switch (filter.type) {
       case SearchFilterType.CODE:
@@ -95,7 +105,10 @@ export function orderFilter(filters: SearchFilter[]) {
       case SearchFilterType.FILE:
         files.push(filter.data as string);
         break;
+      case SearchFilterType.METADATA:
+        metadata.push(filter.data as { key: string; value: string });
+        break;
     }
   });
-  return { keywords, tags, codes, texts, sentences, files };
+  return { keywords, tags, codes, texts, sentences, files, metadata };
 }

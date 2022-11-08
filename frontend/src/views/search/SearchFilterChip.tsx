@@ -35,6 +35,14 @@ function SearchFilterChip({ filter, handleDelete }: SearchFilterChipProps) {
       return <SentenceFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
     case SearchFilterType.FILE:
       return <FileFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
+    case SearchFilterType.METADATA:
+      return (
+        <MetadataFilterChip
+          metadata={filter.data as { key: string; value: string }}
+          onDelete={() => handleDelete(filter)}
+          {...props}
+        />
+      );
     default:
       return <> ERROR!!</>;
   }
@@ -68,6 +76,10 @@ function SentenceFilterChip({ text, ...props }: { text: string } & ChipProps) {
 
 function FileFilterChip({ text, ...props }: { text: string } & ChipProps) {
   return <Chip label={`File: ${text}`} {...props} />;
+}
+
+function MetadataFilterChip({ metadata, ...props }: { metadata: { key: string; value: string } } & ChipProps) {
+  return <Chip label={`${metadata.key}: ${metadata.value}`} {...props} />;
 }
 
 function CodeFilterChip({ spanEntity, ...props }: { spanEntity: SpanEntity } & ChipProps) {
