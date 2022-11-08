@@ -57,6 +57,9 @@ class SearchService(metaclass=SingletonMeta):
                                                                                         keywords=query_params.keywords,
                                                                                         **skip_limit).hits])
 
+            if query_params.metadata:
+                sdocs_ids.append(crud_sdoc.get_ids_by_metadata(db=db, metadata=query_params.metadata, **skip_limit))
+
             if len(sdocs_ids) == 0:
                 # no search results, so we return all documents!
 

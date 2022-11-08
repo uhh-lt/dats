@@ -7,12 +7,13 @@ from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.search import SpanEntity, SpanEntityFrequency, TagStat, SpanEntityDocumentFrequency, \
-    SpanEntityDocumentFrequencyResult
+    SpanEntityDocumentFrequencyResult, KeyValue
 from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM, SourceDocumentDocumentTagLinkTable
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
@@ -183,6 +184,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             query = db.query(self.model.id).join(SourceDocumentDocumentTagLinkTable,
                                                  self.model.id == SourceDocumentDocumentTagLinkTable.source_document_id)
 
+            # fixme: this if is incorrect
             if only_finished:
                 query = query.filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
             else:
@@ -190,6 +192,47 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                           self.model.status == SDocStatus.finished))
             query = query.group_by(self.model.id)
             query = query.having(func.count(self.model.id) == len(tag_ids))
+
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return list(map(lambda row: row.id, query.all()))
+
+    def get_ids_by_metadata(self,
+                            db: Session,
+                            *,
+                            metadata: List[KeyValue],
+                            only_finished: bool = True,
+                            skip: Optional[int] = None,
+                            limit: Optional[int] = None) -> List[int]:
+
+        # all docs that have ALL the tags
+
+        # We want this:
+        # SELECT sourcedocument.id FROM sourcedocument
+        # JOIN sourcedocumentmetadata s on sourcedocument.id = s.source_document_id
+        # WHERE s.key = 'width' and s.value = '250' OR
+        #       s.key = 'height' and s.value = '250'
+        # GROUP BY sourcedocument.id
+        # HAVING COUNT(*) = 2
+
+        query = db.query(self.model.id).join(SourceDocumentMetadataORM,
+                                             self.model.id == SourceDocumentMetadataORM.source_document_id)
+
+        # fixme: how to filter by only_finished?
+        if only_finished:
+            query = query.filter(
+                or_(*[(SourceDocumentMetadataORM.key == m.key) & (SourceDocumentMetadataORM.value == m.value) for m in
+                      metadata]))
+        else:
+            query = query.filter(
+                or_(*[(SourceDocumentMetadataORM.key == m.key) & (SourceDocumentMetadataORM.value == m.value) for m in
+                      metadata]))
+
+        query = query.group_by(self.model.id)
+        query = query.having(func.count(self.model.id) == len(metadata))
 
         if skip is not None:
             query = query.offset(skip)
