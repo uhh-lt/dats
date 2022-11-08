@@ -6,6 +6,9 @@ export { CancelablePromise, CancelError } from "./core/CancelablePromise";
 export { OpenAPI } from "./core/OpenAPI";
 export type { OpenAPIConfig } from "./core/OpenAPI";
 
+export type { ActionRead } from "./models/ActionRead";
+export { ActionTargetObjectType } from "./models/ActionTargetObjectType";
+export { ActionType } from "./models/ActionType";
 export type { AnalysisQueryParameters } from "./models/AnalysisQueryParameters";
 export type { AnnotationDocumentCreate } from "./models/AnnotationDocumentCreate";
 export type { AnnotationDocumentRead } from "./models/AnnotationDocumentRead";
@@ -27,6 +30,7 @@ export type { ElasticSearchDocumentHit } from "./models/ElasticSearchDocumentHit
 export type { FeedbackCreate } from "./models/FeedbackCreate";
 export type { FeedbackRead } from "./models/FeedbackRead";
 export type { HTTPValidationError } from "./models/HTTPValidationError";
+export type { KeyValue } from "./models/KeyValue";
 export type { KeywordStat } from "./models/KeywordStat";
 export type { MemoContentQuery } from "./models/MemoContentQuery";
 export type { MemoCreate } from "./models/MemoCreate";

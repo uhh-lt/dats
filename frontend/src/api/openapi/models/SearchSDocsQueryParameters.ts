@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { KeyValue } from "./KeyValue";
 import type { SpanEntity } from "./SpanEntity";
 
 export type SearchSDocsQueryParameters = {
@@ -33,6 +34,10 @@ export type SearchSDocsQueryParameters = {
    * List of IDs of DocumentTags the SourceDocuments have to be tagged with
    */
   tag_ids?: Array<number>;
+  /**
+   * List of key value pairs that have to be present in the SourceDocuments metadata have to be
+   */
+  metadata?: Array<KeyValue>;
   /**
    * If true return SourceDocuments tagged with all DocumentTags, or anyof the DocumentTags otherwise
    */

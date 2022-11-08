@@ -899,6 +899,36 @@
         }
       }
     },
+    "/project/{proj_id}/user/{user_id}/action": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns all Actions of the Project from a User",
+        "description": "Returns all Actions of the Project from a User",
+        "operationId": "get_user_actions_of_project",
+        "parameters": [
+          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "path" },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Project-Get User Actions Of Project",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ActionRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/project/{proj_id}/memo": {
       "get": {
         "tags": ["project"],
@@ -3788,6 +3818,49 @@
   },
   "components": {
     "schemas": {
+      "ActionRead": {
+        "title": "ActionRead",
+        "required": ["action_type", "id", "user_id", "project_id", "executed", "target_id", "target_object_type"],
+        "type": "object",
+        "properties": {
+          "action_type": { "allOf": [{ "$ref": "#/components/schemas/ActionType" }], "description": "TODO" },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the Memo" },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the Memo belongs to" },
+          "project_id": { "title": "Project Id", "type": "integer", "description": "Project the Memo belongs to" },
+          "executed": {
+            "title": "Executed",
+            "type": "string",
+            "description": "Updated timestamp of the Memo",
+            "format": "date-time"
+          },
+          "target_id": {
+            "title": "Target Id",
+            "type": "integer",
+            "description": "ID of the Object the Memo is attached to"
+          },
+          "target_object_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ActionTargetObjectType" }],
+            "description": "Type of the Object the ID refers to"
+          }
+        }
+      },
+      "ActionTargetObjectType": {
+        "title": "ActionTargetObjectType",
+        "enum": [
+          "memo",
+          "annotation_document",
+          "source_document",
+          "code",
+          "span_annotation",
+          "span_group",
+          "bbox_annotation",
+          "project",
+          "document_tag"
+        ],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "ActionType": { "title": "ActionType", "enum": [0, 1, 2], "type": "integer", "description": "An enumeration." },
       "AnalysisQueryParameters": {
         "title": "AnalysisQueryParameters",
         "required": ["user_ids", "proj_id"],
@@ -4217,6 +4290,15 @@
           "detail": { "title": "Detail", "type": "array", "items": { "$ref": "#/components/schemas/ValidationError" } }
         }
       },
+      "KeyValue": {
+        "title": "KeyValue",
+        "required": ["key", "value"],
+        "type": "object",
+        "properties": {
+          "key": { "title": "Key", "type": "string", "description": "The key of the Metadata" },
+          "value": { "title": "Value", "type": "string", "description": "The value of the Metadata" }
+        }
+      },
       "KeywordStat": {
         "title": "KeywordStat",
         "required": ["keyword", "count"],
@@ -4563,6 +4645,12 @@
             "type": "array",
             "items": { "type": "integer" },
             "description": "List of IDs of DocumentTags the SourceDocuments have to be tagged with"
+          },
+          "metadata": {
+            "title": "Metadata",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/KeyValue" },
+            "description": "List of key value pairs that have to be present in the SourceDocuments metadata have to be"
           },
           "all_tags": {
             "title": "All Tags",

@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ActionRead } from "../models/ActionRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
@@ -467,6 +468,32 @@ export class ProjectService {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/project/{proj_id}/user/{user_id}/memo",
+      path: {
+        proj_id: projId,
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all Actions of the Project from a User
+   * Returns all Actions of the Project from a User
+   * @returns ActionRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserActionsOfProject({
+    projId,
+    userId,
+  }: {
+    projId: number;
+    userId: number;
+  }): CancelablePromise<Array<ActionRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/user/{user_id}/action",
       path: {
         proj_id: projId,
         user_id: userId,

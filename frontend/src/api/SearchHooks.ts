@@ -48,7 +48,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
   return useQuery<SearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, user.data?.id, filters, findTextModality],
     async () => {
-      const { keywords, tags, codes, texts, sentences, files } = orderFilter(filters);
+      const { keywords, tags, codes, texts, sentences, files, metadata } = orderFilter(filters);
       if (sentences.length === 1) {
         if (findTextModality) {
           const result = await SearchService.findSimilarSentences({
@@ -88,6 +88,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
             keywords: keywords.length > 0 ? keywords : undefined,
             search_terms: texts.length > 0 ? texts : undefined,
             file_name: files.length > 0 ? files[0] : undefined,
+            metadata: metadata.length > 0 ? metadata : undefined,
             all_tags: true,
           },
         });
@@ -120,7 +121,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
   return useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
     [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, user.data?.id, filters],
     async () => {
-      const { keywords, tags, codes, texts } = orderFilter(filters);
+      const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
       const data = await SearchService.searchEntityDocumentStats({
         requestBody: {
           proj_id: projectId,
@@ -129,6 +130,8 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
           search_terms: texts.length > 0 ? texts : undefined,
+          file_name: files.length > 0 ? files[0] : undefined,
+          metadata: metadata.length > 0 ? metadata : undefined,
           all_tags: true,
         },
       });
@@ -140,7 +143,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
 const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
   const { user } = useAuth();
   return useQuery<KeywordStat[], Error>([QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, user.data?.id, filters], () => {
-    const { keywords, tags, codes, texts } = orderFilter(filters);
+    const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
     return SearchService.searchKeywordStats({
       requestBody: {
         proj_id: projectId,
@@ -149,6 +152,8 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
         tag_ids: tags.length > 0 ? tags : undefined,
         keywords: keywords.length > 0 ? keywords : undefined,
         search_terms: texts.length > 0 ? texts : undefined,
+        file_name: files.length > 0 ? files[0] : undefined,
+        metadata: metadata.length > 0 ? metadata : undefined,
         all_tags: true,
       },
     });
@@ -160,7 +165,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
   return useQuery<TagStat[], Error>(
     [QueryKey.SEARCH_TAG_STATISTICS, projectId, user.data?.id, filters],
     () => {
-      const { keywords, tags, codes, texts } = orderFilter(filters);
+      const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
       return SearchService.searchTagStats({
         requestBody: {
           proj_id: projectId,
@@ -169,6 +174,8 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
           search_terms: texts.length > 0 ? texts : undefined,
+          file_name: files.length > 0 ? files[0] : undefined,
+          metadata: metadata.length > 0 ? metadata : undefined,
           all_tags: true,
         },
       });
