@@ -52,7 +52,7 @@ def create_document_content_text_file_via_tika(filepath: Path,
     return text_filename, sdoc_db_obj
 
 
-def extract_image_links(pptd: PreProTextDoc) -> None:
+def create_sdoc_links_for_images(pptd: PreProTextDoc) -> None:
     soup = BeautifulSoup(pptd.raw_text, "html.parser")
     img_links = soup.findAll("img")
 
@@ -63,9 +63,6 @@ def extract_image_links(pptd: PreProTextDoc) -> None:
         # persist the link
         with sql.db_session() as db:
             crud_sdoc_link.create(db=db, create_dto=create_dto)
-
-    # only store the text without any HTML tags
-    pptd.raw_text = soup.text
 
 
 def generate_preprotextdoc(filepath: Path,
@@ -107,7 +104,7 @@ def generate_preprotextdoc(filepath: Path,
     pptd.metadata[lang_metadata_create_dto.key] = lang_metadata_create_dto.value
     pptd.metadata[url_metadata_create_dto.key] = url_metadata_create_dto.value
 
-    extract_image_links(pptd=pptd)
+    create_sdoc_links_for_images(pptd=pptd)
 
     return pptd
 
