@@ -36,5 +36,6 @@ dependencies:
   - python-multipart=0.0.5
   - spacy-transformers=1.1
   - ftfy=6.1
+  - beautifulsoup4=4.11.1
   - pip:
     - faiss-gpu==1.7.2
