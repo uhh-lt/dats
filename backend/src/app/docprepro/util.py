@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Tuple, Union, List
+from typing import Tuple, List, Union
 
 from fastapi import UploadFile
 
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.doc_type import get_doc_type, DocType, is_archive_file
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -63,3 +64,5 @@ def finish_prepro_process(ppds: List[Union[PreProImageDoc, PreProTextDoc]]) -> N
             crud_sdoc.update_status(db=db,
                                     sdoc_id=ppd.sdoc_id,
                                     sdoc_status=SDocStatus.finished)
+
+        crud_sdoc_link.resolve_filenames_to_sdoc_ids(db=db)

@@ -39,6 +39,8 @@ from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.action import ActionORM
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 
 from app.util.singleton_meta import SingletonMeta
 from config import conf

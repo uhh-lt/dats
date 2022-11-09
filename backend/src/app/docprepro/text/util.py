@@ -2,6 +2,7 @@ from collections import Counter
 from pathlib import Path
 from typing import List, Dict, Tuple
 
+from bs4 import BeautifulSoup
 from langdetect import detect_langs
 from loguru import logger
 from spacy import Language
@@ -9,8 +10,10 @@ from spacy.tokens import Doc
 from tika import parser
 from tqdm import tqdm
 
+from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
+from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
@@ -49,6 +52,22 @@ def create_document_content_text_file_via_tika(filepath: Path,
     return text_filename, sdoc_db_obj
 
 
+def extract_image_links(pptd: PreProTextDoc) -> None:
+    soup = BeautifulSoup(pptd.raw_text, "html.parser")
+    img_links = soup.findAll("img")
+
+    for img in img_links:
+        create_dto = SourceDocumentLinkCreate(parent_source_document_id=pptd.sdoc_id,
+                                              linked_source_document_filename=img["src"].strip())
+
+        # persist the link
+        with sql.db_session() as db:
+            crud_sdoc_link.create(db=db, create_dto=create_dto)
+
+    # only store the text without any HTML tags
+    pptd.raw_text = soup.text
+
+
 def generate_preprotextdoc(filepath: Path,
                            sdoc_db_obj: SourceDocumentORM) -> PreProTextDoc:
     # if it's not a raw text file, try to extract the content with Apache Tika and store it in a new raw text file
@@ -84,8 +103,11 @@ def generate_preprotextdoc(filepath: Path,
                          project_id=sdoc_db_obj.project_id,
                          sdoc_id=sdoc_db_obj.id,
                          raw_text=content)
+
     pptd.metadata[lang_metadata_create_dto.key] = lang_metadata_create_dto.value
     pptd.metadata[url_metadata_create_dto.key] = url_metadata_create_dto.value
+
+    extract_image_links(pptd=pptd)
 
     return pptd
 

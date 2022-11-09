@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+    from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 
 
 class SourceDocumentORM(ORMBase):
@@ -41,13 +42,18 @@ class SourceDocumentORM(ORMBase):
                                                                        back_populates="source_document",
                                                                        passive_deletes=True)
 
+    source_document_links: List["SourceDocumentLinkORM"] = relationship("SourceDocumentLinkORM",
+                                                                        back_populates="parent_source_document",
+                                                                        passive_deletes=True,
+                                                                        foreign_keys="sourcedocumentlink.c.parent_source_document_id")
+
     # many to many
     document_tags: List["DocumentTagORM"] = relationship("DocumentTagORM",
                                                          secondary="SourceDocumentDocumentTagLinkTable".lower(),
                                                          back_populates="source_documents",
                                                          passive_deletes=True)
     __table_args__ = (
-            UniqueConstraint("project_id",
-                             "filename",
-                             name="UC_unique_filename_in_project"),
-        )
+        UniqueConstraint("project_id",
+                         "filename",
+                         name="UC_unique_filename_in_project"),
+    )
