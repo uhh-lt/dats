@@ -15,14 +15,14 @@ class CRUDSourceDocumentLink(CRUDBase[SourceDocumentLinkORM,
     def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> ORMModelType:
         raise NotImplementedError()
 
-    def resolve_filenames_to_sdoc_ids(self, db: Session) -> None:
+    def resolve_filenames_to_sdoc_ids(self, db: Session) -> List[SourceDocumentLinkORM]:
         unresolved_links: List[SourceDocumentLinkORM] = db.query(self.model).filter(
             self.model.linked_source_document_id.is_(None)).all()
 
         # noinspection PyTypeChecker
         sdoc_fn_to_id: Dict[str, int] = dict(db.query(SourceDocumentORM.filename, SourceDocumentORM.id).filter(
             SourceDocumentORM.filename.in_([link.linked_source_document_filename for link in unresolved_links])).all())
-
+        resolved_links = []
         for link in unresolved_links:
             if link.linked_source_document_filename not in sdoc_fn_to_id:
                 continue
@@ -30,6 +30,9 @@ class CRUDSourceDocumentLink(CRUDBase[SourceDocumentLinkORM,
             db.add(link)
             db.commit()
             db.refresh(link)
+            resolved_links.append(link)
+
+        return resolved_links
 
     def get_linked_sdocs(self, db: Session, parent_sdoc_id: int) -> List[SourceDocumentLinkORM]:
         db_obj = db.query(self.model).filter(self.model.parent_source_document_id == parent_sdoc_id).all()
