@@ -24,6 +24,8 @@ class CRUDSourceDocumentLink(CRUDBase[SourceDocumentLinkORM,
             SourceDocumentORM.filename.in_([link.linked_source_document_filename for link in unresolved_links])).all())
 
         for link in unresolved_links:
+            if link.linked_source_document_filename not in sdoc_fn_to_id:
+                continue
             link.linked_source_document_id = sdoc_fn_to_id[link.linked_source_document_filename]
             db.add(link)
             db.commit()
