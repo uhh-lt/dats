@@ -35,7 +35,7 @@ torch.set_num_threads(1)
 
 
 def __start_apache_tika_server() -> None:
-    logger.debug("Starting Apache Tika Server!")
+    logger.info("Starting Apache Tika Server...")
     # start by parsing a random text file (hacky, I know...)
     from tika import parser
     tika_starter_dummy = "/tmp/tika_starter_dummy.txt"
@@ -43,6 +43,7 @@ def __start_apache_tika_server() -> None:
         f.write("tika_starter_dummy")
     parser.from_file(tika_starter_dummy)
     os.remove(tika_starter_dummy)
+    logger.info("Starting Apache Tika Server... Done!")
 
 
 def __load_spacy_models() -> Dict[str, Language]:
