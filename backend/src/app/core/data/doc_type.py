@@ -1,6 +1,8 @@
 from enum import Enum
+from pathlib import Path
 from typing import Optional
 
+import magic
 from frozendict import frozendict
 
 
@@ -13,6 +15,7 @@ class DocType(str, Enum):
 
 __doc_type_to_mime_type_map = frozendict({
     DocType.text: ["text/plain",
+                   "text/html",
                    "application/pdf",
                    "application/msword",  # .doc
                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],  # .docx
@@ -36,6 +39,11 @@ def get_doc_type(mime_type: str) -> Optional[DocType]:
     if mime_type in __mime_type_to_doc_type_map:
         return __mime_type_to_doc_type_map[mime_type]
     return None
+
+
+def get_mime_type_from_file(file: Path) -> str:
+    file_bytes = file.read_bytes()
+    return magic.from_buffer(file_bytes, mime=True)
 
 
 def mime_type_supported(mime_type: str) -> bool:

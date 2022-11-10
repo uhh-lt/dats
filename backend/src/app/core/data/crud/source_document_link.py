@@ -22,6 +22,7 @@ class CRUDSourceDocumentLink(CRUDBase[SourceDocumentLinkORM,
         # noinspection PyTypeChecker
         sdoc_fn_to_id: Dict[str, int] = dict(db.query(SourceDocumentORM.filename, SourceDocumentORM.id).filter(
             SourceDocumentORM.filename.in_([link.linked_source_document_filename for link in unresolved_links])).all())
+
         resolved_links = []
         for link in unresolved_links:
             if link.linked_source_document_filename not in sdoc_fn_to_id:

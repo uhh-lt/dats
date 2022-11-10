@@ -11,7 +11,7 @@ from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchD
     ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedElasticSearchDocumentHits, PaginatedMemoSearchResults, \
     ElasticMemoHit, KeywordStat
 from app.core.data.dto.source_document import SourceDocumentContent, SourceDocumentTokens, \
-    SourceDocumentKeywords
+    SourceDocumentKeywords, SourceDocumentHTML
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -228,6 +228,25 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                     sdoc_id: int) -> Optional[SourceDocumentContent]:
         esdoc = self.get_esdoc_by_sdoc_id(proj_id=proj_id, sdoc_id=sdoc_id, fields={"content"})
         return SourceDocumentContent(source_document_id=sdoc_id, content=esdoc.content)
+
+    def get_sdoc_html_by_sdoc_id(self,
+                                 *,
+                                 proj_id: int,
+                                 sdoc_id: int) -> Optional[SourceDocumentHTML]:
+        esdoc = self.get_esdoc_by_sdoc_id(proj_id=proj_id, sdoc_id=sdoc_id, fields={"html"})
+        return SourceDocumentHTML(source_document_id=sdoc_id, html=esdoc.html)
+
+    def update_sdoc_html_by_sdoc_id(self,
+                                    *,
+                                    proj_id: int,
+                                    sdoc_html: SourceDocumentHTML) -> SourceDocumentHTML:
+        self.__client.update(index=self.__get_index_name(proj_id=proj_id, index_type='doc'),
+                             id=str(sdoc_html.source_document_id),
+                             body={"doc": {"html": sdoc_html.html}})
+
+        logger.debug((f"Updated HTML of Document '{sdoc_html.source_document_id}' in Index "
+                      f"'{self.__get_index_name(proj_id=proj_id, index_type='doc')}'!"))
+        return sdoc_html
 
     def get_sdoc_tokens_by_sdoc_id(self,
                                    *,

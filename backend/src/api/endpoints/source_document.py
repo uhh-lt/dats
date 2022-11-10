@@ -15,7 +15,7 @@ from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, MemoRead, AttachedObjectType
 from app.core.data.dto.source_document import SourceDocumentRead, SourceDocumentContent, SourceDocumentTokens, \
-    SourceDocumentKeywords
+    SourceDocumentKeywords, SourceDocumentHTML
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataUpdate, SourceDocumentMetadataRead
 from app.core.data.dto.span_annotation import SpanAnnotationRead, SpanAnnotationReadResolvedText
 from app.core.data.repo.repo_service import RepoService
@@ -71,6 +71,26 @@ async def get_content(*,
     if sdoc_db_obj.doctype == DocType.text:
         return ElasticSearchService().get_sdoc_content_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
                                                                   proj_id=sdoc_db_obj.project_id)
+    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+
+
+@router.get("/{sdoc_id}/html", tags=tags,
+            response_model=Optional[SourceDocumentHTML],
+            summary="Returns the (html) content of the SourceDocument",
+            description=("Returns the (html) content of the SourceDocument if it exists. If the SourceDocument is "
+                         "not a text file, there is no content but an URL to the file content."))
+async def get_html(*,
+                   db: Session = Depends(get_db_session),
+                   sdoc_id: int,
+                   only_finished: Optional[bool] = True) -> Optional[SourceDocumentHTML]:
+    # TODO Flo: only if the user has access?
+    if only_finished:
+        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+
+    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    if sdoc_db_obj.doctype == DocType.text:
+        return ElasticSearchService().get_sdoc_html_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
+                                                               proj_id=sdoc_db_obj.project_id)
     return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
 
 

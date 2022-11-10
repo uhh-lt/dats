@@ -9,11 +9,13 @@ class PreProTextDoc(BaseModel):
     filename: str
     project_id: int
     sdoc_id: int
-    raw_text: str
+    text: str
+    html: str = Field(default="")
     metadata: Dict[str, str] = Field(default=dict())
 
     tokens: List[str] = Field(default=list())
     token_character_offsets: List[Tuple[int, int]] = Field(default=list())
+    text2html_character_offsets: List[int] = Field(default=list())
     lemmas: List[str] = Field(default=list())
     pos: List[str] = Field(default=list())
     stopwords: List[bool] = Field(default=list())

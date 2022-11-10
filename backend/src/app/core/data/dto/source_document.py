@@ -70,6 +70,11 @@ class SourceDocumentContent(BaseModel):
     content: str = Field(description="The (textual) content of the SourceDocument the content belongs to.")
 
 
+class SourceDocumentHTML(BaseModel):
+    source_document_id: int = Field(description="ID of the SourceDocument the content belongs to.")
+    html: str = Field(description="The (html) content of the SourceDocument.")
+
+
 class SourceDocumentTokens(BaseModel):
     source_document_id: int = Field(description="ID of the SourceDocument the Tokens belong to.")
     tokens: List[str] = Field(description="The (textual) list Tokens of the SourceDocument the Tokens belong to.")

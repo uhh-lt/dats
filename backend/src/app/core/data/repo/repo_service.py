@@ -244,7 +244,7 @@ class RepoService(metaclass=SingletonMeta):
         doctype = get_doc_type(mime_type=mime_type)
         if not doctype:
             logger.error(f"Unsupported DocType (for MIME Type {mime_type})!"
-                         " Cannot create SourceDocument from file {dst_path}.")
+                         " Cannot create SourceDocument from file {dst_path}")
             raise UnsupportedDocTypeForSourceDocument(dst_path=dst_path)
 
         create_dto = SourceDocumentCreate(content="CONTENT IS NOW IN ElasticSearch!!!",

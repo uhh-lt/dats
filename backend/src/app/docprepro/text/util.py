@@ -1,3 +1,5 @@
+import html
+import re
 from collections import Counter
 from pathlib import Path
 from typing import List, Dict, Tuple
@@ -12,6 +14,7 @@ from tqdm import tqdm
 
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.data.doc_type import get_mime_type_from_file
 from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
@@ -53,7 +56,7 @@ def create_document_content_text_file_via_tika(filepath: Path,
 
 
 def create_sdoc_links_for_images(pptd: PreProTextDoc) -> None:
-    soup = BeautifulSoup(pptd.raw_text, "html.parser")
+    soup = BeautifulSoup(pptd.text, "html.parser")
     img_links = soup.findAll("img")
 
     for img in img_links:
@@ -65,6 +68,20 @@ def create_sdoc_links_for_images(pptd: PreProTextDoc) -> None:
             crud_sdoc_link.create(db=db, create_dto=create_dto)
 
 
+def clean_text_content(content: str, mime: str) -> str:
+    if "html" in mime:
+        # remove redundant white spaces
+        logger.info(f"Cleaning redundant white spaces in html document!")
+        content = re.sub(r"\s+", " ", content).strip()
+
+        # resolve html special characters to their respective unicode character
+        content = content.replace("&lt;", "❮")
+        content = content.replace("&gt;", "❯")
+        content = html.unescape(content)
+
+    return content
+
+
 def generate_preprotextdoc(filepath: Path,
                            sdoc_db_obj: SourceDocumentORM) -> PreProTextDoc:
     # if it's not a raw text file, try to extract the content with Apache Tika and store it in a new raw text file
@@ -74,6 +91,10 @@ def generate_preprotextdoc(filepath: Path,
     # read the content from disk
     with open(filepath, "r") as f:
         content = f.read()
+
+    # clean content
+    mime = get_mime_type_from_file(filepath)
+    content = clean_text_content(content=content, mime=mime)
 
     # store the detected language in SourceDocumentMetadata
     doc_lang = detect_langs(content)[0].lang  # TODO Flo: what to do with mixed lang docs?
@@ -99,7 +120,8 @@ def generate_preprotextdoc(filepath: Path,
     pptd = PreProTextDoc(filename=sdoc_db_obj.filename,
                          project_id=sdoc_db_obj.project_id,
                          sdoc_id=sdoc_db_obj.id,
-                         raw_text=content)
+                         text=content,
+                         html=content)
 
     pptd.metadata[lang_metadata_create_dto.key] = lang_metadata_create_dto.value
     pptd.metadata[url_metadata_create_dto.key] = url_metadata_create_dto.value
@@ -165,7 +187,7 @@ def generate_automatic_span_annotations_sequentially(pptds: List[PreProTextDoc],
     for pptd in tqdm(pptds, desc="Generating Automatic Span Annotations in spaCy sequential Mode... "):
         # Flo: use the language specific model for each pptd
         model = nlp[pptd.metadata["language"]] if pptd.metadata["language"] in nlp else nlp["default"]
-        doc: Doc = model(pptd.raw_text)
+        doc: Doc = model(pptd.text)
         # Flo: generate the automatic span annotations
         pptd = generate_automatic_span_annotations_single_pptd(doc=doc, pptd=pptd)
 
@@ -181,7 +203,7 @@ def generate_automatic_span_annotations_pipeline(pptds: List[PreProTextDoc],
     pptds_data: Dict[str, List[Tuple[str, PreProTextDoc]]] = {lang: [] for lang in nlp.keys()}
     for pptd in pptds:
         pptd_lang = pptd.metadata["language"] if pptd.metadata["language"] in nlp else "default"
-        pptds_data[pptd_lang].append((pptd.raw_text, pptd))
+        pptds_data[pptd_lang].append((pptd.text, pptd))
 
     # Flo: now apply language specific model in pipeline mode
     for (lang, model) in nlp.items():

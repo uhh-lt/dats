@@ -212,7 +212,8 @@ def create_pptds_from_automatic_caption(ppids: List[PreProImageDoc]) -> List[Pre
     fake_pptds = [PreProTextDoc(filename=ppid.image_dst.name,
                                 project_id=ppid.project_id,
                                 sdoc_id=ppid.sdoc_id,
-                                raw_text=ppid.metadata["caption"],
+                                text=ppid.metadata["caption"],
+                                html=ppid.metadata["caption"],
                                 metadata={"language": "en"})
                   for ppid in ppids]
     for fake_pptd in fake_pptds:
