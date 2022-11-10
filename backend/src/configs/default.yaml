@@ -301,23 +301,23 @@ docprepro:
     object_detection:
       model: "facebook/detr-resnet-101"
       confidence_threshold: 0.3
-      device: cuda
+      device: cpu
     image_captioning:
       model: "nlpconnect/vit-gpt2-image-captioning"
       max_caption_length: 16
       num_beams: 4
-      device: cuda
+      device: cpu
 
   simsearch:
     # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
     image_encoder:
       model: "clip-ViT-B-32"
       batch_size: 32
-      device: cuda
+      device: cpu
     text_encoder:
       model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
       batch_size: 32
-      device: cuda
+      device: cpu
       min_sentence_length: 5
 
   celery:
@@ -375,4 +375,4 @@ faiss:
   index_factory_string: "IDMap,Flat"
   index_search_metric: IP # or L2
   index_dimension: 512 # has to match the encoder dimensions!
-  device: cuda
+  device: cpu
