@@ -37,5 +37,6 @@ dependencies:
   - spacy-transformers=1.1
   - ftfy=6.1
   - beautifulsoup4=4.11.1
+  - pytest=7.2.0
   - pip:
     - faiss-gpu==1.7.2
