@@ -41,6 +41,7 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
 
   // query (global server state)
   const sdoc = SdocHooks.useGetDocument(sdocId);
+  const content = SdocHooks.useGetDocumentContent(sdocId);
   const tags = SdocHooks.useGetAllDocumentTags(sdocId);
 
   const isSelected = useMemo(() => {
@@ -80,25 +81,33 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
           }
         />
         <CardContent sx={{ pt: 0 }}>
-          {sdoc.isLoading && (
+          {sdoc.isSuccess && content.isSuccess ? (
+            <>
+              {sdoc.data.doctype === DocType.TEXT ? (
+                <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
+                  {content.data.content}
+                </Typography>
+              ) : sdoc.data.doctype === DocType.IMAGE ? (
+                <CardMedia sx={{ mb: 1.5 }} component="img" height="200" image={sdoc.data.content} alt="Paella dish" />
+              ) : (
+                <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
+                  DOC TYPE IS NOT SUPPORTED :(
+                </Typography>
+              )}
+            </>
+          ) : sdoc.isError ? (
+            <Typography sx={{ mb: 1.5 }} variant="body2">
+              {sdoc.error.message}
+            </Typography>
+          ) : content.isError ? (
+            <Typography sx={{ mb: 1.5 }} variant="body2">
+              {content.error.message}
+            </Typography>
+          ) : (
             <Typography sx={{ mb: 1.5 }} variant="body2">
               ...
             </Typography>
           )}
-          {sdoc.isError && (
-            <Typography sx={{ mb: 1.5 }} variant="body2">
-              {sdoc.error.message}
-            </Typography>
-          )}
-          {sdoc.isSuccess && sdoc.data.doctype === DocType.TEXT && (
-            <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
-              {sdoc.data.content}
-            </Typography>
-          )}
-          {sdoc.isSuccess && sdoc.data.doctype === DocType.IMAGE && (
-            <CardMedia sx={{ mb: 1.5 }} component="img" height="200" image={sdoc.data.content} alt="Paella dish" />
-          )}
-
           <Stack direction={"row"} sx={{ alignItems: "center", height: 22 }}>
             {tags.isLoading && <>...</>}
             {tags.isError && <>{tags.error.message}</>}

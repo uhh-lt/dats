@@ -1,11 +1,11 @@
 import React, { useRef } from "react";
 import { AnnotationDocumentRead, SourceDocumentRead, SpanAnnotationReadResolvedText } from "../../../api/openapi";
-import TextAnnotatorRenderer from "../../annotation/TextAnnotator/TextAnnotatorRenderer";
 import useComputeTokenData from "../../annotation/TextAnnotator/useComputeTokenData";
 import SentenceContextMenu, {
   SentenceContextMenuHandle,
 } from "../../annotation/SentenceContextMenu/SentenceContextMenu";
 import SdocHooks from "../../../api/SdocHooks";
+import TextAnnotatorRendererNew from "../../annotation/TextAnnotator/TextAnnotatorRendererNew";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentRead;
@@ -50,7 +50,6 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
 
     // try to find a parent element that has the sentence class, we go up 3 levels at maximum
     let sentenceElement: HTMLElement = event.target as HTMLElement;
-    console.log(sentenceElement);
     let foundSentence = false;
     for (let i = 0; i < 3; i++) {
       if (sentenceElement && sentenceElement.classList.contains("sentence") && sentenceElement.childElementCount > 0) {
@@ -59,7 +58,6 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
       }
       if (sentenceElement.parentElement) {
         sentenceElement = sentenceElement.parentElement;
-        console.log(sentenceElement);
       } else {
         break;
       }
@@ -101,14 +99,13 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
 
   return (
     <>
-      <TextAnnotatorRenderer
-        sdocId={sdoc.id}
+      <TextAnnotatorRendererNew
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
-        sentences={sentences.data || []}
         onContextMenu={handleContextMenu}
-        hoverSentences={true}
+        isViewer={true}
+        html={sdoc.content}
       />
       <SentenceContextMenu ref={sentenceContextMenuRef} />
     </>

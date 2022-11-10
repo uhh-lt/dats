@@ -51,6 +51,7 @@ export type { SourceDocumentContent } from "./models/SourceDocumentContent";
 export type { SourceDocumentContentQuery } from "./models/SourceDocumentContentQuery";
 export type { SourceDocumentDocumentTagMultiLink } from "./models/SourceDocumentDocumentTagMultiLink";
 export type { SourceDocumentFilenameQuery } from "./models/SourceDocumentFilenameQuery";
+export type { SourceDocumentHTML } from "./models/SourceDocumentHTML";
 export type { SourceDocumentKeywords } from "./models/SourceDocumentKeywords";
 export type { SourceDocumentMetadataCreate } from "./models/SourceDocumentMetadataCreate";
 export type { SourceDocumentMetadataRead } from "./models/SourceDocumentMetadataRead";

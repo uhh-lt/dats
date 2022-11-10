@@ -15,9 +15,8 @@ import { QueryKey } from "../../../api/QueryKey";
 import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
 import { ICode } from "./ICode";
 import useComputeTokenData from "./useComputeTokenData";
-import TextAnnotatorRenderer from "./TextAnnotatorRenderer";
 import { AnnoActions } from "../annoSlice";
-import SdocHooks from "../../../api/SdocHooks";
+import TextAnnotatorRendererNew from "./TextAnnotatorRendererNew";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentRead;
@@ -31,12 +30,10 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
   // global client state (redux)
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
-  const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const codes = useAppSelector((state) => state.annotations.codesForSelection);
   const dispatch = useAppDispatch();
 
   // computed / custom hooks
-  const sentences = SdocHooks.useGetDocumentSentences(sdoc.id);
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocId: sdoc.id,
     annotationDocumentIds: visibleAdocIds,
@@ -285,16 +282,15 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         onEdit={handleCodeSelectorEditCode}
         onDelete={handleCodeSelectorDeleteAnnotation}
       />
-      <TextAnnotatorRenderer
+      <TextAnnotatorRendererNew
         className="myFlexFillAllContainer"
         onContextMenu={handleContextMenu}
         onMouseUp={handleMouseUp}
-        sdocId={sdoc.id}
+        html={sdoc.content}
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
-        sentences={sentences.data || []}
-        hoverSentences={false}
+        isViewer={false}
       />
     </>
   );

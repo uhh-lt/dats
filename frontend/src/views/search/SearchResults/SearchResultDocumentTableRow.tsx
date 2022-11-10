@@ -28,6 +28,7 @@ function SearchResultDocumentTableRow({
 
   // query (global server state)
   const sdoc = SdocHooks.useGetDocument(sdocId);
+  const content = SdocHooks.useGetDocumentContent(sdocId);
   const tags = SdocHooks.useGetAllDocumentTags(sdocId);
 
   const isSelected = useMemo(() => {
@@ -80,9 +81,15 @@ function SearchResultDocumentTableRow({
           {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}
 
           <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-            {sdoc.isLoading && <>...</>}
-            {sdoc.isError && <>{sdoc.error.message}</>}
-            {sdoc.isSuccess && <>{sdoc.data.content}</>}
+            {sdoc.isSuccess && content.isSuccess ? (
+              <>{content.data.content}</>
+            ) : sdoc.isError ? (
+              <>{sdoc.error.message}</>
+            ) : content.isError ? (
+              <>{content.error.message}</>
+            ) : (
+              <>...</>
+            )}
           </div>
           <Stack direction={"row"} component={"span"} className={"myQuickMenu"}>
             <AnnotateButton projectId={projectId} sdocId={sdocId} />

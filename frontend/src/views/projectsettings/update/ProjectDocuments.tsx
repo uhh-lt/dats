@@ -27,6 +27,17 @@ interface ProjectDocumentsProps {
   project: ProjectRead;
 }
 
+// allowed mime types
+const allowedMimeTypes: Array<string> = new Array<string>();
+allowedMimeTypes.push("text/plain");
+allowedMimeTypes.push("text/html");
+allowedMimeTypes.push("image/jpeg");
+allowedMimeTypes.push("image/png");
+allowedMimeTypes.push("application/zip");
+allowedMimeTypes.push("application/pdf");
+allowedMimeTypes.push("application/msword");
+allowedMimeTypes.push("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
 function ProjectDocuments({ project }: ProjectDocumentsProps) {
   const { ref, inView } = useInView();
 
@@ -102,16 +113,6 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
     setContextMenuData(sdocId);
   };
 
-  // allowed mime types
-  const allowedMimeTypes : Array<string> = new Array<string>()
-  allowedMimeTypes.push("text/plain")
-  allowedMimeTypes.push("image/jpeg")
-  allowedMimeTypes.push("image/png")
-  allowedMimeTypes.push("application/zip")
-  allowedMimeTypes.push("application/pdf")
-  allowedMimeTypes.push("application/msword")
-  allowedMimeTypes.push("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-
   return (
     <React.Fragment>
       <Toolbar variant="dense">
@@ -119,13 +120,7 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
           Import documents
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleChange}
-          multiple
-          accept={allowedMimeTypes.toString()}
-        />
+        <input type="file" ref={fileInputRef} onChange={handleChange} multiple accept={allowedMimeTypes.toString()} />
         <LoadingButton
           variant="contained"
           component="label"

@@ -6,6 +6,7 @@ import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentContent } from "../models/SourceDocumentContent";
+import type { SourceDocumentHTML } from "../models/SourceDocumentHTML";
 import type { SourceDocumentKeywords } from "../models/SourceDocumentKeywords";
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
@@ -81,6 +82,34 @@ export class SourceDocumentService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/content",
+      path: {
+        sdoc_id: sdocId,
+      },
+      query: {
+        only_finished: onlyFinished,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the (html) content of the SourceDocument
+   * Returns the (html) content of the SourceDocument if it exists. If the SourceDocument is not a text file, there is no content but an URL to the file content.
+   * @returns SourceDocumentHTML Successful Response
+   * @throws ApiError
+   */
+  public static getHtml({
+    sdocId,
+    onlyFinished = true,
+  }: {
+    sdocId: number;
+    onlyFinished?: boolean;
+  }): CancelablePromise<SourceDocumentHTML> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/html",
       path: {
         sdoc_id: sdocId,
       },

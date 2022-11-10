@@ -6,12 +6,13 @@ import {
   DocType,
   DocumentTagRead,
   MemoRead,
+  SourceDocumentContent,
   SourceDocumentKeywords,
   SourceDocumentMetadataRead,
   SourceDocumentRead,
   SourceDocumentService,
   SourceDocumentTokens,
-  SpanAnnotationReadResolvedText
+  SpanAnnotationReadResolvedText,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import useStableQueries from "../utils/useStableQueries";
@@ -24,8 +25,8 @@ const fetchSdoc = async (sdocId: number) => {
   });
   switch (sdoc.doctype) {
     case DocType.TEXT:
-      const content = await SourceDocumentService.getContent({ sdocId: sdocId });
-      sdoc.content = content.content;
+      const x = await SourceDocumentService.getHtml({ sdocId: sdocId, onlyFinished: true });
+      sdoc.content = x.html;
       break;
     case DocType.IMAGE:
       const url = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
@@ -101,6 +102,18 @@ const useGetDocumentSentences = (sdocId: number | undefined) =>
     [QueryKey.SDOC_SENTENCES, sdocId],
     () =>
       SourceDocumentService.getSentences({
+        sdocId: sdocId!,
+      }),
+    {
+      enabled: !!sdocId,
+    }
+  );
+
+const useGetDocumentContent = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentContent, Error>(
+    [QueryKey.SDOC_CONTENT, sdocId],
+    () =>
+      SourceDocumentService.getContent({
         sdocId: sdocId!,
       }),
     {
@@ -248,6 +261,7 @@ const SdocHooks = {
   useGetDocumentKeywords,
   useUpdateDocumentKeywords,
   useGetDocumentSentences,
+  useGetDocumentContent,
   useDeleteDocument,
   // tags
   useGetAllDocumentTags,

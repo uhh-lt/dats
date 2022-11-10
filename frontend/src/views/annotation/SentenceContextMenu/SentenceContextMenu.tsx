@@ -124,7 +124,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
         </ListItem>
         {annotations &&
           annotations.map((anno) => (
-            <ListItem disablePadding>
+            <ListItem key={anno.id} disablePadding>
               <ListItemButton onClick={() => handleAddFilter(anno)}>
                 <ListItemIcon>
                   <SearchIcon />

@@ -1076,6 +1076,33 @@
         }
       }
     },
+    "/sdoc/{sdoc_id}/html": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the (html) content of the SourceDocument",
+        "description": "Returns the (html) content of the SourceDocument if it exists. If the SourceDocument is not a text file, there is no content but an URL to the file content.",
+        "operationId": "get_html",
+        "parameters": [
+          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
+          {
+            "required": false,
+            "schema": { "title": "Only Finished", "type": "boolean", "default": true },
+            "name": "only_finished",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentHTML" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc/{sdoc_id}/tokens": {
       "get": {
         "tags": ["sourceDocument"],
@@ -4758,6 +4785,19 @@
             "type": "boolean",
             "description": "If true, filename prefix search is done. If false exact filename is searched."
           }
+        }
+      },
+      "SourceDocumentHTML": {
+        "title": "SourceDocumentHTML",
+        "required": ["source_document_id", "html"],
+        "type": "object",
+        "properties": {
+          "source_document_id": {
+            "title": "Source Document Id",
+            "type": "integer",
+            "description": "ID of the SourceDocument the content belongs to."
+          },
+          "html": { "title": "Html", "type": "string", "description": "The (html) content of the SourceDocument." }
         }
       },
       "SourceDocumentKeywords": {
