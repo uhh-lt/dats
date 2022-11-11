@@ -71,7 +71,8 @@ async def get_content(*,
     if sdoc_db_obj.doctype == DocType.text:
         return ElasticSearchService().get_sdoc_content_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
                                                                   proj_id=sdoc_db_obj.project_id)
-    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+    url = RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+    return SourceDocumentContent(source_document_id=sdoc_id, content=url)
 
 
 @router.get("/{sdoc_id}/html", tags=tags,
