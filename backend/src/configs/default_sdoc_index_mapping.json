@@ -1,12 +1,7 @@
 {
   "properties": {
     "filename": {
-      "type": "search_as_you_type",
-      "fields": {
-        "keyword": {
-          "type": "keyword"
-        }
-      }
+      "type": "keyword"
     },
     "content": {
       "type": "text"
