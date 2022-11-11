@@ -26,6 +26,14 @@ export const settingsSlice = createSlice({
         tagStyle: state.annotator.tagStyle === "inline" ? "above" : "inline",
       };
     },
+    disableCode: (state, action: PayloadAction<number>) => {
+      const codeId = action.payload;
+      const disabledCodeIds = state.disabledCodeIds;
+      if (disabledCodeIds.indexOf(codeId) === -1) {
+        disabledCodeIds.push(codeId);
+        state.disabledCodeIds = disabledCodeIds;
+      }
+    },
     toggleCodeDisabled: (state, action: PayloadAction<number[]>) => {
       if (action.payload.length === 0) {
         return;

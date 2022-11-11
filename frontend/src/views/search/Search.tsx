@@ -29,6 +29,8 @@ import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
 import Box from "@mui/material/Box";
 import SearchHooks, { getSearchResultIds, SearchResultsType } from "../../api/SearchHooks";
 import { SearchType } from "./SearchType";
+import ProjectHooks from "../../api/ProjectHooks";
+import { SettingsActions } from "../settings/settingsSlice";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -183,6 +185,17 @@ function Search() {
     },
     [dispatch]
   );
+
+  // hack to disable sentences
+  const projectCodes = ProjectHooks.useGetAllCodes(parseInt(projectId), true);
+  useEffect(() => {
+    if (projectCodes.data) {
+      const sentence = projectCodes.data.find((code) => code.name === "SENTENCE");
+      if (sentence) {
+        dispatch(SettingsActions.disableCode(sentence.id));
+      }
+    }
+  }, [dispatch, projectCodes.data]);
 
   // render
   return (
