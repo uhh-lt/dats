@@ -79,6 +79,11 @@ def clean_text_content(content: str, mime: str) -> str:
         content = content.replace("&gt;", "❯")
         content = html.unescape(content)
 
+        # remove <html> tags
+        if content.startswith("<html>") and content.endswith("</html>"):
+            content = content.replace("<html>", "")
+            content = content.replace("</html>", "")
+
     return content
 
 
