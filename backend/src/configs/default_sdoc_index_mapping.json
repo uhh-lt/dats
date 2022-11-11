@@ -11,6 +11,9 @@
     "content": {
       "type": "text"
     },
+    "html": {
+      "type": "text"
+    },
     "tokens": {
       "type": "keyword"
     },
