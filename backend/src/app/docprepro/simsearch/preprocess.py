@@ -1,7 +1,7 @@
 from typing import List, Union, Dict
 
 import numpy as np
-import torch
+import torch.multiprocessing
 from PIL import Image
 from loguru import logger
 from sentence_transformers import SentenceTransformer
@@ -67,12 +67,21 @@ def index_text_document(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
 
     # encode
     logger.debug(f"Encoding {len(sentence_texts)} sentences from {len(pptds)} documents!")
-    encoded_sentences = encoders[IndexType.TEXT].encode(sentences=sentence_texts,
-                                                        batch_size=text_encoder_batch_size,
-                                                        show_progress_bar=True,
-                                                        normalize_embeddings=True,
-                                                        convert_to_numpy=True,
-                                                        device=conf.docprepro.simsearch.text_encoder.device)
+    try:
+        encoded_sentences = encoders[IndexType.TEXT].encode(sentences=sentence_texts,
+                                                            batch_size=text_encoder_batch_size,
+                                                            show_progress_bar=True,
+                                                            normalize_embeddings=True,
+                                                            convert_to_numpy=True,
+                                                            device=conf.docprepro.simsearch.text_encoder.device)
+    except RuntimeError as e:
+        logger.error(f"Thread Pool crashed: {e} ... Retrying!")
+        encoded_sentences = encoders[IndexType.TEXT].encode(sentences=sentence_texts,
+                                                            batch_size=text_encoder_batch_size,
+                                                            show_progress_bar=True,
+                                                            normalize_embeddings=True,
+                                                            convert_to_numpy=True,
+                                                            device=conf.docprepro.simsearch.text_encoder.device)
 
     # add to index (with the IDs of the SpanAnnotation IDs)
     faisss.add_to_index(embeddings=encoded_sentences,
