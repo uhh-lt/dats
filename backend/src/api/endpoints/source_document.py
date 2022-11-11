@@ -107,7 +107,7 @@ async def get_tokens(*,
                                                                description="If True include the character offsets.",
                                                                default=False)) \
         -> Optional[SourceDocumentTokens]:
-    if not only_finished:
+    if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
@@ -125,7 +125,7 @@ async def get_sentences(*,
                         sdoc_id: int,
                         only_finished: Optional[bool] = True) \
         -> List[SpanAnnotationReadResolvedText]:
-    if not only_finished:
+    if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sent_spans = crud_span_anno.get_all_system_sentence_span_annotations_for_sdocs(db=db, sdoc_ids=[sdoc_id])
@@ -144,7 +144,7 @@ async def get_keywords(*,
                        sdoc_id: int,
                        only_finished: Optional[bool] = True) -> Optional[SourceDocumentKeywords]:
     # TODO Flo: only if the user has access?
-    if not only_finished:
+    if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(sdoc_id=sdoc_db_obj.id,
