@@ -46,6 +46,9 @@ export const QueryKey = {
   // all memos which title matches the query (by query string)
   MEMOS_BY_TITLE_SEARCH: "memosByContentSearch",
 
+  // all actions of a project from a user (by project id, user id)
+  ACTION: "action",
+
   // a single document (by document id)
   SDOC: "sdoc",
   // a single document without content (by document id)

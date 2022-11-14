@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 import {
+  ActionRead,
   CodeRead,
   DocumentTagRead,
   MemoRead,
@@ -173,6 +174,20 @@ const useCreateMemo = () =>
     },
   });
 
+// actions
+const useGetActions = (projectId: number, userId: number) =>
+  useQuery<Array<ActionRead>, Error>(
+    [QueryKey.ACTION, projectId, userId],
+    () =>
+    ProjectService.getUserActionsOfProject({
+      projId: projectId,
+      userId: userId
+    }),
+    {
+      refetchOnWindowFocus: false,
+    }
+  );
+
 const ProjectHooks = {
   // tags
   useGetAllTags,
@@ -194,6 +209,8 @@ const ProjectHooks = {
   // memo
   useGetMemo,
   useCreateMemo,
+  // actions
+  useGetActions,
 };
 
 export default ProjectHooks;

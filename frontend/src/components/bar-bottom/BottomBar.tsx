@@ -6,6 +6,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import BookIcon from "@mui/icons-material/Book";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import { Link, useLocation, useParams } from "react-router-dom";
+import { MenuBook } from "@mui/icons-material";
 
 function calculateValue(path: string) {
   if (path.match(/project\/\d+\/search.*/i)) {
@@ -52,6 +53,13 @@ function BottomBar(props: BottomNavigationProps) {
         icon={<BookIcon />}
         component={Link}
         to={`/project/${projectId}/logbook`}
+      />
+
+      <BottomNavigationAction
+        label="Autologbook"
+        icon={<MenuBook />}
+        component={Link}
+        to={`/project/${projectId}/autologbook`}
       />
     </BottomNavigation>
   );
