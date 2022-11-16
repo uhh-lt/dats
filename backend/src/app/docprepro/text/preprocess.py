@@ -215,6 +215,8 @@ def add_custom_tags_to_html(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
 
             current_position = html_end
 
+        new_html += pptd.html[current_position:]
+
         pptd.html = new_html
 
     return pptds
