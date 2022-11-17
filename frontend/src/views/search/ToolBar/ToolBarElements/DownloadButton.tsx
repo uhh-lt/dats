@@ -16,7 +16,7 @@ function DownloadButton({ sdocId, ...props }: DownloadButtonProps & IconButtonPr
     <Tooltip title="Download file">
       <span>
         <Link to={url.isSuccess ? url.data : "#"} target="_blank" download={url.isSuccess}>
-          <IconButton>
+          <IconButton {...props}>
             <DownloadIcon />
           </IconButton>
         </Link>
