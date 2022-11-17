@@ -200,21 +200,20 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         return list(map(lambda row: row.id, query.all()))
 
-    def get_ids_by_metadata(self,
-                            db: Session,
-                            *,
-                            metadata: List[KeyValue],
-                            only_finished: bool = True,
-                            skip: Optional[int] = None,
-                            limit: Optional[int] = None) -> List[int]:
-
-        # all docs that have ALL the tags
-
+    def get_ids_by_metadata_and_project_id(self,
+                                           db: Session,
+                                           *,
+                                           proj_id: int,
+                                           metadata: List[KeyValue],
+                                           only_finished: bool = True,
+                                           skip: Optional[int] = None,
+                                           limit: Optional[int] = None) -> List[int]:
         # We want this:
         # SELECT sourcedocument.id FROM sourcedocument
         # JOIN sourcedocumentmetadata s on sourcedocument.id = s.source_document_id
         # WHERE s.key = 'width' and s.value = '250' OR
-        #       s.key = 'height' and s.value = '250'
+        #       s.key = 'height' and s.value = '250' AND
+        #       sourcedocument.project_id = proj_id
         # GROUP BY sourcedocument.id
         # HAVING COUNT(*) = 2
 
@@ -223,13 +222,18 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         # fixme: how to filter by only_finished?
         if only_finished:
-            query = query.filter(
-                or_(*[(SourceDocumentMetadataORM.key == m.key) & (SourceDocumentMetadataORM.value == m.value) for m in
-                      metadata]))
+            query = query.filter(and_(self.model.project_id == proj_id,
+                                      self.model.status == SDocStatus.finished,
+                                      or_(*[(SourceDocumentMetadataORM.key == m.key)
+                                            & (SourceDocumentMetadataORM.value == m.value)
+                                            for m in metadata]))
+                                 )
         else:
-            query = query.filter(
-                or_(*[(SourceDocumentMetadataORM.key == m.key) & (SourceDocumentMetadataORM.value == m.value) for m in
-                      metadata]))
+            query = query.filter(and_(self.model.project_id == proj_id,
+                                      or_(*[(SourceDocumentMetadataORM.key == m.key)
+                                            & (SourceDocumentMetadataORM.value == m.value)
+                                            for m in metadata]))
+                                 )
 
         query = query.group_by(self.model.id)
         query = query.having(func.count(self.model.id) == len(metadata))

@@ -34,7 +34,8 @@ class SearchService(metaclass=SingletonMeta):
                                                                     **skip_limit))
 
             if query_params.tag_ids:
-                sdocs_ids.append(crud_sdoc.get_ids_by_document_tags(db=db, tag_ids=query_params.tag_ids,
+                sdocs_ids.append(crud_sdoc.get_ids_by_document_tags(db=db,
+                                                                    tag_ids=query_params.tag_ids,
                                                                     all_tags=query_params.all_tags, **skip_limit))
 
             if query_params.search_terms:
