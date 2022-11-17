@@ -148,10 +148,11 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                   document=esdoc.json())
         if not int(res['_id']) == esdoc.sdoc_id:
             # FIXME Flo: What to do?!
-            logger.error(f"ElasticSearch Document ID and SQL Document ID of Document {esdoc.filename} do not match!")
+            logger.error((f"ElasticSearch Document ID {int(res['_id'])} and SQL Document ID {esdoc.sdoc_id} "
+                          f"of Document '{esdoc.filename}' do not match!"))
 
-        logger.debug(
-            f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to Index '{self.__get_index_name(proj_id=proj_id, index_type='doc')}'!")
+        logger.debug((f"Added Document '{esdoc.filename}' with ID '{res['_id']}' to "
+                      f"Index '{self.__get_index_name(proj_id=proj_id, index_type='doc')}'!"))
         return res['_id']
 
     def bulk_add_documents_to_index(self,
