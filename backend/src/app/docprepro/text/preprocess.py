@@ -86,7 +86,7 @@ repo = RepoService()
 es = ElasticSearchService()
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def import_uploaded_text_document(doc_file_path: Path,
                                   project_id: int) -> List[PreProTextDoc]:
     dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
@@ -97,7 +97,7 @@ def import_uploaded_text_document(doc_file_path: Path,
     return [pptd]
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def build_text_to_html_mapping(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     if len(pptds) == 0:
         return pptds
@@ -118,7 +118,7 @@ def build_text_to_html_mapping(pptds: List[PreProTextDoc]) -> List[PreProTextDoc
     return pptds
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     global spacy_models
 
@@ -128,7 +128,7 @@ def generate_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreP
     return generate_automatic_span_annotations_pipeline(pptds, spacy_models)
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     for pptd in tqdm(pptds, desc="Persisting Automatic SpanAnnotations... "):
         # create AnnoDoc for system user
@@ -184,7 +184,7 @@ def persist_automatic_span_annotations(pptds: List[PreProTextDoc]) -> List[PrePr
     return pptds
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def add_custom_tags_to_html(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     if len(pptds) == 0:
         return pptds
@@ -222,7 +222,7 @@ def add_custom_tags_to_html(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     return pptds
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     if len(pptds) == 0:
         return pptds
@@ -257,7 +257,7 @@ def add_document_to_elasticsearch_index(pptds: List[PreProTextDoc]) -> List[PreP
     return pptds
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def finish_preprocessing(ppds: List[Union[PreProTextDoc, PreProImageDoc]]) -> None:
     with sql.db_session() as db:
         resolved_links = crud_sdoc_link.resolve_filenames_to_sdoc_ids(db=db)
