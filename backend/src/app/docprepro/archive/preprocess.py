@@ -19,7 +19,7 @@ sql = SQLService(echo=False)
 repo = RepoService()
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def import_uploaded_archive(archive_file_path: Path,
                             project_id: int) -> None:
     # store and extract the archive

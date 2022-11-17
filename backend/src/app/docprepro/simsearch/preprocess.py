@@ -47,7 +47,7 @@ text_encoder_min_sentence_length = conf.docprepro.simsearch.text_encoder.min_sen
 image_encoder_batch_size = conf.docprepro.simsearch.image_encoder.batch_size
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def index_text_document(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     if len(pptds) == 0:
         return pptds
@@ -98,7 +98,7 @@ def index_text_document(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     return pptds
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def index_image_document(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     if len(ppids) == 0:
         return ppids
@@ -147,7 +147,7 @@ def index_image_document(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
 
 # TODO Flo: move search stuff to other file
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def find_similar_images(proj_id: int, query: Union[str, Image.Image], top_k: int = 10) -> Dict[int, float]:
     encoded_query = _encode_query(query=query)
     sdoc_ids_with_dists = faisss.search_index(proj_id=proj_id,
@@ -157,7 +157,7 @@ def find_similar_images(proj_id: int, query: Union[str, Image.Image], top_k: int
     return sdoc_ids_with_dists
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def find_similar_sentences(proj_id: int, query: Union[str, Image.Image], top_k: int = 10) -> Dict[int, float]:
     encoded_query = _encode_query(query=query)
     span_anno_ids_with_dists = faisss.search_index(proj_id=proj_id,

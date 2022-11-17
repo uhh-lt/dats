@@ -72,7 +72,7 @@ coco2017_labels = ['background', 'person', 'bicycle', 'car', 'motorcycle', 'airp
                    'toothbrush']
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def import_uploaded_image_document(doc_file_path: Path,
                                    project_id: int) -> List[PreProImageDoc]:
     dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
@@ -85,7 +85,7 @@ def import_uploaded_image_document(doc_file_path: Path,
     return [ppid]
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     global object_detection_feature_extractor
     global object_detection_model
@@ -121,7 +121,7 @@ def generate_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[Pre
     return ppids
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     global image_captioning_feature_extractor
     global image_captioning_model
@@ -168,7 +168,7 @@ def generate_automatic_image_captions(ppids: List[PreProImageDoc]) -> List[PrePr
     return ppids
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     for ppid in tqdm(ppids, desc="Persisting automatic BBox Annotations..."):
         # create AnnoDoc for system user
@@ -205,7 +205,7 @@ def persist_automatic_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreP
     return ppids
 
 
-@celery_worker.task(acks_late=True)
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def create_pptds_from_automatic_caption(ppids: List[PreProImageDoc]) -> List[PreProTextDoc]:
     # Flo: create fake PPTDs to send them to the text worker to generate textual information and store in ES
     #  Note that this has to be in its own async callable function to enable modular celery calls w/o dependencies
