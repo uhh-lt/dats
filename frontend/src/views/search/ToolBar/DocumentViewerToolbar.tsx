@@ -9,6 +9,7 @@ import * as React from "react";
 import AnnotateButton from "./ToolBarElements/AnnotateButton";
 import { useParams } from "react-router-dom";
 import { AttachedObjectType } from "../../../api/openapi";
+import DownloadButton from "./ToolBarElements/DownloadButton";
 
 interface DocumentViewerToolbarProps {
   sdocId: number;
@@ -27,6 +28,7 @@ function DocumentViewerToolbar({ sdocId, searchResultIds }: DocumentViewerToolba
       <TagMenuButton forceSdocId={sdocId} popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
       <DeleteButton sdocId={sdocId} />
       <ToggleShowEntitiesButton />
+      <DownloadButton sdocId={sdocId} />
 
       <Box sx={{ flexGrow: 1 }} />
 
