@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.doc_type import DocType
 from app.core.data.dto.search import SpanEntity, SpanEntityFrequency, TagStat, SpanEntityDocumentFrequency, \
     SpanEntityDocumentFrequencyResult, KeyValue
 from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
@@ -237,6 +238,34 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         query = query.group_by(self.model.id)
         query = query.having(func.count(self.model.id) == len(metadata))
+
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return list(map(lambda row: row.id, query.all()))
+
+    def get_ids_by_doc_types_and_project_id(self,
+                                            db: Session,
+                                            *,
+                                            doc_types: List[DocType],
+                                            proj_id: int,
+                                            only_finished: bool = True,
+                                            skip: Optional[int] = None,
+                                            limit: Optional[int] = None) -> List[int]:
+
+        query = db.query(self.model.id)
+
+        if only_finished:
+            query = query.filter(and_(self.model.project_id == proj_id,
+                                      self.model.status == SDocStatus.finished,
+                                      self.model.doctype.in_(doc_types)))
+        else:
+            query = query.filter(and_(self.model.project_id == proj_id,
+                                      self.model.doctype.in_(doc_types)))
+
+        query = query.group_by(self.model.id)
 
         if skip is not None:
             query = query.offset(skip)

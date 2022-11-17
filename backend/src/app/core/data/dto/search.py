@@ -4,6 +4,7 @@ from typing import Set, Optional, List, Dict
 from pydantic import BaseModel, Field
 
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoRead
 from app.core.data.dto.span_annotation import SpanAnnotationRead
@@ -67,8 +68,8 @@ class SearchSDocsQueryParameters(BaseModel):
                                                            " the SourceDocuments content (via Elasticsearch)"),
                                               default=None)
 
-    file_name: Optional[str] = Field(description=("FileName that have to be present in"
-                                                  " the SourceDocuments FileName (via Elasticsearch)"),
+    file_name: Optional[str] = Field(description=("Filename that have to be present in"
+                                                  " the SourceDocuments Filename (via Elasticsearch)"),
                                      default=None)
 
     span_entities: Optional[List[SpanEntity]] = Field(description=("List of SpanEntities that have to be present in"
@@ -84,6 +85,9 @@ class SearchSDocsQueryParameters(BaseModel):
 
     all_tags: Optional[bool] = Field(description=("If true return SourceDocuments tagged with all DocumentTags, or any"
                                                   "of the DocumentTags otherwise"), default=True)
+
+    doc_types: Optional[List[DocType]] = Field(description="Only return SourceDocuments with the given DocTypes",
+                                               default=[DocType.text, DocType.image, DocType.audio, DocType.video])
 
 
 class SourceDocumentContentQuery(BaseModel):

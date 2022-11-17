@@ -59,11 +59,19 @@ class SearchService(metaclass=SingletonMeta):
                                                                                         **skip_limit).hits])
 
             if query_params.metadata:
-                sdocs_ids.append(crud_sdoc.get_ids_by_metadata(db=db, metadata=query_params.metadata, **skip_limit))
+                sdocs_ids.append(crud_sdoc.get_ids_by_metadata_and_project_id(db=db,
+                                                                              proj_id=query_params.proj_id,
+                                                                              metadata=query_params.metadata,
+                                                                              **skip_limit))
+
+            if query_params.doc_types:
+                sdocs_ids.append(crud_sdoc.get_ids_by_doc_types_and_project_id(db=db,
+                                                                               proj_id=query_params.proj_id,
+                                                                               doc_types=query_params.doc_types,
+                                                                               **skip_limit))
 
             if len(sdocs_ids) == 0:
                 # no search results, so we return all documents!
-
                 return [sdoc.id for sdoc in crud_sdoc.read_by_project(db=db,
                                                                       proj_id=query_params.proj_id,
                                                                       only_finished=True)]
