@@ -57,7 +57,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             ActionService().create_action(proj_id=proj_id,
                                           user_id=SYSTEM_USER_ID,  # FIXME use correct user
                                           action_type=ActionType.UPDATE,
-                                          target=ActionTargetObjectType.code,
+                                          target=ActionTargetObjectType.source_document,
                                           target_id=sid)
 
         return len(new_rows)
@@ -81,7 +81,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             ActionService().create_action(proj_id=proj_id,
                                           user_id=SYSTEM_USER_ID,  # FIXME use correct user
                                           action_type=ActionType.UPDATE,
-                                          target=ActionTargetObjectType.code,
+                                          target=ActionTargetObjectType.source_document,
                                           target_id=sid)
 
         return len(del_rows)

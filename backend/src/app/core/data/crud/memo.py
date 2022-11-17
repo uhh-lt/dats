@@ -94,7 +94,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
             ActionService().create_action(proj_id=proj_id,
                                           user_id=user_id,
                                           action_type=ActionType.DELETE,
-                                          target=ActionTargetObjectType.bbox_annotation,
+                                          target=ActionTargetObjectType.memo,
                                           target_id=rid)
         return removed_ids
 
