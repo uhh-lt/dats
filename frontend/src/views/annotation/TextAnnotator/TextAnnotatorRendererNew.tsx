@@ -79,7 +79,7 @@ function TextAnnotationRendererNew({
               <span
                 key={`sentence-${sentenceId}`}
                 className={"sentence " + (isViewer ? "hoversentence" : "")}
-                data-sentenceid="0"
+                data-sentenceid={sentenceId}
               >
                 {children}
               </span>
