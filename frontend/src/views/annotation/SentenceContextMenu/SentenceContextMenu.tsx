@@ -14,7 +14,7 @@ import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../../search/searchSlice";
 import { createCodeFilter, createSentenceFilter } from "../../search/SearchFilter";
 import { useNavigate } from "react-router-dom";
-import { SpanAnnotationReadResolved } from "../../../api/openapi";
+import { DocType, SpanAnnotationReadResolved } from "../../../api/openapi";
 
 interface SentenceContextMenuProps {}
 
@@ -68,16 +68,14 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleSentenceSimilaritySearch = () => {
-    dispatch(SearchActions.setFindImageModality(false));
-    dispatch(SearchActions.setFindTextModality(true));
+    dispatch(SearchActions.setResultModalites([DocType.TEXT]));
     dispatch(SearchActions.addFilter(createSentenceFilter(sentence!)));
     closeContextMenu();
     navigate("../search");
   };
 
   const handleImageSimilaritySearch = () => {
-    dispatch(SearchActions.setFindImageModality(true));
-    dispatch(SearchActions.setFindTextModality(false));
+    dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
     dispatch(SearchActions.addFilter(createSentenceFilter(sentence!)));
     closeContextMenu();
     navigate("../search");

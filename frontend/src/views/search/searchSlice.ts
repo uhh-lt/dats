@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SearchFilter, SearchFilterType } from "./SearchFilter";
 import { SearchType } from "./SearchType";
+import { DocType } from "../../api/openapi";
 
 interface SearchState {
   selectedDocumentIds: number[];
@@ -11,8 +12,7 @@ interface SearchState {
   isListView: boolean;
   page: number;
   rowsPerPage: number;
-  findTextModality: boolean;
-  findImageModality: boolean;
+  resultModalities: DocType[];
   searchType: SearchType;
 }
 
@@ -25,8 +25,7 @@ const initialState: SearchState = {
   isListView: false,
   page: 0,
   rowsPerPage: 10,
-  findTextModality: true,
-  findImageModality: true,
+  resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
   searchType: SearchType.CONTENT,
 };
 
@@ -109,17 +108,17 @@ export const searchSlice = createSlice({
     setPage: (state, action: PayloadAction<number>) => {
       state.page = action.payload;
     },
-    toggleFindTextModality: (state) => {
-      state.findTextModality = !state.findTextModality;
+    setResultModalites: (state, action: PayloadAction<DocType[]>) => {
+      state.resultModalities = action.payload.sort();
     },
-    setFindTextModality: (state, action: PayloadAction<boolean>) => {
-      state.findTextModality = action.payload;
-    },
-    toggleFindImageModality: (state) => {
-      state.findImageModality = !state.findImageModality;
-    },
-    setFindImageModality: (state, action: PayloadAction<boolean>) => {
-      state.findImageModality = action.payload;
+    toggleModality: (state, action: PayloadAction<DocType>) => {
+      let index = state.resultModalities.indexOf(action.payload);
+      if (index === -1) {
+        state.resultModalities.push(action.payload);
+      } else {
+        state.resultModalities.splice(index, 1);
+      }
+      state.resultModalities = state.resultModalities.sort();
     },
     setSearchType: (state, action: PayloadAction<SearchType>) => {
       state.searchType = action.payload;

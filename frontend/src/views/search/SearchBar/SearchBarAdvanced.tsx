@@ -17,6 +17,7 @@ import TuneIcon from "@mui/icons-material/Tune";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../searchSlice";
 import { SearchType } from "../SearchType";
+import { DocType } from "../../../api/openapi";
 
 interface SearchBarAdvancedProps {
   anchorElRef: React.MutableRefObject<HTMLFormElement | null>;
@@ -27,8 +28,7 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
   const [open, setOpen] = useState<HTMLFormElement | null>(null);
 
   // global client state (redux)
-  const findTextModality = useAppSelector((state) => state.search.findTextModality);
-  const findImageModality = useAppSelector((state) => state.search.findImageModality);
+  const resultModalities = useAppSelector((state) => state.search.resultModalities);
   const searchType = useAppSelector((state) => state.search.searchType);
   const dispatch = useAppDispatch();
 
@@ -76,8 +76,8 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
                   control={
                     <Checkbox
                       name="Text"
-                      onChange={() => dispatch(SearchActions.toggleFindTextModality())}
-                      checked={findTextModality}
+                      onChange={() => dispatch(SearchActions.toggleModality(DocType.TEXT))}
+                      checked={resultModalities.indexOf(DocType.TEXT) !== -1}
                     />
                   }
                   label="Text"
@@ -86,11 +86,31 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
                   control={
                     <Checkbox
                       name="Image"
-                      onChange={() => dispatch(SearchActions.toggleFindImageModality())}
-                      checked={findImageModality}
+                      onChange={() => dispatch(SearchActions.toggleModality(DocType.IMAGE))}
+                      checked={resultModalities.indexOf(DocType.IMAGE) !== -1}
                     />
                   }
                   label="Image"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="Audio"
+                      onChange={() => dispatch(SearchActions.toggleModality(DocType.AUDIO))}
+                      checked={resultModalities.indexOf(DocType.AUDIO) !== -1}
+                    />
+                  }
+                  label="Audio"
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="Video"
+                      onChange={() => dispatch(SearchActions.toggleModality(DocType.VIDEO))}
+                      checked={resultModalities.indexOf(DocType.VIDEO) !== -1}
+                    />
+                  }
+                  label="Video"
                 />
               </FormGroup>
             </FormControl>

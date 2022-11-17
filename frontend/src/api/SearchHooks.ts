@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  DocType,
   KeywordStat,
   MemoContentQuery,
   MemoRead,
@@ -43,14 +44,14 @@ export function getSearchResultIds(results: SearchResults) {
 
 const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: SearchFilter[]) => {
   const { user } = useAuth();
-  const findTextModality = useAppSelector((state) => state.search.findTextModality);
+  const resultModalities = useAppSelector((state) => state.search.resultModalities);
   // const findImageModality = useAppSelector((state) => state.search.findImageModality);
   return useQuery<SearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, user.data?.id, filters, findTextModality],
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, user.data?.id, filters, resultModalities],
     async () => {
       const { keywords, tags, codes, texts, sentences, files, metadata } = orderFilter(filters);
-      if (sentences.length === 1) {
-        if (findTextModality) {
+      if (sentences.length === 1 && resultModalities.length === 1) {
+        if (resultModalities[0] === DocType.TEXT) {
           const result = await SearchService.findSimilarSentences({
             projId: projectId,
             query: filters[0].data as string,
@@ -89,6 +90,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
             search_terms: texts.length > 0 ? texts : undefined,
             file_name: files.length > 0 ? files[0] : undefined,
             metadata: metadata.length > 0 ? metadata : undefined,
+            doc_types: resultModalities.length > 0 ? resultModalities : undefined,
             all_tags: true,
           },
         });
@@ -118,8 +120,9 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
 
 const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]) => {
   const { user } = useAuth();
+  const resultModalities = useAppSelector((state) => state.search.resultModalities);
   return useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
-    [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, user.data?.id, filters],
+    [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, user.data?.id, filters, resultModalities],
     async () => {
       const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
       const data = await SearchService.searchEntityDocumentStats({
@@ -132,6 +135,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
           search_terms: texts.length > 0 ? texts : undefined,
           file_name: files.length > 0 ? files[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
+          doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
         },
       });
@@ -142,28 +146,34 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
 
 const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
   const { user } = useAuth();
-  return useQuery<KeywordStat[], Error>([QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, user.data?.id, filters], () => {
-    const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
-    return SearchService.searchKeywordStats({
-      requestBody: {
-        proj_id: projectId,
-        user_ids: user.data ? [user.data.id] : undefined,
-        span_entities: codes.length > 0 ? codes : undefined,
-        tag_ids: tags.length > 0 ? tags : undefined,
-        keywords: keywords.length > 0 ? keywords : undefined,
-        search_terms: texts.length > 0 ? texts : undefined,
-        file_name: files.length > 0 ? files[0] : undefined,
-        metadata: metadata.length > 0 ? metadata : undefined,
-        all_tags: true,
-      },
-    });
-  });
+  const resultModalities = useAppSelector((state) => state.search.resultModalities);
+  return useQuery<KeywordStat[], Error>(
+    [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, user.data?.id, filters, resultModalities],
+    () => {
+      const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
+      return SearchService.searchKeywordStats({
+        requestBody: {
+          proj_id: projectId,
+          user_ids: user.data ? [user.data.id] : undefined,
+          span_entities: codes.length > 0 ? codes : undefined,
+          tag_ids: tags.length > 0 ? tags : undefined,
+          keywords: keywords.length > 0 ? keywords : undefined,
+          search_terms: texts.length > 0 ? texts : undefined,
+          file_name: files.length > 0 ? files[0] : undefined,
+          metadata: metadata.length > 0 ? metadata : undefined,
+          doc_types: resultModalities.length > 0 ? resultModalities : undefined,
+          all_tags: true,
+        },
+      });
+    }
+  );
 };
 
 const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
   const { user } = useAuth();
+  const resultModalities = useAppSelector((state) => state.search.resultModalities);
   return useQuery<TagStat[], Error>(
-    [QueryKey.SEARCH_TAG_STATISTICS, projectId, user.data?.id, filters],
+    [QueryKey.SEARCH_TAG_STATISTICS, projectId, user.data?.id, filters, resultModalities],
     () => {
       const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
       return SearchService.searchTagStats({
@@ -176,6 +186,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
           search_terms: texts.length > 0 ? texts : undefined,
           file_name: files.length > 0 ? files[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
+          doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
         },
       });

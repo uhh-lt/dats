@@ -4659,7 +4659,7 @@
           "file_name": {
             "title": "File Name",
             "type": "string",
-            "description": "FileName that have to be present in the SourceDocuments FileName (via Elasticsearch)"
+            "description": "Filename that have to be present in the SourceDocuments Filename (via Elasticsearch)"
           },
           "span_entities": {
             "title": "Span Entities",
@@ -4684,6 +4684,12 @@
             "type": "boolean",
             "description": "If true return SourceDocuments tagged with all DocumentTags, or anyof the DocumentTags otherwise",
             "default": true
+          },
+          "doc_types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocType" },
+            "description": "Only return SourceDocuments with the given DocTypes",
+            "default": ["text", "image", "audio", "video"]
           }
         }
       },

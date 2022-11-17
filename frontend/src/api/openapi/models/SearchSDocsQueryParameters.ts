@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { DocType } from "./DocType";
 import type { KeyValue } from "./KeyValue";
 import type { SpanEntity } from "./SpanEntity";
 
@@ -23,7 +24,7 @@ export type SearchSDocsQueryParameters = {
    */
   search_terms?: Array<string>;
   /**
-   * FileName that have to be present in the SourceDocuments FileName (via Elasticsearch)
+   * Filename that have to be present in the SourceDocuments Filename (via Elasticsearch)
    */
   file_name?: string;
   /**
@@ -42,4 +43,8 @@ export type SearchSDocsQueryParameters = {
    * If true return SourceDocuments tagged with all DocumentTags, or anyof the DocumentTags otherwise
    */
   all_tags?: boolean;
+  /**
+   * Only return SourceDocuments with the given DocTypes
+   */
+  doc_types?: Array<DocType>;
 };
