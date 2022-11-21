@@ -121,6 +121,18 @@ const useGetDocumentContent = (sdocId: number | undefined) =>
     }
   );
 
+const useGetLinkedSdocIds = (sdocId: number | undefined) =>
+  useQuery<number[], Error>(
+    [QueryKey.SDOC_LINKS, sdocId],
+    () =>
+      SourceDocumentService.getLinkedSdocs({
+        sdocId: sdocId!,
+      }),
+    {
+      enabled: !!sdocId,
+    }
+  );
+
 const useDeleteDocument = () =>
   useMutation(SourceDocumentService.deleteById, {
     onSuccess: (sdoc) => {
@@ -262,6 +274,7 @@ const SdocHooks = {
   useUpdateDocumentKeywords,
   useGetDocumentSentences,
   useGetDocumentContent,
+  useGetLinkedSdocIds,
   useDeleteDocument,
   // tags
   useGetAllDocumentTags,

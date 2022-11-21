@@ -126,7 +126,7 @@ function SentenceResultCard({
   return (
     <Card
       sx={{ width: "100%" }}
-      onContextMenu={handleOnContextMenu(sdocId)}
+      onContextMenu={handleOnContextMenu ? handleOnContextMenu(sdocId) : undefined}
       raised={isSelected || (parseInt(urlSdocId || "") === sdocId && selectedDocumentIds.length === 0)}
     >
       <CardActionArea onClick={() => handleClick(sdocId)}>
@@ -143,7 +143,7 @@ function SentenceResultCard({
                 color="primary"
                 checked={isSelected}
                 onClick={(e) => e.stopPropagation()}
-                onChange={(event) => handleOnCheckboxChange(event, sdocId)}
+                onChange={handleOnCheckboxChange ? (event) => handleOnCheckboxChange(event, sdocId) : undefined}
                 inputProps={{
                   "aria-labelledby": labelId,
                 }}

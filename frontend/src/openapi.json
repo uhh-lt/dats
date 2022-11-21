@@ -1224,6 +1224,35 @@
         }
       }
     },
+    "/sdoc/{sdoc_id}/linked_sdocs": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
+        "description": "Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
+        "operationId": "get_linked_sdocs",
+        "parameters": [
+          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Sourcedocument-Get Linked Sdocs",
+                  "type": "array",
+                  "items": { "type": "integer" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc/{sdoc_id}/url": {
       "get": {
         "tags": ["sourceDocument"],

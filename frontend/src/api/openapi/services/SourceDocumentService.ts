@@ -235,6 +235,25 @@ export class SourceDocumentService {
   }
 
   /**
+   * Returns the ids of SourceDocuments linked to the SourceDocument with the given id.
+   * Returns the ids of SourceDocuments linked to the SourceDocument with the given id.
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static getLinkedSdocs({ sdocId }: { sdocId: number }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/linked_sdocs",
+      path: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns the URL to the original file of the SourceDocument
    * Returns the URL to the original file of the SourceDocument with the given ID if it exists.
    * @returns string Successful Response

@@ -10,6 +10,8 @@ import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import ImageViewer from "./ImageViewer";
 import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
 import UserName from "../../../components/UserName";
+import SearchResultCard from "../SearchResults/SearchResultCard";
+import { useNavigate } from "react-router-dom";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;
@@ -25,8 +27,11 @@ function DocumentViewer({
   isIdleContent,
   ...props
 }: DocumentViewerProps & BoxProps) {
+  const navigate = useNavigate();
+
   // queries
   const sdoc = SdocHooks.useGetDocument(sdocId);
+  const linkedSdocIds = SdocHooks.useGetLinkedSdocIds(sdocId);
   const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sdocId);
   const { annotationDocuments, selectedAdoc, handleSelectAnnotationDocument } =
     useSelectableAnnotationDocuments(sdocId);
@@ -92,6 +97,22 @@ function DocumentViewer({
                 />
               </>
             )}
+          </>
+        )}
+
+        {linkedSdocIds.isSuccess && (
+          <>
+            <h3>Linked documents:</h3>
+            <Box pb={1} style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
+              {linkedSdocIds.data.map((sdocId) => (
+                <SearchResultCard
+                  key={sdocId}
+                  sdocId={sdocId}
+                  handleClick={() => navigate(`../search/doc/${sdocId}`)}
+                  style={{ marginLeft: "16px", display: "inline-block", whiteSpace: "normal" }}
+                />
+              ))}
+            </Box>
           </>
         )}
       </Stack>

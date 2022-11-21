@@ -5,6 +5,7 @@ import {
   CardContent,
   CardHeader,
   CardMedia,
+  CardProps,
   Stack,
   styled,
   Tooltip,
@@ -31,7 +32,13 @@ const StyledCardHeader = styled(CardHeader)(() => ({
   },
 }));
 
-function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCheckboxChange }: SearchResultItem) {
+function SearchResultCard({
+  sdocId,
+  handleClick,
+  handleOnContextMenu,
+  handleOnCheckboxChange,
+  ...props
+}: SearchResultItem & CardProps) {
   // router
   const { projectId, sdocId: urlSdocId } = useParams() as { projectId: string; sdocId: string | undefined };
 
@@ -55,8 +62,9 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
   return (
     <Card
       sx={{ width: 300, height: 370 }}
-      onContextMenu={handleOnContextMenu(sdocId)}
+      onContextMenu={handleOnContextMenu ? handleOnContextMenu(sdocId) : undefined}
       raised={isSelected || (parseInt(urlSdocId || "") === sdocId && selectedDocumentIds.length === 0)}
+      {...props}
     >
       <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data.id)}>
         <StyledCardHeader
@@ -67,17 +75,19 @@ function SearchResultCard({ sdocId, handleClick, handleOnContextMenu, handleOnCh
           }
           disableTypography
           action={
-            <Checkbox
-              color="primary"
-              checked={isSelected}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(event) => handleOnCheckboxChange(event, sdocId)}
-              inputProps={{
-                "aria-labelledby": labelId,
-              }}
-              sx={{ flexShrink: 0 }}
-              disabled={!sdoc.isSuccess}
-            />
+            handleOnCheckboxChange ? (
+              <Checkbox
+                color="primary"
+                checked={isSelected}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(event) => handleOnCheckboxChange(event, sdocId)}
+                inputProps={{
+                  "aria-labelledby": labelId,
+                }}
+                sx={{ flexShrink: 0 }}
+                disabled={!sdoc.isSuccess}
+              />
+            ) : undefined
           }
         />
         <CardContent sx={{ pt: 0 }}>

@@ -48,7 +48,7 @@ function SearchResultSentenceTableRow({
       aria-checked={isSelected}
       tabIndex={-1}
       selected={isSelected || parseInt(urlSdocId || "") === sdocId}
-      onContextMenu={handleOnContextMenu(sdocId)}
+      onContextMenu={handleOnContextMenu ? handleOnContextMenu(sdocId) : undefined}
       className={"myTableRow"}
     >
       <TableCell padding="checkbox">
@@ -56,7 +56,7 @@ function SearchResultSentenceTableRow({
           color="primary"
           checked={isSelected}
           onClick={(e) => e.stopPropagation()}
-          onChange={(event) => handleOnCheckboxChange(event, sdocId)}
+          onChange={handleOnCheckboxChange ? (event) => handleOnCheckboxChange(event, sdocId) : undefined}
           inputProps={{
             "aria-labelledby": labelId,
           }}
