@@ -151,6 +151,16 @@ async def get_keywords(*,
                                                                proj_id=sdoc_db_obj.project_id)
 
 
+@router.get("/{sdoc_id}/linked_sdocs", tags=tags,
+            response_model=List[int],
+            summary="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
+            description="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.")
+async def get_linked_sdocs(*,
+                           db: Session = Depends(get_db_session),
+                           sdoc_id: int) -> List[int]:
+    return crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
+
+
 @router.patch("/{sdoc_id}/keywords", tags=tags,
               response_model=Optional[SourceDocumentKeywords],
               summary="Updates the keywords of the SourceDocument.",

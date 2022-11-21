@@ -14,6 +14,7 @@ from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CurrentCodeORM, CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM, SourceDocumentDocumentTagLinkTable
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
@@ -452,6 +453,28 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         res = query.all()
         return [TagStat(tag=tag, count=count) for (tag, count) in res]
+
+    def collect_linked_sdoc_ids(self,
+                                db: Session,
+                                *,
+                                sdoc_id: int) -> List[int]:
+
+        # SELECT * FROM sourcedocumentlink sl
+        # WHERE (sl.linked_source_document_id = 1 OR
+        #       sl.parent_source_document_id = 1) and sl.linked_source_document_id IS NOT NULL
+
+        query = db.query(SourceDocumentLinkORM.parent_source_document_id,
+                         SourceDocumentLinkORM.linked_source_document_id)
+
+        # noinspection PyUnresolvedReferences
+        query = query.filter(and_(or_(SourceDocumentLinkORM.parent_source_document_id == sdoc_id,
+                                      SourceDocumentLinkORM.linked_source_document_id == sdoc_id),
+                                  SourceDocumentLinkORM.linked_source_document_id is not None))
+        query = query.order_by(desc(SourceDocumentLinkORM.parent_source_document_id))
+
+        res = query.all()
+        return [linked_sdoc_id if parent_sdoc_id == sdoc_id else parent_sdoc_id
+                for (parent_sdoc_id, linked_sdoc_id) in res]
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)
