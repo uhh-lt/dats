@@ -123,14 +123,17 @@ class RepoService(metaclass=SingletonMeta):
             logger.info(f"Removing SourceDocument File {f.name} of project with ID={proj_id}")
             f.unlink(missing_ok=False)
 
+    def generate_sdoc_filename(self, filename: str, webp: bool = False, thumbnail: bool = False) -> str:
+        file = Path(filename)
+        suffix = ".webp" if webp else file.suffix
+        name = file.stem + ("_thumbnail" if thumbnail else "")
+        return f"{name}{suffix}"
+
     def get_path_to_sdoc_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False, webp: bool = False,
                               thumbnail: bool = False) -> Path:
         filename = sdoc.filename
         if sdoc.doctype == DocType.image:
-            file = Path(filename)
-            suffix = ".webp" if webp else file.suffix
-            name = file.stem + ("_thumbnail" if thumbnail else "")
-            filename = f"{name}{suffix}"
+            filename = self.generate_sdoc_filename(filename=filename, webp=webp, thumbnail=thumbnail)
 
         dst_path = self._get_dst_path_for_project_file(proj_id=sdoc.project_id, filename=filename)
         if raise_if_not_exists and not dst_path.exists():

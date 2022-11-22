@@ -6,8 +6,11 @@ from PIL import Image
 from tqdm import tqdm
 
 from app.core.data.dto.source_document import SDocStatus
+from app.core.data.repo.repo_service import RepoService
 from app.docprepro.image import PreProImageDoc
 from app.docprepro.util import update_sdoc_status
+
+repo = RepoService()
 
 
 def convert_to_webp(path: Path,
@@ -18,10 +21,10 @@ def convert_to_webp(path: Path,
                     thumbnail_size: int = 120):
     with Image.open(path) as im:
         if webp:
-            im.save(path.with_name(path.stem + ".webp"), "WEBP", quality=webp_quality, lossless=True, method=6)
+            im.save(path.with_name(repo.generate_sdoc_filename(path.name, webp=True)), "WEBP", quality=webp_quality, lossless=True, method=6)
         if thumbnails:
             im.thumbnail((thumbnail_size, thumbnail_size))
-            im.save(path.with_name(path.stem + "_thumbnail.webp"), "WEBP", quality=85, lossless=True, method=6)
+            im.save(path.with_name(repo.generate_sdoc_filename(path.name, webp=True, thumbnail=True)), "WEBP", quality=85, lossless=True, method=6)
     if remove_original:
         os.remove(path)
 
