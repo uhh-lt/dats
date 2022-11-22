@@ -10,6 +10,6 @@ def resolve_sdoc_links_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
         return pptds
 
     with SQLService().db_session() as db:
-        crud_sdoc_link.resolve_filenames_to_sdoc_ids(db)
+        crud_sdoc_link.resolve_filenames_to_sdoc_ids(db=db, proj_id=pptds[0].project_id)
 
     return pptds
