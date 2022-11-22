@@ -3,21 +3,29 @@ import { Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 
 interface SdocImageLinkProps {
-  sdocId: number;
-  to: string;
+  projectId: number;
+  filename: string;
+  toPrefix: string;
 }
 
-function SdocImageLink({ to, sdocId }: SdocImageLinkProps) {
-  const url = SdocHooks.useGetURL(sdocId);
+function SdocImageLink({ projectId, filename, toPrefix }: SdocImageLinkProps) {
+  const sdocId = SdocHooks.useGetDocumentIdByFilename(filename, projectId);
+  const url = SdocHooks.useGetURL(sdocId.data);
 
   return (
     <>
-      {url.isSuccess ? (
+      {sdocId.isSuccess && url.isSuccess ? (
         <div>
-          <Link component={RouterLink} to={to}>
-            <img src={url.data} />
-          </Link>
+          {sdocId.data ? (
+            <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
+              <img src={url.data} />
+            </Link>
+          ) : (
+            <img alt={`Could not resolve image ${filename} :(`} />
+          )}
         </div>
+      ) : sdocId.isError ? (
+        <div>Error: {sdocId.error.message}</div>
       ) : url.isError ? (
         <div>Error: {url.error.message}</div>
       ) : (

@@ -106,6 +106,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         onContextMenu={handleContextMenu}
         isViewer={true}
         html={sdoc.content}
+        projectId={sdoc.project_id}
       />
       <SentenceContextMenu ref={sentenceContextMenuRef} />
     </>

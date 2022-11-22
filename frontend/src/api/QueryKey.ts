@@ -70,6 +70,8 @@ export const QueryKey = {
   SDOC_URL: "sdocURL",
   // linked sdoc ids of a document (by document id)
   SDOC_LINKS: "sdocLinks",
+  // id of a single SourceDocument (by project id and filename)
+  SDOC_ID: "sdocId",
   // all sdocs which are in the project (by project id) and tagged with given tag (by tag id)
   SDOCS_BY_PROJECT_AND_TAG_SEARCH: "sdocsByProjectAndTagSearch",
   // all sdocs which are in the project (by project id) and suffice the given filters (by filter list)

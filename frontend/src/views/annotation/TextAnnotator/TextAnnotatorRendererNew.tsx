@@ -24,6 +24,7 @@ interface TextAnnotationRendererNewProps {
   annotationsPerToken: Map<number, number[]> | undefined;
   annotationMap: Map<number, SpanAnnotationReadResolved> | undefined;
   isViewer: boolean;
+  projectId: number;
 }
 
 // needs data from useComputeTokenData
@@ -33,6 +34,7 @@ function TextAnnotationRendererNew({
   annotationsPerToken,
   annotationMap,
   isViewer,
+  projectId,
   ...props
 }: TextAnnotationRendererNewProps & BoxProps) {
   // Order matters. Instructions are processed in
@@ -55,17 +57,16 @@ function TextAnnotationRendererNew({
             return node.name === "img";
           },
           processNode: function (node: any, children: any, index: any) {
-            if (node.attribs.sdocid) {
-              const sdocId = parseInt(node.attribs.sdocid);
+            if (node.attribs.src) {
+              const filename = node.attribs.src;
               return (
                 <SdocImageLink
-                  key={`image-link-${sdocId}`}
-                  sdocId={sdocId}
-                  to={isViewer ? `../search/doc/${sdocId}` : `../annotation/${sdocId}`}
+                  key={`image-link-${filename}`}
+                  filename={filename}
+                  toPrefix={isViewer ? `../search/doc/` : `../annotation/`}
+                  projectId={projectId}
                 />
               );
-            } else {
-              return <img key={`no-image-${index}`} alt="Could not resolve this :(" />;
             }
           },
         },

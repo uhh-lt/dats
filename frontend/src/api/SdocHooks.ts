@@ -6,6 +6,7 @@ import {
   DocType,
   DocumentTagRead,
   MemoRead,
+  ProjectService,
   SourceDocumentContent,
   SourceDocumentKeywords,
   SourceDocumentMetadataRead,
@@ -52,6 +53,21 @@ const useGetDocument = (sdocId: number | undefined) =>
   useQuery<SourceDocumentRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
     enabled: !!sdocId,
   });
+
+const useGetDocumentIdByFilename = (filename: string | undefined, projectId: number) =>
+  useQuery<number | undefined, Error>(
+    [QueryKey.SDOC_ID, projectId, filename],
+    () =>
+      ProjectService.resolveFilename({
+        projId: projectId,
+        filename: filename!,
+        onlyFinished: true,
+      }),
+    {
+      enabled: !!filename,
+      staleTime: Infinity,
+    }
+  );
 
 const useGetDocumentByAdocId = (adocId: number | undefined) =>
   useQuery<SourceDocumentRead, Error>(
@@ -276,6 +292,7 @@ const SdocHooks = {
   useGetDocumentContent,
   useGetLinkedSdocIds,
   useDeleteDocument,
+  useGetDocumentIdByFilename,
   // tags
   useGetAllDocumentTags,
   useGetAllDocumentTagsBatch,

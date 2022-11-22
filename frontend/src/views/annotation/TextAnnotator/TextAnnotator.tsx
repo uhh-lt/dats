@@ -291,6 +291,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}
         isViewer={false}
+        projectId={sdoc.project_id}
       />
     </>
   );

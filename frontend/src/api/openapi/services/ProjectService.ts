@@ -569,4 +569,35 @@ export class ProjectService {
       },
     });
   }
+
+  /**
+   * Returns the Id of the SourceDocument identified by project_id and filename if it exists
+   * Returns the Id of the SourceDocument identified by project_id and filename if it exists
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static resolveFilename({
+    projId,
+    filename,
+    onlyFinished = true,
+  }: {
+    projId: number;
+    filename: string;
+    onlyFinished?: boolean;
+  }): CancelablePromise<number> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/resolve_filename/{filename}",
+      path: {
+        proj_id: projId,
+        filename: filename,
+      },
+      query: {
+        only_finished: onlyFinished,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

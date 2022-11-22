@@ -1003,6 +1003,36 @@
         }
       }
     },
+    "/project/{proj_id}/resolve_filename/{filename}": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns the Id of the SourceDocument identified by project_id and filename if it exists",
+        "description": "Returns the Id of the SourceDocument identified by project_id and filename if it exists",
+        "operationId": "resolve_filename",
+        "parameters": [
+          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "path" },
+          { "required": true, "schema": { "title": "Filename", "type": "string" }, "name": "filename", "in": "path" },
+          {
+            "required": false,
+            "schema": { "title": "Only Finished", "type": "boolean", "default": true },
+            "name": "only_finished",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": { "schema": { "title": "Response Project-Resolve Filename", "type": "integer" } }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["sourceDocument"],
@@ -1265,6 +1295,18 @@
             "required": false,
             "schema": { "title": "Relative", "type": "boolean", "default": true },
             "name": "relative",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Webp", "type": "boolean", "default": false },
+            "name": "webp",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": { "title": "Thumbnail", "type": "boolean", "default": false },
+            "name": "thumbnail",
             "in": "query"
           }
         ],
@@ -4651,8 +4693,29 @@
       },
       "SDocStatus": {
         "title": "SDocStatus",
-        "enum": [-1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-        "type": "integer",
+        "enum": [
+          "undefined_or_erroneous",
+          "import_text_document",
+          "import_image_document",
+          "convert_to_webp_and_generate_thumbnails",
+          "clean_html",
+          "extract_text_from_html_and_create_source_mapping",
+          "detect_language",
+          "generate_image_captions",
+          "create_pptd_from_caption",
+          "generate_span_annotations",
+          "generate_bbox_annotations",
+          "add_custom_html_tags",
+          "create_sdoc_links_from_html",
+          "store_metadata_in_db",
+          "store_span_annotations_in_db",
+          "store_bbox_annotations_in_db",
+          "store_document_in_elasticsearch",
+          "index_image_document_in_faiss",
+          "index_text_document_in_faiss",
+          "finished"
+        ],
+        "type": "string",
         "description": "An enumeration."
       },
       "SearchSDocsQueryParameters": {
