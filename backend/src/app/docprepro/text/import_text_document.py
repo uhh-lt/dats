@@ -30,27 +30,27 @@ def __start_apache_tika_server() -> None:
 __start_apache_tika_server()
 
 
-def create_document_content_text_file_via_tika(filepath: Path,
+def create_document_content_html_file_via_tika(filepath: Path,
                                                sdoc_db_obj: SourceDocumentORM) -> Tuple[Path, SourceDocumentORM]:
-    logger.info(f"Extracting textual content via Tika from {filepath.name} for SourceDocument {sdoc_db_obj.id}...")
+    logger.info(f"Extracting html content via Tika from {filepath.name} for SourceDocument {sdoc_db_obj.id}...")
     if filepath.suffix not in TIKA_SUPPORTED_FILE_EXTENSIONS:
         raise NotImplementedError(f"File Extension {filepath.suffix} are not supported!")
 
-    parsed = parser.from_file(filename=str(filepath))
+    parsed = parser.from_file(filename=str(filepath), xmlContent=True)
 
     if not int(parsed['status']) == 200:
-        logger.warning(f"Couldn't get textual content via Tika from {filepath}!")
+        logger.warning(f"Couldn't get html content via Tika from {filepath}!")
         content = ""
     else:
         content = parsed['content'].strip()
 
-    # create a text file with the textual content
-    text_filename = filepath.parent.joinpath(f"{filepath.stem}.txt")
-    with open(text_filename, 'w') as text_file:
-        text_file.write(content)
-    logger.info(f"Created text file with content from {filepath.name} for SourceDocument {sdoc_db_obj.id}!")
+    # create a html file with the textual content
+    html_filename = filepath.parent.joinpath(f"{filepath.stem}.html")
+    with open(html_filename, 'w') as html_file:
+        html_file.write(content)
+    logger.info(f"Created html file with content from {filepath.name} for SourceDocument {sdoc_db_obj.id}!")
 
-    return text_filename, sdoc_db_obj
+    return html_filename, sdoc_db_obj
 
 
 def import_text_document_(doc_file_path: Path, project_id: int, mime_type: str) -> List[PreProTextDoc]:
@@ -59,7 +59,8 @@ def import_text_document_(doc_file_path: Path, project_id: int, mime_type: str) 
 
     # if it's not a raw text file, try to extract the content with Apache Tika and store it in a new raw text file
     if filepath.suffix in TIKA_SUPPORTED_FILE_EXTENSIONS:
-        filepath, sdoc_db_obj = create_document_content_text_file_via_tika(filepath=filepath, sdoc_db_obj=sdoc_db_obj)
+        filepath, sdoc_db_obj = create_document_content_html_file_via_tika(filepath=filepath, sdoc_db_obj=sdoc_db_obj)
+        mime_type = "text/html"
 
     # read sdoc from db
     sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
