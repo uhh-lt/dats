@@ -510,7 +510,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         res = query.all()
         return [linked_sdoc_id if parent_sdoc_id == sdoc_id else parent_sdoc_id
-                for (parent_sdoc_id, linked_sdoc_id) in res]
+                for (parent_sdoc_id, linked_sdoc_id) in res if linked_sdoc_id is not None]
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)
