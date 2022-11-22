@@ -7,6 +7,7 @@ from transformers import DetrFeatureExtractor, DetrForObjectDetection
 from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
 
 from app.docprepro.celery.celery_worker import celery_worker
+from app.docprepro.image.convert_to_webp_and_generate_thumbnails import convert_to_webp_and_generate_thumbnails_
 from app.docprepro.image.create_pptd_from_caption import create_pptd_from_caption_
 from app.docprepro.image.generate_bbox_annotations import generate_bbox_annotations_
 from app.docprepro.image.generate_image_captions import generate_image_captions_
@@ -43,6 +44,11 @@ image_captioning_tokenizer = AutoTokenizer.from_pretrained(conf.docprepro.image.
 @celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def import_image_document(doc_file_path: Path, project_id: int, mime_type: str) -> List[PreProImageDoc]:
     return import_image_document_(doc_file_path, project_id, mime_type)
+
+
+@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
+def convert_to_webp_and_generate_thumbnails(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
+    return convert_to_webp_and_generate_thumbnails_(ppids)
 
 
 @celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})

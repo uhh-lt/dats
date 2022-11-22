@@ -14,6 +14,8 @@ class SDocStatus(str, Enum):
     import_text_document = "import_text_document"  # "imported uploaded text document"
     import_image_document = "import_image_document"  # "imported uploaded image document"
 
+    convert_to_webp_and_generate_thumbnails = "convert_to_webp_and_generate_thumbnails"  # "converted imported image to .webp and created a thumbnail"
+
     clean_html = "clean_html"  # "cleaned html of text document"
     extract_text_from_html_and_create_source_mapping = "extract_text_from_html_and_create_source_mapping"  # "created html2text source mapping "
 
