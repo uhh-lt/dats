@@ -22,7 +22,7 @@ def create_sdoc_links_from_html_(pptds: List[PreProTextDoc]) -> List[PreProTextD
             soup = BeautifulSoup(pptd.html, "html.parser")
             img_links = soup.findAll("img")
 
-            img_srcs = list(set([img["src"].strip() for img in img_links if "src" in img]))
+            img_srcs = list(set([img["src"].strip() for img in img_links if img.has_attr('src')]))
             for img_src in img_srcs:
                 create_dto = SourceDocumentLinkCreate(parent_source_document_id=pptd.sdoc_id,
                                                       linked_source_document_filename=img_src)

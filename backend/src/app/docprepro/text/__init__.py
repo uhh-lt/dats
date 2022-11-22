@@ -42,8 +42,8 @@ def text_document_preprocessing_apply_async(doc_file_path: Path, project_id: int
             Signature(generate_span_annotations) |
 
             # do stuff with html
-            Signature(add_custom_html_tags) |
             Signature(create_sdoc_links_from_html) |
+            Signature(add_custom_html_tags) |
 
             # save to dbs
             Signature(store_metadata_in_db) |
