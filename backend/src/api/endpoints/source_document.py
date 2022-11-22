@@ -181,10 +181,14 @@ async def update_keywords(*,
 async def get_file_url(*,
                        db: Session = Depends(get_db_session),
                        sdoc_id: int,
-                       relative: Optional[bool] = True) -> Optional[str]:
+                       relative: Optional[bool] = True,
+                       webp: Optional[bool] = False,
+                       thumbnail: Optional[bool] = False
+                       ) -> Optional[str]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj), relative=relative)
+    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj), relative=relative, webp=webp,
+                                      thumbnail=thumbnail)
 
 
 @router.get("/{sdoc_id}/metadata", tags=tags,

@@ -10,7 +10,7 @@ import magic
 from fastapi import UploadFile, HTTPException
 from loguru import logger
 
-from app.core.data.doc_type import get_doc_type
+from app.core.data.doc_type import get_doc_type, DocType
 from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
 from app.util.singleton_meta import SingletonMeta
 from config import conf
@@ -123,11 +123,19 @@ class RepoService(metaclass=SingletonMeta):
             logger.info(f"Removing SourceDocument File {f.name} of project with ID={proj_id}")
             f.unlink(missing_ok=False)
 
-    def get_path_to_sdoc_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False) -> Path:
-        dst_path = self._get_dst_path_for_project_file(proj_id=sdoc.project_id, filename=sdoc.filename)
+    def get_path_to_sdoc_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False, webp: bool = False,
+                              thumbnail: bool = False) -> Path:
+        filename = sdoc.filename
+        if sdoc.doctype == DocType.image:
+            file = Path(filename)
+            suffix = ".webp" if webp else file.suffix
+            name = file.stem + ("_thumbnail" if thumbnail else "")
+            filename = f"{name}{suffix}"
+
+        dst_path = self._get_dst_path_for_project_file(proj_id=sdoc.project_id, filename=filename)
         if raise_if_not_exists and not dst_path.exists():
             logger.error(
-                (f"SourceDocument {sdoc.filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
+                (f"SourceDocument {filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
                  f" found in Repository at {dst_path}!"))
             raise SourceDocumentNotFoundInRepositoryError(sdoc=sdoc, dst=str(dst_path))
         return dst_path
@@ -168,8 +176,9 @@ class RepoService(metaclass=SingletonMeta):
 
         return dst_path
 
-    def get_sdoc_url(self, sdoc: SourceDocumentRead, relative: bool = True) -> Optional[str]:
-        dst_path = self.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True)
+    def get_sdoc_url(self, sdoc: SourceDocumentRead, relative: bool = True, webp: bool = False,
+                     thumbnail: bool = False) -> Optional[str]:
+        dst_path = self.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True, webp=webp, thumbnail=thumbnail)
         relative_url = str(dst_path.relative_to(self.repo_root))
         if relative:
             return relative_url
