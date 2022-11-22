@@ -22,6 +22,7 @@ import SearchResultTag from "./SearchResultTag";
 import { AttachedObjectType, DocType } from "../../../api/openapi";
 import Checkbox from "@mui/material/Checkbox";
 import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
+import { toThumbnailUrl } from "../utils";
 
 const StyledCardHeader = styled(CardHeader)(() => ({
   color: "inherit",
@@ -98,7 +99,13 @@ function SearchResultCard({
                   {content.data.content}
                 </Typography>
               ) : sdoc.data.doctype === DocType.IMAGE ? (
-                <CardMedia sx={{ mb: 1.5 }} component="img" height="200" image={sdoc.data.content} alt="Paella dish" />
+                <CardMedia
+                  sx={{ mb: 1.5 }}
+                  component="img"
+                  height="200"
+                  image={toThumbnailUrl(sdoc.data.content)}
+                  alt="Paella dish"
+                />
               ) : (
                 <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
                   DOC TYPE IS NOT SUPPORTED :(

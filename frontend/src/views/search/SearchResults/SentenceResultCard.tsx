@@ -22,6 +22,7 @@ import { AttachedObjectType, DocType, SimSearchSentenceHit } from "../../../api/
 import Checkbox from "@mui/material/Checkbox";
 import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
 import * as d3 from "d3";
+import { toThumbnailUrl } from "../utils";
 
 const colorScale = d3.scaleLinear([0, 1 / 3, 2 / 3, 1], ["red", "orange", "gold", "green"]);
 
@@ -178,7 +179,13 @@ function SentenceResultCard({
             </Typography>
           )}
           {sdoc.isSuccess && sdoc.data.doctype === DocType.IMAGE && (
-            <CardMedia sx={{ mb: 1.5 }} component="img" height="200" image={sdoc.data.content} alt="Paella dish" />
+            <CardMedia
+              sx={{ mb: 1.5 }}
+              component="img"
+              height="200"
+              image={toThumbnailUrl(sdoc.data.content)}
+              alt="Paella dish"
+            />
           )}
 
           {tags.isLoading && <>...</>}

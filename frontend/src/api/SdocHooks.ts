@@ -30,7 +30,7 @@ const fetchSdoc = async (sdocId: number) => {
       sdoc.content = x.html;
       break;
     case DocType.IMAGE:
-      const url = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
+      const url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
       sdoc.content = process.env.REACT_APP_CONTENT + "/" + url;
       break;
   }
@@ -258,11 +258,15 @@ const useCreateMemo = () =>
   });
 
 // metadata
-const useGetURL = (sdocId: number | undefined) =>
-  useQuery<string, Error>([QueryKey.SDOC_URL, sdocId], () => SourceDocumentService.getFileUrl({ sdocId: sdocId! }), {
-    enabled: !!sdocId,
-    select: (url) => process.env.REACT_APP_CONTENT + "/" + url,
-  });
+const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
+  useQuery<string, Error>(
+    [QueryKey.SDOC_URL, sdocId],
+    () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: webp }),
+    {
+      enabled: !!sdocId,
+      select: (url) => process.env.REACT_APP_CONTENT + "/" + url,
+    }
+  );
 
 const useGetMetadata = (sdocId: number | undefined) =>
   useQuery<Map<string, SourceDocumentMetadataRead>, Error>(

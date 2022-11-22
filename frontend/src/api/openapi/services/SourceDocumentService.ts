@@ -262,9 +262,13 @@ export class SourceDocumentService {
   public static getFileUrl({
     sdocId,
     relative = true,
+    webp = false,
+    thumbnail = false,
   }: {
     sdocId: number;
     relative?: boolean;
+    webp?: boolean;
+    thumbnail?: boolean;
   }): CancelablePromise<string> {
     return __request(OpenAPI, {
       method: "GET",
@@ -274,6 +278,8 @@ export class SourceDocumentService {
       },
       query: {
         relative: relative,
+        webp: webp,
+        thumbnail: thumbnail,
       },
       errors: {
         422: `Validation Error`,

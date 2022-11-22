@@ -10,7 +10,7 @@ interface SdocImageLinkProps {
 
 function SdocImageLink({ projectId, filename, toPrefix }: SdocImageLinkProps) {
   const sdocId = SdocHooks.useGetDocumentIdByFilename(filename, projectId);
-  const url = SdocHooks.useGetURL(sdocId.data);
+  const url = SdocHooks.useGetURL(sdocId.data, true);
 
   return (
     <>
