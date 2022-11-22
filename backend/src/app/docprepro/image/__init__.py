@@ -7,7 +7,7 @@ from celery import Signature
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch import index_image_document_in_faiss
 from app.docprepro.text import store_document_in_elasticsearch, finish_preprocessing, store_span_annotations_in_db, \
-    generate_span_annotations
+    generate_span_annotations, resolve_sdoc_links
 
 # Flo: Task names (as they could be imported)
 import_image_document = "app.docprepro.image.preprocess.import_image_document"
@@ -33,6 +33,7 @@ def image_document_preprocessing_apply_async(doc_file_path: Path, project_id: in
             Signature(generate_span_annotations) |
             Signature(store_span_annotations_in_db) |
             Signature(store_document_in_elasticsearch) |
+            Signature(resolve_sdoc_links) |
             Signature(finish_preprocessing)
     )
     return image_document_preprocessing.apply_async()
@@ -50,6 +51,7 @@ def image_document_preprocessing_without_import_apply_async(ppids: List[PreProIm
             Signature(generate_span_annotations) |
             Signature(store_span_annotations_in_db) |
             Signature(store_document_in_elasticsearch) |
+            Signature(resolve_sdoc_links) |
             Signature(finish_preprocessing)
     )
     return image_document_preprocessing.apply_async()

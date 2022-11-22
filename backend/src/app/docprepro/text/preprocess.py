@@ -14,7 +14,7 @@ from app.docprepro.text.extract_text_from_html_and_create_source_mapping import 
 from app.docprepro.text.finish_preprocessing import finish_preprocessing_
 from app.docprepro.text.generate_span_annotations import generate_span_annotations_
 from app.docprepro.text.import_text_document import import_text_document_
-from app.docprepro.text.resolve_links import resolve_sdoc_links_
+from app.docprepro.text.resolve_sdoc_links import resolve_sdoc_links_
 from app.docprepro.text.store_document_in_elasticsearch import store_document_in_elasticsearch_
 from app.docprepro.text.store_metadata_in_db import store_metadata_in_db_
 from app.docprepro.text.store_span_annotations_in_db import store_span_annotations_in_db_
