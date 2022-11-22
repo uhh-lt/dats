@@ -7,7 +7,6 @@ from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.dto.util import PaginatedResults
 
 
@@ -134,6 +133,11 @@ class ElasticSearchDocumentCreate(BaseModel):
     token_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(description=("The list of character "
                                                                                             "offsets for the tokens "
                                                                                             "in the SourceDocument"))
+    sentences: List[str] = Field(description="The list of the sentences in the SourceDocument")
+    sentence_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(description=("The list of character "
+                                                                                               "offsets for the "
+                                                                                               "sentences "
+                                                                                               "in the SourceDocument"))
     keywords: List[str] = Field(description="The list of keywords of the SourceDocument")
     sdoc_id: int = Field(description="The ID of the SourceDocument as it is in the SQL DB")
     project_id: int = Field(description="The ID of the Project the SourceDocument belongs to")
@@ -148,6 +152,11 @@ class ElasticSearchDocumentRead(BaseModel):
     token_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(description=("The list of character "
                                                                                             "offsets for the tokens "
                                                                                             "in the SourceDocument"))
+    sentences: Optional[List[str]] = Field(description="The list of the sentences in the SourceDocument")
+    sentence_character_offsets: Optional[List[ElasticSearchIntegerRange]] = Field(description=("The list of character "
+                                                                                               "offsets for the "
+                                                                                               "sentences "
+                                                                                               "in the SourceDocument"))
     keywords: Optional[List[str]] = Field(description="The list of keywords of the SourceDocument")
     sdoc_id: Optional[int] = Field(description="The ID of the SourceDocument as it is in the SQL DB")
     project_id: Optional[int] = Field(description="The ID of the Project the SourceDocument belongs to")
@@ -205,8 +214,7 @@ class SimSearchHit(BaseModel):
 
 
 class SimSearchSentenceHit(SimSearchHit):
-    sentence_text: str = Field(description="The sentence returned by the similarity search.")
-    sentence_span: SpanAnnotationRead = Field(description="The sentence SpanAnnotation holding the retrieved sentence")
+    sentence_id: int = Field(description="The sentence id with respect to the SourceDocument")
 
 
 class SimSearchImageHit(SimSearchHit):

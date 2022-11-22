@@ -28,6 +28,11 @@ def store_document_in_elasticsearch_(pptds: List[PreProTextDoc]) -> List[PreProT
                                                                    ElasticSearchIntegerRange(gte=o[0], lt=o[1])
                                                                    for o in pptd.token_character_offsets
                                                                ],
+                                                               sentences=[s.text for s in pptd.sentences],
+                                                               sentence_character_offsets=[
+                                                                   ElasticSearchIntegerRange(gte=s.start, lt=s.end)
+                                                                   for s in pptd.sentences
+                                                               ],
                                                                keywords=pptd.keywords,
                                                                sdoc_id=pptd.sdoc_id,
                                                                project_id=pptd.project_id), pptds))

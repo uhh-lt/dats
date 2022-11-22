@@ -11,7 +11,7 @@ from app.core.data.dto.search import ElasticSearchDocumentCreate, ElasticSearchD
     ElasticSearchMemoRead, ElasticSearchDocumentHit, PaginatedElasticSearchDocumentHits, PaginatedMemoSearchResults, \
     ElasticMemoHit, KeywordStat
 from app.core.data.dto.source_document import SourceDocumentContent, SourceDocumentTokens, \
-    SourceDocumentKeywords, SourceDocumentHTML
+    SourceDocumentKeywords, SourceDocumentHTML, SourceDocumentSentences
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -263,6 +263,22 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                         tokens=esdoc.tokens,
                                         token_character_offsets=[(o.gte, o.lt) for o in esdoc.token_character_offsets])
         return SourceDocumentTokens(source_document_id=sdoc_id, tokens=esdoc.tokens)
+
+    def get_sdoc_sentences_by_sdoc_id(self,
+                                      *,
+                                      proj_id: int,
+                                      sdoc_id: int,
+                                      sentence_offsets: Optional[bool] = False) -> Optional[SourceDocumentSentences]:
+        fields = {"sentences"}
+        if sentence_offsets:
+            fields.add("sentence_character_offsets")
+        esdoc = self.get_esdoc_by_sdoc_id(proj_id=proj_id, sdoc_id=sdoc_id, fields=fields)
+        if sentence_offsets:
+            return SourceDocumentSentences(source_document_id=sdoc_id,
+                                           sentences=esdoc.sentences,
+                                           sentences_character_offsets=[(o.gte, o.lt) for o in
+                                                                        esdoc.sentence_character_offsets])
+        return SourceDocumentSentences(source_document_id=sdoc_id, sentences=esdoc.sentences)
 
     def get_sdoc_keywords_by_sdoc_id(self,
                                      *,

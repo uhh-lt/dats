@@ -15,7 +15,7 @@ def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
         new_html = ""
         current_position = 0
 
-        sentences = pptd.spans["SENTENCE"]
+        sentences = pptd.sentences
         current_sentence_idx = 0
 
         for token_id, (text_start, text_end) in enumerate(pptd.token_character_offsets):

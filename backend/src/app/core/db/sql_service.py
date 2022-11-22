@@ -41,6 +41,8 @@ from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.action import ActionORM
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.faiss_sentence_source_document_link import FaissSentenceSourceDocumentLinkORM
 
 from app.util.singleton_meta import SingletonMeta
 from config import conf

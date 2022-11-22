@@ -25,3 +25,4 @@ class PreProTextDoc(BaseModel):
     keywords: List[str] = Field(default=list())
     word_freqs: Dict[str, int] = Field(default=dict())
     spans: Dict[str, List[AutoSpan]] = Field(default=dict())
+    sentences: List[AutoSpan] = Field(default=list())

@@ -2,11 +2,10 @@ from typing import List, Union, Dict
 
 from PIL.Image import Image
 
+from app.core.data.crud.faiss_sentence_source_document_link import crud_faiss_sentence_link
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.search import SearchSDocsQueryParameters, SimSearchSentenceHit
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.simsearch import find_similar_sentences_apply_async, find_similar_images_apply_async
@@ -88,13 +87,12 @@ class SearchService(metaclass=SingletonMeta):
                                                                      top_k=top_k).get()
 
         with self.sqls.db_session() as db:
-            span_orms = crud_span_anno.read_by_ids(db=db, ids=list(top_k.keys()))
+            faiss_links = crud_faiss_sentence_link.read_by_ids(db=db, ids=list(top_k.keys()))
 
-            return [SimSearchSentenceHit(sdoc_id=span_orm.annotation_document.source_document_id,
+            return [SimSearchSentenceHit(sdoc_id=faiss_link.source_document_id,
                                          score=score,
-                                         sentence_text=span_orm.span_text.text,
-                                         sentence_span=SpanAnnotationRead.from_orm(span_orm))
-                    for span_orm, score in zip(span_orms, top_k.values())]
+                                         sentence_id=faiss_link.sentence_id)
+                    for faiss_link, score in zip(faiss_links, top_k.values())]
 
     def find_similar_images(self, proj_id: int, query: Union[str, Image], top_k: int = 10) \
             -> List[SourceDocumentRead]:

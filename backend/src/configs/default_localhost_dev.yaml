@@ -59,8 +59,6 @@ system_codes:
         desc: "Titles of books, songs, etc."
       MISC:
         desc: "Miscellaneous entities, e.g. events, nationalities, products or works of art"
-  SENTENCE:
-    desc: "A sentence spanning multiple Tokens."
   # image codes from COCO 2017 (bbox)
   ACCESSORY:
     desc: Super Object Category from COCO 2017

@@ -38,11 +38,11 @@ def find_similar_images(proj_id: int, query: Union[str, Image.Image], top_k: int
 @celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def find_similar_sentences(proj_id: int, query: Union[str, Image.Image], top_k: int = 10) -> Dict[int, float]:
     encoded_query = _encode_query(query=query)
-    span_anno_ids_with_dists = faisss.search_index(proj_id=proj_id,
+    embedding_ids_with_dists = faisss.search_index(proj_id=proj_id,
                                                    index_type=IndexType.TEXT,
                                                    query=encoded_query,
                                                    top_k=top_k)
-    return span_anno_ids_with_dists
+    return embedding_ids_with_dists
 
 
 def _encode_query(query: Union[str, Image.Image]) -> np.ndarray:

@@ -98,6 +98,14 @@ class SourceDocumentTokens(BaseModel):
                                                                      default=None)
 
 
+class SourceDocumentSentences(BaseModel):
+    source_document_id: int = Field(description="ID of the SourceDocument the Sentences belong to.")
+    sentences: List[str] = Field(description="The Sentences of the SourceDocument the Sentences belong to.")
+    sentence_character_offsets: Optional[List[Tuple[int, int]]] = Field(description=("The list of character offsets of"
+                                                                                     " the Sentences"),
+                                                                        default=None)
+
+
 class SourceDocumentKeywords(BaseModel):
     source_document_id: int = Field(description="ID of the SourceDocument the Keywords belong to.")
     keywords: List[str] = Field(description="The list of Keywords of the SourceDocument the Keywords belong to.")
