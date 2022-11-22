@@ -3,6 +3,12 @@ from html.parser import HTMLParser
 from itertools import accumulate
 from typing import Union, Dict, List
 
+from tqdm import tqdm
+
+from app.core.data.dto.source_document import SDocStatus
+from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from app.docprepro.util import update_sdoc_status
+
 
 class CustomLineHTMLParser(HTMLParser):
 
@@ -43,7 +49,6 @@ class HTMLTextMapper(CustomLineHTMLParser):
     def handle_data(self, data: str):
         # only add text if it is not only whitespaces!
         if not data.isspace():
-            match2 = re.match(r"(\s+)$", data)
             match = re.match(r"^(\s+)", data)
             start_spaces = 0
             if match and match.group(1):
@@ -74,3 +79,27 @@ class HTMLTextMapper(CustomLineHTMLParser):
     def close(self):
         super().close()
         self.text_end()
+
+
+def extract_text_from_html_and_create_source_mapping_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
+    if len(pptds) == 0:
+        return pptds
+
+    parser = HTMLTextMapper()
+    for pptd in tqdm(pptds, desc="Parsing html... "):
+        results = parser(pptd.html)
+
+        text = " ".join([r["text"] for r in results])
+        pptd.text = text
+
+        text2html_character_offsets = []
+        for result in results:
+            for index in range(result['start'], result['end'] + 1):
+                text2html_character_offsets.append(index)
+        pptd.text2html_character_offsets = text2html_character_offsets
+
+        # Flo: update sdoc status
+        update_sdoc_status(sdoc_id=pptd.sdoc_id,
+                           sdoc_status=SDocStatus.extract_text_from_html_and_create_source_mapping)
+
+    return pptds

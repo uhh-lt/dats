@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class SpanTextORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
+    # FIXME: index row size X exceeds btree version 4 maximum 2704 for index ... (Problem with very large annotations)
     text = Column(String, index=True)
 
     # one to many

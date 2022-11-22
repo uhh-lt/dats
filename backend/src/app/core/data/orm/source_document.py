@@ -19,7 +19,7 @@ class SourceDocumentORM(ORMBase):
     filename = Column(String, nullable=False, index=True)
     content = Column(String, nullable=False, index=False)  # TODO Flo: This will go to ES soon!
     doctype = Column(String, nullable=False, index=True)
-    status = Column(Integer, nullable=False, index=True)
+    status = Column(String, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
     updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
 
