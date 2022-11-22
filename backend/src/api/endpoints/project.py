@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from api.dependencies import skip_limit_params, get_db_session
 from api.util import get_object_memos
 from app.core.data.action_service import ActionService
-from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
@@ -351,3 +350,15 @@ async def get_user_memo(*,
                         user_id: int) -> Optional[MemoRead]:
     db_obj = crud_project.read(db=db, id=proj_id)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
+
+
+@router.get("/{proj_id}/resolve_filename/{filename}", tags=tags,
+            response_model=Optional[int],
+            summary="Returns the Id of the SourceDocument identified by project_id and filename if it exists",
+            description=("Returns the Id of the SourceDocument identified by project_id and filename if it exists"))
+async def resolve_filename(*,
+                           db: Session = Depends(get_db_session),
+                           proj_id: int,
+                           filename: str, only_finished: Optional[bool] = True,
+                           ) -> Optional[int]:
+    return crud_sdoc.filename2id(db=db, proj_id=proj_id, only_finished=only_finished, filename=filename)

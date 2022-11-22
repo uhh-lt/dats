@@ -145,7 +145,7 @@ def main() -> None:
             host="0.0.0.0",
             port=port,
             log_level=conf.logging.level.lower(),
-            debug=True,
+            # debug=True,
             reload=True
         ),
     )

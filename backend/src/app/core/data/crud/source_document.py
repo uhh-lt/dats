@@ -144,6 +144,42 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         return query.all()
 
+    def read_by_filename(self,
+                         db: Session,
+                         *,
+                         proj_id: int,
+                         only_finished: bool = True,
+                         filename: str) -> Optional[SourceDocumentORM]:
+        query = db.query(self.model)
+
+        if only_finished:
+            query = query.filter(self.model.project_id == proj_id,
+                                 self.model.filename == filename,
+                                 self.model.status == SDocStatus.finished)
+        else:
+            query = query.filter(self.model.project_id == proj_id, self.model.filename == filename)
+        return query.first()
+
+    def filename2id(self,
+                    db: Session,
+                    *,
+                    proj_id: int,
+                    only_finished: bool = True,
+                    filename: str) -> Optional[int]:
+        query = db.query(self.model.id)
+
+        if only_finished:
+            query = query.filter(self.model.project_id == proj_id,
+                                 self.model.filename == filename,
+                                 self.model.status == SDocStatus.finished)
+        else:
+            query = query.filter(self.model.project_id == proj_id, self.model.filename == filename)
+        result = query.first()
+
+        if result:
+            return result[0]
+        return None
+
     def count_by_project(self,
                          db: Session,
                          *,
