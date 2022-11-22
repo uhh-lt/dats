@@ -11,8 +11,8 @@ import type { SourceDocumentKeywords } from "../models/SourceDocumentKeywords";
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
+import type { SourceDocumentSentences } from "../models/SourceDocumentSentences";
 import type { SourceDocumentTokens } from "../models/SourceDocumentTokens";
-import type { SpanAnnotationReadResolvedText } from "../models/SpanAnnotationReadResolvedText";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -157,18 +157,23 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the textual tokens of the SourceDocument if it is a text document.
-   * Returns the textual tokens of the SourceDocument if it is a text document.
-   * @returns SpanAnnotationReadResolvedText Successful Response
+   * Returns the sentences of the SourceDocument if it is a text document.
+   * Returns the sentences of the SourceDocument if it is a text document.
+   * @returns SourceDocumentSentences Successful Response
    * @throws ApiError
    */
   public static getSentences({
     sdocId,
     onlyFinished = true,
+    sentenceOffsets = false,
   }: {
     sdocId: number;
     onlyFinished?: boolean;
-  }): CancelablePromise<Array<SpanAnnotationReadResolvedText>> {
+    /**
+     * If True include the character offsets.
+     */
+    sentenceOffsets?: boolean;
+  }): CancelablePromise<SourceDocumentSentences> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/sentences",
@@ -177,6 +182,7 @@ export class SourceDocumentService {
       },
       query: {
         only_finished: onlyFinished,
+        sentence_offsets: sentenceOffsets,
       },
       errors: {
         422: `Validation Error`,

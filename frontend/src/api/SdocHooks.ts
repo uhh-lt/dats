@@ -11,9 +11,9 @@ import {
   SourceDocumentKeywords,
   SourceDocumentMetadataRead,
   SourceDocumentRead,
+  SourceDocumentSentences,
   SourceDocumentService,
   SourceDocumentTokens,
-  SpanAnnotationReadResolvedText,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import useStableQueries from "../utils/useStableQueries";
@@ -114,7 +114,7 @@ const useUpdateDocumentKeywords = () =>
   });
 
 const useGetDocumentSentences = (sdocId: number | undefined) =>
-  useQuery<SpanAnnotationReadResolvedText[], Error>(
+  useQuery<SourceDocumentSentences, Error>(
     [QueryKey.SDOC_SENTENCES, sdocId],
     () =>
       SourceDocumentService.getSentences({

@@ -19,7 +19,6 @@ interface SearchResultSentenceRowProps extends SearchResultItem {
 
 function SearchResultSentenceTableRow({
   hit,
-  sdocId,
   handleClick,
   handleOnContextMenu,
   handleOnCheckboxChange,
@@ -32,23 +31,24 @@ function SearchResultSentenceTableRow({
   const isShowTags = useAppSelector((state) => state.search.isShowTags);
 
   // query (global server state)
-  const sdoc = SdocHooks.useGetDocument(sdocId);
-  const tags = SdocHooks.useGetAllDocumentTags(sdocId);
+  const sdoc = SdocHooks.useGetDocument(hit.sdoc_id);
+  const tags = SdocHooks.useGetAllDocumentTags(hit.sdoc_id);
+  const sentences = SdocHooks.useGetDocumentSentences(hit.sdoc_id);
 
   const isSelected = useMemo(() => {
-    return selectedDocumentIds.indexOf(sdocId) !== -1;
-  }, [sdocId, selectedDocumentIds]);
-  const labelId = `enhanced-table-checkbox-${sdocId}`;
+    return selectedDocumentIds.indexOf(hit.sdoc_id) !== -1;
+  }, [hit.sdoc_id, selectedDocumentIds]);
+  const labelId = `enhanced-table-checkbox-${hit.sdoc_id}`;
 
   return (
     <TableRow
       hover
-      onClick={() => handleClick(sdocId)}
+      onClick={() => handleClick(hit.sdoc_id)}
       role="checkbox"
       aria-checked={isSelected}
       tabIndex={-1}
-      selected={isSelected || parseInt(urlSdocId || "") === sdocId}
-      onContextMenu={handleOnContextMenu ? handleOnContextMenu(sdocId) : undefined}
+      selected={isSelected || parseInt(urlSdocId || "") === hit.sdoc_id}
+      onContextMenu={handleOnContextMenu ? handleOnContextMenu(hit.sdoc_id) : undefined}
       className={"myTableRow"}
     >
       <TableCell padding="checkbox">
@@ -56,7 +56,7 @@ function SearchResultSentenceTableRow({
           color="primary"
           checked={isSelected}
           onClick={(e) => e.stopPropagation()}
-          onChange={handleOnCheckboxChange ? (event) => handleOnCheckboxChange(event, sdocId) : undefined}
+          onChange={handleOnCheckboxChange ? (event) => handleOnCheckboxChange(event, hit.sdoc_id) : undefined}
           inputProps={{
             "aria-labelledby": labelId,
           }}
@@ -84,10 +84,20 @@ function SearchResultSentenceTableRow({
           {tags.isError && <>{tags.error.message}</>}
           {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}
 
-          <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{hit.sentence_text}</div>
+          {sentences.isLoading && <>...</>}
+          {sentences.isError && <>{sentences.error.message}</>}
+          {sentences.isSuccess && (
+            <div style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+              {sentences.data.sentences[hit.sentence_id]}
+            </div>
+          )}
           <Stack direction={"row"} component={"span"} className={"myQuickMenu"}>
-            <AnnotateButton projectId={projectId} sdocId={sdocId} />
-            <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} edge="end" />
+            <AnnotateButton projectId={projectId} sdocId={hit.sdoc_id} />
+            <MemoButton
+              attachedObjectId={hit.sdoc_id}
+              attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
+              edge="end"
+            />
           </Stack>
         </Stack>
       </TableCell>

@@ -125,7 +125,7 @@ export default function SearchResultsView({
                     .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                     .map((hit) => (
                       <SearchResultSentenceTableRow
-                        key={hit.sentence_span.id}
+                        key={`${hit.sdoc_id}-${hit.sentence_id}`}
                         sdocId={hit.sdoc_id}
                         hit={hit}
                         handleClick={handleResultClick}

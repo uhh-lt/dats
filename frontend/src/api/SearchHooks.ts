@@ -20,13 +20,11 @@ import { useAuth } from "../auth/AuthProvider";
 export enum SearchResultsType {
   // type DOCUMENTS returns data: number[]
   DOCUMENTS,
-  // type SENTENCES returns data: SimSearchSentenceHit[]
+  // type SENTENCES returns data: sdocId -> SimSearchSentenceHit[]
   SENTENCES,
 }
 
 export interface SearchResults {
-  // number[]: sdocIds
-  // Map: sdocId -> SimSearchSentenceHit[]
   data: number[] | Map<number, SimSearchSentenceHit[]>;
   type: SearchResultsType;
 }
@@ -238,9 +236,15 @@ const useSentenceSimilaritySearch = (projectId: number, filters: SearchFilter[])
         query: filters[0].data as string,
         topK: 10,
       });
+      const data = new Map<number, SimSearchSentenceHit[]>();
+      result.forEach((hit) => {
+        const hits = data.get(hit.sdoc_id) || [];
+        hits.push(hit);
+        data.set(hit.sdoc_id, hits);
+      });
       return {
         sdocIds: result.map((hit) => hit.sdoc_id),
-        data: result.map((hit) => hit.sentence_span.id),
+        data: data,
         type: SearchResultsType.SENTENCES,
       };
     },

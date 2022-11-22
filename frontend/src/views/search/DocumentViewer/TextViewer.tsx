@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { AnnotationDocumentRead, SourceDocumentRead, SpanAnnotationReadResolvedText } from "../../../api/openapi";
+import { AnnotationDocumentRead, SourceDocumentRead } from "../../../api/openapi";
 import useComputeTokenData from "../../annotation/TextAnnotator/useComputeTokenData";
 import SentenceContextMenu, {
   SentenceContextMenuHandle,
@@ -68,10 +68,10 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
     event.preventDefault();
 
     // get sentence
-    let sentence: SpanAnnotationReadResolvedText | undefined = undefined;
+    let sentence: string | undefined = undefined;
     if (foundSentence) {
       const sentenceIndex = parseInt(sentenceElement.getAttribute("data-sentenceid")!);
-      sentence = sentenceIndex < sentences.data.length ? sentences.data[sentenceIndex] : undefined;
+      sentence = sentenceIndex < sentences.data.sentences.length ? sentences.data.sentences[sentenceIndex] : undefined;
     }
 
     // get all annotations that span the clicked token
@@ -91,7 +91,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
       };
       sentenceContextMenuRef.current?.open(
         position,
-        sentence?.span_text,
+        sentence,
         annos ? annos.map((a) => annotationMap.get(a)!) : undefined
       );
     }

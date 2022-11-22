@@ -16,14 +16,12 @@ function SdocImageLink({ projectId, filename, toPrefix }: SdocImageLinkProps) {
     <>
       {sdocId.isSuccess && url.isSuccess ? (
         <div>
-          {sdocId.data ? (
-            <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
-              <img src={url.data} />
-            </Link>
-          ) : (
-            <img alt={`Could not resolve image ${filename} :(`} />
-          )}
+          <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
+            <img src={url.data} />
+          </Link>
         </div>
+      ) : sdocId.isSuccess && !url.isSuccess ? (
+        <img alt={`Could not resolve image ${filename} :(`} />
       ) : sdocId.isError ? (
         <div>Error: {sdocId.error.message}</div>
       ) : url.isError ? (

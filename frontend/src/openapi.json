@@ -1175,8 +1175,8 @@
     "/sdoc/{sdoc_id}/sentences": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the textual tokens of the SourceDocument if it is a text document.",
-        "description": "Returns the textual tokens of the SourceDocument if it is a text document.",
+        "summary": "Returns the sentences of the SourceDocument if it is a text document.",
+        "description": "Returns the sentences of the SourceDocument if it is a text document.",
         "operationId": "get_sentences",
         "parameters": [
           { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
@@ -1185,20 +1185,24 @@
             "schema": { "title": "Only Finished", "type": "boolean", "default": true },
             "name": "only_finished",
             "in": "query"
+          },
+          {
+            "description": "If True include the character offsets.",
+            "required": false,
+            "schema": {
+              "title": "Include Sentence Offsets",
+              "type": "boolean",
+              "description": "If True include the character offsets.",
+              "default": false
+            },
+            "name": "sentence_offsets",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Sourcedocument-Get Sentences",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolvedText" }
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentSentences" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -4787,7 +4791,7 @@
       },
       "SimSearchSentenceHit": {
         "title": "SimSearchSentenceHit",
-        "required": ["sdoc_id", "score", "sentence_text", "sentence_span"],
+        "required": ["sdoc_id", "score", "sentence_id"],
         "type": "object",
         "properties": {
           "sdoc_id": {
@@ -4796,15 +4800,10 @@
             "description": "The ID of the SourceDocument the sentence appears in."
           },
           "score": { "title": "Score", "type": "number", "description": "The similarity score." },
-          "sentence_text": {
-            "title": "Sentence Text",
-            "type": "string",
-            "description": "The sentence returned by the similarity search."
-          },
-          "sentence_span": {
-            "title": "Sentence Span",
-            "allOf": [{ "$ref": "#/components/schemas/SpanAnnotationRead" }],
-            "description": "The sentence SpanAnnotation holding the retrieved sentence"
+          "sentence_id": {
+            "title": "Sentence Id",
+            "type": "integer",
+            "description": "The sentence id with respect to the SourceDocument"
           }
         }
       },
@@ -5000,6 +4999,30 @@
           }
         }
       },
+      "SourceDocumentSentences": {
+        "title": "SourceDocumentSentences",
+        "required": ["source_document_id", "sentences"],
+        "type": "object",
+        "properties": {
+          "source_document_id": {
+            "title": "Source Document Id",
+            "type": "integer",
+            "description": "ID of the SourceDocument the Sentences belong to."
+          },
+          "sentences": {
+            "title": "Sentences",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The Sentences of the SourceDocument the Sentences belong to."
+          },
+          "sentence_character_offsets": {
+            "title": "Sentence Character Offsets",
+            "type": "array",
+            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] },
+            "description": "The list of character offsets of the Sentences"
+          }
+        }
+      },
       "SourceDocumentTokens": {
         "title": "SourceDocumentTokens",
         "required": ["source_document_id", "tokens"],
@@ -5162,64 +5185,6 @@
             "title": "Code",
             "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
             "description": "Code the SpanAnnotation refers to"
-          },
-          "annotation_document_id": {
-            "title": "Annotation Document Id",
-            "type": "integer",
-            "description": "AnnotationDocument the SpanAnnotation refers to"
-          },
-          "created": {
-            "title": "Created",
-            "type": "string",
-            "description": "Created timestamp of the SpanAnnotation",
-            "format": "date-time"
-          },
-          "updated": {
-            "title": "Updated",
-            "type": "string",
-            "description": "Updated timestamp of the SpanAnnotation",
-            "format": "date-time"
-          }
-        }
-      },
-      "SpanAnnotationReadResolvedText": {
-        "title": "SpanAnnotationReadResolvedText",
-        "required": [
-          "begin",
-          "end",
-          "begin_token",
-          "end_token",
-          "id",
-          "span_text",
-          "current_code_id",
-          "annotation_document_id",
-          "created",
-          "updated"
-        ],
-        "type": "object",
-        "properties": {
-          "begin": { "title": "Begin", "type": "integer", "description": "Begin of the SpanAnnotation in characters" },
-          "end": { "title": "End", "type": "integer", "description": "End of the SpanAnnotation in characters" },
-          "begin_token": {
-            "title": "Begin Token",
-            "type": "integer",
-            "description": "Begin of the SpanAnnotation in tokens"
-          },
-          "end_token": {
-            "title": "End Token",
-            "type": "integer",
-            "description": "End of the SpanAnnotation in tokens"
-          },
-          "id": { "title": "Id", "type": "integer", "description": "ID of the SpanAnnotation" },
-          "span_text": {
-            "title": "Span Text",
-            "type": "string",
-            "description": "The SpanText the SpanAnnotation spans."
-          },
-          "current_code_id": {
-            "title": "Current Code Id",
-            "type": "integer",
-            "description": "CurrentCode the SpanAnnotation refers to"
           },
           "annotation_document_id": {
             "title": "Annotation Document Id",

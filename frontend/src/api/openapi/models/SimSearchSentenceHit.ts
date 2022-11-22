@@ -2,8 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { SpanAnnotationRead } from "./SpanAnnotationRead";
-
 export type SimSearchSentenceHit = {
   /**
    * The ID of the SourceDocument the sentence appears in.
@@ -14,11 +12,7 @@ export type SimSearchSentenceHit = {
    */
   score: number;
   /**
-   * The sentence returned by the similarity search.
+   * The sentence id with respect to the SourceDocument
    */
-  sentence_text: string;
-  /**
-   * The sentence SpanAnnotation holding the retrieved sentence
-   */
-  sentence_span: SpanAnnotationRead;
+  sentence_id: number;
 };
