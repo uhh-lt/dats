@@ -2,6 +2,7 @@ import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
 import annoReducer from "../views/annotation/annoSlice";
 import searchReducer from "../views/search/searchSlice";
 import logbookReducer from "../views/logbook/logbookSlice";
+import autologbookReducer from "../views/autologbook/autologbookSlice";
 import settingsReducer from "../views/settings/settingsSlice";
 
 export const store = configureStore({
@@ -9,6 +10,7 @@ export const store = configureStore({
     annotations: annoReducer,
     search: searchReducer,
     logbook: logbookReducer,
+    autologbook: autologbookReducer,
     settings: settingsReducer,
   },
 });
