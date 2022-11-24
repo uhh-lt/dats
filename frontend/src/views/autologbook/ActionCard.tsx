@@ -91,12 +91,12 @@ function ActionCard({ actionTypeValue, userId, targetObjectType, targetId, execu
   }
 
   return (
-    <Card variant="outlined" sx={{ height: 140, width: 425, margin: 'auto', marginY: 2, backgroundColor: backgroundColor }}>
+    <Card variant="outlined" sx={{ width: '100%', backgroundColor: backgroundColor }}>
       <CardContent>
-        <Typography sx={{ fontSize: 15 }} color="text.secondary" gutterBottom>
+        <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
           User: {userName}<span style={{ float: "right" }}>{ActionType[actionTypeValue]}</span>
         </Typography>
-        <Typography sx={{ mb: 2.5, mt: 2.0 }} variant="h5" component="div">
+        <Typography sx={{ mb: 1.0, mt: 1.5 }} variant="h6" component="div">
           {targetObjectType}: {targetName}
         </Typography>
         <Typography variant="body2">

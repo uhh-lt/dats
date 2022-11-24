@@ -3,6 +3,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 interface AutologbookState {
   year: number;
   week: number;
+  day: number;
 }
 
 const getWeekNumber = (date: Date) => {
@@ -17,6 +18,7 @@ const initState: () => AutologbookState = () => {
   return {
     year: now.getFullYear(),
     week: getWeekNumber(now),
+    day: now.getDate(),
   }
 }
 
@@ -31,6 +33,9 @@ export const autologbookSlice = createSlice({
     },
     setWeek: (state, action: PayloadAction<number>) => {
       state.week = action.payload;
+    },
+    setDay: (state, action: PayloadAction<number>) => {
+      state.day = action.payload;
     },
   },
 });

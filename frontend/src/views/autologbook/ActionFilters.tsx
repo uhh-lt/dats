@@ -1,4 +1,3 @@
-import SdocHooks from "../../api/SdocHooks";
 import {
   AppBar,
   Checkbox,
@@ -16,17 +15,13 @@ import { useEffect } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import Typography from "@mui/material/Typography";
 import UserName from "../../components/UserName";
+import SdocHooks from "../../api/SdocHooks";
 
-interface AnnotationDocumentSelectorProps {
-  sdocId: number | undefined;
-}
 
 /**
- * This component lets the user select annotation documents (that are associated with the SourceDocument) to show in the Annotator.
- * The selected (visible) annotation documents are stored in the redux store.
- * @param sdocId the id of the SourceDocument to select annotation documents for
+The filter task bar on the top left of the Autologbook viewer.
  */
-export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelectorProps) {
+export function ActionFilters() {
   // global client state (context)
   const { user } = useAuth();
 
@@ -35,6 +30,7 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
   const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
 
   // global server state (react query)
+  const sdocId = 0
   const annotationDocuments = SdocHooks.useGetAllAnnotationDocuments(sdocId);
 
   // handlers (for ui)
