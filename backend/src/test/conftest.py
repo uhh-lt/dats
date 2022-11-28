@@ -43,7 +43,7 @@ def project(session: int, user: int) -> int:
     with session.db_session() as sess:
         id = crud_project.create(db=sess,
                                  create_dto=ProjectCreate(title=title, description=description)).id
-        crud_project.associate_user(db=sess, id=id, user_id=user)
+        crud_project.associate_user(db=sess, proj_id=id, user_id=user)
 
     yield id
 
