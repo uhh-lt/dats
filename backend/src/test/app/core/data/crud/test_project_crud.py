@@ -137,7 +137,7 @@ def test_project_users(session: SQLService, project: int, user: int) -> None:
         user_three_orm = UserRead.from_orm(db_user)
 
     with session.db_session() as sess:
-        crud_project.associate_user(db=sess, id=project, user_id=user_three_orm.id)
+        crud_project.associate_user(db=sess, proj_id=project, user_id=user_three_orm.id)
 
         proj_db_obj = crud_project.read(db=sess, id=project)
         project_users = [UserRead.from_orm(user) for user in proj_db_obj.users]
