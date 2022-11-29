@@ -2,7 +2,7 @@
 This tool utilizes Scrapy to crawl blogs and forums and offers a good basis to expand on to crawl other webpages. 
 Crawled pages are post-processed in a multi-step pipeline consisting of:
 - Applying Readability to the webpage
-- Cleanin the text output
+- Cleaning the text output
 - Cleaning the html output
 - Extracting & downloading images
 - Replacing image src with downloaded images filenames
@@ -36,6 +36,9 @@ Check the following example commands to see how to use this tool:
 
 ## Examples
 ```
+# tagesschau [315 docs] [825 imgs]
+scrapy crawl tagesschau -a prefix=tagesschau -a output_dir=/home/tfischer/Development/dwts/data/tagesschau -s IMAGES_STORE=/home/tfischer/Development/dwts/data/tagesschau/images
+
 # ilredpillatore [315 docs] [825 imgs]
 scrapy crawl ilredpillatore -a prefix=ilredpillatore -a output_dir=/home/tfischer/Notebooks/data/ilredpillatore -s IMAGES_STORE=/home/tfischer/Notebooks/data/ilredpillatore/images
 
