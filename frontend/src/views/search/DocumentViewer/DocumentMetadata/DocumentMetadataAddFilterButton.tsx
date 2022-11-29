@@ -25,7 +25,7 @@ function DocumentMetadataAddFilterButton({
   const handleAddMetadataFilter = useCallback(() => {
     dispatch(SearchActions.addFilter(createMetadataFilter(metadata.key, metadata.value)));
     navigate("../search");
-  }, [dispatch, metadata.key, metadata.value]);
+  }, [dispatch, metadata.key, metadata.value, navigate]);
 
   return (
     <Tooltip title="Add as filter">

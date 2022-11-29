@@ -27,6 +27,7 @@ export interface SentenceContextMenuHandle {
   close: () => void;
 }
 
+// eslint-disable-next-line no-empty-pattern
 const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContextMenuProps>(({}, ref) => {
   const navigate = useNavigate();
 

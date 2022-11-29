@@ -132,7 +132,7 @@ function TextAnnotationRendererNew({
         },
       ];
     }
-  }, [annotationMap, annotationsPerToken, isViewer, tokenData]);
+  }, [annotationMap, annotationsPerToken, isViewer, projectId, tokenData]);
 
   const renderedTokens = useMemo(() => {
     if (!annotationsPerToken || !tokenData || !annotationMap) {

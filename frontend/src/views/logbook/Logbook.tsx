@@ -61,6 +61,7 @@ function Logbook() {
   // init form with value from global state (redux)
   useEffect(() => {
     setValue("query", searchTerm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setValue]); // we only want to set the value once, not every time the searchTerm changes!
 
   // search form handling
