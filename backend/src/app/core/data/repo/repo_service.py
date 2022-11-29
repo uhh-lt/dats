@@ -125,9 +125,16 @@ class RepoService(metaclass=SingletonMeta):
 
     def generate_sdoc_filename(self, filename: str, webp: bool = False, thumbnail: bool = False) -> str:
         filename = Path(filename)
-        suffix = ".webp" if webp else ""
-        name = filename.stem + (".thumbnail" if thumbnail else "") + filename.suffix
-        return f"{name}{suffix}"
+        if webp:
+            if thumbnail:
+                return f"{filename}.thumbnail.webp"
+            else:
+                return f"{filename}.webp"
+        else:
+            if thumbnail:
+                return f"{filename.stem}.thumbnail{filename.suffix}"
+            else:
+                return filename.name
 
     def get_path_to_sdoc_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False, webp: bool = False,
                               thumbnail: bool = False) -> Path:
