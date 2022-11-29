@@ -12,6 +12,7 @@ class WritePipeline:
         json_output_dir = output_dir / 'json'
         txt_output_dir = output_dir / 'txt'
         extracted_html_output_dir = output_dir / 'extracted_html'
+        raw_html_output_dir = output_dir / 'raw_html'
 
         # exit if output dir does not exist
         if not output_dir.exists():
@@ -23,6 +24,7 @@ class WritePipeline:
         json_output_dir.mkdir(parents=True, exist_ok=True)
         txt_output_dir.mkdir(parents=True, exist_ok=True)
         extracted_html_output_dir.mkdir(parents=True, exist_ok=True)
+        raw_html_output_dir.mkdir(parents=True, exist_ok=True)
 
         # write html
         if "html" in item:
@@ -33,6 +35,11 @@ class WritePipeline:
         if "extracted_html" in item:
             with open(extracted_html_output_dir / f"{item['file_name']}.html", 'w') as f:
                 f.write(item['extracted_html'])
+
+        # write html
+        if "raw_html" in item:
+            with open(raw_html_output_dir / f"{item['file_name']}.html", 'w') as f:
+                f.write(item['raw_html'])
 
         # write json
         with open(json_output_dir / f"{item['file_name']}.json", 'w') as f:
