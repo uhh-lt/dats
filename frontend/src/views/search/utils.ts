@@ -1,3 +1,4 @@
 export const toThumbnailUrl = (url: string): string => {
-  return url + ".thumbnail.webp";
+  let pos = url.lastIndexOf(".");
+  return url.slice(0, pos) + ".thumbnail.webp";
 };
