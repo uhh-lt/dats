@@ -9,7 +9,7 @@ class CRUDFaissSentenceSourceDocumentLink(CRUDBase[FaissSentenceSourceDocumentLi
                                                    FaissSentenceSourceDocumentLinkCreate,
                                                    None]):
     def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> ORMModelType:
-        # Flo: We no not want to update FaissSentenceSourceDocumentLink
+        # Flo: We do not want to update FaissSentenceSourceDocumentLink
         raise NotImplementedError()
 
 
