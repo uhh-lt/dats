@@ -6,7 +6,7 @@
  * An enumeration.
  */
 export enum ActionType {
-  "_0" = 0,
-  "_1" = 1,
-  "_2" = 2,
+  CREATE = "CREATE",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
 }

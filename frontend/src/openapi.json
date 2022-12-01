@@ -3922,27 +3922,26 @@
     "schemas": {
       "ActionRead": {
         "title": "ActionRead",
-        "required": ["action_type", "id", "user_id", "project_id", "executed", "target_id", "target_object_type"],
+        "required": ["action_type", "target_id", "target_type", "id", "user_id", "project_id", "executed"],
         "type": "object",
         "properties": {
-          "action_type": { "allOf": [{ "$ref": "#/components/schemas/ActionType" }], "description": "TODO" },
-          "id": { "title": "Id", "type": "integer", "description": "ID of the Memo" },
-          "user_id": { "title": "User Id", "type": "integer", "description": "User the Memo belongs to" },
-          "project_id": { "title": "Project Id", "type": "integer", "description": "Project the Memo belongs to" },
+          "action_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ActionType" }],
+            "description": "Type of the Action"
+          },
+          "target_id": { "title": "Target Id", "type": "integer", "description": "ID of the Target of the Action" },
+          "target_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ActionTargetObjectType" }],
+            "description": "Type of the Target the target_id refers to"
+          },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the Action" },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the Action belongs to" },
+          "project_id": { "title": "Project Id", "type": "integer", "description": "Project the Action belongs to" },
           "executed": {
             "title": "Executed",
             "type": "string",
-            "description": "Updated timestamp of the Memo",
+            "description": "Executed timestamp of the Action",
             "format": "date-time"
-          },
-          "target_id": {
-            "title": "Target Id",
-            "type": "integer",
-            "description": "ID of the Object the Memo is attached to"
-          },
-          "target_object_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ActionTargetObjectType" }],
-            "description": "Type of the Object the ID refers to"
           }
         }
       },
@@ -3962,7 +3961,12 @@
         "type": "string",
         "description": "An enumeration."
       },
-      "ActionType": { "title": "ActionType", "enum": [0, 1, 2], "type": "integer", "description": "An enumeration." },
+      "ActionType": {
+        "title": "ActionType",
+        "enum": ["CREATE", "UPDATE", "DELETE"],
+        "type": "string",
+        "description": "An enumeration."
+      },
       "AnalysisQueryParameters": {
         "title": "AnalysisQueryParameters",
         "required": ["user_ids", "proj_id"],

@@ -7,31 +7,31 @@ import type { ActionType } from "./ActionType";
 
 export type ActionRead = {
   /**
-   * TODO
+   * Type of the Action
    */
   action_type: ActionType;
   /**
-   * ID of the Memo
-   */
-  id: number;
-  /**
-   * User the Memo belongs to
-   */
-  user_id: number;
-  /**
-   * Project the Memo belongs to
-   */
-  project_id: number;
-  /**
-   * Updated timestamp of the Memo
-   */
-  executed: string;
-  /**
-   * ID of the Object the Memo is attached to
+   * ID of the Target of the Action
    */
   target_id: number;
   /**
-   * Type of the Object the ID refers to
+   * Type of the Target the target_id refers to
    */
-  target_object_type: ActionTargetObjectType;
+  target_type: ActionTargetObjectType;
+  /**
+   * ID of the Action
+   */
+  id: number;
+  /**
+   * User the Action belongs to
+   */
+  user_id: number;
+  /**
+   * Project the Action belongs to
+   */
+  project_id: number;
+  /**
+   * Executed timestamp of the Action
+   */
+  executed: string;
 };
