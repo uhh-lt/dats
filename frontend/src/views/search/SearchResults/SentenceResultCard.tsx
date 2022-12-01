@@ -24,7 +24,7 @@ import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
 import * as d3 from "d3";
 import { toThumbnailUrl } from "../utils";
 
-const colorScale = d3.scaleLinear([0, 1 / 3, 2 / 3, 1], ["red", "orange", "gold", "green"]);
+const colorScale = d3.scaleLinear([0, 1 / 3, 2 / 3, 1], ["red", "orange", "gold", "yellowgreen"]);
 
 interface ContextSentence {
   id: number;
@@ -164,7 +164,15 @@ function SentenceResultCard({
               {contextSentences.map((sentence) => (
                 <span key={sentence.id}>
                   {sentence.score >= 0 ? (
-                    <span style={{ backgroundColor: colorScale(sentence.score) }}>{sentence.text}</span>
+                    <span
+                      style={{
+                        textDecoration: "underline",
+                        textDecorationColor: colorScale(sentence.score),
+                        textDecorationThickness: "3px",
+                      }}
+                    >
+                      {sentence.text}
+                    </span>
                   ) : (
                     <>{sentence.text}</>
                   )}{" "}
