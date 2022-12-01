@@ -23,12 +23,11 @@ def create_sdoc_links_from_html_(pptds: List[PreProTextDoc]) -> List[PreProTextD
             img_links = soup.findAll("img")
 
             img_srcs = list(set([img["src"].strip() for img in img_links if img.has_attr('src')]))
-            for img_src in img_srcs:
-                create_dto = SourceDocumentLinkCreate(parent_source_document_id=pptd.sdoc_id,
-                                                      linked_source_document_filename=img_src)
 
-                # persist the link
-                crud_sdoc_link.create(db=db, create_dto=create_dto)
+            create_dtos = [SourceDocumentLinkCreate(parent_source_document_id=pptd.sdoc_id,
+                                                    linked_source_document_filename=img_src) for img_src in img_srcs]
+            # persist the link
+            crud_sdoc_link.create_multi(db=db, create_dtos=create_dtos)
 
             # Flo: update sdoc status
             update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.create_sdoc_links_from_html)

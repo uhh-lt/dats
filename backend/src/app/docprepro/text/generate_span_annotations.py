@@ -49,7 +49,7 @@ def generate_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDoc) -> PreP
     pptd.word_freqs = Counter()
     for token in doc:
         pptd.tokens.append(token.text)
-        pptd.token_character_offsets.append((token.idx, token.idx + len(token.text)))
+        pptd.token_character_offsets.append((token.idx, token.idx + len(token)))
         pptd.pos.append(token.pos_)
         pptd.lemmas.append(token.lemma_)
         pptd.stopwords.append(token.is_stop)
@@ -65,7 +65,6 @@ def generate_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDoc) -> PreP
     pptd.keywords = list(pptd.word_freqs.keys())[:5]
 
     # create AutoSpans for NER
-    pptd.spans["NER"] = list()
     for ne in doc.ents:
         auto = AutoSpan(code=f"{ne.label_}",
                         start=ne.start_char,
@@ -73,7 +72,9 @@ def generate_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDoc) -> PreP
                         text=ne.text,
                         start_token=ne.start,
                         end_token=ne.end)
-        pptd.spans["NER"].append(auto)
+        if auto.code not in pptd.spans:
+            pptd.spans[auto.code] = list()
+        pptd.spans[auto.code].append(auto)
 
     # create AutoSpans for Sentences
     pptd.sentences = list()

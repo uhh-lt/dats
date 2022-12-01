@@ -30,16 +30,17 @@ class CRUDSourceDocumentLink(CRUDBase[SourceDocumentLinkORM,
         # noinspection PyTypeChecker
         sdoc_fn_to_id: Dict[str, int] = dict(query2.all())
 
-        resolved_links = []
+
+        resolved_links: List[SourceDocumentLinkORM] = []
+
         for link in unresolved_links:
             if link.linked_source_document_filename not in sdoc_fn_to_id:
                 continue
             link.linked_source_document_id = sdoc_fn_to_id[link.linked_source_document_filename]
-            db.add(link)
-            db.commit()
-            db.refresh(link)
             resolved_links.append(link)
 
+        db.add_all(resolved_links)
+        db.commit()
         return resolved_links
 
     def get_linked_sdocs(self, db: Session, parent_sdoc_id: int) -> List[SourceDocumentLinkORM]:

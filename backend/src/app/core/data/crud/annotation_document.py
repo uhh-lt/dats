@@ -16,10 +16,10 @@ class CRUDAnnotationDocument(CRUDBase[AnnotationDocumentORM, AnnotationDocumentC
         # Flo: We no not want to update AnnotationDocument
         raise NotImplementedError()
 
-    def read_by_sdoc_and_user(self, db: Session, *, sdoc_id: int, user_id: int) -> Optional[AnnotationDocumentORM]:
+    def read_by_sdoc_and_user(self, db: Session, *, sdoc_id: int, user_id: int, raise_error: bool = True) -> Optional[AnnotationDocumentORM]:
         db_obj = db.query(self.model).filter(self.model.source_document_id == sdoc_id,
                                              self.model.user_id == user_id).first()
-        if not db_obj:
+        if raise_error and not db_obj:
             raise NoSuchElementError(self.model, sdoc_id=sdoc_id, user_id=user_id)
         return db_obj
 

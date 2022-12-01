@@ -42,6 +42,22 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
         crud_action.create(db=db, create_dto=create_dto)
 
         return db_obj
+    
+
+    def create_multi(self, db: Session, *, create_dtos: List[SpanAnnotationCreate]) -> List[SpanAnnotationORM]:
+        # first create the SpanText
+        span_texts_orm = crud_span_text.create_multi(db=db, create_dtos=[SpanTextCreate(text=create_dto.span_text) for create_dto in create_dtos])
+
+        # create the SpanAnnotation (and link the SpanText via FK)
+        dto_objs_data = [jsonable_encoder(create_dto.dict(exclude={"span_text"})) for create_dto in create_dtos]
+        # noinspection PyArgumentList
+        db_objs = [self.model(**dto_obj_data) for dto_obj_data in dto_objs_data]
+        for db_obj, span_text_orm in zip(db_objs, span_texts_orm):
+            db_obj.span_text_id = span_text_orm.id
+        db.add_all(db_objs)
+        db.commit()
+        return db_objs
+
 
     def read_by_adoc(self,
                      db: Session,

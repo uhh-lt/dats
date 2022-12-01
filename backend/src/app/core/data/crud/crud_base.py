@@ -58,6 +58,13 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         self.__create_action(db_obj=db_obj, action_type=ActionType.CREATE)
 
         return db_obj
+    
+    def create_multi(self, db: Session, *, create_dtos: List[CreateDTOType]) -> List[ORMModelType]:
+        db_obj = [self.model(**jsonable_encoder(x)) for x in create_dtos]
+        db.add_all(db_obj)
+        db.commit()
+        return db_obj
+
 
     def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> Optional[ORMModelType]:
         db_obj = self.read(db=db, id=id)
