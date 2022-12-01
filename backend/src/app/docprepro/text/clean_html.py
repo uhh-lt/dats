@@ -19,11 +19,11 @@ def clean_html_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
         return pptds
 
     for pptd in tqdm(pptds, desc="Parsing html... "):
+        # remove redundant white spaces
+        content = re.sub(r"\s+", " ", pptd.html).strip()
         if "html" in pptd.mime_type:
             logger.info(f"Cleaning html document!")
 
-            # remove redundant white spaces
-            content = re.sub(r"\s+", " ", pptd.html).strip()
 
             soup = BeautifulSoup(content, "html.parser")
             # remove specific tags and their children completely
@@ -36,14 +36,14 @@ def clean_html_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
                     s.unwrap()
             content = str(soup)
 
-            # resolve html special characters to their respective unicode character
-            content = content.replace("&lt;", "❮")
-            content = content.replace("&gt;", "❯")
-            content = html.unescape(content)
+        # resolve html special characters to their respective unicode character
+        content = content.replace("&lt;", "❮")
+        content = content.replace("&gt;", "❯")
+        content = html.unescape(content)
 
-            pptd.html = content
+        pptd.html = content
 
-            # Flo: update sdoc status
-            update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.clean_html)
+        # Flo: update sdoc status
+        update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.clean_html)
 
     return pptds

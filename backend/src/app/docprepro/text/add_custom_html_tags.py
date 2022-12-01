@@ -1,10 +1,12 @@
 from typing import List
 
 from tqdm import tqdm
+from loguru import logger
 
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
+from app.util.string_builder import StringBuilder
 
 
 def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
@@ -12,15 +14,19 @@ def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
         return pptds
 
     for pptd in tqdm(pptds, desc="Generating html with custom tags... "):
-        new_html = ""
+        new_html = StringBuilder()
         current_position = 0
 
         sentences = pptd.sentences
         current_sentence_idx = 0
 
         for token_id, (text_start, text_end) in enumerate(pptd.token_character_offsets):
-            html_start = pptd.text2html_character_offsets[text_start]
-            html_end = pptd.text2html_character_offsets[text_end]
+            try:
+                html_start = pptd.text2html_character_offsets[text_start]
+                html_end = pptd.text2html_character_offsets[text_end]
+            except IndexError:
+                logger.warning(f"'${pptd.filename}' seems corrupt")
+                break
 
             new_html += pptd.html[current_position:html_start]
 
@@ -39,7 +45,7 @@ def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
 
         new_html += pptd.html[current_position:]
 
-        pptd.html = new_html
+        pptd.html = new_html.build()
         # Flo: update sdoc status
         update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.add_custom_html_tags)
 

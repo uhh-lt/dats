@@ -94,8 +94,7 @@ def extract_text_from_html_and_create_source_mapping_(pptds: List[PreProTextDoc]
 
         text2html_character_offsets = []
         for result in results:
-            for index in range(result['start'], result['end'] + 1):
-                text2html_character_offsets.append(index)
+            text2html_character_offsets.extend(range(result['start'], result['end'] + 1))
         pptd.text2html_character_offsets = text2html_character_offsets
 
         # Flo: update sdoc status
