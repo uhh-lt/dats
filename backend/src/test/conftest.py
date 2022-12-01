@@ -1,6 +1,17 @@
-import pytest
+import os
 import random
 import string
+
+import pytest
+
+from app.core.startup import startup
+
+# Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
+# file once more manually, so it would be executed twice.
+STARTUP_DONE = bool(int(os.environ.get('STARTUP_DONE', '0')))
+if not STARTUP_DONE:
+    startup(reset_data=True)
+    os.environ['STARTUP_DONE'] = "1"
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
@@ -13,7 +24,6 @@ from app.core.db.sql_service import SQLService
 
 @pytest.fixture
 def code(session: SQLService, project: int, user: int) -> int:
-
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"

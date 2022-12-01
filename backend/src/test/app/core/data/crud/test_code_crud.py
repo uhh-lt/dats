@@ -1,6 +1,7 @@
-import pytest
 import random
 import string
+
+import pytest
 
 from api.util import get_object_memos
 from app.core.data.crud.code import crud_code
@@ -12,7 +13,6 @@ from app.core.db.sql_service import SQLService
 
 
 def test_create_get_delete_code(session: SQLService, project: int, user: int) -> None:
-
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -46,7 +46,6 @@ def test_create_get_delete_code(session: SQLService, project: int, user: int) ->
 
 
 def test_update_code(session: SQLService, code: int) -> None:
-
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -75,7 +74,6 @@ def test_update_code(session: SQLService, code: int) -> None:
 
 
 def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -> None:
-
     title = "".join(random.choices(string.ascii_letters, k=15))
     content = "".join(random.choices(string.ascii_letters, k=30))
     starred = False
@@ -87,8 +85,8 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
             db=sess, code_id=code, create_dto=memo)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         memo_new = [MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                    attached_object_id=db_obj.id,
-                    attached_object_type=AttachedObjectType.code)]
+                             attached_object_id=db_obj.id,
+                             attached_object_type=AttachedObjectType.code)]
 
     assert len(memo_new) == 1
     assert memo_new[0].title == title
@@ -100,7 +98,7 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
         db_obj = crud_code.read(db=sess, id=code)
         memos = get_object_memos(db_obj=db_obj)
 
-    print(f'{memos=}')
+    # print(f'{memos=}')
 
     assert len(memos) == 1
     assert memos[0].title == title

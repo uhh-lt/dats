@@ -1,22 +1,36 @@
-from typing import List, Dict
-
-import pytest
 import random
 import string
+from typing import Dict, Any
 
+import pytest
 from sqlalchemy.exc import IntegrityError
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
-from app.core.data.crud.user import crud_user
+from app.core.data.crud.user import crud_user, SYSTEM_USER_ID
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.user import UserRead, UserCreate
 from app.core.db.sql_service import SQLService
+from config import conf
+
+
+def get_number_of_system_codes() -> int:
+    def __count_codes_recursively(code_dict: Dict[str, Dict[str, Any]], num: int, names):
+        for code_name in code_dict.keys():
+            num += 1
+            if code_name in names:
+                print(f"CODENAME: {code_name=}")
+            names.add(code_name)
+            if "children" in code_dict[code_name]:
+                num = __count_codes_recursively(code_dict[code_name]["children"], num, names)
+        return num
+
+    return __count_codes_recursively(conf.system_codes, 0, set())
 
 
 def test_update_project(session: SQLService, project: int) -> None:
@@ -68,7 +82,6 @@ def test_update_project(session: SQLService, project: int) -> None:
 
 
 def test_create_remove_project(session: SQLService) -> None:
-
     # check empty database
     with session.db_session() as sess:
         dbs = crud_project.read_multi(db=sess)
@@ -111,11 +124,11 @@ def test_create_remove_project(session: SQLService) -> None:
         with session.db_session() as sess:
             r = crud_project.remove(db=sess, id=id)
 
+
 # project user
 
 
 def test_project_users(session: SQLService, project: int, user: int) -> None:
-
     with session.db_session() as sess:
         users = crud_project.read(db=sess, id=project)
 
@@ -130,7 +143,7 @@ def test_project_users(session: SQLService, project: int, user: int) -> None:
     password = "".join(random.choices(string.ascii_letters, k=15))
 
     user_three = UserCreate(email=email, first_name=first_name,
-                      last_name=last_name, password=password)
+                            last_name=last_name, password=password)
 
     with session.db_session() as sess:
         db_user = crud_user.create(db=sess, create_dto=user_three)
@@ -154,17 +167,17 @@ def test_project_users(session: SQLService, project: int, user: int) -> None:
     assert len(project_users) == 2
     assert project_users[1].id == user
 
+
 # project codes
 
 
 def test_get_remove_project_codes(session: SQLService, project: int) -> None:
-
     with session.db_session() as sess:
         proj_db_obj = crud_project.read(db=sess, id=project)
 
         s = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
 
-    assert len(s) == 123
+    assert len(s) == get_number_of_system_codes()
 
     # removes all project codes
 
@@ -176,11 +189,11 @@ def test_get_remove_project_codes(session: SQLService, project: int) -> None:
 
     assert len(s) == 0
 
+
 # project tags
 
 
 def test_get_project_tags(session: SQLService, project: int) -> None:
-
     with session.db_session() as sess:
         proj_db_obj = crud_project.read(db=sess, id=project)
         s = [DocumentTagRead.from_orm(tag)
@@ -188,38 +201,38 @@ def test_get_project_tags(session: SQLService, project: int) -> None:
 
     assert len(s) == 0
 
+
 # user codes
 
 
-def test_get_remove_project_user_codes(session: SQLService, project: int) -> None:
-
+def test_get_remove_project_system_user_codes(session: SQLService, project: int) -> None:
     with session.db_session() as sess:
         s = [CodeRead.from_orm(code_db_obj) for code_db_obj in
-             crud_code.read_by_user_and_project(db=sess, user_id=1, proj_id=project)]
+             crud_code.read_by_user_and_project(db=sess, user_id=SYSTEM_USER_ID, proj_id=project)]
 
-    assert len(s) == 123
+    assert len(s) == get_number_of_system_codes()
 
     # remove user codes
 
     with session.db_session() as sess:
-        crud_code.remove_by_user_and_project(db=sess, user_id=1, proj_id=project)
+        crud_code.remove_by_user_and_project(db=sess, user_id=SYSTEM_USER_ID, proj_id=project)
         s = [CodeRead.from_orm(code_db_obj) for code_db_obj in
-             crud_code.read_by_user_and_project(db=sess, user_id=1, proj_id=project)]
+             crud_code.read_by_user_and_project(db=sess, user_id=SYSTEM_USER_ID, proj_id=project)]
 
     assert len(s) == 0
+
 
 # user memos
 
 
 def test_get_add_remove_memos_project(session: SQLService, project: int, user: int) -> None:
-
     with session.db_session() as sess:
         db_objs = crud_memo.read_by_user_and_project(
             db=sess, user_id=user, proj_id=project, only_starred=False)
         memo_list = [crud_memo.get_memo_read_dto_from_orm(
             db=sess, db_obj=db_obj) for db_obj in db_objs]
 
-    len(memo_list) == 0
+    assert len(memo_list) == 0
 
     # add memo1
     title1 = "".join(random.choices(string.ascii_letters, k=30))
@@ -236,7 +249,7 @@ def test_get_add_remove_memos_project(session: SQLService, project: int, user: i
                              attached_object_id=project,
                              attached_object_type=AttachedObjectType.project)
 
-    print(f'{memo1_obj=}')
+    # print(f'{memo1_obj=}')
 
     # add memo2
     title2 = "".join(random.choices(string.ascii_letters, k=30))
@@ -253,7 +266,7 @@ def test_get_add_remove_memos_project(session: SQLService, project: int, user: i
                              attached_object_id=project,
                              attached_object_type=AttachedObjectType.project)
 
-    print(f'{memo2_obj=}')
+    # print(f'{memo2_obj=}')
 
     with session.db_session() as sess:
         db_objs_unstarred = crud_memo.read_by_user_and_project(

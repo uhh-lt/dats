@@ -1,12 +1,13 @@
-import pytest
 import random
 import string
+
+import pytest
 
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.user import crud_user
 from app.core.data.dto import ProjectRead
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.user import UserRead, UserCreate, UserUpdate, UserLogin, UserAuthorizationHeaderData
+from app.core.data.dto.user import UserRead, UserCreate, UserUpdate
 from app.core.db.sql_service import SQLService
 
 
@@ -34,11 +35,10 @@ def test_create_delete_user(session: SQLService) -> None:
     assert user.password != password  # password is hashed
 
     # delete user
-
     with session.db_session() as sess:
         crud_user.remove(db=sess, id=user_new.id)
 
-        # try delete user second time
+        # try to delete user second time
         with pytest.raises(NoSuchElementError) as e:
             crud_user.read(db=sess, id=user_new.id)
 
@@ -65,7 +65,6 @@ def test_update_user(session: SQLService, user: int) -> None:
 
 
 def test_get_user_projects(session: SQLService, project: int, user: int) -> None:
-
     with session.db_session() as sess:
         db_obj = crud_user.read(db=sess, id=user)
         user_projects = [ProjectRead.from_orm(
@@ -75,28 +74,25 @@ def test_get_user_projects(session: SQLService, project: int, user: int) -> None
     assert user_projects[0].id == project
 
 
-# TODO: Fails
+# TODO: Fails on teardown because the codes gets removed here already!
 def test_get_delete_user_codes(session: SQLService, code: int, user: int) -> None:
-
     with session.db_session() as sess:
         db_obj = crud_user.read(db=sess, id=user)
         user_codes = [CodeRead.from_orm(code) for code in db_obj.codes]
 
     assert len(user_codes) == 1
 
-    with session.db_session() as sess:
-        # TODO: FAILED test/app/core/data/crud/test_user_crud.py::test_get_delete_user_codes - sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedTable) missing FROM-clause entry for table "user"
-        # crud_user.remove_all_codes(db=sess, id=user_id)
-
-        db_obj = crud_user.read(db=sess, id=user)
-        user_codes = [CodeRead.from_orm(code) for code in db_obj.codes]
-
+    # with session.db_session() as sess:
+    #     crud_user.remove_all_codes(db=sess, id=user)
+    #
+    #     db_obj = crud_user.read(db=sess, id=user)
+    #     user_codes = [CodeRead.from_orm(code) for code in db_obj.codes]
+    #
     # assert len(user_codes) == 0
 
 
-# TODO: Fails
+# TODO: Fails on teardown because the codes gets removed here already!
 def test_delete_user_codes(session: SQLService, user: int, code: int) -> None:
-
     with session.db_session() as sess:
         db_obj = crud_user.read(db=sess, id=user)
         codes = [CodeRead.from_orm(code) for code in db_obj.codes]
@@ -104,14 +100,14 @@ def test_delete_user_codes(session: SQLService, user: int, code: int) -> None:
     assert len(codes) == 1
 
     # with session.db_session() as sess:
-        # crud_user.remove_all_codes(db=sess, id=user)
-        # db_obj = crud_user.read(db=sess, id=user)
-        # codes = [CodeRead.from_orm(code) for code in db_obj.codes]
-
+    #     crud_user.remove_all_codes(db=sess, id=user)
+    #     db_obj = crud_user.read(db=sess, id=user)
+    #     codes = [CodeRead.from_orm(code) for code in db_obj.codes]
+    #
     # assert len(codes) == 0
 
-def test_get_all_user(session: SQLService, user: int) -> None:
 
+def test_get_all_user(session: SQLService, user: int) -> None:
     with session.db_session() as sess:
         db_objs = crud_user.read_multi(db=sess)
         users = [UserRead.from_orm(proj) for proj in db_objs]
