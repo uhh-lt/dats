@@ -212,6 +212,7 @@ services:
       - ../backend/src:/dwts_code/src
       - ./backend_repo:/tmp/dwts
       - ./models_cache:/models_cache
+      - ./tika:/tika
     depends_on:
       - rabbitmq
       - redis
