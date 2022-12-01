@@ -233,11 +233,6 @@ system_codes:
         desc: Object Category from COCO 2017
       TRAFFIC LIGHT:
         desc: Object Category from COCO 2017
-  PERSON:
-    desc: Super Object Category from COCO 2017
-    children:
-      PERSON:
-        desc: Object Category from COCO 2017
   SPORTS:
     desc: Super Object Category from COCO 2017
     children:
