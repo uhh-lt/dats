@@ -4,6 +4,7 @@ import {
   Divider,
   Drawer,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemButton,
@@ -15,6 +16,7 @@ import InfoIcon from "@mui/icons-material/Info";
 import GavelIcon from "@mui/icons-material/Gavel";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import SettingsIcon from "@mui/icons-material/Settings";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 
@@ -90,6 +92,15 @@ export default function TemporaryDrawer() {
               <GavelIcon />
             </ListItemIcon>
             <ListItemText primary="Imprint" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem disablePadding>
+          <ListItemButton component={Link} href="https://github.com/uhh-lt/dwts/wiki" target="_blank">
+            <ListItemIcon>
+              <AutoStoriesIcon />
+            </ListItemIcon>
+            <ListItemText primary="Wiki" />
           </ListItemButton>
         </ListItem>
       </List>
