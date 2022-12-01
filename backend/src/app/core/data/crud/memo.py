@@ -4,9 +4,8 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete, and_
 from sqlalchemy.orm import Session
 
-from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.action import ActionType, ActionTargetObjectType
+from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
 from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 from app.core.data.dto.object_handle import ObjectHandleCreate
 from app.core.data.dto.search import ElasticSearchMemoCreate
@@ -90,12 +89,14 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
 
         removed_ids = list(map(lambda t: t[0], removed_ids))
 
+        from app.core.data.crud.action import crud_action
         for rid in removed_ids:
-            ActionService().create_action(proj_id=proj_id,
-                                          user_id=user_id,
-                                          action_type=ActionType.DELETE,
-                                          target=ActionTargetObjectType.memo,
-                                          target_id=rid)
+            create_dto = ActionCreate(project_id=proj_id,
+                                      user_id=user_id,
+                                      action_type=ActionType.DELETE,
+                                      target_type=ActionTargetObjectType.memo,
+                                      target_id=rid)
+            crud_action.create(db=db, create_dto=create_dto)
         return removed_ids
 
     def exists_for_user_and_object_handle(self, db: Session, *, user_id: int, attached_to_id: int) -> bool:
@@ -112,11 +113,13 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, None]):
         db.commit()
         db.refresh(db_obj)
 
-        ActionService().create_action(proj_id=create_dto.project_id,
-                                      user_id=create_dto.user_id,
-                                      action_type=ActionType.CREATE,
-                                      target=ActionTargetObjectType.memo,
-                                      target_id=db_obj.id)
+        from app.core.data.crud.action import crud_action
+        create_dto = ActionCreate(project_id=create_dto.project_id,
+                                  user_id=create_dto.user_id,
+                                  action_type=ActionType.CREATE,
+                                  target_type=ActionTargetObjectType.memo,
+                                  target_id=db_obj.id)
+        crud_action.create(db=db, create_dto=create_dto)
         return db_obj
 
     def create_for_code(self, db: Session, code_id: int, create_dto: MemoCreate) -> MemoORM:

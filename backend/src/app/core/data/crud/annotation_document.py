@@ -3,10 +3,9 @@ from typing import Optional, List
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType, NoSuchElementError
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType
+from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 
@@ -42,12 +41,14 @@ class CRUDAnnotationDocument(CRUDBase[AnnotationDocumentORM, AnnotationDocumentC
         from app.core.data.crud.source_document import crud_sdoc
         proj_id = crud_sdoc.read(db=db, id=sdoc_id).project_id
 
+        from app.core.data.crud.action import crud_action
         for rid in removed_ids:
-            ActionService().create_action(proj_id=proj_id,
-                                          user_id=SYSTEM_USER_ID,
-                                          action_type=ActionType.DELETE,
-                                          target=ActionTargetObjectType.annotation_document,
-                                          target_id=rid)
+            create_dto = ActionCreate(project_id=proj_id,
+                                      user_id=SYSTEM_USER_ID,
+                                      action_type=ActionType.DELETE,
+                                      target_id=rid,
+                                      target_type=ActionTargetObjectType.annotation_document)
+            crud_action.create(db=db, create_dto=create_dto)
         return removed_ids
 
 

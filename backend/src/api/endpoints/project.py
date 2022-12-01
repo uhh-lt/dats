@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import skip_limit_params, get_db_session
 from api.util import get_object_memos
-from app.core.data.action_service import ActionService
+from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
@@ -298,7 +298,7 @@ async def get_user_actions_of_project(*,
                                       user_id: int,
                                       db: Session = Depends(get_db_session)) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
-    return ActionService().get_user_actions_of_project(db=db, proj_id=proj_id, user_id=user_id)
+    return crud_action.get_user_actions_of_project(db=db, proj_id=proj_id, user_id=user_id)
 
 
 @router.delete("/{proj_id}/user/{user_id}/memo", tags=tags,

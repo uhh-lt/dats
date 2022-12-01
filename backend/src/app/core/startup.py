@@ -93,9 +93,6 @@ def __init_services__(create_database_and_tables: bool = False,
     # import and init AnalysisService
     from app.core.analysis.analysis_service import AnalysisService
     AnalysisService()
-    # import and init ActionService
-    from app.core.data.action_service import ActionService
-    ActionService()
 
 
 def __create_system_user__() -> None:

@@ -4,10 +4,10 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-class ActionType(int, Enum):
-    CREATE = 0
-    UPDATE = 1
-    DELETE = 2
+class ActionType(str, Enum):
+    CREATE = 'CREATE'
+    UPDATE = 'UPDATE'
+    DELETE = 'DELETE'
 
 
 class ActionTargetObjectType(str, Enum):
@@ -24,7 +24,9 @@ class ActionTargetObjectType(str, Enum):
 
 # Properties shared across all DTOs
 class ActionBaseDTO(BaseModel):
-    action_type: ActionType = Field(description='TODO')
+    action_type: ActionType = Field(description='Type of the Action')
+    target_id: int = Field(description='ID of the Target of the Action')
+    target_type: ActionTargetObjectType = Field(description='Type of the Target the target_id refers to')
 
 
 # Properties for creation
@@ -34,21 +36,11 @@ class ActionCreate(ActionBaseDTO):
 
 
 # Properties to read
-class ActionReadBaseDTO(ActionBaseDTO):
-    id: int = Field(description='ID of the Memo')
-    user_id: int = Field(description='User the Memo belongs to')
-    project_id: int = Field(description='Project the Memo belongs to')
-    executed: datetime = Field(description="Updated timestamp of the Memo")
-
-
-class ActionRead(ActionReadBaseDTO):
-    target_id: int = Field(description='ID of the Object the Memo is attached to')
-    target_object_type: ActionTargetObjectType = Field(description='Type of the Object the ID refers to')
-
-
-# Properties in DB (as in ORM)
-class ActionInDB(ActionReadBaseDTO):
-    target_id: int = Field(description='The ObjectHandle the Memo is attached to')
+class ActionRead(ActionBaseDTO):
+    id: int = Field(description='ID of the Action')
+    user_id: int = Field(description='User the Action belongs to')
+    project_id: int = Field(description='Project the Action belongs to')
+    executed: datetime = Field(description="Executed timestamp of the Action")
 
     class Config:
         orm_mode = True

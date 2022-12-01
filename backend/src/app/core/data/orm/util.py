@@ -66,5 +66,7 @@ def get_action_target_type(orm: ORMBase) -> Optional[ActionTargetObjectType]:
         return ActionTargetObjectType.bbox_annotation
     elif isinstance(orm, SpanGroupORM):
         return ActionTargetObjectType.span_group
+    elif isinstance(orm, ProjectORM):
+        return ActionTargetObjectType.project
     else:
         return None

@@ -3,10 +3,9 @@ from typing import List
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from app.core.data.action_service import ActionService
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType
+from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
 from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate, BBoxAnnotationUpdate
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 
@@ -25,12 +24,15 @@ class CRUDBBoxAnnotation(CRUDBase[BBoxAnnotationORM, BBoxAnnotationCreate, BBoxA
         from app.core.data.crud.annotation_document import crud_adoc
         proj_id = crud_adoc.read(db=db, id=adoc_id).source_document.project_id
 
+        from app.core.data.crud.action import crud_action
         for rid in removed_ids:
-            ActionService().create_action(proj_id=proj_id,
-                                          user_id=SYSTEM_USER_ID,
-                                          action_type=ActionType.DELETE,
-                                          target=ActionTargetObjectType.bbox_annotation,
-                                          target_id=rid)
+            create_dto = ActionCreate(project_id=proj_id,
+                                      user_id=SYSTEM_USER_ID,
+                                      action_type=ActionType.DELETE,
+                                      target_type=ActionTargetObjectType.bbox_annotation,
+                                      target_id=rid)
+            crud_action.create(db=db, create_dto=create_dto)
+
         return removed_ids
 
 
