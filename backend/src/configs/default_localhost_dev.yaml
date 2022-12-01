@@ -16,6 +16,100 @@ repo:
     port: ${oc.env:CONTENT_SERVER_EXPOSED, 13134}
     context_path: /
 
+docprepro:
+  text:
+    spacy:
+      # note that the spacy models have to be installed in the env to use it! (docker!)
+      models:
+        en: "/spacy_models/en_core_web_trf-3.4.1"
+        de: "/spacy_models/de_core_news_lg-3.4.0"
+        it: "/spacy_models/it_core_news_lg-3.4.0"
+        default: "en"
+
+      device: cpu # cpu is faster if concurrency is high!
+      max_text_length: 2000000 # in characters (1000000 is spaCy default)
+    bulk_threshold: 100
+
+  image:
+    object_detection:
+      model: "facebook/detr-resnet-101"
+      confidence_threshold: 0.3
+      device: cpu
+    image_captioning:
+      model: "nlpconnect/vit-gpt2-image-captioning"
+      max_caption_length: 16
+      num_beams: 4
+      device: cpu
+
+  simsearch:
+    # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
+    image_encoder:
+      model: "clip-ViT-B-32"
+      batch_size: 32
+      device: cpu
+    text_encoder:
+      model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+      batch_size: 32
+      device: cpu
+      min_sentence_length: 5
+
+  celery:
+    batch_size:
+      text: 200
+      image: 10
+    backend:
+      host: ${oc.env:REDIS_HOST, localhost}
+      port: ${oc.env:REDIS_PORT, 6379}
+      db: 0
+      password: ${oc.env:REDIS_PASSWORD, dwts123}
+    broker:
+      host: ${oc.env:RABBITMQ_HOST, localhost}
+      port: ${oc.env:RABBITMQ_PORT, 5672}
+      user: ${oc.env:RABBITMQ_USER, dwtsuser}
+      password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
+
+
+postgres:
+  host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
+  port: ${oc.env:POSTGRES_PORT, 5432}
+  db: ${oc.env:POSTGRES_DB, dwts}
+  user: ${oc.env:POSTGRES_USER, dwtsuser}
+  password: ${oc.env:POSTGRES_PASSWORD, dwts123}
+
+
+redis:
+  host: ${oc.env:REDIS_HOST, localhost}
+  port: ${oc.env:REDIS_PORT, 6379}
+  password: ${oc.env:REDIS_PASSWORD, dwts123}
+  clients:
+    feedback: 1 # name: redis db index -- DO NOT USE DB 0, it's reserved for RabbitMQ!
+
+logging:
+  max_file_size: 500 # MB
+  level: ${oc.env:LOG_LEVEL, debug}
+
+elasticsearch:
+  host: ${oc.env:ES_HOST, 127.0.0.1}
+  port: ${oc.env:ES_PORT, 9200}
+  use_ssl: False
+  verify_certs: False
+  sniff_on_start: False
+  sniff_on_connection_fail: False
+  sniffer_timeout: 120
+  index_mappings:
+    docs: configs/default_sdoc_index_mapping.json
+    memos: configs/default_memo_index_mapping.json
+  index_settings:
+    docs:
+    memos:
+
+faiss:
+  # see https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
+  index_factory_string: "IDMap,Flat"
+  index_search_metric: IP # or L2
+  index_dimension: 512 # has to match the encoder dimensions!
+  device: cpu
+
 system_codes:
   # text codes from spacy NER models (spans)
   NAMED_ENTITY:
@@ -275,97 +369,3 @@ system_codes:
         desc: Object Category from COCO 2017
       TRUCK:
         desc: Object Category from COCO 2017
-
-docprepro:
-  text:
-    spacy:
-      # note that the spacy models have to be installed in the env to use it! (docker!)
-      models:
-        en: "/spacy_models/en_core_web_trf-3.4.1"
-        de: "/spacy_models/de_core_news_lg-3.4.0"
-        it: "/spacy_models/it_core_news_lg-3.4.0"
-        default: "en"
-
-      device: cpu # cpu is faster if concurrency is high!
-      max_text_length: 2000000 # in characters (1000000 is spaCy default)
-    bulk_threshold: 100
-
-  image:
-    object_detection:
-      model: "facebook/detr-resnet-101"
-      confidence_threshold: 0.3
-      device: cpu
-    image_captioning:
-      model: "nlpconnect/vit-gpt2-image-captioning"
-      max_caption_length: 16
-      num_beams: 4
-      device: cpu
-
-  simsearch:
-    # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
-    image_encoder:
-      model: "clip-ViT-B-32"
-      batch_size: 32
-      device: cpu
-    text_encoder:
-      model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
-      batch_size: 32
-      device: cpu
-      min_sentence_length: 5
-
-  celery:
-    batch_size:
-      text: 200
-      image: 10
-    backend:
-      host: ${oc.env:REDIS_HOST, localhost}
-      port: ${oc.env:REDIS_PORT, 6379}
-      db: 0
-      password: ${oc.env:REDIS_PASSWORD, dwts123}
-    broker:
-      host: ${oc.env:RABBITMQ_HOST, localhost}
-      port: ${oc.env:RABBITMQ_PORT, 5672}
-      user: ${oc.env:RABBITMQ_USER, dwtsuser}
-      password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
-
-
-postgres:
-  host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
-  port: ${oc.env:POSTGRES_PORT, 5432}
-  db: ${oc.env:POSTGRES_DB, dwts}
-  user: ${oc.env:POSTGRES_USER, dwtsuser}
-  password: ${oc.env:POSTGRES_PASSWORD, dwts123}
-
-
-redis:
-  host: ${oc.env:REDIS_HOST, localhost}
-  port: ${oc.env:REDIS_PORT, 6379}
-  password: ${oc.env:REDIS_PASSWORD, dwts123}
-  clients:
-    feedback: 1 # name: redis db index -- DO NOT USE DB 0, it's reserved for RabbitMQ!
-
-logging:
-  max_file_size: 500 # MB
-  level: ${oc.env:LOG_LEVEL, debug}
-
-elasticsearch:
-  host: ${oc.env:ES_HOST, 127.0.0.1}
-  port: ${oc.env:ES_PORT, 9200}
-  use_ssl: False
-  verify_certs: False
-  sniff_on_start: False
-  sniff_on_connection_fail: False
-  sniffer_timeout: 120
-  index_mappings:
-    docs: configs/default_sdoc_index_mapping.json
-    memos: configs/default_memo_index_mapping.json
-  index_settings:
-    docs:
-    memos:
-
-faiss:
-  # see https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
-  index_factory_string: "IDMap,Flat"
-  index_search_metric: IP # or L2
-  index_dimension: 512 # has to match the encoder dimensions!
-  device: cpu
