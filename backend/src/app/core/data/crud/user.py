@@ -29,7 +29,7 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
 
     def remove_all_codes(self, db: Session, *, id: int) -> List[int]:
         db_obj = self.read(db=db, id=id)
-        statement = delete(CodeORM).where(CodeORM.user_id == db_obj.id).returning(self.model.id)
+        statement = delete(CodeORM).where(CodeORM.user_id == db_obj.id).returning(CodeORM.id)
         removed_ids = db.execute(statement).fetchall()
         db.commit()
         return list(map(lambda t: t[0], removed_ids))
