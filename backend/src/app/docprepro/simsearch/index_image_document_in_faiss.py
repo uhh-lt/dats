@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List
 
 import numpy as np
@@ -34,6 +35,13 @@ def _load_image_encoder() -> SentenceTransformer:
 image_encoder = _load_image_encoder()
 
 
+def load_image(img_p: Path) -> Image.Image:
+    img = Image.open(img_p)
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+    return img
+
+
 def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     if len(ppids) == 0:
         return ppids
@@ -48,10 +56,7 @@ def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProIm
     image_files = [ppid.image_dst for ppid in ppids]
     images: List[Image] = list()
     for f in image_files:
-        img = Image.open(f)
-        if img.mode != "RGB":
-            img = img.convert("RGB")
-        images.append(img)
+        images.append(load_image(f))
 
     # encode
     logger.debug(f"Encoding {len(ppids)} images...")
