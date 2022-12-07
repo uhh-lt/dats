@@ -8,7 +8,7 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityFrequency, \
     PaginatedElasticSearchDocumentHits, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
     PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat, TagStat, SpanEntityDocumentFrequencyResult, \
-    SimSearchSentenceHit
+    SimSearchSentenceHit, SimSearchImageHit
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
@@ -156,7 +156,7 @@ async def find_similar_sentences(proj_id: int, query: Union[str, int], top_k: in
 
 
 @router.post("/simsearch/images", tags=tags,
-             response_model=List[SourceDocumentRead],
+             response_model=List[SimSearchImageHit],
              summary="Returns similar Image SourceDocuments according to a textual or visual query.",
              description="Returns similar Image SourceDocuments according to a textual or visual query.")
 async def find_similar_images(proj_id: int, query: Union[str, int], top_k: int = 10) \

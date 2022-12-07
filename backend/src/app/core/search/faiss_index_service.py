@@ -78,6 +78,7 @@ class FaissIndexService(metaclass=SingletonMeta):
         if raise_if_not_exists and not exists:
             logger.error(f"{index_type} Index for Project {proj_id} does not exist!")
             raise FaissIndexDoesNotExistError(proj_id=proj_id, index_type=index_type)
+        return exists
 
     def add_to_index(self, embeddings: np.ndarray, embedding_ids: np.ndarray, proj_id: int,
                      index_type: IndexType) -> None:

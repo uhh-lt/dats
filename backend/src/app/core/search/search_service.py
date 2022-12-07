@@ -4,10 +4,11 @@ from PIL.Image import Image
 
 from app.core.data.crud.faiss_sentence_source_document_link import crud_faiss_sentence_link
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.search import SearchSDocsQueryParameters, SimSearchSentenceHit
-from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.search import SearchSDocsQueryParameters, SimSearchSentenceHit, SimSearchImageHit
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
+from app.core.search.faiss_index_service import FaissIndexService
+from app.core.search.index_type import IndexType
 from app.docprepro.simsearch import find_similar_sentences_apply_async, find_similar_images_apply_async
 from app.util.singleton_meta import SingletonMeta
 
@@ -80,7 +81,7 @@ class SearchService(metaclass=SingletonMeta):
 
     def find_similar_sentences(self, proj_id: int, query: Union[str, Image], top_k: int = 10) \
             -> List[SimSearchSentenceHit]:
-
+        FaissIndexService().index_exists(proj_id=proj_id, index_type=IndexType.TEXT, raise_if_not_exists=True)
         # perform the simsearch and get the span anno ids with scores
         top_k: Dict[int, float] = find_similar_sentences_apply_async(proj_id=proj_id,
                                                                      query=query,
@@ -94,9 +95,8 @@ class SearchService(metaclass=SingletonMeta):
                                          sentence_id=faiss_link.sentence_id)
                     for faiss_link, score in zip(faiss_links, top_k.values())]
 
-    def find_similar_images(self, proj_id: int, query: Union[str, int], top_k: int = 10) \
-            -> List[SourceDocumentRead]:
-
+    def find_similar_images(self, proj_id: int, query: Union[str, int], top_k: int = 10) -> List[SimSearchImageHit]:
+        FaissIndexService().index_exists(proj_id=proj_id, index_type=IndexType.IMAGE, raise_if_not_exists=True)
         # perform the simsearch and get the sdoc ids with scores
         top_k: Dict[int, float] = find_similar_images_apply_async(proj_id=proj_id,
                                                                   query=query,
@@ -105,5 +105,5 @@ class SearchService(metaclass=SingletonMeta):
         with self.sqls.db_session() as db:
             sdoc_orms = crud_sdoc.read_by_ids(db=db, ids=list(top_k.keys()))
 
-        return [SourceDocumentRead.from_orm(sdoc_orm)
+        return [SimSearchImageHit(sdoc_id=sdoc_orm.id, score=score)
                 for sdoc_orm, score in zip(sdoc_orms, top_k.values())]

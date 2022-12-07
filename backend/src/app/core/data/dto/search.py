@@ -209,7 +209,7 @@ class PaginatedMemoSearchResults(PaginatedResults):
 
 
 class SimSearchHit(BaseModel):
-    sdoc_id: int = Field(description="The ID of the SourceDocument the sentence appears in.")
+    sdoc_id: int = Field(description="The ID of the SourceDocument similar to the query.")
     score: float = Field(description="The similarity score.")
 
 
