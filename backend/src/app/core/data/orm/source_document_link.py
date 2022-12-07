@@ -16,7 +16,6 @@ class SourceDocumentLinkORM(ORMBase):
     parent_source_document_id = Column(Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), index=True)
     parent_source_document: "SourceDocumentORM" = relationship("SourceDocumentORM",
                                                                viewonly=True,
-                                                               passive_deletes=True,
                                                                foreign_keys="sourcedocumentlink.c.parent_source_document_id")
 
     linked_source_document_id = Column(Integer,
@@ -25,7 +24,6 @@ class SourceDocumentLinkORM(ORMBase):
                                        index=True)
     linked_source_document: "SourceDocumentORM" = relationship("SourceDocumentORM",
                                                                viewonly=True,
-                                                               passive_deletes=True,
                                                                foreign_keys="sourcedocumentlink.c.linked_source_document_id")
 
     linked_source_document_filename = Column(String, index=True)
