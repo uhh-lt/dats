@@ -3,7 +3,6 @@ from typing import List
 import numpy as np
 import torch
 from loguru import logger
-from sentence_transformers import SentenceTransformer
 
 from app.core.data.crud.faiss_sentence_source_document_link import crud_faiss_sentence_link
 from app.core.data.crud.source_document import crud_sdoc
@@ -12,28 +11,18 @@ from app.core.data.dto.source_document import SDocStatus
 from app.core.db.sql_service import SQLService
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
+from app.docprepro.simsearch.util import text_encoder
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from config import conf
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)
 
-sql = SQLService(echo=False)
+sqls = SQLService(echo=False)
 faisss = FaissIndexService()
 
 text_encoder_batch_size = conf.docprepro.simsearch.text_encoder.batch_size
 text_encoder_min_sentence_length = conf.docprepro.simsearch.text_encoder.min_sentence_length
-
-
-# loading the encoder models
-def _load_text_encoder() -> SentenceTransformer:
-    text_encoder_model = conf.docprepro.simsearch.text_encoder.model
-    logger.debug(f"Loading text encoder model {text_encoder_model} ...")
-    return SentenceTransformer(conf.docprepro.simsearch.text_encoder.model,
-                               device=conf.docprepro.simsearch.text_encoder.device)
-
-
-text_encoder = _load_text_encoder()
 
 
 def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
@@ -76,7 +65,7 @@ def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProText
                                                     device=conf.docprepro.simsearch.text_encoder.device)
 
         # bulk insert links and return ids
-        with sql.db_session() as db:
+        with sqls.db_session() as db:
             embedding_ids = [crud_faiss_sentence_link.create(db=db, create_dto=link).id for link in links]
 
         # add to index (with the IDs of the SpanAnnotation IDs)
@@ -87,7 +76,7 @@ def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProText
     else:
         logger.debug(f"No sentences to encode and add to the faiss index!")
 
-    with sql.db_session() as db:
+    with sqls.db_session() as db:
         for sdoc_id in sdoc_ids:
             crud_sdoc.update_status(db=db,
                                     sdoc_id=sdoc_id,

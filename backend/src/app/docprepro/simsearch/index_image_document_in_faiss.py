@@ -1,11 +1,9 @@
-from pathlib import Path
 from typing import List
 
 import numpy as np
 import torch
 from PIL import Image
 from loguru import logger
-from sentence_transformers import SentenceTransformer
 
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.source_document import SDocStatus
@@ -13,33 +11,16 @@ from app.core.db.sql_service import SQLService
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
+from app.docprepro.simsearch.util import load_image, image_encoder
 from config import conf
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)
 
-sqls = SQLService()
+sqls = SQLService(echo=False)
 faisss = FaissIndexService()
 
 image_encoder_batch_size = conf.docprepro.simsearch.image_encoder.batch_size
-
-
-# loading the encoder models
-def _load_image_encoder() -> SentenceTransformer:
-    image_encoder_model = conf.docprepro.simsearch.image_encoder.model
-    logger.debug(f"Loading image encoder model {image_encoder_model} ...")
-    return SentenceTransformer(conf.docprepro.simsearch.image_encoder.model,
-                               device=conf.docprepro.simsearch.image_encoder.device)
-
-
-image_encoder = _load_image_encoder()
-
-
-def load_image(img_p: Path) -> Image.Image:
-    img = Image.open(img_p)
-    if img.mode != "RGB":
-        img = img.convert("RGB")
-    return img
 
 
 def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
