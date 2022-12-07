@@ -1,6 +1,5 @@
 from typing import List, Union, Dict
 
-from app.core.search.faiss_index_service import FaissIndexService
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch.find_similar_images import find_similar_images_
@@ -8,8 +7,6 @@ from app.docprepro.simsearch.find_similar_sentences import find_similar_sentence
 from app.docprepro.simsearch.index_image_document_in_faiss import index_image_document_in_faiss_
 from app.docprepro.simsearch.index_text_document_in_faiss import index_text_document_in_faiss_
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
-
-faisss = FaissIndexService()
 
 
 @celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
