@@ -60,12 +60,21 @@ def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProIm
 
     # encode
     logger.debug(f"Encoding {len(ppids)} images...")
-    encoded_images = image_encoder.encode(sentences=images,
-                                          batch_size=image_encoder_batch_size,
-                                          show_progress_bar=True,
-                                          normalize_embeddings=True,
-                                          convert_to_numpy=True,
-                                          device=conf.docprepro.simsearch.text_encoder.device)
+    try:
+        encoded_images = image_encoder.encode(sentences=images,
+                                              batch_size=image_encoder_batch_size,
+                                              show_progress_bar=True,
+                                              normalize_embeddings=True,
+                                              convert_to_numpy=True,
+                                              device=conf.docprepro.simsearch.text_encoder.device)
+    except RuntimeError as e:
+        logger.error(f"Thread Pool crashed: {e} ... Retrying!")
+        encoded_images = image_encoder.encode(sentences=images,
+                                              batch_size=image_encoder_batch_size,
+                                              show_progress_bar=True,
+                                              normalize_embeddings=True,
+                                              convert_to_numpy=True,
+                                              device=conf.docprepro.simsearch.text_encoder.device)
 
     # close the image files again
     map(lambda image: image.close(), images)
