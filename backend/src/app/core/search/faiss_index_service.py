@@ -73,8 +73,11 @@ class FaissIndexService(metaclass=SingletonMeta):
         faiss.write_index(index, str(index_fn))
         logger.debug(f"Persisted {index_type} index for Project {proj_id} at {index_fn}!")
 
-    def index_exists(self, proj_id: int, index_type: IndexType) -> bool:
-        return self._get_index_path_for_project(proj_id=proj_id, index_type=index_type).exists()
+    def index_exists(self, proj_id: int, index_type: IndexType, raise_if_not_exists: bool = False) -> bool:
+        exists = self._get_index_path_for_project(proj_id=proj_id, index_type=index_type).exists()
+        if raise_if_not_exists and not exists:
+            logger.error(f"{index_type} Index for Project {proj_id} does not exist!")
+            raise FaissIndexDoesNotExistError(proj_id=proj_id, index_type=index_type)
 
     def add_to_index(self, embeddings: np.ndarray, embedding_ids: np.ndarray, proj_id: int,
                      index_type: IndexType) -> None:
@@ -127,9 +130,7 @@ class FaissIndexService(metaclass=SingletonMeta):
                      top_k: int = 10) -> Dict[int, float]:
         if query.ndim == 1:
             query = query[np.newaxis]
-        if not self.index_exists(proj_id=proj_id, index_type=index_type):
-            logger.error(f"{index_type} Index for Project {proj_id} does not exist!")
-            raise FaissIndexDoesNotExistError(proj_id=proj_id, index_type=index_type)
+        assert self.index_exists(proj_id=proj_id, index_type=index_type, raise_if_not_exists=True)
 
         # load or create the index
         index = self.create_or_load_index_for_project(proj_id=proj_id, index_type=index_type)
