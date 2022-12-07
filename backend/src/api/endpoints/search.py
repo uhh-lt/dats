@@ -161,5 +161,4 @@ async def find_similar_sentences(proj_id: int, query: Union[str, int], top_k: in
              description="Returns similar Image SourceDocuments according to a textual or visual query.")
 async def find_similar_images(proj_id: int, query: Union[str, int], top_k: int = 10) \
         -> List[SourceDocumentRead]:
-    # FIXME: Image query type not a valid pydantic type --> use uploaded image file or sdoc_id!
     return SearchService().find_similar_images(proj_id=proj_id, query=query, top_k=top_k)

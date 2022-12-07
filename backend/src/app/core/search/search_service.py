@@ -94,7 +94,7 @@ class SearchService(metaclass=SingletonMeta):
                                          sentence_id=faiss_link.sentence_id)
                     for faiss_link, score in zip(faiss_links, top_k.values())]
 
-    def find_similar_images(self, proj_id: int, query: Union[str, Image], top_k: int = 10) \
+    def find_similar_images(self, proj_id: int, query: Union[str, int], top_k: int = 10) \
             -> List[SourceDocumentRead]:
 
         # perform the simsearch and get the sdoc ids with scores
