@@ -9,7 +9,6 @@ from app.core.data.dto.search import SearchSDocsQueryParameters, SpanEntityFrequ
     PaginatedElasticSearchDocumentHits, SourceDocumentContentQuery, SourceDocumentFilenameQuery, MemoContentQuery, \
     PaginatedMemoSearchResults, MemoTitleQuery, KeywordStat, TagStat, SpanEntityDocumentFrequencyResult, \
     SimSearchSentenceHit, SimSearchImageHit
-from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
 
@@ -160,5 +159,5 @@ async def find_similar_sentences(proj_id: int, query: Union[str, int], top_k: in
              summary="Returns similar Image SourceDocuments according to a textual or visual query.",
              description="Returns similar Image SourceDocuments according to a textual or visual query.")
 async def find_similar_images(proj_id: int, query: Union[str, int], top_k: int = 10) \
-        -> List[SourceDocumentRead]:
+        -> List[SimSearchImageHit]:
     return SearchService().find_similar_images(proj_id=proj_id, query=query, top_k=top_k)
