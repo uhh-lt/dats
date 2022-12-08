@@ -5,27 +5,28 @@ import { SpanEntity } from "../../api/openapi";
 // const isString = (varToCheck: any): varToCheck is string => typeof varToCheck === "string";
 // const isNumber = (varToCheck: any): varToCheck is number => typeof varToCheck === "number";
 
-export enum SearchFilterType {
+export enum FilterType {
   CODE,
   TAG,
   KEYWORD,
-  TEXT,
+  TERM,
   SENTENCE,
-  FILE,
+  IMAGE,
+  FILENAME,
   METADATA,
 }
 
 export type SearchFilter = {
   id: string;
   data: SpanEntity | number | string | { key: string; value: string };
-  type: SearchFilterType;
+  type: FilterType;
 };
 
 export function createDocumentTagFilter(tagId: number): SearchFilter {
   return {
     id: `tag-${tagId}`,
     data: tagId,
-    type: SearchFilterType.TAG,
+    type: FilterType.TAG,
   };
 }
 
@@ -33,7 +34,7 @@ export function createCodeFilter(codeId: number, annotatedText: string): SearchF
   return {
     id: `code-${codeId}-${annotatedText}`,
     data: { code_id: codeId, span_text: annotatedText },
-    type: SearchFilterType.CODE,
+    type: FilterType.CODE,
   };
 }
 
@@ -41,15 +42,15 @@ export function createKeywordFilter(keyword: string): SearchFilter {
   return {
     id: `keyword-${keyword}`,
     data: keyword,
-    type: SearchFilterType.KEYWORD,
+    type: FilterType.KEYWORD,
   };
 }
 
-export function createTextFilter(text: string): SearchFilter {
+export function createTermFilter(term: string): SearchFilter {
   return {
-    id: `text-${text}`,
-    data: text,
-    type: SearchFilterType.TEXT,
+    id: `text-${term}`,
+    data: term,
+    type: FilterType.TERM,
   };
 }
 
@@ -57,15 +58,23 @@ export function createSentenceFilter(sentence: string): SearchFilter {
   return {
     id: `sentence-${sentence}`,
     data: sentence,
-    type: SearchFilterType.SENTENCE,
+    type: FilterType.SENTENCE,
   };
 }
 
-export function createFileFilter(filename: string): SearchFilter {
+export function createImageFilter(imageSdocId: number): SearchFilter {
+  return {
+    id: `image-${imageSdocId}`,
+    data: imageSdocId,
+    type: FilterType.IMAGE,
+  };
+}
+
+export function createFilenameFilter(filename: string): SearchFilter {
   return {
     id: `file-${filename}`,
     data: filename,
-    type: SearchFilterType.FILE,
+    type: FilterType.FILENAME,
   };
 }
 
@@ -73,42 +82,46 @@ export function createMetadataFilter(key: string, value: string): SearchFilter {
   return {
     id: `metadata-${key}-${value}`,
     data: { key: key, value: value },
-    type: SearchFilterType.METADATA,
+    type: FilterType.METADATA,
   };
 }
 
-export function orderFilter(filters: SearchFilter[]) {
+export function orderFilters(filters: SearchFilter[]) {
   const keywords: string[] = [];
   const tags: number[] = [];
   const codes: SpanEntity[] = [];
-  const texts: string[] = [];
+  const terms: string[] = [];
   const sentences: string[] = [];
-  const files: string[] = [];
+  const images: number[] = [];
+  const filenames: string[] = [];
   const metadata: { key: string; value: string }[] = [];
   filters.forEach((filter) => {
     switch (filter.type) {
-      case SearchFilterType.CODE:
+      case FilterType.CODE:
         codes.push(filter.data as SpanEntity);
         break;
-      case SearchFilterType.KEYWORD:
+      case FilterType.KEYWORD:
         keywords.push(filter.data as string);
         break;
-      case SearchFilterType.TAG:
+      case FilterType.TAG:
         tags.push(filter.data as number);
         break;
-      case SearchFilterType.TEXT:
-        texts.push(filter.data as string);
+      case FilterType.TERM:
+        terms.push(filter.data as string);
         break;
-      case SearchFilterType.SENTENCE:
+      case FilterType.SENTENCE:
         sentences.push(filter.data as string);
         break;
-      case SearchFilterType.FILE:
-        files.push(filter.data as string);
+      case FilterType.IMAGE:
+        images.push(filter.data as number);
         break;
-      case SearchFilterType.METADATA:
+      case FilterType.FILENAME:
+        filenames.push(filter.data as string);
+        break;
+      case FilterType.METADATA:
         metadata.push(filter.data as { key: string; value: string });
         break;
     }
   });
-  return { keywords, tags, codes, texts, sentences, files, metadata };
+  return { keywords, tags, codes, terms, sentences, images, filenames, metadata };
 }

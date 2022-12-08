@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type SimSearchSentenceHit = {
+export type SimSearchImageHit = {
   /**
    * The ID of the SourceDocument similar to the query.
    */
@@ -11,8 +11,4 @@ export type SimSearchSentenceHit = {
    * The similarity score.
    */
   score: number;
-  /**
-   * The sentence id with respect to the SourceDocument
-   */
-  sentence_id: number;
 };

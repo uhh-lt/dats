@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { SearchFilter, SearchFilterType } from "./SearchFilter";
-import { SearchType } from "./SearchType";
+import { SearchFilter, FilterType } from "./SearchFilter";
+import { QueryType } from "./QueryType";
 import { DocType } from "../../api/openapi";
 
 interface SearchState {
@@ -13,7 +13,7 @@ interface SearchState {
   page: number;
   rowsPerPage: number;
   resultModalities: DocType[];
-  searchType: SearchType;
+  searchType: QueryType;
 }
 
 const initialState: SearchState = {
@@ -26,7 +26,7 @@ const initialState: SearchState = {
   page: 0,
   rowsPerPage: 10,
   resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
-  searchType: SearchType.CONTENT,
+  searchType: QueryType.LEXICAL,
 };
 
 export const searchSlice = createSlice({
@@ -62,16 +62,16 @@ export const searchSlice = createSlice({
     // filtering
     addFilter: (state, action: PayloadAction<SearchFilter>) => {
       // it is only allowed to have either a single sentence filter, or multiple other filters
-      if (action.payload.type === SearchFilterType.SENTENCE) {
+      if (action.payload.type === FilterType.SENTENCE || action.payload.type === FilterType.IMAGE) {
         state.filters = [];
-      } else if (state.filters.find((f) => f.type === SearchFilterType.SENTENCE)) {
+      } else if (state.filters.find((f) => f.type === FilterType.SENTENCE || f.type === FilterType.IMAGE)) {
         state.filters = [];
       }
 
       // it is only allowed to have a single file filter
       // therefore, remove existing file filters before adding a new one
-      if (action.payload.type === SearchFilterType.FILE) {
-        state.filters = state.filters.filter((f) => f.type !== SearchFilterType.FILE);
+      if (action.payload.type === FilterType.FILENAME) {
+        state.filters = state.filters.filter((f) => f.type !== FilterType.FILENAME);
       }
 
       // only add the filter, if it does not exist already
@@ -120,7 +120,7 @@ export const searchSlice = createSlice({
       }
       state.resultModalities = state.resultModalities.sort();
     },
-    setSearchType: (state, action: PayloadAction<SearchType>) => {
+    setSearchType: (state, action: PayloadAction<QueryType>) => {
       state.searchType = action.payload;
     },
   },

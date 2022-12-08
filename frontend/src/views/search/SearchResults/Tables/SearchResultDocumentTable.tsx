@@ -1,11 +1,13 @@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import ToggleAllDocumentsButton from "../ToolBar/ToolBarElements/ToggleAllDocumentsButton";
+import ToggleAllDocumentsButton from "../../ToolBar/ToolBarElements/ToggleAllDocumentsButton";
 import { TableContainerProps } from "@mui/material/TableContainer";
 import { useCallback, useMemo, useState } from "react";
+import { SearchResults } from "../../../../api/SearchHooks";
+import SearchResultDocumentTableRow from "./SearchResultDocumentTableRow";
+import { SearchResultEventHandlerProps } from "../SearchResultProps";
 
 interface SearchResultsTableProps {
-  searchResultDocumentIds: number[];
-  numSearchResults: number;
+  searchResults: SearchResults<any>;
   page: number;
   rowsPerPage: number;
   children?: React.ReactNode;
@@ -15,10 +17,12 @@ function SearchResultDocumentTable({
   children,
   page,
   rowsPerPage,
-  searchResultDocumentIds,
-  numSearchResults,
+  searchResults,
+  handleClick,
+  handleOnContextMenu,
+  handleOnCheckboxChange,
   ...props
-}: SearchResultsTableProps & TableContainerProps) {
+}: SearchResultsTableProps & SearchResultEventHandlerProps & TableContainerProps) {
   // handle resize
   const [width, setWidth] = useState(80);
   const [isResizing, setIsResizing] = useState(false);
@@ -42,8 +46,8 @@ function SearchResultDocumentTable({
   // computed
   // use empty rows to fill table
   const emptyRows = useMemo(
-    () => (page > 0 ? Math.max(0, (1 + page) * rowsPerPage - numSearchResults) : 0),
-    [numSearchResults, page, rowsPerPage]
+    () => (page > 0 ? Math.max(0, (1 + page) * rowsPerPage - searchResults.getNumberOfHits()) : 0),
+    [searchResults, page, rowsPerPage]
   );
 
   return (
@@ -52,7 +56,7 @@ function SearchResultDocumentTable({
         <TableHead>
           <TableRow>
             <TableCell padding="checkbox" style={{ width: "48px" }}>
-              <ToggleAllDocumentsButton sdocIds={searchResultDocumentIds} />
+              <ToggleAllDocumentsButton sdocIds={searchResults.getSearchResultSDocIds()} />
             </TableCell>
             <TableCell style={{ position: "relative", width: `${width}px` }}>
               Document
@@ -62,7 +66,18 @@ function SearchResultDocumentTable({
           </TableRow>
         </TableHead>
         <TableBody>
-          {children}
+          {searchResults
+            .getSearchResultSDocIds()
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .map((sdocId) => (
+              <SearchResultDocumentTableRow
+                key={sdocId}
+                sdocId={sdocId}
+                handleClick={handleClick}
+                handleOnContextMenu={handleOnContextMenu}
+                handleOnCheckboxChange={handleOnCheckboxChange}
+              />
+            ))}
           {emptyRows > 0 && (
             <TableRow
               style={{

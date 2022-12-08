@@ -3,17 +3,17 @@ import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
 import { Stack, Tooltip } from "@mui/material";
 import { useParams } from "react-router-dom";
-import MemoButton from "../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../../features/memo-dialog/MemoButton";
 import * as React from "react";
 import { useMemo } from "react";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import SdocHooks from "../../../api/SdocHooks";
-import SearchResultTag from "./SearchResultTag";
-import { SearchResultItem } from "./SearchResultItem";
-import AnnotateButton from "../ToolBar/ToolBarElements/AnnotateButton";
-import { AttachedObjectType, SimSearchSentenceHit } from "../../../api/openapi";
+import { useAppSelector } from "../../../../plugins/ReduxHooks";
+import SdocHooks from "../../../../api/SdocHooks";
+import SearchResultTag from "../SearchResultTag";
+import { SearchResultProps } from "../SearchResultProps";
+import AnnotateButton from "../../ToolBar/ToolBarElements/AnnotateButton";
+import { AttachedObjectType, SimSearchImageHit, SimSearchSentenceHit } from "../../../../api/openapi";
 
-interface SearchResultSentenceRowProps extends SearchResultItem {
+interface SearchResultSentenceRowProps extends SearchResultProps {
   hit: SimSearchSentenceHit;
 }
 

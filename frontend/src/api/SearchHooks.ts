@@ -7,15 +7,75 @@ import {
   MemoTitleQuery,
   PaginatedMemoSearchResults,
   SearchService,
+  SimSearchImageHit,
   SimSearchSentenceHit,
+  SpanEntity,
   SpanEntityDocumentFrequency,
   TagStat,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
-import { orderFilter, SearchFilter } from "../views/search/SearchFilter";
+import { orderFilters, SearchFilter } from "../views/search/SearchFilter";
 import queryClient from "../plugins/ReactQueryClient";
 import { useAppSelector } from "../plugins/ReduxHooks";
 import { useAuth } from "../auth/AuthProvider";
+import { useMemo } from "react";
+
+export abstract class SearchResults<T extends Iterable<any>> {
+  constructor(protected results: T) {
+    this.results = results;
+  }
+
+  getResults(): T {
+    return this.results;
+  }
+
+  abstract getSearchResultSDocIds(): number[];
+
+  abstract getNumberOfHits(): number;
+
+  getAggregatedNumberOfHits(): number {
+    return this.getNumberOfHits();
+  }
+}
+
+export class LexicalSearchResults extends SearchResults<number[]> {
+  getSearchResultSDocIds(): number[] {
+    if (this.results.length === 0) return [];
+    return this.results;
+  }
+
+  getNumberOfHits(): number {
+    return this.results.length;
+  }
+}
+
+export abstract class SimilaritySearchResults<
+  T extends Map<number, SimSearchSentenceHit[]> | SimSearchImageHit[]
+> extends SearchResults<T> {}
+
+export class SentenceSimilaritySearchResults extends SimilaritySearchResults<Map<number, SimSearchSentenceHit[]>> {
+  getSearchResultSDocIds(): number[] {
+    return Array.from(this.results.keys());
+  }
+
+  getNumberOfHits(): number {
+    return this.results.size;
+  }
+
+  getAggregatedNumberOfHits(): number {
+    return Array.from(this.results.values()).flat().length;
+  }
+}
+
+export class ImageSimilaritySearchResults extends SimilaritySearchResults<SimSearchImageHit[]> {
+  getSearchResultSDocIds(): number[] {
+    return this.results.map((hit) => hit.sdoc_id);
+  }
+
+  getNumberOfHits(): number {
+    return this.results.length;
+  }
+}
 
 export enum SearchResultsType {
   // type DOCUMENTS returns data: number[]
@@ -24,78 +84,111 @@ export enum SearchResultsType {
   SENTENCES,
 }
 
-export interface SearchResults {
-  data: number[] | Map<number, SimSearchSentenceHit[]>;
-  type: SearchResultsType;
-}
-
-export function getSearchResultIds(results: SearchResults) {
-  switch (results.type) {
-    case SearchResultsType.DOCUMENTS:
-      return results.data as number[];
-    case SearchResultsType.SENTENCES:
-      return Array.from((results.data as Map<number, SimSearchSentenceHit[]>).keys());
-    default:
-      return [];
+const filterSearchQueryFn = async (
+  projectId: number,
+  userId: number | undefined,
+  resultModalities: DocType[],
+  filter: {
+    keywords: string[];
+    tags: number[];
+    codes: SpanEntity[];
+    terms: string[];
+    sentences: string[];
+    images: number[];
+    filenames: string[];
+    metadata: { key: string; value: string }[];
   }
-}
+): Promise<LexicalSearchResults> => {
+  const sdocIds = await SearchService.searchSdocs({
+    requestBody: {
+      proj_id: projectId,
+      user_ids: userId ? [userId] : undefined,
+      span_entities: filter.codes.length > 0 ? filter.codes : undefined,
+      tag_ids: filter.tags.length > 0 ? filter.tags : undefined,
+      keywords: filter.keywords.length > 0 ? filter.keywords : undefined,
+      search_terms: filter.terms.length > 0 ? filter.terms : undefined,
+      file_name: filter.filenames.length > 0 ? filter.filenames[0] : undefined,
+      metadata: filter.metadata.length > 0 ? filter.metadata : undefined,
+      doc_types: resultModalities.length > 0 ? resultModalities : undefined,
+      all_tags: true,
+    },
+  });
+  return new LexicalSearchResults(sdocIds);
+};
+
+const sentenceSimilaritySearchQueryFn = async (
+  projectId: number,
+  query: number | string
+): Promise<SentenceSimilaritySearchResults> => {
+  const result = await SearchService.findSimilarSentences({
+    projId: projectId,
+    query: query,
+    topK: 10,
+  });
+
+  // combine multiple results (sentences) per document
+  const combinedSDocHits = new Map<number, SimSearchSentenceHit[]>();
+  result.forEach((hit) => {
+    const hits = combinedSDocHits.get(hit.sdoc_id) || [];
+    hits.push(hit);
+    combinedSDocHits.set(hit.sdoc_id, hits);
+  });
+
+  return new SentenceSimilaritySearchResults(combinedSDocHits);
+};
+
+const imageSimilaritySearchQueryFn = async (
+  projectId: number,
+  query: number | string
+): Promise<ImageSimilaritySearchResults> => {
+  const results = await SearchService.findSimilarImages({
+    projId: projectId,
+    query: query,
+    topK: 10,
+  });
+
+  return new ImageSimilaritySearchResults(results);
+};
 
 const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: SearchFilter[]) => {
   const { user } = useAuth();
   const resultModalities = useAppSelector((state) => state.search.resultModalities);
-  // const findImageModality = useAppSelector((state) => state.search.findImageModality);
-  return useQuery<SearchResults, Error>(
+  const orderedFilters = useMemo(() => {
+    return orderFilters(filters);
+  }, [filters]);
+
+  return useQuery<SearchResults<any>, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, user.data?.id, filters, resultModalities],
     async () => {
-      const { keywords, tags, codes, texts, sentences, files, metadata } = orderFilter(filters);
-      if (sentences.length === 1 && resultModalities.length === 1) {
-        if (resultModalities[0] === DocType.TEXT) {
-          const result = await SearchService.findSimilarSentences({
-            projId: projectId,
-            query: filters[0].data as string,
-            topK: 10,
-          });
-
-          // combine multiple results (sentences) per document
-          const x = new Map<number, SimSearchSentenceHit[]>();
-          result.forEach((hit) => {
-            const hits = x.get(hit.sdoc_id) || [];
-            hits.push(hit);
-            x.set(hit.sdoc_id, hits);
-          });
-
-          return {
-            data: x,
-            type: SearchResultsType.SENTENCES,
-          };
-        } else {
-          // todo: please only return number[]
-          const imageSdocs = await SearchService.findSimilarImages({
-            projId: projectId,
-            query: filters[0].data as string,
-            topK: 10,
-          });
-          return { data: imageSdocs.map((img) => img.id), type: SearchResultsType.DOCUMENTS };
-        }
-      } else if (sentences.length === 0) {
-        const sdocIds = await SearchService.searchSdocs({
-          requestBody: {
-            proj_id: projectId,
-            user_ids: user.data ? [user.data.id] : undefined,
-            span_entities: codes.length > 0 ? codes : undefined,
-            tag_ids: tags.length > 0 ? tags : undefined,
-            keywords: keywords.length > 0 ? keywords : undefined,
-            search_terms: texts.length > 0 ? texts : undefined,
-            file_name: files.length > 0 ? files[0] : undefined,
-            metadata: metadata.length > 0 ? metadata : undefined,
-            doc_types: resultModalities.length > 0 ? resultModalities : undefined,
-            all_tags: true,
-          },
-        });
-        return { data: sdocIds, type: SearchResultsType.DOCUMENTS };
+      if (orderedFilters.sentences.length === 0 && orderedFilters.images.length === 0) {
+        return await filterSearchQueryFn(projectId, user.data?.id, resultModalities, orderedFilters);
+      } else if (
+        orderedFilters.sentences.length === 1 &&
+        orderedFilters.images.length === 0 &&
+        resultModalities[0] === DocType.TEXT
+      ) {
+        return await sentenceSimilaritySearchQueryFn(projectId, orderedFilters.sentences[0]);
+      } else if (
+        orderedFilters.sentences.length === 1 &&
+        orderedFilters.images.length === 0 &&
+        resultModalities[0] === DocType.IMAGE
+      ) {
+        return await imageSimilaritySearchQueryFn(projectId, orderedFilters.sentences[0]);
+      } else if (
+        orderedFilters.sentences.length === 0 &&
+        orderedFilters.images.length === 1 &&
+        resultModalities[0] === DocType.TEXT
+      ) {
+        return await sentenceSimilaritySearchQueryFn(projectId, orderedFilters.images[0]);
+      } else if (
+        orderedFilters.sentences.length === 0 &&
+        orderedFilters.images.length === 1 &&
+        resultModalities[0] === DocType.IMAGE
+      ) {
+        return await imageSimilaritySearchQueryFn(projectId, orderedFilters.images[0]);
       } else {
         console.error("ERROR!");
-        return { data: [], type: SearchResultsType.DOCUMENTS };
+        return new LexicalSearchResults([]);
       }
     }
   );
@@ -122,7 +215,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
   return useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
     [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, user.data?.id, filters, resultModalities],
     async () => {
-      const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
+      const { keywords, tags, codes, terms, filenames, metadata } = orderFilters(filters);
       const data = await SearchService.searchEntityDocumentStats({
         requestBody: {
           proj_id: projectId,
@@ -130,8 +223,8 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
           span_entities: codes.length > 0 ? codes : undefined,
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
-          search_terms: texts.length > 0 ? texts : undefined,
-          file_name: files.length > 0 ? files[0] : undefined,
+          search_terms: terms.length > 0 ? terms : undefined,
+          file_name: filenames.length > 0 ? filenames[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
@@ -148,7 +241,7 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
   return useQuery<KeywordStat[], Error>(
     [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, user.data?.id, filters, resultModalities],
     () => {
-      const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
+      const { keywords, tags, codes, terms, filenames, metadata } = orderFilters(filters);
       return SearchService.searchKeywordStats({
         requestBody: {
           proj_id: projectId,
@@ -156,8 +249,8 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
           span_entities: codes.length > 0 ? codes : undefined,
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
-          search_terms: texts.length > 0 ? texts : undefined,
-          file_name: files.length > 0 ? files[0] : undefined,
+          search_terms: terms.length > 0 ? terms : undefined,
+          file_name: filenames.length > 0 ? filenames[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
@@ -173,7 +266,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
   return useQuery<TagStat[], Error>(
     [QueryKey.SEARCH_TAG_STATISTICS, projectId, user.data?.id, filters, resultModalities],
     () => {
-      const { keywords, tags, codes, texts, files, metadata } = orderFilter(filters);
+      const { keywords, tags, codes, terms, filenames, metadata } = orderFilters(filters);
       return SearchService.searchTagStats({
         requestBody: {
           proj_id: projectId,
@@ -181,8 +274,8 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
           span_entities: codes.length > 0 ? codes : undefined,
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
-          search_terms: texts.length > 0 ? texts : undefined,
-          file_name: files.length > 0 ? files[0] : undefined,
+          search_terms: terms.length > 0 ? terms : undefined,
+          file_name: filenames.length > 0 ? filenames[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
@@ -227,32 +320,6 @@ const useSearchMemoTitle = (params: MemoTitleQuery) =>
     }
   );
 
-const useSentenceSimilaritySearch = (projectId: number, filters: SearchFilter[]) =>
-  useQuery<SearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filters],
-    async () => {
-      const result = await SearchService.findSimilarSentences({
-        projId: projectId,
-        query: filters[0].data as string,
-        topK: 10,
-      });
-      const data = new Map<number, SimSearchSentenceHit[]>();
-      result.forEach((hit) => {
-        const hits = data.get(hit.sdoc_id) || [];
-        hits.push(hit);
-        data.set(hit.sdoc_id, hits);
-      });
-      return {
-        sdocIds: result.map((hit) => hit.sdoc_id),
-        data: data,
-        type: SearchResultsType.SENTENCES,
-      };
-    },
-    {
-      enabled: filters.length > 0,
-    }
-  );
-
 const SearchHooks = {
   useSearchEntityDocumentStats,
   useSearchKeywordStats,
@@ -261,7 +328,6 @@ const SearchHooks = {
   useSearchMemoContent,
   useSearchDocumentsByProjectIdAndTagId,
   useSearchDocumentsByProjectIdAndFilters,
-  useSentenceSimilaritySearch,
 };
 
 export default SearchHooks;

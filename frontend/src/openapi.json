@@ -3680,7 +3680,7 @@
                 "schema": {
                   "title": "Response Search-Find Similar Images",
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SourceDocumentRead" }
+                  "items": { "$ref": "#/components/schemas/SimSearchImageHit" }
                 }
               }
             }
@@ -4793,6 +4793,19 @@
           }
         }
       },
+      "SimSearchImageHit": {
+        "title": "SimSearchImageHit",
+        "required": ["sdoc_id", "score"],
+        "type": "object",
+        "properties": {
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "The ID of the SourceDocument similar to the query."
+          },
+          "score": { "title": "Score", "type": "number", "description": "The similarity score." }
+        }
+      },
       "SimSearchSentenceHit": {
         "title": "SimSearchSentenceHit",
         "required": ["sdoc_id", "score", "sentence_id"],
@@ -4801,7 +4814,7 @@
           "sdoc_id": {
             "title": "Sdoc Id",
             "type": "integer",
-            "description": "The ID of the SourceDocument the sentence appears in."
+            "description": "The ID of the SourceDocument similar to the query."
           },
           "score": { "title": "Score", "type": "number", "description": "The similarity score." },
           "sentence_id": {

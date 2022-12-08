@@ -7,10 +7,10 @@ import type { MemoTitleQuery } from "../models/MemoTitleQuery";
 import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
 import type { SearchSDocsQueryParameters } from "../models/SearchSDocsQueryParameters";
+import type { SimSearchImageHit } from "../models/SimSearchImageHit";
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SourceDocumentContentQuery } from "../models/SourceDocumentContentQuery";
 import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
-import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SpanEntityDocumentFrequencyResult } from "../models/SpanEntityDocumentFrequencyResult";
 import type { SpanEntityFrequency } from "../models/SpanEntityFrequency";
 import type { TagStat } from "../models/TagStat";
@@ -311,7 +311,7 @@ export class SearchService {
   /**
    * Returns similar Image SourceDocuments according to a textual or visual query.
    * Returns similar Image SourceDocuments according to a textual or visual query.
-   * @returns SourceDocumentRead Successful Response
+   * @returns SimSearchImageHit Successful Response
    * @throws ApiError
    */
   public static findSimilarImages({
@@ -322,7 +322,7 @@ export class SearchService {
     projId: number;
     query: string | number;
     topK?: number;
-  }): CancelablePromise<Array<SourceDocumentRead>> {
+  }): CancelablePromise<Array<SimSearchImageHit>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/simsearch/images",

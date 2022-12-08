@@ -17,7 +17,7 @@ function SdocImageLink({ projectId, filename, toPrefix }: SdocImageLinkProps) {
       {sdocId.isSuccess && url.isSuccess ? (
         <div>
           <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
-            <img src={url.data} alt="resolved" />
+            <img src={url.data} alt="resolved" data-sdoc-id={sdocId.data} />
           </Link>
         </div>
       ) : sdocId.isSuccess && !url.isSuccess ? (

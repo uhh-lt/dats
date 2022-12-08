@@ -1,6 +1,6 @@
 import { Chip, ChipProps, Tooltip } from "@mui/material";
 import * as React from "react";
-import { SearchFilter, SearchFilterType } from "./SearchFilter";
+import { FilterType, SearchFilter } from "./SearchFilter";
 import CodeHooks from "../../api/CodeHooks";
 import { SpanEntity } from "../../api/openapi";
 import TagHooks from "../../api/TagHooks";
@@ -21,21 +21,23 @@ const props: ChipProps = {
 
 function SearchFilterChip({ filter, handleDelete }: SearchFilterChipProps) {
   switch (filter.type) {
-    case SearchFilterType.CODE:
+    case FilterType.CODE:
       return <CodeFilterChip spanEntity={filter.data as SpanEntity} onDelete={() => handleDelete(filter)} {...props} />;
-    case SearchFilterType.TAG:
+    case FilterType.TAG:
       return (
         <DocumentTagFilterChip documentTagId={filter.data as number} onDelete={() => handleDelete(filter)} {...props} />
       );
-    case SearchFilterType.KEYWORD:
+    case FilterType.KEYWORD:
       return <KeywordFilterChip keyword={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
-    case SearchFilterType.TEXT:
+    case FilterType.TERM:
       return <TextFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
-    case SearchFilterType.SENTENCE:
+    case FilterType.SENTENCE:
       return <SentenceFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
-    case SearchFilterType.FILE:
+    case FilterType.IMAGE:
+      return <ImageFilterChip sdocId={filter.data as number} onDelete={() => handleDelete(filter)} {...props} />;
+    case FilterType.FILENAME:
       return <FileFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
-    case SearchFilterType.METADATA:
+    case FilterType.METADATA:
       return (
         <MetadataFilterChip
           metadata={filter.data as { key: string; value: string }}
@@ -72,6 +74,10 @@ function TextFilterChip({ text, ...props }: { text: string } & ChipProps) {
 
 function SentenceFilterChip({ text, ...props }: { text: string } & ChipProps) {
   return <Chip label={`Sentence: ${text}`} {...props} />;
+}
+
+function ImageFilterChip({ sdocId, ...props }: { sdocId: number } & ChipProps) {
+  return <Chip label={`Image ID: ${sdocId}`} {...props} />;
 }
 
 function FileFilterChip({ text, ...props }: { text: string } & ChipProps) {

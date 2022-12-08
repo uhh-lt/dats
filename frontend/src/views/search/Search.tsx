@@ -10,15 +10,15 @@ import Portal from "@mui/material/Portal";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useForm } from "react-hook-form";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import { SimSearchSentenceHit, SpanEntityDocumentFrequency } from "../../api/openapi";
+import { SpanEntityDocumentFrequency } from "../../api/openapi";
 import { isNumber } from "lodash";
 import {
   createCodeFilter,
   createDocumentTagFilter,
-  createFileFilter,
+  createFilenameFilter,
   createKeywordFilter,
   createSentenceFilter,
-  createTextFilter,
+  createTermFilter,
   SearchFilter,
 } from "./SearchFilter";
 import { SearchActions } from "./searchSlice";
@@ -27,8 +27,8 @@ import SearchFilterChip from "./SearchFilterChip";
 import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
 import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
 import Box from "@mui/material/Box";
-import SearchHooks, { getSearchResultIds, SearchResultsType } from "../../api/SearchHooks";
-import { SearchType } from "./SearchType";
+import SearchHooks from "../../api/SearchHooks";
+import { QueryType } from "./QueryType";
 import ProjectHooks from "../../api/ProjectHooks";
 import { SettingsActions } from "../settings/settingsSlice";
 
@@ -63,20 +63,20 @@ function Search() {
   // computed (local client state)
   const searchResultDocumentIds = useMemo(() => {
     if (!searchResults.data) return [];
-    return getSearchResultIds(searchResults.data);
+    return searchResults.data.getSearchResultSDocIds();
   }, [searchResults.data]);
+
   const numSearchResults = useMemo(() => {
     if (!searchResults.data) return 0;
     // in list view we show every single sentence
-    if (searchResults.data.type === SearchResultsType.SENTENCES && isListView) {
-      return Array.from((searchResults.data.data as Map<number, SimSearchSentenceHit[]>).values()).flat().length;
-    } else if (searchResults.data.type === SearchResultsType.SENTENCES) {
-      return (searchResults.data.data as Map<number, SimSearchSentenceHit[]>).size;
-    } else {
-      return (searchResults.data.data as number[]).length;
+    if (isListView) {
+      return searchResults.data.getNumberOfHits();
     }
+    return searchResults.data.getAggregatedNumberOfHits();
   }, [isListView, searchResults.data]);
+
   const viewDocument = Boolean(sdocId);
+
   const selectedTag = useMemo(() => {
     if (filters.length === 1 && isNumber(filters[0].data)) {
       return filters[0].data;
@@ -110,13 +110,13 @@ function Search() {
   const handleSearch = (data: any) => {
     if (data.query.trim().length === 0) return;
     switch (searchType) {
-      case SearchType.CONTENT:
+      case QueryType.LEXICAL:
         handleAddTextFilter(data.query);
         break;
-      case SearchType.FILE:
+      case QueryType.FILENAME:
         handleAddFileFilter(data.query);
         break;
-      case SearchType.SENTENCE:
+      case QueryType.SEMANTIC:
         handleAddSentenceFilter(data.query);
         break;
     }
@@ -157,7 +157,7 @@ function Search() {
   );
   const handleAddTextFilter = useCallback(
     (text: string) => {
-      dispatch(SearchActions.addFilter(createTextFilter(text)));
+      dispatch(SearchActions.addFilter(createTermFilter(text)));
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
@@ -165,12 +165,13 @@ function Search() {
   );
   const handleAddFileFilter = useCallback(
     (filename: string) => {
-      dispatch(SearchActions.addFilter(createFileFilter(filename)));
+      dispatch(SearchActions.addFilter(createFilenameFilter(filename)));
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId]
   );
+
   const handleAddSentenceFilter = useCallback(
     (sentence: string) => {
       dispatch(SearchActions.addFilter(createSentenceFilter(sentence)));
@@ -179,6 +180,7 @@ function Search() {
     },
     [dispatch, navigateIfNecessary, projectId]
   );
+
   const handleRemoveFilter = useCallback(
     (filter: SearchFilter) => {
       dispatch(SearchActions.removeFilter(filter));
@@ -247,19 +249,17 @@ function Search() {
                 numSearchResults={numSearchResults}
                 className="myFlexFitContentContainer"
               />
-              <React.Fragment>
+              <>
                 {searchResults.isLoading && <div>Loading!</div>}
                 {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
                 {searchResults.isSuccess && (
                   <SearchResultsView
                     searchResults={searchResults.data}
-                    searchResultDocumentIds={searchResultDocumentIds}
-                    numSearchResults={numSearchResults}
                     handleResultClick={handleResultClick}
                     className="myFlexFillAllContainer"
                   />
                 )}
-              </React.Fragment>
+              </>
             </Grid>
             <Grid
               item

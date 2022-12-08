@@ -2,6 +2,8 @@ import { AnnotationDocumentRead, BBoxAnnotationReadResolvedCode, SourceDocumentR
 import AdocHooks from "../../../api/AdocHooks";
 import React, { useEffect, useMemo, useRef } from "react";
 import * as d3 from "d3";
+import { Box } from "@mui/material";
+import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
 
 interface ImageViewerProps {
   sdoc: SourceDocumentRead;
@@ -15,8 +17,23 @@ function ImageViewer({ sdoc, adoc, showEntities, height }: ImageViewerProps) {
   const gRef = useRef<SVGGElement>(null);
   const bboxRef = useRef<SVGGElement>(null);
   const textRef = useRef<SVGGElement>(null);
+  const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
+  // global server state (react-query)
   const annotations = AdocHooks.useGetAllBboxAnnotations(adoc?.id);
+
+  // ui events
+  const handleContextMenu = (event: React.MouseEvent) => {
+    event.preventDefault();
+
+    // calculate position of the context menu
+    const position = {
+      left: event.clientX,
+      top: event.clientY,
+    };
+
+    imageContextMenuRef.current?.open(position, sdoc.id);
+  };
 
   const handleZoom = (e: d3.D3ZoomEvent<any, any>) => {
     d3.select(gRef.current).attr("transform", e.transform.toString());
@@ -82,7 +99,7 @@ function ImageViewer({ sdoc, adoc, showEntities, height }: ImageViewerProps) {
   }, [height, annotations.data, showEntities]);
 
   return (
-    <>
+    <Box onContextMenu={handleContextMenu}>
       {annotations.isError && <span>{annotations.error.message}</span>}
       <svg ref={svgRef} width="100%" height={`${height}px`} style={{ cursor: "move" }}>
         <g ref={gRef}>
@@ -91,7 +108,8 @@ function ImageViewer({ sdoc, adoc, showEntities, height }: ImageViewerProps) {
           <g ref={textRef}></g>
         </g>
       </svg>
-    </>
+      <ImageContextMenu ref={imageContextMenuRef} />
+    </Box>
   );
 }
 

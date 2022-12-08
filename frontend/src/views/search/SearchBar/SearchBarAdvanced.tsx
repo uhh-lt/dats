@@ -16,7 +16,7 @@ import {
 import TuneIcon from "@mui/icons-material/Tune";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../searchSlice";
-import { SearchType } from "../SearchType";
+import { QueryType } from "../QueryType";
 import { DocType } from "../../../api/openapi";
 
 interface SearchBarAdvancedProps {
@@ -119,12 +119,12 @@ function SearchBarAdvanced({ anchorElRef }: SearchBarAdvancedProps) {
               <RadioGroup
                 aria-labelledby="radio-buttons-group-query"
                 value={searchType}
-                onChange={(event, value) => dispatch(SearchActions.setSearchType(value as SearchType))}
+                onChange={(event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
                 name="radio-buttons-group"
               >
-                <FormControlLabel value={SearchType.CONTENT} control={<Radio />} label="Content" />
-                <FormControlLabel value={SearchType.SENTENCE} control={<Radio />} label="Sentence" />
-                <FormControlLabel value={SearchType.FILE} control={<Radio />} label="File name" />
+                {Object.entries(QueryType).map((qt) => (
+                  <FormControlLabel key={qt[1]} value={qt[1] as QueryType} control={<Radio />} label={qt[1]} />
+                ))}
               </RadioGroup>
             </FormControl>
           </CardContent>

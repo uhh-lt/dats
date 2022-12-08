@@ -1,11 +1,10 @@
 import React, { useRef } from "react";
 import { AnnotationDocumentRead, SourceDocumentRead } from "../../../api/openapi";
 import useComputeTokenData from "../../annotation/TextAnnotator/useComputeTokenData";
-import SentenceContextMenu, {
-  SentenceContextMenuHandle,
-} from "../../annotation/SentenceContextMenu/SentenceContextMenu";
+import SentenceContextMenu, { SentenceContextMenuHandle } from "../../../components/ContextMenu/SentenceContextMenu";
 import SdocHooks from "../../../api/SdocHooks";
 import TextAnnotatorRendererNew from "../../annotation/TextAnnotator/TextAnnotatorRendererNew";
+import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentRead;
@@ -19,6 +18,7 @@ interface AnnotationVisualizerProps {
 function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
   // local state
   const sentenceContextMenuRef = useRef<SentenceContextMenuHandle>(null);
+  const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
   // global server state (react-query)
   const sentences = SdocHooks.useGetDocumentSentences(sdoc.id);
@@ -34,66 +34,72 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
     if (!sentences.data) return;
 
     // try to find a parent element that has the tok class, we go up 3 levels at maximum
-    let token: HTMLElement = event.target as HTMLElement;
-    let foundToken = false;
+    let element: HTMLElement = event.target as HTMLElement;
+    let tokenIndex: number = NaN;
+    let sentenceIndex: number = NaN;
+    let imageSdocId: number = NaN;
+
     for (let i = 0; i < 3; i++) {
-      if (token && token.classList.contains("tok") && token.childElementCount > 0) {
-        foundToken = true;
-        break;
+      if (isNaN(imageSdocId)) {
+        imageSdocId = parseInt(element.getAttribute("data-sdoc-id")!);
       }
-      if (token.parentElement) {
-        token = token.parentElement;
+      if (isNaN(sentenceIndex)) {
+        sentenceIndex = parseInt(element.getAttribute("data-sentenceid")!);
+      }
+      if (isNaN(tokenIndex)) {
+        tokenIndex = parseInt(element.getAttribute("data-tokenid")!);
+      }
+
+      if (!isNaN(imageSdocId)) break;
+
+      // traverse up the tree one element
+      if (element.parentElement) {
+        element = element.parentElement;
       } else {
         break;
       }
     }
 
-    // try to find a parent element that has the sentence class, we go up 3 levels at maximum
-    let sentenceElement: HTMLElement = event.target as HTMLElement;
-    let foundSentence = false;
-    for (let i = 0; i < 3; i++) {
-      if (sentenceElement && sentenceElement.classList.contains("sentence") && sentenceElement.childElementCount > 0) {
-        foundSentence = true;
-        break;
-      }
-      if (sentenceElement.parentElement) {
-        sentenceElement = sentenceElement.parentElement;
-      } else {
-        break;
-      }
-    }
-
-    if (!foundToken && !foundSentence) return;
+    if (isNaN(tokenIndex) && isNaN(sentenceIndex) && isNaN(imageSdocId)) return;
 
     event.preventDefault();
 
-    // get sentence
-    let sentence: string | undefined = undefined;
-    if (foundSentence) {
-      const sentenceIndex = parseInt(sentenceElement.getAttribute("data-sentenceid")!);
-      sentence = sentenceIndex < sentences.data.sentences.length ? sentences.data.sentences[sentenceIndex] : undefined;
-    }
+    if (!isNaN(imageSdocId)) {
+      // calculate position of the context menu
+      const position = {
+        left: event.clientX,
+        top: event.clientY,
+      };
 
-    // get all annotations that span the clicked token
-    let annos: number[] | undefined = undefined;
-    if (foundToken) {
-      const tokenIndex = parseInt(token.getAttribute("data-tokenid")!);
-      annos = annotationsPerToken.get(tokenIndex);
-    }
-
-    // open code selector if there are annotations
-    if (annos || sentence) {
+      imageContextMenuRef.current?.open(position, imageSdocId);
+    } else {
       // calculate position of the context menu (based on selection end)
       const boundingBox = (event.target as HTMLElement).getBoundingClientRect();
       const position = {
         left: boundingBox.left,
         top: boundingBox.top + boundingBox.height,
       };
-      sentenceContextMenuRef.current?.open(
-        position,
-        sentence,
-        annos ? annos.map((a) => annotationMap.get(a)!) : undefined
-      );
+
+      // get the sentence that spans the clicked element
+      let sentence: string | undefined = undefined;
+      if (!isNaN(sentenceIndex)) {
+        sentence = sentences.data.sentences[sentenceIndex];
+      }
+
+      // get all annotations that span the clicked token
+      let annos: number[] | undefined = undefined;
+      if (!isNaN(tokenIndex)) {
+        annos = annotationsPerToken.get(tokenIndex);
+      }
+
+      // open code selector if there are annotations
+      if (annos || sentence) {
+        sentenceContextMenuRef.current?.open(
+          position,
+          sentence,
+          annos ? annos.map((a) => annotationMap.get(a)!) : undefined
+        );
+      }
     }
   };
 
@@ -109,6 +115,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         projectId={sdoc.project_id}
       />
       <SentenceContextMenu ref={sentenceContextMenuRef} />
+      <ImageContextMenu ref={imageContextMenuRef} />
     </>
   );
 }

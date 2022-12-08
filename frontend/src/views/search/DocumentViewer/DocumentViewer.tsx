@@ -10,7 +10,7 @@ import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import ImageViewer from "./ImageViewer";
 import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
 import UserName from "../../../components/UserName";
-import SearchResultCard from "../SearchResults/SearchResultCard";
+import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
 import { useNavigate } from "react-router-dom";
 
 interface DocumentViewerProps {
@@ -105,7 +105,7 @@ function DocumentViewer({
             <h3>Linked documents:</h3>
             <Box pb={1} style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
               {linkedSdocIds.data.map((sdocId) => (
-                <SearchResultCard
+                <LexicalSearchResultCard
                   key={sdocId}
                   sdocId={sdocId}
                   handleClick={() => navigate(`../search/doc/${sdocId}`)}

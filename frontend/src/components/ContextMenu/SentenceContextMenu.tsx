@@ -10,11 +10,11 @@ import {
   PopoverPosition,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import { SearchActions } from "../../search/searchSlice";
-import { createCodeFilter, createSentenceFilter } from "../../search/SearchFilter";
+import { useAppDispatch } from "../../plugins/ReduxHooks";
+import { SearchActions } from "../../views/search/searchSlice";
+import { createCodeFilter, createSentenceFilter } from "../../views/search/SearchFilter";
 import { useNavigate } from "react-router-dom";
-import { DocType, SpanAnnotationReadResolved } from "../../../api/openapi";
+import { DocType, SpanAnnotationReadResolved } from "../../api/openapi";
 
 interface SentenceContextMenuProps {}
 
