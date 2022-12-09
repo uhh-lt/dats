@@ -17,6 +17,8 @@ function calculateValue(path: string) {
     return 2;
   } else if (path.match(/project\/\d+\/logbook.*/i)) {
     return 3;
+  } else if (path.match(/project\/\d+\/autologbook.*/i)) {
+    return 4;
   }
 }
 

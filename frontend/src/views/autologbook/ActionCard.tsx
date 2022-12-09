@@ -11,13 +11,6 @@ import {
   ProjectRead, SourceDocumentRead, SpanAnnotationReadResolved
 } from "../../api/openapi";
 import UserHooks from "../../api/UserHooks";
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
-import CodeHooks from "../../api/CodeHooks";
-import MemoHooks from "../../api/MemoHooks";
-import SdocHooks from "../../api/SdocHooks";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import ProjectHooks from "../../api/ProjectHooks";
-import TagHooks from "../../api/TagHooks";
 import useGetActionCardsActionTarget from "./useGetActionCardsActionTarget";
 import { useMemo } from "react";
 

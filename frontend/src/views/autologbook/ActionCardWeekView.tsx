@@ -2,7 +2,7 @@ import React from "react";
 import ActionCard from "./ActionCard";
 import { ActionRead } from "../../api/openapi";
 import { List, ListItem, Paper } from "@mui/material";
-import { blue } from '@mui/material/colors';
+import Typography from "@mui/material/Typography";
 
 
 interface ActionCardDayViewProps {
@@ -27,11 +27,11 @@ function ActionCardWeekView({ actions, day }: ActionCardDayViewProps) {
   return (
     <>
       <Paper variant="outlined" elevation={3} style={{ width: '100%', height: '100%', backgroundColor: 'whitesmoke' }}>
-        <Paper style={{ backgroundColor: '#1976d2' }}>
-          <div style={{ height: '3em', width: '100%' , display: 'flex',
-            justifyContent: 'center', alignItems: 'center', color: 'white' }}>
+        <Paper style={{ backgroundColor: '#1976d2', height: '3em', width: '100%' , display: 'flex',
+                        justifyContent: 'center', alignItems: 'center' }}>
+          <Typography variant="h6" color="white" component="div">
             {dateHeader}
-          </div>
+          </Typography>
         </Paper>
         <List style={{height: 200, minHeight: '94%', maxHeight: '100%', width: '100%', overflowY: 'scroll'}}>
           {actions.map((action) =>
