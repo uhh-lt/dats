@@ -13,6 +13,7 @@ import {
 import UserHooks from "../../api/UserHooks";
 import useGetActionCardsActionTarget from "./useGetActionCardsActionTarget";
 import { useMemo } from "react";
+import Tooltip from "@mui/material/Tooltip";
 
 interface ActionCardProps {
   actionTypeValue: number;
@@ -89,9 +90,11 @@ function ActionCard({ actionTypeValue, userId, targetObjectType, targetId, execu
         <Typography sx={{ fontSize: 12, whiteSpace: 'nowrap' }} color="text.secondary" gutterBottom>
           User: {userName}<span style={{ float: "right" }}>{ActionType[actionTypeValue]}</span>
         </Typography>
-        <Typography sx={{ mb: 1.0, mt: 1.5, whiteSpace: 'nowrap' }} variant="h6" component="div">
-          {targetObjectType}: {targetName}
-        </Typography>
+        <Tooltip title={targetName}>
+          <Typography sx={{ mb: 1.0, mt: 1.5, whiteSpace: 'nowrap' }} variant="h6" component="div">
+            {targetObjectType}: {targetName}
+          </Typography>
+        </Tooltip>
         <Typography variant="body2">
           {executedAt}
         </Typography>
