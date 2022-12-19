@@ -6,8 +6,9 @@ import "@toast-ui/editor/dist/toastui-editor.css";
 import ProjectHooks from "../../api/ProjectHooks";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import {
+  Box,
   Grid,
-  Portal,
+  Portal, Stack, Toolbar,
   Typography
 } from "@mui/material";
 import { ActionRead, ActionTargetObjectType } from "../../api/openapi";
@@ -15,6 +16,7 @@ import ActionCardWeekView from "./ActionCardWeekView";
 import ActionDateFunctions from "./ActionDateFunctions";
 import { AutologbookActions, getDateOfISOWeek, getWeekDates } from "./autologbookSlice";
 import { ActionFilters } from "./ActionFilters";
+import SearchFilterChip from "../search/SearchFilterChip";
 
 function Autologbook() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -134,18 +136,17 @@ function Autologbook() {
         </Typography>
       </Portal>
       {!actionsEachDay && <div>Loading!</div>}
-      <div style={{ minHeight: '100%', overflow: 'auto' }}>
-        <Grid container columnSpacing={2}>
-          <Grid item xs={6} sm={6} md={6} lg={6} xl={6}>
+      <div className="myFlexContainer h100">
+        <Box className="myFlexFitContent">
+          <Toolbar variant="dense" color="secondary">
             <ActionFilters/>
-          </Grid>
-          <Grid item xs={6} sm={6} md={6} lg={6} xl={6}>
+            <Box sx={{flexGrow: 1}} />
             <ActionDateFunctions weekDays={selectedWeek} />
-          </Grid>
-        </Grid>
-        <Grid container columnSpacing={2} justifyContent="center" overflow={'auto'} style={{ minHeight: '82.5vh' }}>
+          </Toolbar>
+        </Box>
+        <Grid container className="myFlexFillAllContainer" columnSpacing={2}>
           {!!actionsEachDay && actionsEachDay.map((actions, index) =>
-            <Grid item xs={1.7} sm={1.7} md={1.7} lg={1.7} xl={1.7}>
+            <Grid item xs={12/7} className="h100">
               <ActionCardWeekView actions={actions} day={selectedWeek[index]} />
             </Grid>
           )}

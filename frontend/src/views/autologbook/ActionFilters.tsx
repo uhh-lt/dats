@@ -1,9 +1,9 @@
-import {
-  AppBar, ButtonGroup,
+  import {
+  AppBar, Button, ButtonGroup,
   Checkbox,
   FormControl, IconButton,
   ListItemText,
-  MenuItem,
+  MenuItem, OutlinedInput,
   Select,
   SelectChangeEvent,
   Stack,
@@ -84,19 +84,18 @@ export function ActionFilters() {
 
   // render
   return (
-    <Stack direction="row" sx={{ alignItems: "center", backgroundColor: "lightgray", width: "85%" }}>
-      <Typography component="div" fontSize={18} style={{ marginLeft: 20, marginRight: 10 }}>
-        Filters:
-      </Typography>
-      <AppBar position="relative" color="secondary">
-        <Toolbar variant="dense">
-          <FormControl size="small">
-            <Stack direction="row" sx={{ alignItems: "center" }}>
-              <Typography variant="h6" color="inherit" component="div" style={{ marginRight: "3%" }}>
+
+        <>
+          <Typography component="div" variant="h5" style={{ paddingTop: 10, paddingBottom: 14, paddingRight: 12 }}>
+            Filters:
+          </Typography>
+
+              <Typography fontSize={18} color="inherit" component="div" sx={{mr: 1}}>
                 Users:
               </Typography>
               <Select
-                sx={{ backgroundColor: "white", marginRight: "3%" }}
+                size="small"
+                sx={{ backgroundColor: "white", mr: 1 }}
                 multiple
                 value={visibleUserIds || []}
                 onChange={handleUserFilterChange}
@@ -117,10 +116,11 @@ export function ActionFilters() {
                     </ListItemText>
                   </MenuItem>)}
               </Select>
-              <Typography variant="h6" color="inherit" component="div" style={{ marginRight: "3%" }}>
+
+              <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1}}>
                 Actions:
               </Typography>
-              <ButtonGroup sx={{ backgroundColor: 'white', marginRight: "3%" }}>
+              <ButtonGroup sx={{ backgroundColor: 'white', mr: 1, border: "1px solid grey" }}>
                 <IconButton children={<Add/>} color={showCreated ? 'primary' : 'default'}
                             onClick={() => dispatch(AutologbookActions.toggleCreated())}/>
                 <IconButton children={<Edit/>} color={showUpdated ? 'primary' : 'default'}
@@ -128,11 +128,13 @@ export function ActionFilters() {
                 <IconButton children={<Remove/>} color={showDeleted ? 'primary' : 'default'}
                             onClick={() => dispatch(AutologbookActions.toggleDeleted())}/>
               </ButtonGroup>
-              <Typography variant="h6" color="inherit" component="div" style={{ marginRight: "3%" }}>
+
+              <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
                 Entities:
               </Typography>
               <Select
-                sx={{ backgroundColor: "white", marginRight: 2 }}
+                size="small"
+                sx={{ backgroundColor: "white" }}
                 multiple
                 value={visibleEntityIds || []}
                 onChange={handleEntityFilterChange}
@@ -148,10 +150,6 @@ export function ActionFilters() {
                   </MenuItem>
                 })}
               </Select>
-            </Stack>
-          </FormControl>
-        </Toolbar>
-      </AppBar>
-    </Stack>
+        </>
   );
 }

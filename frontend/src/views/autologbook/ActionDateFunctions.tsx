@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from "react";
-import { Box, IconButton, TextField } from "@mui/material";
+import { Box, FormControlLabel, IconButton, Switch, TextField, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -54,28 +54,26 @@ function ActionDateFunctions({ weekDays }: ActionDateFunctionsProps) {
   }
 
   return (
-    <>
-      <Box display='flex' alignItems='center' style={{ width: '100%', height: '100%', minHeight: '2.8em', fontSize: 20 }}>
-        <IconButton style={{ marginLeft: 130 }} children={<ArrowBackIosNewIcon/>}
+      <>
+        <IconButton children={<ArrowBackIosNewIcon/>}
                     onClick={() => dispatch(AutologbookActions.prevWeek())}/>
-        <div style={{ width: '30%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography fontSize={22} component="div" sx={{ minWidth: 280, textAlign: 'center' }}>
           {weekString(startDate, endDate)}
-        </div>
+        </Typography>
         <IconButton children={<ArrowForwardIosIcon/>} onClick={() => dispatch(AutologbookActions.nextWeek())}/>
         <TextField
           id="date"
           label="Selected Week"
-          defaultValue={weekStartDate}
+          value={weekStartDate}
           type="date"
           size='small'
           onChange={(e) => newDateHandler(e)}
-          sx={{ marginLeft: 1.7, width: 160 }}
+          sx={{ marginLeft: 1.7, marginRight: 2, width: 160 }}
           InputLabelProps={{
             shrink: true,
           }}
         />
-      </Box>
-    </>
+      </>
   )
 }
 
