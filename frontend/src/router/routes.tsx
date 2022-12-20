@@ -20,6 +20,7 @@ import User from "../views/User";
 import Feedback from "../views/Feedback";
 import CodeFrequency from "../views/analysis/CodeFrequency/CodeFrequency";
 import Settings from "../views/settings/Settings";
+import Autologbook from "../views/autologbook/Autologbook";
 
 const routes: RouteObject[] = [
   {
@@ -134,6 +135,10 @@ const routes: RouteObject[] = [
       {
         path: "/project/:projectId/logbook/:category",
         element: <Logbook />,
+      },
+      {
+        path: "/project/:projectId/autologbook",
+        element: <Autologbook />,
       },
     ],
   },
