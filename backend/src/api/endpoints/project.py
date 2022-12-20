@@ -298,7 +298,7 @@ async def get_user_actions_of_project(*,
                                       user_id: int,
                                       db: Session = Depends(get_db_session)) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
-    return crud_action.get_user_actions_of_project(db=db, proj_id=proj_id, user_id=user_id)
+    return crud_action.read_by_user_and_project(db=db, proj_id=proj_id, user_id=user_id)
 
 
 @router.delete("/{proj_id}/user/{user_id}/memo", tags=tags,
