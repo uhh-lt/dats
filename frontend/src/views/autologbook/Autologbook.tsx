@@ -1,12 +1,16 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import "@toast-ui/editor/dist/toastui-editor.css";
 import ProjectHooks from "../../api/ProjectHooks";
-import ActionCard from "./ActionCard";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { Box, Checkbox, FormControlLabel, FormGroup, Grid, Portal, Typography } from "@mui/material";
+import { Box, Grid, Portal, Toolbar, Typography } from "@mui/material";
+import { ActionRead, ActionTargetObjectType, ActionType } from "../../api/openapi";
+import ActionCardWeekView from "./ActionCardWeekView";
+import ActionDateFunctions from "./ActionDateFunctions";
+import { AutologbookActions, getDateOfISOWeek, getWeekDates } from "./autologbookSlice";
+import { ActionFilters } from "./ActionFilters";
 
 function Autologbook() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -20,20 +24,104 @@ function Autologbook() {
   };
 
   // global state (redux)
-  //const dispatch = useAppDispatch();
-  //const searchTerm = useAppSelector((state) => state.logbook.searchTerm);
-  //const category = useAppSelector((state) => state.logbook.category);
+  const dispatch = useAppDispatch();
+  const year = useAppSelector((state) => state.autologbook.year);
+  const week = useAppSelector((state) => state.autologbook.week);
+  const showCreated = useAppSelector((state) => state.autologbook.showCreated);
+  const showUpdated = useAppSelector((state) => state.autologbook.showUpdated);
+  const showDeleted = useAppSelector((state) => state.autologbook.showDeleted);
+  const userFilter = useAppSelector((state) => state.autologbook.userFilter);
+  const entityFilter = useAppSelector((state) => state.autologbook.entityFilter);
 
   const userActions = ProjectHooks.useGetActions(parseInt(projectId), user.data!.id);
 
-  // reformat datetime to better readable format
-  const reformatTimestamp = (ts: string) => {
-    let date = new Date(ts)
-    let options: Intl.DateTimeFormatOptions = { day: 'numeric', year: 'numeric', month: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit' }
-    return date.toLocaleDateString("en-GB", options)
+  const selectedWeekDates: () => Date[] = () => {
+    let weekStart: Date = getDateOfISOWeek(week, year)
+    return getWeekDates(weekStart)
   }
 
+  // Gets the day index of a date in the selected week (or -1 if not in the week)
+  const getDayIndexInSelectedWeek: (date: Date, weekArr: Date[]) => number = (date, weekArr) => {
+    let weekStart: Date = weekArr[0]
+    let weekEnd: Date = weekArr[weekArr.length - 1]
+    let dYear = date.getFullYear()
+    if (dYear === weekStart.getFullYear() || dYear === weekEnd.getFullYear()) {
+      let dMonth = date.getMonth()
+      let startMonth = weekStart.getMonth()
+      let endMonth = weekEnd.getMonth()
+      if (startMonth === endMonth) {
+        if (dMonth === endMonth && date.getDate() >= weekStart.getDate() && date.getDate() <= weekEnd.getDate()) {
+          return date.getDate() - weekStart.getDate()
+        }
+      } else {
+        if (dMonth === startMonth) {
+          if (date.getDate() >= weekStart.getDate()) {
+            return date.getDate() - weekStart.getDate()
+          }
+        } else if (dMonth === endMonth && date.getDate() <= weekEnd.getDate()) {
+          return 6 - weekEnd.getDate() - date.getDate()
+        }
+      }
+    }
+    return -1
+  }
+
+  const selectedWeek: Date[] = selectedWeekDates()
+
+  const filterAction: (action: ActionRead, entityIdx: number) => boolean = (action, entityIdx) => {
+    if (action.action_type === ActionType.CREATE) {
+      if (!showCreated) {
+        return false
+      }
+    } else if (action.action_type === ActionType.UPDATE) {
+      if (!showUpdated) {
+        return false
+      }
+    } else {
+      if (!showDeleted) {
+        return false
+      }
+    }
+    if (entityFilter !== undefined && !entityFilter.has(entityIdx)) {
+      return false
+    }
+    return !(userFilter !== undefined && !userFilter.has(action.user_id));
+
+  }
+
+  const actionsEachDay: ActionRead[][] = useMemo(() => {
+    if (!userActions.data)
+      return []
+
+    let userSet = new Set<number>()
+    let entitySet = new Set<number>()
+    let entityValues = Object.values(ActionTargetObjectType)
+    let result: ActionRead[][] = [[], [], [], [], [], [], []]
+    userActions.data.forEach((action) => {
+      userSet.add(action.user_id)
+      let entityIdx = entityValues.indexOf(action.target_type)
+      entitySet.add(entityIdx)
+      if (!filterAction(action, entityIdx)) {
+        return
+      }
+      let date: Date = new Date(action.executed);
+      let weekDay: number = getDayIndexInSelectedWeek(date, selectedWeek)
+      if (weekDay >= 0) {
+        result[weekDay].push(action)
+      }
+    })
+    let userArr = Array.from(userSet).sort();
+    dispatch(AutologbookActions.setVisibleUserIds(userArr));
+    let entityArr = Array.from(entitySet).sort();
+    dispatch(AutologbookActions.setVisibleEntityIds(entityArr));
+    if (userFilter === undefined || entityFilter === undefined) {
+      dispatch(AutologbookActions.setUserFilter(userArr));
+      dispatch(AutologbookActions.setEntityFilter(entityArr));
+    }
+    return result
+  }, [userActions.data, week, year, showCreated, showUpdated, showDeleted, userFilter, entityFilter])
+
+  // FIXME: When shrinking the window, the actioncardweekview is not fully scrollable
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
@@ -41,34 +129,23 @@ function Autologbook() {
           Automatic Logbook
         </Typography>
       </Portal>
-      <Grid container spacing={4} columns={16}>
-        <Grid item xs={2} style={{ boxShadow: "2px 2px 2px 2px gray" }}>
-          <Box style={{ margin: '2em' }}>
-            <FormGroup>
-              <h4>Action Type Filters:</h4>
-              <FormControlLabel control={<Checkbox defaultChecked />} label="Create" />
-              <FormControlLabel control={<Checkbox defaultChecked />} label="Update" />
-              <FormControlLabel control={<Checkbox defaultChecked />} label="Delete" />
-            </FormGroup>
-          </Box>
+      {!actionsEachDay && <div>Loading!</div>}
+      <div className="myFlexContainer h100">
+        <Box className="myFlexFitContent">
+          <Toolbar variant="dense" color="secondary">
+            <ActionFilters/>
+            <Box sx={{flexGrow: 1}} />
+            <ActionDateFunctions weekDays={selectedWeek} />
+          </Toolbar>
+        </Box>
+        <Grid container className="myFlexFillAllContainer" columnSpacing={2}>
+          {!!actionsEachDay && actionsEachDay.map((actions, index) =>
+            <Grid item xs={12/7} className="h100">
+              <ActionCardWeekView actions={actions} day={selectedWeek[index]} />
+            </Grid>
+          )}
         </Grid>
-        <Grid item xs={14}>
-          <Box style={{maxHeight: '88vh', overflow: 'auto'}}>
-            <div style={{width : '85%', height: '100%'}}>
-              {userActions.isLoading && <div>Loading!</div>}
-              {userActions.isError && <div>Error: {userActions.error.message}</div>}
-              {userActions.isSuccess &&
-                <div style={{height: 'inherit'}}>{
-                  userActions.data.map((action) =>
-                      <ActionCard actionTypeValue={action.action_type}
-                                  targetObjectType={action.target_object_type}
-                                  executedAt={reformatTimestamp(action.executed)}/>
-                  )}
-                </div>}
-            </div>
-          </Box>
-        </Grid>
-      </Grid>
+      </div>
     </>
   );
 }

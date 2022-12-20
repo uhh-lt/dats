@@ -75,9 +75,9 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
                              data-index={virtualItem.index}
                              style={{padding: 5, position: "absolute", top: 0, left: 0,
                                transform: `translateY(${virtualItem.start}px)`}}>
-              <ActionCard actionTypeValue={action.action_type}
+              <ActionCard actionType={action.action_type}
                           userId={action.user_id}
-                          targetObjectType={action.target_object_type}
+                          targetObjectType={action.target_type}
                           targetId={action.target_id}
                           executedAt={reformatTimestamp(action.executed)}/>
             </ListItem>})}
