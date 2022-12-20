@@ -12,8 +12,12 @@ import {
 } from "../../api/openapi";
 import UserHooks from "../../api/UserHooks";
 import useGetActionCardsActionTarget from "./useGetActionCardsActionTarget";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { AutologbookActions } from "./autologbookSlice";
+import { IconButton } from "@mui/material";
 
 interface ActionCardProps {
   actionTypeValue: number;
@@ -24,6 +28,8 @@ interface ActionCardProps {
 }
 
 function ActionCard({ actionTypeValue, userId, targetObjectType, targetId, executedAt }: ActionCardProps) {
+
+  const [expanded, setExpanded] = useState(false);
 
   let backgroundColor
   switch (actionTypeValue) {
@@ -86,17 +92,20 @@ function ActionCard({ actionTypeValue, userId, targetObjectType, targetId, execu
 
   return (
     <Card variant="outlined" sx={{ width: '100%', backgroundColor: backgroundColor }}>
-      <CardContent>
-        <Typography sx={{ fontSize: 12, whiteSpace: 'nowrap' }} color="text.secondary" gutterBottom>
+      <CardContent sx={{position: "relative"}}>
+        <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
           User: {userName}<span style={{ float: "right" }}>{ActionType[actionTypeValue]}</span>
         </Typography>
         <Tooltip title={targetName}>
-          <Typography sx={{ mb: 1.0, mt: 1.5, whiteSpace: 'nowrap' }} variant="h6" component="div">
+          <Typography sx={{ mb: 1.0, mt: 1.5 }} variant="h6" component="div">
             {targetObjectType}: {targetName}
           </Typography>
         </Tooltip>
+        {expanded && <Typography sx={{ mb: 1.0 }}>Demo Text</Typography>}
         <Typography variant="body2">
           {executedAt}
+          <IconButton children={expanded ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
+                      onClick={() => setExpanded(!expanded)} style={{ position: "absolute", bottom: 16, right: 10 }}/>
         </Typography>
       </CardContent>
     </Card>

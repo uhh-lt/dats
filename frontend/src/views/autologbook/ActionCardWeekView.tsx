@@ -58,7 +58,7 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
   const rowVirtualizer = useVirtualizer({
     count: actions.length || 0,
     getScrollElement: () => listRef.current,
-    estimateSize: () => 142,
+    estimateSize: () => 155,
   });
 
   return (
@@ -70,11 +70,11 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
       }}>
           {rowVirtualizer.getVirtualItems().map((virtualItem) => {
             let action = actions[virtualItem.index]
-            return <ListItem style={{padding: 5,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              transform: `translateY(${virtualItem.start}px)`}}>
+            return <ListItem key={virtualItem.key}
+                             ref={rowVirtualizer.measureElement}
+                             data-index={virtualItem.index}
+                             style={{padding: 5, position: "absolute", top: 0, left: 0,
+                               transform: `translateY(${virtualItem.start}px)`}}>
               <ActionCard actionTypeValue={action.action_type}
                           userId={action.user_id}
                           targetObjectType={action.target_object_type}
