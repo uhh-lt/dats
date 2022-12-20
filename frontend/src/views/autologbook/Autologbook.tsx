@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from "react";
+import React, { useContext, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
@@ -34,6 +34,14 @@ function Autologbook() {
   const entityFilter = useAppSelector((state) => state.autologbook.entityFilter);
 
   const userActions = ProjectHooks.useGetActions(parseInt(projectId), user.data!.id);
+  const users = ProjectHooks.useGetAllUsers(parseInt(projectId));
+
+  // init user filter selection with all users
+  useEffect(() => {
+    if (users.data) {
+      dispatch(AutologbookActions.setVisibleUserIds(users.data.map((user) => user.id)));
+    }
+  }, [dispatch, users.data]);
 
   const selectedWeekDates: () => Date[] = () => {
     let weekStart: Date = getDateOfISOWeek(week, year)
@@ -82,10 +90,10 @@ function Autologbook() {
         return false
       }
     }
-    if (entityFilter !== undefined && !entityFilter.has(entityIdx)) {
+    if (entityFilter !== undefined && !entityFilter.includes(entityIdx)) {
       return false
     }
-    return !(userFilter !== undefined && !userFilter.has(action.user_id));
+    return !(userFilter !== undefined && !userFilter.includes(action.user_id));
 
   }
 
@@ -93,12 +101,10 @@ function Autologbook() {
     if (!userActions.data)
       return []
 
-    let userSet = new Set<number>()
     let entitySet = new Set<number>()
     let entityValues = Object.values(ActionTargetObjectType)
     let result: ActionRead[][] = [[], [], [], [], [], [], []]
     userActions.data.forEach((action) => {
-      userSet.add(action.user_id)
       let entityIdx = entityValues.indexOf(action.target_type)
       entitySet.add(entityIdx)
       if (!filterAction(action, entityIdx)) {
@@ -110,12 +116,9 @@ function Autologbook() {
         result[weekDay].push(action)
       }
     })
-    let userArr = Array.from(userSet).sort();
-    dispatch(AutologbookActions.setVisibleUserIds(userArr));
     let entityArr = Array.from(entitySet).sort();
     dispatch(AutologbookActions.setVisibleEntityIds(entityArr));
-    if (userFilter === undefined || entityFilter === undefined) {
-      dispatch(AutologbookActions.setUserFilter(userArr));
+    if (entityFilter === undefined) {
       dispatch(AutologbookActions.setEntityFilter(entityArr));
     }
     return result
@@ -140,7 +143,7 @@ function Autologbook() {
         </Box>
         <Grid container className="myFlexFillAllContainer" columnSpacing={2}>
           {!!actionsEachDay && actionsEachDay.map((actions, index) =>
-            <Grid item xs={12/7} className="h100">
+            <Grid key={index} item xs={12/7} className="h100">
               <ActionCardWeekView actions={actions} day={selectedWeek[index]} />
             </Grid>
           )}

@@ -17,7 +17,7 @@ function ActionCardWeekView({ actions, day }: ActionCardWeekViewProps) {
 
   return (
     <>
-      <Card variant="outlined" elevation={3} style={{ width: '100%', height: '100%', backgroundColor: 'whitesmoke' }}>
+      <Card variant="outlined" style={{ width: '100%', height: '100%', backgroundColor: 'whitesmoke' }}>
         <CardHeader
           style={{ backgroundColor: '#1976d2', color: 'white', padding: "8px"}}
           title={dateHeader}

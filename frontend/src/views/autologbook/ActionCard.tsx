@@ -32,6 +32,9 @@ interface ActionCardProps {
 function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt }: ActionCardProps) {
 
   const [expanded, setExpanded] = useState(false);
+  const toggleExpanded = () => {
+    setExpanded((oldExpanded) => !oldExpanded)
+  }
 
   let backgroundColor
   switch (actionType) {
@@ -107,7 +110,7 @@ function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt
         <Typography variant="body2">
           {executedAt}
           <IconButton children={expanded ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
-                      onClick={() => setExpanded(!expanded)} style={{ position: "absolute", bottom: 16, right: 10 }}/>
+                      onClick={toggleExpanded} style={{ position: "absolute", bottom: 16, right: 10 }}/>
         </Typography>
       </CardContent>
     </Card>

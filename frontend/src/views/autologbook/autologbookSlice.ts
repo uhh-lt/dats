@@ -4,14 +4,14 @@ interface AutologbookState {
   year: number;
   week: number;
   day: number;
-  visibleUserIds: number[] | undefined;
-  visibleEntityIds: number[] | undefined;
+  visibleUserIds: number[];
+  visibleEntityIds: number[];
   // Filters
   showCreated: boolean;
   showUpdated: boolean;
   showDeleted: boolean;
-  userFilter: Set<number> | undefined;
-  entityFilter: Set<number> | undefined;
+  userFilter: number[];
+  entityFilter: number[] | undefined;
 }
 
 export const getWeekNumber = (date: Date) => {
@@ -50,13 +50,13 @@ const initState: () => AutologbookState = () => {
     year: now.getFullYear(),
     week: getWeekNumber(now),
     day: now.getDate(),
-    visibleUserIds: undefined,
-    visibleEntityIds: undefined,
+    visibleUserIds: [],
+    visibleEntityIds: [],
     // Filters
     showCreated: true,
     showUpdated: true,
     showDeleted: true,
-    userFilter: undefined,
+    userFilter: [],
     entityFilter: undefined,
   }
 }
@@ -129,10 +129,10 @@ export const autologbookSlice = createSlice({
       state.showDeleted = !state.showDeleted;
     },
     setUserFilter: (state, action: PayloadAction<number[]>) => {
-      state.userFilter = new Set<number>(action.payload);
+      state.userFilter = action.payload;
     },
     setEntityFilter: (state, action: PayloadAction<number[]>) => {
-      state.entityFilter = new Set<number>(action.payload);
+      state.entityFilter = action.payload;
     },
   },
 });
