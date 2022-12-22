@@ -2,3 +2,5 @@
 
 This is the repository for the D-WISE Tool Suite (DWTS) Backend - an outcome of
 the [D-WISE Project](https://www.dwise.uni-hamburg.de/)
+
+Please refer to the Wiki for help!
