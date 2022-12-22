@@ -1,3 +1,5 @@
+# This script drops the deploy section from the docker compose file since it is
+# not supported by the docker compose version available in GH Actions environment
 import yaml
 
 with open("docker-compose.yml") as f:
