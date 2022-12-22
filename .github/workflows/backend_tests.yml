@@ -23,7 +23,7 @@ jobs:
         with:
           swap-size-gb: 10
       - uses: actions/checkout@v3
-      - name: Build docker container
+      - name: Start Docker Containers
         run: |
           cd docker
           ./setup-folders.sh
@@ -36,17 +36,18 @@ jobs:
           export CELERY_ARCHIVE_WORKER_CONCURRENCY=1
           export API_PRODUCTION_WORKERS=0
           docker compose -f compose-test.yml up -d --quiet-pull
+          echo Waiting for containers to start...
           sleep 240
           cd ..
       - name: Run CRUD tests
         run: |
           docker exec -i demo-dwts-backend-api-1 /opt/envs/dwts/bin/python -m pytest
-      - name: Upload Testdata
+      - name: Run Import Data End-To-End Test
         env:
-          TESTDATA: ${{ secrets.TESTDATA }}
+          TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
         run: |
           cd tools/importer
           wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
-          unzip -q -P "$TESTDATA" totalitarismo.zip
+          unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
           python dwts_importer.py --input_dir images --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarisimo
           python dwts_importer.py --input_dir json --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarismo --is_json
