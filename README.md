@@ -1,3 +1,4 @@
+[![Backend Tests](https://github.com/uhh-lt/dwts/actions/workflows/backend_tests.yml/badge.svg?branch=mwp_v1)](https://github.com/uhh-lt/dwts/actions/workflows/backend_tests.yml)
 # D-WISE Tool Suite
 
 This is the repository for the D-WISE Tool Suite (DWTS) - an outcome of
