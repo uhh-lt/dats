@@ -1,8 +1,7 @@
 import React, { useRef } from "react";
 import ActionCard from "./ActionCard";
 import { ActionRead } from "../../api/openapi";
-import { Box, Card, CardContent, CardHeader, List, ListItem, Paper } from "@mui/material";
-import Typography from "@mui/material/Typography";
+import { Card, CardContent, CardHeader, List, ListItem } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface ActionCardWeekViewProps {

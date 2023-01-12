@@ -12,6 +12,34 @@ import ActionDateFunctions from "./ActionDateFunctions";
 import { AutologbookActions, getDateOfISOWeek, getWeekDates } from "./autologbookSlice";
 import { ActionFilters } from "./ActionFilters";
 
+const filterAction = (
+  action: ActionRead,
+  entityIdx: number,
+  showCreated: boolean,
+  showUpdated: boolean,
+  showDeleted: boolean,
+  entityFilter: number[] | undefined,
+  userFilter: number[]
+) => {
+  if (action.action_type === ActionType.CREATE) {
+    if (!showCreated) {
+      return false;
+    }
+  } else if (action.action_type === ActionType.UPDATE) {
+    if (!showUpdated) {
+      return false;
+    }
+  } else {
+    if (!showDeleted) {
+      return false;
+    }
+  }
+  if (entityFilter !== undefined && !entityFilter.includes(entityIdx)) {
+    return false;
+  }
+  return !(userFilter !== undefined && !userFilter.includes(action.user_id));
+};
+
 function Autologbook() {
   const appBarContainerRef = useContext(AppBarContext);
 
@@ -44,85 +72,63 @@ function Autologbook() {
   }, [dispatch, users.data]);
 
   const selectedWeekDates: () => Date[] = () => {
-    let weekStart: Date = getDateOfISOWeek(week, year)
-    return getWeekDates(weekStart)
-  }
+    let weekStart: Date = getDateOfISOWeek(week, year);
+    return getWeekDates(weekStart);
+  };
 
   // Gets the day index of a date in the selected week (or -1 if not in the week)
   const getDayIndexInSelectedWeek: (date: Date, weekArr: Date[]) => number = (date, weekArr) => {
-    let weekStart: Date = weekArr[0]
-    let weekEnd: Date = weekArr[weekArr.length - 1]
-    let dYear = date.getFullYear()
+    let weekStart: Date = weekArr[0];
+    let weekEnd: Date = weekArr[weekArr.length - 1];
+    let dYear = date.getFullYear();
     if (dYear === weekStart.getFullYear() || dYear === weekEnd.getFullYear()) {
-      let dMonth = date.getMonth()
-      let startMonth = weekStart.getMonth()
-      let endMonth = weekEnd.getMonth()
+      let dMonth = date.getMonth();
+      let startMonth = weekStart.getMonth();
+      let endMonth = weekEnd.getMonth();
       if (startMonth === endMonth) {
         if (dMonth === endMonth && date.getDate() >= weekStart.getDate() && date.getDate() <= weekEnd.getDate()) {
-          return date.getDate() - weekStart.getDate()
+          return date.getDate() - weekStart.getDate();
         }
       } else {
         if (dMonth === startMonth) {
           if (date.getDate() >= weekStart.getDate()) {
-            return date.getDate() - weekStart.getDate()
+            return date.getDate() - weekStart.getDate();
           }
         } else if (dMonth === endMonth && date.getDate() <= weekEnd.getDate()) {
-          return 6 - weekEnd.getDate() - date.getDate()
+          return 6 - weekEnd.getDate() - date.getDate();
         }
       }
     }
-    return -1
-  }
+    return -1;
+  };
 
-  const selectedWeek: Date[] = selectedWeekDates()
-
-  const filterAction: (action: ActionRead, entityIdx: number) => boolean = (action, entityIdx) => {
-    if (action.action_type === ActionType.CREATE) {
-      if (!showCreated) {
-        return false
-      }
-    } else if (action.action_type === ActionType.UPDATE) {
-      if (!showUpdated) {
-        return false
-      }
-    } else {
-      if (!showDeleted) {
-        return false
-      }
-    }
-    if (entityFilter !== undefined && !entityFilter.includes(entityIdx)) {
-      return false
-    }
-    return !(userFilter !== undefined && !userFilter.includes(action.user_id));
-
-  }
+  const selectedWeek: Date[] = selectedWeekDates();
 
   const actionsEachDay: ActionRead[][] = useMemo(() => {
-    if (!userActions.data)
-      return []
+    if (!userActions.data) return [];
 
-    let entitySet = new Set<number>()
-    let entityValues = Object.values(ActionTargetObjectType)
-    let result: ActionRead[][] = [[], [], [], [], [], [], []]
+    let entitySet = new Set<number>();
+    let entityValues = Object.values(ActionTargetObjectType);
+    let result: ActionRead[][] = [[], [], [], [], [], [], []];
     userActions.data.forEach((action) => {
-      let entityIdx = entityValues.indexOf(action.target_type)
-      entitySet.add(entityIdx)
-      if (!filterAction(action, entityIdx)) {
-        return
+      let entityIdx = entityValues.indexOf(action.target_type);
+      entitySet.add(entityIdx);
+      if (!filterAction(action, entityIdx, showCreated, showUpdated, showDeleted, entityFilter, userFilter)) {
+        return;
       }
       let date: Date = new Date(action.executed);
-      let weekDay: number = getDayIndexInSelectedWeek(date, selectedWeek)
+      let weekDay: number = getDayIndexInSelectedWeek(date, selectedWeek);
       if (weekDay >= 0) {
-        result[weekDay].push(action)
+        result[weekDay].push(action);
       }
-    })
+    });
     let entityArr = Array.from(entitySet).sort();
     dispatch(AutologbookActions.setVisibleEntityIds(entityArr));
     if (entityFilter === undefined) {
       dispatch(AutologbookActions.setEntityFilter(entityArr));
     }
-    return result
-  }, [userActions.data, week, year, showCreated, showUpdated, showDeleted, userFilter, entityFilter])
+    return result;
+  }, [userActions.data, dispatch, entityFilter, showCreated, showUpdated, showDeleted, userFilter, selectedWeek]);
 
   // FIXME: When shrinking the window, the actioncardweekview is not fully scrollable
   return (
@@ -136,17 +142,18 @@ function Autologbook() {
       <div className="myFlexContainer h100">
         <Box className="myFlexFitContent">
           <Toolbar variant="dense" color="secondary">
-            <ActionFilters/>
-            <Box sx={{flexGrow: 1}} />
+            <ActionFilters />
+            <Box sx={{ flexGrow: 1 }} />
             <ActionDateFunctions weekDays={selectedWeek} />
           </Toolbar>
         </Box>
         <Grid container className="myFlexFillAllContainer" columnSpacing={2}>
-          {!!actionsEachDay && actionsEachDay.map((actions, index) =>
-            <Grid key={index} item xs={12/7} className="h100">
-              <ActionCardWeekView actions={actions} day={selectedWeek[index]} />
-            </Grid>
-          )}
+          {!!actionsEachDay &&
+            actionsEachDay.map((actions, index) => (
+              <Grid key={index} item xs={12 / 7} className="h100">
+                <ActionCardWeekView actions={actions} day={selectedWeek[index]} />
+              </Grid>
+            ))}
         </Grid>
       </div>
     </>

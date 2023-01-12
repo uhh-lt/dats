@@ -1,14 +1,4 @@
-import {
-  AppBar, Button, ButtonGroup,
-  Checkbox,
-  FormControl, IconButton,
-  ListItemText,
-  MenuItem, OutlinedInput,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Toolbar
-} from "@mui/material";
+import { ButtonGroup, Checkbox, IconButton, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import * as React from "react";
 import Typography from "@mui/material/Typography";
@@ -26,7 +16,6 @@ const entityValueArray = Object.values(ActionTargetObjectType);
  * Filter functions are applied in Autologbook.tsx
  */
 export function ActionFilters() {
-
   const { user } = useAuth();
 
   // global state (redux)
@@ -84,7 +73,6 @@ export function ActionFilters() {
 
   // render
   return (
-
     <>
       <Typography component="div" variant="h5" style={{ paddingTop: 10, paddingBottom: 14, paddingRight: 12 }}>
         Filters:
@@ -108,25 +96,35 @@ export function ActionFilters() {
           ))
         }
       >
-        {visibleUserIds?.map((user) =>
+        {visibleUserIds?.map((user) => (
           <MenuItem key={user} value={user}>
             <Checkbox checked={userFilter?.includes(user)} />
             <ListItemText>
               <UserName userId={user} />
             </ListItemText>
-          </MenuItem>)}
+          </MenuItem>
+        ))}
       </Select>
 
       <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
         Actions:
       </Typography>
       <ButtonGroup sx={{ backgroundColor: "white", mr: 1, border: "1px solid grey" }}>
-        <IconButton children={<Add />} color={showCreated ? "primary" : "default"}
-                    onClick={() => dispatch(AutologbookActions.toggleCreated())} />
-        <IconButton children={<Edit />} color={showUpdated ? "primary" : "default"}
-                    onClick={() => dispatch(AutologbookActions.toggleUpdated())} />
-        <IconButton children={<Remove />} color={showDeleted ? "primary" : "default"}
-                    onClick={() => dispatch(AutologbookActions.toggleDeleted())} />
+        <IconButton
+          children={<Add />}
+          color={showCreated ? "primary" : "default"}
+          onClick={() => dispatch(AutologbookActions.toggleCreated())}
+        />
+        <IconButton
+          children={<Edit />}
+          color={showUpdated ? "primary" : "default"}
+          onClick={() => dispatch(AutologbookActions.toggleUpdated())}
+        />
+        <IconButton
+          children={<Remove />}
+          color={showDeleted ? "primary" : "default"}
+          onClick={() => dispatch(AutologbookActions.toggleDeleted())}
+        />
       </ButtonGroup>
 
       <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
@@ -142,17 +140,16 @@ export function ActionFilters() {
           if (entityFilter && entityFilter.length > 0) {
             return <>{entityValueArray[entityFilter[0]]}</>;
           }
-        }
-        }
+        }}
       >
         {entityValueArray.map((entity, index) => {
           let inEntities = visibleEntityIds?.includes(index);
-          return <MenuItem key={index} value={index} disabled={!inEntities}>
-            <Checkbox checked={entityFilter?.includes(index)} />
-            <ListItemText>
-              {entity}
-            </ListItemText>
-          </MenuItem>;
+          return (
+            <MenuItem key={index} value={index} disabled={!inEntities}>
+              <Checkbox checked={entityFilter?.includes(index)} />
+              <ListItemText>{entity}</ListItemText>
+            </MenuItem>
+          );
         })}
       </Select>
     </>

@@ -12,7 +12,7 @@ import {
   MemoRead,
   ProjectRead,
   SourceDocumentRead,
-  SpanAnnotationReadResolved
+  SpanAnnotationReadResolved,
 } from "../../api/openapi";
 import UserHooks from "../../api/UserHooks";
 import useGetActionCardsActionTarget from "./useGetActionCardsActionTarget";
@@ -30,76 +30,67 @@ interface ActionCardProps {
 }
 
 function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt }: ActionCardProps) {
-
   const [expanded, setExpanded] = useState(false);
   const toggleExpanded = () => {
-    setExpanded((oldExpanded) => !oldExpanded)
-  }
+    setExpanded((oldExpanded) => !oldExpanded);
+  };
 
-  let backgroundColor
+  let backgroundColor;
   switch (actionType) {
     case ActionType.CREATE:
-      backgroundColor = 'rgba(0, 255, 0, 0.2)'
+      backgroundColor = "rgba(0, 255, 0, 0.2)";
       break;
     case ActionType.UPDATE:
-      backgroundColor = 'rgba(255, 180, 30, 0.2)'
+      backgroundColor = "rgba(255, 180, 30, 0.2)";
       break;
     case ActionType.DELETE:
-      backgroundColor = 'rgba(255, 87, 51, 0.2)'
+      backgroundColor = "rgba(255, 87, 51, 0.2)";
       break;
     default:
-      backgroundColor = null
+      backgroundColor = null;
   }
 
-  let readObject;
-  const targetObject = useGetActionCardsActionTarget(targetObjectType)(targetId)
+  const targetObject = useGetActionCardsActionTarget(targetObjectType)(targetId);
   const targetName = useMemo(() => {
-    if (!targetObject.data)
-      return "Loading"
+    if (!targetObject.data) return "Loading";
 
     switch (targetObjectType) {
       case ActionTargetObjectType.MEMO:
-        readObject = targetObject?.data! as MemoRead
-        return readObject.title
+        return (targetObject?.data! as MemoRead).title;
       case ActionTargetObjectType.PROJECT:
-        readObject = targetObject?.data! as ProjectRead
-        return readObject.title
+        return (targetObject?.data! as ProjectRead).title;
       case ActionTargetObjectType.DOCUMENT_TAG:
-        readObject = targetObject?.data! as DocumentTagRead
-        return readObject.title
+        return (targetObject?.data! as DocumentTagRead).title;
       case ActionTargetObjectType.ANNOTATION_DOCUMENT:
-        return "Annotation Document"
+        return "Annotation Document";
       case ActionTargetObjectType.SPAN_GROUP:
-        return "Span Group does not exist"
+        return "Span Group does not exist";
       case ActionTargetObjectType.SOURCE_DOCUMENT:
-        readObject = targetObject?.data! as SourceDocumentRead
-        return readObject.filename
+        return (targetObject?.data! as SourceDocumentRead).filename;
       case ActionTargetObjectType.SPAN_ANNOTATION:
-        readObject = targetObject?.data! as SpanAnnotationReadResolved
-        return readObject.code.name
+        return (targetObject?.data! as SpanAnnotationReadResolved).code.name;
       case ActionTargetObjectType.BBOX_ANNOTATION:
-        readObject = targetObject?.data! as BBoxAnnotationReadResolvedCode
-        return readObject.code.name
+        return (targetObject?.data! as BBoxAnnotationReadResolvedCode).code.name;
       case ActionTargetObjectType.CODE:
       default:
-        readObject = targetObject?.data! as CodeRead
-        return readObject.name
+        return (targetObject?.data! as CodeRead).name;
     }
-  }, [targetObject.data])
+  }, [targetObject.data, targetObjectType]);
 
   const user = UserHooks.useGetUser(userId)?.data;
-  let userName: string
+  let userName: string;
   if (!user) {
-    userName = userId.toString()
+    userName = userId.toString();
   } else {
     userName = user.first_name + " " + user.last_name;
   }
 
   return (
-    <Card variant="outlined" sx={{ width: '100%', backgroundColor: backgroundColor }}>
-      <CardContent sx={{position: "relative"}}>
+    <Card variant="outlined" sx={{ width: "100%", backgroundColor: backgroundColor }}>
+      <CardContent sx={{ position: "relative" }}>
         <Typography sx={{ fontSize: 12 }} color="text.secondary" gutterBottom>
-          User: {userName}<span style={{ float: "right" }}>{actionType.valueOf()}</span>
+          User: {userName}
+          <span style={{ float: "right" }}>{actionType.valueOf()}</span>
         </Typography>
         <Tooltip title={targetName}>
           <Typography sx={{ mb: 1.0, mt: 1.5 }} variant="h6" component="div">
@@ -109,8 +100,11 @@ function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt
         {expanded && <Typography sx={{ mb: 1.0 }}>Demo Text</Typography>}
         <Typography variant="body2">
           {executedAt}
-          <IconButton children={expanded ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
-                      onClick={toggleExpanded} style={{ position: "absolute", bottom: 16, right: 10 }}/>
+          <IconButton
+            children={expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            onClick={toggleExpanded}
+            style={{ position: "absolute", bottom: 16, right: 10 }}
+          />
         </Typography>
       </CardContent>
     </Card>
