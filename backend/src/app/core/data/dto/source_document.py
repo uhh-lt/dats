@@ -13,6 +13,8 @@ class SDocStatus(str, Enum):
 
     import_text_document = "import_text_document"  # "imported uploaded text document"
     import_image_document = "import_image_document"  # "imported uploaded image document"
+    import_audio_document = "import_image_document"  # "imported uploaded image document"
+    import_video_document = "import_image_document"  # "imported uploaded image document"
 
     convert_to_webp_and_generate_thumbnails = "convert_to_webp_and_generate_thumbnails"  # "converted imported image to .webp and created a thumbnail"
 
