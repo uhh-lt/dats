@@ -19,7 +19,9 @@ class CeleryConfig:
 
     # https://docs.celeryq.dev/en/stable/userguide/routing.html
     task_routes = {
+        "app.docprepro.audio.preprocess.*": {"queue": "audioQ"},
         "app.docprepro.text.preprocess.*": {"queue": "textQ"},
+        "app.docprepro.video.preprocess.*": {"queue": "videoQ"},
         "app.docprepro.image.preprocess.*": {"queue": "imageQ"},
         "app.docprepro.archive.preprocess.*": {"queue": "archiveQ"},
         "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"}
