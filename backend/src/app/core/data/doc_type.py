@@ -20,8 +20,16 @@ __doc_type_to_mime_type_map = frozendict({
                    "application/msword",  # .doc
                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],  # .docx
     DocType.image: ["image/jpeg", "image/png"],
-    DocType.video: [],
-    DocType.audio: []
+    DocType.audio: ["audio/mpeg",
+                    "audio/ogg",
+                    "audio/wave",
+                    "audio/webm",
+                    "audio/x-wav",
+                    "audio/x-pn-wav"],
+    DocType.video: ["video/mp4",
+                    "video/webm",
+                    "video/x-m4v",
+                    "video/quicktime"]
 })
 
 __mime_type_to_doc_type_map = frozendict({
