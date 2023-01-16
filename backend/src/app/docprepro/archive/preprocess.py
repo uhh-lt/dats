@@ -13,6 +13,10 @@ from app.docprepro.image import image_document_preprocessing_without_import_appl
 from app.docprepro.image.import_image_document import import_image_document_
 from app.docprepro.text import text_document_preprocessing_without_import_apply_async
 from app.docprepro.text.import_text_document import import_text_document_
+from app.docprepro.audio import audio_document_preprocessing_without_import_apply_async
+from app.docprepro.audio.import_audio_document import import_audio_document_
+from app.docprepro.video import video_document_preprocessing_without_import_apply_async
+from app.docprepro.video.import_video_document import import_video_document_
 from config import conf
 
 sql = SQLService(echo=False)
@@ -27,6 +31,8 @@ def import_uploaded_archive(archive_file_path: Path,
                                                 archive_path=archive_file_path)
     pptds = []
     ppids = []
+    ppads = []
+    ppvds = []
 
     for filepath in tqdm(file_dsts,
                          total=len(file_dsts),
@@ -42,6 +48,12 @@ def import_uploaded_archive(archive_file_path: Path,
             elif doctype == DocType.image:
                 ppid = import_image_document_(doc_file_path=filepath, project_id=project_id, mime_type=mime_type)[0]
                 ppids.append(ppid)
+            elif doctype == DocType.audio:
+                ppad = import_audio_document_(doc_file_path=filepath, project_id=project_id, mime_type=mime_type)[0]
+                ppads.append(ppad)
+            elif doctype == DocType.video:
+                ppvd = import_video_document_(doc_file_path=filepath, project_id=project_id, mime_type=mime_type)[0]
+                ppvds.append(ppvd)
             else:
                 pass
         except (FileNotFoundInRepositoryError, UnsupportedDocTypeForSourceDocument, Exception) as e:
@@ -57,6 +69,14 @@ def import_uploaded_archive(archive_file_path: Path,
             logger.debug(f"Sending batch of {len(ppids)} image documents to image preprocessing celery worker!")
             image_document_preprocessing_without_import_apply_async(ppids=ppids)
             ppids = []
+        if len(ppads) >= conf.docprepro.celery.batch_size.image:
+            logger.debug(f"Sending batch of {len(ppids)} audio documents to image preprocessing celery worker!")
+            audio_document_preprocessing_without_import_apply_async(ppids=ppids)
+            ppads = []
+        if len(ppvds) >= conf.docprepro.celery.batch_size.image:
+            logger.debug(f"Sending batch of {len(ppids)} video documents to image preprocessing celery worker!")
+            video_document_preprocessing_without_import_apply_async(ppids=ppids)
+            ppvds = []
 
     # send the last batch of preprodocs to the responsible workers
     if len(pptds) > 0:
@@ -65,3 +85,9 @@ def import_uploaded_archive(archive_file_path: Path,
     if len(ppids) > 0:
         logger.debug(f"Sending batch of {len(ppids)} image documents to image preprocessing celery worker!")
         image_document_preprocessing_without_import_apply_async(ppids=ppids)
+    if len(ppads) > 0:
+        logger.debug(f"Sending batch of {len(ppads)} audio documents to image preprocessing celery worker!")
+        audio_document_preprocessing_without_import_apply_async(ppads=ppads)
+    if len(ppvds) > 0:
+        logger.debug(f"Sending batch of {len(ppvds)} image documents to image preprocessing celery worker!")
+        video_document_preprocessing_without_import_apply_async(ppvds=ppvds)
