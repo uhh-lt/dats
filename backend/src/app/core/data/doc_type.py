@@ -29,6 +29,7 @@ __doc_type_to_mime_type_map = frozendict({
     DocType.video: ["video/mp4",
                     "video/webm",
                     "video/x-m4v",
+                    "video/x-msvideo",
                     "video/quicktime"]
 })
 
