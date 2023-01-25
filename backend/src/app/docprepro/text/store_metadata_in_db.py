@@ -25,7 +25,7 @@ def store_metadata_in_db_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
 
             # persist word frequencies
             sdoc_meta_create_dto = SourceDocumentMetadataCreate(key="word_frequencies",
-                                                                value=json.dumps(pptd.word_freqs).replace("\"", "'"),
+                                                                value=json.dumps(pptd.word_freqs),
                                                                 source_document_id=pptd.sdoc_id,
                                                                 read_only=True)
 
