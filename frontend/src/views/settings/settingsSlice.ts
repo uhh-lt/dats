@@ -1,15 +1,23 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export interface SearchSettings {
+  SearchResStyle: "wordcloud" | "text";
+}
+
 export interface AnnotatorSettings {
   tagStyle: "inline" | "above";
 }
 
 export interface SettingsState {
+  search: SearchSettings;
   annotator: AnnotatorSettings;
   disabledCodeIds: number[];
 }
 
 const initialState: SettingsState = {
+  search: {
+    SearchResStyle: "wordcloud",
+  },
   annotator: {
     tagStyle: "inline",
   },
@@ -20,6 +28,12 @@ export const settingsSlice = createSlice({
   name: "settings",
   initialState,
   reducers: {
+    toggleSearchResStyle: (state) => {
+      state.search = {
+        ...state.search,
+        SearchResStyle: state.search.SearchResStyle === "wordcloud" ? "text" : "wordcloud",
+      };
+    },
     toggleAnnotatorTagStyle: (state) => {
       state.annotator = {
         ...state.annotator,

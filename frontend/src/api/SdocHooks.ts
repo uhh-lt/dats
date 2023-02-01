@@ -284,6 +284,15 @@ const useGetMetadata = (sdocId: number | undefined) =>
     }
   );
 
+const useGetWordFrequencies = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentMetadataRead, Error>(
+    [QueryKey.SDOC_WORD_FREQUENCIES, sdocId],
+    () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_frequencies" }),
+    {
+      enabled: !!sdocId,
+    }
+  );
+
 const SdocHooks = {
   // sdoc
   useGetDocument,
@@ -311,6 +320,7 @@ const SdocHooks = {
   // metadata
   useGetURL,
   useGetMetadata,
+  useGetWordFrequencies,
 };
 
 export default SdocHooks;
