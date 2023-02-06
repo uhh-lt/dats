@@ -6,6 +6,8 @@ import { DocType } from "../../api/openapi";
 interface SearchState {
   selectedDocumentIds: number[];
   filters: SearchFilter[];
+  filterAnchorPositions: number[];
+  filterAnchorLimits: number[];
   isSplitView: boolean;
   isShowEntities: boolean;
   isShowTags: boolean;
@@ -19,6 +21,8 @@ interface SearchState {
 const initialState: SearchState = {
   selectedDocumentIds: [],
   filters: [],
+  filterAnchorPositions: [],
+  filterAnchorLimits: [],
   isSplitView: false,
   isShowEntities: true,
   isShowTags: true,
@@ -77,16 +81,36 @@ export const searchSlice = createSlice({
       // only add the filter, if it does not exist already
       if (!state.filters.find((f) => f.id === action.payload!.id)) {
         state.filters.push(action.payload);
+        // TODO: fully reset positions when changing filters?
+        state.filterAnchorPositions = [...state.filterAnchorPositions, -1];
       }
     },
     removeFilter: (state, action: PayloadAction<SearchFilter>) => {
-      state.filters = state.filters.filter((f) => f.id !== action.payload.id);
+      const newFilters: SearchFilter[] = [];
+      const newPositions: number[] = [];
+      for (let i = 0; i < state.filters.length; i++) {
+        let filter: SearchFilter = state.filters[i];
+        if (filter.id !== action.payload.id) {
+          newFilters.push(filter);
+          newPositions.push(state.filterAnchorPositions[i]);
+        }
+      }
+      state.filters = newFilters;
+      state.filterAnchorPositions = newPositions;
     },
     setFilter: (state, action: PayloadAction<SearchFilter>) => {
       state.filters = [action.payload];
     },
     clearFilters: (state) => {
       state.filters = [];
+    },
+    increaseFilterAnchorPosition: (state, action: PayloadAction<number>) => {
+      state.filterAnchorPositions = state.filterAnchorPositions.map((pos: number, index: number) =>
+        action.payload === index ? (pos + 1 === state.filterAnchorLimits[index] ? 0 : pos + 1) : pos
+      );
+    },
+    setFilterAnchorLimits: (state, action: PayloadAction<number[]>) => {
+      state.filterAnchorLimits = action.payload;
     },
 
     // ui

@@ -21,7 +21,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
   const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
   // global server state (react-query)
-  const sentences = SdocHooks.useGetDocumentSentences(sdoc.id);
+  const sentences = SdocHooks.useGetDocumentSentences(sdoc.id).data?.sentences;
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocId: sdoc.id,
     annotationDocumentIds: showEntities ? [adoc.id] : [],
@@ -31,7 +31,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
   const handleContextMenu = (event: React.MouseEvent) => {
     if (!annotationsPerToken) return;
     if (!annotationMap) return;
-    if (!sentences.data) return;
+    if (!sentences) return;
 
     // try to find a parent element that has the tok class, we go up 3 levels at maximum
     let element: HTMLElement = event.target as HTMLElement;
@@ -83,7 +83,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
       // get the sentence that spans the clicked element
       let sentence: string | undefined = undefined;
       if (!isNaN(sentenceIndex)) {
-        sentence = sentences.data.sentences[sentenceIndex];
+        sentence = sentences[sentenceIndex];
       }
 
       // get all annotations that span the clicked token
@@ -113,6 +113,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         isViewer={true}
         html={sdoc.content}
         projectId={sdoc.project_id}
+        sentences={sentences}
       />
       <SentenceContextMenu ref={sentenceContextMenuRef} />
       <ImageContextMenu ref={imageContextMenuRef} />

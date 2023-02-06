@@ -66,3 +66,11 @@ rect.hovered {
     background-color: rgba(0, 255, 255, 0.5);
     cursor: pointer;
 }
+
+.filterhighlight {
+    background-color: yellow;
+}
+
+.jumphighlight {
+    background-color: lightgreen;
+}
