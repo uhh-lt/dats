@@ -93,6 +93,25 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
     setContextMenuData(node);
   };
 
+  // checlboxes
+  const [isChecked, setIsChecked] = useState<{ selections: any[] }>({ selections: [] });
+  const handleCheckboxChange = (index: any) => {
+    let sel = isChecked.selections;
+    let find = sel.indexOf(index);
+
+    if (find > -1) {
+      sel.splice(find, 1);
+    } else {
+      sel.push(index);
+    }
+
+    setIsChecked({
+      selections: sel,
+    });
+  };
+  const handleGenerateGraph = () => {
+    console.log(isChecked.selections);
+  };
   const content = (
     <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
@@ -120,7 +139,11 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
             renderActions={(node) => (
               <React.Fragment>
                 {isCodeGraph ? (
-                  <Checkbox checked={selectedCodeId?.toString() || ""} />
+                  <Checkbox
+                    key={node?.code.id}
+                    checked={isChecked.selections.includes(node)}
+                    onChange={() => handleCheckboxChange(node)}
+                  />
                 ) : (
                   <>
                     <CodeToggleVisibilityButton code={node} />
@@ -133,6 +156,17 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
             openContextMenu={onContextMenu}
           />
 
+          {isCodeGraph && (
+            <div>
+              <Button
+                variant="contained"
+                onClick={handleGenerateGraph}
+                sx={{ width: "50%", marginTop: "20px", float: "right" }}
+              >
+                Generate Graph
+              </Button>
+            </div>
+          )}
           <CodeEditDialog codes={allCodes.data} />
           <SpanCreationDialog ref={codeCreationDialogRef} />
           <CodeExplorerContextMenu
