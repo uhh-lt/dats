@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
-import { AppBar, Button, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
+import { AppBar, Button, Checkbox, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
 import { useParams } from "react-router-dom";
 import CodeTreeView from "./CodeTreeView";
 import ICodeTree from "./ICodeTree";
@@ -23,9 +23,10 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
+  isCodeGraph?: boolean;
 }
 
-function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps) {
+function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps & PaperProps) {
   const { user } = useAuth();
   const { projectId } = useParams() as { projectId: string };
   const projId = parseInt(projectId);
@@ -96,14 +97,16 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
     <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
         <>
-          <Button
-            variant="contained"
-            onClick={() => codeCreationDialogRef.current!.open()}
-            startIcon={<AddBoxIcon />}
-            sx={{ my: 0.5, mx: 2 }}
-          >
-            Add Code
-          </Button>
+          {!isCodeGraph && (
+            <Button
+              variant="contained"
+              onClick={() => codeCreationDialogRef.current!.open()}
+              startIcon={<AddBoxIcon />}
+              sx={{ my: 0.5, mx: 2 }}
+            >
+              Add Code
+            </Button>
+          )}
           <Divider />
           <CodeTreeView
             className="myFlexFillAllContainer"
@@ -116,13 +119,20 @@ function CodeExplorer({ showToolbar, ...props }: CodeExplorerProps & PaperProps)
             onCollapseClick={handleCollapseClick}
             renderActions={(node) => (
               <React.Fragment>
-                <CodeToggleVisibilityButton code={node} />
-                <CodeEditButton code={node.code} />
-                <MemoButton attachedObjectId={node.code.id} attachedObjectType={AttachedObjectType.CODE} />
+                {isCodeGraph ? (
+                  <Checkbox checked={selectedCodeId?.toString() || ""} />
+                ) : (
+                  <>
+                    <CodeToggleVisibilityButton code={node} />
+                    <CodeEditButton code={node.code} />
+                    <MemoButton attachedObjectId={node.code.id} attachedObjectType={AttachedObjectType.CODE} />
+                  </>
+                )}
               </React.Fragment>
             )}
             openContextMenu={onContextMenu}
           />
+
           <CodeEditDialog codes={allCodes.data} />
           <SpanCreationDialog ref={codeCreationDialogRef} />
           <CodeExplorerContextMenu
