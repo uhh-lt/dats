@@ -20,6 +20,8 @@ import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 import { AttachedObjectType } from "../../../api/openapi";
 import SpanCreationDialog, { CodeCreationDialogHandle } from "../SpanContextMenu/SpanCreationDialog";
 import AddBoxIcon from "@mui/icons-material/AddBox";
+import { LogbookActions } from "../../logbook/logbookSlice";
+import { CodeGraphActions } from "../../analysis/CodeGraph/codeGraphSlice";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
@@ -95,6 +97,7 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
 
   // checlboxes
   const [isChecked, setIsChecked] = useState<{ selections: any[] }>({ selections: [] });
+  const [generateGraph, setGenerateGraph] = useState(false);
   const handleCheckboxChange = (index: any) => {
     let sel = isChecked.selections;
     let find = sel.indexOf(index);
@@ -112,6 +115,7 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
   const handleGenerateGraph = () => {
     console.log(isChecked.selections);
   };
+
   const content = (
     <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
@@ -163,7 +167,7 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
                 onClick={handleGenerateGraph}
                 sx={{ width: "50%", marginTop: "20px", float: "right" }}
               >
-                Generate Graph
+                Generate
               </Button>
             </div>
           )}

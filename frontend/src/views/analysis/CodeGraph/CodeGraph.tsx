@@ -1,11 +1,14 @@
 import { Paper } from "@mui/material";
-import React from "react";
 import CodeExplorer from "../../annotation/CodeExplorer/CodeExplorer";
+import CodeTree from "./CodeTree";
 
 const CodeGraph = () => {
   return (
-    <Paper square className="myFlexContainer h100" sx={{ width: 350 }} elevation={1}>
-      <CodeExplorer isCodeGraph={true} />
+    <Paper style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+      <Paper square className="myFlexContainer" sx={{ width: 350, height: 600 }} elevation={1}>
+        <CodeExplorer isCodeGraph={true} />
+      </Paper>
+      <CodeTree></CodeTree>
     </Paper>
   );
 };
