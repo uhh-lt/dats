@@ -1,4 +1,4 @@
-import { tree, select, hierarchy, linkHorizontal } from "d3";
+import { tree, select, hierarchy, linkHorizontal, indexes } from "d3";
 import React from "react";
 
 const treeData = {
@@ -40,16 +40,18 @@ type HierarchyNode = {
   children?: HierarchyNode[];
 };
 
+const svgWidth = 500;
+const svgHeight = 500;
+
 const CodeTree = () => {
   const svgRef = React.useRef<SVGSVGElement>(null);
-  const width = document.body.clientWidth;
-  const height = 100 || document.body.clientHeight;
-  const treeLayout = tree().size([width, height]);
 
-  React.useEffect(() => {
-    const svg = select(svgRef.current);
-    svg.selectAll("*").remove();
-    svg.attr("width", width).attr("height", height);
+  const [descendants, paths, pathGenerator] = React.useMemo(() => {
+    const treeLayout = tree().size([svgWidth, svgHeight]);
+
+    // const svg = select(svgRef.current);
+    // svg.selectAll("*").remove();
+    // svg.attr("width", width).attr("height", height);
 
     const root = hierarchy<HierarchyNode>(treeData);
     const paths = treeLayout(root).links();
@@ -57,27 +59,23 @@ const CodeTree = () => {
       .x((d) => d.y)
       .y((d) => d.x);
 
-    svg
-      .selectAll("path")
-      .data(paths)
-      .enter()
-      .append("path")
-      .attr("stroke", "black")
-      .attr("d", pathGenerator)
-      .attr("stroke-width", 2);
-
-    svg
-      .selectAll("text")
-      .data(root.descendants())
-      .enter()
-      .append("text")
-      .attr("color", "black")
-      .attr("font-size", "0.75rem")
-      .attr("x", (d) => d.y)
-      .attr("y", (d) => d.x)
-      .text(({ data }) => data.name);
+    return [root.descendants(), paths, pathGenerator];
   }, []);
-  return <svg ref={svgRef} />;
+
+  return (
+    <>
+      <svg ref={svgRef} height={svgHeight} width={svgWidth}>
+        {paths.map((d, index) => (
+          <path key={index} stroke="black" d={pathGenerator(d)} strokeWidth="2" />
+        ))}
+        {descendants.map((d) => (
+          <text key={d.data.name} x={d.y} y={d.x} fontSize={"0.75rem"} color="black">
+            {d.data.name}
+          </text>
+        ))}
+      </svg>
+    </>
+  );
 };
 
 export default CodeTree;

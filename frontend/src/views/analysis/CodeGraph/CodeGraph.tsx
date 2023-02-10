@@ -8,7 +8,7 @@ const CodeGraph = () => {
       <Paper square className="myFlexContainer" sx={{ width: 350, height: 600 }} elevation={1}>
         <CodeExplorer isCodeGraph={true} />
       </Paper>
-      <CodeTree></CodeTree>
+      <CodeTree />
     </Paper>
   );
 };
