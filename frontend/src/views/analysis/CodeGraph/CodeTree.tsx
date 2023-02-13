@@ -8,8 +8,8 @@ const CodeTree = () => {
   console.log("tree data", treeData);
   const svgRef = React.useRef<SVGSVGElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
-  const svgWidth = 300;
-  const svgHeight = 100;
+  const svgWidth = 600;
+  const svgHeight = 500;
 
   useEffect(() => {
     const svg = select(svgRef.current);
@@ -32,10 +32,11 @@ const CodeTree = () => {
       .data(root.descendants())
       .join("circle")
       .attr("class", "node")
-      .attr("r", 4)
+      .attr("r", 25)
+      .attr("stroke", "black")
       .attr("fill", "black")
       .attr("cx", (node) => node.x)
-      .attr("cy", (node) => node.y);
+      .attr("cy", (node) => node.y - 10);
 
     // links
     svg
@@ -49,20 +50,21 @@ const CodeTree = () => {
 
     // labels
     svg
-      .selectAll(".label")
+      .selectAll(".circle")
       .data(root.descendants())
       .join("text")
-      .attr("class", "label")
+      .attr("class", "circle")
       .text((node) => node.data.code.name)
       .attr("text-anchor", "middle")
-      .attr("font-size", 12)
+      .attr("font-size", 8)
+      .style("fill", "white")
       .attr("x", (node) => node.x)
-      .attr("y", (node) => node.y + 10);
+      .attr("y", (node) => node.y - 10);
   }, [treeData]);
 
   return (
-    <div ref={wrapperRef}>
-      <svg ref={svgRef}></svg>
+    <div ref={wrapperRef} style={{ width: "100vw", height: "100vh", overflow: "auto" }}>
+      <svg ref={svgRef} style={{ width: "100vw", height: "100vh" }}></svg>
     </div>
   );
 };
