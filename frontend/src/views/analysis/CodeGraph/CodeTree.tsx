@@ -1,42 +1,11 @@
 // @ts-nocheck
 import { hierarchy, linkVertical, select, tree } from "d3";
 import React, { useEffect } from "react";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 
 const CodeTree = () => {
-  const treeData = {
-    name: "Eve",
-    children: [
-      {
-        name: "Cain",
-      },
-      {
-        name: "Seth",
-        children: [
-          {
-            name: "Enos",
-          },
-          {
-            name: "Noam",
-          },
-        ],
-      },
-      {
-        name: "Abel",
-      },
-      {
-        name: "Awan",
-        children: [
-          {
-            name: "Enoch",
-          },
-        ],
-      },
-      {
-        name: "Azura",
-      },
-    ],
-  };
-
+  const treeData = useAppSelector((state) => state.codeGraph.codesGraphSelection);
+  console.log("tree data", treeData);
   const svgRef = React.useRef<SVGSVGElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const svgWidth = 300;
@@ -44,7 +13,7 @@ const CodeTree = () => {
 
   useEffect(() => {
     const svg = select(svgRef.current);
-    const root = hierarchy(treeData);
+    const root = hierarchy(treeData[0]);
     const treeLayout = tree().size([svgWidth, svgHeight]);
     treeLayout(root);
 
@@ -84,7 +53,7 @@ const CodeTree = () => {
       .data(root.descendants())
       .join("text")
       .attr("class", "label")
-      .text((node) => node.data.name)
+      .text((node) => node.data.code.name)
       .attr("text-anchor", "middle")
       .attr("font-size", 12)
       .attr("x", (node) => node.x)
