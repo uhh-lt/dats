@@ -1,80 +1,100 @@
-import { tree, select, hierarchy, linkHorizontal, indexes } from "d3";
-import React from "react";
-
-const treeData = {
-  name: "Eve",
-  children: [
-    {
-      name: "Cain",
-    },
-    {
-      name: "Seth",
-      children: [
-        {
-          name: "Enos",
-        },
-        {
-          name: "Noam",
-        },
-      ],
-    },
-    {
-      name: "Abel",
-    },
-    {
-      name: "Awan",
-      children: [
-        {
-          name: "Enoch",
-        },
-      ],
-    },
-    {
-      name: "Azura",
-    },
-  ],
-};
-
-type HierarchyNode = {
-  name: string;
-  children?: HierarchyNode[];
-};
-
-const svgWidth = 500;
-const svgHeight = 500;
+// @ts-nocheck
+import { hierarchy, linkVertical, select, tree } from "d3";
+import React, { useEffect } from "react";
 
 const CodeTree = () => {
+  const treeData = {
+    name: "Eve",
+    children: [
+      {
+        name: "Cain",
+      },
+      {
+        name: "Seth",
+        children: [
+          {
+            name: "Enos",
+          },
+          {
+            name: "Noam",
+          },
+        ],
+      },
+      {
+        name: "Abel",
+      },
+      {
+        name: "Awan",
+        children: [
+          {
+            name: "Enoch",
+          },
+        ],
+      },
+      {
+        name: "Azura",
+      },
+    ],
+  };
+
   const svgRef = React.useRef<SVGSVGElement>(null);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
+  const svgWidth = 300;
+  const svgHeight = 100;
 
-  const [descendants, paths, pathGenerator] = React.useMemo(() => {
+  useEffect(() => {
+    const svg = select(svgRef.current);
+    const root = hierarchy(treeData);
     const treeLayout = tree().size([svgWidth, svgHeight]);
+    treeLayout(root);
 
-    // const svg = select(svgRef.current);
-    // svg.selectAll("*").remove();
-    // svg.attr("width", width).attr("height", height);
+    console.log(root.descendants());
+    console.log(root.links());
 
-    const root = hierarchy<HierarchyNode>(treeData);
-    const paths = treeLayout(root).links();
-    const pathGenerator = linkHorizontal()
-      .x((d) => d.y)
-      .y((d) => d.x);
+    const linkGenerator = linkVertical()
+      .source((link) => link.source)
+      .target((link) => link.target)
+      .x((node) => node.x)
+      .y((node) => node.y);
 
-    return [root.descendants(), paths, pathGenerator];
-  }, []);
+    // node
+    svg
+      .selectAll(".node")
+      .data(root.descendants())
+      .join("circle")
+      .attr("class", "node")
+      .attr("r", 4)
+      .attr("fill", "black")
+      .attr("cx", (node) => node.x)
+      .attr("cy", (node) => node.y);
+
+    // links
+    svg
+      .selectAll(".link")
+      .data(root.links())
+      .join("path")
+      .attr("class", "link")
+      .attr("d", linkGenerator)
+      .attr("fill", "none")
+      .attr("stroke", "black");
+
+    // labels
+    svg
+      .selectAll(".label")
+      .data(root.descendants())
+      .join("text")
+      .attr("class", "label")
+      .text((node) => node.data.name)
+      .attr("text-anchor", "middle")
+      .attr("font-size", 12)
+      .attr("x", (node) => node.x)
+      .attr("y", (node) => node.y + 10);
+  }, [treeData]);
 
   return (
-    <>
-      <svg ref={svgRef} height={svgHeight} width={svgWidth}>
-        {paths.map((d, index) => (
-          <path key={index} stroke="black" d={pathGenerator(d)} strokeWidth="2" />
-        ))}
-        {descendants.map((d) => (
-          <text key={d.data.name} x={d.y} y={d.x} fontSize={"0.75rem"} color="black">
-            {d.data.name}
-          </text>
-        ))}
-      </svg>
-    </>
+    <div ref={wrapperRef}>
+      <svg ref={svgRef}></svg>
+    </div>
   );
 };
 
