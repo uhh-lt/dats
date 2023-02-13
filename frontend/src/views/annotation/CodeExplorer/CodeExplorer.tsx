@@ -96,8 +96,12 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
   };
 
   // checlboxes
-  const [isChecked, setIsChecked] = useState<{ selections: any[] }>({ selections: [] });
-  const [generateGraph, setGenerateGraph] = useState(false);
+  const [isChecked, setIsChecked] = useState<{ selections: any[] }>({
+    selections: [],
+  });
+
+  const [codeData, setCodeData] = useState<any>([{ code: { name: "root" }, children: [] }]);
+
   const handleCheckboxChange = (index: any) => {
     let sel = isChecked.selections;
     let find = sel.indexOf(index);
@@ -112,8 +116,17 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
       selections: sel,
     });
   };
+
   const handleGenerateGraph = () => {
-    console.log(isChecked.selections);
+    for (var i = 0; i < isChecked.selections.length; i++) {
+      codeData[0].children.push(isChecked.selections[i]);
+      isChecked.selections.splice(i, 1);
+      i--; //decrement i IF we remove an item
+    }
+    setCodeData(codeData);
+    dispatch(CodeGraphActions.setCodeGraphSelection(codeData));
+    console.log("checked", isChecked.selections);
+    console.log("code Data", codeData);
   };
 
   const content = (
