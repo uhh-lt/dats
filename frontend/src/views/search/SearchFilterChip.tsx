@@ -10,7 +10,6 @@ import { SearchActions } from "./searchSlice";
 
 interface SearchFilterChipProps {
   filter: SearchFilter;
-  filterIdx: number;
   handleDelete: (filter: SearchFilter) => void;
 }
 
@@ -22,15 +21,14 @@ const props: ChipProps = {
   ),
 };
 
-function SearchFilterChip({ filter, filterIdx, handleDelete }: SearchFilterChipProps) {
-  const position = useAppSelector((state) => state.search.filterAnchorPositions)[filterIdx];
+function SearchFilterChip({ filter, handleDelete }: SearchFilterChipProps) {
+  const position = useAppSelector((state) => state.search.filterAnchorInfo)[filter.id]!.pos;
 
   switch (filter.type) {
     case FilterType.CODE:
       return (
         <CodeFilterChip
           anchorId={filter.id}
-          filterIdx={filterIdx}
           position={position}
           spanEntity={filter.data as SpanEntity}
           onDelete={() => handleDelete(filter)}
@@ -45,7 +43,6 @@ function SearchFilterChip({ filter, filterIdx, handleDelete }: SearchFilterChipP
       return (
         <KeywordFilterChip
           anchorId={filter.id}
-          filterIdx={filterIdx}
           position={position}
           keyword={filter.data as string}
           onDelete={() => handleDelete(filter)}
@@ -56,7 +53,6 @@ function SearchFilterChip({ filter, filterIdx, handleDelete }: SearchFilterChipP
       return (
         <TextFilterChip
           anchorId={filter.id}
-          filterIdx={filterIdx}
           position={position}
           text={filter.data as string}
           onDelete={() => handleDelete(filter)}
@@ -98,30 +94,30 @@ function DocumentTagFilterChip({ documentTagId, ...props }: { documentTagId: num
 
 function KeywordFilterChip({
   anchorId,
-  filterIdx,
   position,
   keyword,
   ...props
-}: { anchorId: string; filterIdx: number; position: number; keyword: string } & ChipProps) {
+}: { anchorId: string; position: number; keyword: string } & ChipProps) {
   const dispatch = useAppDispatch();
+  props.title = `Jump to Highlight ${position + 1}`;
   return (
-    <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(filterIdx))}>
-      <Chip label={`Keyword: ${keyword}`} {...props} />
+    <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}>
+      <Chip label={`Keyword: ${keyword}`} style={{ cursor: "pointer" }} {...props} />
     </a>
   );
 }
 
 function TextFilterChip({
   anchorId,
-  filterIdx,
   position,
   text,
   ...props
-}: { anchorId: string; filterIdx: number; position: number; text: string } & ChipProps) {
+}: { anchorId: string; position: number; text: string } & ChipProps) {
   const dispatch = useAppDispatch();
+  props.title = `Jump to Highlight ${position + 1}`;
   return (
-    <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(filterIdx))}>
-      <Chip label={text} {...props} />
+    <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}>
+      <Chip label={text} style={{ cursor: "pointer" }} {...props} />
     </a>
   );
 }
@@ -144,13 +140,13 @@ function MetadataFilterChip({ metadata, ...props }: { metadata: { key: string; v
 
 function CodeFilterChip({
   anchorId,
-  filterIdx,
   position,
   spanEntity,
   ...props
-}: { anchorId: string; filterIdx: number; position: number; spanEntity: SpanEntity } & ChipProps) {
+}: { anchorId: string; position: number; spanEntity: SpanEntity } & ChipProps) {
   const dispatch = useAppDispatch();
   const code = CodeHooks.useGetCode(spanEntity.code_id);
+  props.title = `Jump to Highlight ${position + 1}`;
 
   return (
     <>
@@ -159,9 +155,9 @@ function CodeFilterChip({
       {code.isSuccess && (
         <a
           href={"#" + anchorId + position}
-          onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(filterIdx))}
+          onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
         >
-          <Chip label={`${code.data.name}: ${spanEntity.span_text}`} {...props} />
+          <Chip label={`${code.data.name}: ${spanEntity.span_text}`} style={{ cursor: "pointer" }} {...props} />
         </a>
       )}
     </>

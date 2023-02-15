@@ -232,8 +232,8 @@ function Search() {
           <Box className="myFlexFitContent">
             <Stack direction="row" style={{ flexWrap: "wrap", gap: "8px" }}>
               {filters.length > 0 && <Typography variant="h6">Filter:</Typography>}
-              {filters.map((filter, index) => (
-                <SearchFilterChip key={filter.id} filter={filter} filterIdx={index} handleDelete={handleRemoveFilter} />
+              {filters.map((filter) => (
+                <SearchFilterChip key={filter.id} filter={filter} handleDelete={handleRemoveFilter} />
               ))}
             </Stack>
           </Box>
