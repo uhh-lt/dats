@@ -1,16 +1,13 @@
 // @ts-nocheck
 import { hierarchy, linkVertical, select, tree } from "d3";
 import React, { useEffect } from "react";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
 
-const CodeTree = () => {
-  const treeData = useAppSelector((state) => state.codeGraph.codesGraphSelection);
-  console.log("tree data", treeData);
+const CodeTree = ({ treeData }) => {
+  // const treeData = useAppSelector((state) => state.codeGraph.codesGraphSelection);
   const svgRef = React.useRef<SVGSVGElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const svgWidth = 600;
   const svgHeight = 500;
-
   useEffect(() => {
     const svg = select(svgRef.current);
     const root = hierarchy(treeData[0]);
@@ -49,22 +46,22 @@ const CodeTree = () => {
       .attr("stroke", "black");
 
     // labels
-    svg
+    /*   svg
       .selectAll(".circle")
       .data(root.descendants())
       .join("text")
       .attr("class", "circle")
-      .text((node) => node.data.code.name)
+      .text((node) => node.code.name)
       .attr("text-anchor", "middle")
       .attr("font-size", 8)
       .style("fill", "white")
       .attr("x", (node) => node.x)
-      .attr("y", (node) => node.y - 10);
+      .attr("y", (node) => node.y - 10); */
   }, [treeData]);
 
   return (
-    <div ref={wrapperRef} style={{ width: "100vw", height: "100vh", overflow: "auto" }}>
-      <svg ref={svgRef} style={{ width: "100vw", height: "100vh" }}></svg>
+    <div ref={wrapperRef} style={{ width: "100%", height: "100%" }}>
+      <svg ref={svgRef} style={{ width: "100%", height: "100%" }}></svg>
     </div>
   );
 };

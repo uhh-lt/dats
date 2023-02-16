@@ -22,13 +22,15 @@ import SpanCreationDialog, { CodeCreationDialogHandle } from "../SpanContextMenu
 import AddBoxIcon from "@mui/icons-material/AddBox";
 import { LogbookActions } from "../../logbook/logbookSlice";
 import { CodeGraphActions } from "../../analysis/CodeGraph/codeGraphSlice";
+import { CheckBoxActions } from "../../analysis/CodeGraph/CheckBoxSlice";
+import { StaticDatePicker } from "@mui/lab";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
-  isCodeGraph?: boolean;
+  showCheckboxes?: boolean;
 }
 
-function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps & PaperProps) {
+function CodeExplorer({ showToolbar, showCheckboxes, ...props }: CodeExplorerProps & PaperProps) {
   const { user } = useAuth();
   const { projectId } = useParams() as { projectId: string };
   const projId = parseInt(projectId);
@@ -95,26 +97,16 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
     setContextMenuData(node);
   };
 
-  // checlboxes
+  // checlboxes=
   const [isChecked, setIsChecked] = useState<{ selections: any[] }>({
     selections: [],
   });
-
+  const checkBoxes = useAppSelector((state) => state.checkBoxs.checkBoxes);
+  console.log("checkboxes", checkBoxes);
   const [codeData, setCodeData] = useState<any>([{ code: { name: "root" }, children: [] }]);
 
   const handleCheckboxChange = (index: any) => {
-    let sel = isChecked.selections;
-    let find = sel.indexOf(index);
-
-    if (find > -1) {
-      sel.splice(find, 1);
-    } else {
-      sel.push(index);
-    }
-
-    setIsChecked({
-      selections: sel,
-    });
+    dispatch(CheckBoxActions.toggleCheckBox(index));
   };
 
   const handleGenerateGraph = () => {
@@ -133,7 +125,7 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
     <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
         <>
-          {!isCodeGraph && (
+          {!showCheckboxes && (
             <Button
               variant="contained"
               onClick={() => codeCreationDialogRef.current!.open()}
@@ -143,7 +135,7 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
               Add Code
             </Button>
           )}
-          <Divider />
+          {!showCheckboxes && <Divider />}
           <CodeTreeView
             className="myFlexFillAllContainer"
             data={codeTree.model}
@@ -155,10 +147,10 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
             onCollapseClick={handleCollapseClick}
             renderActions={(node) => (
               <React.Fragment>
-                {isCodeGraph ? (
+                {showCheckboxes ? (
                   <Checkbox
                     key={node?.code.id}
-                    checked={isChecked.selections.includes(node)}
+                    checked={checkBoxes.includes(node)}
                     onChange={() => handleCheckboxChange(node)}
                   />
                 ) : (
@@ -173,7 +165,7 @@ function CodeExplorer({ showToolbar, isCodeGraph, ...props }: CodeExplorerProps 
             openContextMenu={onContextMenu}
           />
 
-          {isCodeGraph && (
+          {showCheckboxes && (
             <div>
               <Button
                 variant="contained"

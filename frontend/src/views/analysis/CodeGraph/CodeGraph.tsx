@@ -1,22 +1,48 @@
-import { Paper } from "@mui/material";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { Box, Button, Grid, Paper, Stack } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import CodeExplorer from "../../annotation/CodeExplorer/CodeExplorer";
+import { CodeGraphActions } from "./codeGraphSlice";
 import CodeTree from "./CodeTree";
 
 const CodeGraph = () => {
-  const treeData = useAppSelector((state) => state.codeGraph.codesGraphSelection);
+  const [generate, setGenerate] = useState(false);
+  const checkBoxData = useAppSelector((state) => state.checkBoxs.checkBoxes);
+  const handleGenerateGraph = () => {
+    setGenerate(true);
+  };
+
+  const rootNode = {
+    name: "root",
+    children: checkBoxData,
+  };
+
+  const mergeData = [rootNode, ...checkBoxData];
+
+  console.log("mergeData", mergeData);
 
   return (
-    <Paper style={{ display: "flex" }}>
-      <Paper square className="myFlexContainer" sx={{ width: 350, height: 600 }} elevation={1}>
-        <CodeExplorer isCodeGraph={true} />
-      </Paper>
-      {treeData.length !== 0 && (
-        <div style={{ width: "100vw", height: "100vh", overflow: "auto" }}>
-          <CodeTree />
+    <Grid container columnSpacing={2} className="h100" sx={{ py: 1 }}>
+      <Grid item md={3} className="h100">
+        <CodeExplorer showCheckboxes={true} />
+      </Grid>
+      <Grid item md={9} className="myFlexContainer h100">
+        <Box className="myFlexFitContent">
+          <Stack direction="row" style={{ flexWrap: "wrap", gap: "8px" }}>
+            <Button
+              variant="contained"
+              onClick={handleGenerateGraph}
+              sx={{ width: "50%", marginTop: "20px", float: "right" }}
+            >
+              Generate
+            </Button>
+          </Stack>
+        </Box>
+        <div className="myFlexFillAllContainer">
+          {generate && mergeData.length !== 0 && <CodeTree treeData={mergeData} />}
         </div>
-      )}
-    </Paper>
+      </Grid>
+    </Grid>
   );
 };
 
