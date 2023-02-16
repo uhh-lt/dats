@@ -99,10 +99,12 @@ function KeywordFilterChip({
   ...props
 }: { anchorId: string; position: number; keyword: string } & ChipProps) {
   const dispatch = useAppDispatch();
-  props.title = `Jump to Highlight ${position + 1}`;
+  const tooltip = `Jump to Highlight ${position + 1}`;
   return (
     <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}>
-      <Chip label={`Keyword: ${keyword}`} style={{ cursor: "pointer" }} {...props} />
+      <Tooltip title={tooltip}>
+        <Chip label={`Keyword: ${keyword}`} style={{ cursor: "pointer" }} {...props} />
+      </Tooltip>
     </a>
   );
 }
@@ -114,10 +116,12 @@ function TextFilterChip({
   ...props
 }: { anchorId: string; position: number; text: string } & ChipProps) {
   const dispatch = useAppDispatch();
-  props.title = `Jump to Highlight ${position + 1}`;
+  const tooltip = `Jump to Highlight ${position + 1}`;
   return (
     <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}>
-      <Chip label={text} style={{ cursor: "pointer" }} {...props} />
+      <Tooltip title={tooltip}>
+        <Chip label={text} style={{ cursor: "pointer" }} {...props} />
+      </Tooltip>
     </a>
   );
 }
@@ -146,7 +150,7 @@ function CodeFilterChip({
 }: { anchorId: string; position: number; spanEntity: SpanEntity } & ChipProps) {
   const dispatch = useAppDispatch();
   const code = CodeHooks.useGetCode(spanEntity.code_id);
-  props.title = `Jump to Highlight ${position + 1}`;
+  const tooltip = `Jump to Highlight ${position + 1}`;
 
   return (
     <>
@@ -157,7 +161,9 @@ function CodeFilterChip({
           href={"#" + anchorId + position}
           onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
         >
-          <Chip label={`${code.data.name}: ${spanEntity.span_text}`} style={{ cursor: "pointer" }} {...props} />
+          <Tooltip title={tooltip}>
+            <Chip label={`${code.data.name}: ${spanEntity.span_text}`} style={{ cursor: "pointer" }} {...props} />
+          </Tooltip>
         </a>
       )}
     </>

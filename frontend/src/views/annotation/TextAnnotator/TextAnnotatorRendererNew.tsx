@@ -136,7 +136,18 @@ function TextAnnotationRendererNew({
   const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
   const { hash } = useLocation();
-  const anchoredSpan: string = hash.substring(1);
+  const anchoredSpan: string = decodeURI(hash.substring(1));
+
+  const sentIdsHighlighted: number[] = useMemo(() => {
+    return getHighlightedSentIds(sentences, filters);
+  }, [sentences, filters]);
+  const { anchorInfos, highlightSet } = useMemo(() => {
+    const result = getHighlightedTokenSet(tokenData, filters);
+    if (result.filterLimits !== undefined) {
+      dispatch(SearchActions.setFilterAnchorLimits(result.filterLimits));
+    }
+    return { anchorInfos: result.anchorInfos, highlightSet: result.highlightSet };
+  }, [tokenData, filters, dispatch]);
 
   useEffect(() => {
     // return the last highlight, that was jumped to, to its default highlighting
@@ -151,21 +162,18 @@ function TextAnnotationRendererNew({
         const token = selectedAnchor.querySelector(".text");
         if (token) {
           token.className = token.className.replace("filterhighlight", "jumphighlight");
+          const numTokens = anchoredSpan.split(" ").length;
+          const tokenId = parseInt(token.id.substring(5));
+          for (let i = 1; i < numTokens; i++) {
+            const nextToken = document.getElementById("token" + (tokenId + i));
+            if (nextToken) {
+              nextToken.className = nextToken.className.replace("filterhighlight", "jumphighlight");
+            }
+          }
         }
       }
     }
   }, [anchoredSpan]);
-
-  const sentIdsHighlighted: number[] = useMemo(() => {
-    return getHighlightedSentIds(sentences, filters);
-  }, [sentences, filters]);
-  const { anchorInfos, highlightSet } = useMemo(() => {
-    const result = getHighlightedTokenSet(tokenData, filters);
-    if (result.filterLimits !== undefined) {
-      dispatch(SearchActions.setFilterAnchorLimits(result.filterLimits));
-    }
-    return { anchorInfos: result.anchorInfos, highlightSet: result.highlightSet };
-  }, [tokenData, filters, dispatch]);
 
   // Order matters. Instructions are processed in
   // the order they're defined
