@@ -24,7 +24,6 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
   const gRef = useRef<SVGGElement>(null);
   const bboxRef = useRef<SVGGElement>(null);
   const textRef = useRef<SVGGElement>(null);
-  const imgRef = useRef<SVGImageElement>(null);
   const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
   const imgContainerHeight = 500;
@@ -58,16 +57,13 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
   }, [zoom]);
 
   useEffect(() => {
-    const img = d3.select("image");
     const rect = d3.select(bboxRef.current).selectAll<SVGRectElement, BBoxAnnotationReadResolvedCode>("rect");
     const text = d3.select(textRef.current).selectAll<SVGTextElement, BBoxAnnotationReadResolvedCode>("text");
     const data = showEntities ? annotations.data || [] : [];
     const scaledRatio = imgContainerHeight / height;
 
-    const portWidth: number = svgRef.current!.width.baseVal.value; // FIXME: sometimes 0!
+    const portWidth: number = svgRef.current!.clientWidth;
     let xCentering = portWidth / 2 - (width * scaledRatio) / 2;
-    console.log(portWidth);
-    img.attr("x", xCentering);
 
     // add & remove nodes
     rect
@@ -76,10 +72,10 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
         (enter) =>
           enter
             .append("rect")
-            .attr("x", (d) => d.x_min * scaledRatio + xCentering)
-            .attr("y", (d) => d.y_min * scaledRatio)
-            .attr("width", (d) => (d.x_max - d.x_min) * scaledRatio)
-            .attr("height", (d) => (d.y_max - d.y_min) * scaledRatio)
+            .attr("x", (d) => d.x_min)
+            .attr("y", (d) => d.y_min)
+            .attr("width", (d) => d.x_max - d.x_min)
+            .attr("height", (d) => d.y_max - d.y_min)
             .attr("fill", "transparent")
             .attr("stroke", (d) => d.code.color)
             .attr("stroke-width", 3),
@@ -100,8 +96,8 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
         (enter) =>
           enter
             .append("text")
-            .attr("x", (d) => d.x_min * scaledRatio + xCentering + 3)
-            .attr("y", (d) => d.y_max * scaledRatio - 3)
+            .attr("x", (d) => d.x_min + 3)
+            .attr("y", (d) => d.y_max - 3)
             .attr("fill", "white")
             .attr("stroke", "black")
             .attr("stroke-width", 0.75)
@@ -112,7 +108,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
         (update) => update.attr("x", (d) => d.x_min),
         (exit) => exit.remove()
       );
-    // TODO: try to scale with zoom
+    d3.select(gRef.current).attr("transform", `translate(${xCentering}, 0) scale(${scaledRatio})`);
   }, [width, height, annotations.data, showEntities, sdoc.content]);
 
   return (
@@ -120,7 +116,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
       {annotations.isError && <span>{annotations.error.message}</span>}
       <svg ref={svgRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
-          <image href={sdoc.content} ref={imgRef} height={imgContainerHeight} />
+          <image href={sdoc.content} />
           <g ref={bboxRef}></g>
           <g ref={textRef}></g>
         </g>
