@@ -98,27 +98,15 @@ function CodeExplorer({ showToolbar, showCheckboxes, ...props }: CodeExplorerPro
   };
 
   // checlboxes=
-  const [isChecked, setIsChecked] = useState<{ selections: any[] }>({
-    selections: [],
-  });
+
   const checkBoxes = useAppSelector((state) => state.checkBoxs.checkBoxes);
-  console.log("checkboxes", checkBoxes);
-  const [codeData, setCodeData] = useState<any>([{ code: { name: "root" }, children: [] }]);
-
-  const handleCheckboxChange = (index: any) => {
-    dispatch(CheckBoxActions.toggleCheckBox(index));
-  };
-
-  const handleGenerateGraph = () => {
-    for (var i = 0; i < isChecked.selections.length; i++) {
-      codeData[0].children.push(isChecked.selections[i]);
-      isChecked.selections.splice(i, 1);
-      i--; //decrement i IF we remove an item
+  const handleCheckboxChange = (node: any) => {
+    const index = checkBoxes.findIndex((item) => item.code.id === node.code.id);
+    if (index !== -1) {
+      dispatch(CheckBoxActions.toggleCheckBox(index));
+    } else {
+      dispatch(CheckBoxActions.toggleCheckBox(node));
     }
-    setCodeData(codeData);
-    dispatch(CodeGraphActions.setCodeGraphSelection(codeData));
-    console.log("checked", isChecked.selections);
-    console.log("code Data", codeData);
   };
 
   const content = (
@@ -150,8 +138,10 @@ function CodeExplorer({ showToolbar, showCheckboxes, ...props }: CodeExplorerPro
                 {showCheckboxes ? (
                   <Checkbox
                     key={node?.code.id}
-                    checked={checkBoxes.includes(node)}
-                    onChange={() => handleCheckboxChange(node)}
+                    checked={checkBoxes.some((item) => item.code.id === node.code.id)}
+                    onChange={() => {
+                      handleCheckboxChange(node);
+                    }}
                   />
                 ) : (
                   <>
@@ -160,22 +150,12 @@ function CodeExplorer({ showToolbar, showCheckboxes, ...props }: CodeExplorerPro
                     <MemoButton attachedObjectId={node.code.id} attachedObjectType={AttachedObjectType.CODE} />
                   </>
                 )}
+                {}
               </React.Fragment>
             )}
             openContextMenu={onContextMenu}
           />
 
-          {showCheckboxes && (
-            <div>
-              <Button
-                variant="contained"
-                onClick={handleGenerateGraph}
-                sx={{ width: "50%", marginTop: "20px", float: "right" }}
-              >
-                Generate
-              </Button>
-            </div>
-          )}
           <CodeEditDialog codes={allCodes.data} />
           <SpanCreationDialog ref={codeCreationDialogRef} />
           <CodeExplorerContextMenu

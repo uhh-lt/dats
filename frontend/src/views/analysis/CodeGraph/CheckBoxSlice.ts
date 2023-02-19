@@ -15,14 +15,24 @@ export const checkBoxSlice = createSlice({
   initialState,
   reducers: {
     toggleCheckBox: (state, action: PayloadAction<any>) => {
-      const index = state.checkBoxes.findIndex((item) => item === action.payload);
+      const index =
+        typeof action.payload === "number"
+          ? action.payload
+          : state.checkBoxes.findIndex((item) => item.code.id === action.payload.code.id);
+      let newState = {
+        ...state,
+        isChecked: false,
+        checkBoxes: [...state.checkBoxes],
+      };
       if (index !== -1) {
-        state.checkBoxes.splice(index, 1);
-        state.isChecked = false;
+        newState.checkBoxes.splice(index, 1);
       } else {
-        state.checkBoxes.push(action.payload);
-        state.isChecked = true;
+        newState.checkBoxes.push(action.payload);
       }
+      if (newState.checkBoxes.length > 0) {
+        newState.isChecked = true;
+      }
+      return newState;
     },
   },
 });

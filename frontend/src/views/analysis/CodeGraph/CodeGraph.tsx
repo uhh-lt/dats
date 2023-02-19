@@ -1,8 +1,7 @@
-import { Box, Button, Grid, Paper, Stack } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { Box, Button, Grid, Stack } from "@mui/material";
+import { useState } from "react";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 import CodeExplorer from "../../annotation/CodeExplorer/CodeExplorer";
-import { CodeGraphActions } from "./codeGraphSlice";
 import CodeTree from "./CodeTree";
 
 const CodeGraph = () => {
@@ -13,7 +12,7 @@ const CodeGraph = () => {
   };
 
   const rootNode = {
-    name: "root",
+    code: { name: "root", color: "green" },
     children: checkBoxData,
   };
 
