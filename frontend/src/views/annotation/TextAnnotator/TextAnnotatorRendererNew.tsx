@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { useLocation } from "react-router-dom";
 import { FilterType, SearchFilter } from "../../search/SearchFilter";
 import { SearchActions } from "../../search/searchSlice";
+import token from "./Token";
 
 const htmlToReactParser = new Parser();
 
@@ -31,13 +32,6 @@ interface TextAnnotationRendererNewProps {
   isViewer: boolean;
   projectId: number;
 }
-
-const stripTokenFormatting = (tokens: string) => {
-  return tokens
-    .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, " ")
-    .toLowerCase()
-    .split(/\s+/);
-};
 
 const getHighlightedSentIds = (sentences: string[] | undefined, filters: SearchFilter[]) => {
   if (!sentences || !filters) {
@@ -63,8 +57,8 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
     (f) => f.type === FilterType.KEYWORD || f.type === FilterType.TERM || f.type === FilterType.CODE
   );
   // standardize the format of tokens strings to make them better searchable in the document
-  const tokenFilterHighlights: string[][] = tokenFilters.map((f) =>
-    stripTokenFormatting(typeof f.data === "object" ? (f.data as SpanEntity).span_text : (f.data as string))
+  const tokenFilterHighlights: string[] = tokenFilters.map((f) =>
+    (typeof f.data === "object" ? (f.data as SpanEntity).span_text : (f.data as string)).toLowerCase().trim()
   );
   // An array that keeps track of the number of occurrences of each filter during the search loop
   const filterOccurrences: number[] = new Array<number>(tokenFilterHighlights.length).fill(0);
@@ -72,54 +66,52 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
   // in the current list of filters can be found when starting from that position.
   for (let i = 0; i < tokenData.length; i++) {
     // traverse all tokens
-    let currTok = tokenData[i].text.toLowerCase();
+    const validFilters: (string | undefined)[] = [...tokenFilterHighlights];
     let filterIds: string[] = [];
+    let tokenConcats = undefined;
     let newSpanEnd = undefined;
-    // check for each filter, if there is a match at this token index in the text.
-    for (let j = 0; j < tokenFilterHighlights.length; j++) {
-      let filter = tokenFilterHighlights[j];
-      if (filter[0] === currTok) {
-        if (filter.length > 1) {
-          let match = true;
-          let tokenIdx = i;
-          for (let k = 1; k < filter.length; k++) {
-            tokenIdx = i + k;
-            let filterToken = filter[k];
-            if (filterToken !== tokenData[tokenIdx].text.toLowerCase()) {
-              match = false;
-              break;
+    for (let j = i; j < tokenData.length; j++) {
+      let currTok = tokenData[j].text.toLowerCase();
+      tokenConcats = !tokenConcats ? currTok : tokenConcats + currTok;
+      // check for each filter, if there is a match at this token index in the text.
+      for (let k = 0; k < validFilters.length; k++) {
+        let filter = validFilters[k];
+        if (!!filter) {
+          if (filter.startsWith(tokenConcats)) {
+            if (filter === tokenConcats) {
+              newSpanEnd = j;
+              filterIds.push(tokenFilters[k].id.trim() + "-idx" + filterOccurrences[k]);
+              filterOccurrences[k] += 1;
             }
+          } else {
+            validFilters[k] = undefined;
           }
-          if (match) {
-            if (!newSpanEnd || tokenIdx > newSpanEnd) {
-              newSpanEnd = tokenIdx;
-            }
-            filterIds.push(tokenFilters[j].id + filterOccurrences[j]);
-            filterOccurrences[j] += 1;
-          }
-        } else {
-          if (!newSpanEnd) {
-            newSpanEnd = i;
-          }
-          filterIds.push(tokenFilters[j].id + filterOccurrences[j]);
-          filterOccurrences[j] += 1;
         }
+      }
+      if (validFilters.every((v) => !v)) {
+        break;
+      } else if (tokenData[j].whitespace) {
+        tokenConcats += " ";
       }
     }
     if (newSpanEnd) {
       anchorInfos.set(i, filterIds);
-      for (let j = i; j <= newSpanEnd; j++) {
-        highlightSet.add(j);
+      for (let t = i; t <= newSpanEnd; t++) {
+        highlightSet.add(t);
       }
-    }
-    if (!tokenData[i].whitespace) {
-      i++;
     }
   }
   // create a mapping from filter IDs to the total number of occurrences of each filter (for anchor limits)
   const filterLimits: Map<string, number> = new Map<string, number>();
   tokenFilters.forEach((filter, index) => filterLimits.set(filter.id, filterOccurrences[index]));
   return { anchorInfos: anchorInfos, highlightSet: highlightSet, filterLimits: filterLimits };
+};
+
+const removePrevJumphighlights = () => {
+  const prevSelectedAnchor = document.querySelectorAll(".jumphighlight");
+  prevSelectedAnchor.forEach((anchor) => {
+    anchor.className = anchor.className.replace("jumphighlight", "filterhighlight");
+  });
 };
 
 // needs data from useComputeTokenData
@@ -133,6 +125,7 @@ function TextAnnotationRendererNew({
   projectId,
   ...props
 }: TextAnnotationRendererNewProps & BoxProps) {
+  // FIXME: almost identical filters with trailing whitespaces are saved as individual filters
   const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
   const { hash } = useLocation();
@@ -151,29 +144,51 @@ function TextAnnotationRendererNew({
 
   useEffect(() => {
     // return the last highlight, that was jumped to, to its default highlighting
-    const prevSelectedAnchor = document.querySelectorAll(".jumphighlight");
-    prevSelectedAnchor.forEach((anchor) => {
-      anchor.className = anchor.className.replace("jumphighlight", "filterhighlight");
-    });
-    // apply the special highlighting to an element that was just jumped to
-    if (anchoredSpan) {
-      const selectedAnchor = document.getElementById(anchoredSpan);
-      if (selectedAnchor) {
-        const token = selectedAnchor.querySelector(".text");
-        if (token) {
-          token.className = token.className.replace("filterhighlight", "jumphighlight");
-          const numTokens = anchoredSpan.split(" ").length;
-          const tokenId = parseInt(token.id.substring(5));
-          for (let i = 1; i < numTokens; i++) {
-            const nextToken = document.getElementById("token" + (tokenId + i));
-            if (nextToken) {
-              nextToken.className = nextToken.className.replace("filterhighlight", "jumphighlight");
+    if (tokenData) {
+      removePrevJumphighlights();
+      // apply the special highlighting to an element that was just jumped to
+      if (anchoredSpan) {
+        const selectedAnchor = document.getElementById(anchoredSpan);
+        if (selectedAnchor) {
+          const startTokenElem = selectedAnchor.querySelector(".text");
+          if (startTokenElem) {
+            startTokenElem.className = startTokenElem.className.replace("filterhighlight", "jumphighlight");
+            // check the nextTokens until the concatenation of these tokens matches anchoredSpan
+            let filterContent: string;
+            const anchorSegments = anchoredSpan.split("-");
+            let startSlice = anchorSegments[0] === "code" ? 2 : 1;
+            filterContent = anchorSegments
+              .slice(startSlice, anchorSegments.length - 1)
+              .join("-")
+              .toLowerCase()
+              .trim();
+            const startTokenId = parseInt(startTokenElem.id.substring(5));
+            let prevToken = tokenData[startTokenId];
+            let tokensConcat = prevToken.text.toLowerCase();
+            if (tokensConcat !== filterContent) {
+              for (let i = startTokenId + 1; i < tokenData.length; i++) {
+                const token = tokenData[i];
+                tokensConcat += prevToken.whitespace ? " " + token.text.toLowerCase() : token.text.toLowerCase();
+                const nextToken = document.getElementById("token" + i);
+                if (nextToken && filterContent.startsWith(tokensConcat)) {
+                  nextToken.className = nextToken.className.replace("filterhighlight", "jumphighlight");
+                  if (filterContent === tokensConcat) {
+                    break;
+                  }
+                } else {
+                  // TODO: error (unusual behaviour)
+                  console.log("Error: The anchor did not match the filter's content!");
+                  removePrevJumphighlights();
+                  break;
+                }
+                prevToken = token;
+              }
             }
           }
         }
       }
     }
-  }, [anchoredSpan]);
+  }, [anchoredSpan, tokenData]);
 
   // Order matters. Instructions are processed in
   // the order they're defined

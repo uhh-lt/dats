@@ -101,7 +101,10 @@ function KeywordFilterChip({
   const dispatch = useAppDispatch();
   const tooltip = `Jump to Highlight ${position + 1}`;
   return (
-    <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}>
+    <a
+      href={`#${anchorId.trim()}-idx${position}`}
+      onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
+    >
       <Tooltip title={tooltip}>
         <Chip label={`Keyword: ${keyword}`} style={{ cursor: "pointer" }} {...props} />
       </Tooltip>
@@ -118,7 +121,10 @@ function TextFilterChip({
   const dispatch = useAppDispatch();
   const tooltip = `Jump to Highlight ${position + 1}`;
   return (
-    <a href={"#" + anchorId + position} onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}>
+    <a
+      href={`#${anchorId.trim()}-idx${position}`}
+      onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
+    >
       <Tooltip title={tooltip}>
         <Chip label={text} style={{ cursor: "pointer" }} {...props} />
       </Tooltip>
@@ -158,7 +164,7 @@ function CodeFilterChip({
       {code.isError && <Chip label={code.error.message} />}
       {code.isSuccess && (
         <a
-          href={"#" + anchorId + position}
+          href={`#${anchorId.trim()}-idx${position}`}
           onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
         >
           <Tooltip title={tooltip}>
