@@ -100,15 +100,63 @@ function CodeExplorer({ showToolbar, showCheckboxes, ...props }: CodeExplorerPro
   // checlboxes=
 
   const checkBoxes = useAppSelector((state) => state.checkBoxs.checkBoxes);
-  const handleCheckboxChange = (node: any) => {
-    const index = checkBoxes.findIndex((item) => item.code.id === node.code.id);
-    if (index !== -1) {
-      dispatch(CheckBoxActions.toggleCheckBox(index));
+
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>, node: any) => {
+    const { checked } = event.target;
+    let newCheckBoxes = checkBoxes.slice();
+    const index = newCheckBoxes.findIndex((item) => item.code.id === node.code.id);
+
+    if (checked) {
+      const nodesToAdd = getNodesToAdd(node);
+      const nodesToAddIds = nodesToAdd.map((n) => n.code.id);
+      newCheckBoxes = newCheckBoxes.filter((item) => !nodesToAddIds.includes(item.code.id));
+      newCheckBoxes.push(...nodesToAdd);
     } else {
-      dispatch(CheckBoxActions.toggleCheckBox(node));
+      const nodesToRemove = getNodesToRemove(node);
+      const nodesToRemoveIds = nodesToRemove.map((n) => n.code.id);
+      newCheckBoxes = newCheckBoxes.filter((item) => !nodesToRemoveIds.includes(item.code.id));
     }
+
+    dispatch(CheckBoxActions.toggleCheckBox(newCheckBoxes));
   };
 
+  const getNodesToAdd = (node: any) => {
+    const nodes: any[] = [node];
+
+    if (node.children) {
+      node.children.forEach((child: any) => {
+        if (!isChecked(child)) {
+          nodes.push(...getNodesToAdd(child));
+        }
+      });
+    }
+
+    return nodes;
+  };
+
+  const getNodesToRemove = (node: any) => {
+    const nodes: any[] = [];
+
+    if (node.children) {
+      node.children.forEach((child: any) => {
+        if (isChecked(child)) {
+          nodes.push(...getNodesToRemove(child));
+        }
+      });
+    }
+
+    nodes.push(node);
+    return nodes;
+  };
+
+  const isChecked = (node: any) => {
+    const rootNode = checkBoxes.find((item) => item.code.id === node.code.id);
+    if (!rootNode) {
+      return false;
+    }
+    const nodes = getNodesToAdd(rootNode);
+    return nodes.every((item) => checkBoxes.some((i) => i.code.id === item.code.id));
+  };
   const content = (
     <>
       {user.isSuccess && allCodes.isSuccess && codeTree ? (
@@ -138,10 +186,8 @@ function CodeExplorer({ showToolbar, showCheckboxes, ...props }: CodeExplorerPro
                 {showCheckboxes ? (
                   <Checkbox
                     key={node?.code.id}
-                    checked={checkBoxes.some((item) => item.code.id === node.code.id)}
-                    onChange={() => {
-                      handleCheckboxChange(node);
-                    }}
+                    checked={isChecked(node)}
+                    onChange={(event) => handleCheckboxChange(event, node)}
                   />
                 ) : (
                   <>

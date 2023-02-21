@@ -11,14 +11,17 @@ const CodeGraph = () => {
     setGenerate(true);
   };
 
+  console.log("checkBoxData1", checkBoxData[0]);
+
   const rootNode = {
     code: { name: "root", color: "green" },
     children: checkBoxData,
   };
 
-  const mergeData = [rootNode, ...checkBoxData];
+  const mergeData = [rootNode, ...checkBoxData.slice(0, 1)];
 
   console.log("mergeData", mergeData);
+  console.log("checkBoxData", checkBoxData);
 
   return (
     <Grid container columnSpacing={2} className="h100" sx={{ py: 1 }}>
@@ -38,7 +41,7 @@ const CodeGraph = () => {
           </Stack>
         </Box>
         <div className="myFlexFillAllContainer">
-          {generate && mergeData.length !== 0 && <CodeTree treeData={mergeData} />}
+          {generate && mergeData.length !== 0 && <CodeTree treeData={[mergeData[0]]} />}
         </div>
       </Grid>
     </Grid>
