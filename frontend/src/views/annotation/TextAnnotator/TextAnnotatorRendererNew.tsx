@@ -47,6 +47,8 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
   // Maps the token index to an array of filter IDs that produced a match at that index.
   // (multiple filters might match at the same token index)
   const anchorInfos: Map<number, string[]> = new Map<number, string[]>();
+  // information about over which tokens an anchor spans
+  const anchorTokenIds: Map<string, number[]> = new Map<string, number[]>();
   // A set of token indices. If an index is in this set, it means that the token at this index should be highlighted
   const highlightSet: Set<number> = new Set<number>();
   if (!tokenData || !filters) {
@@ -65,6 +67,7 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
   // the search loop: Iteratively check for every token position in the text, if any filter
   // in the current list of filters can be found when starting from that position.
   for (let i = 0; i < tokenData.length; i++) {
+    // TODO: Only one iteration over the list of tokens necessary
     // traverse all tokens
     const validFilters: (string | undefined)[] = [...tokenFilterHighlights];
     let filterIds: string[] = [];
@@ -80,8 +83,11 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
           if (filter.startsWith(tokenConcats)) {
             if (filter === tokenConcats) {
               newSpanEnd = j;
-              filterIds.push(tokenFilters[k].id.trim() + "-idx" + filterOccurrences[k]);
+              const uniqueFilterId = tokenFilters[k].id.trim() + "-idx" + filterOccurrences[k];
+              anchorTokenIds.set(uniqueFilterId, [i, j]);
+              filterIds.push(uniqueFilterId);
               filterOccurrences[k] += 1;
+              validFilters[k] = undefined;
             }
           } else {
             validFilters[k] = undefined;
@@ -104,7 +110,12 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
   // create a mapping from filter IDs to the total number of occurrences of each filter (for anchor limits)
   const filterLimits: Map<string, number> = new Map<string, number>();
   tokenFilters.forEach((filter, index) => filterLimits.set(filter.id, filterOccurrences[index]));
-  return { anchorInfos: anchorInfos, highlightSet: highlightSet, filterLimits: filterLimits };
+  return {
+    anchorInfos: anchorInfos,
+    anchorTokenIds: anchorTokenIds,
+    highlightSet: highlightSet,
+    filterLimits: filterLimits,
+  };
 };
 
 const removePrevJumphighlights = () => {
@@ -134,61 +145,36 @@ function TextAnnotationRendererNew({
   const sentIdsHighlighted: number[] = useMemo(() => {
     return getHighlightedSentIds(sentences, filters);
   }, [sentences, filters]);
-  const { anchorInfos, highlightSet } = useMemo(() => {
+  const { anchorInfos, anchorTokenIds, highlightSet } = useMemo(() => {
     const result = getHighlightedTokenSet(tokenData, filters);
     if (result.filterLimits !== undefined) {
       dispatch(SearchActions.setFilterAnchorLimits(result.filterLimits));
     }
-    return { anchorInfos: result.anchorInfos, highlightSet: result.highlightSet };
+    return {
+      anchorInfos: result.anchorInfos,
+      anchorTokenIds: result.anchorTokenIds,
+      highlightSet: result.highlightSet,
+    };
   }, [tokenData, filters, dispatch]);
 
   useEffect(() => {
     // return the last highlight, that was jumped to, to its default highlighting
-    if (tokenData) {
+    if (tokenData && anchorTokenIds) {
       removePrevJumphighlights();
       // apply the special highlighting to an element that was just jumped to
       if (anchoredSpan) {
-        const selectedAnchor = document.getElementById(anchoredSpan);
-        if (selectedAnchor) {
-          const startTokenElem = selectedAnchor.querySelector(".text");
-          if (startTokenElem) {
-            startTokenElem.className = startTokenElem.className.replace("filterhighlight", "jumphighlight");
-            // check the nextTokens until the concatenation of these tokens matches anchoredSpan
-            let filterContent: string;
-            const anchorSegments = anchoredSpan.split("-");
-            let startSlice = anchorSegments[0] === "code" ? 2 : 1;
-            filterContent = anchorSegments
-              .slice(startSlice, anchorSegments.length - 1)
-              .join("-")
-              .toLowerCase()
-              .trim();
-            const startTokenId = parseInt(startTokenElem.id.substring(5));
-            let prevToken = tokenData[startTokenId];
-            let tokensConcat = prevToken.text.toLowerCase();
-            if (tokensConcat !== filterContent) {
-              for (let i = startTokenId + 1; i < tokenData.length; i++) {
-                const token = tokenData[i];
-                tokensConcat += prevToken.whitespace ? " " + token.text.toLowerCase() : token.text.toLowerCase();
-                const nextToken = document.getElementById("token" + i);
-                if (nextToken && filterContent.startsWith(tokensConcat)) {
-                  nextToken.className = nextToken.className.replace("filterhighlight", "jumphighlight");
-                  if (filterContent === tokensConcat) {
-                    break;
-                  }
-                } else {
-                  // TODO: error (unusual behaviour)
-                  console.log("Error: The anchor did not match the filter's content!");
-                  removePrevJumphighlights();
-                  break;
-                }
-                prevToken = token;
-              }
+        const tokenRange = anchorTokenIds.get(anchoredSpan);
+        if (tokenRange) {
+          for (let i = tokenRange[0]; i <= tokenRange[1]; i++) {
+            const token = document.getElementById("token" + i);
+            if (token) {
+              token.className = token.className.replace("filterhighlight", "jumphighlight");
             }
           }
         }
       }
     }
-  }, [anchoredSpan, tokenData]);
+  }, [anchoredSpan, tokenData, anchorTokenIds]);
 
   // Order matters. Instructions are processed in
   // the order they're defined
