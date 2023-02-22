@@ -11,6 +11,8 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.archive import import_uploaded_archive_apply_async
 from app.docprepro.image import image_document_preprocessing_apply_async
+from app.docprepro.audio import audio_document_preprocessing_apply_async
+from app.docprepro.video import video_document_preprocessing_apply_async
 from app.docprepro.text import text_document_preprocessing_apply_async
 from config import conf
 
@@ -33,6 +35,10 @@ def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
         text_document_preprocessing_apply_async(doc_file_path=file_path, project_id=proj_id, mime_type=mime_type)
     elif doc_type == DocType.image:
         image_document_preprocessing_apply_async(doc_file_path=file_path, project_id=proj_id, mime_type=mime_type)
+    elif doc_type == DocType.audio:
+        audio_document_preprocessing_apply_async(doc_file_path=file_path, project_id=proj_id, mime_type=mime_type)
+    elif doc_type == DocType.video:
+        video_document_preprocessing_apply_async(doc_file_path=file_path, project_id=proj_id, mime_type=mime_type)
     elif is_archive_file(uploaded_file.content_type):
         import_uploaded_archive_apply_async(archive_file_path=file_path, project_id=proj_id)
 
