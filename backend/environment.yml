@@ -13,7 +13,7 @@ dependencies:
   - huggingface::transformers=4.21
   - pydantic=1.8
   - spacy=3.4
-  - cupy=11.2 
+  - cupy=11.2
   - fastapi=0.85
   - sqlalchemy=1.4
   - psycopg2-binary=2.9
@@ -40,4 +40,6 @@ dependencies:
   - pytest=7.2.0
   - ffmpeg-python=0.2.0
   - pip:
-    - faiss-gpu==1.7.2
+      - faiss-gpu==1.7.2
+      - black
+      - rope
