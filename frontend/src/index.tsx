@@ -17,7 +17,7 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
 
-let persistor = persistStore(store);
+const persistor = persistStore(store);
 const container = document.getElementById("root");
 const root = createRoot(container!);
 root.render(
