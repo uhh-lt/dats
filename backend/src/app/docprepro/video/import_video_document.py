@@ -34,7 +34,7 @@ def import_video_document_(doc_file_path: Path, project_id: int, mime_type: str)
         # persist SourceDocumentMetadata
         with sql.db_session() as db:
             crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
-            
+
         ppvd.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
 
     # store the URL to the file as SourceDocumentMetadata
@@ -48,7 +48,7 @@ def import_video_document_(doc_file_path: Path, project_id: int, mime_type: str)
         crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
     ppvd.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
 
-    # update sdoc status 
+    # update sdoc status
     update_sdoc_status(sdoc_id=ppvd.sdoc_id, sdoc_status=SDocStatus.import_video_document)
 
     # return a list so that we can use text PrePro also with archives which contain multiple docs

@@ -13,8 +13,8 @@ class SDocStatus(str, Enum):
 
     import_text_document = "import_text_document"  # "imported uploaded text document"
     import_image_document = "import_image_document"  # "imported uploaded image document"
-    import_audio_document = "import_image_document"  # "imported uploaded image document"
-    import_video_document = "import_image_document"  # "imported uploaded image document"
+    import_audio_document = "import_audio_document"  # "imported uploaded audio document"
+    import_video_document = "import_video_document"  # "imported uploaded video document"
 
     convert_to_webp_and_generate_thumbnails = "convert_to_webp_and_generate_thumbnails"  # "converted imported image to .webp and created a thumbnail"
 
@@ -41,7 +41,7 @@ class SDocStatus(str, Enum):
 
 
 """
- TODO Flo: 
+ TODO Flo:
  Because we"re not storing the content in the SQL DB but only in the ES instance we handle this differently
   than in other DTOs.
 """
