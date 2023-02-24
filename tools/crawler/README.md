@@ -1,6 +1,8 @@
 # Blog & Forum Crawler
-This tool utilizes Scrapy to crawl blogs and forums and offers a good basis to expand on to crawl other webpages. 
+
+This tool utilizes Scrapy to crawl blogs and forums and offers a good basis to expand on to crawl other webpages.
 Crawled pages are post-processed in a multi-step pipeline consisting of:
+
 - Applying Readability to the webpage
 - Cleaning the text output
 - Cleaning the html output
@@ -9,22 +11,26 @@ Crawled pages are post-processed in a multi-step pipeline consisting of:
 - Write the results in multiple formats (txt, json, html, images)
 
 ## Requirements
+
 - Python
 - Readability
 - Scrapy
 - python-magic
 
 ## Installation
+
 ```
 pip install scrapy python-magic
 ```
 
 ## Settings
+
 All settings can be changed in settings.py. For example, to adjust the execution order of the pipeline's steps change the
 ITEM_PIPELINES array. Every setting can be overwritten in the CLI by specifying `-s SETTING=my_custom_value`. For example,
 to change the save location of images, you can set `-s IMAGES_STORE=/path/to/images`.
 
 ## Usage
+
 Scrapy uses so-called "spiders" to scrape and download webpages. Existing spiders for multiple different forums and blogs
 are stored in the spiders directory. Every spider corresponds to a specific webpage and utilizes specific CSS Selectors to
 extract the content and navigate the website.
@@ -35,7 +41,14 @@ steps. All pipeline steps are stored in the pipelines directory. The pipeline ca
 Check the following example commands to see how to use this tool:
 
 ## Examples
+
 ```
+# demo news
+scrapy crawl generic -a prefix=demonews -a output_dir=/home/tfischer/Development/dwts/data/demonews -s IMAGES_STORE=/home/tfischer/Development/dwts/data/demonews/images
+
+# bbc
+scrapy crawl bbc -a prefix=bbc -a output_dir=/home/tfischer/Development/dwts/data/bbc -s IMAGES_STORE=/home/tfischer/Development/dwts/data/bbc/images
+
 # tagesschau [315 docs] [825 imgs]
 scrapy crawl tagesschau -a prefix=tagesschau -a output_dir=/home/tfischer/Development/dwts/data/tagesschau -s IMAGES_STORE=/home/tfischer/Development/dwts/data/tagesschau/images
 
@@ -60,7 +73,7 @@ scrapy crawl ilforumdegliincel -a output_dir=/home/tfischer/Notebooks/data/ilfor
 # ilforumdeibrutti [6379 docs] [960 imgs]
 scrapy crawl ilforumdeibrutti -a prefix=ilforumdeibrutti -a output_dir=/home/tfischer/Notebooks/data/ilforumdeibrutti/presentazioni -a thread_id=75016454 -a max_pages=3600 -s IMAGES_STORE=/home/tfischer/Notebooks/data/ilforumdeibrutti/presentazioni/images
 
-# incelsis [99475 docs] [6882 imgs] 
+# incelsis [99475 docs] [6882 imgs]
 scrapy crawl incelsis -a prefix=incelsis -a output_dir=/home/tfischer/Notebooks/data/incelsis -a page=5 -a max_pages=100 -s IMAGES_STORE=/home/tfischer/Notebooks/data/incelsis/images
 
 # incelsnet [680 docs] [407 imgs]
@@ -71,6 +84,7 @@ scrapy crawl unbruttoforum -a prefix=unbruttoforum -a output_dir=/home/tfischer/
 ```
 
 ## Extending the spiders
+
 - Use `scrapy shell https://my-interesting-website.com` to get an interactive scrapy version of the website
 - Use the developer tools of your browser to get CSS Selectors to your desired content
 - Check your CSS Selectors using response.css('')

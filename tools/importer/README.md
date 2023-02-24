@@ -1,19 +1,31 @@
 # D-WISE Tool Suite Importer
+
 This tool can be used to automatically import html, text, image and json files into the D-WISE Tool Suite.
 
 The importer works by calling the API of the D-WISE Tool Suite to upload, tag and add metadata to provided documents.
 
 ## Requirements
+
 - Python
 - python-magic package
 
 ## Installation
+
 ```
 pip install python-magic
 ```
 
 ## Usage
+
 ```
+# import demonews
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/demonews/images --backend_url http://localhost:18120/ --project_name demo_news --tag_name health
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/demonews/json --backend_url http://localhost:18120/ --project_name demo_news --tag_name health --is_json
+
+# import bbc
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/bbc/images --backend_url http://localhost:18120/ --project_name demo_news --tag_name bbc
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/bbc/json --backend_url http://localhost:18120/ --project_name demo_news --tag_name bbc --is_json
+
 # import images
 python dwts_importer.py --input_dir /path/to/images --backend_url http://localhost:5500/ --project_name my_project --tag_name tag1
 
@@ -22,6 +34,7 @@ python dwts_importer.py --input_dir /path/to/json --backend_url http://localhost
 ```
 
 ## CLI Parameters
+
 ```
   --input_dir INPUT_DIR
                         Path to directory containing json, text, html or image files to be imported
