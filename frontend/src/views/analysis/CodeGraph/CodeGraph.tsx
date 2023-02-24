@@ -20,9 +20,9 @@ const CodeGraph = () => {
   const handleGenerateGraph = () => {
     if (!codeExplorerRef.current) return;
 
-    const selectedCodeIds = codeExplorerRef.current.getSelectedCodeIds();
-    console.log("selectedCodeIds", selectedCodeIds);
-    if (selectedCodeIds.length > 0) {
+    const checkedCodeIds = codeExplorerRef.current.getCheckedCodeIds();
+    console.log("checkedCodeIds", checkedCodeIds);
+    if (checkedCodeIds.length > 0) {
       // TODO: use the code ids to construct the graph data here
       const nodeA: ICodeTree = {
         code: {

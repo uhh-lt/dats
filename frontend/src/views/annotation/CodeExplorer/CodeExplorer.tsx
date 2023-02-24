@@ -28,7 +28,7 @@ interface CodeExplorerProps {
 }
 
 export interface CodeExplorerHandle {
-  getSelectedCodeIds: () => number[];
+  getCheckedCodeIds: () => number[];
 }
 
 const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperProps>(
@@ -187,7 +187,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperPro
 
     // exposed methods (via ref)
     useImperativeHandle(ref, () => ({
-      getSelectedCodeIds: () => checkedCodeIds,
+      getCheckedCodeIds: () => checkedCodeIds,
     }));
 
     const content = (
