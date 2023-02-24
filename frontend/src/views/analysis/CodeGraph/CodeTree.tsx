@@ -1,8 +1,12 @@
 // @ts-nocheck
-import { hierarchy, tree, zoom, zoomIdentity, select } from "d3";
+import { hierarchy, tree, zoom, select } from "d3";
 import { useEffect, useRef, useState, React, Fragment } from "react";
 
-const CodeTree = ({ treeData }: any) => {
+interface CodeTreeProps {
+  treeData: ICodeTree[];
+}
+
+const CodeTree = ({ treeData }: CodeTreeProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const [root, setRoot] = useState<any>(null);
@@ -24,7 +28,7 @@ const CodeTree = ({ treeData }: any) => {
     const hierarchyData = hierarchy(treeData[0]);
     const treeLayout = tree()
       .size([width - 100, height])
-      .separation((a, b) => (a.parent == b.parent ? 2 : 1));
+      .separation((a, b) => (a.parent === b.parent ? 2 : 1));
 
     treeLayout(hierarchyData);
     setRoot(hierarchyData);
