@@ -11,3 +11,9 @@ the [D-WISE Project](https://www.dwise.uni-hamburg.de/)
   - navigate to the docker directory: `cd dwts/docker`
   - run `docker-compose up -d`
   - visit [http://localhost:3000/](http://localhost:3000/) in your browser
+
+## Tech Stack
+![TechStack](docs/DWTS_Arch-backend-techstack.drawio.png)
+
+## License
+Apache 2.0 - See [license file](LICENSE) for details
