@@ -158,8 +158,8 @@ async def search_memos_by_title_query(*,
 
 @router.post("/simsearch/sentences", tags=tags,
              response_model=List[SimSearchSentenceHit],
-             summary="Returns similar sentence SpanAnnotation according to a textual or visual query.",
-             description="Returns similar sentence SpanAnnotation according to a textual or visual query.")
+             summary="Returns similar sentences according to a textual or visual query.",
+             description="Returns similar sentences according to a textual or visual query.")
 async def find_similar_sentences(proj_id: int, query: Union[str, int], top_k: int = 10) \
         -> List[SimSearchSentenceHit]:
     # FIXME: Image query type not a valid pydantic type --> use uploaded image file or sdoc_id!
@@ -168,8 +168,8 @@ async def find_similar_sentences(proj_id: int, query: Union[str, int], top_k: in
 
 @router.post("/simsearch/images", tags=tags,
              response_model=List[SimSearchImageHit],
-             summary="Returns similar Image SourceDocuments according to a textual or visual query.",
-             description="Returns similar Image SourceDocuments according to a textual or visual query.")
+             summary="Returns similar images according to a textual or visual query.",
+             description="Returns similar images according to a textual or visual query.")
 async def find_similar_images(proj_id: int, query: Union[str, int], top_k: int = 10) \
         -> List[SimSearchImageHit]:
     return SearchService().find_similar_images(proj_id=proj_id, query=query, top_k=top_k)

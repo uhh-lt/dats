@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Union
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import skip_limit_params, resolve_code_param, get_db_session, include_sentence_spans
+from api.dependencies import skip_limit_params, resolve_code_param, get_db_session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -60,13 +60,11 @@ async def get_all_span_annotations(*,
                                    db: Session = Depends(get_db_session),
                                    adoc_id: int,
                                    skip_limit: Dict[str, str] = Depends(skip_limit_params),
-                                   resolve_code: bool = Depends(resolve_code_param),
-                                   include_sentences: bool = Depends(include_sentence_spans)) \
+                                   resolve_code: bool = Depends(resolve_code_param)) \
         -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     spans = crud_span_anno.read_by_adoc(db=db,
                                         adoc_id=adoc_id,
-                                        include_sentences=include_sentences,
                                         **skip_limit)
     span_read_dtos = [SpanAnnotationRead.from_orm(span) for span in spans]
     if resolve_code:

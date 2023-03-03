@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import delete, and_
+from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
@@ -11,16 +11,19 @@ from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate, SpanAnnotationUpdate
 from app.core.data.dto.span_text import SpanTextCreate
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CurrentCodeORM, CodeORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 
 
-class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanAnnotationUpdate]):
-
-    def create(self, db: Session, *, create_dto: SpanAnnotationCreate) -> SpanAnnotationORM:
+class CRUDSpanAnnotation(
+    CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanAnnotationUpdate]
+):
+    def create(
+        self, db: Session, *, create_dto: SpanAnnotationCreate
+    ) -> SpanAnnotationORM:
         # first create the SpanText
-        span_text_orm = crud_span_text.create(db=db, create_dto=SpanTextCreate(text=create_dto.span_text))
+        span_text_orm = crud_span_text.create(
+            db=db, create_dto=SpanTextCreate(text=create_dto.span_text)
+        )
 
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_obj_data = jsonable_encoder(create_dto.dict(exclude={"span_text"}))
@@ -34,22 +37,34 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
 
         # create action manually because we're not using crud base create
         from app.core.data.crud.action import crud_action
-        create_dto = ActionCreate(project_id=db_obj.annotation_document.source_document.project_id,
-                                  user_id=SYSTEM_USER_ID,  # FIXME use correct user
-                                  action_type=ActionType.CREATE,
-                                  target_type=ActionTargetObjectType.span_annotation,
-                                  target_id=db_obj.id)
+
+        create_dto = ActionCreate(
+            project_id=db_obj.annotation_document.source_document.project_id,
+            user_id=SYSTEM_USER_ID,  # FIXME use correct user
+            action_type=ActionType.CREATE,
+            target_type=ActionTargetObjectType.span_annotation,
+            target_id=db_obj.id,
+        )
         crud_action.create(db=db, create_dto=create_dto)
 
         return db_obj
-    
 
-    def create_multi(self, db: Session, *, create_dtos: List[SpanAnnotationCreate]) -> List[SpanAnnotationORM]:
+    def create_multi(
+        self, db: Session, *, create_dtos: List[SpanAnnotationCreate]
+    ) -> List[SpanAnnotationORM]:
         # first create the SpanText
-        span_texts_orm = crud_span_text.create_multi(db=db, create_dtos=[SpanTextCreate(text=create_dto.span_text) for create_dto in create_dtos])
+        span_texts_orm = crud_span_text.create_multi(
+            db=db,
+            create_dtos=[
+                SpanTextCreate(text=create_dto.span_text) for create_dto in create_dtos
+            ],
+        )
 
         # create the SpanAnnotation (and link the SpanText via FK)
-        dto_objs_data = [jsonable_encoder(create_dto.dict(exclude={"span_text"})) for create_dto in create_dtos]
+        dto_objs_data = [
+            jsonable_encoder(create_dto.dict(exclude={"span_text"}))
+            for create_dto in create_dtos
+        ]
         # noinspection PyArgumentList
         db_objs = [self.model(**dto_obj_data) for dto_obj_data in dto_objs_data]
         for db_obj, span_text_orm in zip(db_objs, span_texts_orm):
@@ -58,59 +73,58 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
         db.commit()
         return db_objs
 
-
-    def read_by_adoc(self,
-                     db: Session,
-                     *,
-                     adoc_id: int,
-                     include_sentences: bool = False,
-                     skip: int = 0,
-                     limit: int = 100) -> List[SpanAnnotationORM]:
-        if include_sentences:
-            query = db.query(self.model) \
-                .where(self.model.annotation_document_id == adoc_id) \
-                .offset(skip).limit(limit)
-        else:
-            # TODO Flo: can we combine this easily into one query?
-            sent_ccid = db.query(CurrentCodeORM.id) \
-                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id) \
-                .filter(CodeORM.name == "SENTENCE").scalar()
-
-            query = db.query(self.model) \
-                .filter(self.model.annotation_document_id == adoc_id,
-                        self.model.current_code_id != sent_ccid) \
-                .offset(skip).limit(limit)
+    def read_by_adoc(
+        self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 1000
+    ) -> List[SpanAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .where(self.model.annotation_document_id == adoc_id)
+            .offset(skip)
+            .limit(limit)
+        )
 
         return query.all()
 
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
-        statement = delete(self.model).where(self.model.annotation_document_id == adoc_id).returning(self.model.id)
+        statement = (
+            delete(self.model)
+            .where(self.model.annotation_document_id == adoc_id)
+            .returning(self.model.id)
+        )
         removed_ids = db.execute(statement).fetchall()
         db.commit()
         removed_ids = list(map(lambda t: t[0], removed_ids))
 
         from app.core.data.crud.annotation_document import crud_adoc
+
         proj_id = crud_adoc.read(db=db, id=adoc_id).source_document.project_id
 
         from app.core.data.crud.action import crud_action
+
         for rid in removed_ids:
-            create_dto = ActionCreate(project_id=proj_id,
-                                      user_id=SYSTEM_USER_ID,
-                                      action_type=ActionType.DELETE,
-                                      target_type=ActionTargetObjectType.span_annotation,
-                                      target_id=rid)
+            create_dto = ActionCreate(
+                project_id=proj_id,
+                user_id=SYSTEM_USER_ID,
+                action_type=ActionType.DELETE,
+                target_type=ActionTargetObjectType.span_annotation,
+                target_id=rid,
+            )
             crud_action.create(db=db, create_dto=create_dto)
 
         return removed_ids
 
-    def remove_from_all_span_groups(self, db: Session, span_id: int) -> Optional[SpanAnnotationORM]:
+    def remove_from_all_span_groups(
+        self, db: Session, span_id: int
+    ) -> Optional[SpanAnnotationORM]:
         db_obj = self.read(db=db, id=span_id)
         db_obj.span_groups = []
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def add_to_span_group(self, db: Session, span_id: int, group_id: id) -> Optional[SpanAnnotationORM]:
+    def add_to_span_group(
+        self, db: Session, span_id: int, group_id: id
+    ) -> Optional[SpanAnnotationORM]:
         span_db_obj = self.read(db=db, id=span_id)
         group_db_obj = crud_span_group.read(db=db, id=group_id)
         span_db_obj.span_groups.append(group_db_obj)
@@ -119,44 +133,14 @@ class CRUDSpanAnnotation(CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanA
         db.refresh(span_db_obj)
         return span_db_obj
 
-    def remove_from_span_group(self, db: Session, span_id: int, group_id: id) -> Optional[SpanAnnotationORM]:
+    def remove_from_span_group(
+        self, db: Session, span_id: int, group_id: id
+    ) -> Optional[SpanAnnotationORM]:
         span_db_obj = self.read(db=db, id=span_id)
         group_db_obj = crud_span_group.read(db=db, id=group_id)
         span_db_obj.document_tags.remove(group_db_obj)
         db.commit()
         db.refresh(span_db_obj)
         return span_db_obj
-
-    def get_all_system_sentence_span_annotations_for_sdocs(self,
-                                                           db: Session,
-                                                           *,
-                                                           sdoc_ids: List[int]) -> List[SpanAnnotationORM]:
-        """
-        SELECT spanannotation.id AS span_id,
-            annotationdocument.source_document_id as sdoc_id,
-            code.name as name,
-            currentcode.id as ccid
-        FROM spanannotation
-            JOIN annotationdocument ON annotationdocument.id = spanannotation.annotation_document_id
-            JOIN currentcode ON spanannotation.current_code_id = currentcode.id
-            JOIN code ON currentcode.code_id = code.id
-        WHERE code.name LIKE 'SENTENCE' AND
-            annotationdocument.user_id = 1 AND
-            annotationdocument.source_document_id IN 1
-        """
-
-        query = db.query(self.model) \
-            .join(AnnotationDocumentORM, AnnotationDocumentORM.id == self.model.annotation_document_id) \
-            .join(CurrentCodeORM, CurrentCodeORM.id == self.model.current_code_id) \
-            .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
-
-        query = query.filter(and_(CodeORM.name == "SENTENCE",
-                                  AnnotationDocumentORM.user_id == SYSTEM_USER_ID,
-                                  AnnotationDocumentORM.source_document_id.in_(sdoc_ids)))
-
-        query = query.order_by(self.model.begin_token)
-
-        return query.all()
-
 
 crud_span_anno = CRUDSpanAnnotation(SpanAnnotationORM)

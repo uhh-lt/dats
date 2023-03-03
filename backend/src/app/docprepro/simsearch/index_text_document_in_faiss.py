@@ -31,9 +31,10 @@ def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProText
 
     # assume that all PPTDs come from the same project!
     proj_id = pptds[0].project_id
-    # get the actual sentence span annotations
     sdoc_ids = [pptd.sdoc_id for pptd in pptds]
 
+    # create the links between sdoc sentences (that are stored in ES)
+    #  and faiss sentence embeddings
     links = []
     sentences = []
     for pptd in pptds:

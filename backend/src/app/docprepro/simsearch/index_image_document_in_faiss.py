@@ -29,7 +29,6 @@ def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProIm
 
     # assume that all PPIDs come from the same project!
     proj_id = ppids[0].project_id
-    # get the actual sentence span annotations
     sdoc_ids = [ppid.sdoc_id for ppid in ppids]
 
     # load the images (and keep the files open!)
