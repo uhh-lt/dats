@@ -14,6 +14,7 @@ import { useLocation } from "react-router-dom";
 import { FilterType, SearchFilter } from "../../search/SearchFilter";
 import { SearchActions } from "../../search/searchSlice";
 import token from "./Token";
+import { filter } from "lodash";
 
 const htmlToReactParser = new Parser();
 
@@ -142,20 +143,21 @@ function TextAnnotationRendererNew({
   const { hash } = useLocation();
   const anchoredSpan: string = decodeURI(hash.substring(1));
 
+  // computed
   const sentIdsHighlighted: number[] = useMemo(() => {
     return getHighlightedSentIds(sentences, filters);
   }, [sentences, filters]);
-  const { anchorInfos, anchorTokenIds, highlightSet } = useMemo(() => {
-    const result = getHighlightedTokenSet(tokenData, filters);
-    if (result.filterLimits !== undefined) {
-      dispatch(SearchActions.setFilterAnchorLimits(result.filterLimits));
+
+  const { anchorInfos, highlightSet, anchorTokenIds, filterLimits } = useMemo(() => {
+    return getHighlightedTokenSet(tokenData, filters);
+  }, [tokenData, filters]);
+
+  // effects
+  useEffect(() => {
+    if (filterLimits !== undefined) {
+      dispatch(SearchActions.setFilterAnchorLimits(filterLimits));
     }
-    return {
-      anchorInfos: result.anchorInfos,
-      anchorTokenIds: result.anchorTokenIds,
-      highlightSet: result.highlightSet,
-    };
-  }, [tokenData, filters, dispatch]);
+  }, [filterLimits, dispatch]);
 
   useEffect(() => {
     // return the last highlight, that was jumped to, to its default highlighting
@@ -284,7 +286,11 @@ function TextAnnotationRendererNew({
             }
             if (filters) {
               for (let i = 0; i < filters.length; i++) {
-                result = <span id={filters[i]}>{result}</span>;
+                result = (
+                  <span key={`token-${tokenId}-${i}`} id={filters[i]}>
+                    {result}
+                  </span>
+                );
               }
             }
             return result;
