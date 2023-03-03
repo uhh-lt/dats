@@ -101,7 +101,7 @@ function DocumentViewer({
           </>
         )}
 
-        {linkedSdocIds.isSuccess && (
+        {linkedSdocIds.isSuccess && linkedSdocIds.data.length > 0 && (
           <>
             <h3>Linked documents:</h3>
             <Box pb={1} style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
