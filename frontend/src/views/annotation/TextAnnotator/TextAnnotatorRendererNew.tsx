@@ -155,7 +155,7 @@ function TextAnnotationRendererNew({
   // effects
   useEffect(() => {
     if (filterLimits !== undefined) {
-      dispatch(SearchActions.setFilterAnchorLimits(filterLimits));
+      dispatch(SearchActions.setFilterAnchorLimits(Object.fromEntries(filterLimits)));
     }
   }, [filterLimits, dispatch]);
 

@@ -115,8 +115,8 @@ export const searchSlice = createSlice({
         anchorState.pos = newPos;
       }
     },
-    setFilterAnchorLimits: (state, action: PayloadAction<Map<string, number>>) => {
-      action.payload.forEach((limit, key) => {
+    setFilterAnchorLimits: (state, action: PayloadAction<{ [id: string]: number }>) => {
+      Object.entries(action.payload).forEach(([key, limit]) => {
         let anchorState = state.filterAnchorInfo[key];
         if (anchorState) {
           anchorState.limit = limit;
