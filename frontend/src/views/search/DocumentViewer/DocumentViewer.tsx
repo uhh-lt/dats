@@ -93,6 +93,7 @@ function DocumentViewer({
                   sdoc={sdoc.data}
                   adoc={selectedAdoc}
                   showEntities={showEntities}
+                  width={parseInt(metadata.data.get("width")!.value)}
                   height={parseInt(metadata.data.get("height")!.value)}
                 />
               </>
