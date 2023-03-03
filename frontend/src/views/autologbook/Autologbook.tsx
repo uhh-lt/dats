@@ -104,12 +104,15 @@ function Autologbook() {
 
   const selectedWeek: Date[] = selectedWeekDates();
 
-  const actionsEachDay: ActionRead[][] = useMemo(() => {
-    if (!userActions.data) return [];
+  const { entityArr, actionsEachDay } = useMemo(() => {
+    if (!userActions.data) {
+      return { entityArr: undefined, actionsEachDay: undefined };
+    }
 
     let entitySet = new Set<number>();
+    let actionsEachDay: ActionRead[][] = [[], [], [], [], [], [], []];
+
     let entityValues = Object.values(ActionTargetObjectType);
-    let result: ActionRead[][] = [[], [], [], [], [], [], []];
     userActions.data.forEach((action) => {
       let entityIdx = entityValues.indexOf(action.target_type);
       entitySet.add(entityIdx);
@@ -119,16 +122,22 @@ function Autologbook() {
       let date: Date = new Date(action.executed);
       let weekDay: number = getDayIndexInSelectedWeek(date, selectedWeek);
       if (weekDay >= 0) {
-        result[weekDay].push(action);
+        actionsEachDay[weekDay].push(action);
       }
     });
-    let entityArr = Array.from(entitySet).sort();
+
+    return { entityArr: Array.from(entitySet).sort(), actionsEachDay };
+  }, [userActions.data, entityFilter, showCreated, showUpdated, showDeleted, userFilter, selectedWeek]);
+
+  // effects
+  // todo: beschreiben, was macht dieser Effekt?
+  useEffect(() => {
+    if (entityArr === undefined) return;
     dispatch(AutologbookActions.setVisibleEntityIds(entityArr));
     if (entityFilter === undefined) {
       dispatch(AutologbookActions.setEntityFilter(entityArr));
     }
-    return result;
-  }, [userActions.data, dispatch, entityFilter, showCreated, showUpdated, showDeleted, userFilter, selectedWeek]);
+  }, [entityArr, dispatch, entityFilter]);
 
   // FIXME: When shrinking the window, the actioncardweekview is not fully scrollable
   return (
