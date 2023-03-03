@@ -5,6 +5,8 @@ import CodeHooks from "../../api/CodeHooks";
 import { SpanEntity } from "../../api/openapi";
 import TagHooks from "../../api/TagHooks";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { SearchActions } from "./searchSlice";
 
 interface SearchFilterChipProps {
   filter: SearchFilter;
@@ -20,17 +22,43 @@ const props: ChipProps = {
 };
 
 function SearchFilterChip({ filter, handleDelete }: SearchFilterChipProps) {
+  const position = useAppSelector((state) => state.search.filterAnchorInfo)[filter.id]!.pos;
+
   switch (filter.type) {
     case FilterType.CODE:
-      return <CodeFilterChip spanEntity={filter.data as SpanEntity} onDelete={() => handleDelete(filter)} {...props} />;
+      return (
+        <CodeFilterChip
+          anchorId={filter.id}
+          position={position}
+          spanEntity={filter.data as SpanEntity}
+          onDelete={() => handleDelete(filter)}
+          {...props}
+        />
+      );
     case FilterType.TAG:
       return (
         <DocumentTagFilterChip documentTagId={filter.data as number} onDelete={() => handleDelete(filter)} {...props} />
       );
     case FilterType.KEYWORD:
-      return <KeywordFilterChip keyword={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
+      return (
+        <KeywordFilterChip
+          anchorId={filter.id}
+          position={position}
+          keyword={filter.data as string}
+          onDelete={() => handleDelete(filter)}
+          {...props}
+        />
+      );
     case FilterType.TERM:
-      return <TextFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
+      return (
+        <TextFilterChip
+          anchorId={filter.id}
+          position={position}
+          text={filter.data as string}
+          onDelete={() => handleDelete(filter)}
+          {...props}
+        />
+      );
     case FilterType.SENTENCE:
       return <SentenceFilterChip text={filter.data as string} onDelete={() => handleDelete(filter)} {...props} />;
     case FilterType.IMAGE:
@@ -64,12 +92,44 @@ function DocumentTagFilterChip({ documentTagId, ...props }: { documentTagId: num
   );
 }
 
-function KeywordFilterChip({ keyword, ...props }: { keyword: string } & ChipProps) {
-  return <Chip label={`Keyword: ${keyword}`} {...props} />;
+function KeywordFilterChip({
+  anchorId,
+  position,
+  keyword,
+  ...props
+}: { anchorId: string; position: number; keyword: string } & ChipProps) {
+  const dispatch = useAppDispatch();
+  const tooltip = `Jump to Highlight ${position + 1}`;
+  return (
+    <a
+      href={`#${anchorId.trim()}-idx${position}`}
+      onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
+    >
+      <Tooltip title={tooltip}>
+        <Chip label={`Keyword: ${keyword}`} style={{ cursor: "pointer" }} {...props} />
+      </Tooltip>
+    </a>
+  );
 }
 
-function TextFilterChip({ text, ...props }: { text: string } & ChipProps) {
-  return <Chip label={text} {...props} />;
+function TextFilterChip({
+  anchorId,
+  position,
+  text,
+  ...props
+}: { anchorId: string; position: number; text: string } & ChipProps) {
+  const dispatch = useAppDispatch();
+  const tooltip = `Jump to Highlight ${position + 1}`;
+  return (
+    <a
+      href={`#${anchorId.trim()}-idx${position}`}
+      onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
+    >
+      <Tooltip title={tooltip}>
+        <Chip label={text} style={{ cursor: "pointer" }} {...props} />
+      </Tooltip>
+    </a>
+  );
 }
 
 function SentenceFilterChip({ text, ...props }: { text: string } & ChipProps) {
@@ -88,14 +148,30 @@ function MetadataFilterChip({ metadata, ...props }: { metadata: { key: string; v
   return <Chip label={`${metadata.key}: ${metadata.value}`} {...props} />;
 }
 
-function CodeFilterChip({ spanEntity, ...props }: { spanEntity: SpanEntity } & ChipProps) {
+function CodeFilterChip({
+  anchorId,
+  position,
+  spanEntity,
+  ...props
+}: { anchorId: string; position: number; spanEntity: SpanEntity } & ChipProps) {
+  const dispatch = useAppDispatch();
   const code = CodeHooks.useGetCode(spanEntity.code_id);
+  const tooltip = `Jump to Highlight ${position + 1}`;
 
   return (
     <>
       {code.isLoading && <Chip label={`Loading: ${spanEntity.span_text}`} />}
       {code.isError && <Chip label={code.error.message} />}
-      {code.isSuccess && <Chip label={`${code.data.name}: ${spanEntity.span_text}`} {...props} />}
+      {code.isSuccess && (
+        <a
+          href={`#${anchorId.trim()}-idx${position}`}
+          onClick={() => dispatch(SearchActions.increaseFilterAnchorPosition(anchorId))}
+        >
+          <Tooltip title={tooltip}>
+            <Chip label={`${code.data.name}: ${spanEntity.span_text}`} style={{ cursor: "pointer" }} {...props} />
+          </Tooltip>
+        </a>
+      )}
     </>
   );
 }

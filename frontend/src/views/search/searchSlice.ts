@@ -3,9 +3,15 @@ import { SearchFilter, FilterType } from "./SearchFilter";
 import { QueryType } from "./QueryType";
 import { DocType } from "../../api/openapi";
 
+interface AnchorState {
+  pos: number;
+  limit: number;
+}
+
 interface SearchState {
   selectedDocumentIds: number[];
   filters: SearchFilter[];
+  filterAnchorInfo: { [id: string]: AnchorState };
   isSplitView: boolean;
   isShowEntities: boolean;
   isShowTags: boolean;
@@ -19,6 +25,7 @@ interface SearchState {
 const initialState: SearchState = {
   selectedDocumentIds: [],
   filters: [],
+  filterAnchorInfo: {},
   isSplitView: false,
   isShowEntities: true,
   isShowTags: true,
@@ -75,18 +82,46 @@ export const searchSlice = createSlice({
       }
 
       // only add the filter, if it does not exist already
-      if (!state.filters.find((f) => f.id === action.payload!.id)) {
+      if (!state.filters.some((f) => f.id === action.payload!.id)) {
         state.filters.push(action.payload);
+        state.filterAnchorInfo[action.payload!.id] = { pos: -1, limit: -1 };
       }
     },
     removeFilter: (state, action: PayloadAction<SearchFilter>) => {
-      state.filters = state.filters.filter((f) => f.id !== action.payload.id);
+      const newFilters: SearchFilter[] = [];
+      for (let i = 0; i < state.filters.length; i++) {
+        let filter: SearchFilter = state.filters[i];
+        if (filter.id === action.payload.id) {
+          delete state.filterAnchorInfo[filter.id];
+        } else {
+          newFilters.push(filter);
+        }
+      }
+      state.filters = newFilters;
     },
     setFilter: (state, action: PayloadAction<SearchFilter>) => {
       state.filters = [action.payload];
     },
     clearFilters: (state) => {
       state.filters = [];
+    },
+    increaseFilterAnchorPosition: (state, action: PayloadAction<string>) => {
+      let anchorState = state.filterAnchorInfo[action.payload];
+      if (anchorState) {
+        let newPos = anchorState.pos + 1;
+        if (newPos === anchorState.limit) {
+          newPos = 0;
+        }
+        anchorState.pos = newPos;
+      }
+    },
+    setFilterAnchorLimits: (state, action: PayloadAction<Map<string, number>>) => {
+      action.payload.forEach((limit, key) => {
+        let anchorState = state.filterAnchorInfo[key];
+        if (anchorState) {
+          anchorState.limit = limit;
+        }
+      });
     },
 
     // ui
