@@ -3,7 +3,7 @@ import { SearchFilter, FilterType } from "./SearchFilter";
 import { QueryType } from "./QueryType";
 import { DocType } from "../../api/openapi";
 
-interface AnchorState {
+export interface AnchorState {
   pos: number;
   limit: number;
 }
