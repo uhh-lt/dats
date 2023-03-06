@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, Boolean
+from sqlalchemy import Column, Integer, ForeignKey, String, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -17,14 +17,14 @@ class SourceDocumentMetadataORM(ORMBase):
     read_only = Column(Boolean, nullable=False, index=True)
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
-                                                    uselist=False,
-                                                    back_populates="source_document_metadata",
-                                                    passive_deletes=True)
+    object_handle: "ObjectHandleORM" = relationship(
+        "ObjectHandleORM", uselist=False, back_populates="source_document_metadata", passive_deletes=True
+    )
 
     # many to one
-    source_document_id = Column(Integer,
-                                ForeignKey('sourcedocument.id', ondelete="CASCADE"),
-                                nullable=False,
-                                index=True)
+    source_document_id = Column(
+        Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     source_document: "SourceDocumentORM" = relationship("SourceDocumentORM", back_populates="metadata_")
+
+    __table_args__ = (UniqueConstraint("source_document_id", "key", name="UC_unique_metadata_key_per_sdoc"),)
