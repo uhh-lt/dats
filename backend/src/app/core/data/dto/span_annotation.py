@@ -47,11 +47,3 @@ class SpanAnnotationReadResolved(SpanAnnotationBaseDTO):
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
 
-
-class SpanAnnotationReadResolvedText(SpanAnnotationBaseDTO):
-    id: int = Field(description='ID of the SpanAnnotation')
-    span_text: str = Field(description='The SpanText the SpanAnnotation spans.')
-    current_code_id: int = Field(description='CurrentCode the SpanAnnotation refers to')
-    annotation_document_id: int = Field(description='AnnotationDocument the SpanAnnotation refers to')
-    created: datetime = Field(description="Created timestamp of the SpanAnnotation")
-    updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
