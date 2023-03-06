@@ -17,7 +17,12 @@ function SdocImageLink({ projectId, filename, toPrefix }: SdocImageLinkProps) {
       {sdocId.isSuccess && url.isSuccess ? (
         <div>
           <Link component={RouterLink} to={`${toPrefix}${sdocId.data}`}>
-            <img src={url.data} alt="resolved" data-sdoc-id={sdocId.data} />
+            <img
+              src={url.data}
+              alt="resolved"
+              data-sdoc-id={sdocId.data}
+              style={{ maxWidth: "640px", maxHeight: "480px" }}
+            />
           </Link>
         </div>
       ) : sdocId.isSuccess && !url.isSuccess ? (
