@@ -1,9 +1,28 @@
-import { IconButton, InputBase, Paper, Tooltip } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import React, { useRef } from "react";
+import {
+  Card,
+  CardContent,
+  Checkbox,
+  ClickAwayListener,
+  FormControl,
+  FormControlLabel,
+  FormGroup,
+  FormLabel,
+  IconButton,
+  InputBase,
+  Paper,
+  Popper,
+  Radio,
+  RadioGroup,
+  Tooltip,
+} from "@mui/material";
+import React, { useRef, useState } from "react";
 import { UseFormRegister } from "react-hook-form";
-import SearchBarAdvanced from "./SearchBarAdvanced";
+import { DocType } from "../../../api/openapi";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { QueryType } from "../QueryType";
+import { SearchActions } from "../searchSlice";
 
 interface SearchBarProps {
   register: UseFormRegister<Record<string, any>>;
@@ -15,31 +34,157 @@ interface SearchBarProps {
 function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: SearchBarProps) {
   const container = useRef<HTMLFormElement | null>(null);
 
+  // global client state (redux)
+  const resultModalities = useAppSelector((state) => state.search.resultModalities);
+  const searchType = useAppSelector((state) => state.search.searchType);
+  const dispatch = useAppDispatch();
+
+  // local state
+  const [anchorEl, setAnchorEl] = useState<HTMLFormElement | null>(null);
+  const open = Boolean(anchorEl);
+
+  // event handlers
+  const handleFocus = (event: any) => {
+    event.stopPropagation();
+    setAnchorEl(container.current);
+  };
+
+  const handleClose = () => {
+    // clear focus
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setAnchorEl(null);
+  };
+
+  const handleSubmitWrapper = (event: React.FormEvent<HTMLFormElement>) => {
+    handleClose();
+    handleSubmit(event);
+  };
+
+  const handleClearSearchWrapper = (event: React.MouseEvent<HTMLButtonElement>) => {
+    handleClose();
+    handleClearSearch();
+  };
+
   return (
-    <Paper
-      component="form"
-      elevation={0}
-      sx={{ p: "2px", display: "flex", alignItems: "center", width: "100%", maxWidth: "800px" }}
-      onSubmit={handleSubmit}
-      ref={container}
-    >
-      <Tooltip title={"Search"}>
-        <span>
-          <IconButton sx={{ p: "10px" }} type="submit">
-            <SearchIcon />
-          </IconButton>
-        </span>
-      </Tooltip>
-      <InputBase sx={{ ml: 1, flex: 1 }} placeholder={placeholder} {...register("query")} />
-      <Tooltip title={"Clear search"}>
-        <span>
-          <IconButton sx={{ p: "10px" }} onClick={() => handleClearSearch()}>
-            <ClearIcon />
-          </IconButton>
-        </span>
-      </Tooltip>
-      <SearchBarAdvanced anchorElRef={container} />
-    </Paper>
+    <ClickAwayListener onClickAway={handleClose}>
+      <Paper
+        elevation={0}
+        component="form"
+        onSubmit={handleSubmitWrapper}
+        ref={container}
+        sx={{
+          padding: "2px",
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          maxWidth: "800px",
+          ...(open && {
+            borderBottomRightRadius: 0,
+            borderBottomLeftRadius: 0,
+            border: `1px solid rgba(0, 0, 0, 0.12)`,
+            borderBottom: "none",
+          }),
+        }}
+      >
+        <Tooltip title={"Search"}>
+          <span>
+            <IconButton sx={{ p: "10px" }} type="submit">
+              <SearchIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <InputBase
+          sx={{ ml: 1, flex: 1 }}
+          placeholder={placeholder}
+          {...register("query")}
+          autoComplete="off"
+          onFocus={handleFocus}
+        />
+        <Tooltip title={"Clear search"}>
+          <span>
+            <IconButton sx={{ p: "10px" }} onClick={handleClearSearchWrapper}>
+              <ClearIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+        <Popper
+          open={open}
+          anchorEl={anchorEl}
+          disablePortal
+          sx={{ zIndex: 900, width: "800px" }}
+          style={{ marginTop: "-3px !important" }}
+        >
+          <Card
+            elevation={0}
+            variant="outlined"
+            sx={{ borderTop: "none", borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+          >
+            <CardContent>
+              <FormControl component="fieldset" variant="standard" sx={{ mr: 3 }}>
+                <FormLabel component="legend">Result modalities</FormLabel>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="Text"
+                        onChange={() => dispatch(SearchActions.toggleModality(DocType.TEXT))}
+                        checked={resultModalities.indexOf(DocType.TEXT) !== -1}
+                      />
+                    }
+                    label="Text"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="Image"
+                        onChange={() => dispatch(SearchActions.toggleModality(DocType.IMAGE))}
+                        checked={resultModalities.indexOf(DocType.IMAGE) !== -1}
+                      />
+                    }
+                    label="Image"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="Audio"
+                        onChange={() => dispatch(SearchActions.toggleModality(DocType.AUDIO))}
+                        checked={resultModalities.indexOf(DocType.AUDIO) !== -1}
+                      />
+                    }
+                    label="Audio"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="Video"
+                        onChange={() => dispatch(SearchActions.toggleModality(DocType.VIDEO))}
+                        checked={resultModalities.indexOf(DocType.VIDEO) !== -1}
+                      />
+                    }
+                    label="Video"
+                  />
+                </FormGroup>
+              </FormControl>
+              <FormControl>
+                <FormLabel id="radio-buttons-group-query">Query Type</FormLabel>
+                <RadioGroup
+                  aria-labelledby="radio-buttons-group-query"
+                  value={searchType}
+                  onChange={(event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
+                  name="radio-buttons-group"
+                >
+                  {Object.entries(QueryType).map((qt) => (
+                    <FormControlLabel key={qt[1]} value={qt[1] as QueryType} control={<Radio />} label={qt[1]} />
+                  ))}
+                </RadioGroup>
+              </FormControl>
+            </CardContent>
+          </Card>
+        </Popper>
+      </Paper>
+    </ClickAwayListener>
   );
 }
 
