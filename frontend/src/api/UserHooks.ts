@@ -37,17 +37,12 @@ const useGetAllCodes = (userId: number) => {
   });
 };
 
-// memo
-const useGetAllMemos = (userId: number) =>
-  useQuery<MemoRead[], Error>([QueryKey.USER_MEMOS, userId], () => UserService.getUserMemos({ userId }));
-
 const UserHooks = {
   useGetProjects,
   useGetUser,
   useGetAll,
   useRegister,
   useGetAllCodes,
-  useGetAllMemos,
 };
 
 export default UserHooks;

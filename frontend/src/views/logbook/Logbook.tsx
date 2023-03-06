@@ -15,6 +15,7 @@ import { LogbookActions } from "./logbookSlice";
 import "@toast-ui/editor/dist/toastui-editor.css";
 import LogbookEditor from "./LogbookEditor";
 import { AttachedObjectType } from "../../api/openapi";
+import ProjectHooks from "../../api/ProjectHooks";
 
 export const FILTER_OUT_TYPES = [
   AttachedObjectType.ANNOTATION_DOCUMENT,
@@ -26,7 +27,7 @@ export const FILTER_OUT_TYPES = [
 function Logbook() {
   const appBarContainerRef = useContext(AppBarContext);
 
-  // global state
+  // global client state
   const { user } = useAuth();
 
   // router
@@ -34,18 +35,18 @@ function Logbook() {
     projectId: string;
   };
 
-  // global state (redux)
+  // global client state (redux)
   const dispatch = useAppDispatch();
   const searchTerm = useAppSelector((state) => state.logbook.searchTerm);
   const category = useAppSelector((state) => state.logbook.category);
 
-  // queries
+  // global server state (react-query)
   const searchMemos = SearchHooks.useSearchMemoContent({
     content_query: searchTerm,
     user_id: user.data!.id,
     proj_id: parseInt(projectId),
   });
-  const userMemos = UserHooks.useGetAllMemos(user.data!.id);
+  const userMemos = ProjectHooks.useGetAllUserMemos(parseInt(projectId), user.data!.id);
 
   // computed
   // select memos based on search term (if there is no search term, show all user memos)

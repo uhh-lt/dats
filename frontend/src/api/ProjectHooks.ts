@@ -9,7 +9,7 @@ import {
   ProjectRead,
   ProjectService,
   ProjectUpdate,
-  UserRead
+  UserRead,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
@@ -167,6 +167,20 @@ const useGetMemo = (projectId: number | undefined, userId: number | undefined) =
     }
   );
 
+const useGetAllUserMemos = (projectId: number | undefined, userId: number | undefined) =>
+  useQuery<MemoRead[], Error>(
+    [QueryKey.USER_MEMOS, projectId, userId],
+    () =>
+      ProjectService.getUserMemosOfProject({
+        projId: projectId!,
+        userId: userId!,
+      }),
+    {
+      retry: false,
+      enabled: !!projectId && !!userId,
+    }
+  );
+
 const useCreateMemo = () =>
   useMutation(ProjectService.addMemo, {
     onSuccess: (data) => {
@@ -179,10 +193,10 @@ const useGetActions = (projectId: number, userId: number) =>
   useQuery<Array<ActionRead>, Error>(
     [QueryKey.ACTION, projectId, userId],
     () =>
-    ProjectService.getUserActionsOfProject({
-      projId: projectId,
-      userId: userId
-    }),
+      ProjectService.getUserActionsOfProject({
+        projId: projectId,
+        userId: userId,
+      }),
     {
       refetchOnWindowFocus: false,
     }
@@ -208,6 +222,7 @@ const ProjectHooks = {
   useGetAllCodes,
   // memo
   useGetMemo,
+  useGetAllUserMemos,
   useCreateMemo,
   // actions
   useGetActions,

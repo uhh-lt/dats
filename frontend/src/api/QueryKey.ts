@@ -22,7 +22,7 @@ export const QueryKey = {
   USER_PROJECTS: "userProjects",
   // all codes of a user (by user id)
   USER_CODES: "userCodes",
-  // all memos of a user (by user id)
+  // all memos of a user (by user id, by project id)
   USER_MEMOS: "userMemos",
 
   // a memo (by memo id)
