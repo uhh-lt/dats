@@ -2,6 +2,7 @@ from typing import Union, List, Optional
 
 from fastapi import HTTPException
 from loguru import logger
+from pydantic import BaseModel, Field
 from starlette import status
 
 from app.core.data.dto.memo import MemoRead, MemoInDB, AttachedObjectType
@@ -60,3 +61,4 @@ def get_object_memos(db_obj: Union[SourceDocumentORM,
         return memos[0]
 
     return memos
+
