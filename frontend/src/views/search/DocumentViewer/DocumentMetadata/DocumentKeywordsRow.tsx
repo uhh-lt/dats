@@ -93,8 +93,8 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
 
   return (
     <>
-      <Grid item md={2} style={{ position: "relative" }}>
-        <Stack direction="row" sx={{ alignItems: "center", position: "absolute", bottom: 0 }}>
+      <Grid item md={2}>
+        <Stack direction="row" sx={{ alignItems: "center", mt: "10px" }}>
           <InfoOutlinedIcon fontSize="medium" sx={{ mr: 1 }} />
           <TextField value={"keywords"} fullWidth size="small" variant="standard" disabled />
         </Stack>
@@ -118,12 +118,18 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
               ))
             }
             renderInput={(params) => (
-              <TextField {...params} variant="standard" placeholder="keywords" onBlur={() => handleUpdate()} />
+              <TextField
+                {...params}
+                fullWidth
+                variant="standard"
+                placeholder="keywords"
+                onBlur={() => handleUpdate()}
+              />
             )}
           />
           <Tooltip title="Clear">
             <span>
-              <IconButton onClick={() => handleClear()} disabled={updateMutation.isLoading}>
+              <IconButton size="small" onClick={() => handleClear()} disabled={updateMutation.isLoading}>
                 <ClearIcon />
               </IconButton>
             </span>

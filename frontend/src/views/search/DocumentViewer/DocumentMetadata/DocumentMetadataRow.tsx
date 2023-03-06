@@ -8,6 +8,8 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { ErrorMessage } from "@hookform/error-message";
 import DocumentMetadataDeleteButton from "./DocumentMetadataDeleteButton";
 import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton";
+import { isValidHttpUrl } from "./utils";
+import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton";
 
 interface DocumentMetadataRowProps {
   metadata: SourceDocumentMetadataRead;
@@ -22,6 +24,10 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
     reset,
   } = useForm();
 
+  // computed
+  const isLink = isValidHttpUrl(metadata.value);
+
+  // effects
   // initialize form when metadata changes
   useEffect(() => {
     reset({
@@ -65,7 +71,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
     <>
       <Grid item md={2}>
         <Stack direction="row" sx={{ alignItems: "center" }}>
-          <InfoOutlinedIcon fontSize="medium" sx={{ mr: 1 }} />
+          <InfoOutlinedIcon fontSize="medium" sx={{ my: "5px", mr: 1 }} />
           <TextField
             {...register("key", { required: "Key is required" })}
             error={Boolean(errors.key)}
@@ -90,7 +96,8 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
             disabled={metadata.read_only}
             onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
           />
-          <DocumentMetadataAddFilterButton metadata={metadata} />
+          {isLink && <DocumentMetadataGoToButton link={metadata.value} size="small" />}
+          <DocumentMetadataAddFilterButton metadata={metadata} size="small" />
           <DocumentMetadataDeleteButton metadataId={metadata.id} size="small" disabled={metadata.read_only} />
         </Stack>
       </Grid>
