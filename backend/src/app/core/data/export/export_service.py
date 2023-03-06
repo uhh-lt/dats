@@ -367,3 +367,65 @@ class ExportService(metaclass=SingletonMeta):
                 zipf.write(file, file.name)
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
+
+    def export_all_user_data_from_proj(
+        self,
+        db: Session,
+        proj_id: int,
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> str:
+        logger.info(f"Exporting all user data from Project {proj_id} ...")
+        proj = crud_project.read(db=db, id=proj_id)
+        users = proj.users
+
+        exported_adocs: Dict[int, List[pd.DataFrame]] = dict()
+        exported_memos: List[pd.DataFrame] = []
+
+        for user in users:
+            ex_adocs, ex_memos = self._export_user_data_from_proj(
+                db=db, user_id=user.id, proj_id=proj_id
+            )
+
+            # one memo df per user
+            exported_memos.append(pd.concat(ex_memos))
+
+            # group  the adocs by sdoc id and merge them later
+            for adoc_df in ex_adocs:
+                sdoc_id = adoc_df.iloc[0].sdoc_id
+                if sdoc_id not in exported_adocs:
+                    exported_adocs[sdoc_id] = []
+                exported_adocs[sdoc_id].append(adoc_df)
+
+        # merge adocs
+        merged_exported_adocs: List[pd.DataFrame] = []
+        for adoc_id in exported_adocs.keys():
+            merged_exported_adocs.append(pd.concat(exported_adocs[adoc_id]))
+
+        # write adocs to files
+        exported_files = []
+        for adoc_df in merged_exported_adocs:
+            export_file = self._write_export_data_to_temp_file(
+                data=adoc_df,
+                export_format=export_format,
+                fn=f"sdoc_{adoc_df.iloc[0].sdoc_id}_annotations_export",
+            )
+            exported_files.append(export_file)
+
+        # write memos to files
+        for memo_df in exported_memos:
+            export_file = self._write_export_data_to_temp_file(
+                data=memo_df,
+                export_format=export_format,
+                fn=f"user_{memo_df.iloc[0].user_id}_memo_export",
+            )
+            exported_files.append(export_file)
+
+        # ZIP all files
+        export_zip = self.repo.create_temp_file(
+            f"user_data_project_{proj_id}_export.zip"
+        )
+        with zipfile.ZipFile(export_zip, mode="w") as zipf:
+            for file in exported_files:
+                zipf.write(file, file.name)
+
+        return self.repo.get_temp_file_url(export_zip.name, relative=True)
