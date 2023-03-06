@@ -30,7 +30,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         """
         self.model = model
 
-    def read(self, db: Session, id: int) -> Optional[ORMModelType]:
+    def read(self, db: Session, id: int) -> ORMModelType:
         db_obj = db.query(self.model).filter(self.model.id == id).first()
         if not db_obj:
             raise NoSuchElementError(self.model, id=id)
