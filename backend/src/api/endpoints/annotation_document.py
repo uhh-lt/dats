@@ -101,9 +101,9 @@ async def get_all_bbox_annotations(*,
     bboxes = crud_bbox_anno.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)
     bbox_read_dtos = [BBoxAnnotationRead.from_orm(bbox) for bbox in bboxes]
     if resolve_code:
-        return [BBoxAnnotationReadResolvedCode(**span_dto.dict(exclude={"current_code_id"}),
+        return [BBoxAnnotationReadResolvedCode(**bbox_dto.dict(exclude={"current_code_id"}),
                                                code=CodeRead.from_orm(bbox_orm.current_code.code))
-                for bbox_orm, span_dto in zip(bboxes, bbox_read_dtos)]
+                for bbox_orm, bbox_dto in zip(bboxes, bbox_read_dtos)]
     else:
         return bbox_read_dtos
 
