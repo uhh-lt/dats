@@ -39,9 +39,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
     def create(self, db: Session, *, create_dto: MemoCreate) -> MemoORM:
         raise NotImplementedError()
 
-    def update(
-        self, db: Session, *, id: int, update_dto: MemoUpdate
-    ) -> Optional[MemoORM]:
+    def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> Optional[MemoORM]:
         updated_memo = super().update(db, id=id, update_dto=update_dto)
         self.__update_memo_in_elasticsearch(updated_memo)
         return updated_memo
@@ -64,15 +62,9 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
                 .all()
             )
 
-        return (
-            db.query(self.model)
-            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
-            .all()
-        )
+        return db.query(self.model).filter(self.model.user_id == user_id, self.model.project_id == proj_id).all()
 
-    def read_by_user_and_sdoc(
-        self, db: Session, user_id: int, sdoc_id: int
-    ) -> List[MemoORM]:
+    def read_by_user_and_sdoc(self, db: Session, user_id: int, sdoc_id: int) -> List[MemoORM]:
         # SELECT m
         # FROM memo m
         #     JOIN objecthandle o on o.id = m.attached_to_id
@@ -133,17 +125,13 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             )
         )
 
-        query = query.filter(
-            and_(SourceDocumentORM.id == sdoc_id, self.model.user_id == user_id)
-        )
+        query = query.filter(and_(SourceDocumentORM.id == sdoc_id, self.model.user_id == user_id))
 
         sdoc_memo = query.all()
 
         return span_memos + bbox_memos + sdoc_memo
 
-    def remove_by_user_and_project(
-        self, db: Session, user_id: int, proj_id: int
-    ) -> List[int]:
+    def remove_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[int]:
         statement = (
             delete(self.model)
             .where(self.model.user_id == user_id, self.model.project_id == proj_id)
@@ -167,9 +155,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             crud_action.create(db=db, create_dto=create_dto)
         return removed_ids
 
-    def exists_for_user_and_object_handle(
-        self, db: Session, *, user_id: int, attached_to_id: int
-    ) -> bool:
+    def exists_for_user_and_object_handle(self, db: Session, *, user_id: int, attached_to_id: int) -> bool:
         return (
             db.query(self.model.id)
             .filter(
@@ -180,9 +166,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             is not None
         )
 
-    def __create_memo(
-        self, create_dto: MemoCreate, db: Session, oh_db_obj: ObjectHandleORM
-    ):
+    def __create_memo(self, create_dto: MemoCreate, db: Session, oh_db_obj: ObjectHandleORM):
         # create the Memo
         dto_obj_data = jsonable_encoder(create_dto)
         dto_obj_data["attached_to_id"] = oh_db_obj.id
@@ -204,16 +188,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         crud_action.create(db=db, create_dto=action_create_dto)
         return db_obj
 
-    def create_for_code(
-        self, db: Session, code_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_code(self, db: Session, code_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
         # create an ObjectHandle for the Code
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(code_id=code_id)
-        )
+        oh_db_obj = crud_object_handle.create(db=db, create_dto=ObjectHandleCreate(code_id=code_id))
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
         self.__add_memo_to_elasticsearch(
             memo_orm=db_obj,
@@ -222,16 +202,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_project(
-        self, db: Session, project_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_project(self, db: Session, project_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
         # create an ObjectHandle for the Project
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(project_id=project_id)
-        )
+        oh_db_obj = crud_object_handle.create(db=db, create_dto=ObjectHandleCreate(project_id=project_id))
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
         self.__add_memo_to_elasticsearch(
             memo_orm=db_obj,
@@ -240,16 +216,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_sdoc(
-        self, db: Session, sdoc_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_sdoc(self, db: Session, sdoc_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
         # create an ObjectHandle for the SourceDocument
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(source_document_id=sdoc_id)
-        )
+        oh_db_obj = crud_object_handle.create(db=db, create_dto=ObjectHandleCreate(source_document_id=sdoc_id))
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
         self.__add_memo_to_elasticsearch(
             memo_orm=db_obj,
@@ -258,16 +230,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_adoc(
-        self, db: Session, adoc_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_adoc(self, db: Session, adoc_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
         # create an ObjectHandle for the AnnotationDocument
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(annotation_document_id=adoc_id)
-        )
+        oh_db_obj = crud_object_handle.create(db=db, create_dto=ObjectHandleCreate(annotation_document_id=adoc_id))
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
         self.__add_memo_to_elasticsearch(
             memo_orm=db_obj,
@@ -276,9 +244,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_span_annotation(
-        self, db: Session, span_anno_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_span_annotation(self, db: Session, span_anno_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
@@ -295,16 +261,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_span_group(
-        self, db: Session, span_group_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_span_group(self, db: Session, span_group_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
         # create an ObjectHandle for the SpanGroup
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(span_group_id=span_group_id)
-        )
+        oh_db_obj = crud_object_handle.create(db=db, create_dto=ObjectHandleCreate(span_group_id=span_group_id))
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
         self.__add_memo_to_elasticsearch(
             memo_orm=db_obj,
@@ -313,9 +275,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_bbox_annotation(
-        self, db: Session, bbox_anno_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_bbox_annotation(self, db: Session, bbox_anno_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
@@ -332,16 +292,12 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         )
         return db_obj
 
-    def create_for_document_tag(
-        self, db: Session, doc_tag_id: int, create_dto: MemoCreate
-    ) -> MemoORM:
+    def create_for_document_tag(self, db: Session, doc_tag_id: int, create_dto: MemoCreate) -> MemoORM:
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
         # create an ObjectHandle for the DocumentTag
-        oh_db_obj = crud_object_handle.create(
-            db=db, create_dto=ObjectHandleCreate(document_tag_id=doc_tag_id)
-        )
+        oh_db_obj = crud_object_handle.create(db=db, create_dto=ObjectHandleCreate(document_tag_id=doc_tag_id))
         db_obj = self.__create_memo(create_dto, db, oh_db_obj)
         self.__add_memo_to_elasticsearch(
             memo_orm=db_obj,
@@ -356,9 +312,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         # Flo: this is necessary to avoid circular imports.
         from app.core.data.crud.object_handle import crud_object_handle
 
-        attached_to = crud_object_handle.resolve_handled_object(
-            db=db, handle=db_obj.attached_to
-        )
+        attached_to = crud_object_handle.resolve_handled_object(db=db, handle=db_obj.attached_to)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
         if isinstance(attached_to, CodeORM):
             return MemoRead(
@@ -409,9 +363,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
                 attached_object_type=AttachedObjectType.document_tag,
             )
         else:
-            raise NotImplementedError(
-                f"Unknown AttachedObjectType: {type(attached_to)}"
-            )
+            raise NotImplementedError(f"Unknown AttachedObjectType: {type(attached_to)}")
 
     @staticmethod
     def __add_memo_to_elasticsearch(
@@ -429,9 +381,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             attached_object_id=attached_object_id,
             attached_object_type=attached_object_type,
         )
-        ElasticSearchService().add_memo_to_index(
-            proj_id=memo_orm.project_id, esmemo=esmemo
-        )
+        ElasticSearchService().add_memo_to_index(proj_id=memo_orm.project_id, esmemo=esmemo)
 
     @staticmethod
     def __update_memo_in_elasticsearch(
@@ -445,9 +395,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             starred=memo_orm.starred,
         )
 
-        ElasticSearchService().update_memo_in_index(
-            proj_id=memo_orm.project_id, update=update_es_dto
-        )
+        ElasticSearchService().update_memo_in_index(proj_id=memo_orm.project_id, update=update_es_dto)
 
 
 crud_memo = CRUDMemo(MemoORM)
