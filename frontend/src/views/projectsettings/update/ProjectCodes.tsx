@@ -91,7 +91,7 @@ function ProjectCodes({ project }: ProjectCodesProps) {
 
   return (
     <>
-      <Toolbar variant="dense">
+      <Toolbar variant="dense" style={{ paddingRight: "8px" }}>
         <Typography variant="h6" color="inherit" component="div">
           Filter codes
         </Typography>
@@ -105,6 +105,7 @@ function ProjectCodes({ project }: ProjectCodesProps) {
             setCodeFilter(event.target.value);
           }}
         />
+        <CodeToggleEnabledButton code={codeTree?.model} />
       </Toolbar>
       <Divider />
 
@@ -124,8 +125,8 @@ function ProjectCodes({ project }: ProjectCodesProps) {
             onCollapseClick={handleCollapseClick}
             renderActions={(node) => (
               <>
-                <CodeToggleEnabledButton code={node} />
                 <CodeEditButton code={node.code} />
+                <CodeToggleEnabledButton code={node} />
               </>
             )}
           />

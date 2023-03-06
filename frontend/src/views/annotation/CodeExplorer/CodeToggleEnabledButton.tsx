@@ -9,13 +9,18 @@ import { flatTree } from "./TreeUtils";
 import { SettingsActions } from "../../settings/settingsSlice";
 import { RootState } from "../../../store/store";
 
-function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: ICodeTree }) {
+function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: ICodeTree | null | undefined }) {
   // redux (global client state)
-  const isDisabled = useAppSelector((state: RootState) => state.settings.disabledCodeIds.indexOf(code.code.id) !== -1);
+  const isDisabled = useAppSelector((state: RootState) =>
+    code ? state.settings.disabledCodeIds.indexOf(code.code.id) !== -1 : false
+  );
   const dispatch = useAppDispatch();
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
+
+    if (!code) return;
+
     // toggle visibility of the code and all its children
     const codeIds = [code.code.id];
     if (code.children) {
@@ -26,9 +31,11 @@ function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: I
 
   return (
     <Tooltip title="Enable/disable code project-wide">
-      <IconButton onClick={handleClick} {...props}>
-        {!isDisabled ? <VisibilityIcon /> : <VisibilityOffIcon />}
-      </IconButton>
+      <span>
+        <IconButton onClick={handleClick} {...props} disabled={!code}>
+          {!isDisabled ? <VisibilityIcon /> : <VisibilityOffIcon />}
+        </IconButton>
+      </span>
     </Tooltip>
   );
 }
