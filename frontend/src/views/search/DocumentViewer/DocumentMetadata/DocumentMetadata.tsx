@@ -53,8 +53,6 @@ function DocumentMetadata({ sdocId, metadata }: DocumentMetadataProps) {
     return [];
   }, [metadata.data]);
 
-  console.log(metadata.data);
-
   return (
     <MyAccordion disableGutters square elevation={0} variant="outlined">
       <MyAccordionSummary>

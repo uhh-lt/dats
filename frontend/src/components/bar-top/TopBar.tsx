@@ -1,15 +1,22 @@
 import { AppBar, AppBarProps, Box, Button, Grid, Link, Stack, Toolbar, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import TemporaryDrawer from "./TemporaryDrawer";
-import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAuth } from "../../auth/AuthProvider";
 import UserProfileMenu from "../../features/user-profile-menu/UserProfileMenu";
+import ProjectHooks from "../../api/ProjectHooks";
 
 function TopBar(props: AppBarProps) {
   const { isLoggedIn, logout, user } = useAuth();
   const navigate = useNavigate();
   const appBarContainerRef = useContext(AppBarContext);
+
+  // global client state (react-router)
+  const { projectId } = useParams() as { projectId: string | undefined };
+
+  // global server state (react-query)
+  const project = ProjectHooks.useGetProject(projectId ? parseInt(projectId) : undefined);
 
   const handleLogout = () => {
     logout();
@@ -40,6 +47,11 @@ function TopBar(props: AppBarProps) {
                 <Box sx={{ flexGrow: 1 }} ref={appBarContainerRef} />
               ) : (
                 <Box sx={{ flexGrow: 1 }} />
+              )}
+              {project.isSuccess && (
+                <Typography variant="h6" noWrap sx={{ display: { xs: "none", sm: "block" }, mr: 2 }}>
+                  Project: {project.data?.title}
+                </Typography>
               )}
               {!isLoggedIn ? (
                 <Button color="inherit" component={RouterLink} to="/login">

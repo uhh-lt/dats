@@ -34,11 +34,14 @@ const useGetAllTags = (projectId: number) =>
 // project
 const useGetAllProjects = () => useQuery<ProjectRead[], Error>([QueryKey.PROJECTS], () => ProjectService.readAll({}));
 
-const useGetProject = (projectId: number) =>
-  useQuery<ProjectRead, Error>([QueryKey.PROJECT, projectId], () =>
-    ProjectService.readProject({
-      projId: projectId,
-    })
+const useGetProject = (projectId: number | undefined) =>
+  useQuery<ProjectRead, Error>(
+    [QueryKey.PROJECT, projectId],
+    () =>
+      ProjectService.readProject({
+        projId: projectId!,
+      }),
+    { enabled: !!projectId }
   );
 
 // sdoc
