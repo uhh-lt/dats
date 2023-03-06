@@ -412,6 +412,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.document_tag
             )
+        else:
+            raise NotImplementedError(f"Unknown AttachedObjectType: {type(attached_to)}")
 
     @staticmethod
     def __add_memo_to_elasticsearch(
