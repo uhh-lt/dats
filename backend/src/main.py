@@ -26,7 +26,7 @@ from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticS
     NoSuchMemoInElasticSearchError  # noqa E402
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
     span_annotation, document_tag, span_group, bbox_annotation, search, metadata, feedback, analysis, \
-    prepro  # noqa E402
+    prepro, export  # noqa E402
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from config import conf  # noqa E402
 
@@ -64,7 +64,7 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 # add custom exception handlers
-# TODO Flo: find a better place for this! (and Exceptions in general)
+# TODO Flo: find a better place for this! (and Exceptions in general. move into own file)
 @app.exception_handler(NoSuchElementError)
 async def no_such_element_error_handler(_, exc: NoSuchElementError):
     return PlainTextResponse(str(exc), status_code=404)
@@ -131,6 +131,7 @@ app.include_router(metadata.router)
 app.include_router(feedback.router)
 app.include_router(analysis.router)
 app.include_router(prepro.router)
+app.include_router(export.router)
 
 
 def main() -> None:
