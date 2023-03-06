@@ -1,6 +1,7 @@
 import os
 import shutil
 import urllib.parse as url
+import uuid
 import zipfile
 from pathlib import Path
 from typing import Tuple, Optional, List
@@ -185,6 +186,30 @@ class RepoService(metaclass=SingletonMeta):
             logger.warning(f"Cannot store uploaded file! Error: {e}")
 
         return dst_path
+
+    def create_temp_file(self, fn: Optional[str]) -> Path:
+        if fn is None:
+            fn = str(uuid.uuid4())
+        p = self.temp_files_root / fn
+        if p.exists():
+            logger.warning(f"Temporary File '{fn}' already exists and is removed now!")
+            p.unlink()
+        Path(p).touch()
+        logger.info(f"Created Temporary File at {p}")
+
+        return p
+
+    def get_temp_file_url(self, fn: str, relative: bool = True) -> str:
+        p = self.temp_files_root / fn
+        if not p.exists():
+            raise FileNotFoundInRepositoryError(proj_id=-1, filename=fn, dst=p)
+
+        relative_url = str(p.relative_to(self.repo_root))
+        if relative:
+            return relative_url
+
+        return url.urljoin(self.base_url, relative_url)
+
 
     def get_sdoc_url(self, sdoc: SourceDocumentRead, relative: bool = True, webp: bool = False,
                      thumbnail: bool = False) -> Optional[str]:
