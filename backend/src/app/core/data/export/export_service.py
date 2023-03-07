@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
-from app.core.data.crud.code import CRUDCode, crud_code
+from app.core.data.crud.code import crud_code
+from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.bbox_annotation import (
@@ -302,6 +303,51 @@ class ExportService(metaclass=SingletonMeta):
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
 
+    def _export_tag_data(self, db: Session, tag_id: int) -> pd.DataFrame:
+        logger.info(f"Exporting DocumentTag {tag_id} ...")
+
+        tag = crud_document_tag.read(db=db, id=tag_id)
+        tag_dto = DocumentTagRead.from_orm(tag)
+        applied_to_sdoc_ids = [sdoc.id for sdoc in tag.source_documents]
+        applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
+        data = {
+            "tag_id": [tag_dto.id],
+            "tag_name": [tag_dto.title],
+            "description": [tag_dto.description],
+            "color": [tag_dto.color],
+            "created": [tag_dto.created],
+            "applied_to_sdoc_ids": [applied_to_sdoc_ids],
+            "applied_to_sdoc_filenames": [applied_to_sdoc_filenames],
+        }
+
+        df = pd.DataFrame(data=data)
+        return df
+
+    def _export_project_tags_data(
+        self, db: Session, proj_id: int
+    ) -> List[pd.DataFrame]:
+        tags = crud_project.read(db=db, id=proj_id).document_tags
+        exported_tags: List[pd.DataFrame] = []
+        for tag in tags:
+            export_data = self._export_tag_data(db=db, tag_id=tag.id)
+            exported_tags.append(export_data)
+        return exported_tags
+
+    def export_project_tags(
+        self, db: Session, proj_id: int, export_format: ExportFormat = ExportFormat.CSV
+    ) -> str:
+        ex_tags = self._export_project_tags_data(db=db, proj_id=proj_id)
+
+        # one file for all tags
+        export_data = pd.concat(ex_tags)
+        export_file = self._write_export_data_to_temp_file(
+            data=export_data,
+            export_format=export_format,
+            fn=f"project_{proj_id}_tags_export",
+        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+        return export_url
+
     def _export_code_data(self, db: Session, code_id: int) -> pd.DataFrame:
         logger.info(f"Exporting Code {code_id} ...")
 
@@ -412,6 +458,8 @@ class ExportService(metaclass=SingletonMeta):
             exported_codes,
         ) = self._export_user_data_from_proj(db=db, user_id=user_id, proj_id=proj_id)
 
+        exported_tags = self._export_project_tags_data(db=db, proj_id=proj_id)
+
         exported_files = []
         # one file per adoc
         for adoc_df in exported_adocs:
@@ -437,6 +485,15 @@ class ExportService(metaclass=SingletonMeta):
             data=exported_code_df,
             export_format=export_format,
             fn=f"user_{user_id}_code_export",
+        )
+        exported_files.append(export_file)
+
+        # one file for all tags
+        exported_tag_df = pd.concat(exported_tags)
+        export_file = self._write_export_data_to_temp_file(
+            data=exported_tag_df,
+            export_format=export_format,
+            fn=f"project_{proj_id}_tags_export",
         )
         exported_files.append(export_file)
 
@@ -514,6 +571,16 @@ class ExportService(metaclass=SingletonMeta):
                 fn=f"user_{code_df.iloc[0].created_by_user_id}_code_export",
             )
             exported_files.append(export_file)
+
+        # write all tags to one file
+        exported_tags = self._export_project_tags_data(db=db, proj_id=proj_id)
+        exported_tag_df = pd.concat(exported_tags)
+        export_file = self._write_export_data_to_temp_file(
+            data=exported_tag_df,
+            export_format=export_format,
+            fn=f"project_{proj_id}_tags_export",
+        )
+        exported_files.append(export_file)
 
         # ZIP all files
         export_zip = self.repo.create_temp_file(
