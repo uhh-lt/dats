@@ -324,6 +324,42 @@ class ExportService(metaclass=SingletonMeta):
         df = pd.DataFrame(data=data)
         return df
 
+    def _export_logbook_memo_data(self, db: Session, proj_id: int, user_id: int) -> str:
+        logger.info(f"Exporting LogBook for User {user_id} of Project {proj_id} ...")
+        # FIXME find better way to get the LogBook memo (with SQL but this will be a complicated query with JOINS to resolve the objecthandle)
+        memos = crud_memo.read_by_user_and_project(
+            db=db, user_id=user_id, proj_id=proj_id, only_starred=False
+        )
+        logbook_dto = None
+        # avoid circular imports
+        from app.core.data.crud.object_handle import crud_object_handle
+        for memo in memos:
+            # get attached object
+            attached_to = crud_object_handle.resolve_handled_object(
+                db=db, handle=memo.attached_to
+            )
+            if isinstance(attached_to, ProjectORM):
+                logbook_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
+
+        if logbook_dto is None:
+            msg = f"User {user_id} has no LogBook for Project {proj_id}!"
+            logger.error(msg)
+            raise ValueError(msg)
+
+        return logbook_dto.content
+
+    def export_logbook_memo(self, db: Session, proj_id: int, user_id: int) -> str:
+        # special handling for LogBook memos: we export is as single MarkDown File
+        logbook_content = self._export_logbook_memo_data(
+            db=db, proj_id=proj_id, user_id=user_id
+        )
+        # create the logbook file
+        logbook_file = self.repo.create_temp_file(
+            f"project_{proj_id}_user_{user_id}_logbook.md"
+        )
+        logbook_file.write_text(logbook_content)
+        return self.repo.get_temp_file_url(logbook_file.name, relative=True)
+
     def _export_project_tags_data(
         self, db: Session, proj_id: int
     ) -> List[pd.DataFrame]:
@@ -344,7 +380,7 @@ class ExportService(metaclass=SingletonMeta):
         export_file = self._write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
-            fn=f"project_{proj_id}_tags_export",
+            fn=f"project_{proj_id}_tags",
         )
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
@@ -460,6 +496,9 @@ class ExportService(metaclass=SingletonMeta):
         ) = self._export_user_data_from_proj(db=db, user_id=user_id, proj_id=proj_id)
 
         exported_tags = self._export_project_tags_data(db=db, proj_id=proj_id)
+        logbook_content = self._export_logbook_memo_data(
+            db=db, proj_id=proj_id, user_id=user_id
+        )
 
         exported_files = []
         # one file per adoc
@@ -498,6 +537,12 @@ class ExportService(metaclass=SingletonMeta):
         )
         exported_files.append(export_file)
 
+        # one file for the logbook
+        logbook_file = self.repo.create_temp_file(
+            f"project_{proj_id}_user_{user_id}_logbook.md"
+        )
+        logbook_file.write_text(logbook_content)
+
         # ZIP all files
         export_zip = self.repo.create_temp_file(
             f"user_{user_id}_project_{proj_id}_export.zip"
@@ -521,6 +566,7 @@ class ExportService(metaclass=SingletonMeta):
         exported_adocs: Dict[int, List[pd.DataFrame]] = dict()
         exported_memos: List[pd.DataFrame] = []
         exported_codes: List[pd.DataFrame] = []
+        exported_logbooks: List[Tuple[int, str]] = []
 
         for user in users:
             ex_adocs, ex_memos, ex_codes = self._export_user_data_from_proj(
@@ -529,6 +575,12 @@ class ExportService(metaclass=SingletonMeta):
 
             # one memo df per user
             exported_memos.append(pd.concat(ex_memos))
+
+            # one logbook content string per user
+            exported_logbooks.append((
+                user.id,
+                self._export_logbook_memo_data(db=db, proj_id=proj_id, user_id=user.id)
+            ))
 
             # one code df per user
             exported_codes.append(pd.concat(ex_codes))
@@ -563,6 +615,14 @@ class ExportService(metaclass=SingletonMeta):
                 fn=f"user_{memo_df.iloc[0].user_id}_memo_export",
             )
             exported_files.append(export_file)
+
+        # write logbooks to files
+        for user_id, logbook_content in exported_logbooks:
+            logbook_file = self.repo.create_temp_file(
+                f"user_{user_id}_logbook.md"
+            )
+            logbook_file.write_text(logbook_content)
+            exported_files.append(logbook_file)
 
         # write codes to files
         for code_df in exported_codes:
