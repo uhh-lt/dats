@@ -8,6 +8,7 @@ import { Add, Edit, Remove } from "@mui/icons-material";
 import { ActionTargetObjectType } from "../../api/openapi";
 import { useEffect } from "react";
 import { useAuth } from "../../auth/AuthProvider";
+import { readableObjectType } from "./ActionCard";
 
 const entityValueArray = Object.values(ActionTargetObjectType);
 
@@ -138,7 +139,7 @@ export function ActionFilters() {
         onChange={handleEntityFilterChange}
         renderValue={() => {
           if (entityFilter && entityFilter.length > 0) {
-            return <>{entityValueArray[entityFilter[0]]}</>;
+            return <>{readableObjectType(entityValueArray[entityFilter[0]])}</>;
           }
         }}
       >
@@ -147,7 +148,7 @@ export function ActionFilters() {
           return (
             <MenuItem key={index} value={index} disabled={!inEntities}>
               <Checkbox checked={entityFilter?.includes(index)} />
-              <ListItemText>{entity}</ListItemText>
+              <ListItemText>{readableObjectType(entity)}</ListItemText>
             </MenuItem>
           );
         })}

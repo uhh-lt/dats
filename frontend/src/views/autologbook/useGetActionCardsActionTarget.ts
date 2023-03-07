@@ -12,7 +12,7 @@ const useGetActionCardsActionTarget = (type: ActionTargetObjectType | undefined)
     case ActionTargetObjectType.MEMO:
       return MemoHooks.useGetMemo;
     case ActionTargetObjectType.ANNOTATION_DOCUMENT:
-      return CodeHooks.useGetCode;  // TODO
+      return CodeHooks.useGetCode;
     case ActionTargetObjectType.SOURCE_DOCUMENT:
       return SdocHooks.useGetDocument;
     case ActionTargetObjectType.CODE:
@@ -20,7 +20,7 @@ const useGetActionCardsActionTarget = (type: ActionTargetObjectType | undefined)
     case ActionTargetObjectType.SPAN_ANNOTATION:
       return SpanAnnotationHooks.useGetAnnotation;
     case ActionTargetObjectType.SPAN_GROUP:
-      return CodeHooks.useGetCode;  // TODO
+      return CodeHooks.useGetCode;
     case ActionTargetObjectType.BBOX_ANNOTATION:
       return BboxAnnotationHooks.useGetAnnotation;
     case ActionTargetObjectType.PROJECT:
