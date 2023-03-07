@@ -116,6 +116,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     logger.info("Stopping D-WISE Tool Suite FastAPI!")
+    RepoService().purge_temporary_files()
 
 
 # include the endpoint routers
