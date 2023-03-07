@@ -27,9 +27,9 @@ const useCreateAnnotation = () =>
 
       // Optimistically update to the new value
       queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
-        const fakeAnnotation = old?.find((a) => a.id === FAKE_ANNOTATION_ID);
         const fakeAnnotationIndex = old?.findIndex((a) => a.id === FAKE_ANNOTATION_ID);
-        if (fakeAnnotation && fakeAnnotationIndex && fakeAnnotationIndex !== -1) {
+        if (fakeAnnotationIndex !== undefined && fakeAnnotationIndex !== -1) {
+          const fakeAnnotation = old![fakeAnnotationIndex];
           // we already created a fake annotation, that is correct as is
           if (fakeAnnotation.code.id === newSpanAnnotation.requestBody.current_code_id) {
             return old;
