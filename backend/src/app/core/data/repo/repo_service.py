@@ -230,17 +230,18 @@ class RepoService(metaclass=SingletonMeta):
                                                                       filename=archive_path.name)
         dst = archive_path_in_project.parent
 
-        logger.debug(f"Extracting archive at {archive_path_in_project} ...")
+        logger.info(f"Extracting archive at {archive_path_in_project} ...")
         if not zipfile.is_zipfile(archive_path_in_project):
             raise ErroneousArchiveException(archive_path=archive_path_in_project)
-        logger.debug(f"Extracting archive {archive_path_in_project.name} to {dst} ...")
+        logger.info(f"Extracting archive {archive_path_in_project.name} to {dst} ...")
         # taken from: https://stackoverflow.com/a/4917469
         # flattens the extracted file hierarchy
         try:
+            extracted_file_paths = []
             with ZipFile(archive_path_in_project, "r") as zip_archive:
-                extracted_files = zip_archive.namelist()
-                logger.debug(f"Archive {archive_path_in_project.name} contains {len(extracted_files)} files...")
-                for member in extracted_files:
+                files_in_archive = zip_archive.namelist()
+                logger.debug(f"Archive {archive_path_in_project.name} contains {len(files_in_archive)} files...")
+                for member in files_in_archive:
                     filename = os.path.basename(member)
                     # skip directories
                     if not filename:
@@ -249,15 +250,17 @@ class RepoService(metaclass=SingletonMeta):
 
                     # copy file (taken from zipfile's extract)
                     source = zip_archive.open(member)
-                    target = open(os.path.join(dst, filename), "wb")
+                    target_p = os.path.join(dst, filename)
+                    target = open(target_p, "wb")
                     with source, target:
                         shutil.copyfileobj(source, target)
+                    extracted_file_paths.append(Path(target_p))
         except Exception as e:
             logger.error(f"Cannot extract Archive {archive_path_in_project.name}! Error: {e}")
             raise ErroneousArchiveException(archive_path=archive_path_in_project)
 
-        logger.debug(f"Extracting archive at {archive_path_in_project}... Done!")
-        return [dst.joinpath(file) for file in extracted_files]
+        logger.info(f"Extracting archive at {archive_path_in_project}... Done!")
+        return extracted_file_paths
 
     def store_uploaded_file_in_project_repo(self, proj_id: int, uploaded_file: UploadFile) -> Path:
         try:
