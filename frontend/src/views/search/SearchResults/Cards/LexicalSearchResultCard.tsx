@@ -47,10 +47,10 @@ function LexicalSearchResultCard({
 }
 
 const wordCloudOptions: OptionsProp = {
-  enableTooltip: true,
+  enableTooltip: false,
   deterministic: true,
   fontFamily: "impact",
-  fontSizes: [15, 35],
+  fontSizes: [12, 23],
   padding: 1,
   scale: "sqrt",
   transitionDuration: 0,
@@ -62,11 +62,13 @@ function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentRead
   // global client state (redux)
   const searchResStyle = useAppSelector((state) => state.settings.search.SearchResStyle);
 
-  // rendering
-  if (searchResStyle === "text") {
-    return <TextContent sdoc={sdoc} />;
-  }
-  return <WordCloudContent sdoc={sdoc} />;
+  return useMemo(() => {
+    // rendering
+    if (searchResStyle === "text") {
+      return <TextContent sdoc={sdoc} />;
+    }
+    return <WordCloudContent sdoc={sdoc} />;
+  }, [searchResStyle, sdoc]);
 }
 
 function WordCloudContent({ sdoc }: { sdoc: SourceDocumentRead }) {
@@ -86,8 +88,8 @@ function WordCloudContent({ sdoc }: { sdoc: SourceDocumentRead }) {
 
   // rendering
   return (
-    <div style={{ width: 350, height: 200 }}>
-      <ReactWordcloud options={wordCloudOptions} size={[300, 200]} words={wordCloudInput} />
+    <div style={{ overflow: "hidden", padding: 0, height: 212 }}>
+      <ReactWordcloud options={wordCloudOptions} words={wordCloudInput} />
     </div>
   );
 }
