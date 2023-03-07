@@ -220,6 +220,7 @@ class ExportService(metaclass=SingletonMeta):
             "user_id": [user_dto.id],
             "created": [memo_dto.created],
             "updated": [memo_dto.updated],
+            "starred": [memo_dto.starred],
             "attached_to": [memo_dto.attached_object_type],
             "content": [memo_dto.content],
             "adoc_id": [None],
