@@ -19,16 +19,15 @@ from app.docprepro.video import video_document_preprocessing_without_import_appl
 from app.docprepro.video.import_video_document import import_video_document_
 from config import conf
 
-sql = SQLService(echo=False)
-repo = RepoService()
+sql: SQLService = SQLService(echo=False)
+repo: RepoService = RepoService()
 
 
 @celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
 def import_uploaded_archive(archive_file_path: Path,
                             project_id: int) -> None:
     # store and extract the archive
-    file_dsts = repo.extract_archive_in_project(proj_id=project_id,
-                                                archive_path=archive_file_path)
+    file_dsts = repo.extract_archive_in_project(proj_id=project_id, archive_path=archive_file_path)
     pptds = []
     ppids = []
     ppads = []
@@ -55,39 +54,40 @@ def import_uploaded_archive(archive_file_path: Path,
                 ppvd = import_video_document_(doc_file_path=filepath, project_id=project_id, mime_type=mime_type)[0]
                 ppvds.append(ppvd)
             else:
-                pass
+                logger.warning(f"Unknown DocType for {str(filepath)} with MIME {mime_type}")
+                raise UnsupportedDocTypeForSourceDocument(filepath)
         except (FileNotFoundInRepositoryError, UnsupportedDocTypeForSourceDocument, Exception) as e:
             logger.warning(f"Skipping import of File {filepath.name} because:\n {e}")
             continue
 
         # send the preprodocs to the responsible workers batch-wise
         if len(pptds) >= conf.docprepro.celery.batch_size.text:
-            logger.debug(f"Sending batch of {len(pptds)} text documents to text preprocessing celery worker!")
+            logger.info(f"Sending batch of {len(pptds)} text documents to text preprocessing celery worker!")
             text_document_preprocessing_without_import_apply_async(pptds=pptds)
             pptds = []
         if len(ppids) >= conf.docprepro.celery.batch_size.image:
-            logger.debug(f"Sending batch of {len(ppids)} image documents to image preprocessing celery worker!")
+            logger.info(f"Sending batch of {len(ppids)} image documents to image preprocessing celery worker!")
             image_document_preprocessing_without_import_apply_async(ppids=ppids)
             ppids = []
         if len(ppads) >= conf.docprepro.celery.batch_size.image:
-            logger.debug(f"Sending batch of {len(ppids)} audio documents to image preprocessing celery worker!")
-            audio_document_preprocessing_without_import_apply_async(ppids=ppids)
+            logger.info(f"Sending batch of {len(ppids)} audio documents to image preprocessing celery worker!")
+            audio_document_preprocessing_without_import_apply_async(ppads=ppads)
             ppads = []
         if len(ppvds) >= conf.docprepro.celery.batch_size.image:
-            logger.debug(f"Sending batch of {len(ppids)} video documents to image preprocessing celery worker!")
-            video_document_preprocessing_without_import_apply_async(ppids=ppids)
+            logger.info(f"Sending batch of {len(ppids)} video documents to image preprocessing celery worker!")
+            video_document_preprocessing_without_import_apply_async(ppvds=ppvds)
             ppvds = []
 
     # send the last batch of preprodocs to the responsible workers
     if len(pptds) > 0:
-        logger.debug(f"Sending batch of {len(pptds)} text documents to text preprocessing celery worker!")
+        logger.info(f"Sending batch of {len(pptds)} text documents to text preprocessing celery worker!")
         text_document_preprocessing_without_import_apply_async(pptds=pptds)
     if len(ppids) > 0:
-        logger.debug(f"Sending batch of {len(ppids)} image documents to image preprocessing celery worker!")
+        logger.info(f"Sending batch of {len(ppids)} image documents to image preprocessing celery worker!")
         image_document_preprocessing_without_import_apply_async(ppids=ppids)
     if len(ppads) > 0:
-        logger.debug(f"Sending batch of {len(ppads)} audio documents to image preprocessing celery worker!")
+        logger.info(f"Sending batch of {len(ppads)} audio documents to image preprocessing celery worker!")
         audio_document_preprocessing_without_import_apply_async(ppads=ppads)
     if len(ppvds) > 0:
-        logger.debug(f"Sending batch of {len(ppvds)} image documents to image preprocessing celery worker!")
+        logger.info(f"Sending batch of {len(ppvds)} image documents to image preprocessing celery worker!")
         video_document_preprocessing_without_import_apply_async(ppvds=ppvds)
