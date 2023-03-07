@@ -1,15 +1,9 @@
-import {
-  AnnotationDocumentRead,
-  BBoxAnnotationReadResolvedCode,
-  SourceDocumentMetadataRead,
-  SourceDocumentRead,
-} from "../../../api/openapi";
-import AdocHooks from "../../../api/AdocHooks";
-import React, { useEffect, useMemo, useRef } from "react";
-import * as d3 from "d3";
 import { Box } from "@mui/material";
+import * as d3 from "d3";
+import React, { useEffect, useMemo, useRef } from "react";
+import AdocHooks from "../../../api/AdocHooks";
+import { AnnotationDocumentRead, BBoxAnnotationReadResolvedCode, SourceDocumentRead } from "../../../api/openapi";
 import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
-import MetadataHooks from "../../../api/MetadataHooks";
 
 interface ImageViewerProps {
   sdoc: SourceDocumentRead;

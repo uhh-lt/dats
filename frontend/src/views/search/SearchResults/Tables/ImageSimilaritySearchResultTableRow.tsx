@@ -1,17 +1,16 @@
-import TableRow from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
-import Checkbox from "@mui/material/Checkbox";
 import { Stack, Tooltip } from "@mui/material";
-import { useParams } from "react-router-dom";
-import MemoButton from "../../../../features/memo-dialog/MemoButton";
-import * as React from "react";
+import Checkbox from "@mui/material/Checkbox";
+import TableCell from "@mui/material/TableCell";
+import TableRow from "@mui/material/TableRow";
 import { useMemo } from "react";
-import { useAppSelector } from "../../../../plugins/ReduxHooks";
+import { useParams } from "react-router-dom";
+import { AttachedObjectType, SimSearchImageHit } from "../../../../api/openapi";
 import SdocHooks from "../../../../api/SdocHooks";
-import SearchResultTag from "../SearchResultTag";
-import { SearchResultProps } from "../SearchResultProps";
+import MemoButton from "../../../../features/memo-dialog/MemoButton";
+import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import AnnotateButton from "../../ToolBar/ToolBarElements/AnnotateButton";
-import { AttachedObjectType, SimSearchImageHit, SimSearchSentenceHit } from "../../../../api/openapi";
+import { SearchResultProps } from "../SearchResultProps";
+import SearchResultTag from "../SearchResultTag";
 
 interface ImageSimilaritySearchResultTableRowProps extends SearchResultProps {
   hit: SimSearchImageHit;

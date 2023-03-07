@@ -1,15 +1,14 @@
 import { CardContent, Divider, TextField, Toolbar, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
+import Tree from "ts-tree-structure";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
-import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
 import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton";
-import Tree, { Node } from "ts-tree-structure";
-import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
-import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
 import CodeEditDialog from "../../annotation/CodeExplorer/CodeEditDialog";
 import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton";
-import { filter } from "lodash";
+import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
+import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
+import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
 
 interface ProjectCodesProps {
   project: ProjectRead;

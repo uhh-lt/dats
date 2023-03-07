@@ -1,20 +1,18 @@
-import React, { useEffect, useMemo } from "react";
-import Token from "./Token";
-import "./TextAnnotatorRenderer.css";
 import { Box, BoxProps } from "@mui/material";
+import React, { useEffect, useMemo } from "react";
+import "./TextAnnotatorRenderer.css";
+import Token from "./Token";
 // @ts-ignore
 import * as HtmlToReact from "html-to-react";
 // @ts-ignore
 import { Parser } from "html-to-react";
-import { IToken } from "./IToken";
-import { SpanAnnotationReadResolved, SpanEntity } from "../../../api/openapi";
-import SdocImageLink from "./SdocImageLink";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { useLocation } from "react-router-dom";
+import { SpanAnnotationReadResolved, SpanEntity } from "../../../api/openapi";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { FilterType, SearchFilter } from "../../search/SearchFilter";
 import { SearchActions } from "../../search/searchSlice";
-import token from "./Token";
-import { filter } from "lodash";
+import { IToken } from "./IToken";
+import SdocImageLink from "./SdocImageLink";
 
 const htmlToReactParser = new Parser();
 

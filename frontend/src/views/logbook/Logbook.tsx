@@ -1,21 +1,20 @@
-import React, { useContext, useEffect, useMemo } from "react";
 import { Box, Grid } from "@mui/material";
-import MemoExplorer from "./MemoExplorer";
-import { useParams } from "react-router-dom";
 import Portal from "@mui/material/Portal";
-import SearchBar from "../search/SearchBar/SearchBar";
-import MemoResults from "./MemoResults";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useForm } from "react-hook-form";
-import UserHooks from "../../api/UserHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import SearchHooks from "../../api/SearchHooks";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { LogbookActions } from "./logbookSlice";
 import "@toast-ui/editor/dist/toastui-editor.css";
-import LogbookEditor from "./LogbookEditor";
+import { useContext, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
 import { AttachedObjectType } from "../../api/openapi";
 import ProjectHooks from "../../api/ProjectHooks";
+import SearchHooks from "../../api/SearchHooks";
+import { useAuth } from "../../auth/AuthProvider";
+import { AppBarContext } from "../../layouts/TwoBarLayout";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import SearchBar from "../search/SearchBar/SearchBar";
+import LogbookEditor from "./LogbookEditor";
+import { LogbookActions } from "./logbookSlice";
+import MemoExplorer from "./MemoExplorer";
+import MemoResults from "./MemoResults";
 
 export const FILTER_OUT_TYPES = [
   AttachedObjectType.ANNOTATION_DOCUMENT,
