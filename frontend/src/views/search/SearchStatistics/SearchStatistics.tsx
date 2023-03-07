@@ -1,4 +1,4 @@
-import { TabContext } from "@mui/lab";
+import { TabContext, TabPanel } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import KeywordStats from "./KeywordStats";
@@ -53,10 +53,47 @@ function SearchStatistics({
   const [validEntityStats, setValidEntityStats] = useState<Map<number, SpanEntityDocumentFrequency[]>>(new Map());
   const entityTotalCounts = SearchHooks.useSearchEntityDocumentStats(projectId, []);
   const entityStats = SearchHooks.useSearchEntityDocumentStats(projectId, filter);
+  const entityTotalCountMap = useMemo(() => {
+    // map from code_id -> entity_text -> entity_count
+    const result = new Map<number, Map<string, number>>();
+    if (!entityTotalCounts.data) return result;
+
+    Array.from(entityTotalCounts.data.entries()).forEach(([codeId, data]) => {
+      const codeMap = new Map<string, number>();
+      data.forEach((stat) => {
+        codeMap.set(stat.span_text, stat.count);
+      });
+      result.set(codeId, codeMap);
+    });
+
+    return result;
+  }, [entityTotalCounts.data]);
+
   const keywordTotalCounts = SearchHooks.useSearchKeywordStats(projectId, []);
   const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter);
+  const keywordTotalCountMap = useMemo(() => {
+    // map from keyword_text -> keyword_count
+    const result = new Map<string, number>();
+    if (!keywordTotalCounts.data) return result;
+
+    keywordTotalCounts.data.forEach((stat) => {
+      result.set(stat.keyword, stat.count);
+    });
+    return result;
+  }, [keywordTotalCounts.data]);
+
   const tagTotalCount = SearchHooks.useSearchTagStats(projectId, []);
   const tagStats = SearchHooks.useSearchTagStats(projectId, filter);
+  const tagTotalCountMap = useMemo(() => {
+    // map from tag_id -> tag_count
+    const result = new Map<number, number>();
+    if (!tagTotalCount.data) return result;
+
+    tagTotalCount.data.forEach((stat) => {
+      result.set(stat.tag.id, stat.count);
+    });
+    return result;
+  }, [tagTotalCount.data]);
 
   // computed
   const filteredProjectCodes = useMemo(() => {
@@ -109,26 +146,30 @@ function SearchStatistics({
         <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
           <KeywordStats
             keywordStats={keywordStats}
-            keywordTotalCount={keywordTotalCounts}
+            keywordTotalCountMap={keywordTotalCountMap}
             handleClick={handleKeywordClick}
             parentRef={parentRef}
           />
           <DocumentTagStats
             tagStats={tagStats}
-            tagTotalCount={tagTotalCount}
+            tagTotalCountMap={tagTotalCountMap}
             handleClick={handleTagClick}
             parentRef={parentRef}
           />
-          {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
-            <CodeStats
-              key={codeId}
-              codeId={codeId}
-              codeStats={data}
-              codeTotalCount={entityTotalCounts.data!.get(codeId)!}
-              handleClick={handleCodeClick}
-              parentRef={parentRef}
-            />
-          ))}
+          {Array.from(validEntityStats.entries()).map(([codeId, data]) =>
+            entityTotalCountMap.has(codeId) ? (
+              <CodeStats
+                key={codeId}
+                codeId={codeId}
+                codeStats={data}
+                entityTotalCountMap={entityTotalCountMap.get(codeId)!}
+                handleClick={handleCodeClick}
+                parentRef={parentRef}
+              />
+            ) : (
+              <React.Fragment key={codeId}>No total counts available :(</React.Fragment>
+            )
+          )}
         </Box>
       </TabContext>
       <SearchStatisticsContextMenu

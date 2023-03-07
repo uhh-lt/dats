@@ -1,9 +1,7 @@
-import { Box, Button, ButtonProps, Typography } from "@mui/material";
-import React, { useEffect } from "react";
+import { Button, ButtonProps, Typography } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 
 export interface StatsDisplayButtonProps {
-  key: number | string;
   term: string;
   count: number;
   totalCount: number;
@@ -13,7 +11,6 @@ export interface StatsDisplayButtonProps {
 }
 
 function StatsDisplayButton({
-  key,
   term,
   count,
   totalCount,
@@ -28,7 +25,6 @@ function StatsDisplayButton({
   return (
     <Tooltip title={term}>
       <div
-        key={key}
         style={{
           width: widthVal + "%",
           height: 30,

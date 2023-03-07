@@ -1,26 +1,25 @@
-import { Button } from "@mui/material";
+import { TabPanel } from "@mui/lab";
+import { UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { KeywordStat } from "../../../api/openapi";
-import { UseQueryResult } from "@tanstack/react-query";
-import { TabPanel } from "@mui/lab";
 import StatsDisplayButton from "./StatsDisplayButton";
 
 interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
-  keywordTotalCount: UseQueryResult<KeywordStat[], Error>;
+  keywordTotalCountMap: Map<string, number>;
   handleClick: (keyword: string) => void;
   parentRef: React.MutableRefObject<unknown>;
 }
 
-function KeywordStats({ keywordStats, keywordTotalCount, handleClick, parentRef }: KeywordStatsProps) {
+function KeywordStats({ keywordStats, keywordTotalCountMap, handleClick, parentRef }: KeywordStatsProps) {
   // render
   return (
     <>
-      {keywordStats.isSuccess && keywordTotalCount.isSuccess ? (
+      {keywordStats.isSuccess ? (
         <KeywordStatsContent
           keywordStats={keywordStats.data}
-          keywordTotalCount={keywordTotalCount.data}
+          keywordTotalCountMap={keywordTotalCountMap}
           handleClick={handleClick}
           parentRef={parentRef}
         />
@@ -39,12 +38,12 @@ export default KeywordStats;
 
 interface KeywordStatsContentProps {
   keywordStats: KeywordStat[];
-  keywordTotalCount: KeywordStat[];
+  keywordTotalCountMap: Map<string, number>;
   handleClick: (keyword: string) => void;
   parentRef: React.MutableRefObject<unknown>;
 }
 
-function KeywordStatsContent({ keywordStats, keywordTotalCount, handleClick, parentRef }: KeywordStatsContentProps) {
+function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, parentRef }: KeywordStatsContentProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: keywordStats.length || 0,
@@ -53,10 +52,7 @@ function KeywordStatsContent({ keywordStats, keywordTotalCount, handleClick, par
   });
 
   // computed
-  const maxValue = useMemo(
-    () => (keywordTotalCount ? Math.max(...keywordTotalCount.map((x) => x.count)) : 0),
-    [keywordTotalCount]
-  );
+  const maxValue = useMemo(() => Math.max(...Array.from(keywordTotalCountMap.values())), [keywordTotalCountMap]);
 
   return (
     <TabPanel
@@ -68,17 +64,41 @@ function KeywordStatsContent({ keywordStats, keywordTotalCount, handleClick, par
         position: "relative",
       }}
     >
-      {rowVirtualizer.getVirtualItems().map((virtualItem) => (
-        <StatsDisplayButton
-          key={virtualItem.key}
-          term={keywordStats[virtualItem.index].keyword}
-          count={keywordStats[virtualItem.index].count}
-          totalCount={keywordTotalCount[virtualItem.index].count}
-          maxCount={maxValue}
-          translateY={virtualItem.start}
-          handleClick={() => handleClick(keywordStats[virtualItem.index].keyword)}
-        />
-      ))}
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+        let keywordStat = keywordStats[virtualItem.index];
+
+        if (keywordTotalCountMap.has(keywordStat.keyword)) {
+          return (
+            <StatsDisplayButton
+              key={virtualItem.key}
+              term={keywordStat.keyword}
+              count={keywordStat.count}
+              totalCount={keywordTotalCountMap.get(keywordStat.keyword)!}
+              maxCount={maxValue}
+              translateY={virtualItem.start}
+              handleClick={() => handleClick(keywordStat.keyword)}
+            />
+          );
+        }
+        return (
+          <div
+            key={virtualItem.key}
+            style={{
+              width: "100%",
+              height: 30,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              transform: `translateY(${virtualItem.start}px)`,
+
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            {keywordStat.keyword}: {keywordStat.count} No total count... Why?
+          </div>
+        );
+      })}
     </TabPanel>
   );
 }

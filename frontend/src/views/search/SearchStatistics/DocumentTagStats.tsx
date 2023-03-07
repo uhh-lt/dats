@@ -1,26 +1,25 @@
-import { Button, ButtonProps } from "@mui/material";
-import React, { useMemo } from "react";
-import TagHooks from "../../../api/TagHooks";
-import { DocumentTagRead, TagStat } from "../../../api/openapi";
-import { useVirtualizer } from "@tanstack/react-virtual";
 import { TabPanel } from "@mui/lab";
 import { UseQueryResult } from "@tanstack/react-query";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import React, { useMemo } from "react";
+import { DocumentTagRead, TagStat } from "../../../api/openapi";
+import TagHooks from "../../../api/TagHooks";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
 
 interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
-  tagTotalCount: UseQueryResult<TagStat[], Error>;
+  tagTotalCountMap: Map<number, number>;
   handleClick: (tagId: number) => void;
   parentRef: React.MutableRefObject<undefined>;
 }
 
-function DocumentTagStats({ tagStats, tagTotalCount, handleClick, parentRef }: DocumentTagStatsProps) {
+function DocumentTagStats({ tagStats, tagTotalCountMap, handleClick, parentRef }: DocumentTagStatsProps) {
   return (
     <>
-      {tagStats.isSuccess && tagTotalCount.isSuccess ? (
+      {tagStats.isSuccess ? (
         <DocumentTagStatsContent
           tagStats={tagStats.data}
-          tagTotalCount={tagTotalCount.data}
+          tagTotalCountMap={tagTotalCountMap}
           handleClick={handleClick}
           parentRef={parentRef}
         />
@@ -39,12 +38,12 @@ export default DocumentTagStats;
 
 interface DocumentTagStatsContentProps {
   tagStats: TagStat[];
-  tagTotalCount: TagStat[];
+  tagTotalCountMap: Map<number, number>;
   handleClick: (tagId: number) => void;
   parentRef: React.MutableRefObject<undefined>;
 }
 
-function DocumentTagStatsContent({ tagStats, tagTotalCount, handleClick, parentRef }: DocumentTagStatsContentProps) {
+function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, parentRef }: DocumentTagStatsContentProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: tagStats.length,
@@ -53,7 +52,7 @@ function DocumentTagStatsContent({ tagStats, tagTotalCount, handleClick, parentR
   });
 
   // computed
-  const maxValue = useMemo(() => (tagTotalCount ? Math.max(...tagTotalCount.map((x) => x.count)) : 0), [tagTotalCount]);
+  const maxValue = useMemo(() => Math.max(...Array.from(tagTotalCountMap.values())), [tagTotalCountMap]);
 
   return (
     <TabPanel
@@ -65,18 +64,41 @@ function DocumentTagStatsContent({ tagStats, tagTotalCount, handleClick, parentR
         position: "relative",
       }}
     >
-      {rowVirtualizer.getVirtualItems().map((virtualItem) => (
-        <DocumentTagStatButtonContent
-          tagId={tagStats[virtualItem.index].tag.id}
-          key={virtualItem.key}
-          term={""}
-          count={tagStats[virtualItem.index].count}
-          totalCount={tagTotalCount[virtualItem.index].count}
-          maxCount={maxValue}
-          translateY={virtualItem.start}
-          handleClick={() => handleClick(tagStats[virtualItem.index].tag.id)}
-        />
-      ))}
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+        let tagStat = tagStats[virtualItem.index];
+
+        if (tagTotalCountMap.has(tagStat.tag.id)) {
+          return (
+            <DocumentTagStatButtonContent
+              tagId={tagStat.tag.id}
+              key={virtualItem.key}
+              term={""}
+              count={tagStat.count}
+              totalCount={tagTotalCountMap.get(tagStat.tag.id)!}
+              maxCount={maxValue}
+              translateY={virtualItem.start}
+              handleClick={() => handleClick(tagStat.tag.id)}
+            />
+          );
+        }
+        return (
+          <div
+            key={virtualItem.key}
+            style={{
+              width: "100%",
+              height: 30,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              transform: `translateY(${virtualItem.start}px)`,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            {tagStat.tag.title}: {tagStat.count} No total count... Why?
+          </div>
+        );
+      })}
     </TabPanel>
   );
 }

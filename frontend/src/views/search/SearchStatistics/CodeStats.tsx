@@ -1,19 +1,18 @@
-import { Button } from "@mui/material";
+import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { SpanEntityDocumentFrequency } from "../../../api/openapi";
-import { TabPanel } from "@mui/lab";
 import StatsDisplayButton from "./StatsDisplayButton";
 
 interface CodeStatsProps {
   codeId: number;
   codeStats: SpanEntityDocumentFrequency[];
-  codeTotalCount: SpanEntityDocumentFrequency[];
+  entityTotalCountMap: Map<string, number>;
   handleClick: (stat: SpanEntityDocumentFrequency) => void;
   parentRef: React.MutableRefObject<undefined>;
 }
 
-function CodeStats({ codeId, codeStats, codeTotalCount, handleClick, parentRef }: CodeStatsProps) {
+function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parentRef }: CodeStatsProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: codeStats.length,
@@ -22,7 +21,7 @@ function CodeStats({ codeId, codeStats, codeTotalCount, handleClick, parentRef }
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...codeTotalCount.map((x) => x.count)), [codeTotalCount]);
+  const maxValue = useMemo(() => Math.max(...Array.from(entityTotalCountMap.values())), [entityTotalCountMap]);
 
   // render
   return (
@@ -35,17 +34,56 @@ function CodeStats({ codeId, codeStats, codeTotalCount, handleClick, parentRef }
         position: "relative",
       }}
     >
-      {rowVirtualizer.getVirtualItems().map((virtualItem) => (
-        <StatsDisplayButton
-          key={virtualItem.key}
-          term={codeStats[virtualItem.index].span_text}
-          count={codeStats[virtualItem.index].count}
-          totalCount={codeTotalCount[virtualItem.index].count}
-          maxCount={maxValue}
-          translateY={virtualItem.start}
-          handleClick={() => handleClick(codeStats[virtualItem.index])}
-        />
-      ))}
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+        let codeStat = codeStats[virtualItem.index];
+
+        return (
+          <StatsDisplayButton
+            key={virtualItem.key}
+            term={codeStat.span_text}
+            count={codeStat.count}
+            totalCount={entityTotalCountMap.get(codeStat.span_text)!}
+            maxCount={maxValue}
+            translateY={virtualItem.start}
+            handleClick={() => handleClick(codeStat)}
+          />
+        );
+      })}
+
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+        let codeStat = codeStats[virtualItem.index];
+
+        if (entityTotalCountMap.has(codeStat.span_text)) {
+          return (
+            <StatsDisplayButton
+              key={virtualItem.key}
+              term={codeStat.span_text}
+              count={codeStat.count}
+              totalCount={entityTotalCountMap.get(codeStat.span_text)!}
+              maxCount={maxValue}
+              translateY={virtualItem.start}
+              handleClick={() => handleClick(codeStat)}
+            />
+          );
+        }
+        return (
+          <div
+            key={virtualItem.key}
+            style={{
+              width: "100%",
+              height: 30,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              transform: `translateY(${virtualItem.start}px)`,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            {codeStat.span_text}: {codeStat.count} No total count... Why?
+          </div>
+        );
+      })}
     </TabPanel>
   );
 }
