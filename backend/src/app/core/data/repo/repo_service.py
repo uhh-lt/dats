@@ -114,6 +114,11 @@ class RepoService(metaclass=SingletonMeta):
         proj_repo_path = self.get_project_repo_root_path(proj_id=proj_id)
         shutil.rmtree(proj_repo_path)
 
+    def purge_temporary_files(self) -> None:
+        logger.warning("Removing temporary files in repo!")
+        shutil.rmtree(self.temp_files_root)
+        self.temp_files_root.mkdir(parents=True)
+
     def remove_sdoc_file(self, sdoc: SourceDocumentRead) -> None:
         logger.info(f"Removing SourceDocument File {sdoc.filename} of project with ID={sdoc.project_id}")
         self.get_path_to_sdoc_file(sdoc=sdoc, raise_if_not_exists=True).unlink()
