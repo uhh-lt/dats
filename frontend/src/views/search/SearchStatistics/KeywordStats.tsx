@@ -4,19 +4,26 @@ import React, { useMemo } from "react";
 import { KeywordStat } from "../../../api/openapi";
 import { UseQueryResult } from "@tanstack/react-query";
 import { TabPanel } from "@mui/lab";
+import StatsDisplayButton from "./StatsDisplayButton";
 
 interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
+  keywordTotalCount: UseQueryResult<KeywordStat[], Error>;
   handleClick: (keyword: string) => void;
   parentRef: React.MutableRefObject<unknown>;
 }
 
-function KeywordStats({ keywordStats, handleClick, parentRef }: KeywordStatsProps) {
+function KeywordStats({ keywordStats, keywordTotalCount, handleClick, parentRef }: KeywordStatsProps) {
   // render
   return (
     <>
-      {keywordStats.isSuccess ? (
-        <KeywordStatsContent keywordStats={keywordStats.data} handleClick={handleClick} parentRef={parentRef} />
+      {keywordStats.isSuccess && keywordTotalCount.isSuccess ? (
+        <KeywordStatsContent
+          keywordStats={keywordStats.data}
+          keywordTotalCount={keywordTotalCount.data}
+          handleClick={handleClick}
+          parentRef={parentRef}
+        />
       ) : keywordStats.isError ? (
         <TabPanel value="keywords">Error: {keywordStats.error.message}</TabPanel>
       ) : keywordStats.isLoading && keywordStats.isFetching ? (
@@ -32,20 +39,24 @@ export default KeywordStats;
 
 interface KeywordStatsContentProps {
   keywordStats: KeywordStat[];
+  keywordTotalCount: KeywordStat[];
   handleClick: (keyword: string) => void;
   parentRef: React.MutableRefObject<unknown>;
 }
 
-function KeywordStatsContent({ keywordStats, handleClick, parentRef }: KeywordStatsContentProps) {
+function KeywordStatsContent({ keywordStats, keywordTotalCount, handleClick, parentRef }: KeywordStatsContentProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: keywordStats.length || 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 40,
+    estimateSize: () => 35,
   });
 
   // computed
-  const maxValue = useMemo(() => (keywordStats ? Math.max(...keywordStats.map((x) => x.count)) : 0), [keywordStats]);
+  const maxValue = useMemo(
+    () => (keywordTotalCount ? Math.max(...keywordTotalCount.map((x) => x.count)) : 0),
+    [keywordTotalCount]
+  );
 
   return (
     <TabPanel
@@ -58,23 +69,15 @@ function KeywordStatsContent({ keywordStats, handleClick, parentRef }: KeywordSt
       }}
     >
       {rowVirtualizer.getVirtualItems().map((virtualItem) => (
-        <Button
+        <StatsDisplayButton
           key={virtualItem.key}
-          sx={{
-            width: `${(keywordStats[virtualItem.index].count / maxValue) * 100}%`,
-            justifyContent: "left",
-          }}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            transform: `translateY(${virtualItem.start}px)`,
-          }}
-          variant="outlined"
-          onClick={() => handleClick(keywordStats[virtualItem.index].keyword)}
-        >
-          {keywordStats[virtualItem.index].keyword}: {keywordStats[virtualItem.index].count}
-        </Button>
+          term={keywordStats[virtualItem.index].keyword}
+          count={keywordStats[virtualItem.index].count}
+          totalCount={keywordTotalCount[virtualItem.index].count}
+          maxCount={maxValue}
+          translateY={virtualItem.start}
+          handleClick={() => handleClick(keywordStats[virtualItem.index].keyword)}
+        />
       ))}
     </TabPanel>
   );

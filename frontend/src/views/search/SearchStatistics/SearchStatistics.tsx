@@ -51,8 +51,11 @@ function SearchStatistics({
 
   // stats
   const [validEntityStats, setValidEntityStats] = useState<Map<number, SpanEntityDocumentFrequency[]>>(new Map());
+  const entityTotalCounts = SearchHooks.useSearchEntityDocumentStats(projectId, []);
   const entityStats = SearchHooks.useSearchEntityDocumentStats(projectId, filter);
+  const keywordTotalCounts = SearchHooks.useSearchKeywordStats(projectId, []);
   const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter);
+  const tagTotalCount = SearchHooks.useSearchTagStats(projectId, []);
   const tagStats = SearchHooks.useSearchTagStats(projectId, filter);
 
   // computed
@@ -104,13 +107,24 @@ function SearchStatistics({
           </Tabs>
         </Box>
         <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
-          <KeywordStats keywordStats={keywordStats} handleClick={handleKeywordClick} parentRef={parentRef} />
-          <DocumentTagStats tagStats={tagStats} handleClick={handleTagClick} parentRef={parentRef} />
+          <KeywordStats
+            keywordStats={keywordStats}
+            keywordTotalCount={keywordTotalCounts}
+            handleClick={handleKeywordClick}
+            parentRef={parentRef}
+          />
+          <DocumentTagStats
+            tagStats={tagStats}
+            tagTotalCount={tagTotalCount}
+            handleClick={handleTagClick}
+            parentRef={parentRef}
+          />
           {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
             <CodeStats
               key={codeId}
               codeId={codeId}
               codeStats={data}
+              codeTotalCount={entityTotalCounts.data!.get(codeId)!}
               handleClick={handleCodeClick}
               parentRef={parentRef}
             />

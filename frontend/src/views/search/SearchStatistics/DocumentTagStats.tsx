@@ -1,22 +1,29 @@
 import { Button, ButtonProps } from "@mui/material";
 import React, { useMemo } from "react";
 import TagHooks from "../../../api/TagHooks";
-import { TagStat } from "../../../api/openapi";
+import { DocumentTagRead, TagStat } from "../../../api/openapi";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { TabPanel } from "@mui/lab";
 import { UseQueryResult } from "@tanstack/react-query";
+import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
 
 interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
+  tagTotalCount: UseQueryResult<TagStat[], Error>;
   handleClick: (tagId: number) => void;
   parentRef: React.MutableRefObject<undefined>;
 }
 
-function DocumentTagStats({ tagStats, handleClick, parentRef }: DocumentTagStatsProps) {
+function DocumentTagStats({ tagStats, tagTotalCount, handleClick, parentRef }: DocumentTagStatsProps) {
   return (
     <>
-      {tagStats.isSuccess ? (
-        <DocumentTagStatsContent tagStats={tagStats.data} handleClick={handleClick} parentRef={parentRef} />
+      {tagStats.isSuccess && tagTotalCount.isSuccess ? (
+        <DocumentTagStatsContent
+          tagStats={tagStats.data}
+          tagTotalCount={tagTotalCount.data}
+          handleClick={handleClick}
+          parentRef={parentRef}
+        />
       ) : tagStats.isError ? (
         <TabPanel value="tags">Error: {tagStats.error.message}</TabPanel>
       ) : tagStats.isLoading && tagStats.isFetching ? (
@@ -32,20 +39,21 @@ export default DocumentTagStats;
 
 interface DocumentTagStatsContentProps {
   tagStats: TagStat[];
+  tagTotalCount: TagStat[];
   handleClick: (tagId: number) => void;
   parentRef: React.MutableRefObject<undefined>;
 }
 
-function DocumentTagStatsContent({ tagStats, handleClick, parentRef }: DocumentTagStatsContentProps) {
+function DocumentTagStatsContent({ tagStats, tagTotalCount, handleClick, parentRef }: DocumentTagStatsContentProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: tagStats.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 40,
+    estimateSize: () => 35,
   });
 
   // computed
-  const maxValue = useMemo(() => (tagStats ? Math.max(...tagStats.map((x) => x.count)) : 0), [tagStats]);
+  const maxValue = useMemo(() => (tagTotalCount ? Math.max(...tagTotalCount.map((x) => x.count)) : 0), [tagTotalCount]);
 
   return (
     <TabPanel
@@ -59,37 +67,28 @@ function DocumentTagStatsContent({ tagStats, handleClick, parentRef }: DocumentT
     >
       {rowVirtualizer.getVirtualItems().map((virtualItem) => (
         <DocumentTagStatButtonContent
-          key={virtualItem.key}
-          style={{
-            width: `${(tagStats[virtualItem.index].count / maxValue) * 100}%`,
-            justifyContent: "left",
-            position: "absolute",
-            top: 0,
-            left: 0,
-            transform: `translateY(${virtualItem.start}px)`,
-          }}
-          variant="outlined"
-          onClick={() => handleClick(tagStats[virtualItem.index].tag.id)}
           tagId={tagStats[virtualItem.index].tag.id}
+          key={virtualItem.key}
+          term={""}
           count={tagStats[virtualItem.index].count}
+          totalCount={tagTotalCount[virtualItem.index].count}
+          maxCount={maxValue}
+          translateY={virtualItem.start}
+          handleClick={() => handleClick(tagStats[virtualItem.index].tag.id)}
         />
       ))}
     </TabPanel>
   );
 }
 
-function DocumentTagStatButtonContent({ tagId, count, ...props }: { tagId: number; count: number } & ButtonProps) {
-  const tag = TagHooks.useGetTag(tagId);
+function DocumentTagStatButtonContent({ tagId, ...props }: { tagId: number } & StatsDisplayButtonProps) {
+  const tag: UseQueryResult<DocumentTagRead, Error> = TagHooks.useGetTag(tagId);
 
   return (
-    <Button {...props} disabled={!tag.isSuccess}>
-      {tag.isLoading && <>Loading...: {count}</>}
-      {tag.isError && <>{tag.error.message} </>}
-      {tag.isSuccess && (
-        <>
-          {tag.data.title}: {count}
-        </>
-      )}
-    </Button>
+    <StatsDisplayButton
+      {...props}
+      disabled={!tag.isSuccess}
+      term={tag.isLoading ? "Loading..." : tag.isError ? tag.error.message : tag.data.title}
+    />
   );
 }
