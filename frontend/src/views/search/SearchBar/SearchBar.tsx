@@ -23,6 +23,14 @@ import { DocType } from "../../../api/openapi";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { QueryType } from "../QueryType";
 import { SearchActions } from "../searchSlice";
+import ImageIcon from "@mui/icons-material/Image";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import FeedIcon from "@mui/icons-material/Feed";
+import FeedOutlinedIcon from "@mui/icons-material/FeedOutlined";
+import AudiotrackIcon from "@mui/icons-material/Audiotrack";
+import AudiotrackOutlinedIcon from "@mui/icons-material/AudiotrackOutlined";
+import MovieIcon from "@mui/icons-material/Movie";
+import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
 
 interface SearchBarProps {
   register: UseFormRegister<Record<string, any>>;
@@ -124,13 +132,15 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
             <CardContent>
               <FormControl component="fieldset" variant="standard" sx={{ mr: 3 }}>
                 <FormLabel component="legend">Result modalities</FormLabel>
-                <FormGroup>
+                <FormGroup row>
                   <FormControlLabel
                     control={
                       <Checkbox
                         name="Text"
                         onChange={() => dispatch(SearchActions.toggleModality(DocType.TEXT))}
                         checked={resultModalities.indexOf(DocType.TEXT) !== -1}
+                        checkedIcon={<FeedIcon />}
+                        icon={<FeedOutlinedIcon />}
                       />
                     }
                     label="Text"
@@ -141,6 +151,8 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
                         name="Image"
                         onChange={() => dispatch(SearchActions.toggleModality(DocType.IMAGE))}
                         checked={resultModalities.indexOf(DocType.IMAGE) !== -1}
+                        checkedIcon={<ImageIcon />}
+                        icon={<ImageOutlinedIcon />}
                       />
                     }
                     label="Image"
@@ -151,6 +163,8 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
                         name="Audio"
                         onChange={() => dispatch(SearchActions.toggleModality(DocType.AUDIO))}
                         checked={resultModalities.indexOf(DocType.AUDIO) !== -1}
+                        checkedIcon={<AudiotrackIcon />}
+                        icon={<AudiotrackOutlinedIcon />}
                       />
                     }
                     label="Audio"
@@ -161,6 +175,8 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
                         name="Video"
                         onChange={() => dispatch(SearchActions.toggleModality(DocType.VIDEO))}
                         checked={resultModalities.indexOf(DocType.VIDEO) !== -1}
+                        checkedIcon={<MovieIcon />}
+                        icon={<MovieOutlinedIcon />}
                       />
                     }
                     label="Video"
@@ -170,6 +186,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
               <FormControl>
                 <FormLabel id="radio-buttons-group-query">Query Type</FormLabel>
                 <RadioGroup
+                  row
                   aria-labelledby="radio-buttons-group-query"
                   value={searchType}
                   onChange={(event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
