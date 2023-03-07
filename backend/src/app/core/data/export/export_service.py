@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.code import CRUDCode, crud_code
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.bbox_annotation import (
@@ -17,7 +18,6 @@ from app.core.data.dto.bbox_annotation import (
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.span_annotation import (
@@ -172,7 +172,10 @@ class ExportService(metaclass=SingletonMeta):
         return export_url
 
     def export_adocs(
-        self, db: Session, adoc_ids: List[int], export_format: ExportFormat = ExportFormat.CSV
+        self,
+        db: Session,
+        adoc_ids: List[int],
+        export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
         exported_files = []
         for adoc_id in adoc_ids:
@@ -299,36 +302,101 @@ class ExportService(metaclass=SingletonMeta):
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
 
+    def _export_code_data(self, db: Session, code_id: int) -> pd.DataFrame:
+        logger.info(f"Exporting Code {code_id} ...")
+
+        code = crud_code.read(db=db, id=code_id)
+        user_dto = UserRead.from_orm(code.user)
+        code_dto = CodeRead.from_orm(code)
+        parent_code_id = code_dto.parent_code_id
+        parent_code_name = None
+        if parent_code_id is not None:
+            parent_code_name = CodeRead.from_orm(code.parent_code).name
+
+        data = {
+            "code_id": [code_dto.id],
+            "code_name": [code_dto.name],
+            "description": [code_dto.description],
+            "color": [code_dto.color],
+            "created": [code_dto.created],
+            "parent_code_id": [parent_code_id],
+            "parent_code_name": [parent_code_name],
+            "created_by_user_id": [user_dto.id],
+            "created_by_user_first_name": [user_dto.first_name],
+            "created_by_user_last_name": [user_dto.last_name],
+        }
+
+        df = pd.DataFrame(data=data)
+        return df
+
+    def export_project_codes(
+        self, db: Session, proj_id: int, export_format: ExportFormat = ExportFormat.CSV
+    ) -> str:
+        proj = crud_project.read(db=db, id=proj_id)
+        code_dfs = [
+            self._export_code_data(db=db, code_id=code.id) for code in proj.codes
+        ]
+        codes = pd.concat(code_dfs)
+        export_file = self._write_export_data_to_temp_file(
+            codes, export_format=export_format, fn=f"project_{proj_id}_codes"
+        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+        return export_url
+
+    def export_user_codes_from_proj(
+        self,
+        db: Session,
+        user_id: int,
+        proj_id: int,
+        export_format: ExportFormat = ExportFormat.CSV,
+    ) -> str:
+        user = crud_user.read(db=db, id=user_id)
+        code_dfs = [
+            self._export_code_data(db=db, code_id=code.id)
+            for code in user.codes
+            if code.project_id == proj_id
+        ]
+        codes = pd.concat(code_dfs)
+        export_file = self._write_export_data_to_temp_file(
+            codes, export_format=export_format, fn=f"user_{user_id}_codes"
+        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+        return export_url
+
     def _export_user_data_from_proj(
         self,
         db: Session,
         user_id: int,
         proj_id: int,
-    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
+    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame], List[pd.DataFrame]]:
         logger.info(f"Exporting data of User {user_id} in Project {proj_id} ...")
         user = crud_user.read(db=db, id=user_id)
 
         # all AnnotationDocuments
-        adocs = [
-            AnnotationDocumentRead.from_orm(adoc)
-            for adoc in user.annotation_documents
-            if adoc.source_document.project_id == proj_id
-        ]
-
+        adocs = user.annotation_documents
         exported_adocs: List[pd.DataFrame] = []
         for adoc in adocs:
-            export_data = self._export_adoc_data(db=db, adoc_id=adoc.id)
-            exported_adocs.append(export_data)
+            if adoc.source_document.project_id == proj_id:
+                export_data = self._export_adoc_data(db=db, adoc_id=adoc.id)
+                exported_adocs.append(export_data)
 
         # all Memos
         memos = user.memos
-
         exported_memos: List[pd.DataFrame] = []
         for memo in memos:
-            export_data = self._export_memo_data(db=db, memo_id=memo.id)
-            exported_memos.append(export_data)
+            if memo.project_id == proj_id:
+                export_data = self._export_memo_data(db=db, memo_id=memo.id)
+                exported_memos.append(export_data)
 
-        return exported_adocs, exported_memos
+        # all Codes
+        codes = user.codes
+        exported_codes: List[pd.DataFrame] = []
+        for code in codes:
+            if code.project_id == proj_id:
+                export_data = self._export_code_data(db=db, code_id=code.id)
+                exported_codes.append(export_data)
+
+        return exported_adocs, exported_memos, exported_codes
 
     def export_user_data_from_proj(
         self,
@@ -337,11 +405,15 @@ class ExportService(metaclass=SingletonMeta):
         proj_id: int,
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
-        exported_adocs, exported_memos = self._export_user_data_from_proj(
-            db=db, user_id=user_id, proj_id=proj_id
-        )
+
+        (
+            exported_adocs,
+            exported_memos,
+            exported_codes,
+        ) = self._export_user_data_from_proj(db=db, user_id=user_id, proj_id=proj_id)
 
         exported_files = []
+        # one file per adoc
         for adoc_df in exported_adocs:
             export_file = self._write_export_data_to_temp_file(
                 data=adoc_df,
@@ -350,11 +422,21 @@ class ExportService(metaclass=SingletonMeta):
             )
             exported_files.append(export_file)
 
+        # one file for all memos
         exported_memo_df = pd.concat(exported_memos)
         export_file = self._write_export_data_to_temp_file(
             data=exported_memo_df,
             export_format=export_format,
             fn=f"user_{user_id}_memo_export",
+        )
+        exported_files.append(export_file)
+
+        # one file for all codes
+        exported_code_df = pd.concat(exported_codes)
+        export_file = self._write_export_data_to_temp_file(
+            data=exported_code_df,
+            export_format=export_format,
+            fn=f"user_{user_id}_code_export",
         )
         exported_files.append(export_file)
 
@@ -380,14 +462,18 @@ class ExportService(metaclass=SingletonMeta):
 
         exported_adocs: Dict[int, List[pd.DataFrame]] = dict()
         exported_memos: List[pd.DataFrame] = []
+        exported_codes: List[pd.DataFrame] = []
 
         for user in users:
-            ex_adocs, ex_memos = self._export_user_data_from_proj(
+            ex_adocs, ex_memos, ex_codes = self._export_user_data_from_proj(
                 db=db, user_id=user.id, proj_id=proj_id
             )
 
             # one memo df per user
             exported_memos.append(pd.concat(ex_memos))
+
+            # one code df per user
+            exported_codes.append(pd.concat(ex_codes))
 
             # group  the adocs by sdoc id and merge them later
             for adoc_df in ex_adocs:
@@ -417,6 +503,15 @@ class ExportService(metaclass=SingletonMeta):
                 data=memo_df,
                 export_format=export_format,
                 fn=f"user_{memo_df.iloc[0].user_id}_memo_export",
+            )
+            exported_files.append(export_file)
+
+        # write codes to files
+        for code_df in exported_codes:
+            export_file = self._write_export_data_to_temp_file(
+                data=code_df,
+                export_format=export_format,
+                fn=f"user_{code_df.iloc[0].created_by_user_id}_code_export",
             )
             exported_files.append(export_file)
 
