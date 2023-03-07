@@ -40,6 +40,11 @@ from app.core.data.repo.repo_service import RepoService
 from app.util.singleton_meta import SingletonMeta
 
 
+class NoDataToExportError(Exception):
+    def __init__(self, what_msg: str):
+        super().__init__(what_msg)
+
+
 class ExportService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.repo: RepoService = RepoService()
@@ -333,6 +338,7 @@ class ExportService(metaclass=SingletonMeta):
         logbook_dto = None
         # avoid circular imports
         from app.core.data.crud.object_handle import crud_object_handle
+
         for memo in memos:
             # get attached object
             attached_to = crud_object_handle.resolve_handled_object(
@@ -343,8 +349,8 @@ class ExportService(metaclass=SingletonMeta):
 
         if logbook_dto is None:
             msg = f"User {user_id} has no LogBook for Project {proj_id}!"
-            logger.error(msg)
-            raise ValueError(msg)
+            logger.warning(msg)
+            return ""
 
         return logbook_dto.content
 
@@ -376,14 +382,18 @@ class ExportService(metaclass=SingletonMeta):
         ex_tags = self._export_project_tags_data(db=db, proj_id=proj_id)
 
         # one file for all tags
-        export_data = pd.concat(ex_tags)
-        export_file = self._write_export_data_to_temp_file(
-            data=export_data,
-            export_format=export_format,
-            fn=f"project_{proj_id}_tags",
-        )
-        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
-        return export_url
+        if len(ex_tags) > 0:
+            export_data = pd.concat(ex_tags)
+            export_file = self._write_export_data_to_temp_file(
+                data=export_data,
+                export_format=export_format,
+                fn=f"project_{proj_id}_tags",
+            )
+            export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+            return export_url
+        msg = f"No DocumentTags to export in Project {proj_id}"
+        logger.error(msg)
+        raise NoDataToExportError(msg)
 
     def _export_code_data(self, db: Session, code_id: int) -> pd.DataFrame:
         logger.info(f"Exporting Code {code_id} ...")
@@ -419,12 +429,16 @@ class ExportService(metaclass=SingletonMeta):
         code_dfs = [
             self._export_code_data(db=db, code_id=code.id) for code in proj.codes
         ]
-        codes = pd.concat(code_dfs)
-        export_file = self._write_export_data_to_temp_file(
-            codes, export_format=export_format, fn=f"project_{proj_id}_codes"
-        )
-        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
-        return export_url
+        if len(code_dfs) > 0:
+            codes = pd.concat(code_dfs)
+            export_file = self._write_export_data_to_temp_file(
+                codes, export_format=export_format, fn=f"project_{proj_id}_codes"
+            )
+            export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
+            return export_url
+        msg = f"No Codes to export in Project {proj_id}"
+        logger.error(msg)
+        raise NoDataToExportError(msg)
 
     def export_user_codes_from_proj(
         self,
@@ -503,39 +517,55 @@ class ExportService(metaclass=SingletonMeta):
         exported_files = []
         # one file per adoc
         for adoc_df in exported_adocs:
-            export_file = self._write_export_data_to_temp_file(
-                data=adoc_df,
-                export_format=export_format,
-                fn=f"adoc_{adoc_df.iloc[0].adoc_id}_export",
-            )
-            exported_files.append(export_file)
+            if len(adoc_df) > 0:  # for adocs with 0 annos
+                export_file = self._write_export_data_to_temp_file(
+                    data=adoc_df,
+                    export_format=export_format,
+                    fn=f"adoc_{adoc_df.iloc[0].adoc_id}_export",
+                )
+                exported_files.append(export_file)
 
         # one file for all memos
-        exported_memo_df = pd.concat(exported_memos)
-        export_file = self._write_export_data_to_temp_file(
-            data=exported_memo_df,
-            export_format=export_format,
-            fn=f"user_{user_id}_memo_export",
-        )
-        exported_files.append(export_file)
+        if len(exported_memos) > 0:
+            exported_memo_df = pd.concat(exported_memos)
+            export_file = self._write_export_data_to_temp_file(
+                data=exported_memo_df,
+                export_format=export_format,
+                fn=f"user_{user_id}_memo_export",
+            )
+            exported_files.append(export_file)
+        else:
+            msg = f"No Memos to export for User {user_id} in Project {proj_id}"
+            logger.error(msg)
+            raise NoDataToExportError(msg)
 
         # one file for all codes
-        exported_code_df = pd.concat(exported_codes)
-        export_file = self._write_export_data_to_temp_file(
-            data=exported_code_df,
-            export_format=export_format,
-            fn=f"user_{user_id}_code_export",
-        )
-        exported_files.append(export_file)
+        if len(exported_codes) > 0:
+            exported_code_df = pd.concat(exported_codes)
+            export_file = self._write_export_data_to_temp_file(
+                data=exported_code_df,
+                export_format=export_format,
+                fn=f"user_{user_id}_code_export",
+            )
+            exported_files.append(export_file)
+        else:
+            msg = f"No Codes to export for User {user_id} in Project {proj_id}"
+            logger.error(msg)
+            raise NoDataToExportError(msg)
 
         # one file for all tags
-        exported_tag_df = pd.concat(exported_tags)
-        export_file = self._write_export_data_to_temp_file(
-            data=exported_tag_df,
-            export_format=export_format,
-            fn=f"project_{proj_id}_tags_export",
-        )
-        exported_files.append(export_file)
+        if len(exported_tags) > 0:
+            exported_tag_df = pd.concat(exported_tags)
+            export_file = self._write_export_data_to_temp_file(
+                data=exported_tag_df,
+                export_format=export_format,
+                fn=f"project_{proj_id}_tags_export",
+            )
+            exported_files.append(export_file)
+        else:
+            msg = f"No Tags to export in Project {proj_id}"
+            logger.error(msg)
+            raise NoDataToExportError(msg)
 
         # one file for the logbook
         logbook_file = self.repo.create_temp_file(
@@ -574,23 +604,30 @@ class ExportService(metaclass=SingletonMeta):
             )
 
             # one memo df per user
-            exported_memos.append(pd.concat(ex_memos))
+            if len(ex_memos) > 0:
+                exported_memos.append(pd.concat(ex_memos))
 
             # one logbook content string per user
-            exported_logbooks.append((
-                user.id,
-                self._export_logbook_memo_data(db=db, proj_id=proj_id, user_id=user.id)
-            ))
+            exported_logbooks.append(
+                (
+                    user.id,
+                    self._export_logbook_memo_data(
+                        db=db, proj_id=proj_id, user_id=user.id
+                    ),
+                )
+            )
 
             # one code df per user
-            exported_codes.append(pd.concat(ex_codes))
+            if len(ex_codes) > 0:
+                exported_codes.append(pd.concat(ex_codes))
 
             # group  the adocs by sdoc id and merge them later
             for adoc_df in ex_adocs:
-                sdoc_id = adoc_df.iloc[0].sdoc_id
-                if sdoc_id not in exported_adocs:
-                    exported_adocs[sdoc_id] = []
-                exported_adocs[sdoc_id].append(adoc_df)
+                if len(adoc_df) > 0:  # for adocs with 0 annos:
+                    sdoc_id = adoc_df.iloc[0].sdoc_id
+                    if sdoc_id not in exported_adocs:
+                        exported_adocs[sdoc_id] = []
+                    exported_adocs[sdoc_id].append(adoc_df)
 
         # merge adocs
         merged_exported_adocs: List[pd.DataFrame] = []
@@ -618,9 +655,7 @@ class ExportService(metaclass=SingletonMeta):
 
         # write logbooks to files
         for user_id, logbook_content in exported_logbooks:
-            logbook_file = self.repo.create_temp_file(
-                f"user_{user_id}_logbook.md"
-            )
+            logbook_file = self.repo.create_temp_file(f"user_{user_id}_logbook.md")
             logbook_file.write_text(logbook_content)
             exported_files.append(logbook_file)
 
@@ -635,13 +670,14 @@ class ExportService(metaclass=SingletonMeta):
 
         # write all tags to one file
         exported_tags = self._export_project_tags_data(db=db, proj_id=proj_id)
-        exported_tag_df = pd.concat(exported_tags)
-        export_file = self._write_export_data_to_temp_file(
-            data=exported_tag_df,
-            export_format=export_format,
-            fn=f"project_{proj_id}_tags_export",
-        )
-        exported_files.append(export_file)
+        if len(exported_tags) > 0:
+            exported_tag_df = pd.concat(exported_tags)
+            export_file = self._write_export_data_to_temp_file(
+                data=exported_tag_df,
+                export_format=export_format,
+                fn=f"project_{proj_id}_tags_export",
+            )
+            exported_files.append(export_file)
 
         # ZIP all files
         export_zip = self.repo.create_temp_file(

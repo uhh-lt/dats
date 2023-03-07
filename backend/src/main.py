@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from uvicorn import Config, Server
 
 from app.core.startup import startup
+from app.core.data.export.export_service import NoDataToExportError
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
@@ -20,7 +21,7 @@ if not STARTUP_DONE:
     os.environ['STARTUP_DONE'] = "1"
 
 from app.core.data.crud.source_document import SourceDocumentPreprocessingUnfinishedError
-from app.core.data.repo.repo_service import SourceDocumentNotFoundInRepositoryError, \
+from app.core.data.repo.repo_service import RepoService, SourceDocumentNotFoundInRepositoryError, \
     FileNotFoundInRepositoryError  # noqa E402
 from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
     NoSuchMemoInElasticSearchError  # noqa E402
@@ -69,6 +70,9 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 async def no_such_element_error_handler(_, exc: NoSuchElementError):
     return PlainTextResponse(str(exc), status_code=404)
 
+@app.exception_handler(NoDataToExportError)
+async def no_data_to_export_handler(_, exc: NoDataToExportError):
+    return PlainTextResponse(str(exc), status_code=404)
 
 @app.exception_handler(NoSuchSourceDocumentInElasticSearchError)
 async def no_such_sdoc_in_es_error_handler(_, exc: NoSuchSourceDocumentInElasticSearchError):
