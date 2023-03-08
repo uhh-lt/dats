@@ -58,11 +58,14 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
   };
 
   const handleClose = () => {
-    // clear focus
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+    // TODO would be better if the listener is added/removed when the search bar is opened/closed
+    if (open) {
+      // clear focus
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      setAnchorEl(null);
     }
-    setAnchorEl(null);
   };
 
   const handleSubmitWrapper = (event: React.FormEvent<HTMLFormElement>) => {
