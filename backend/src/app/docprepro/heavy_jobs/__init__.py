@@ -4,7 +4,7 @@ from typing import Any
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
-import_uploaded_archive = "app.docprepro.archive.preprocess.import_uploaded_archive"
+import_uploaded_archive = "app.docprepro.heavy_jobs.preprocess.import_uploaded_archive"
 
 
 def import_uploaded_archive_apply_async(archive_file_path: Path,

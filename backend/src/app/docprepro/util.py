@@ -9,7 +9,7 @@ from app.core.data.dto.source_document import SDocStatus
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.docprepro.archive import import_uploaded_archive_apply_async
+from app.docprepro.heavy_jobs import import_uploaded_archive_apply_async
 from app.docprepro.image import image_document_preprocessing_apply_async
 from app.docprepro.audio import audio_document_preprocessing_apply_async
 from app.docprepro.video import video_document_preprocessing_apply_async
