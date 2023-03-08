@@ -60,7 +60,7 @@ const wordCloudOptions: OptionsProp = {
 
 function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentRead }) {
   // global client state (redux)
-  const searchResStyle = useAppSelector((state) => state.settings.search.SearchResStyle);
+  const searchResStyle = useAppSelector((state) => state.settings.search.searchResStyle);
 
   return useMemo(() => {
     // rendering

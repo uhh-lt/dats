@@ -23,20 +23,20 @@ function StatsDisplayButton({
   const widthVal = Math.sqrt(totalCount / maxCount) * 100;
 
   return (
-    <Tooltip title={term}>
-      <div
-        style={{
-          width: widthVal + "%",
-          height: 30,
-          position: "absolute",
-          top: 0,
-          left: 0,
-          transform: `translateY(${translateY}px)`,
-          display: "flex",
-          alignItems: "center",
-        }}
-        onClick={() => handleClick()}
-      >
+    <div
+      style={{
+        width: widthVal + "%",
+        height: 30,
+        position: "absolute",
+        top: 0,
+        left: 0,
+        transform: `translateY(${translateY}px)`,
+        display: "flex",
+        alignItems: "center",
+      }}
+      onClick={() => handleClick()}
+    >
+      <Tooltip title={term}>
         <Typography
           fontSize={16}
           minWidth={100}
@@ -45,28 +45,28 @@ function StatsDisplayButton({
         >
           {term}
         </Typography>
-        <Button
-          style={{
-            width: "100%",
-            height: 30,
-            float: "left",
-            justifyContent: "left",
-            marginRight: 2,
-            paddingLeft: 3,
-            color: "white",
-            fontSize: 13,
-            background: `linear-gradient(90deg, rgba(40,40,40,1) ${gradRatio}%, rgba(255,255,255,1) ${gradRatio}%, rgba(25, 118, 210,1) ${Math.min(
-              gradRatio + 1,
-              100
-            )}%)`,
-          }}
-          {...(btnProps as ButtonProps)}
-        >
-          <b>{count}</b>
-        </Button>
-        <Typography fontSize={18}>{totalCount}</Typography>
-      </div>
-    </Tooltip>
+      </Tooltip>
+      <Button
+        style={{
+          width: "100%",
+          height: 30,
+          float: "left",
+          justifyContent: "left",
+          marginRight: 2,
+          paddingLeft: 3,
+          color: "white",
+          fontSize: 13,
+          background: `linear-gradient(90deg, rgba(40,40,40,1) ${gradRatio}%, rgba(255,255,255,1) ${gradRatio}%, rgba(25, 118, 210,1) ${Math.min(
+            gradRatio + 1,
+            100
+          )}%)`,
+        }}
+        {...(btnProps as ButtonProps)}
+      >
+        <b>{count}</b>
+      </Button>
+      <Typography fontSize={18}>{totalCount}</Typography>
+    </div>
   );
 }
 
