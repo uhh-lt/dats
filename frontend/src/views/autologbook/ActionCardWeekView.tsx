@@ -77,7 +77,7 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
             <ListItem
               key={virtualItem.key}
               // @ts-ignore
-              ref={rowVirtualizer.measureElement}
+              ref={(element) => rowVirtualizer.measureElement(element)}
               data-index={virtualItem.index}
               style={{
                 padding: 5,
