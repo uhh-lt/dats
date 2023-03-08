@@ -11,7 +11,6 @@ from sqlalchemy.exc import IntegrityError
 from uvicorn import Config, Server
 
 from app.core.startup import startup
-from app.core.data.export.export_service import NoDataToExportError
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
@@ -25,6 +24,7 @@ from app.core.data.repo.repo_service import RepoService, SourceDocumentNotFoundI
     FileNotFoundInRepositoryError  # noqa E402
 from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
     NoSuchMemoInElasticSearchError  # noqa E402
+from app.core.data.export.export_service import ExportJobPreparationError, NoDataToExportError, NoSuchExportJobError
 from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
     span_annotation, document_tag, span_group, bbox_annotation, search, metadata, feedback, analysis, \
     prepro, export  # noqa E402
@@ -70,9 +70,21 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 async def no_such_element_error_handler(_, exc: NoSuchElementError):
     return PlainTextResponse(str(exc), status_code=404)
 
+
 @app.exception_handler(NoDataToExportError)
 async def no_data_to_export_handler(_, exc: NoDataToExportError):
     return PlainTextResponse(str(exc), status_code=404)
+
+
+@app.exception_handler(NoSuchExportJobError)
+async def no_such_export_job_handler(_, exc: NoSuchExportJobError):
+    return PlainTextResponse(str(exc), status_code=404)
+
+
+@app.exception_handler(ExportJobPreparationError)
+async def export_job_preparation_error_handler(_, exc: ExportJobPreparationError):
+    return PlainTextResponse(str(exc), status_code=500)
+
 
 @app.exception_handler(NoSuchSourceDocumentInElasticSearchError)
 async def no_such_sdoc_in_es_error_handler(_, exc: NoSuchSourceDocumentInElasticSearchError):
