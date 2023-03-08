@@ -1,10 +1,13 @@
-import * as React from "react";
-import { useMemo, useState } from "react";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { IconButton } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { capitalize } from "lodash";
+import { useMemo, useState } from "react";
 import {
-  ActionRead,
   ActionTargetObjectType,
   ActionType,
   BBoxAnnotationReadResolvedCode,
@@ -17,11 +20,6 @@ import {
 } from "../../api/openapi";
 import UserHooks from "../../api/UserHooks";
 import useGetActionCardsActionTarget from "./useGetActionCardsActionTarget";
-import Tooltip from "@mui/material/Tooltip";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import { IconButton } from "@mui/material";
-import { capitalize } from "lodash";
 
 interface ActionCardProps {
   actionType: ActionType;

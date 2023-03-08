@@ -61,8 +61,7 @@ interface ExporterInfo {
   attached_to: number[];
 }
 
-interface ExporterProps {}
-function ExporterDialog({}: ExporterProps) {
+function ExporterDialog() {
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
@@ -79,7 +78,7 @@ function ExporterDialog({}: ExporterProps) {
 
   // global state (react-query)
   const projectUsers = ProjectHooks.useGetAllUsers(projectId);
-  const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(projectId);
+  // const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(projectId);
   const projectTags = ProjectHooks.useGetAllTags(projectId);
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
   const projectCodeTree = useMemo(

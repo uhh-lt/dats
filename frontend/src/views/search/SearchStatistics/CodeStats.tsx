@@ -9,7 +9,7 @@ interface CodeStatsProps {
   codeStats: SpanEntityDocumentFrequency[];
   entityTotalCountMap: Map<string, number>;
   handleClick: (stat: SpanEntityDocumentFrequency) => void;
-  parentRef: React.MutableRefObject<undefined>;
+  parentRef: React.RefObject<HTMLDivElement>;
 }
 
 function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parentRef }: CodeStatsProps) {

@@ -9,7 +9,7 @@ interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
   keywordTotalCountMap: Map<string, number>;
   handleClick: (keyword: string) => void;
-  parentRef: React.MutableRefObject<unknown>;
+  parentRef: React.RefObject<HTMLDivElement>;
 }
 
 function KeywordStats({ keywordStats, keywordTotalCountMap, handleClick, parentRef }: KeywordStatsProps) {
@@ -40,7 +40,7 @@ interface KeywordStatsContentProps {
   keywordStats: KeywordStat[];
   keywordTotalCountMap: Map<string, number>;
   handleClick: (keyword: string) => void;
-  parentRef: React.MutableRefObject<unknown>;
+  parentRef: React.RefObject<HTMLDivElement>;
 }
 
 function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, parentRef }: KeywordStatsContentProps) {

@@ -10,7 +10,7 @@ interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
   tagTotalCountMap: Map<number, number>;
   handleClick: (tagId: number) => void;
-  parentRef: React.MutableRefObject<undefined>;
+  parentRef: React.RefObject<HTMLDivElement>;
 }
 
 function DocumentTagStats({ tagStats, tagTotalCountMap, handleClick, parentRef }: DocumentTagStatsProps) {
@@ -40,7 +40,7 @@ interface DocumentTagStatsContentProps {
   tagStats: TagStat[];
   tagTotalCountMap: Map<number, number>;
   handleClick: (tagId: number) => void;
-  parentRef: React.MutableRefObject<undefined>;
+  parentRef: React.RefObject<HTMLDivElement>;
 }
 
 function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, parentRef }: DocumentTagStatsContentProps) {

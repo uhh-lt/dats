@@ -1,16 +1,16 @@
-import { TabContext, TabPanel } from "@mui/lab";
+import { TabContext } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import KeywordStats from "./KeywordStats";
+import { useParams } from "react-router-dom";
+import { CodeRead, SpanEntityDocumentFrequency } from "../../../api/openapi";
+import ProjectHooks from "../../../api/ProjectHooks";
+import SearchHooks from "../../../api/SearchHooks";
+import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { SearchFilter } from "../SearchFilter";
 import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";
-import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks";
+import KeywordStats from "./KeywordStats";
 import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
-import { CodeRead, SpanEntityDocumentFrequency } from "../../../api/openapi";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
-import SearchHooks from "../../../api/SearchHooks";
-import { SearchFilter } from "../SearchFilter";
 
 interface SearchStatisticsProps {
   filter: SearchFilter[];
@@ -129,7 +129,7 @@ function SearchStatistics({
   }, []);
 
   // The scrollable element for the lists
-  const parentRef = useRef();
+  const parentRef = useRef<HTMLDivElement>(null);
 
   return (
     <Box className="myFlexContainer" {...(props as BoxProps)}>
