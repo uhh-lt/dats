@@ -10,6 +10,7 @@ import TopBar from "../components/bar-top/TopBar";
 import "./Layout.css";
 import FloatingFeedbackButton from "../features/feedback/FloatingFeedbackButton";
 import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog";
+import ExporterDialog from "../features/Exporter/ExporterDialog";
 
 export const AppBarContext = React.createContext<React.MutableRefObject<any> | null>(null);
 
@@ -37,6 +38,7 @@ function TwoBarLayout() {
           <SnackbarDialog />
           <TagCreationDialog />
           <ConfirmationDialog />
+          <ExporterDialog />
         </AppBarContext.Provider>
       </React.Fragment>
     );

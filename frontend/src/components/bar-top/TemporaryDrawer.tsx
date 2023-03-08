@@ -19,6 +19,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
+import ExporterListItemButton from "../../features/Exporter/ExporterListItemButton";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
@@ -103,6 +104,8 @@ export default function TemporaryDrawer() {
             <ListItemText primary="Wiki" />
           </ListItemButton>
         </ListItem>
+
+        <ExporterListItemButton />
       </List>
     </Box>
   );
