@@ -10,11 +10,10 @@ import SearchHooks from "../../api/SearchHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import SearchBar from "../search/SearchBar/SearchBar";
 import LogbookEditor from "./LogbookEditor";
 import { LogbookActions } from "./logbookSlice";
-import MemoExplorer from "./MemoExplorer";
 import MemoResults from "./MemoResults";
+import MemoSearchBar from "./MemoSearchBar";
 
 export const FILTER_OUT_TYPES = [
   AttachedObjectType.ANNOTATION_DOCUMENT,
@@ -37,13 +36,15 @@ function Logbook() {
   // global client state (redux)
   const dispatch = useAppDispatch();
   const searchTerm = useAppSelector((state) => state.logbook.searchTerm);
-  const category = useAppSelector((state) => state.logbook.category);
+  const categories = useAppSelector((state) => state.logbook.categories);
+  const starred = useAppSelector((state) => state.logbook.starred);
 
   // global server state (react-query)
   const searchMemos = SearchHooks.useSearchMemoContent({
     content_query: searchTerm,
     user_id: user.data!.id,
     proj_id: parseInt(projectId),
+    starred: starred,
   });
   const userMemos = ProjectHooks.useGetAllUserMemos(parseInt(projectId), user.data!.id);
 
@@ -76,14 +77,10 @@ function Logbook() {
     reset();
   };
 
-  const handleCategoryClick = (category: string | undefined) => {
-    dispatch(LogbookActions.setCategory(category));
-  };
-
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
-        <SearchBar
+        <MemoSearchBar
           register={register}
           handleSubmit={handleSubmit(handleSearch, handleSearchError)}
           handleClearSearch={handleClearSearch}
@@ -91,31 +88,22 @@ function Logbook() {
         />
       </Portal>
       <Grid container columnSpacing={2} className="h100" sx={{ py: 1 }}>
-        <Grid item md={2} className="h100">
-          <Box className="h100" sx={{ overflowY: "auto" }}>
-            <MemoExplorer
-              sx={{ p: 0, whiteSpace: "nowrap", overflowX: "hidden" }}
-              handleCategoryClick={handleCategoryClick}
-              selectedCategory={category}
-            />
-          </Box>
-        </Grid>
-        <Grid item md={5} className="h100">
-          <Box className="h100" sx={{ overflowY: "auto" }}>
+        <Grid item md={6} className="h100">
+          <Box className="h100" sx={{ overflowY: "auto", pl: 1 }}>
             {memos.isLoading && <div>Loading!</div>}
             {memos.isError && <div>Error: {memos.error.message}</div>}
             {memos.isSuccess && (
               <MemoResults
                 memoIds={memos.data
                   .filter((m) => !FILTER_OUT_TYPES.includes(m.attached_object_type))
+                  .filter((m) => categories.includes(m.attached_object_type))
                   .map((memo) => memo.id)}
-                filter={category}
                 noResultsText={`No memos match your query "${searchTerm}" :(`}
               />
             )}
           </Box>
         </Grid>
-        <Grid item md={5} className="h100">
+        <Grid item md={6} className="h100">
           <Box className="h100" sx={{ pr: 1 }}>
             <LogbookEditor />
           </Box>

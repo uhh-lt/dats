@@ -7,7 +7,6 @@ import { AttachedObjectType } from "../../api/openapi";
 
 interface MemoResultsProps {
   memoIds: number[];
-  filter: string | undefined;
   noResultsText: string;
 }
 
@@ -17,8 +16,7 @@ export interface MemoCardContextMenuData {
   attachedObjectType: AttachedObjectType | undefined;
 }
 
-// todo: the filtering should happen in the backend?
-function MemoResults({ noResultsText, memoIds, filter }: MemoResultsProps) {
+function MemoResults({ noResultsText, memoIds }: MemoResultsProps) {
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
   const [contextMenuData, setContextMenuData] = useState<MemoCardContextMenuData>({
@@ -36,7 +34,7 @@ function MemoResults({ noResultsText, memoIds, filter }: MemoResultsProps) {
     <>
       <Stack spacing={2}>
         {memoIds.map((memoId) => (
-          <MemoCard key={memoId} memoId={memoId} filter={filter} onContextMenu={onContextMenu} />
+          <MemoCard key={memoId} memoId={memoId} onContextMenu={onContextMenu} />
         ))}
         {memoIds.length === 0 && <div>{noResultsText}</div>}
       </Stack>

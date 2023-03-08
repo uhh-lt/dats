@@ -1,13 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { AttachedObjectType } from "../../api/openapi";
 
 interface LogbookState {
   searchTerm: string;
-  category: string | undefined;
+  categories: AttachedObjectType[];
+  starred: boolean;
 }
 
 const initialState: LogbookState = {
   searchTerm: "",
-  category: undefined,
+  categories: Object.values(AttachedObjectType),
+  starred: false,
 };
 
 export const logbookSlice = createSlice({
@@ -17,8 +20,19 @@ export const logbookSlice = createSlice({
     setSearchTerm: (state, action: PayloadAction<string>) => {
       state.searchTerm = action.payload;
     },
-    setCategory: (state, action: PayloadAction<string | undefined>) => {
-      state.category = action.payload;
+    setCategories: (state, action: PayloadAction<AttachedObjectType[]>) => {
+      state.categories = action.payload;
+    },
+    toggleCategory: (state, action: PayloadAction<AttachedObjectType>) => {
+      const index = state.categories.indexOf(action.payload);
+      if (index > -1) {
+        state.categories.splice(index, 1);
+      } else {
+        state.categories.push(action.payload);
+      }
+    },
+    toggleStarred: (state) => {
+      state.starred = !state.starred;
     },
   },
 });

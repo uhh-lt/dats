@@ -295,7 +295,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
 
 const useSearchMemoContent = (params: MemoContentQuery) =>
   useQuery<MemoRead[], Error>(
-    [QueryKey.MEMOS_BY_CONTENT_SEARCH, params.content_query],
+    [QueryKey.MEMOS_BY_CONTENT_SEARCH, params],
     async () => {
       const result = await SearchService.searchMemosByContentQuery({
         requestBody: params,

@@ -26,7 +26,6 @@ function MemoExplorer({ sdocId, showToolbar, ...props }: MemoExplorerProps & Pap
         <div className="myFlexFillAllContainer">
           <MemoResults
             memoIds={memos.data.map((memo) => memo.id)}
-            filter={undefined}
             noResultsText={`There are no memos for this document yet.`}
           />
         </div>
