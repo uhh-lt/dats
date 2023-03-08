@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
+import React, { forwardRef, useImperativeHandle, useState } from "react";
 import {
   Box,
   List,
@@ -14,7 +14,8 @@ import { useAppDispatch } from "../../plugins/ReduxHooks";
 import { SearchActions } from "../../views/search/searchSlice";
 import { createCodeFilter, createSentenceFilter } from "../../views/search/SearchFilter";
 import { useNavigate } from "react-router-dom";
-import { DocType, SpanAnnotationReadResolved } from "../../api/openapi";
+import { AttachedObjectType, DocType, SpanAnnotationReadResolved } from "../../api/openapi";
+import MemoListItemButton from "../../features/memo-dialog/MemoListItemButton";
 
 interface SentenceContextMenuProps {}
 
@@ -123,18 +124,34 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
         </ListItem>
         {annotations &&
           annotations.map((anno) => (
-            <ListItem key={anno.id} disablePadding>
-              <ListItemButton onClick={() => handleAddFilter(anno)}>
-                <ListItemIcon>
-                  <SearchIcon />
-                </ListItemIcon>
-                <ListItemText primary="Add filter: " />
-                <Box
-                  style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 8 }}
-                />
-                <ListItemText primary={`${anno.code.name}: ${anno.span_text}`} />
-              </ListItemButton>
-            </ListItem>
+            <React.Fragment key={anno.id}>
+              <ListItem disablePadding>
+                <ListItemButton onClick={() => handleAddFilter(anno)}>
+                  <ListItemIcon>
+                    <SearchIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Add filter: " />
+                  <Box
+                    style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 8 }}
+                  />
+                  <ListItemText primary={`${anno.code.name}: ${anno.span_text}`} />
+                </ListItemButton>
+              </ListItem>
+              <MemoListItemButton
+                onClick={() => closeContextMenu()}
+                attachedObjectId={anno.id}
+                attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
+                content={
+                  <>
+                    <ListItemText primary="Memo: " />
+                    <Box
+                      style={{ width: 20, height: 20, backgroundColor: anno.code.color, marginRight: 8, marginLeft: 8 }}
+                    />
+                    <ListItemText primary={`${anno.code.name}: ${anno.span_text}`} />
+                  </>
+                }
+              />
+            </React.Fragment>
           ))}
       </List>
     </Popover>
