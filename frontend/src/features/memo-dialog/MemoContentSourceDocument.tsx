@@ -90,7 +90,7 @@ export function MemoContentSourceDocument({
 
   return (
     <MemoForm
-      title={`Memo for Source Document ${sdoc.filename}`}
+      title={`Memo for Document ${sdoc.filename}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
       handleDeleteMemo={handleDeleteSdocMemo}

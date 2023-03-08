@@ -94,7 +94,7 @@ export function MemoContentBboxAnnotation({
 
   return (
     <MemoForm
-      title={`Memo for bboxAnnotation ${bboxAnnotation.id}`}
+      title={`Memo for Image Annotation ${bboxAnnotation.id}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateBboxAnnotationMemo}
       handleDeleteMemo={handleDeleteBboxAnnotationMemo}

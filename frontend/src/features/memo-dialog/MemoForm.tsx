@@ -1,5 +1,5 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { DialogActions, DialogContent, DialogTitle, Stack, TextField, Tooltip } from "@mui/material";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { MemoRead } from "../../api/openapi";
@@ -7,6 +7,12 @@ import { LoadingButton } from "@mui/lab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import UserHooks from "../../api/UserHooks";
+
+const toDateString = (date: string) => {
+  const yourDate = new Date(date);
+  const offset = yourDate.getTimezoneOffset();
+  return new Date(yourDate.getTime() - offset * 60 * 1000).toISOString().split("T")[0];
+};
 
 interface MemoFormProps {
   title: string;
@@ -55,7 +61,11 @@ export function MemoForm({
   return (
     <React.Fragment>
       <form onSubmit={handleSubmit(handleCreateOrUpdateMemo, handleError)}>
-        <DialogTitle>{title}</DialogTitle>
+        <Tooltip title={title} placement="top">
+          <DialogTitle style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {title}
+          </DialogTitle>
+        </Tooltip>
         <DialogContent>
           <Stack spacing={3}>
             {memo && user.data && (
@@ -71,7 +81,7 @@ export function MemoForm({
                   <TextField
                     fullWidth
                     label="Created"
-                    value={new Date(memo.created).toLocaleDateString("en-CA")}
+                    value={toDateString(memo.created)}
                     type="date"
                     variant="standard"
                     InputLabelProps={{ shrink: true }}
@@ -80,7 +90,7 @@ export function MemoForm({
                   <TextField
                     fullWidth
                     label="Updated"
-                    value={new Date(memo.updated).toLocaleDateString("en-CA")}
+                    value={toDateString(memo.updated)}
                     type="date"
                     variant="standard"
                     InputLabelProps={{ shrink: true }}
@@ -96,6 +106,7 @@ export function MemoForm({
               {...register("title", { required: "Title is required" })}
               error={Boolean(errors.title)}
               helperText={<ErrorMessage errors={errors} name="title" />}
+              InputLabelProps={{ shrink: true }}
             />
             <TextField
               multiline
@@ -106,6 +117,7 @@ export function MemoForm({
               {...register("content", { required: "Content is required" })}
               error={Boolean(errors.content)}
               helperText={<ErrorMessage errors={errors} name="content" />}
+              InputLabelProps={{ shrink: true }}
             />
           </Stack>
         </DialogContent>
