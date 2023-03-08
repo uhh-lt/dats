@@ -84,18 +84,20 @@ export function ActionFilters() {
       </Typography>
       <Select
         size="small"
-        sx={{ backgroundColor: "white", mr: 1 }}
+        sx={{ backgroundColor: "white", mr: 1, maxWidth: 300, overflow: "hidden" }}
         multiple
         value={visibleUserIds || []}
         onChange={handleUserFilterChange}
-        renderValue={() =>
-          userFilter.map((x, index) => (
-            <React.Fragment key={x}>
-              <UserName userId={x} />
-              {index < userFilter.length - 1 && ", "}
-            </React.Fragment>
-          ))
-        }
+        renderValue={() => (
+          <>
+            {userFilter.map((x, index) => (
+              <React.Fragment key={x}>
+                <UserName userId={x} />
+                {index < userFilter.length - 1 && ", "}
+              </React.Fragment>
+            ))}
+          </>
+        )}
       >
         {visibleUserIds?.map((user) => (
           <MenuItem key={user} value={user}>
@@ -133,13 +135,22 @@ export function ActionFilters() {
       </Typography>
       <Select
         size="small"
-        sx={{ backgroundColor: "white" }}
+        sx={{ backgroundColor: "white", maxWidth: 300, overflow: "hidden" }}
         multiple
         value={visibleEntityIds || []}
         onChange={handleEntityFilterChange}
         renderValue={() => {
           if (entityFilter && entityFilter.length > 0) {
-            return <>{readableObjectType(entityValueArray[entityFilter[0]])}</>;
+            return (
+              <>
+                {entityFilter.map((entity, index) => (
+                  <React.Fragment key={entity}>
+                    {readableObjectType(entityValueArray[entity])}
+                    {index < entityFilter.length - 1 && ", "}
+                  </React.Fragment>
+                ))}
+              </>
+            );
           }
         }}
       >
