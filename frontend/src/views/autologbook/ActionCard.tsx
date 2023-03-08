@@ -4,6 +4,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import {
+  ActionRead,
   ActionTargetObjectType,
   ActionType,
   BBoxAnnotationReadResolvedCode,
@@ -20,6 +21,7 @@ import Tooltip from "@mui/material/Tooltip";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { IconButton } from "@mui/material";
+import { capitalize } from "lodash";
 
 interface ActionCardProps {
   actionType: ActionType;
@@ -28,6 +30,10 @@ interface ActionCardProps {
   targetId: number;
   executedAt: string;
 }
+
+export const readableObjectType = (type: ActionTargetObjectType) => {
+  return type.valueOf().split("_").map(capitalize).join(" ");
+};
 
 function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt }: ActionCardProps) {
   const [expanded, setExpanded] = useState(false);
@@ -61,10 +67,6 @@ function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt
         return (targetObject?.data! as ProjectRead).title;
       case ActionTargetObjectType.DOCUMENT_TAG:
         return (targetObject?.data! as DocumentTagRead).title;
-      case ActionTargetObjectType.ANNOTATION_DOCUMENT:
-        return "Annotation Document";
-      case ActionTargetObjectType.SPAN_GROUP:
-        return "Span Group does not exist";
       case ActionTargetObjectType.SOURCE_DOCUMENT:
         return (targetObject?.data! as SourceDocumentRead).filename;
       case ActionTargetObjectType.SPAN_ANNOTATION:
@@ -94,7 +96,7 @@ function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt
         </Typography>
         <Tooltip title={targetName}>
           <Typography sx={{ mb: 1.0, mt: 1.5 }} variant="h6" component="div">
-            {targetObjectType}: {targetName}
+            {readableObjectType(targetObjectType)}: {targetName}
           </Typography>
         </Tooltip>
         {expanded && <Typography sx={{ mb: 1.0 }}>Demo Text</Typography>}

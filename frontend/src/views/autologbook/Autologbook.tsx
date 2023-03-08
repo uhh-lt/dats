@@ -125,6 +125,9 @@ function Autologbook() {
         actionsEachDay[weekDay].push(action);
       }
     });
+    // remove annotation documents and span groups fully from autologbook
+    entitySet.delete(1);
+    entitySet.delete(5);
 
     return { entityArr: Array.from(entitySet).sort(), actionsEachDay };
   }, [userActions.data, entityFilter, showCreated, showUpdated, showDeleted, userFilter, selectedWeek]);
