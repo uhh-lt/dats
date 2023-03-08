@@ -81,14 +81,16 @@ function Annotation() {
                   <Button
                     onClick={() => toggleShowCodeExplorer()}
                     variant={showCodeExplorer ? "contained" : "outlined"}
-                    color="success"
+                    color="primary"
+                    sx={{color: "primary.contrastText"}}
                   >
                     Code Explorer
                   </Button>
                   <Button
                     onClick={() => toggleShowCodeExplorer()}
                     variant={!showCodeExplorer ? "contained" : "outlined"}
-                    color="success"
+                    color="primary"
+                    sx={{color: "primary.contrastText"}}
                   >
                     Memo Explorer
                   </Button>
