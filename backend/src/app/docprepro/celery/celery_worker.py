@@ -23,7 +23,7 @@ class CeleryConfig:
         "app.docprepro.text.preprocess.*": {"queue": "textQ"},
         "app.docprepro.video.preprocess.*": {"queue": "videoQ"},
         "app.docprepro.image.preprocess.*": {"queue": "imageQ"},
-        "app.docprepro.heavy_jobs.preprocess.*": {"queue": "heavy_jobsQ"},
+        "app.docprepro.heavy_jobs.tasks.*": {"queue": "heavyjobsQ"},
         "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"}
     }
 

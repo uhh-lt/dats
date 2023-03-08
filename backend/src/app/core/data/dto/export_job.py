@@ -7,6 +7,11 @@ from enum import Enum
 from app.core.data.dto.dto_base import UpdateDTOBase
 
 
+class ExportFormat(str, Enum):
+    CSV = "CSV"
+    JSON = "JSON"
+
+
 class ExportJobStatus(str, Enum):
     INIT = "init"
     IN_PROGRESS = "in_progress"
@@ -15,6 +20,7 @@ class ExportJobStatus(str, Enum):
 
 class ExportJobParameters(BaseModel):
     project_id: int = Field(description="The ID of the Project to export")
+    export_format: ExportFormat = Field(description="The format of the exported data.")
 
 
 # Properties shared across all DTOs

@@ -8,7 +8,6 @@ from app.core.data.doc_type import DocType, get_doc_type
 from app.core.data.repo.repo_service import RepoService, UnsupportedDocTypeForSourceDocument, \
     FileNotFoundInRepositoryError
 from app.core.db.sql_service import SQLService
-from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image import image_document_preprocessing_without_import_apply_async
 from app.docprepro.image.import_image_document import import_image_document_
 from app.docprepro.text import text_document_preprocessing_without_import_apply_async
@@ -22,9 +21,7 @@ from config import conf
 sql: SQLService = SQLService(echo=False)
 repo: RepoService = RepoService()
 
-
-@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
-def import_uploaded_archive(archive_file_path: Path,
+def import_uploaded_archive_(archive_file_path: Path,
                             project_id: int) -> None:
     # store and extract the archive
     file_dsts = repo.extract_archive_in_project(proj_id=project_id, archive_path=archive_file_path)
