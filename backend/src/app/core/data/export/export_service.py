@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
-from app.core.data.crud.project import crud_project
+from app.core.data.crud.project import CRUDProject, crud_project
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import crud_user
@@ -45,7 +45,7 @@ from app.core.data.dto.export_job import (
     ExportJobCreate,
     ExportJobUpdate,
     ExportJobStatus,
-    ExportFormat
+    ExportFormat,
 )
 
 
@@ -69,6 +69,16 @@ class ExportJobAlreadyStartedOrDoneError(Exception):
 class NoSuchExportJobError(Exception):
     def __init__(self, export_job_id: str) -> None:
         super().__init__(f"There exists not ExportJob with ID {export_job_id}")
+
+
+class NoSuchExportFormatError(Exception):
+    def __init__(self, export_format: str) -> None:
+        super().__init__(
+            (
+                f"ExportFormat {export_format} not available! ",
+                f"Available Formats: {[fmt.split('.')[0] for fmt in ExportFormat]}",
+            )
+        )
 
 
 class ExportService(metaclass=SingletonMeta):
@@ -716,7 +726,20 @@ class ExportService(metaclass=SingletonMeta):
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
 
+    def __assert_all_requested_data_exists(
+        self, export_params: ExportJobParameters
+    ) -> None:
+        if export_params.export_format.value not in set(i.value for i in ExportFormat):
+            raise NoSuchExportFormatError(
+                export_format=export_params.export_format.value
+            )
+
+        with self.sqls.db_session() as db:
+            crud_project.exists(db=db, id=export_params.project_id, raise_error=True)
+
     def prepare_export_job(self, export_params: ExportJobParameters) -> ExportJobRead:
+        self.__assert_all_requested_data_exists(export_params=export_params)
+
         exj_create = ExportJobCreate(parameters=export_params)
         exj_read = self.redis.store_export_job(export_job=exj_create)
         if exj_read is None:
