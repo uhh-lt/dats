@@ -9,6 +9,7 @@ import { ActionTargetObjectType } from "../../api/openapi";
 import { useEffect } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { readableObjectType } from "./ActionCard";
+import Tooltip from "@mui/material/Tooltip";
 
 const entityValueArray = Object.values(ActionTargetObjectType);
 
@@ -113,21 +114,27 @@ export function ActionFilters() {
         Actions:
       </Typography>
       <ButtonGroup sx={{ backgroundColor: "white", mr: 1, border: "1px solid grey" }}>
-        <IconButton
-          children={<Add />}
-          color={showCreated ? "primary" : "default"}
-          onClick={() => dispatch(AutologbookActions.toggleCreated())}
-        />
-        <IconButton
-          children={<Edit />}
-          color={showUpdated ? "primary" : "default"}
-          onClick={() => dispatch(AutologbookActions.toggleUpdated())}
-        />
-        <IconButton
-          children={<Remove />}
-          color={showDeleted ? "primary" : "default"}
-          onClick={() => dispatch(AutologbookActions.toggleDeleted())}
-        />
+        <Tooltip title={"Create-Actions"}>
+          <IconButton
+            children={<Add />}
+            color={showCreated ? "primary" : "default"}
+            onClick={() => dispatch(AutologbookActions.toggleCreated())}
+          />
+        </Tooltip>
+        <Tooltip title={"Edit-Actions"}>
+          <IconButton
+            children={<Edit />}
+            color={showUpdated ? "primary" : "default"}
+            onClick={() => dispatch(AutologbookActions.toggleUpdated())}
+          />
+        </Tooltip>
+        <Tooltip title={"Delete-Actions"}>
+          <IconButton
+            children={<Remove />}
+            color={showDeleted ? "primary" : "default"}
+            onClick={() => dispatch(AutologbookActions.toggleDeleted())}
+          />
+        </Tooltip>
       </ButtonGroup>
 
       <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
