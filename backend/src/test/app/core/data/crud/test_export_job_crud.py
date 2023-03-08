@@ -1,12 +1,13 @@
 from datetime import datetime
-from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobStatus, ExportJobUpdate
+from app.core.data.dto.export_job import ExportJobCreate, ExportJobParameters, ExportJobRead, ExportJobStatus, ExportJobUpdate
 from app.core.db.redis_service import RedisService
 
 
 def test_crud_cycle() -> None:
     redis: RedisService = RedisService()
 
-    create = ExportJobCreate(description='Test ExportJob')
+    params = ExportJobParameters(project_id=1)
+    create = ExportJobCreate(parameters=params)
     assert create.status == ExportJobStatus.INIT
     assert create.results_url is None
 
@@ -25,7 +26,7 @@ def test_crud_cycle() -> None:
     assert isinstance(updated, ExportJobRead)
     assert updated.id == read.id
     assert updated.created == read.created
-    assert updated.description == read.description
+    assert updated.parameters == read.parameters
     assert updated.status == ExportJobStatus.IN_PROGRESS
     assert updated.results_url is None
 
@@ -35,7 +36,7 @@ def test_crud_cycle() -> None:
     assert isinstance(updated, ExportJobRead)
     assert updated.id == read.id
     assert updated.created == read.created
-    assert updated.description == read.description
+    assert updated.parameters == read.parameters
     assert updated.status == ExportJobStatus.DONE
     assert updated.results_url == 'www.dwts.io'
 
