@@ -89,19 +89,17 @@ function Logbook() {
       </Portal>
       <Grid container columnSpacing={2} className="h100" sx={{ py: 1 }}>
         <Grid item md={6} className="h100">
-          <Box className="h100" sx={{ overflowY: "auto", pl: 1 }}>
-            {memos.isLoading && <div>Loading!</div>}
-            {memos.isError && <div>Error: {memos.error.message}</div>}
-            {memos.isSuccess && (
-              <MemoResults
-                memoIds={memos.data
-                  .filter((m) => !FILTER_OUT_TYPES.includes(m.attached_object_type))
-                  .filter((m) => categories.includes(m.attached_object_type))
-                  .map((memo) => memo.id)}
-                noResultsText={`No memos match your query "${searchTerm}" :(`}
-              />
-            )}
-          </Box>
+          {memos.isLoading && <div>Loading!</div>}
+          {memos.isError && <div>Error: {memos.error.message}</div>}
+          {memos.isSuccess && (
+            <MemoResults
+              memoIds={memos.data
+                .filter((m) => !FILTER_OUT_TYPES.includes(m.attached_object_type))
+                .filter((m) => categories.includes(m.attached_object_type))
+                .map((memo) => memo.id)}
+              noResultsText={`No memos match your query "${searchTerm}" :(`}
+            />
+          )}
         </Grid>
         <Grid item md={6} className="h100">
           <Box className="h100" sx={{ pr: 1 }}>
