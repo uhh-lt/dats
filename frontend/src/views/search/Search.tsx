@@ -84,12 +84,6 @@ function Search() {
     return undefined;
   }, [filters]);
 
-  // effects
-  // reset table navigation page to 0, when the filters change
-  useEffect(() => {
-    dispatch(SearchActions.setPage(0));
-  }, [dispatch, filters]);
-
   // handle navigation
   const navigateIfNecessary = useCallback(
     (to: string) => {

@@ -85,6 +85,9 @@ export const searchSlice = createSlice({
       if (!state.filters.some((f) => f.id === action.payload!.id)) {
         state.filters.push(action.payload);
         state.filterAnchorInfo[action.payload!.id] = { pos: -1, limit: -1 };
+
+        // reset page to 0, when a new filter is added
+        state.page = 0;
       }
     },
     removeFilter: (state, action: PayloadAction<SearchFilter>) => {
@@ -101,6 +104,9 @@ export const searchSlice = createSlice({
     },
     setFilter: (state, action: PayloadAction<SearchFilter>) => {
       state.filters = [action.payload];
+
+      // reset page to 0, when a new filter is added
+      state.page = 0;
     },
     clearFilters: (state) => {
       state.filters = [];
@@ -154,6 +160,8 @@ export const searchSlice = createSlice({
         state.resultModalities.splice(index, 1);
       }
       state.resultModalities = state.resultModalities.sort();
+      // reset page to 0, when modalities are changed
+      state.page = 0;
     },
     setSearchType: (state, action: PayloadAction<QueryType>) => {
       state.searchType = action.payload;
