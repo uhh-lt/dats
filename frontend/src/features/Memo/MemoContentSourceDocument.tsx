@@ -1,21 +1,25 @@
 import React from "react";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { CodeRead } from "../../api/openapi";
-import CodeHooks from "../../api/CodeHooks";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
+import { SourceDocumentRead } from "../../api/openapi";
+import SdocHooks from "../../api/SdocHooks";
 import MemoHooks from "../../api/MemoHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoForm } from "./MemoForm";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
 
-interface MemoContentCodeProps {
-  code: CodeRead;
+interface MemoContentSourceDocumentProps {
+  sdoc: SourceDocumentRead;
 }
 
-export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProps & MemoContentProps) {
+export function MemoContentSourceDocument({
+  sdoc,
+  memo,
+  closeDialog,
+}: MemoContentSourceDocumentProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
-  const createMutation = CodeHooks.useCreateMemo();
+  const createMutation = SdocHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
   const deleteMutation = MemoHooks.useDeleteMemo();
 
@@ -35,7 +39,7 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
         {
           onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Updated memo for code ${code.name}`,
+              text: `Updated memo for source document ${sdoc.filename}`,
               severity: "success",
             });
             closeDialog();
@@ -45,18 +49,18 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
     } else {
       createMutation.mutate(
         {
-          codeId: code.id,
+          sdocId: sdoc.id,
           requestBody: {
+            user_id: user.data.id,
+            project_id: sdoc.project_id,
             title: data.title,
             content: data.content,
-            user_id: user.data.id,
-            project_id: code.project_id,
           },
         },
         {
           onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Created memo for code ${code.name}`,
+              text: `Created memo for source document ${sdoc.filename}`,
               severity: "success",
             });
             closeDialog();
@@ -65,14 +69,14 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
       );
     }
   };
-  const handleDeleteCodeMemo = () => {
+  const handleDeleteSdocMemo = () => {
     if (memo) {
       deleteMutation.mutate(
         { memoId: memo.id },
         {
           onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Deleted memo for code ${code.name}`,
+              text: `Deleted memo for source document ${sdoc.filename}`,
               severity: "success",
             });
             closeDialog();
@@ -80,16 +84,16 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
         }
       );
     } else {
-      throw Error("Invalid invocation of handleDeleteCodeMemo. No memo to delete.");
+      throw Error("Invalid invocation of handleDeleteSdocMemo. No memo to delete.");
     }
   };
 
   return (
     <MemoForm
-      title={`Memo for code ${code.name}`}
+      title={`Memo for Document ${sdoc.filename}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
-      handleDeleteMemo={handleDeleteCodeMemo}
+      handleDeleteMemo={handleDeleteSdocMemo}
       isUpdateLoading={updateMutation.isLoading}
       isCreateLoading={createMutation.isLoading}
       isDeleteLoading={deleteMutation.isLoading}

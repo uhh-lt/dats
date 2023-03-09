@@ -3,7 +3,7 @@ import SdocHooks from "../../api/SdocHooks";
 import { useEffect, useState } from "react";
 import { AnnotationDocumentRead } from "../../api/openapi";
 import AdocHooks from "../../api/AdocHooks";
-import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 
 /**
  * Given a SourceDocument (via sdocId), return the current user's AnnotationDocument for that SourceDocument.

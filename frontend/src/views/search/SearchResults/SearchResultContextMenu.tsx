@@ -1,11 +1,11 @@
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import React from "react";
 import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenuMenuItem";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link } from "react-router-dom";
-import MemoMenuItem from "../../../features/memo-dialog/MemoMenuItem";
+import MemoMenuItem from "../../../features/Memo/MemoMenuItem";
 import { AttachedObjectType } from "../../../api/openapi";
 import DeleteMenuItem from "../ToolBar/ToolBarElements/DeleteMenuItem";
 

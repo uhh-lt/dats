@@ -1,5 +1,5 @@
 import MetadataHooks from "../../../../api/MetadataHooks";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import React, { useCallback } from "react";
 import { Grid } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
@@ -32,10 +32,10 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
         },
         onError: (error: any) => {
           SnackbarAPI.openSnackbar({
-            text: error.status === 409 ? 'Key already exists' : 'Could not add metadata',
+            text: error.status === 409 ? "Key already exists" : "Could not add metadata",
             severity: "error",
           });
-        }
+        },
       }
     );
   }, [createMutation, sdocId]);

@@ -5,7 +5,8 @@ import { useParams } from "react-router-dom";
 import { CodeRead, SpanEntityDocumentFrequency } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SearchHooks from "../../../api/SearchHooks";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { SearchFilter } from "../SearchFilter";
 import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";
@@ -68,19 +69,8 @@ function SearchStatistics({
 
     return result;
   }, [entityTotalCounts.data]);
-
-  const keywordTotalCounts = SearchHooks.useSearchKeywordStats(projectId, []);
-  const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter);
-  const keywordTotalCountMap = useMemo(() => {
-    // map from keyword_text -> keyword_count
-    const result = new Map<string, number>();
-    if (!keywordTotalCounts.data) return result;
-
-    keywordTotalCounts.data.forEach((stat) => {
-      result.set(stat.keyword, stat.count);
-    });
-    return result;
-  }, [keywordTotalCounts.data]);
+  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
+  const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter, sortStatsByGlobal);
 
   const tagTotalCount = SearchHooks.useSearchTagStats(projectId, []);
   const tagStats = SearchHooks.useSearchTagStats(projectId, filter);
@@ -146,7 +136,6 @@ function SearchStatistics({
         <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
           <KeywordStats
             keywordStats={keywordStats}
-            keywordTotalCountMap={keywordTotalCountMap}
             handleClick={handleKeywordClick}
             parentRef={parentRef}
           />

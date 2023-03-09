@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import SdocHooks from "../../../../api/SdocHooks";
 import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import { useNavigate } from "react-router-dom";
 import { SearchActions } from "../../searchSlice";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks";

@@ -18,7 +18,7 @@ import LabelIcon from "@mui/icons-material/Label";
 import SearchIcon from "@mui/icons-material/Search";
 import { useParams } from "react-router-dom";
 import { flatMap, isEqual } from "lodash";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import TagCreationButton from "../TagCreate/TagCreationButton";
 import TagManageButton from "../TagManage/TagManageButton";
 import { DocumentTagRead } from "../../../../api/openapi";

@@ -6,7 +6,7 @@ import "./SearchResults.css";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { SearchActions } from "../searchSlice";
 import LexicalSearchResultCard from "./Cards/LexicalSearchResultCard";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import { useParams } from "react-router-dom";
 import {
   ImageSimilaritySearchResults,

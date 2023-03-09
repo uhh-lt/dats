@@ -1,5 +1,5 @@
-export const sortStats = (statsOrder: string, stats: any[], totalCountMap: Map<any, number>, attrGetter: Function) => {
-  if (statsOrder === "total") {
+export const sortStats = (sortStatsByGlobal: boolean, stats: any[], totalCountMap: Map<any, number>, attrGetter: Function) => {
+  if (sortStatsByGlobal) {
     stats.sort((a, b) => {
       let totalA = totalCountMap.get(attrGetter(a))!;
       let totalB = totalCountMap.get(attrGetter(b))!;

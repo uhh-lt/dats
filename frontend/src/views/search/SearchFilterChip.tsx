@@ -170,7 +170,10 @@ function AnchorChip({
   ...props
 }: { anchorId: string; anchorState: AnchorState; text: string } & ChipProps) {
   const dispatch = useAppDispatch();
-  const tooltip = `Jump to Highlight ${anchorState.pos + 1} / ${anchorState.limit}`;
+  const tooltip =
+    anchorState.pos + 1 > anchorState.limit
+      ? `Jump to Highlight 1 / ${anchorState.limit}`
+      : `Jump to Highlight ${anchorState.pos + 1} / ${anchorState.limit}`;
 
   return (
     <a

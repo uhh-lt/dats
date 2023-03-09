@@ -6,7 +6,7 @@ import SdocHooks from "../../../../api/SdocHooks";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import ClearIcon from "@mui/icons-material/Clear";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 
 interface DocumentKeywordsProps {
   sdocId: number | undefined;

@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { useQueryClient } from "@tanstack/react-query";
 import { selectionIsEmpty } from "./utils";
 import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
 import { ICode } from "./ICode";
@@ -293,6 +293,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         isViewer={false}
         projectId={sdoc.project_id}
         sentences={undefined}
+        doHighlighting={false}
       />
     </>
   );

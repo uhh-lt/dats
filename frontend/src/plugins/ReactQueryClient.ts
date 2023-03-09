@@ -1,5 +1,5 @@
 import { MutationCache, QueryClient } from "@tanstack/react-query";
-import SnackbarAPI from "../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../features/Snackbar/SnackbarAPI";
 
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({

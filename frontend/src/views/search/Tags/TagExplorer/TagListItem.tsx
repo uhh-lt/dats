@@ -1,6 +1,6 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemProps, ListItemText } from "@mui/material";
 import TagEditButton from "../TagEdit/TagEditButton";
-import MemoButton from "../../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../../features/Memo/MemoButton";
 import LabelIcon from "@mui/icons-material/Label";
 import React from "react";
 import TagHooks from "../../../../api/TagHooks";

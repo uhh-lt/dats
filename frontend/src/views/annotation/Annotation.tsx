@@ -1,6 +1,6 @@
 import { AppBar, Button, ButtonGroup, Grid, Paper, Portal, Toolbar, Typography } from "@mui/material";
 import React, { useContext, useState } from "react";
-import DocumentExplorer from "../../features/document-explorer/DocumentExplorer";
+import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
 import { useParams } from "react-router-dom";
 import CodeExplorer from "./CodeExplorer/CodeExplorer";
 import SdocHooks from "../../api/SdocHooks";
@@ -82,7 +82,7 @@ function Annotation() {
                     onClick={() => toggleShowCodeExplorer()}
                     variant={showCodeExplorer ? "contained" : "outlined"}
                     color="primary"
-                    sx={{color: "primary.contrastText"}}
+                    sx={{ color: "primary.contrastText" }}
                   >
                     Code Explorer
                   </Button>
@@ -90,7 +90,7 @@ function Annotation() {
                     onClick={() => toggleShowCodeExplorer()}
                     variant={!showCodeExplorer ? "contained" : "outlined"}
                     color="primary"
-                    sx={{color: "primary.contrastText"}}
+                    sx={{ color: "primary.contrastText" }}
                   >
                     Memo Explorer
                   </Button>

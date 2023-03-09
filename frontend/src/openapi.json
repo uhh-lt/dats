@@ -3335,6 +3335,12 @@
         "parameters": [
           {
             "required": false,
+            "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
+            "name": "sort_by_global",
+            "in": "query"
+          },
+          {
+            "required": false,
             "schema": { "title": "Top K", "type": "integer", "default": 50 },
             "name": "top_k",
             "in": "query"
@@ -4407,11 +4413,20 @@
       },
       "KeywordStat": {
         "title": "KeywordStat",
-        "required": ["keyword", "count"],
+        "required": ["keyword", "filtered_count", "global_count"],
         "type": "object",
         "properties": {
           "keyword": { "title": "Keyword", "type": "string", "description": "The counted keyword." },
-          "count": { "title": "Count", "type": "integer", "description": "Number of occurrences of the keyword." }
+          "filtered_count": {
+            "title": "Filtered Count",
+            "type": "integer",
+            "description": "Number of occurrences of the keyword in the filtered collection"
+          },
+          "global_count": {
+            "title": "Global Count",
+            "type": "integer",
+            "description": "Number of occurrences of the keyword in the entire collection"
+          }
         }
       },
       "MemoContentQuery": {
@@ -4705,6 +4720,8 @@
           "undefined_or_erroneous",
           "import_text_document",
           "import_image_document",
+          "import_audio_document",
+          "import_video_document",
           "convert_to_webp_and_generate_thumbnails",
           "clean_html",
           "extract_text_from_html_and_create_source_mapping",

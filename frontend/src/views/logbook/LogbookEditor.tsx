@@ -3,7 +3,7 @@ import { Editor } from "@toast-ui/react-editor";
 import ProjectHooks from "../../api/ProjectHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import { useParams } from "react-router-dom";
-import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import MemoHooks from "../../api/MemoHooks";
 
 function LogbookEditor() {

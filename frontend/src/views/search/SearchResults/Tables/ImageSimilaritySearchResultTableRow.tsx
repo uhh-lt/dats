@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { AttachedObjectType, SimSearchImageHit } from "../../../../api/openapi";
 import SdocHooks from "../../../../api/SdocHooks";
-import MemoButton from "../../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../../features/Memo/MemoButton";
 import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import AnnotateButton from "../../ToolBar/ToolBarElements/AnnotateButton";
 import { SearchResultProps } from "../SearchResultProps";

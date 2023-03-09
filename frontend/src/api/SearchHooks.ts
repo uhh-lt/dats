@@ -235,7 +235,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
   );
 };
 
-const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
+const useSearchKeywordStats = (projectId: number, filters: SearchFilter[], sortByGlobal: boolean) => {
   const { user } = useAuth();
   const resultModalities = useAppSelector((state) => state.search.resultModalities);
   return useQuery<KeywordStat[], Error>(
@@ -255,6 +255,7 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[]) => {
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
         },
+        sortByGlobal: sortByGlobal,
       });
     }
   );

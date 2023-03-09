@@ -3,7 +3,7 @@ import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import React from "react";
 import MemoHooks from "../../api/MemoHooks";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
 
 interface MemoStarButtonProps {
   memoId: number;

@@ -6,7 +6,7 @@ import { IconButtonProps } from "@mui/material";
 import SdocHooks from "../../../../api/SdocHooks";
 import { useCallback } from "react";
 import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks";
 import { SearchActions } from "../../searchSlice";

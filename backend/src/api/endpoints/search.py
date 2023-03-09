@@ -59,10 +59,14 @@ async def search_entity_document_stats(*,
              description="Returns KeywordStats for the given SourceDocuments.")
 async def search_keyword_stats(*,
                                query_params: SearchSDocsQueryParameters,
+                               sort_by_global: bool = False,
                                top_k: int = 50) -> List[KeywordStat]:
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
-    return ElasticSearchService().get_sdoc_keyword_counts_by_sdoc_ids(proj_id=query_params.proj_id,
+    keyword_stats = ElasticSearchService().get_sdoc_keyword_counts_by_sdoc_ids(proj_id=query_params.proj_id,
                                                                       sdoc_ids=set(sdoc_ids), top_k=top_k)
+    if sort_by_global:
+        keyword_stats.sort(key=lambda x: x.global_count, reverse=True)
+    return keyword_stats
 
 
 @router.post("/tag_stats", tags=tags,

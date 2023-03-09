@@ -30,6 +30,7 @@ interface TextAnnotationRendererNewProps {
   annotationMap: Map<number, SpanAnnotationReadResolved> | undefined;
   isViewer: boolean;
   projectId: number;
+  doHighlighting: boolean;
 }
 
 const getHighlightedSentIds = (sentences: string[] | undefined, filters: SearchFilter[]) => {
@@ -82,7 +83,7 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
           if (filter.startsWith(tokenConcats)) {
             if (filter === tokenConcats) {
               newSpanEnd = j;
-              const uniqueFilterId = tokenFilters[k].id.trim() + "-idx" + filterOccurrences[k];
+              const uniqueFilterId = tokenFilters[k].id.trim() + "-idx" + (filterOccurrences[k] + 1);
               anchorTokenIds.set(uniqueFilterId, [i, j]);
               filterIds.push(uniqueFilterId);
               filterOccurrences[k] += 1;
@@ -99,7 +100,7 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
         tokenConcats += " ";
       }
     }
-    if (newSpanEnd) {
+    if (newSpanEnd !== undefined) {
       anchorInfos.set(i, filterIds);
       for (let t = i; t <= newSpanEnd; t++) {
         highlightSet.add(t);
@@ -133,6 +134,7 @@ function TextAnnotationRendererNew({
   annotationMap,
   isViewer,
   projectId,
+  doHighlighting,
   ...props
 }: TextAnnotationRendererNewProps & BoxProps) {
   // FIXME: almost identical filters with trailing whitespaces are saved as individual filters
@@ -147,8 +149,12 @@ function TextAnnotationRendererNew({
   }, [sentences, filters]);
 
   const { anchorInfos, highlightSet, anchorTokenIds, filterLimits } = useMemo(() => {
-    return getHighlightedTokenSet(tokenData, filters);
-  }, [tokenData, filters]);
+    if (doHighlighting) {
+      return getHighlightedTokenSet(tokenData, filters);
+    } else {
+      return { anchorInfos: undefined, highlightSet: undefined, anchorTokenIds: undefined, filterLimits: undefined };
+    }
+  }, [doHighlighting, tokenData, filters]);
 
   // effects
   useEffect(() => {

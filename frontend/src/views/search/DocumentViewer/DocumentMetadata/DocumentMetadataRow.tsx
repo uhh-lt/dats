@@ -2,7 +2,7 @@ import { SourceDocumentMetadataRead } from "../../../../api/openapi";
 import { useForm } from "react-hook-form";
 import React, { useCallback, useEffect } from "react";
 import MetadataHooks from "../../../../api/MetadataHooks";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import { Grid, Stack, TextField } from "@mui/material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { ErrorMessage } from "@hookform/error-message";

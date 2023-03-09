@@ -19,14 +19,14 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ProjectRead, UserRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
 import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 
 interface ProjectUsersProps {
   project: ProjectRead;

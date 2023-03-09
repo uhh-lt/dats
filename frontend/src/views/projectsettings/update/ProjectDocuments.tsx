@@ -13,13 +13,13 @@ import {
   Typography,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
 import { LoadingButton } from "@mui/lab";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { useInView } from "react-intersection-observer";
 

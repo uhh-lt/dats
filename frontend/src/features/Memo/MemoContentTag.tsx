@@ -1,30 +1,26 @@
 import React from "react";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { SpanAnnotationReadResolved } from "../../api/openapi";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
+import { DocumentTagRead } from "../../api/openapi";
+import TagHooks from "../../api/TagHooks";
 import MemoHooks from "../../api/MemoHooks";
 import { MemoForm } from "./MemoForm";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
 
-interface MemoContentSpanAnnotationProps {
-  spanAnnotation: SpanAnnotationReadResolved;
+interface MemoContentTagProps {
+  tag: DocumentTagRead;
 }
 
-export function MemoContentSpanAnnotation({
-  spanAnnotation,
-  memo,
-  closeDialog,
-}: MemoContentSpanAnnotationProps & MemoContentProps) {
+export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
-  const createMutation = SpanAnnotationHooks.useCreateMemo();
+  const createMutation = TagHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateSpanAnnotationMemo = (data: any) => {
+  const handleCreateOrUpdateCodeMemo = (data: any) => {
     if (!user.data) return;
 
     if (memo) {
@@ -37,9 +33,9 @@ export function MemoContentSpanAnnotation({
           },
         },
         {
-          onSuccess: (memo) => {
+          onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Updated memo for spanAnnotation ${memo.attached_object_id}`,
+              text: `Updated memo for tag ${tag.title}`,
               severity: "success",
             });
             closeDialog();
@@ -49,18 +45,18 @@ export function MemoContentSpanAnnotation({
     } else {
       createMutation.mutate(
         {
-          spanId: spanAnnotation.id,
+          tagId: tag.id,
           requestBody: {
             user_id: user.data.id,
-            project_id: spanAnnotation.code.project_id,
+            project_id: tag.project_id,
             title: data.title,
             content: data.content,
           },
         },
         {
-          onSuccess: (memo) => {
+          onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Created memo for spanAnnotation ${memo.attached_object_id}`,
+              text: `Created memo for tag ${tag.title}`,
               severity: "success",
             });
             closeDialog();
@@ -69,14 +65,14 @@ export function MemoContentSpanAnnotation({
       );
     }
   };
-  const handleDeleteSpanAnnotationMemo = () => {
+  const handleDeleteTagMemo = () => {
     if (memo) {
       deleteMutation.mutate(
         { memoId: memo.id },
         {
-          onSuccess: (memo) => {
+          onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Deleted memo for spanAnnotation ${memo.attached_object_id}`,
+              text: `Deleted memo for tag ${tag.title}`,
               severity: "success",
             });
             closeDialog();
@@ -84,16 +80,16 @@ export function MemoContentSpanAnnotation({
         }
       );
     } else {
-      throw Error("Invalid invocation of handleDeleteSpanAnnotationMemo. No memo to delete.");
+      throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
     }
   };
 
   return (
     <MemoForm
-      title={`Memo for Text Annotation '${spanAnnotation.span_text}'`}
+      title={`Memo for tag ${tag.title}`}
       memo={memo}
-      handleCreateOrUpdateMemo={handleCreateOrUpdateSpanAnnotationMemo}
-      handleDeleteMemo={handleDeleteSpanAnnotationMemo}
+      handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
+      handleDeleteMemo={handleDeleteTagMemo}
       isUpdateLoading={updateMutation.isLoading}
       isCreateLoading={createMutation.isLoading}
       isDeleteLoading={deleteMutation.isLoading}

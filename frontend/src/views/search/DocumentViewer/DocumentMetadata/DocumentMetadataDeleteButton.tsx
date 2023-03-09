@@ -1,6 +1,6 @@
 import { IconButtonProps } from "@mui/material";
 import MetadataHooks from "../../../../api/MetadataHooks";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import React, { useCallback } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
