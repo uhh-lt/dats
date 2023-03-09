@@ -1,6 +1,6 @@
 import { Menu } from "@mui/material";
 import React from "react";
-import { ContextMenuProps } from "../projects/ProjectContextMenu2";
+import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
 import MemoEditMenuItem from "../../features/memo-dialog/MemoEditMenuItem";
 import MemoStarMenuItem from "../../features/memo-dialog/MemoStarMenuItem";
 import { AttachedObjectType } from "../../api/openapi";

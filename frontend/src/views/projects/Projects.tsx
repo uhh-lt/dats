@@ -10,14 +10,15 @@ import {
   IconButton,
   Toolbar,
   Tooltip,
-  Typography
+  Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { Link } from "react-router-dom";
 import UserHooks from "../../api/UserHooks";
 import PreProHooks from "../../api/PreProHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import ProjectContextMenu2, { ContextMenuPosition } from "./ProjectContextMenu2";
+import ProjectContextMenu from "./ProjectContextMenu";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import { ProjectRead } from "../../api/openapi";
 
 function Projects() {
@@ -51,7 +52,7 @@ function Projects() {
                 sx={{
                   width: 420,
                   border: "3px dashed lightgray",
-                  boxShadow: 0
+                  boxShadow: 0,
                 }}
               >
                 <CardActionArea component={Link} to="/projectsettings">
@@ -60,7 +61,7 @@ function Projects() {
                       height: 250,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center"
+                      justifyContent: "center",
                     }}
                   >
                     <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
@@ -70,9 +71,11 @@ function Projects() {
                 </CardActionArea>
               </Card>
             </Grid>
-            {projects.data.map((project) => <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>)}
+            {projects.data.map((project) => (
+              <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>
+            ))}
           </Grid>
-          <ProjectContextMenu2
+          <ProjectContextMenu
             projectId={contextMenuData}
             position={contextMenuPosition}
             handleClose={() => setContextMenuPosition(null)}
@@ -84,8 +87,8 @@ function Projects() {
 }
 
 interface ProjectCardProps {
-  project: ProjectRead,
-  onContextMenu: any
+  project: ProjectRead;
+  onContextMenu: any;
 }
 
 function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
@@ -99,14 +102,20 @@ function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
               {project.description}
             </Typography>
           </CardContent>
-          {preProStatus.isSuccess && <CardContent sx={{ padding: "0px !important" }}>
-            <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
-              Number of preprocessed Documents: {preProStatus.data.num_sdocs_finished}
-              <br />
-              {preProStatus.data.in_progress && <>Document preprocessing is in progress </>}
-              {preProStatus.data.in_progress && <>{preProStatus.data.num_sdocs_in_progress} <CircularProgress/></>}
-            </Typography>
-          </CardContent>}
+          {preProStatus.isSuccess && (
+            <CardContent sx={{ padding: "0px !important" }}>
+              <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
+                Number of preprocessed Documents: {preProStatus.data.num_sdocs_finished}
+                <br />
+                {preProStatus.data.in_progress && <>Document preprocessing is in progress </>}
+                {preProStatus.data.in_progress && (
+                  <>
+                    {preProStatus.data.num_sdocs_in_progress} <CircularProgress />
+                  </>
+                )}
+              </Typography>
+            </CardContent>
+          )}
         </CardActionArea>
         <CardActions>
           <Typography
@@ -126,7 +135,8 @@ function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
           </Tooltip>
         </CardActions>
       </Card>
-    </Grid>)
+    </Grid>
+  );
 }
 
 export default Projects;

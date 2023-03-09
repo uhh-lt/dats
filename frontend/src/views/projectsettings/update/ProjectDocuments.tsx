@@ -19,7 +19,7 @@ import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
 import { LoadingButton } from "@mui/lab";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { useInView } from "react-intersection-observer";
 

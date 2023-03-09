@@ -1,7 +1,7 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useRef, useState } from "react";
 import { AttachedObjectType } from "../../api/openapi";
-import { ContextMenuPosition } from "../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import MemoCard from "./MemoCard";
 import MemoResultsContextMenu from "./MemoResultsContextMenu";
 

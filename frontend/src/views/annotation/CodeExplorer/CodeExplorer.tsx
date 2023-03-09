@@ -15,7 +15,7 @@ import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeEditButton from "./CodeEditButton";
 import MemoButton from "../../../features/memo-dialog/MemoButton";
 import { useAuth } from "../../../auth/AuthProvider";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 import { AttachedObjectType } from "../../../api/openapi";
 import SpanCreationDialog, { CodeCreationDialogHandle } from "../SpanContextMenu/SpanCreationDialog";

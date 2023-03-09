@@ -3,7 +3,7 @@ import React from "react";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link } from "react-router-dom";
-import { ContextMenuProps } from "../../views/projects/ProjectContextMenu2";
+import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
 import TagMenuMenuItem from "../../views/search/ToolBar/ToolBarElements/TagMenuMenuItem";
 import MemoMenuItem from "../memo-dialog/MemoMenuItem";
 import { AttachedObjectType } from "../../api/openapi";

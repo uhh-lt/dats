@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import { CodeRead, SpanEntityDocumentFrequency } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SearchHooks from "../../../api/SearchHooks";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import { SearchFilter } from "../SearchFilter";
 import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";

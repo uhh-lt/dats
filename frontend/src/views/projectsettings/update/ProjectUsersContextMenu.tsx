@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 
 interface ProjectUsersContextMenuProps {
   position: ContextMenuPosition | null;

@@ -26,7 +26,7 @@ import ProjectHooks from "../../../api/ProjectHooks";
 import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
 import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 
 interface ProjectUsersProps {
   project: ProjectRead;

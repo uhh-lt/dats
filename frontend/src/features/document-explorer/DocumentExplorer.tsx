@@ -28,7 +28,7 @@ import DocumentNavigation from "../../components/DocumentNavigation";
 import { AnnoActions } from "../../views/annotation/annoSlice";
 import ArticleIcon from "@mui/icons-material/Article";
 import ImageIcon from "@mui/icons-material/Image";
-import { ContextMenuPosition } from "../../views/projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
 import SearchHooks from "../../api/SearchHooks";
 import LabelIcon from "@mui/icons-material/Label";

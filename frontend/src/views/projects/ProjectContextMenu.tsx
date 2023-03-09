@@ -3,22 +3,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-
-export interface ContextMenuPosition {
-  x: number;
-  y: number;
-}
-
-export interface ContextMenuProps {
-  position: ContextMenuPosition | null;
-  handleClose: () => void;
-}
+import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
 
 interface ProjectContextMenuProps extends ContextMenuProps {
   projectId: number | undefined;
 }
 
-function ProjectContextMenu2({ position, projectId, handleClose }: ProjectContextMenuProps) {
+function ProjectContextMenu({ position, projectId, handleClose }: ProjectContextMenuProps) {
   return (
     <Menu
       open={position !== null}
@@ -29,7 +20,6 @@ function ProjectContextMenu2({ position, projectId, handleClose }: ProjectContex
         e.preventDefault();
         handleClose();
       }}
-      // PaperProps={{ sx: { width: 240, height: 300 } }}
     >
       <MenuItem component={Link} to={`/project/${projectId}/search`}>
         <ListItemIcon>
@@ -47,4 +37,4 @@ function ProjectContextMenu2({ position, projectId, handleClose }: ProjectContex
   );
 }
 
-export default ProjectContextMenu2;
+export default ProjectContextMenu;

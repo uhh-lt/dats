@@ -17,7 +17,7 @@ import { Link, Link as RouterLink, useParams } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import UserHooks from "../../api/UserHooks";
 import ProjectSelectionContextMenu from "./ProjectSelectionContextMenu";
-import { ContextMenuPosition } from "../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 
 function ProjectSelection() {
   const { user } = useAuth();

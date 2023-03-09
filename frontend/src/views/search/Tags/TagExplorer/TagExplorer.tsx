@@ -18,7 +18,7 @@ import TagEditDialog from "../TagEdit/TagEditDialog";
 import StorageIcon from "@mui/icons-material/Storage";
 import DownloadIcon from "@mui/icons-material/Download";
 import TagExplorerContextMenu from "./TagExplorerContextMenu";
-import { ContextMenuPosition } from "../../../projects/ProjectContextMenu2";
+import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
 import Box from "@mui/material/Box";
 
 interface TagSearchProps {
