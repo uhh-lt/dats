@@ -324,8 +324,21 @@ class ElasticSearchService(metaclass=SingletonMeta):
                                                    }
                                            }
                                    })
-        stats = OmegaConf.create(res).aggregations.keyword_counts.buckets
-        return [KeywordStat(keyword=s["key"], count=s["doc_count"]) for s in stats]
+        filtered_stats = OmegaConf.create(res).aggregations.keyword_counts.buckets
+        filtered_stats_list = [(s["key"], s["doc_count"]) for s in filtered_stats]
+        keywords = [k for k, c in filtered_stats_list]
+
+        multi_search_body = []
+        for k in keywords:
+            multi_search_body.append({}) # empty header
+            multi_search_body.append({"size": 0, "query": {"term": {"keywords" : k}}})
+        
+        res = self.__client.msearch(index=self.__get_index_name(proj_id=proj_id),
+                                    body=multi_search_body
+                                    )
+        global_stats_list = [r["hits"]["total"]["value"] for r in res["responses"]]
+
+        return [KeywordStat(keyword=f[0], filtered_count=f[1], global_count=g) for f, g in zip(filtered_stats_list, global_stats_list)]
 
     def delete_document_from_index(self,
                                    proj_id: int,
