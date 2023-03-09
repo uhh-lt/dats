@@ -30,6 +30,7 @@ interface TextAnnotationRendererNewProps {
   annotationMap: Map<number, SpanAnnotationReadResolved> | undefined;
   isViewer: boolean;
   projectId: number;
+  doHighlighting: boolean;
 }
 
 const getHighlightedSentIds = (sentences: string[] | undefined, filters: SearchFilter[]) => {
@@ -133,6 +134,7 @@ function TextAnnotationRendererNew({
   annotationMap,
   isViewer,
   projectId,
+  doHighlighting,
   ...props
 }: TextAnnotationRendererNewProps & BoxProps) {
   // FIXME: almost identical filters with trailing whitespaces are saved as individual filters
@@ -147,8 +149,12 @@ function TextAnnotationRendererNew({
   }, [sentences, filters]);
 
   const { anchorInfos, highlightSet, anchorTokenIds, filterLimits } = useMemo(() => {
-    return getHighlightedTokenSet(tokenData, filters);
-  }, [tokenData, filters]);
+    if (doHighlighting) {
+      return getHighlightedTokenSet(tokenData, filters);
+    } else {
+      return { anchorInfos: undefined, highlightSet: undefined, anchorTokenIds: undefined, filterLimits: undefined };
+    }
+  }, [doHighlighting, tokenData, filters]);
 
   // effects
   useEffect(() => {
