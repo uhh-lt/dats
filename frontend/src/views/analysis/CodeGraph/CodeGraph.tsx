@@ -3,19 +3,100 @@ import { useRef, useState } from "react";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import CodeExplorer, { CodeExplorerHandle } from "../../annotation/CodeExplorer/CodeExplorer";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
-import CodeTree from "./CodeTree";
+import ForceLayout from "./CodeTree";
+
 import useComputeCodeTree from "./useComputeCodeTree";
 
 const CodeGraph = () => {
   // local state
   const codeExplorerRef = useRef<CodeExplorerHandle>(null);
-  const [graphData, setGraphData] = useState<ICodeTree[] | undefined>(undefined);
+  const [graphData, setGraphData] = useState<[]>(undefined);
 
   // custom hooks
   const { codeTree, codes } = useComputeCodeTree();
+  const [matchedData, setMatchedData] = useState([]);
 
   console.log("codeTree", codeTree);
-  console.log("codes", codes);
+  console.log("codes", codes.data);
+
+  function handleMatchData(ids, data) {
+    const matched = [];
+
+    data.forEach((arr) => {
+      if (Array.isArray(arr)) {
+        const objs = [];
+        arr.forEach((obj) => {
+          if (ids.includes(obj.id)) {
+            objs.push(obj);
+          }
+        });
+
+        if (objs.length > 0) {
+          // Group objects by parent_code_id
+          const groupedObjs = objs.reduce((acc, curr) => {
+            const key = curr.parent_code_id;
+            if (!acc[key]) {
+              acc[key] = [];
+            }
+            acc[key].push(curr);
+            return acc;
+          }, {});
+
+          // Push grouped objects to matched array
+          Object.values(groupedObjs).forEach((group) => {
+            matched.push(group);
+          });
+        }
+      } else {
+        if (ids.includes(arr.id)) {
+          matched.push([arr]);
+        }
+      }
+    });
+
+    const grouped = matched.reduce((groups, arr) => {
+      if (Array.isArray(arr)) {
+        arr.forEach((obj) => {
+          const key = obj.parent_code_id !== null && obj.parent_code_id !== undefined ? obj.parent_code_id : obj.id;
+          if (!groups[key]) {
+            groups[key] = [];
+          }
+          groups[key].push(obj);
+        });
+      } else {
+        const obj = arr;
+        const key = obj.parent_code_id !== null && obj.parent_code_id !== undefined ? obj.parent_code_id : obj.id;
+        if (!groups[key]) {
+          groups[key] = [];
+        }
+        groups[key].push(obj);
+      }
+      return groups;
+    }, {});
+
+    const groupedArray = Object.values(grouped);
+
+    setMatchedData(groupedArray);
+    return groupedArray;
+  }
+
+  //  function groupObjectsById(idArray, dataArray) {
+  //    const result = [];
+
+  //   const matchedObjects = dataArray.filter((obj) => idArray.includes(obj.id) || idArray.includes(obj.parent_code_id));
+
+  //    matchedObjects.forEach((obj) => {
+  //      const key = obj.parent_code_id === null ? obj.id : obj.parent_code_id;
+  //      let matchingArray = result.find((arr) => arr[0].parent_code_id === key);
+  //      if (!matchingArray) {
+  //        matchingArray = [];
+  //        result.push(matchingArray);
+  //      }
+  //      matchingArray.push(obj);
+  //    });
+  //
+  //    return result;
+  //  }
 
   const handleGenerateGraph = () => {
     if (!codeExplorerRef.current) return;
@@ -23,6 +104,12 @@ const CodeGraph = () => {
     const checkedCodeIds = codeExplorerRef.current.getCheckedCodeIds();
     console.log("checkedCodeIds", checkedCodeIds);
     if (checkedCodeIds.length > 0) {
+      // console.log("hello", groupObjectsById(checkedCodeIds, codes.data));
+      console.log("mt2", handleMatchData(checkedCodeIds, codes.data));
+      // console.log("match data", matchedData);
+      // setGraphData(groupObjectsById(checkedCodeIds, codes.data));
+      setGraphData(handleMatchData(checkedCodeIds, codes.data));
+
       // TODO: use the code ids to construct the graph data here
       const nodeA: ICodeTree = {
         code: {
@@ -99,7 +186,6 @@ const CodeGraph = () => {
 
       // please do not use a single root node, lets use a graph (e.g. force directed graph) to display the data
       // the graph would not need a single *artificial* root node
-      setGraphData([nodeA, nodeB]);
     } else {
       setGraphData(undefined);
     }
@@ -122,7 +208,7 @@ const CodeGraph = () => {
             </Button>
           </Stack>
         </Box>
-        <div className="myFlexFillAllContainer">{graphData && <CodeTree treeData={graphData} />}</div>
+        <div className="myFlexFillAllContainer">{graphData !== undefined && <ForceLayout data={graphData} />}</div>
       </Grid>
     </Grid>
   );
