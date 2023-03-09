@@ -868,16 +868,20 @@ class ExportService(metaclass=SingletonMeta):
         )
 
         # TODO: parse the parameters and run the respective method
-        with self.sqls.db_session() as db:
-            results_url = self._export_all_user_data_from_proj(
-                db=db,
-                export_format=exj.parameters.export_format,
-                proj_id=exj.parameters.project_id,
+        try:
+            with self.sqls.db_session() as db:
+                results_url = self._export_all_user_data_from_proj(
+                    db=db,
+                    export_format=exj.parameters.export_format,
+                    proj_id=exj.parameters.project_id,
+                )
+            exj = self._update_export_job(
+                url=results_url,
+                status=ExportJobStatus.DONE,
+                export_job_id=export_job_id,
             )
-        exj = self._update_export_job(
-            url=results_url,
-            status=ExportJobStatus.DONE,
-            export_job_id=export_job_id,
-        )
+        except:
+            self._update_export_job(status=ExportJobStatus.FAILED, url=None, export_job_id=export_job_id)
+
 
         return exj

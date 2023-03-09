@@ -16,6 +16,7 @@ class ExportJobStatus(str, Enum):
     INIT = "init"
     IN_PROGRESS = "in_progress"
     DONE = "done"
+    FAILED = "failed"
 
 
 class ExportJobParameters(BaseModel):
