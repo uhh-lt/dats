@@ -121,6 +121,11 @@ export const searchSlice = createSlice({
         anchorState.pos = newPos;
       }
     },
+    resetFilterInfos: (state) => {
+      Object.entries(state.filterAnchorInfo).forEach(([key, limit]) => {
+        state.filterAnchorInfo[key] = { pos: -1, limit: -1 };
+      });
+    },
     setFilterAnchorLimits: (state, action: PayloadAction<{ [id: string]: number }>) => {
       Object.entries(action.payload).forEach(([key, limit]) => {
         let anchorState = state.filterAnchorInfo[key];
