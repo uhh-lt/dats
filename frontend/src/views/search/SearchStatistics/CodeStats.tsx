@@ -23,7 +23,9 @@ function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parent
   });
 
   const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
-  sortStats(statsOrder, codeStats, entityTotalCountMap, (a: SpanEntityDocumentFrequency) => a.span_text);
+  useMemo(() => {
+    sortStats(statsOrder, codeStats, entityTotalCountMap, (a: SpanEntityDocumentFrequency) => a.span_text);
+  }, [codeStats, entityTotalCountMap, statsOrder]);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(entityTotalCountMap.values())), [entityTotalCountMap]);

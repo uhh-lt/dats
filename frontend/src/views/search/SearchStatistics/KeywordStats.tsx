@@ -54,7 +54,9 @@ function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, 
   });
 
   const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
-  sortStats(statsOrder, keywordStats, keywordTotalCountMap, (a: KeywordStat) => a.keyword);
+  useMemo(() => {
+    sortStats(statsOrder, keywordStats, keywordTotalCountMap, (a: KeywordStat) => a.keyword);
+  }, [keywordStats, keywordTotalCountMap, statsOrder]);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(keywordTotalCountMap.values())), [keywordTotalCountMap]);

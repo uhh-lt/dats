@@ -54,7 +54,9 @@ function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, pare
   });
 
   const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
-  sortStats(statsOrder, tagStats, tagTotalCountMap, (a: TagStat) => a.tag.id);
+  useMemo(() => {
+    sortStats(statsOrder, tagStats, tagTotalCountMap, (a: TagStat) => a.tag.id);
+  }, [tagStats, tagTotalCountMap, statsOrder]);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(tagTotalCountMap.values())), [tagTotalCountMap]);
