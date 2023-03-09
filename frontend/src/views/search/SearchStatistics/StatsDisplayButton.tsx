@@ -25,7 +25,7 @@ function StatsDisplayButton({
   return (
     <div
       style={{
-        width: widthVal + "%",
+        width: "100%",
         height: 30,
         position: "absolute",
         top: 0,
@@ -46,25 +46,25 @@ function StatsDisplayButton({
           {term}
         </Typography>
       </Tooltip>
-      <Button
-        style={{
-          width: "100%",
-          height: 30,
-          float: "left",
-          justifyContent: "left",
-          marginRight: 2,
-          paddingLeft: 3,
-          color: "white",
-          fontSize: 13,
-          background: `linear-gradient(90deg, rgba(40,40,40,1) ${gradRatio}%, rgba(255,255,255,1) ${gradRatio}%, rgba(25, 118, 210,1) ${Math.min(
-            gradRatio + 1,
-            100
-          )}%)`,
-        }}
-        {...(btnProps as ButtonProps)}
-      >
-        <b>{count}</b>
-      </Button>
+      <div style={{ width: "100%", marginRight: 2 }}>
+        <Button
+          style={{
+            width: widthVal + "%",
+            height: 30,
+            float: "left",
+            justifyContent: "left",
+            color: "white",
+            fontSize: 13,
+            background: `linear-gradient(90deg, rgba(40,40,40,1) ${gradRatio}%, rgba(255,255,255,1) ${gradRatio}%, rgba(25, 118, 210,1) ${Math.min(
+              gradRatio + 1,
+              100
+            )}%)`,
+          }}
+          {...(btnProps as ButtonProps)}
+        >
+          <b>{count}</b>
+        </Button>
+      </div>
       <Typography fontSize={18}>{totalCount}</Typography>
     </div>
   );

@@ -6,6 +6,7 @@ import { DocumentTagRead, TagStat } from "../../../api/openapi";
 import TagHooks from "../../../api/TagHooks";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { sortStats } from "./utils";
 
 interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
@@ -53,13 +54,7 @@ function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, pare
   });
 
   const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
-  if (statsOrder === "total") {
-    tagStats.sort((a, b) => {
-      let totalA = tagTotalCountMap.get(a.tag.id)!;
-      let totalB = tagTotalCountMap.get(b.tag.id)!;
-      return totalA > totalB ? -1 : totalB > totalA ? 1 : a.count > b.count ? -1 : b.count > a.count ? 1 : 0;
-    });
-  }
+  sortStats(statsOrder, tagStats, tagTotalCountMap, (a: TagStat) => a.tag.id);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(tagTotalCountMap.values())), [tagTotalCountMap]);

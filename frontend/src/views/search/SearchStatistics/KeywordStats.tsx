@@ -5,6 +5,7 @@ import React, { useMemo } from "react";
 import { KeywordStat } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { sortStats } from "./utils";
 
 interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
@@ -53,13 +54,7 @@ function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, 
   });
 
   const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
-  if (statsOrder === "total") {
-    keywordStats.sort((a, b) => {
-      let totalA = keywordTotalCountMap.get(a.keyword)!;
-      let totalB = keywordTotalCountMap.get(b.keyword)!;
-      return totalA > totalB ? -1 : totalB > totalA ? 1 : a.count > b.count ? -1 : b.count > a.count ? 1 : 0;
-    });
-  }
+  sortStats(statsOrder, keywordStats, keywordTotalCountMap, (a: KeywordStat) => a.keyword);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(keywordTotalCountMap.values())), [keywordTotalCountMap]);

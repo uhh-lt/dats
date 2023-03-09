@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { SpanEntityDocumentFrequency } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { sortStats } from "./utils";
 
 interface CodeStatsProps {
   codeId: number;
@@ -22,13 +23,7 @@ function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parent
   });
 
   const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
-  if (statsOrder === "total") {
-    codeStats.sort((a, b) => {
-      let totalA = entityTotalCountMap.get(a.span_text)!;
-      let totalB = entityTotalCountMap.get(b.span_text)!;
-      return totalA > totalB ? -1 : totalB > totalA ? 1 : a.count > b.count ? -1 : b.count > a.count ? 1 : 0;
-    });
-  }
+  sortStats(statsOrder, codeStats, entityTotalCountMap, (a: SpanEntityDocumentFrequency) => a.span_text);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(entityTotalCountMap.values())), [entityTotalCountMap]);
