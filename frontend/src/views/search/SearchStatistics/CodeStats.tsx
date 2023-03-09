@@ -9,12 +9,11 @@ import { sortStats } from "./utils";
 interface CodeStatsProps {
   codeId: number;
   codeStats: SpanEntityDocumentFrequency[];
-  entityTotalCountMap: Map<string, number>;
   handleClick: (stat: SpanEntityDocumentFrequency) => void;
   parentRef: React.RefObject<HTMLDivElement>;
 }
 
-function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parentRef }: CodeStatsProps) {
+function CodeStats({ codeId, codeStats, handleClick, parentRef }: CodeStatsProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: codeStats.length,
@@ -22,13 +21,8 @@ function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parent
     estimateSize: () => 35,
   });
 
-  const statsOrder = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
-  useMemo(() => {
-    sortStats(statsOrder, codeStats, entityTotalCountMap, (a: SpanEntityDocumentFrequency) => a.span_text);
-  }, [codeStats, entityTotalCountMap, statsOrder]);
-
   // computed
-  const maxValue = useMemo(() => Math.max(...Array.from(entityTotalCountMap.values())), [entityTotalCountMap]);
+  const maxValue = useMemo(() => Math.max(...codeStats.map(x => x.global_count)), [codeStats]);
 
   // render
   return (
@@ -48,47 +42,12 @@ function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parent
           <StatsDisplayButton
             key={virtualItem.key}
             term={codeStat.span_text}
-            count={codeStat.count}
-            totalCount={entityTotalCountMap.get(codeStat.span_text)!}
+            count={codeStat.filtered_count}
+            totalCount={codeStat.global_count}
             maxCount={maxValue}
             translateY={virtualItem.start}
             handleClick={() => handleClick(codeStat)}
           />
-        );
-      })}
-
-      {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let codeStat = codeStats[virtualItem.index];
-
-        if (entityTotalCountMap.has(codeStat.span_text)) {
-          return (
-            <StatsDisplayButton
-              key={virtualItem.key}
-              term={codeStat.span_text}
-              count={codeStat.count}
-              totalCount={entityTotalCountMap.get(codeStat.span_text)!}
-              maxCount={maxValue}
-              translateY={virtualItem.start}
-              handleClick={() => handleClick(codeStat)}
-            />
-          );
-        }
-        return (
-          <div
-            key={virtualItem.key}
-            style={{
-              width: "100%",
-              height: 30,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              transform: `translateY(${virtualItem.start}px)`,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {codeStat.span_text}: {codeStat.count} No total count... Why?
-          </div>
         );
       })}
     </TabPanel>

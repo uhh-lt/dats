@@ -70,14 +70,19 @@ export class SearchService {
    * @returns SpanEntityDocumentFrequencyResult Successful Response
    * @throws ApiError
    */
-  public static searchEntityDocumentStats({
+  public static searchCodeStats({
     requestBody,
+    sortByGlobal = false,
   }: {
     requestBody: SearchSDocsQueryParameters;
+    sortByGlobal?: boolean;
   }): CancelablePromise<SpanEntityDocumentFrequencyResult> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/entity_document_stats",
+      url: "/search/code_stats",
+      query: {
+        sort_by_global: sortByGlobal,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

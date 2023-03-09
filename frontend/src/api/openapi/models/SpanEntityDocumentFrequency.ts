@@ -14,5 +14,9 @@ export type SpanEntityDocumentFrequency = {
   /**
    * Number of occurrences of the SpanEntity in a collection of SourceDocuments.
    */
-  count: number;
+  filtered_count: number;
+  /**
+   * Number of occurrences of the SpanEntity in a collection of SourceDocuments.
+   */
+  global_count: number;
 };

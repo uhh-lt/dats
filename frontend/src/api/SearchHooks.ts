@@ -209,14 +209,14 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
     { enabled: !!tagId && !!projectId }
   );
 
-const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]) => {
+const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[], sortStatsByGlobal: boolean) => {
   const { user } = useAuth();
   const resultModalities = useAppSelector((state) => state.search.resultModalities);
   return useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
     [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, user.data?.id, filters, resultModalities],
     async () => {
       const { keywords, tags, codes, terms, filenames, metadata } = orderFilters(filters);
-      const data = await SearchService.searchEntityDocumentStats({
+      const data = await SearchService.searchCodeStats({
         requestBody: {
           proj_id: projectId,
           user_ids: user.data ? [user.data.id] : undefined,
@@ -229,6 +229,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
         },
+        
       });
       return new Map(Object.entries(data.stats).map((x) => [parseInt(x[0]), x[1]]));
     }

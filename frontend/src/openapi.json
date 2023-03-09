@@ -3300,12 +3300,20 @@
         }
       }
     },
-    "/search/entity_document_stats": {
+    "/search/code_stats": {
       "post": {
         "tags": ["search"],
         "summary": "Returns SpanEntityStats for the given SourceDocuments.",
         "description": "Returns SpanEntityStats for the given SourceDocuments.",
-        "operationId": "search_entity_document_stats",
+        "operationId": "search_code_stats",
+        "parameters": [
+          {
+            "required": false,
+            "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
+            "name": "sort_by_global",
+            "in": "query"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }
@@ -5270,7 +5278,7 @@
       },
       "SpanEntityDocumentFrequency": {
         "title": "SpanEntityDocumentFrequency",
-        "required": ["code_id", "span_text", "count"],
+        "required": ["code_id", "span_text", "filtered_count", "global_count"],
         "type": "object",
         "properties": {
           "code_id": {
@@ -5283,8 +5291,13 @@
             "type": "string",
             "description": "The SpanText the SpanAnnotation spans"
           },
-          "count": {
-            "title": "Count",
+          "filtered_count": {
+            "title": "Filtered Count",
+            "type": "integer",
+            "description": "Number of occurrences of the SpanEntity in a collection of SourceDocuments."
+          },
+          "global_count": {
+            "title": "Global Count",
             "type": "integer",
             "description": "Number of occurrences of the SpanEntity in a collection of SourceDocuments."
           }

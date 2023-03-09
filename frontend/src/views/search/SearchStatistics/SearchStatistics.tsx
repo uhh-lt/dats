@@ -52,24 +52,8 @@ function SearchStatistics({
 
   // stats
   const [validEntityStats, setValidEntityStats] = useState<Map<number, SpanEntityDocumentFrequency[]>>(new Map());
-  const entityTotalCounts = SearchHooks.useSearchEntityDocumentStats(projectId, []);
-  const entityStats = SearchHooks.useSearchEntityDocumentStats(projectId, filter);
-  const entityTotalCountMap = useMemo(() => {
-    // map from code_id -> entity_text -> entity_count
-    const result = new Map<number, Map<string, number>>();
-    if (!entityTotalCounts.data) return result;
-
-    Array.from(entityTotalCounts.data.entries()).forEach(([codeId, data]) => {
-      const codeMap = new Map<string, number>();
-      data.forEach((stat) => {
-        codeMap.set(stat.span_text, stat.count);
-      });
-      result.set(codeId, codeMap);
-    });
-
-    return result;
-  }, [entityTotalCounts.data]);
   const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
+  const codeStats = SearchHooks.useSearchEntityDocumentStats(projectId, filter, sortStatsByGlobal);
   const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter, sortStatsByGlobal);
 
   const tagTotalCount = SearchHooks.useSearchTagStats(projectId, []);
@@ -94,16 +78,16 @@ function SearchStatistics({
   // effects
   // make sure that a valid tab is selected, when the stats (and thus the documents) change
   useEffect(() => {
-    if (entityStats.data) {
+    if (codeStats.data) {
       if (tab !== "keywords" && tab !== "tags") {
         const currentCodeId = parseInt(tab);
-        if (entityStats.data.get(currentCodeId) === undefined) {
+        if (codeStats.data.get(currentCodeId) === undefined) {
           setTab("keywords");
         }
       }
-      setValidEntityStats(entityStats.data);
+      setValidEntityStats(codeStats.data);
     }
-  }, [tab, setValidEntityStats, entityStats.data]);
+  }, [tab, setValidEntityStats, codeStats.data]);
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
@@ -145,18 +129,14 @@ function SearchStatistics({
             handleClick={handleTagClick}
             parentRef={parentRef}
           />
-          {Array.from(validEntityStats.entries()).map(([codeId, data]) =>
-            entityTotalCountMap.has(codeId) ? (
+          {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
               <CodeStats
                 key={codeId}
                 codeId={codeId}
                 codeStats={data}
-                entityTotalCountMap={entityTotalCountMap.get(codeId)!}
                 handleClick={handleCodeClick}
                 parentRef={parentRef}
               />
-            ) : (
-              <React.Fragment key={codeId}>No total counts available :(</React.Fragment>
             )
           )}
         </Box>
