@@ -21,7 +21,8 @@ class SpanEntityFrequency(SpanEntity):
 
 
 class SpanEntityDocumentFrequency(SpanEntity):
-    count: int = Field(description="Number of occurrences of the SpanEntity in a collection of SourceDocuments.")
+    filtered_count: int = Field(description="Number of occurrences of the SpanEntity in a collection of SourceDocuments.")
+    global_count: int = Field(description="Number of occurrences of the SpanEntity in a collection of SourceDocuments.")
 
 
 class SpanEntityDocumentFrequencyResult(BaseModel):

@@ -1,4 +1,4 @@
-from typing import List, Set, Optional
+from typing import List, Set, Optional, Tuple
 
 from sqlalchemy import delete, func, and_, or_, desc
 from sqlalchemy.orm import Session
@@ -401,20 +401,54 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                                     count=count) for (sdoc_id, code_id, text, count) in res]
 
     # noinspection PyUnresolvedReferences
-    def collect_entity_document_stats(self,
-                                      db: Session,
-                                      *,
-                                      user_ids: Set[int] = None,
-                                      sdoc_ids: Set[int] = None,
-                                      proj_id: int,
-                                      only_finished: bool = True,
-                                      skip: Optional[int] = None,
-                                      limit: Optional[int] = None) -> SpanEntityDocumentFrequencyResult:
+    def collect_code_stats(self,
+                           db: Session,
+                           *,
+                           user_ids: Set[int] = None,
+                           sdoc_ids: Set[int] = None,
+                           proj_id: int,
+                           only_finished: bool = True,
+                           skip: Optional[int] = None,
+                           limit: Optional[int] = None) -> SpanEntityDocumentFrequencyResult:
         # Flo: we always want ADocs from the SYSTEM_USER
         if not user_ids:
             user_ids = set()
         user_ids.add(SYSTEM_USER_ID)
 
+        filtered_res = self._query_code_stats(db, user_ids=user_ids, sdoc_ids=sdoc_ids,
+                               proj_id=proj_id, only_finished=only_finished, skip=skip, limit=limit)
+        filtered_res.sort(key=lambda x: (x[0], x[1]))
+
+        code_ids = [r.code_id for r in filtered_res]
+        texts = [r.text for r in filtered_res]
+
+        global_res = self._query_code_stats(
+            db, user_ids=user_ids, proj_id=proj_id, code_ids=code_ids, texts=texts, only_finished=only_finished)
+        global_res.sort(key=lambda x: (x[0], x[1]))
+        
+        stats = dict()
+        i = 0
+        for f in filtered_res:
+            # global_res might contain matches with same text but different code than in the filtered collection
+            while global_res[i].code_id != f.code_id or global_res[i].text != f.text:
+                i += 1
+            doc_freqs = stats.get(f.code_id, [])
+            doc_freqs.append(SpanEntityDocumentFrequency(code_id=f.code_id, filtered_count=f.doc_freq, global_count=global_res[i].doc_freq, span_text=f.text))
+            stats[f.code_id] = doc_freqs
+
+        return SpanEntityDocumentFrequencyResult(stats=stats)
+
+    def _query_code_stats(self,
+                          db: Session,
+                          *,
+                          user_ids: Set[int] = None,
+                          sdoc_ids: Set[int] = None,
+                          proj_id: int,
+                          code_ids: List[int] = None,
+                          texts: List[str] = None,
+                          only_finished: bool = True,
+                          skip: Optional[int] = None,
+                          limit: Optional[int] = None) -> List[Tuple[int, str, int]]:
         # we want this:
         # SELECT code_id, text, count(sdoc_id) FROM (SELECT DISTINCT sourcedocument.id AS sdoc_id, code.id AS code_id, spantext.text AS text
         #        FROM sourcedocument
@@ -435,18 +469,20 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             .join(CurrentCodeORM) \
             .join(CodeORM) \
             .join(SpanTextORM)
+        
+        inner_query = inner_query.filter(self.model.project_id == proj_id,
+                                                CodeORM.name != "SENTENCE",
+                                                AnnotationDocumentORM.user_id.in_(list(user_ids)))
 
         if only_finished:
-            inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
-                                                  self.model.id.in_(list(sdoc_ids)),
-                                                  CodeORM.name != "SENTENCE",
-                                                  self.model.status == SDocStatus.finished,
-                                                  AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
-        else:
-            inner_query = inner_query.filter(and_(self.model.project_id == proj_id,
-                                                  self.model.id.in_(list(sdoc_ids)),
-                                                  CodeORM.name != "SENTENCE",
-                                                  AnnotationDocumentORM.user_id.in_(list(user_ids)))).subquery()
+            inner_query = inner_query.filter(self.model.status == SDocStatus.finished)
+        if sdoc_ids is not None and len(sdoc_ids) > 0:
+            inner_query = inner_query.filter(self.model.id.in_(list(sdoc_ids)))
+        if code_ids is not None and len(code_ids) > 0:
+            inner_query = inner_query.filter(CodeORM.id.in_(code_ids))
+        if texts is not None and len(texts) > 0:
+            inner_query = inner_query.filter(SpanTextORM.text.in_(texts))
+        inner_query = inner_query.subquery()
 
         doc_freq = func.count(inner_query.c.sdoc_id).label("doc_freq")
         outer_query = db.query(inner_query.c.code_id, inner_query.c.text, doc_freq)
@@ -459,14 +495,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             outer_query = outer_query.limit(limit)
 
         res = outer_query.all()
-
-        stats = dict()
-        for r in res:
-            doc_freqs = stats.get(r.code_id, [])
-            doc_freqs.append(SpanEntityDocumentFrequency(code_id=r.code_id, count=r.doc_freq, span_text=r.text))
-            stats[r.code_id] = doc_freqs
-
-        return SpanEntityDocumentFrequencyResult(stats=stats)
+        return res
 
     def collect_tag_stats(self,
                           db: Session,

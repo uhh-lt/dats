@@ -37,20 +37,24 @@ async def search_span_entity_stats(*,
     return crud_sdoc.collect_entity_stats(db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id)
 
 
-@router.post("/entity_document_stats", tags=tags,
+@router.post("/code_stats", tags=tags,
              response_model=SpanEntityDocumentFrequencyResult,
              summary="Returns SpanEntityStats for the given SourceDocuments.",
              description="Returns SpanEntityStats for the given SourceDocuments.")
-async def search_entity_document_stats(*,
-                                       db: Session = Depends(get_db_session),
-                                       query_params: SearchSDocsQueryParameters) -> SpanEntityDocumentFrequencyResult:
+async def search_code_stats(*,
+                            db: Session = Depends(get_db_session),
+                            query_params: SearchSDocsQueryParameters,
+                            sort_by_global: bool = False) -> SpanEntityDocumentFrequencyResult:
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
     # TODO Flo for large corpora this gets very slow. Hence we have to set a limit and in future implement some lazy
     #  loading or scrolling in the frontend with skip and limit.
-    return crud_sdoc.collect_entity_document_stats(db=db,
-                                                   sdoc_ids=sdoc_ids,
-                                                   proj_id=query_params.proj_id,
-                                                   skip=0, limit=10000)
+    code_stats =  crud_sdoc.collect_code_stats(db=db,
+                                        sdoc_ids=sdoc_ids,
+                                        proj_id=query_params.proj_id,
+                                        skip=0, limit=1000)
+    for v in code_stats.stats.values():
+        v.sort(key=(lambda x: x.global_count) if sort_by_global else (lambda x: x.filtered_count), reverse=True)
+    return code_stats
 
 
 @router.post("/keyword_stats", tags=tags,
