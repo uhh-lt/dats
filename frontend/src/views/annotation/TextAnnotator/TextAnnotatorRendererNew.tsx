@@ -82,7 +82,7 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
           if (filter.startsWith(tokenConcats)) {
             if (filter === tokenConcats) {
               newSpanEnd = j;
-              const uniqueFilterId = tokenFilters[k].id.trim() + "-idx" + filterOccurrences[k];
+              const uniqueFilterId = tokenFilters[k].id.trim() + "-idx" + (filterOccurrences[k] + 1);
               anchorTokenIds.set(uniqueFilterId, [i, j]);
               filterIds.push(uniqueFilterId);
               filterOccurrences[k] += 1;
@@ -99,7 +99,7 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
         tokenConcats += " ";
       }
     }
-    if (newSpanEnd) {
+    if (newSpanEnd !== undefined) {
       anchorInfos.set(i, filterIds);
       for (let t = i; t <= newSpanEnd; t++) {
         highlightSet.add(t);
