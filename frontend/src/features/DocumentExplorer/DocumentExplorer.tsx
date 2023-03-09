@@ -1,6 +1,6 @@
-import * as React from "react";
-import { useCallback, useRef, useState } from "react";
-import Typography from "@mui/material/Typography";
+import ArticleIcon from "@mui/icons-material/Article";
+import ImageIcon from "@mui/icons-material/Image";
+import LabelIcon from "@mui/icons-material/Label";
 import {
   AppBar,
   FormControl,
@@ -18,21 +18,21 @@ import {
   Toolbar,
   Tooltip,
 } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import ProjectHooks from "../../api/ProjectHooks";
-import { Link as RouterLink, useParams } from "react-router-dom";
-import SdocHooks from "../../api/SdocHooks";
-import { AttachedObjectType, DocType } from "../../api/openapi";
-import MemoButton from "../Memo/MemoButton";
-import DocumentNavigation from "../../components/DocumentNavigation";
-import { AnnoActions } from "../../views/annotation/annoSlice";
-import ArticleIcon from "@mui/icons-material/Article";
-import ImageIcon from "@mui/icons-material/Image";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
-import SearchHooks from "../../api/SearchHooks";
-import LabelIcon from "@mui/icons-material/Label";
+import Typography from "@mui/material/Typography";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import * as React from "react";
+import { useCallback, useRef, useState } from "react";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import { AttachedObjectType, DocType } from "../../api/openapi";
+import ProjectHooks from "../../api/ProjectHooks";
+import SdocHooks from "../../api/SdocHooks";
+import SearchHooks from "../../api/SearchHooks";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
+import DocumentNavigation from "../../components/DocumentNavigation";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { AnnoActions } from "../../views/annotation/annoSlice";
+import MemoButton from "../Memo/MemoButton";
+import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
 
 function DocumentExplorer({ ...props }) {
   // router
@@ -111,7 +111,7 @@ function DocumentExplorer({ ...props }) {
       {!selectedDocumentTag ? (
         <div>Please select a document tag above :)</div>
       ) : sdocs.isSuccess ? (
-        <div ref={containerRef}>
+        <div ref={containerRef} className="myFlexFillAllContainer">
           {sdocs.data.length === 0 && <div>No documents found...</div>}
           {sdocs.data.length > 0 && (
             <List
@@ -121,7 +121,6 @@ function DocumentExplorer({ ...props }) {
                 width: "100%",
                 position: "relative",
               }}
-              className="myFlexFillAllContainer"
             >
               {rowVirtualizer.getVirtualItems().map((virtualItem) => {
                 let sId = sdocs.data[virtualItem.index];
