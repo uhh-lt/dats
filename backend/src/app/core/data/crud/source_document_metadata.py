@@ -10,6 +10,7 @@ from app.core.data.dto.source_document_metadata import (
 )
 
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class CRUDSourceDocumentMetadata(
@@ -54,13 +55,17 @@ class CRUDSourceDocumentMetadata(
         skip: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> List[SourceDocumentMetadataORM]:
-        query = db.query(self.model).filter(self.model.project_id == proj_id)
+        query = (
+            db.query(self.model, SourceDocumentORM.project_id)
+            .join(SourceDocumentORM)
+            .filter(SourceDocumentORM.project_id == proj_id)
+        )
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
             query = query.limit(limit)
 
-        return query.all()
+        return list(map(lambda t: t[0], query.all()))
 
 
 crud_sdoc_meta = CRUDSourceDocumentMetadata(SourceDocumentMetadataORM)
