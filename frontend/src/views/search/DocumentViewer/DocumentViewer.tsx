@@ -41,7 +41,7 @@ function DocumentViewer({
 
   // the queries are disabled if sdocId is undefined => show the idle content
   const dispatch = useAppDispatch();
-  if (!sdocId) {
+  if (sdocId === undefined || sdocId === null) {
     dispatch(SearchActions.resetFilterInfos());
     return <Box {...props}>{isIdleContent}</Box>;
   }
