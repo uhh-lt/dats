@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 import zipfile
 
 from loguru import logger
@@ -88,6 +88,19 @@ class ExportService(metaclass=SingletonMeta):
         cls.sqls: SQLService = SQLService()
 
         return super(ExportService, cls).__new__(cls)
+
+    def __create_export_zip(
+        self, fn: Union[str, Path], file_paths: List[str | Path]
+    ) -> Path:
+        fn = Path(fn)
+        if not fn.suffix == ".zip":
+            fn = fn.with_suffix(".zip")
+        export_zip = self.repo.create_temp_file(fn)
+        with zipfile.ZipFile(export_zip, mode="w") as zipf:
+            for file in exported_files:
+                zipf.write(file, file.name)
+        logger.debug(f"Added {len(file_paths)} files to {export_zip}")
+        return export_zip
 
     def __write_export_data_to_temp_file(
         self, data: pd.DataFrame, export_format: ExportFormat, fn: Optional[str] = None
@@ -230,11 +243,7 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(export_file)
 
         # ZIP all files
-        export_zip = self.repo.create_temp_file("adocs_export.zip")
-        with zipfile.ZipFile(export_zip, mode="w") as zipf:
-            for file in exported_files:
-                zipf.write(file, file.name)
-
+        export_zip = self.__create_export_zip("adocs_export.zip", exported_files)
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
 
     def __export_memo_data(self, db: Session, memo_id: int) -> pd.DataFrame:
@@ -611,12 +620,9 @@ class ExportService(metaclass=SingletonMeta):
         logbook_file.write_text(logbook_content)
 
         # ZIP all files
-        export_zip = self.repo.create_temp_file(
-            f"project_{proj_id}_user_{user_id}_export.zip"
+        export_zip = self.__create_export_zip(
+            f"project_{proj_id}_user_{user_id}_export.zip", exported_files
         )
-        with zipfile.ZipFile(export_zip, mode="w") as zipf:
-            for file in exported_files:
-                zipf.write(file, file.name)
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
 
@@ -717,12 +723,9 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(export_file)
 
         # ZIP all files
-        export_zip = self.repo.create_temp_file(
-            f"user_data_project_{proj_id}_export.zip"
+        export_zip = self.__create_export_zip(
+            f"user_data_project_{proj_id}_export.zip", exported_files
         )
-        with zipfile.ZipFile(export_zip, mode="w") as zipf:
-            for file in exported_files:
-                zipf.write(file, file.name)
 
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
 
