@@ -293,6 +293,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         isViewer={false}
         projectId={sdoc.project_id}
         sentences={undefined}
+        doHighlighting={false}
       />
     </>
   );

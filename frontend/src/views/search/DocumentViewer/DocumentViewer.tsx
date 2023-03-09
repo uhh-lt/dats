@@ -12,6 +12,8 @@ import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
 import UserName from "../../../components/UserName";
 import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { SearchActions } from "../searchSlice";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;
@@ -38,7 +40,9 @@ function DocumentViewer({
   const metadata = SdocHooks.useGetMetadata(sdocId);
 
   // the queries are disabled if sdocId is undefined => show the idle content
-  if (!sdocId) {
+  const dispatch = useAppDispatch();
+  if (sdocId === undefined || sdocId === null) {
+    dispatch(SearchActions.resetFilterInfos());
     return <Box {...props}>{isIdleContent}</Box>;
   }
 

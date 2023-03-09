@@ -114,6 +114,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         html={sdoc.content}
         projectId={sdoc.project_id}
         sentences={sentences}
+        doHighlighting={true}
       />
       <SentenceContextMenu ref={sentenceContextMenuRef} />
       <ImageContextMenu ref={imageContextMenuRef} />

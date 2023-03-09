@@ -84,7 +84,7 @@ export const searchSlice = createSlice({
       // only add the filter, if it does not exist already
       if (!state.filters.some((f) => f.id === action.payload!.id)) {
         state.filters.push(action.payload);
-        state.filterAnchorInfo[action.payload!.id] = { pos: -1, limit: -1 };
+        state.filterAnchorInfo[action.payload!.id] = { pos: 0, limit: -1 };
 
         // reset page to 0, when a new filter is added
         state.page = 0;
@@ -115,11 +115,16 @@ export const searchSlice = createSlice({
       let anchorState = state.filterAnchorInfo[action.payload];
       if (anchorState) {
         let newPos = anchorState.pos + 1;
-        if (newPos === anchorState.limit) {
-          newPos = 0;
+        if (newPos > anchorState.limit) {
+          newPos = 1;
         }
         anchorState.pos = newPos;
       }
+    },
+    resetFilterInfos: (state) => {
+      Object.entries(state.filterAnchorInfo).forEach(([key, limit]) => {
+        state.filterAnchorInfo[key] = { pos: 0, limit: -1 };
+      });
     },
     setFilterAnchorLimits: (state, action: PayloadAction<{ [id: string]: number }>) => {
       Object.entries(action.payload).forEach(([key, limit]) => {
