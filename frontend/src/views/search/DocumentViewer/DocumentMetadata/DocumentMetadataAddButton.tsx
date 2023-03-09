@@ -30,6 +30,12 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
             severity: "success",
           });
         },
+        onError: (error: any) => {
+          SnackbarAPI.openSnackbar({
+            text: error.status === 409 ? 'Key already exists' : 'Could not add metadata',
+            severity: "error",
+          });
+        }
       }
     );
   }, [createMutation, sdocId]);
