@@ -2,7 +2,7 @@ import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/materi
 import StarIcon from "@mui/icons-material/Star";
 import React from "react";
 import MemoHooks from "../../api/MemoHooks";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
 
 interface MemoStarButtonProps {
   memoId: number | undefined;

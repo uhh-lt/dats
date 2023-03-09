@@ -3,7 +3,7 @@ import React from "react";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem";
 import { ContextMenuProps } from "../../../components/ContextMenu/ContextMenuProps";
 import CodeEditMenuItem from "./CodeEditMenuItem";
-import MemoMenuItem from "../../../features/memo-dialog/MemoMenuItem";
+import MemoMenuItem from "../../../features/Memo/MemoMenuItem";
 import ICodeTree from "./ICodeTree";
 import { AttachedObjectType } from "../../../api/openapi";
 

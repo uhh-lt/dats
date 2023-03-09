@@ -1,6 +1,6 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
 import { CodeRead, CodeUpdate } from "../../../api/openapi";

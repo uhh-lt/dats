@@ -13,7 +13,7 @@ import { AnnoActions } from "../annoSlice";
 import CodeEditDialog from "./CodeEditDialog";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeEditButton from "./CodeEditButton";
-import MemoButton from "../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../features/Memo/MemoButton";
 import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";

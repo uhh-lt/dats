@@ -1,6 +1,6 @@
 import { Box, Toolbar } from "@mui/material";
 import BackButton from "./ToolBarElements/BackButton";
-import MemoButton from "../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../features/Memo/MemoButton";
 import TagMenuButton from "./ToolBarElements/TagMenuButton";
 import DeleteButton from "./ToolBarElements/DeleteButton";
 import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton";

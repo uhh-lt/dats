@@ -23,7 +23,7 @@ import ProjectHooks from "../../api/ProjectHooks";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
 import { AttachedObjectType, DocType } from "../../api/openapi";
-import MemoButton from "../memo-dialog/MemoButton";
+import MemoButton from "../Memo/MemoButton";
 import DocumentNavigation from "../../components/DocumentNavigation";
 import { AnnoActions } from "../../views/annotation/annoSlice";
 import ArticleIcon from "@mui/icons-material/Article";

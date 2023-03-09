@@ -10,7 +10,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CloseIcon from "@mui/icons-material/Close";
 import ProjectDetails from "./ProjectDetails";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
 

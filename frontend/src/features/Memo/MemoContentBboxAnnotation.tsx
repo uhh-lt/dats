@@ -1,26 +1,34 @@
 import React from "react";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { DocumentTagRead } from "../../api/openapi";
-import TagHooks from "../../api/TagHooks";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
+import { BBoxAnnotationReadResolvedCode, MemoRead } from "../../api/openapi";
 import MemoHooks from "../../api/MemoHooks";
 import { MemoForm } from "./MemoForm";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import { MemoContentProps } from "./MemoContentBboxAnnotation";
 
-interface MemoContentTagProps {
-  tag: DocumentTagRead;
+export interface MemoContentProps {
+  memo: MemoRead | undefined;
+  closeDialog: () => void;
 }
 
-export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps & MemoContentProps) {
+interface MemoContentBboxAnnotationProps {
+  bboxAnnotation: BBoxAnnotationReadResolvedCode;
+}
+
+export function MemoContentBboxAnnotation({
+  bboxAnnotation,
+  memo,
+  closeDialog,
+}: MemoContentBboxAnnotationProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
-  const createMutation = TagHooks.useCreateMemo();
+  const createMutation = BboxAnnotationHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateCodeMemo = (data: any) => {
+  const handleCreateOrUpdateBboxAnnotationMemo = (data: any) => {
     if (!user.data) return;
 
     if (memo) {
@@ -33,9 +41,9 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (memo) => {
             SnackbarAPI.openSnackbar({
-              text: `Updated memo for tag ${tag.title}`,
+              text: `Updated memo for bboxAnnotation ${memo.attached_object_id}`,
               severity: "success",
             });
             closeDialog();
@@ -45,10 +53,10 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
     } else {
       createMutation.mutate(
         {
-          tagId: tag.id,
+          bboxId: bboxAnnotation.id,
           requestBody: {
             user_id: user.data.id,
-            project_id: tag.project_id,
+            project_id: bboxAnnotation.code.project_id,
             title: data.title,
             content: data.content,
           },
@@ -56,7 +64,7 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
         {
           onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Created memo for tag ${tag.title}`,
+              text: `Created memo for bboxAnnotation ${bboxAnnotation.id}`,
               severity: "success",
             });
             closeDialog();
@@ -65,14 +73,14 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
       );
     }
   };
-  const handleDeleteTagMemo = () => {
+  const handleDeleteBboxAnnotationMemo = () => {
     if (memo) {
       deleteMutation.mutate(
         { memoId: memo.id },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             SnackbarAPI.openSnackbar({
-              text: `Deleted memo for tag ${tag.title}`,
+              text: `Deleted memo for bboxAnnotation ${data.attached_object_id}`,
               severity: "success",
             });
             closeDialog();
@@ -80,16 +88,16 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
         }
       );
     } else {
-      throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
+      throw Error("Invalid invocation of handleDeleteBboxAnnotationMemo. No memo to delete.");
     }
   };
 
   return (
     <MemoForm
-      title={`Memo for tag ${tag.title}`}
+      title={`Memo for Image Annotation ${bboxAnnotation.id}`}
       memo={memo}
-      handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
-      handleDeleteMemo={handleDeleteTagMemo}
+      handleCreateOrUpdateMemo={handleCreateOrUpdateBboxAnnotationMemo}
+      handleDeleteMemo={handleDeleteBboxAnnotationMemo}
       isUpdateLoading={updateMutation.isLoading}
       isCreateLoading={createMutation.isLoading}
       isDeleteLoading={deleteMutation.isLoading}

@@ -1,14 +1,13 @@
 import React, { useRef } from "react";
 import { Box, CssBaseline } from "@mui/material";
 import { Outlet, useParams } from "react-router-dom";
-import MemoDialog from "../features/memo-dialog/MemoDialog";
-import ImportDocumentDialog from "../features/document-import/ImportDocumentDialog";
-import SnackbarDialog from "../features/snackbar/SnackbarDialog";
+import MemoDialog from "../features/Memo/MemoDialog";
+import SnackbarDialog from "../features/Snackbar/SnackbarDialog";
 import TagCreationDialog from "../views/search/Tags/TagCreate/TagCreationDialog";
-import BottomBar from "../components/bar-bottom/BottomBar";
-import TopBar from "../components/bar-top/TopBar";
+import BottomBar from "../components/NavBarBottom/BottomBar";
+import TopBar from "../components/NavBarTop/TopBar";
 import "./Layout.css";
-import FloatingFeedbackButton from "../features/feedback/FloatingFeedbackButton";
+import FloatingFeedbackButton from "../features/FeedbackButton/FloatingFeedbackButton";
 import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog";
 import ExporterDialog from "../features/Exporter/ExporterDialog";
 
@@ -34,7 +33,6 @@ function TwoBarLayout() {
           </Box>
           <FloatingFeedbackButton />
           <MemoDialog />
-          <ImportDocumentDialog />
           <SnackbarDialog />
           <TagCreationDialog />
           <ConfirmationDialog />

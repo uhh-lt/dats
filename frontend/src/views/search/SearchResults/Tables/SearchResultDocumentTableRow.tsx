@@ -3,7 +3,7 @@ import TableCell from "@mui/material/TableCell";
 import Checkbox from "@mui/material/Checkbox";
 import { Stack, Tooltip } from "@mui/material";
 import { useParams } from "react-router-dom";
-import MemoButton from "../../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../../features/Memo/MemoButton";
 import * as React from "react";
 import { useMemo } from "react";
 import { useAppSelector } from "../../../../plugins/ReduxHooks";

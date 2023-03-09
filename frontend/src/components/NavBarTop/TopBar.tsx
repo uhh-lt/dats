@@ -4,7 +4,7 @@ import TemporaryDrawer from "./TemporaryDrawer";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAuth } from "../../auth/AuthProvider";
-import UserProfileMenu from "../../features/user-profile-menu/UserProfileMenu";
+import UserProfileMenu from "../../features/UserProfileMenu/UserProfileMenu";
 import ProjectHooks from "../../api/ProjectHooks";
 
 function TopBar(props: AppBarProps) {

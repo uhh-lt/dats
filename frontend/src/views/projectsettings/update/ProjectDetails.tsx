@@ -2,7 +2,7 @@ import { Box, CardActions, CardContent, Divider, Stack, TextField } from "@mui/m
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { ErrorMessage } from "@hookform/error-message";

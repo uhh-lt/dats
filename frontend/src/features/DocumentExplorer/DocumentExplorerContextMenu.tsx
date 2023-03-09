@@ -5,7 +5,7 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link } from "react-router-dom";
 import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
 import TagMenuMenuItem from "../../views/search/ToolBar/ToolBarElements/TagMenuMenuItem";
-import MemoMenuItem from "../memo-dialog/MemoMenuItem";
+import MemoMenuItem from "../Memo/MemoMenuItem";
 import { AttachedObjectType } from "../../api/openapi";
 import DeleteMenuItem from "../../views/search/ToolBar/ToolBarElements/DeleteMenuItem";
 

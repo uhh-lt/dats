@@ -1,30 +1,30 @@
 import React from "react";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
-import { SourceDocumentRead } from "../../api/openapi";
-import SdocHooks from "../../api/SdocHooks";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
+import { SpanAnnotationReadResolved } from "../../api/openapi";
 import MemoHooks from "../../api/MemoHooks";
-import { useAuth } from "../../auth/AuthProvider";
 import { MemoForm } from "./MemoForm";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
+import { useAuth } from "../../auth/AuthProvider";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
 
-interface MemoContentSourceDocumentProps {
-  sdoc: SourceDocumentRead;
+interface MemoContentSpanAnnotationProps {
+  spanAnnotation: SpanAnnotationReadResolved;
 }
 
-export function MemoContentSourceDocument({
-  sdoc,
+export function MemoContentSpanAnnotation({
+  spanAnnotation,
   memo,
   closeDialog,
-}: MemoContentSourceDocumentProps & MemoContentProps) {
+}: MemoContentSpanAnnotationProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
-  const createMutation = SdocHooks.useCreateMemo();
+  const createMutation = SpanAnnotationHooks.useCreateMemo();
   const updateMutation = MemoHooks.useUpdateMemo();
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateCodeMemo = (data: any) => {
+  const handleCreateOrUpdateSpanAnnotationMemo = (data: any) => {
     if (!user.data) return;
 
     if (memo) {
@@ -37,9 +37,9 @@ export function MemoContentSourceDocument({
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (memo) => {
             SnackbarAPI.openSnackbar({
-              text: `Updated memo for source document ${sdoc.filename}`,
+              text: `Updated memo for spanAnnotation ${memo.attached_object_id}`,
               severity: "success",
             });
             closeDialog();
@@ -49,18 +49,18 @@ export function MemoContentSourceDocument({
     } else {
       createMutation.mutate(
         {
-          sdocId: sdoc.id,
+          spanId: spanAnnotation.id,
           requestBody: {
             user_id: user.data.id,
-            project_id: sdoc.project_id,
+            project_id: spanAnnotation.code.project_id,
             title: data.title,
             content: data.content,
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (memo) => {
             SnackbarAPI.openSnackbar({
-              text: `Created memo for source document ${sdoc.filename}`,
+              text: `Created memo for spanAnnotation ${memo.attached_object_id}`,
               severity: "success",
             });
             closeDialog();
@@ -69,14 +69,14 @@ export function MemoContentSourceDocument({
       );
     }
   };
-  const handleDeleteSdocMemo = () => {
+  const handleDeleteSpanAnnotationMemo = () => {
     if (memo) {
       deleteMutation.mutate(
         { memoId: memo.id },
         {
-          onSuccess: () => {
+          onSuccess: (memo) => {
             SnackbarAPI.openSnackbar({
-              text: `Deleted memo for source document ${sdoc.filename}`,
+              text: `Deleted memo for spanAnnotation ${memo.attached_object_id}`,
               severity: "success",
             });
             closeDialog();
@@ -84,16 +84,16 @@ export function MemoContentSourceDocument({
         }
       );
     } else {
-      throw Error("Invalid invocation of handleDeleteSdocMemo. No memo to delete.");
+      throw Error("Invalid invocation of handleDeleteSpanAnnotationMemo. No memo to delete.");
     }
   };
 
   return (
     <MemoForm
-      title={`Memo for Document ${sdoc.filename}`}
+      title={`Memo for Text Annotation '${spanAnnotation.span_text}'`}
       memo={memo}
-      handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
-      handleDeleteMemo={handleDeleteSdocMemo}
+      handleCreateOrUpdateMemo={handleCreateOrUpdateSpanAnnotationMemo}
+      handleDeleteMemo={handleDeleteSpanAnnotationMemo}
       isUpdateLoading={updateMutation.isLoading}
       isCreateLoading={createMutation.isLoading}
       isDeleteLoading={deleteMutation.isLoading}

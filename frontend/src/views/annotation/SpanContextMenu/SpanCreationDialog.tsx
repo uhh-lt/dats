@@ -17,7 +17,7 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "../../../auth/AuthProvider";
 import { useForm } from "react-hook-form";
 import CodeHooks from "../../../api/CodeHooks";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { CodeRead } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { HexColorPicker } from "react-colorful";

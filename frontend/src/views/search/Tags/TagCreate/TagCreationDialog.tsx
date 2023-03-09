@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../../EventBus";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
-import SnackbarAPI from "../../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import { useParams } from "react-router-dom";
 import { HexColorPicker } from "react-colorful";
 import TagHooks from "../../../../api/TagHooks";

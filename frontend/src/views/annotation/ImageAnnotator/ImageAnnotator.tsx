@@ -9,7 +9,7 @@ import * as d3 from "d3";
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
 import { ICode } from "../TextAnnotator/ICode";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SVGBBox from "./SVGBBox";

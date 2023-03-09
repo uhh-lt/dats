@@ -1,5 +1,5 @@
 import FeedbackHooks from "../../api/FeedbackHooks";
-import SnackbarAPI from "../snackbar/SnackbarAPI";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
 import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, Stack, TextField } from "@mui/material";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import { useAuth } from "../../auth/AuthProvider";

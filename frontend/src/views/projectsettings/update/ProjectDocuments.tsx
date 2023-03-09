@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";

@@ -15,7 +15,7 @@ import { SearchActions } from "../../views/search/searchSlice";
 import { createCodeFilter, createSentenceFilter } from "../../views/search/SearchFilter";
 import { useNavigate } from "react-router-dom";
 import { AttachedObjectType, DocType, SpanAnnotationReadResolved } from "../../api/openapi";
-import MemoListItemButton from "../../features/memo-dialog/MemoListItemButton";
+import MemoListItemButton from "../../features/Memo/MemoListItemButton";
 
 interface SentenceContextMenuProps {}
 

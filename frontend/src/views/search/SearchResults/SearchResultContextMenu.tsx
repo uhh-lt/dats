@@ -5,7 +5,7 @@ import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenu
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { Link } from "react-router-dom";
-import MemoMenuItem from "../../../features/memo-dialog/MemoMenuItem";
+import MemoMenuItem from "../../../features/Memo/MemoMenuItem";
 import { AttachedObjectType } from "../../../api/openapi";
 import DeleteMenuItem from "../ToolBar/ToolBarElements/DeleteMenuItem";
 

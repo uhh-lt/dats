@@ -14,7 +14,7 @@ import {
 import React from "react";
 import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import CloseIcon from "@mui/icons-material/Close";
 import { Link, useNavigate } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";

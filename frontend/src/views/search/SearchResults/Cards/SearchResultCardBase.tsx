@@ -15,7 +15,7 @@ import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import SdocHooks from "../../../../api/SdocHooks";
 import * as React from "react";
 import { useMemo } from "react";
-import MemoButton from "../../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../../features/Memo/MemoButton";
 import SearchResultTag from "../SearchResultTag";
 import { AttachedObjectType, SourceDocumentRead } from "../../../../api/openapi";
 import Checkbox from "@mui/material/Checkbox";

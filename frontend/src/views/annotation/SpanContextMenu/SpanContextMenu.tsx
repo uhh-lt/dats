@@ -18,7 +18,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import SpanCreationDialog, { CodeCreationDialogHandle } from "./SpanCreationDialog";
 import CodeHooks from "../../../api/CodeHooks";
-import MemoButton from "../../../features/memo-dialog/MemoButton";
+import MemoButton from "../../../features/Memo/MemoButton";
 import {
   AttachedObjectType,
   BBoxAnnotationReadResolvedCode,

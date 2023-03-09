@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import SnackbarAPI from "../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import UserHooks from "../../api/UserHooks";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";

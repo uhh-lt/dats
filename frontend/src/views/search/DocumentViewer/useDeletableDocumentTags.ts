@@ -1,4 +1,4 @@
-import SnackbarAPI from "../../../features/snackbar/SnackbarAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { DocumentTagRead } from "../../../api/openapi";
 import { useCallback } from "react";
 import SdocHooks from "../../../api/SdocHooks";
