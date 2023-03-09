@@ -3,6 +3,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { SpanEntityDocumentFrequency } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { sortStats } from "./utils";
 
 interface CodeStatsProps {
   codeId: number;
@@ -19,6 +21,11 @@ function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parent
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
   });
+
+  const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
+  useMemo(() => {
+    sortStats(statsOrder, codeStats, entityTotalCountMap, (a: SpanEntityDocumentFrequency) => a.span_text);
+  }, [codeStats, entityTotalCountMap, statsOrder]);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(entityTotalCountMap.values())), [entityTotalCountMap]);

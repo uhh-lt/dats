@@ -4,6 +4,8 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { KeywordStat } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { sortStats } from "./utils";
 
 interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
@@ -50,6 +52,11 @@ function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, 
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
   });
+
+  const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
+  useMemo(() => {
+    sortStats(statsOrder, keywordStats, keywordTotalCountMap, (a: KeywordStat) => a.keyword);
+  }, [keywordStats, keywordTotalCountMap, statsOrder]);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(keywordTotalCountMap.values())), [keywordTotalCountMap]);

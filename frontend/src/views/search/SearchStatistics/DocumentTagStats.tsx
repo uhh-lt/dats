@@ -5,6 +5,8 @@ import React, { useMemo } from "react";
 import { DocumentTagRead, TagStat } from "../../../api/openapi";
 import TagHooks from "../../../api/TagHooks";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { sortStats } from "./utils";
 
 interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
@@ -50,6 +52,11 @@ function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, pare
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
   });
+
+  const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
+  useMemo(() => {
+    sortStats(statsOrder, tagStats, tagTotalCountMap, (a: TagStat) => a.tag.id);
+  }, [tagStats, tagTotalCountMap, statsOrder]);
 
   // computed
   const maxValue = useMemo(() => Math.max(...Array.from(tagTotalCountMap.values())), [tagTotalCountMap]);
