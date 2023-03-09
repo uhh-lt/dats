@@ -4,7 +4,7 @@ import urllib.parse as url
 import uuid
 import zipfile
 from pathlib import Path
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Union
 from zipfile import ZipFile
 
 import magic
@@ -192,7 +192,7 @@ class RepoService(metaclass=SingletonMeta):
 
         return dst_path
 
-    def create_temp_file(self, fn: Optional[str]) -> Path:
+    def create_temp_file(self, fn: Optional[Union[str, Path]]) -> Path:
         if fn is None:
             fn = str(uuid.uuid4())
         p = self.temp_files_root / fn
