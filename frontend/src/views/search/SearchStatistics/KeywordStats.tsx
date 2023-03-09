@@ -9,19 +9,17 @@ import { sortStats } from "./utils";
 
 interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
-  keywordTotalCountMap: Map<string, number>;
   handleClick: (keyword: string) => void;
   parentRef: React.RefObject<HTMLDivElement>;
 }
 
-function KeywordStats({ keywordStats, keywordTotalCountMap, handleClick, parentRef }: KeywordStatsProps) {
+function KeywordStats({ keywordStats, handleClick, parentRef }: KeywordStatsProps) {
   // render
   return (
     <>
       {keywordStats.isSuccess ? (
         <KeywordStatsContent
           keywordStats={keywordStats.data}
-          keywordTotalCountMap={keywordTotalCountMap}
           handleClick={handleClick}
           parentRef={parentRef}
         />
@@ -40,12 +38,11 @@ export default KeywordStats;
 
 interface KeywordStatsContentProps {
   keywordStats: KeywordStat[];
-  keywordTotalCountMap: Map<string, number>;
   handleClick: (keyword: string) => void;
   parentRef: React.RefObject<HTMLDivElement>;
 }
 
-function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, parentRef }: KeywordStatsContentProps) {
+function KeywordStatsContent({ keywordStats, handleClick, parentRef }: KeywordStatsContentProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: keywordStats.length || 0,
@@ -53,13 +50,8 @@ function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, 
     estimateSize: () => 35,
   });
 
-  const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
-  useMemo(() => {
-    sortStats(statsOrder, keywordStats, keywordTotalCountMap, (a: KeywordStat) => a.keyword);
-  }, [keywordStats, keywordTotalCountMap, statsOrder]);
-
   // computed
-  const maxValue = useMemo(() => Math.max(...Array.from(keywordTotalCountMap.values())), [keywordTotalCountMap]);
+  const maxValue = useMemo(() => Math.max(...keywordStats.map(x => x.global_count)), [keywordStats]);
 
   return (
     <TabPanel
@@ -73,37 +65,16 @@ function KeywordStatsContent({ keywordStats, keywordTotalCountMap, handleClick, 
     >
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         let keywordStat = keywordStats[virtualItem.index];
-
-        if (keywordTotalCountMap.has(keywordStat.keyword)) {
-          return (
-            <StatsDisplayButton
-              key={virtualItem.key}
-              term={keywordStat.keyword}
-              count={keywordStat.count}
-              totalCount={keywordTotalCountMap.get(keywordStat.keyword)!}
-              maxCount={maxValue}
-              translateY={virtualItem.start}
-              handleClick={() => handleClick(keywordStat.keyword)}
-            />
-          );
-        }
         return (
-          <div
+          <StatsDisplayButton
             key={virtualItem.key}
-            style={{
-              width: "100%",
-              height: 30,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              transform: `translateY(${virtualItem.start}px)`,
-
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {keywordStat.keyword}: {keywordStat.count} No total count... Why?
-          </div>
+            term={keywordStat.keyword}
+            count={keywordStat.filtered_count}
+            totalCount={keywordStat.global_count}
+            maxCount={maxValue}
+            translateY={virtualItem.start}
+            handleClick={() => handleClick(keywordStat.keyword)}
+          />
         );
       })}
     </TabPanel>

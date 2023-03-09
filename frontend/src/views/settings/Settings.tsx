@@ -6,7 +6,7 @@ function Settings() {
   // global client state (redux)
   const dispatch = useAppDispatch();
   const searchResStyle = useAppSelector((state) => state.settings.search.searchResStyle);
-  const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
+  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
   const tagStyle = useAppSelector((state) => state.settings.annotator.tagStyle);
 
   // ui events
@@ -42,9 +42,9 @@ function Settings() {
           <Typography variant="subtitle1" sx={{ mt: 1 }}>
             Bar Plot Ordering:
           </Typography>
-          <ToggleButtonGroup color="primary" value={statsOrder} onClick={() => handleToggleStatsOrder()}>
-            <ToggleButton value="black">Black Bar</ToggleButton>
-            <ToggleButton value="total">Total Count</ToggleButton>
+          <ToggleButtonGroup color="primary" value={sortStatsByGlobal} onClick={() => handleToggleStatsOrder()}>
+            <ToggleButton value={false}>Filtered Count</ToggleButton>
+            <ToggleButton value={true}>Total Count</ToggleButton>
           </ToggleButtonGroup>
           <Typography variant="h5" sx={{ mt: 2 }}>
             Annotator

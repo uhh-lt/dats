@@ -53,7 +53,7 @@ function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, pare
     estimateSize: () => 35,
   });
 
-  const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
+  const statsOrder = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
   useMemo(() => {
     sortStats(statsOrder, tagStats, tagTotalCountMap, (a: TagStat) => a.tag.id);
   }, [tagStats, tagTotalCountMap, statsOrder]);

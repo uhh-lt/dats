@@ -22,7 +22,7 @@ function CodeStats({ codeId, codeStats, entityTotalCountMap, handleClick, parent
     estimateSize: () => 35,
   });
 
-  const statsOrder = useAppSelector((state) => state.settings.search.statsOrder);
+  const statsOrder = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
   useMemo(() => {
     sortStats(statsOrder, codeStats, entityTotalCountMap, (a: SpanEntityDocumentFrequency) => a.span_text);
   }, [codeStats, entityTotalCountMap, statsOrder]);

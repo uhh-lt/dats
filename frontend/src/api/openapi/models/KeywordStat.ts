@@ -8,7 +8,11 @@ export type KeywordStat = {
    */
   keyword: string;
   /**
-   * Number of occurrences of the keyword.
+   * Number of occurrences of the keyword in the filtered collection
    */
-  count: number;
+  filtered_count: number;
+  /**
+   * Number of occurrences of the keyword in the entire collection
+   */
+  global_count: number;
 };

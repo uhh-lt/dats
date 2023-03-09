@@ -9,6 +9,8 @@ export enum SDocStatus {
   UNDEFINED_OR_ERRONEOUS = "undefined_or_erroneous",
   IMPORT_TEXT_DOCUMENT = "import_text_document",
   IMPORT_IMAGE_DOCUMENT = "import_image_document",
+  IMPORT_AUDIO_DOCUMENT = "import_audio_document",
+  IMPORT_VIDEO_DOCUMENT = "import_video_document",
   CONVERT_TO_WEBP_AND_GENERATE_THUMBNAILS = "convert_to_webp_and_generate_thumbnails",
   CLEAN_HTML = "clean_html",
   EXTRACT_TEXT_FROM_HTML_AND_CREATE_SOURCE_MAPPING = "extract_text_from_html_and_create_source_mapping",
