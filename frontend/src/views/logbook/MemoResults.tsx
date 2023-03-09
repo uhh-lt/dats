@@ -4,6 +4,7 @@ import { AttachedObjectType } from "../../api/openapi";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import MemoCard from "./MemoCard";
 import MemoResultsContextMenu from "./MemoResultsContextMenu";
+import { CardContent, List } from "@mui/material";
 
 interface MemoResultsProps {
   memoIds: number[];
@@ -39,33 +40,7 @@ function MemoResults({ noResultsText, memoIds }: MemoResultsProps) {
   };
 
   return (
-    <div ref={containerRef} className="h100" style={{ overflowY: "auto" }}>
-      <div
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-          width: "100%",
-          position: "relative",
-        }}
-      >
-        {rowVirtualizer.getVirtualItems().map((virtualItem) => (
-          <MemoCard
-            key={virtualItem.key}
-            // @ts-ignore
-            ref={(element) => rowVirtualizer.measureElement(element)}
-            data-index={virtualItem.index}
-            style={{
-              padding: 5,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              transform: `translateY(${virtualItem.start}px)`,
-            }}
-            memoId={memoIds[virtualItem.index]}
-            onContextMenu={onContextMenu}
-          />
-        ))}
-        {memoIds.length === 0 && <div>{noResultsText}</div>}
-      </div>
+    <>
       <MemoResultsContextMenu
         memoId={contextMenuData.memoId}
         memoStarred={contextMenuData.memoStarred}
@@ -73,7 +48,35 @@ function MemoResults({ noResultsText, memoIds }: MemoResultsProps) {
         position={contextMenuPosition}
         handleClose={() => setContextMenuPosition(null)}
       />
-    </div>
+      <CardContent ref={containerRef} style={{ height: "100%", padding: 0, overflowY: "auto" }}>
+        <List
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualItem) => (
+            <MemoCard
+              key={virtualItem.key}
+              // @ts-ignore
+              ref={(element) => rowVirtualizer.measureElement(element)}
+              dataIndex={virtualItem.index}
+              style={{
+                width: "100%",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+              memoId={memoIds[virtualItem.index]}
+              onContextMenu={onContextMenu}
+            />
+          ))}
+          {memoIds.length === 0 && <div>{noResultsText}</div>}
+        </List>
+      </CardContent>
+    </>
   );
 }
 

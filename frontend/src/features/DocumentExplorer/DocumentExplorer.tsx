@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Typography from "@mui/material/Typography";
 import {
   AppBar,
@@ -32,6 +32,7 @@ import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPos
 import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
 import SearchHooks from "../../api/SearchHooks";
 import LabelIcon from "@mui/icons-material/Label";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 function DocumentExplorer({ ...props }) {
   // router
@@ -50,6 +51,14 @@ function DocumentExplorer({ ...props }) {
     const tagId = event.target.value;
     dispatch(AnnoActions.setSelectedDocumentTagId(tagId !== "-1" ? parseInt(event.target.value) : undefined));
   };
+
+  const containerRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
+  // The virtualizer
+  const rowVirtualizer = useVirtualizer({
+    count: sdocs.data?.length || 0,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 48,
+  });
 
   // context menu
   const [contextMenuData, setContextMenuData] = useState<number>();
@@ -102,21 +111,39 @@ function DocumentExplorer({ ...props }) {
       {!selectedDocumentTag ? (
         <div>Please select a document tag above :)</div>
       ) : sdocs.isSuccess ? (
-        <>
+        <div ref={containerRef}>
           {sdocs.data.length === 0 && <div>No documents found...</div>}
           {sdocs.data.length > 0 && (
-            <List className="myFlexFillAllContainer">
-              {sdocs.data.map((sId) => (
-                <DocumentExplorerListItem
-                  key={sId}
-                  sdocId={sId}
-                  selectedSdocId={parseInt(sdocId || "")}
-                  onContextMenu={openContextMenu(sId)}
-                />
-              ))}
+            <List
+              style={{
+                whiteSpace: "nowrap",
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+              className="myFlexFillAllContainer"
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                let sId = sdocs.data[virtualItem.index];
+                return (
+                  <DocumentExplorerListItem
+                    key={virtualItem.key}
+                    sdocId={sId}
+                    selectedSdocId={parseInt(sdocId || "")}
+                    onContextMenu={openContextMenu(sId)}
+                    style={{
+                      height: 48,
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      transform: `translateY(${virtualItem.start}px)`,
+                    }}
+                  />
+                );
+              })}
             </List>
           )}
-        </>
+        </div>
       ) : sdocs.isError ? (
         <div>Error: {sdocs.error.message}</div>
       ) : (

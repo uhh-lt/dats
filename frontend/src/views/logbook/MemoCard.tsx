@@ -1,6 +1,6 @@
 import { Card, CardActions, CardContent, CardHeader, Typography } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
-import React from "react";
+import React, { forwardRef } from "react";
 import MemoHooks from "../../api/MemoHooks";
 import { AttachedObjectType } from "../../api/openapi";
 import MemoEditButton from "../../features/Memo/MemoEditButton";
@@ -14,9 +14,11 @@ import { MemoCardContextMenuData } from "./MemoResults";
 interface MemoCardProps {
   memoId: number;
   onContextMenu: (data: MemoCardContextMenuData) => (event: React.MouseEvent) => void;
+  style: any;
+  dataIndex: number;
 }
 
-function MemoCard({ memoId, onContextMenu }: MemoCardProps) {
+const MemoCard = forwardRef<any, MemoCardProps>(({ memoId, onContextMenu, style, dataIndex }, ref) => {
   // query
   const memo = MemoHooks.useGetMemo(memoId);
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
@@ -58,6 +60,9 @@ function MemoCard({ memoId, onContextMenu }: MemoCardProps) {
         memoStarred: memo.data?.starred,
         attachedObjectType: memo.data?.attached_object_type,
       })}
+      style={style}
+      ref={ref}
+      data-index={dataIndex}
     >
       {memo.isSuccess && attachedObject.isSuccess ? (
         <>
@@ -114,6 +119,6 @@ function MemoCard({ memoId, onContextMenu }: MemoCardProps) {
       )}
     </Card>
   );
-}
+});
 
 export default MemoCard;
