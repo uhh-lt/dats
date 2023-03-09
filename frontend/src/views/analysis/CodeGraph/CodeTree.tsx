@@ -1,118 +1,149 @@
 // @ts-nocheck
-import { hierarchy, tree, zoom, select } from "d3";
-import { useEffect, useRef, useState, React, Fragment } from "react";
+//import { hierarchy, tree, zoom, select } from "d3";
+//import { useEffect, useRef, useState, React, Fragment } from "react";
+//import React, { useEffect, useRef } from "react";
+//import * as d3 from "d3";
+
+//interface CodeTreeProps {
+//  data: ICodeTree[];
+//}
+
+import React, { useEffect, useRef } from "react";
+import * as d3 from "d3";
 
 interface CodeTreeProps {
-  treeData: ICodeTree[];
+  data: ICodeTree[];
 }
 
-const CodeTree = ({ treeData }: CodeTreeProps) => {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const gRef = useRef<SVGGElement>(null);
-  const [root, setRoot] = useState<any>(null);
+const ForceLayout = ({ data }) => {
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const simulationRef = useRef<d3.Simulation<ICodeTree[], undefined> | null>(null);
 
   useEffect(() => {
-    const svg = select(svgRef.current);
-    const g = select(gRef.current);
-    const width = svg.node().clientWidth;
-    const height = svg.node().clientHeight;
+    if (!svgRef.current) return;
 
-    const zoomBehavior = zoom().on("zoom", (event) => {
-      g.attr("transform", event.transform);
-      g.selectAll("circle").attr("r", (20 / event.transform.k).toFixed(2));
-      g.selectAll("text").style("font-size", (8 / event.transform.k).toFixed(2));
+    const svg = d3.select(svgRef.current);
+
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
+
+    const links = [];
+    data.forEach((arr) => {
+      for (let i = 0; i < arr.length - 1; i++) {
+        links.push({ source: arr[i].id, target: arr[i + 1].id });
+      }
     });
 
-    svg.call(zoomBehavior);
+    const simulation = d3
+      .forceSimulation(data.flat().map((d) => Object.assign({}, d)))
+      .force(
+        "link",
+        d3.forceLink(links).id((d) => d.id)
+      )
+      .force("charge", d3.forceManyBody().strength(-50))
+      .force("center", d3.forceCenter(width / 2, height / 2));
 
-    const hierarchyData = hierarchy(treeData[0]);
-    const treeLayout = tree()
-      .size([width - 100, height])
-      .separation((a, b) => (a.parent === b.parent ? 2 : 1));
+    simulationRef.current = simulation;
+    simulation &&
+      simulation.on("tick", () => {
+        svg
+          .selectAll(".link")
+          .attr("x1", (d) => d?.source?.x!)
+          .attr("y1", (d) => d?.source?.y!)
+          .attr("x2", (d) => d?.target?.x!)
+          .attr("y2", (d) => d?.target?.y!);
 
-    treeLayout(hierarchyData);
-    setRoot(hierarchyData);
+        svg
+          .selectAll(".node")
+          .attr("cx", (d) => d?.x!)
+          .attr("cy", (d) => d?.y!);
+      });
 
-    // Add zoom event listener to expand nodes on zoom
-    svg.on("wheel.zoom", null); // Remove the default zoom behavior
-    svg.call(
-      zoom().on("zoom", (event) => {
-        g.attr("transform", event.transform);
-        g.selectAll("g").attr("transform", (d) => `translate(${d.x},${d.y})scale(${event.transform.k})`);
-      })
-    );
-
-    // Set the initial position of the nodes
-    hierarchyData.descendants().forEach((d) => {
-      d.y = d.depth * 100; // Change this value to adjust the distance between levels
-    });
-
-    // Redraw the tree with the new layout
-    treeLayout(hierarchyData);
-    setRoot(hierarchyData);
-  }, [treeData]);
-
-  const handleCircleClick = (node) => {
-    if (node.children) {
-      node._children = node.children;
-      node.children = null;
-    } else {
-      node.children = node._children;
-      node._children = null;
-    }
-    setRoot(root);
-  };
+    return () => {
+      simulation.stop();
+    };
+  }, [data]);
 
   return (
-    <svg ref={svgRef} style={{ width: "100%", height: "100%", overflow: "auto", marginTop: "30px" }}>
-      <g ref={gRef}>
-        {root &&
-          tree()
-            .size([svgRef.current.clientWidth - 100, svgRef.current.clientHeight])(root)
-            .descendants()
-            .map((d) => (
-              <g key={d.data.name} transform={`translate(${d.x},${d.y})`} style={{ cursor: "pointer" }}>
-                <circle
-                  r={23}
-                  fill={d?.data.code.color}
-                  stroke="black"
-                  strokeWidth={1}
-                  onClick={() => handleCircleClick(d)}
-                />
-                <text fontSize={"7px"} color="black" textAnchor="middle" dominantBaseline="central">
-                  {d.data.code.name}
-                </text>
-                {d.children &&
-                  d.children.map((child) => (
-                    <Fragment key={child.data.code.name}>
-                      <line
-                        x1={0}
-                        y1={0}
-                        x2={child.x - d.x}
-                        y2={child.y - d.y}
-                        stroke="black"
-                        strokeWidth={1}
-                        fill="none"
-                      />
-                      <g transform={`translate(${child.x - d.x},${child.y - d.y})`} style={{ cursor: "pointer" }}>
-                        <circle
-                          r={20}
-                          fill="white"
-                          stroke="black"
-                          strokeWidth={1}
-                          onClick={() => handleCircleClick(child)}
-                        />
-                        <text fontSize={"0.5rem"} color="black" textAnchor="middle" dominantBaseline="central">
-                          {child.data.code.name}
-                        </text>
-                      </g>
-                    </Fragment>
-                  ))}
-              </g>
-            ))}
-      </g>
+    <svg ref={svgRef} width={500} height={500}>
+      {data.map((arr) => arr.map((obj) => <circle key={obj.id} className="node" r={5} fill="red" />))}
+      {data.flatMap((arr, i) =>
+        arr
+          .slice(0, arr.length - 1)
+          .map((obj, j) => <line key={`${i}-${j}`} className="link" stroke="black" strokeWidth={1} />)
+      )}
     </svg>
   );
 };
 
-export default CodeTree;
+{
+  /*const ForceLayout = ({ data }) => {
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const simulationRef = useRef<d3.Simulation<ICodeTree[], undefined> | null>(null);
+
+  useEffect(() => {
+    if (!svgRef.current) return;
+
+    const svg = d3.select(svgRef.current);
+
+    const width = +svg.attr("width");
+    const height = +svg.attr("height");
+
+    const nodes = data.map((arr) => arr.map((obj) => ({ id: obj.id, data: obj }))).flat();
+
+    const links = [];
+    data.forEach((arr) => {
+      for (let i = 0; i < arr.length - 1; i++) {
+        links.push({ source: arr[i].id, target: arr[i + 1].id });
+      }
+    });
+
+    const simulation = d3
+      .forceSimulation(nodes)
+      .force(
+        "link",
+        d3.forceLink(links).id((d) => d.id)
+      )
+      .force("charge", d3.forceManyBody().strength(-50))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
+    simulationRef.current = simulation;
+
+    const link = svg
+      .selectAll(".link")
+      .data(links)
+      .join("line")
+      .attr("class", "link")
+      .attr("stroke", "black")
+      .attr("stroke-width", "1");
+
+    const node = svg
+      .selectAll(".node")
+      .data(nodes)
+      .join("circle")
+      .attr("class", "node")
+      .attr("r", 5)
+      .attr("fill", "red");
+
+    const ticked = () => {
+      link
+        .attr("x1", (d) => d.source.x!)
+        .attr("y1", (d) => d.source.y!)
+        .attr("x2", (d) => d.target.x!)
+        .attr("y2", (d) => d.target.y!);
+
+      node.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
+    };
+
+    simulation.on("tick", ticked);
+
+    return () => {
+      simulation.stop();
+    };
+  }, [data]);
+
+  return <svg ref={svgRef} width={500} height={500} />;
+}; */
+}
+
+export default ForceLayout;
