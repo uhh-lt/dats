@@ -1,12 +1,12 @@
-import * as React from "react";
-import BottomNavigation, { BottomNavigationProps } from "@mui/material/BottomNavigation";
-import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-import SearchIcon from "@mui/icons-material/Search";
+import { MenuBook } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BookIcon from "@mui/icons-material/Book";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
+import SearchIcon from "@mui/icons-material/Search";
+import BottomNavigation, { BottomNavigationProps } from "@mui/material/BottomNavigation";
+import BottomNavigationAction from "@mui/material/BottomNavigationAction";
+import * as React from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { MenuBook } from "@mui/icons-material";
 
 function calculateValue(path: string) {
   if (path.match(/project\/\d+\/search.*/i)) {
@@ -27,20 +27,34 @@ function BottomBar(props: BottomNavigationProps) {
   let { projectId } = useParams();
   const value = calculateValue(location.pathname);
 
+  // local state
+  const [searchPage, setSearchPage] = React.useState("search");
+  const [annotationPage, setAnnotationPage] = React.useState("annotation");
+
+  // store the current page in the local state
+  React.useEffect(() => {
+    if (value === 0) {
+      setSearchPage("search" + location.pathname.split("/search")[1]);
+    }
+    if (value === 1) {
+      setAnnotationPage("annotation" + location.pathname.split("/annotation")[1]);
+    }
+  }, [location, value]);
+
   return (
     <BottomNavigation showLabels value={value} {...props}>
       <BottomNavigationAction
         label="Search"
         icon={<SearchIcon />}
         component={Link}
-        to={`/project/${projectId}/search`}
+        to={`/project/${projectId}/${searchPage}`}
       />
 
       <BottomNavigationAction
         label="Annotation"
         icon={<FormatColorTextIcon />}
         component={Link}
-        to={`/project/${projectId}/annotation`}
+        to={`/project/${projectId}/${annotationPage}`}
       />
 
       <BottomNavigationAction
