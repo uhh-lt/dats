@@ -8,8 +8,6 @@ from app.docprepro.heavy_jobs.preprocess import import_uploaded_archive_
 
 @celery_worker.task(
     acks_late=True,
-    autoretry_for=(Exception,),
-    retry_kwargs={"max_retries": 5, "countdown": 5},
 )
 def start_export_job(export_job: ExportJobRead) -> None:
     start_export_job_(export_job=export_job)
