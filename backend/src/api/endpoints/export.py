@@ -1,14 +1,10 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter
 
-from api.dependencies import get_db_session
 from app.core.data.dto.export_job import (
-    ExportFormat,
     ExportJobParameters,
     ExportJobRead,
 )
 from app.core.data.export.export_service import ExportService
-from app.core.data.dto.util import MultipleIdsParameter
 from app.docprepro.heavy_jobs import prepare_and_start_export_job_async
 
 router = APIRouter(prefix="/export")
