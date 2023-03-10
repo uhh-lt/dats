@@ -79,9 +79,13 @@ async def search_keyword_stats(*,
              description="Returns Stat for the given SourceDocuments.")
 async def search_tag_stats(*,
                            db: Session = Depends(get_db_session),
-                           query_params: SearchSDocsQueryParameters) -> List[TagStat]:
+                           query_params: SearchSDocsQueryParameters,
+                           sort_by_global: bool = False) -> List[TagStat]:
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(query_params=query_params)
-    return crud_sdoc.collect_tag_stats(db=db, sdoc_ids=sdoc_ids)
+    tag_stats = crud_sdoc.collect_tag_stats(db=db, sdoc_ids=sdoc_ids)
+    if sort_by_global:
+        tag_stats.sort(key=lambda x: x.global_count, reverse=True)
+    return tag_stats
 
 
 @router.post("/lexical/sdoc/content", tags=tags,

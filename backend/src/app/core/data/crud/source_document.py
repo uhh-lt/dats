@@ -516,8 +516,19 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         query = query.group_by(DocumentTagORM.id)
         query = query.order_by(desc(count))
 
-        res = query.all()
-        return [TagStat(tag=tag, count=count) for (tag, count) in res]
+        filtered_res = query.all()
+
+        tag_ids = [tag.id for tag, _ in filtered_res]
+
+        count = func.count().label("count")
+        query = db.query(SourceDocumentDocumentTagLinkTable.document_tag_id, count) \
+            .filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids)) \
+            .group_by(SourceDocumentDocumentTagLinkTable.document_tag_id) \
+            .order_by(func.array_position(tag_ids, SourceDocumentDocumentTagLinkTable.document_tag_id))
+        
+        global_res = query.all()
+
+        return [TagStat(tag=tag, filtered_count=fcount, global_count=gcount) for (tag, fcount), (tid, gcount) in zip(filtered_res, global_res)]
 
     def collect_linked_sdoc_ids(self,
                                 db: Session,

@@ -38,7 +38,8 @@ class KeywordStat(BaseModel):
 
 class TagStat(BaseModel):
     tag: DocumentTagRead = Field(description="The counted document tag.")
-    count: int = Field(description="Number of occurrences of the document tag.")
+    filtered_count: int = Field(description="Number of occurrences of the document tag in the filtered documents")
+    global_count: int = Field(description="Number of occurrences of the document tag in all documents")
 
 
 class SpanEntityStatsQueryParameters(BaseModel):
