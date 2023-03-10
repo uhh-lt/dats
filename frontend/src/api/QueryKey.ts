@@ -115,4 +115,7 @@ export const QueryKey = {
 
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",
+
+  // export
+  EXPORT_JOB: "exportJob",
 };

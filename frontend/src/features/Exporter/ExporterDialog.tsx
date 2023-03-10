@@ -1,41 +1,54 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SaveIcon from "@mui/icons-material/Save";
+import { LoadingButton } from "@mui/lab";
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
-  Divider,
-  FormControl,
   FormControlLabel,
-  FormGroup,
   Radio,
   RadioGroup,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import ExporterHooks from "../../api/ExporterHooks";
+import {
+  ExportFormat,
+  ExportJobParameters,
+  ExportJobStatus,
+  SingleDocAllUserAnnotationsExportJobParams,
+  SingleDocSingleUserAnnotationsExportJobParams,
+  SingleProjectAllDataExportJobParams,
+  SingleProjectAllTagsExportJobParams,
+  SingleUserAllCodesExportJobParams,
+  SingleUserAllMemosExportJobParams,
+  SingleUserLogbookExportJobParams,
+} from "../../api/openapi";
+import { ExportJobType } from "../../api/openapi/models/ExportJobType";
 import ProjectHooks from "../../api/ProjectHooks";
+import { useAuth } from "../../auth/AuthProvider";
+import UserName from "../../components/UserName";
 import eventBus from "../../EventBus";
-import { codesToTree } from "../../views/annotation/CodeExplorer/TreeUtils";
-import { ExporterConfig } from "./ExporterAPI";
-import ExporterTreeSelect from "./ExporterTreeSelect";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
 import ExporterItemSelectList from "./ExporterItemSelectList";
 
 // users documents codes tags attached_to
 const enabledComponentsPerType = new Map<string, string[]>(
   Object.entries({
-    Memo: ["users", "attached_to"],
-    Tag: ["users", "documents", "tags"],
-    Annotation: ["users", "documents", "codes"],
-    Tagset: ["users"],
+    Project: [],
+    Tagset: [],
     Codeset: ["users"],
+    Memos: ["users"],
     Logbook: ["users"],
+    Annotations: ["singleUser"],
   })
 );
 const componentIsDisabled = (type: string, component: string): boolean => {
@@ -45,52 +58,172 @@ const componentIsDisabled = (type: string, component: string): boolean => {
   return true;
 };
 
-const attachObjects = [
-  { id: 0, name: "Document" },
-  { id: 1, name: "Code" },
-  { id: 2, name: "Tag" },
-  { id: 3, name: "Annotation" },
-];
+// const attachObjects = [
+//   { id: 0, name: "Document" },
+//   { id: 1, name: "Code" },
+//   { id: 2, name: "Tag" },
+//   { id: 3, name: "Annotations" },
+// ];
 
-interface ExporterInfo {
-  type: string;
+export interface ExporterInfo {
+  type: "Project" | "Tagset" | "Codeset" | "Memos" | "Logbook" | "Annotations";
   users: number[];
-  documents: number[];
-  codes: number[];
-  tags: number[];
-  attached_to: number[];
+  singleUser: boolean;
+  sdocId: number;
 }
+
+const exporterInfoToExporterJobParameters = (exporterData: ExporterInfo, projectId: number): ExportJobParameters => {
+  switch (exporterData.type) {
+    case "Project":
+      return {
+        export_job_type: ExportJobType.SINGLE_PROJECT_ALL_DATA,
+        specific_export_job_parameters: {
+          project_id: projectId,
+          export_job_type: ExportJobType.SINGLE_PROJECT_ALL_DATA,
+        } as SingleProjectAllDataExportJobParams,
+        export_format: ExportFormat.CSV,
+      };
+    case "Tagset":
+      return {
+        export_job_type: ExportJobType.SINGLE_PROJECT_ALL_TAGS,
+        specific_export_job_parameters: {
+          project_id: projectId,
+          export_job_type: ExportJobType.SINGLE_PROJECT_ALL_TAGS,
+        } as SingleProjectAllTagsExportJobParams,
+        export_format: ExportFormat.CSV,
+      };
+    case "Codeset":
+      return {
+        export_job_type: ExportJobType.SINGLE_USER_ALL_CODES,
+        specific_export_job_parameters: {
+          project_id: projectId,
+          export_job_type: ExportJobType.SINGLE_USER_ALL_CODES,
+          user_id: exporterData.users[0],
+        } as SingleUserAllCodesExportJobParams,
+        export_format: ExportFormat.CSV,
+      };
+    case "Memos":
+      return {
+        export_job_type: ExportJobType.SINGLE_USER_ALL_MEMOS,
+        specific_export_job_parameters: {
+          project_id: projectId,
+          export_job_type: ExportJobType.SINGLE_USER_ALL_MEMOS,
+          user_id: exporterData.users[0],
+        } as SingleUserAllMemosExportJobParams,
+        export_format: ExportFormat.CSV,
+      };
+    case "Logbook":
+      return {
+        export_job_type: ExportJobType.SINGLE_USER_LOGBOOK,
+        specific_export_job_parameters: {
+          project_id: projectId,
+          export_job_type: ExportJobType.SINGLE_USER_LOGBOOK,
+          user_id: exporterData.users[0],
+        } as SingleUserLogbookExportJobParams,
+        export_format: ExportFormat.CSV,
+      };
+    case "Annotations":
+      if (exporterData.singleUser) {
+        return {
+          export_job_type: ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS,
+          specific_export_job_parameters: {
+            project_id: projectId,
+            export_job_type: ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS,
+            sdoc_id: exporterData.sdocId,
+            user_id: exporterData.users[0],
+          } as SingleDocSingleUserAnnotationsExportJobParams,
+          export_format: ExportFormat.CSV,
+        };
+      } else {
+        return {
+          export_job_type: ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS,
+          specific_export_job_parameters: {
+            project_id: projectId,
+            export_job_type: ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS,
+            sdoc_id: exporterData.sdocId,
+          } as SingleDocAllUserAnnotationsExportJobParams,
+          export_format: ExportFormat.CSV,
+        };
+      }
+  }
+};
 
 function ExporterDialog() {
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // local state
+  const [exportJobId, setExportJobId] = useState<string | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const [exporterData, setExporterData] = useState<ExporterInfo>({
-    type: "Memo",
+    type: "Project",
     users: [],
-    documents: [],
-    codes: [],
-    tags: [],
-    attached_to: [],
+    singleUser: false,
+    sdocId: -1,
   });
 
+  // mutations (react-query)
+  const createJobMutation = ExporterHooks.useStartExportJob();
+
+  const handleClick = () => {
+    const requestBody = exporterInfoToExporterJobParameters(exporterData, projectId);
+    createJobMutation.mutate(
+      {
+        requestBody,
+      },
+      {
+        onSuccess: (exportJobRead) => {
+          SnackbarAPI.openSnackbar({
+            text: `Created new export job ${exportJobRead.id}`,
+            severity: "success",
+          });
+          setExportJobId(exportJobRead.id);
+        },
+      }
+    );
+  };
+
   // global state (react-query)
+  const exportJob = ExporterHooks.useGetExportJob(exportJobId);
+  const { user } = useAuth();
+
   const projectUsers = ProjectHooks.useGetAllUsers(projectId);
   // const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(projectId);
-  const projectTags = ProjectHooks.useGetAllTags(projectId);
-  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
-  const projectCodeTree = useMemo(
-    () => (projectCodes.data ? codesToTree(projectCodes.data) : undefined),
-    [projectCodes.data]
-  );
+  // const projectTags = ProjectHooks.useGetAllTags(projectId);
+  // const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
+  // const projectCodeTree = useMemo(
+  //   () => (projectCodes.data ? codesToTree(projectCodes.data) : undefined),
+  //   [projectCodes.data]
+  // );
 
   // listen to open-memo event and open the dialog
-  const openModal = useCallback((event: CustomEventInit<ExporterConfig>) => {
-    setOpen(true);
-    // setExporterData(event.detail);
-  }, []);
+  const openModal = useCallback(
+    (event: CustomEventInit<ExporterInfo>) => {
+      setOpen(true);
+      const data = event.detail!;
+      if (data.users.length !== 1 && user.data) {
+        data.users = [user.data.id];
+      }
+      setExporterData(event.detail!);
+    },
+    [user]
+  );
+
+  useEffect(() => {
+    if (!exportJob.data) return;
+    if (exportJob.data.status) {
+      if (exportJob.data.status === ExportJobStatus.DONE) {
+        window.open(process.env.REACT_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
+        setExportJobId(undefined);
+      } else if (exportJob.data.status === ExportJobStatus.FAILED) {
+        SnackbarAPI.openSnackbar({
+          text: `Export job ${exportJob.data.id} failed`,
+          severity: "error",
+        });
+        setExportJobId(undefined);
+      }
+    }
+  }, [exportJob.data]);
 
   useEffect(() => {
     eventBus.on("open-exporter", openModal);
@@ -106,7 +239,16 @@ function ExporterDialog() {
 
   const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setExporterData((oldData) => {
-      return { ...oldData, type: (event.target as HTMLInputElement).value };
+      return {
+        ...oldData,
+        type: (event.target as HTMLInputElement).value as
+          | "Project"
+          | "Tagset"
+          | "Codeset"
+          | "Memos"
+          | "Logbook"
+          | "Annotations",
+      };
     });
   };
 
@@ -116,28 +258,34 @@ function ExporterDialog() {
     });
   };
 
-  const handleTagsChange = (selectedItems: number[]) => {
+  const handleToggleSingleUser = () => {
     setExporterData((oldData) => {
-      return { ...oldData, tags: selectedItems };
+      return { ...oldData, singleUser: !oldData.singleUser };
     });
   };
 
-  const handleCodesChange = (selectedItems: number[]) => {
-    setExporterData((oldData) => {
-      return { ...oldData, codes: selectedItems };
-    });
-  };
+  // const handleTagsChange = (selectedItems: number[]) => {
+  //   setExporterData((oldData) => {
+  //     return { ...oldData, tags: selectedItems };
+  //   });
+  // };
 
-  const toggleAttachedTo = (selectedItem: number) => {
-    setExporterData((oldData) => {
-      const idx = oldData.attached_to.indexOf(selectedItem);
-      if (idx === -1) {
-        return { ...oldData, attached_to: [...oldData.attached_to, selectedItem] };
-      }
-      oldData.attached_to.splice(idx, 1);
-      return { ...oldData, attached_to: oldData.attached_to };
-    });
-  };
+  // const handleCodesChange = (selectedItems: number[]) => {
+  //   setExporterData((oldData) => {
+  //     return { ...oldData, codes: selectedItems };
+  //   });
+  // };
+
+  // const toggleAttachedTo = (selectedItem: number) => {
+  //   setExporterData((oldData) => {
+  //     const idx = oldData.attached_to.indexOf(selectedItem);
+  //     if (idx === -1) {
+  //       return { ...oldData, attached_to: [...oldData.attached_to, selectedItem] };
+  //     }
+  //     oldData.attached_to.splice(idx, 1);
+  //     return { ...oldData, attached_to: oldData.attached_to };
+  //   });
+  // };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -146,37 +294,84 @@ function ExporterDialog() {
         <Accordion elevation={0} variant="outlined">
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ width: "33%", flexShrink: 0 }}>Type</Typography>
-            <Typography sx={{ color: "text.secondary" }}>You want to export {exporterData.type}.</Typography>
+            <Typography sx={{ color: "text.secondary" }}>
+              You want to export the {exporterData.type}
+              {enabledComponentsPerType.get(exporterData.type)!.length > 0 ? "..." : "."}
+            </Typography>
           </AccordionSummary>
           <AccordionDetails>
             <RadioGroup name="export-type-group" value={exporterData.type} onChange={handleTypeChange} row>
               {Array.from(enabledComponentsPerType.keys()).map((type) => (
-                <FormControlLabel key={type} value={type} control={<Radio />} label={type} />
+                <FormControlLabel
+                  key={type}
+                  value={type}
+                  control={<Radio />}
+                  label={type}
+                  disabled={type === "Annotations" && exporterData.sdocId === -1}
+                />
               ))}
             </RadioGroup>
           </AccordionDetails>
         </Accordion>
-        <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "users")}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography sx={{ width: "33%", flexShrink: 0 }}>User</Typography>
-            <Typography sx={{ color: "text.secondary" }}>
-              You selected {exporterData.users.length}/{projectUsers.data?.length || -1} users.
-            </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <ExporterItemSelectList
-              items={
-                projectUsers.data?.map((user) => {
-                  return { id: user.id, description: `${user.first_name} ${user.last_name}` };
-                }) || []
-              }
-              value={exporterData.users}
-              onChange={handleUsersChange}
-              itemsPerPage={5}
-            />
-          </AccordionDetails>
-        </Accordion>
-        <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "documents")}>
+        {!componentIsDisabled(exporterData.type, "users") && (
+          <Accordion elevation={0} variant="outlined">
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography sx={{ width: "33%", flexShrink: 0 }}>User</Typography>
+              <Typography sx={{ color: "text.secondary" }}>
+                ... of {exporterData.users.length > 0 ? <UserName userId={exporterData.users[0]} /> : "no user"}.
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <ExporterItemSelectList
+                items={
+                  projectUsers.data?.map((user) => {
+                    return { id: user.id, description: `${user.first_name} ${user.last_name}` };
+                  }) || []
+                }
+                value={exporterData.users}
+                onChange={handleUsersChange}
+                itemsPerPage={5}
+                singleSelect={true}
+              />
+            </AccordionDetails>
+          </Accordion>
+        )}
+        {!componentIsDisabled(exporterData.type, "singleUser") && (
+          <Accordion elevation={0} variant="outlined">
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Typography sx={{ width: "33%", flexShrink: 0 }}>User</Typography>
+              <Typography sx={{ color: "text.secondary" }}>
+                ... of {exporterData.singleUser ? <UserName userId={exporterData.users[0]} /> : "all users"}.
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <ToggleButtonGroup
+                sx={{ ml: 2, mb: 1 }}
+                color="primary"
+                value={exporterData.singleUser}
+                onClick={handleToggleSingleUser}
+              >
+                <ToggleButton value={true}>Single User</ToggleButton>
+                <ToggleButton value={false}>All Users</ToggleButton>
+              </ToggleButtonGroup>
+              {exporterData.singleUser && (
+                <ExporterItemSelectList
+                  items={
+                    projectUsers.data?.map((user) => {
+                      return { id: user.id, description: `${user.first_name} ${user.last_name}` };
+                    }) || []
+                  }
+                  value={exporterData.users}
+                  onChange={handleUsersChange}
+                  itemsPerPage={5}
+                  singleSelect={true}
+                />
+              )}
+            </AccordionDetails>
+          </Accordion>
+        )}
+
+        {/* <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "documents")}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ width: "33%", flexShrink: 0 }}>Documents</Typography>
             <Typography sx={{ color: "text.secondary" }}>You selected 10/3456 documents.</Typography>
@@ -187,8 +382,8 @@ function ExporterDialog() {
               leo lobortis eget.
             </Typography>
           </AccordionDetails>
-        </Accordion>
-        <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "codes")}>
+        </Accordion> */}
+        {/* <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "codes")}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ width: "33%", flexShrink: 0 }}>Codes</Typography>
             <Typography sx={{ color: "text.secondary" }}>
@@ -198,8 +393,8 @@ function ExporterDialog() {
           <AccordionDetails>
             <ExporterTreeSelect tree={projectCodeTree} value={exporterData.codes} onChange={handleCodesChange} />
           </AccordionDetails>
-        </Accordion>
-        <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "tags")}>
+        </Accordion> */}
+        {/* <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "tags")}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ width: "33%", flexShrink: 0 }}>Tags</Typography>
             <Typography sx={{ color: "text.secondary" }}>
@@ -218,8 +413,8 @@ function ExporterDialog() {
               itemsPerPage={5}
             />
           </AccordionDetails>
-        </Accordion>
-        <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "attached_to")}>
+        </Accordion> */}
+        {/* <Accordion elevation={0} variant="outlined" disabled={componentIsDisabled(exporterData.type, "attached_to")}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography sx={{ width: "33%", flexShrink: 0 }}>Attached To</Typography>
             <Typography sx={{ color: "text.secondary" }}>
@@ -246,15 +441,19 @@ function ExporterDialog() {
               </FormGroup>
             </FormControl>
           </AccordionDetails>
-        </Accordion>
-        <Divider>Summary</Divider>
-        <DialogContentText>
-          You are going to export {exporterData.type} with {exporterData.users.length} users, 10 documents, 25 codes,
-          10...
-        </DialogContentText>
+        </Accordion> */}
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Close</Button>
+        <LoadingButton
+          loading={exportJobId !== undefined}
+          loadingPosition="start"
+          startIcon={<SaveIcon />}
+          variant="outlined"
+          onClick={handleClick}
+        >
+          Export data!
+        </LoadingButton>
       </DialogActions>
     </Dialog>
   );
