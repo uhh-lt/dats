@@ -558,6 +558,7 @@ class ExportService(metaclass=SingletonMeta):
         db: Session,
         user_id: int,
         sdoc_id: int,
+        project_id: int,
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
         # get the adoc
@@ -568,7 +569,7 @@ class ExportService(metaclass=SingletonMeta):
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
             export_format=export_format,
-            fn=f"adoc_{adoc.id}_export",
+            fn=f"project_{project_id}_sdoc_{sdoc_id}_adoc_{adoc.id}_export",
         )
         export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
@@ -577,13 +578,14 @@ class ExportService(metaclass=SingletonMeta):
         self,
         db: Session,
         sdoc_id: int,
+        project_id: int,
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
         # get the adocs
         sdoc = crud_sdoc.read(db=db, id=sdoc_id)
         all_adocs = sdoc.annotation_documents
         if len(all_adocs) == 0:
-            raise NoDataToExportError(f"There are no annotations for SDoc {sdoc_id}")
+            raise NoDataToExportError(f"There are no annotations for SDoc {sdoc_id} in Project {project_id}")
 
         # export the data
         export_data = None
