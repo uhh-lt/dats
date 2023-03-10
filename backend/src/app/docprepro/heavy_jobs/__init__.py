@@ -10,6 +10,7 @@ from app.core.data.export.export_service import ExportService
 import_uploaded_archive_task = "app.docprepro.heavy_jobs.tasks.import_uploaded_archive"
 start_export_job_task = "app.docprepro.heavy_jobs.tasks.start_export_job"
 
+
 def import_uploaded_archive_apply_async(
     archive_file_path: Path, project_id: int
 ) -> Any:

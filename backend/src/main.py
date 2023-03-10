@@ -14,20 +14,48 @@ from app.core.startup import startup
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
-STARTUP_DONE = bool(int(os.environ.get('STARTUP_DONE', '0')))
+STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
     startup(reset_data=False)
-    os.environ['STARTUP_DONE'] = "1"
+    os.environ["STARTUP_DONE"] = "1"
 
-from app.core.data.crud.source_document import SourceDocumentPreprocessingUnfinishedError
-from app.core.data.repo.repo_service import RepoService, SourceDocumentNotFoundInRepositoryError, \
-    FileNotFoundInRepositoryError  # noqa E402
-from app.core.search.elasticsearch_service import NoSuchSourceDocumentInElasticSearchError, \
-    NoSuchMemoInElasticSearchError  # noqa E402
-from app.core.data.export.export_service import ExportJobPreparationError, NoDataToExportError, NoSuchExportJobError, NoSuchExportFormatError
-from api.endpoints import general, project, user, source_document, code, annotation_document, memo, \
-    span_annotation, document_tag, span_group, bbox_annotation, search, metadata, feedback, analysis, \
-    prepro, export  # noqa E402
+from app.core.data.crud.source_document import (
+    SourceDocumentPreprocessingUnfinishedError,
+)
+from app.core.data.repo.repo_service import (
+    RepoService,
+    SourceDocumentNotFoundInRepositoryError,
+    FileNotFoundInRepositoryError,
+)  # noqa E402
+from app.core.search.elasticsearch_service import (
+    NoSuchSourceDocumentInElasticSearchError,
+    NoSuchMemoInElasticSearchError,
+)  # noqa E402
+from app.core.data.export.export_service import (
+    ExportJobPreparationError,
+    NoDataToExportError,
+    NoSuchExportJobError,
+    NoSuchExportFormatError,
+)
+from api.endpoints import (
+    general,
+    project,
+    user,
+    source_document,
+    code,
+    annotation_document,
+    memo,
+    span_annotation,
+    document_tag,
+    span_group,
+    bbox_annotation,
+    search,
+    metadata,
+    feedback,
+    analysis,
+    prepro,
+    export,
+)  # noqa E402
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from config import conf  # noqa E402
 
@@ -36,12 +64,13 @@ from config import conf  # noqa E402
 def custom_generate_unique_id(route: APIRoute):
     return f"{route.tags[0]}-{route.name}"
 
+
 # create the FastAPI app
 app = FastAPI(
     title="D-WISE Tool Suite Backend API",
     description="The REST API for the D-WISE Tool Suite Backend",
     version="alpha_mwp_1",
-    generate_unique_id_function=custom_generate_unique_id
+    generate_unique_id_function=custom_generate_unique_id,
 )
 
 # Handle CORS
@@ -92,7 +121,9 @@ async def export_job_preparation_error_handler(_, exc: ExportJobPreparationError
 
 
 @app.exception_handler(NoSuchSourceDocumentInElasticSearchError)
-async def no_such_sdoc_in_es_error_handler(_, exc: NoSuchSourceDocumentInElasticSearchError):
+async def no_such_sdoc_in_es_error_handler(
+    _, exc: NoSuchSourceDocumentInElasticSearchError
+):
     return PlainTextResponse(str(exc), status_code=500)
 
 
@@ -102,17 +133,23 @@ async def no_such_memo_in_es_error_handler(_, exc: NoSuchMemoInElasticSearchErro
 
 
 @app.exception_handler(SourceDocumentNotFoundInRepositoryError)
-async def source_document_not_found_in_repository_error_handler(_, exc: SourceDocumentNotFoundInRepositoryError):
+async def source_document_not_found_in_repository_error_handler(
+    _, exc: SourceDocumentNotFoundInRepositoryError
+):
     return PlainTextResponse(str(exc), status_code=500)
 
 
 @app.exception_handler(SourceDocumentPreprocessingUnfinishedError)
-async def source_document_preprocessing_unfinished_error_handler(_, exc: SourceDocumentPreprocessingUnfinishedError):
+async def source_document_preprocessing_unfinished_error_handler(
+    _, exc: SourceDocumentPreprocessingUnfinishedError
+):
     return PlainTextResponse(str(exc), status_code=500)
 
 
 @app.exception_handler(FileNotFoundInRepositoryError)
-async def file_not_found_in_repository_error_handler(_, exc: FileNotFoundInRepositoryError):
+async def file_not_found_in_repository_error_handler(
+    _, exc: FileNotFoundInRepositoryError
+):
     return PlainTextResponse(str(exc), status_code=500)
 
 
@@ -159,8 +196,9 @@ app.include_router(export.router)
 def main() -> None:
     # read port from config
     port = int(conf.api.port)
-    assert port is not None and isinstance(port, int) and port > 0, \
-        "The API port has to be a positive integer! E.g. 8081"
+    assert (
+        port is not None and isinstance(port, int) and port > 0
+    ), "The API port has to be a positive integer! E.g. 8081"
 
     server = Server(
         Config(
@@ -169,7 +207,7 @@ def main() -> None:
             port=port,
             log_level=conf.logging.level.lower(),
             # debug=True,
-            reload=True
+            reload=True,
         ),
     )
 

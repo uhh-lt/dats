@@ -8,10 +8,10 @@ from app.core.startup import startup
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
-STARTUP_DONE = bool(int(os.environ.get('STARTUP_DONE', '0')))
+STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
     startup(reset_data=True)
-    os.environ['STARTUP_DONE'] = "1"
+    os.environ["STARTUP_DONE"] = "1"
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
@@ -27,8 +27,13 @@ def code(session: SQLService, project: int, user: int) -> int:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
-    code = CodeCreate(name=name, color=color,
-                      description=description, project_id=project, user_id=user)
+    code = CodeCreate(
+        name=name,
+        color=color,
+        description=description,
+        project_id=project,
+        user_id=user,
+    )
 
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
@@ -51,8 +56,9 @@ def project(session: int, user: int) -> int:
     description = "Test description"
 
     with session.db_session() as sess:
-        id = crud_project.create(db=sess,
-                                 create_dto=ProjectCreate(title=title, description=description)).id
+        id = crud_project.create(
+            db=sess, create_dto=ProjectCreate(title=title, description=description)
+        ).id
         crud_project.associate_user(db=sess, proj_id=id, user_id=user)
 
     yield id
@@ -68,8 +74,9 @@ def user(session: SQLService) -> int:
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
 
-    user = UserCreate(email=email, first_name=first_name,
-                      last_name=last_name, password=password)
+    user = UserCreate(
+        email=email, first_name=first_name, last_name=last_name, password=password
+    )
 
     with session.db_session() as sess:
         # create user

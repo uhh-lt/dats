@@ -1,12 +1,18 @@
 from datetime import datetime
-from app.core.data.dto.export_job import ExportJobCreate, ExportJobParameters, ExportJobRead, ExportJobStatus, ExportJobUpdate
+from app.core.data.dto.export_job import (
+    ExportJobCreate,
+    ExportJobParameters,
+    ExportJobRead,
+    ExportJobStatus,
+    ExportJobUpdate,
+)
 from app.core.db.redis_service import RedisService
 
 
 def test_crud_cycle() -> None:
     redis: RedisService = RedisService()
 
-    assert True # FIXME
+    assert True  # FIXME
     return
 
     params = ExportJobParameters(project_id=1)
@@ -33,7 +39,7 @@ def test_crud_cycle() -> None:
     assert updated.status == ExportJobStatus.IN_PROGRESS
     assert updated.results_url is None
 
-    update = ExportJobUpdate(status=ExportJobStatus.DONE, results_url='www.dwts.io')
+    update = ExportJobUpdate(status=ExportJobStatus.DONE, results_url="www.dwts.io")
     updated = redis.update_export_job(key=read.id, update=update)
     assert updated is not None
     assert isinstance(updated, ExportJobRead)
@@ -41,10 +47,9 @@ def test_crud_cycle() -> None:
     assert updated.created == read.created
     assert updated.parameters == read.parameters
     assert updated.status == ExportJobStatus.DONE
-    assert updated.results_url == 'www.dwts.io'
+    assert updated.results_url == "www.dwts.io"
 
     deleted = redis.delete_export_job(key=updated.id)
     assert deleted is not None
     assert isinstance(deleted, ExportJobRead)
     assert deleted == updated
-

@@ -143,4 +143,5 @@ class CRUDSpanAnnotation(
         db.refresh(span_db_obj)
         return span_db_obj
 
+
 crud_span_anno = CRUDSpanAnnotation(SpanAnnotationORM)

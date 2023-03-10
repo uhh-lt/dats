@@ -39,7 +39,9 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
     def create(self, db: Session, *, create_dto: MemoCreate) -> MemoORM:
         raise NotImplementedError()
 
-    def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> Optional[MemoORM]:
+    def update(
+        self, db: Session, *, id: int, update_dto: MemoUpdate
+    ) -> Optional[MemoORM]:
         updated_memo = super().update(db, id=id, update_dto=update_dto)
         self.__update_memo_in_elasticsearch(updated_memo)
         return updated_memo
@@ -64,9 +66,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
 
         return (
             db.query(self.model)
-            .filter(
-                self.model.user_id == user_id, self.model.project_id == proj_id
-            )
+            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
             .all()
         )
 
@@ -89,8 +89,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             )
             .join(
                 AnnotationDocumentORM,
-                AnnotationDocumentORM.id
-                == SpanAnnotationORM.annotation_document_id,
+                AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
             )
         )
 
@@ -112,8 +111,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             )
             .join(
                 AnnotationDocumentORM,
-                AnnotationDocumentORM.id
-                == BBoxAnnotationORM.annotation_document_id,
+                AnnotationDocumentORM.id == BBoxAnnotationORM.annotation_document_id,
             )
         )
 
@@ -148,9 +146,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
     ) -> List[int]:
         statement = (
             delete(self.model)
-            .where(
-                self.model.user_id == user_id, self.model.project_id == proj_id
-            )
+            .where(self.model.user_id == user_id, self.model.project_id == proj_id)
             .returning(self.model.id)
         )
         removed_ids = db.execute(statement).fetchall()
@@ -368,52 +364,54 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.code
+                attached_object_type=AttachedObjectType.code,
             )
         elif isinstance(attached_to, SpanAnnotationORM):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.span_annotation
+                attached_object_type=AttachedObjectType.span_annotation,
             )
         elif isinstance(attached_to, SpanGroupORM):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.span_group
+                attached_object_type=AttachedObjectType.span_group,
             )
         elif isinstance(attached_to, BBoxAnnotationORM):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.bbox_annotation
+                attached_object_type=AttachedObjectType.bbox_annotation,
             )
         elif isinstance(attached_to, AnnotationDocumentORM):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.annotation_document
+                attached_object_type=AttachedObjectType.annotation_document,
             )
         elif isinstance(attached_to, SourceDocumentORM):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.source_document
+                attached_object_type=AttachedObjectType.source_document,
             )
         elif isinstance(attached_to, ProjectORM):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.project
+                attached_object_type=AttachedObjectType.project,
             )
         elif isinstance(attached_to, DocumentTagORM):
             return MemoRead(
                 **memo_as_in_db_dto.dict(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
-                attached_object_type=AttachedObjectType.document_tag
+                attached_object_type=AttachedObjectType.document_tag,
             )
         else:
-            raise NotImplementedError(f"Unknown AttachedObjectType: {type(attached_to)}")
+            raise NotImplementedError(
+                f"Unknown AttachedObjectType: {type(attached_to)}"
+            )
 
     @staticmethod
     def __add_memo_to_elasticsearch(

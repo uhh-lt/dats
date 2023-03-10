@@ -24,14 +24,14 @@ class CeleryConfig:
         "app.docprepro.video.preprocess.*": {"queue": "videoQ"},
         "app.docprepro.image.preprocess.*": {"queue": "imageQ"},
         "app.docprepro.heavy_jobs.tasks.*": {"queue": "heavyjobsQ"},
-        "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"}
+        "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"},
     }
 
     def to_dict(self) -> Dict:
         d = {}
         for attr in dir(self):
             value = getattr(self, attr)
-            if not attr.startswith('__') and not inspect.ismethod(value):
+            if not attr.startswith("__") and not inspect.ismethod(value):
                 d[attr] = value
         return d
 
@@ -40,7 +40,7 @@ class CeleryConfig:
 celery_worker = Celery(
     "celery_worker",
     backend=f"redis://:{cc.backend.password}@{cc.backend.host}:{cc.backend.port}/{cc.backend.db}",
-    broker=f"amqp://{cc.broker.user}:{cc.broker.password}@{cc.broker.host}:{cc.broker.port}//"
+    broker=f"amqp://{cc.broker.user}:{cc.broker.password}@{cc.broker.host}:{cc.broker.port}//",
 )
 
 # Flo: config the celery worker with the CommonConfig (serialization and event format etc)

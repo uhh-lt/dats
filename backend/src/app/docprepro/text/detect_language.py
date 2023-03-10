@@ -15,7 +15,9 @@ def detect_language_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
 
     for pptd in tqdm(pptds, desc="Detecting language... "):
         try:
-            pptd.metadata["language"] = detect_langs(pptd.text)[0].lang  # TODO Flo: what to do with mixed lang docs?
+            pptd.metadata["language"] = detect_langs(pptd.text)[
+                0
+            ].lang  # TODO Flo: what to do with mixed lang docs?
         except Exception as e:
             logger.warning(f"Cannot detect language of SDoc {pptd.sdoc_id}")
             pptd.metadata["language"] = "en"

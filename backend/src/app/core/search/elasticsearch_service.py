@@ -114,11 +114,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
         logger.info("Successfully established connection to ElasticSearch!")
 
-        if (
-            kwargs["remove_all_indices"]
-            if "remove_all_indices" in kwargs
-            else False
-        ):
+        if kwargs["remove_all_indices"] if "remove_all_indices" in kwargs else False:
             logger.warning("Removing all DWTS ElasticSearch indices!")
             esc.indices.delete(index="dwts_*", allow_no_indices=True)
 
@@ -311,9 +307,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         esdoc = self.get_esdoc_by_sdoc_id(
             proj_id=proj_id, sdoc_id=sdoc_id, fields={"content"}
         )
-        return SourceDocumentContent(
-            source_document_id=sdoc_id, content=esdoc.content
-        )
+        return SourceDocumentContent(source_document_id=sdoc_id, content=esdoc.content)
 
     def get_sdoc_html_by_sdoc_id(
         self, *, proj_id: int, sdoc_id: int
@@ -361,9 +355,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                     (o.gte, o.lt) for o in esdoc.token_character_offsets
                 ],
             )
-        return SourceDocumentTokens(
-            source_document_id=sdoc_id, tokens=esdoc.tokens
-        )
+        return SourceDocumentTokens(source_document_id=sdoc_id, tokens=esdoc.tokens)
 
     def get_sdoc_sentences_by_sdoc_id(
         self,
@@ -428,33 +420,21 @@ class ElasticSearchService(metaclass=SingletonMeta):
             index=self.__get_index_name(proj_id=proj_id),
             size=0,
             query={"terms": {"sdoc_id": list(sdoc_ids)}},
-            aggs={
-                "keyword_counts": {
-                    "terms": {"field": "keywords", "size": top_k}
-                }
-            },
+            aggs={"keyword_counts": {"terms": {"field": "keywords", "size": top_k}}},
         )
-        filtered_stats = OmegaConf.create(
-            res
-        ).aggregations.keyword_counts.buckets
-        filtered_stats_list = [
-            (s["key"], s["doc_count"]) for s in filtered_stats
-        ]
+        filtered_stats = OmegaConf.create(res).aggregations.keyword_counts.buckets
+        filtered_stats_list = [(s["key"], s["doc_count"]) for s in filtered_stats]
         keywords = [k for k, c in filtered_stats_list]
 
         multi_search_body = []
         for k in keywords:
             multi_search_body.append({})  # empty header
-            multi_search_body.append(
-                {"size": 0, "query": {"term": {"keywords": k}}}
-            )
+            multi_search_body.append({"size": 0, "query": {"term": {"keywords": k}}})
 
         res = self.__client.msearch(
             index=self.__get_index_name(proj_id=proj_id), body=multi_search_body
         )
-        global_stats_list = [
-            r["hits"]["total"]["value"] for r in res["responses"]
-        ]
+        global_stats_list = [r["hits"]["total"]["value"] for r in res["responses"]]
 
         return [
             KeywordStat(keyword=f[0], filtered_count=f[1], global_count=g)
@@ -470,9 +450,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             f"Deleted Document with ID={sdoc_id} from Index '{self.__get_index_name(proj_id=proj_id, index_type='doc')}'!"
         )
 
-    def add_memo_to_index(
-        self, proj_id: int, esmemo: ElasticSearchMemoCreate
-    ) -> int:
+    def add_memo_to_index(self, proj_id: int, esmemo: ElasticSearchMemoCreate) -> int:
         res = self.__client.index(
             index=self.__get_index_name(proj_id=proj_id, index_type="memo"),
             id=str(esmemo.memo_id),
@@ -506,9 +484,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             _source=list(fields),
         )
         if not res["found"]:
-            raise NoSuchMemoInElasticSearchError(
-                proj_id=proj_id, memo_id=memo_id
-            )
+            raise NoSuchMemoInElasticSearchError(proj_id=proj_id, memo_id=memo_id)
 
         return ElasticSearchMemoRead(**res["_source"])
 
@@ -530,9 +506,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             raise NoSuchMemoInElasticSearchError(proj_id=proj_id, memo_id=memo_id)
 
         update_data = {
-            k: v
-            for k, v in update.dict(exclude={'memo_id'}).items()
-            if v is not None
+            k: v for k, v in update.dict(exclude={"memo_id"}).items() if v is not None
         }
 
         self.__client.update(
@@ -579,13 +553,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
             raise ValueError("Query DSL object must not be None or empty!")
 
         if isinstance(limit, int) and (limit > 10000 or limit < 1):
-            raise ValueError(
-                "Limit must be a positive Integer smaller than 10000!"
-            )
+            raise ValueError("Limit must be a positive Integer smaller than 10000!")
         elif isinstance(skip, int) and (skip > 10000 or limit < 1):
-            raise ValueError(
-                "Skip must be a positive Integer smaller than 10000!"
-            )
+            raise ValueError("Skip must be a positive Integer smaller than 10000!")
         elif limit is None or skip is None:
             # use scroll api
             res = list(
@@ -677,9 +647,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         query["bool"]["must"].append({"match": {"user_id": user_id}})
         if starred is not None:
             # add starred to query
-            query["bool"]["must"].append(
-                {"match": {"starred": str(starred).lower()}}
-            )
+            query["bool"]["must"].append({"match": {"starred": str(starred).lower()}})
 
         res = self.__search(
             sdoc=False,
@@ -800,9 +768,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
         for keyword in keywords:
             query["bool"]["must"].append({"match": {"keywords": keyword}})
-        return self.__search_sdocs(
-            proj_id=proj_id, query=query, limit=limit, skip=skip
-        )
+        return self.__search_sdocs(proj_id=proj_id, query=query, limit=limit, skip=skip)
 
     def search_memos_by_exact_title(
         self,
@@ -857,9 +823,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             proj_id=proj_id,
             query={
                 "bool": {
-                    "must": [
-                        {"match": {"content": {"query": query, "fuzziness": 1}}}
-                    ]
+                    "must": [{"match": {"content": {"query": query, "fuzziness": 1}}}]
                 }
             },
             user_id=user_id,

@@ -49,7 +49,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "span_group_id": crud_span_group,
         "user_id": crud_user,
         "action_id": crud_action,
-        "memo_id": crud_memo
+        "memo_id": crud_memo,
     }
 
     __obj_id_orm_type_map = {
@@ -65,7 +65,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "span_group_id": SpanGroupORM,
         "user_id": UserORM,
         "action_id": ActionORM,
-        "memo_id": MemoORM
+        "memo_id": MemoORM,
     }
 
     def create(self, db: Session, *, create_dto: ObjectHandleCreate) -> ObjectHandleORM:
@@ -78,45 +78,54 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
                 with SQLService().db_session() as sess:
                     for (obj_id_key, obj_id_val) in create_dto.dict().items():
                         if obj_id_val:
-                            return self.read_by_attached_object_id(db=sess,
-                                                                   obj_id_key=obj_id_key,
-                                                                   obj_id_val=obj_id_val)
+                            return self.read_by_attached_object_id(
+                                db=sess, obj_id_key=obj_id_key, obj_id_val=obj_id_val
+                            )
             else:
                 # Flo: re-raise Exception since it's not a UC Violation
                 raise e
 
-    def read_by_attached_object_id(self,
-                                   db: Session,
-                                   obj_id_key: str,
-                                   obj_id_val: int) -> Optional[ObjectHandleORM]:
+    def read_by_attached_object_id(
+        self, db: Session, obj_id_key: str, obj_id_val: int
+    ) -> Optional[ObjectHandleORM]:
         if obj_id_key not in self.__obj_id_orm_type_map.keys():
             raise ValueError("Unknown Object ID!")
 
         obj_type = self.__obj_id_orm_type_map[obj_id_key]
 
-        db_obj = db.query(self.model).filter(getattr(self.model, obj_id_key) == obj_id_val).first()
+        db_obj = (
+            db.query(self.model)
+            .filter(getattr(self.model, obj_id_key) == obj_id_val)
+            .first()
+        )
         if not db_obj:
             raise NoSuchElementError(obj_type, id=obj_id_val)
         return db_obj
 
-    def resolve_handled_object(self, db: Session, handle: ObjectHandleORM) -> Union[AnnotationDocumentORM,
-                                                                                    CodeORM,
-                                                                                    CurrentCodeORM,
-                                                                                    DocumentTagORM,
-                                                                                    ProjectORM,
-                                                                                    SourceDocumentORM,
-                                                                                    SourceDocumentMetadataORM,
-                                                                                    SpanAnnotationORM,
-                                                                                    BBoxAnnotationORM,
-                                                                                    SpanGroupORM,
-                                                                                    UserORM,
-                                                                                    MemoORM,
-                                                                                    ActionORM,
-                                                                                    None]:
+    def resolve_handled_object(
+        self, db: Session, handle: ObjectHandleORM
+    ) -> Union[
+        AnnotationDocumentORM,
+        CodeORM,
+        CurrentCodeORM,
+        DocumentTagORM,
+        ProjectORM,
+        SourceDocumentORM,
+        SourceDocumentMetadataORM,
+        SpanAnnotationORM,
+        BBoxAnnotationORM,
+        SpanGroupORM,
+        UserORM,
+        MemoORM,
+        ActionORM,
+        None,
+    ]:
         target_id = None
         for target_id in self.__obj_id_crud_map.keys():
             if getattr(handle, target_id):
-                return self.__obj_id_crud_map[target_id].read(db=db, id=getattr(handle, target_id))
+                return self.__obj_id_crud_map[target_id].read(
+                    db=db, id=getattr(handle, target_id)
+                )
 
         raise KeyError(f"Unknown target_id: {target_id}!")
 

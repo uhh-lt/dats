@@ -31,15 +31,15 @@ def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
             new_html += pptd.html[current_position:html_start]
 
             if sentences[current_sentence_idx].end_token == token_id:
-                new_html += f'</sent>'
+                new_html += f"</sent>"
                 current_sentence_idx += 1
 
             if sentences[current_sentence_idx].start_token == token_id:
-                new_html += f'<sent id={current_sentence_idx}>'
+                new_html += f"<sent id={current_sentence_idx}>"
 
-            new_html += f'<t id={token_id}>'
+            new_html += f"<t id={token_id}>"
             new_html += pptd.html[html_start:html_end]
-            new_html += '</t>'
+            new_html += "</t>"
 
             current_position = html_end
 
@@ -47,6 +47,8 @@ def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
 
         pptd.html = new_html.build()
         # Flo: update sdoc status
-        update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.add_custom_html_tags)
+        update_sdoc_status(
+            sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.add_custom_html_tags
+        )
 
     return pptds

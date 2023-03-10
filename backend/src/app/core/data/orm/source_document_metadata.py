@@ -18,13 +18,25 @@ class SourceDocumentMetadataORM(ORMBase):
 
     # one to one
     object_handle: "ObjectHandleORM" = relationship(
-        "ObjectHandleORM", uselist=False, back_populates="source_document_metadata", passive_deletes=True
+        "ObjectHandleORM",
+        uselist=False,
+        back_populates="source_document_metadata",
+        passive_deletes=True,
     )
 
     # many to one
     source_document_id = Column(
-        Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("sourcedocument.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    source_document: "SourceDocumentORM" = relationship("SourceDocumentORM", back_populates="metadata_")
+    source_document: "SourceDocumentORM" = relationship(
+        "SourceDocumentORM", back_populates="metadata_"
+    )
 
-    __table_args__ = (UniqueConstraint("source_document_id", "key", name="UC_unique_metadata_key_per_sdoc"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "source_document_id", "key", name="UC_unique_metadata_key_per_sdoc"
+        ),
+    )

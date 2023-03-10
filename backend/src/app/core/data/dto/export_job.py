@@ -97,22 +97,16 @@ class SingleDocAllUserAnnotationsExportJobParams(SpecificExportJobParameters):
         const=True,
         description="The type of the export job (what to export)",
     )
-    sdoc_id: int = Field(
-        description="The ID of the SDocument to get the data from."
-    )
+    sdoc_id: int = Field(description="The ID of the SDocument to get the data from.")
 
 
-class SingleDocSingleUserAnnotationsExportJobParams(
-    SpecificExportJobParameters
-):
+class SingleDocSingleUserAnnotationsExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS,
         const=True,
         description="The type of the export job (what to export)",
     )
-    sdoc_id: int = Field(
-        description="The ID of the SDocument to get the data from."
-    )
+    sdoc_id: int = Field(description="The ID of the SDocument to get the data from.")
     user_id: int = Field(description="The ID of the User to get the data from.")
 
 
@@ -132,10 +126,8 @@ class ExportJobParameters(BaseModel):
         SingleUserAllMemosExportJobParams,
         SingleUserLogbookExportJobParams,
         SingleDocAllUserAnnotationsExportJobParams,
-        SingleDocSingleUserAnnotationsExportJobParams
-    ] = Field(
-        description="Specific parameters for the export job w.r.t it's type"
-    )
+        SingleDocSingleUserAnnotationsExportJobParams,
+    ] = Field(description="Specific parameters for the export job w.r.t it's type")
 
 
 # Properties shared across all DTOs

@@ -17,5 +17,8 @@ class ORMBase:
     def as_dict(self, exclude: Optional[Set] = None):
         if not exclude:
             exclude = {}
-        return {c.key: getattr(self, c.key)
-                for c in inspect(self).mapper.column_attrs if c.key not in exclude}
+        return {
+            c.key: getattr(self, c.key)
+            for c in inspect(self).mapper.column_attrs
+            if c.key not in exclude
+        }

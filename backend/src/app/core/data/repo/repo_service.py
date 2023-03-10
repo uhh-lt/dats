@@ -12,7 +12,11 @@ from fastapi import UploadFile, HTTPException
 from loguru import logger
 
 from app.core.data.doc_type import get_doc_type, DocType
-from app.core.data.dto.source_document import SourceDocumentCreate, SourceDocumentRead, SDocStatus
+from app.core.data.dto.source_document import (
+    SourceDocumentCreate,
+    SourceDocumentRead,
+    SDocStatus,
+)
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -23,29 +27,41 @@ from config import conf
 
 class SourceDocumentNotFoundInRepositoryError(Exception):
     def __init__(self, sdoc: SourceDocumentRead, dst: str):
-        super().__init__((f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
-                          f"the DWTS Repository at {dst}"))
+        super().__init__(
+            (
+                f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
+                f"the DWTS Repository at {dst}"
+            )
+        )
 
 
 class FileNotFoundInRepositoryError(Exception):
     def __init__(self, proj_id: int, filename: str, dst: str):
-        super().__init__(f"The file '{filename}' of Project {proj_id} cannot be found in the DWTS Repository at {dst}")
+        super().__init__(
+            f"The file '{filename}' of Project {proj_id} cannot be found in the DWTS Repository at {dst}"
+        )
 
 
 class FileAlreadyExistsInRepositoryError(Exception):
     def __init__(self, proj_id: int, filename: str, dst: str):
-        super().__init__(f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
-                         f"same name in the DWTS Repository at {dst}")
+        super().__init__(
+            f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
+            f"same name in the DWTS Repository at {dst}"
+        )
 
 
 class ProjectAlreadyExistsInRepositoryError(Exception):
     def __init__(self, proj_id: int):
-        super().__init__(f"Cannot create directory structure for Project {proj_id} because it already exists!")
+        super().__init__(
+            f"Cannot create directory structure for Project {proj_id} because it already exists!"
+        )
 
 
 class UnsupportedDocTypeForSourceDocument(Exception):
     def __init__(self, dst_path: Path):
-        super().__init__(f"Unsupported DocType! Cannot create SourceDocument from file {dst_path}.")
+        super().__init__(
+            f"Unsupported DocType! Cannot create SourceDocument from file {dst_path}."
+        )
 
 
 class ErroneousArchiveException(Exception):
@@ -92,7 +108,9 @@ class RepoService(metaclass=SingletonMeta):
             # make sure projtemp_files_root exists
             if not self.temp_files_root.exists():
                 self.temp_files_root.mkdir(parents=True)
-                logger.info(f"Created DWTS temp files root at {str(self.temp_files_root)}")
+                logger.info(
+                    f"Created DWTS temp files root at {str(self.temp_files_root)}"
+                )
 
             # make sure logs dir exists
             if not self.logs_root.exists():
@@ -120,16 +138,24 @@ class RepoService(metaclass=SingletonMeta):
         self.temp_files_root.mkdir(parents=True)
 
     def remove_sdoc_file(self, sdoc: SourceDocumentRead) -> None:
-        logger.info(f"Removing SourceDocument File {sdoc.filename} of project with ID={sdoc.project_id}")
+        logger.info(
+            f"Removing SourceDocument File {sdoc.filename} of project with ID={sdoc.project_id}"
+        )
         self.get_path_to_sdoc_file(sdoc=sdoc, raise_if_not_exists=True).unlink()
 
     def remove_all_project_sdoc_files(self, proj_id: int) -> None:
         logger.info(f"Removing all SourceDocument Files of project with ID={proj_id}")
-        for f in map(Path, os.scandir(self._get_project_repo_sdocs_root_path(proj_id=proj_id))):
-            logger.info(f"Removing SourceDocument File {f.name} of project with ID={proj_id}")
+        for f in map(
+            Path, os.scandir(self._get_project_repo_sdocs_root_path(proj_id=proj_id))
+        ):
+            logger.info(
+                f"Removing SourceDocument File {f.name} of project with ID={proj_id}"
+            )
             f.unlink(missing_ok=False)
 
-    def generate_sdoc_filename(self, filename: str, webp: bool = False, thumbnail: bool = False) -> str:
+    def generate_sdoc_filename(
+        self, filename: str, webp: bool = False, thumbnail: bool = False
+    ) -> str:
         filename = Path(filename)
         if webp:
             if thumbnail:
@@ -142,17 +168,29 @@ class RepoService(metaclass=SingletonMeta):
             else:
                 return filename.name
 
-    def get_path_to_sdoc_file(self, sdoc: SourceDocumentRead, raise_if_not_exists: bool = False, webp: bool = False,
-                              thumbnail: bool = False) -> Path:
+    def get_path_to_sdoc_file(
+        self,
+        sdoc: SourceDocumentRead,
+        raise_if_not_exists: bool = False,
+        webp: bool = False,
+        thumbnail: bool = False,
+    ) -> Path:
         filename = sdoc.filename
         if sdoc.doctype == DocType.image:
-            filename = self.generate_sdoc_filename(filename=filename, webp=webp, thumbnail=thumbnail)
+            filename = self.generate_sdoc_filename(
+                filename=filename, webp=webp, thumbnail=thumbnail
+            )
 
-        dst_path = self._get_dst_path_for_project_file(proj_id=sdoc.project_id, filename=filename)
+        dst_path = self._get_dst_path_for_project_file(
+            proj_id=sdoc.project_id, filename=filename
+        )
         if raise_if_not_exists and not dst_path.exists():
             logger.error(
-                (f"SourceDocument {filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
-                 f" found in Repository at {dst_path}!"))
+                (
+                    f"SourceDocument {filename} with ID {sdoc.id} from Project {sdoc.project_id} cannot be"
+                    f" found in Repository at {dst_path}!"
+                )
+            )
             raise SourceDocumentNotFoundInRepositoryError(sdoc=sdoc, dst=str(dst_path))
         return dst_path
 
@@ -163,13 +201,17 @@ class RepoService(metaclass=SingletonMeta):
         return self.get_project_repo_root_path(proj_id=proj_id).joinpath("docs/")
 
     def _get_dst_path_for_project_file(self, proj_id: int, filename: str) -> Path:
-        return self._get_project_repo_sdocs_root_path(proj_id=proj_id).joinpath(f"{filename}")
+        return self._get_project_repo_sdocs_root_path(proj_id=proj_id).joinpath(
+            f"{filename}"
+        )
 
     def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
         dst_path = self._get_project_repo_sdocs_root_path(proj_id=proj_id)
         try:
             if dst_path.exists():
-                logger.warning("Cannot create project directory structure because it already exists!")
+                logger.warning(
+                    "Cannot create project directory structure because it already exists!"
+                )
                 raise ProjectAlreadyExistsInRepositoryError(proj_id=proj_id)
             dst_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
@@ -178,12 +220,20 @@ class RepoService(metaclass=SingletonMeta):
 
         return dst_path
 
-    def _create_directory_structure_for_project_file(self, proj_id: int, filename: str) -> Optional[Path]:
-        dst_path = self._get_dst_path_for_project_file(proj_id=proj_id, filename=filename)
+    def _create_directory_structure_for_project_file(
+        self, proj_id: int, filename: str
+    ) -> Optional[Path]:
+        dst_path = self._get_dst_path_for_project_file(
+            proj_id=proj_id, filename=filename
+        )
         try:
             if dst_path.exists():
-                logger.warning("Cannot store uploaded file because a file with the same name already exists!")
-                raise FileAlreadyExistsInRepositoryError(proj_id=proj_id, filename=filename, dst=str(dst_path))
+                logger.warning(
+                    "Cannot store uploaded file because a file with the same name already exists!"
+                )
+                raise FileAlreadyExistsInRepositoryError(
+                    proj_id=proj_id, filename=filename, dst=str(dst_path)
+                )
             elif not dst_path.parent.exists():
                 dst_path.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
@@ -215,19 +265,27 @@ class RepoService(metaclass=SingletonMeta):
 
         return url.urljoin(self.base_url, relative_url)
 
-
-    def get_sdoc_url(self, sdoc: SourceDocumentRead, relative: bool = True, webp: bool = False,
-                     thumbnail: bool = False) -> Optional[str]:
-        dst_path = self.get_path_to_sdoc_file(sdoc, raise_if_not_exists=True, webp=webp, thumbnail=thumbnail)
+    def get_sdoc_url(
+        self,
+        sdoc: SourceDocumentRead,
+        relative: bool = True,
+        webp: bool = False,
+        thumbnail: bool = False,
+    ) -> Optional[str]:
+        dst_path = self.get_path_to_sdoc_file(
+            sdoc, raise_if_not_exists=True, webp=webp, thumbnail=thumbnail
+        )
         relative_url = str(dst_path.relative_to(self.repo_root))
         if relative:
             return relative_url
         return url.urljoin(self.base_url, relative_url)
 
-    def extract_archive_in_project(self, proj_id: int, archive_path: Path) \
-            -> List[Path]:
-        archive_path_in_project = self._get_dst_path_for_project_file(proj_id=proj_id,
-                                                                      filename=archive_path.name)
+    def extract_archive_in_project(
+        self, proj_id: int, archive_path: Path
+    ) -> List[Path]:
+        archive_path_in_project = self._get_dst_path_for_project_file(
+            proj_id=proj_id, filename=archive_path.name
+        )
         dst = archive_path_in_project.parent
 
         logger.info(f"Extracting archive at {archive_path_in_project} ...")
@@ -240,7 +298,9 @@ class RepoService(metaclass=SingletonMeta):
             extracted_file_paths = []
             with ZipFile(archive_path_in_project, "r") as zip_archive:
                 files_in_archive = zip_archive.namelist()
-                logger.debug(f"Archive {archive_path_in_project.name} contains {len(files_in_archive)} files...")
+                logger.debug(
+                    f"Archive {archive_path_in_project.name} contains {len(files_in_archive)} files..."
+                )
                 for member in files_in_archive:
                     filename = os.path.basename(member)
                     # skip directories
@@ -256,25 +316,36 @@ class RepoService(metaclass=SingletonMeta):
                         shutil.copyfileobj(source, target)
                     extracted_file_paths.append(Path(target_p))
         except Exception as e:
-            logger.error(f"Cannot extract Archive {archive_path_in_project.name}! Error: {e}")
+            logger.error(
+                f"Cannot extract Archive {archive_path_in_project.name}! Error: {e}"
+            )
             raise ErroneousArchiveException(archive_path=archive_path_in_project)
 
         logger.info(f"Extracting archive at {archive_path_in_project}... Done!")
         return extracted_file_paths
 
-    def store_uploaded_file_in_project_repo(self, proj_id: int, uploaded_file: UploadFile) -> Path:
+    def store_uploaded_file_in_project_repo(
+        self, proj_id: int, uploaded_file: UploadFile
+    ) -> Path:
         try:
-            in_project_dst = self._create_directory_structure_for_project_file(proj_id=proj_id,
-                                                                               filename=uploaded_file.filename)
-            logger.info(f"Storing Uploaded File {uploaded_file.filename} in Project {proj_id} Repo at {in_project_dst}")
+            in_project_dst = self._create_directory_structure_for_project_file(
+                proj_id=proj_id, filename=uploaded_file.filename
+            )
+            logger.info(
+                f"Storing Uploaded File {uploaded_file.filename} in Project {proj_id} Repo at {in_project_dst}"
+            )
             real_file_size = 0
             with open(in_project_dst, "wb") as f:
                 for chunk in uploaded_file.file:
                     real_file_size += len(chunk)
                     if real_file_size > conf.api.max_upload_file_size:
-                        raise HTTPException(status_code=413,
-                                            detail=(f"File {uploaded_file.filename} is too large!"
-                                                    f" Maximum allowed size in bytes: {conf.api.max_upload_file_size}"))
+                        raise HTTPException(
+                            status_code=413,
+                            detail=(
+                                f"File {uploaded_file.filename} is too large!"
+                                f" Maximum allowed size in bytes: {conf.api.max_upload_file_size}"
+                            ),
+                        )
                     f.write(chunk)
                 f.close()
 
@@ -285,23 +356,34 @@ class RepoService(metaclass=SingletonMeta):
             # FIXME Flo: Throw or what?!
             logger.warning(f"Cannot store uploaded file! Error:\n  {e}")
 
-    def build_source_document_create_dto_from_file(self, proj_id: int, filename: str) -> Tuple[Path,
-                                                                                               SourceDocumentCreate]:
-        dst_path = self._get_dst_path_for_project_file(proj_id=proj_id, filename=filename)
+    def build_source_document_create_dto_from_file(
+        self, proj_id: int, filename: str
+    ) -> Tuple[Path, SourceDocumentCreate]:
+        dst_path = self._get_dst_path_for_project_file(
+            proj_id=proj_id, filename=filename
+        )
         if not dst_path.exists():
-            logger.error(f"File '{filename}' in Project {proj_id} cannot be found in Repository at {dst_path}!")
-            raise FileNotFoundInRepositoryError(proj_id=proj_id, filename=filename, dst=str(dst_path))
+            logger.error(
+                f"File '{filename}' in Project {proj_id} cannot be found in Repository at {dst_path}!"
+            )
+            raise FileNotFoundInRepositoryError(
+                proj_id=proj_id, filename=filename, dst=str(dst_path)
+            )
 
         mime_type = magic.from_file(dst_path, mime=True)
         doctype = get_doc_type(mime_type=mime_type)
         if not doctype:
-            logger.error(f"Unsupported DocType (for MIME Type {mime_type})!"
-                         " Cannot create SourceDocument from file {dst_path}")
+            logger.error(
+                f"Unsupported DocType (for MIME Type {mime_type})!"
+                " Cannot create SourceDocument from file {dst_path}"
+            )
             raise UnsupportedDocTypeForSourceDocument(dst_path=dst_path)
 
-        create_dto = SourceDocumentCreate(content="CONTENT IS NOW IN ElasticSearch!!!",
-                                          filename=filename,
-                                          doctype=doctype,
-                                          project_id=proj_id,
-                                          status=SDocStatus.undefined_or_erroneous)
+        create_dto = SourceDocumentCreate(
+            content="CONTENT IS NOW IN ElasticSearch!!!",
+            filename=filename,
+            doctype=doctype,
+            project_id=proj_id,
+            status=SDocStatus.undefined_or_erroneous,
+        )
         return dst_path, create_dto

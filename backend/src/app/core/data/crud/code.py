@@ -16,7 +16,6 @@ from config import conf
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
-
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
         dto_obj_data = jsonable_encoder(create_dto)
         # first create the code
@@ -33,36 +32,49 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
         # create the action manually since we are not using the crud base create
         from app.core.data.crud.action import crud_action
-        create_dto = ActionCreate(project_id=create_dto.project_id,
-                                  user_id=create_dto.user_id,
-                                  action_type=ActionType.UPDATE,
-                                  target_type=ActionTargetObjectType.code,
-                                  target_id=db_obj.id)
+
+        create_dto = ActionCreate(
+            project_id=create_dto.project_id,
+            user_id=create_dto.user_id,
+            action_type=ActionType.UPDATE,
+            target_type=ActionTargetObjectType.code,
+            target_id=db_obj.id,
+        )
         crud_action.create(db=db, create_dto=create_dto)
 
         return db_obj
 
-    def create_system_codes_for_project(self, db: Session, proj_id: int) -> List[CodeORM]:
+    def create_system_codes_for_project(
+        self, db: Session, proj_id: int
+    ) -> List[CodeORM]:
         created: List[CodeORM] = []
 
-        def __create_recursively(code_dict: Dict[str, Dict[str, Any]], parent_code_id: int = None):
+        def __create_recursively(
+            code_dict: Dict[str, Dict[str, Any]], parent_code_id: int = None
+        ):
             for code_name in code_dict.keys():
-                create_dto = CodeCreate(name=str(code_name),
-                                        color=get_next_color(),
-                                        description=code_dict[code_name]["desc"],
-                                        project_id=proj_id,
-                                        user_id=SYSTEM_USER_ID,
-                                        parent_code_id=parent_code_id)
+                create_dto = CodeCreate(
+                    name=str(code_name),
+                    color=get_next_color(),
+                    description=code_dict[code_name]["desc"],
+                    project_id=proj_id,
+                    user_id=SYSTEM_USER_ID,
+                    parent_code_id=parent_code_id,
+                )
 
-                if not self.exists_by_name_and_user_and_project(db,
-                                                                code_name=create_dto.name,
-                                                                proj_id=create_dto.project_id,
-                                                                user_id=create_dto.user_id):
+                if not self.exists_by_name_and_user_and_project(
+                    db,
+                    code_name=create_dto.name,
+                    proj_id=create_dto.project_id,
+                    user_id=create_dto.user_id,
+                ):
                     db_code = self.create(db=db, create_dto=create_dto)
                     created.append(db_code)
 
                     if "children" in code_dict[code_name]:
-                        __create_recursively(code_dict[code_name]["children"], parent_code_id=db_code.id)
+                        __create_recursively(
+                            code_dict[code_name]["children"], parent_code_id=db_code.id
+                        )
 
         __create_recursively(conf.system_codes)
 
@@ -71,71 +83,133 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def read_by_name(self, db: Session, code_name: str) -> List[CodeORM]:
         return db.query(self.model).filter(self.model.name == code_name).all()
 
-    def read_by_name_and_project(self, db: Session, code_name: str, proj_id: int) -> List[CodeORM]:
-        return db.query(self.model).filter(self.model.name == code_name,
-                                           self.model.project_id == proj_id).all()
+    def read_by_name_and_project(
+        self, db: Session, code_name: str, proj_id: int
+    ) -> List[CodeORM]:
+        return (
+            db.query(self.model)
+            .filter(self.model.name == code_name, self.model.project_id == proj_id)
+            .all()
+        )
 
-    def read_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[CodeORM]:
-        return db.query(self.model).filter(self.model.user_id == user_id,
-                                           self.model.project_id == proj_id).all()
+    def read_by_user_and_project(
+        self, db: Session, user_id: int, proj_id: int
+    ) -> List[CodeORM]:
+        return (
+            db.query(self.model)
+            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
+            .all()
+        )
 
-    def read_by_name_and_user(self, db: Session, code_name: str, user_id: int) -> List[CodeORM]:
-        return db.query(self.model).filter(self.model.name == code_name,
-                                           self.model.user_id == user_id).all()
+    def read_by_name_and_user(
+        self, db: Session, code_name: str, user_id: int
+    ) -> List[CodeORM]:
+        return (
+            db.query(self.model)
+            .filter(self.model.name == code_name, self.model.user_id == user_id)
+            .all()
+        )
 
-    def read_by_name_and_user_and_project(self, db: Session, code_name: str, user_id: int, proj_id: int) -> CodeORM:
-        return db.query(self.model).filter(self.model.name == code_name,
-                                           self.model.user_id == user_id,
-                                           self.model.project_id == proj_id).first()
+    def read_by_name_and_user_and_project(
+        self, db: Session, code_name: str, user_id: int, proj_id: int
+    ) -> CodeORM:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.name == code_name,
+                self.model.user_id == user_id,
+                self.model.project_id == proj_id,
+            )
+            .first()
+        )
 
     def exists_by_name(self, db: Session, *, code_name: str) -> bool:
-        return db.query(self.model.id).filter(self.model.name == code_name).first() is not None
+        return (
+            db.query(self.model.id).filter(self.model.name == code_name).first()
+            is not None
+        )
 
-    def exists_by_name_and_project(self, db: Session, *, code_name: str, proj_id: int) -> bool:
-        return db.query(self.model.id).filter(self.model.name == code_name,
-                                              self.model.project_id == proj_id).first() is not None
+    def exists_by_name_and_project(
+        self, db: Session, *, code_name: str, proj_id: int
+    ) -> bool:
+        return (
+            db.query(self.model.id)
+            .filter(self.model.name == code_name, self.model.project_id == proj_id)
+            .first()
+            is not None
+        )
 
-    def exists_by_name_and_user(self, db: Session, *, code_name: str, user_id: int) -> bool:
-        return db.query(self.model.id).filter(self.model.name == code_name,
-                                              self.model.user_id == user_id).first() is not None
+    def exists_by_name_and_user(
+        self, db: Session, *, code_name: str, user_id: int
+    ) -> bool:
+        return (
+            db.query(self.model.id)
+            .filter(self.model.name == code_name, self.model.user_id == user_id)
+            .first()
+            is not None
+        )
 
-    def exists_by_name_and_user_and_project(self, db: Session, *, code_name: str, user_id: int, proj_id: int) -> bool:
-        return db.query(self.model.id).filter(self.model.name == code_name,
-                                              self.model.user_id == user_id,
-                                              self.model.project_id == proj_id).first() is not None
+    def exists_by_name_and_user_and_project(
+        self, db: Session, *, code_name: str, user_id: int, proj_id: int
+    ) -> bool:
+        return (
+            db.query(self.model.id)
+            .filter(
+                self.model.name == code_name,
+                self.model.user_id == user_id,
+                self.model.project_id == proj_id,
+            )
+            .first()
+            is not None
+        )
 
-    def remove_by_user_and_project(self, db: Session, user_id: int, proj_id: int) -> List[int]:
-        statement = delete(self.model).where(self.model.user_id == user_id,
-                                             self.model.project_id == proj_id).returning(self.model.id)
+    def remove_by_user_and_project(
+        self, db: Session, user_id: int, proj_id: int
+    ) -> List[int]:
+        statement = (
+            delete(self.model)
+            .where(self.model.user_id == user_id, self.model.project_id == proj_id)
+            .returning(self.model.id)
+        )
         removed_ids = db.execute(statement).fetchall()
         db.commit()
 
         removed_ids = list(map(lambda t: t[0], removed_ids))
 
         from app.core.data.crud.action import crud_action
+
         for rid in removed_ids:
-            create_dto = ActionCreate(project_id=proj_id,
-                                      user_id=user_id,
-                                      action_type=ActionType.CREATE,
-                                      target_type=ActionTargetObjectType.code,
-                                      target_id=rid)
+            create_dto = ActionCreate(
+                project_id=proj_id,
+                user_id=user_id,
+                action_type=ActionType.CREATE,
+                target_type=ActionTargetObjectType.code,
+                target_id=rid,
+            )
             crud_action.create(db=db, create_dto=create_dto)
 
         return removed_ids
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
-        statement = delete(self.model).where(self.model.project_id == proj_id).returning(self.model.id)
+        statement = (
+            delete(self.model)
+            .where(self.model.project_id == proj_id)
+            .returning(self.model.id)
+        )
         removed_ids = db.execute(statement).fetchall()
         db.commit()
         removed_ids = list(map(lambda t: t[0], removed_ids))
 
         from app.core.data.crud.action import crud_action
+
         for rid in removed_ids:
-            create_dto = ActionCreate(project_id=proj_id,
-                                      user_id=SYSTEM_USER_ID,
-                                      action_type=ActionType.CREATE,
-                                      target_type=ActionTargetObjectType.code,
-                                      target_id=rid)
+            create_dto = ActionCreate(
+                project_id=proj_id,
+                user_id=SYSTEM_USER_ID,
+                action_type=ActionType.CREATE,
+                target_type=ActionTargetObjectType.code,
+                target_id=rid,
+            )
             crud_action.create(db=db, create_dto=create_dto)
 
         return removed_ids

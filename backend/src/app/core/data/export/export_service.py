@@ -12,20 +12,28 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
-from app.core.data.dto.bbox_annotation import (BBoxAnnotationRead,
-                                               BBoxAnnotationReadResolvedCode)
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationRead,
+    BBoxAnnotationReadResolvedCode,
+)
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.export_job import (ExportFormat, ExportJobCreate,
-                                          ExportJobParameters, ExportJobRead,
-                                          ExportJobStatus, ExportJobType,
-                                          ExportJobUpdate)
+from app.core.data.dto.export_job import (
+    ExportFormat,
+    ExportJobCreate,
+    ExportJobParameters,
+    ExportJobRead,
+    ExportJobStatus,
+    ExportJobType,
+    ExportJobUpdate,
+)
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_metadata import \
-    SourceDocumentMetadataRead
-from app.core.data.dto.span_annotation import (SpanAnnotationRead,
-                                               SpanAnnotationReadResolved)
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+)
 from app.core.data.dto.span_group import SpanGroupRead
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -90,9 +98,7 @@ class ExportService(metaclass=SingletonMeta):
         cls.sqls: SQLService = SQLService()
 
         # map from job_type to function
-        cls.export_method_for_job_type: Dict[
-            ExportJobType, Callable[..., str]
-        ] = {
+        cls.export_method_for_job_type: Dict[ExportJobType, Callable[..., str]] = {
             ExportJobType.SINGLE_PROJECT_ALL_DATA: cls._export_all_data_from_proj,
             ExportJobType.SINGLE_PROJECT_ALL_TAGS: cls._export_all_tags_from_proj,
             ExportJobType.SINGLE_USER_ALL_DATA: cls._export_user_data_from_proj,
@@ -359,9 +365,7 @@ class ExportService(metaclass=SingletonMeta):
         elif isinstance(attached_to, SpanAnnotationORM):
             span_read_dto = SpanAnnotationRead.from_orm(attached_to)
             span_read_resolved_dto = SpanAnnotationReadResolved(
-                **span_read_dto.dict(
-                    exclude={"current_code_id", "span_text_id"}
-                ),
+                **span_read_dto.dict(exclude={"current_code_id", "span_text_id"}),
                 code=CodeRead.from_orm(attached_to.current_code.code),
                 span_text=attached_to.span_text.text,
             )
@@ -434,9 +438,7 @@ class ExportService(metaclass=SingletonMeta):
         tag = crud_document_tag.read(db=db, id=tag_id)
         tag_dto = DocumentTagRead.from_orm(tag)
         applied_to_sdoc_ids = [sdoc.id for sdoc in tag.source_documents]
-        applied_to_sdoc_filenames = [
-            sdoc.filename for sdoc in tag.source_documents
-        ]
+        applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
         data = {
             "tag_id": [tag_dto.id],
             "tag_name": [tag_dto.title],
@@ -453,9 +455,7 @@ class ExportService(metaclass=SingletonMeta):
     def __generate_content_for_logbook_export(
         self, db: Session, project_id: int, user_id: int
     ) -> str:
-        logger.info(
-            f"Exporting LogBook for User {user_id} of Project {project_id} ..."
-        )
+        logger.info(f"Exporting LogBook for User {user_id} of Project {project_id} ...")
         # FIXME find better way to get the LogBook memo (with SQL but this will be a complicated query with JOINS to resolve the objecthandle)
         memos = crud_memo.read_by_user_and_project(
             db=db, user_id=user_id, proj_id=project_id, only_starred=False
@@ -470,9 +470,7 @@ class ExportService(metaclass=SingletonMeta):
                 db=db, handle=memo.attached_to
             )
             if isinstance(attached_to, ProjectORM):
-                logbook_dto = crud_memo.get_memo_read_dto_from_orm(
-                    db=db, db_obj=memo
-                )
+                logbook_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
 
         if logbook_dto is None:
             msg = f"User {user_id} has no LogBook for Project {project_id}!"
@@ -493,9 +491,7 @@ class ExportService(metaclass=SingletonMeta):
             exported_tags.append(export_data)
         return exported_tags
 
-    def __generate_export_df_for_code(
-        self, db: Session, code_id: int
-    ) -> pd.DataFrame:
+    def __generate_export_df_for_code(self, db: Session, code_id: int) -> pd.DataFrame:
         logger.info(f"Exporting Code {code_id} ...")
 
         code = crud_code.read(db=db, id=code_id)
@@ -528,9 +524,7 @@ class ExportService(metaclass=SingletonMeta):
         user_id: int,
         project_id: int,
     ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame], List[pd.DataFrame]]:
-        logger.info(
-            f"Exporting data of User {user_id} in Project {project_id} ..."
-        )
+        logger.info(f"Exporting data of User {user_id} in Project {project_id} ...")
         user = crud_user.read(db=db, id=user_id)
 
         # all AnnotationDocuments
@@ -538,9 +532,7 @@ class ExportService(metaclass=SingletonMeta):
         exported_adocs: List[pd.DataFrame] = []
         for adoc in adocs:
             if adoc.source_document.project_id == project_id:
-                export_data = self.__generate_export_df_for_adoc(
-                    db=db, adoc_id=adoc.id
-                )
+                export_data = self.__generate_export_df_for_adoc(db=db, adoc_id=adoc.id)
                 exported_adocs.append(export_data)
 
         # all Memos
@@ -548,9 +540,7 @@ class ExportService(metaclass=SingletonMeta):
         exported_memos: List[pd.DataFrame] = []
         for memo in memos:
             if memo.project_id == project_id:
-                export_data = self.__generate_export_df_for_memo(
-                    db=db, memo_id=memo.id
-                )
+                export_data = self.__generate_export_df_for_memo(db=db, memo_id=memo.id)
                 exported_memos.append(export_data)
 
         # all Codes
@@ -558,9 +548,7 @@ class ExportService(metaclass=SingletonMeta):
         exported_codes: List[pd.DataFrame] = []
         for code in codes:
             if code.project_id == project_id:
-                export_data = self.__generate_export_df_for_code(
-                    db=db, code_id=code.id
-                )
+                export_data = self.__generate_export_df_for_code(db=db, code_id=code.id)
                 exported_codes.append(export_data)
 
         return exported_adocs, exported_memos, exported_codes
@@ -582,9 +570,7 @@ class ExportService(metaclass=SingletonMeta):
             export_format=export_format,
             fn=f"adoc_{adoc.id}_export",
         )
-        export_url = self.repo.get_temp_file_url(
-            export_file.name, relative=True
-        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
 
     def _export_all_user_annotations_from_sdoc(
@@ -597,9 +583,7 @@ class ExportService(metaclass=SingletonMeta):
         sdoc = crud_sdoc.read(db=db, id=sdoc_id)
         all_adocs = sdoc.annotation_documents
         if len(all_adocs) == 0:
-            raise NoDataToExportError(
-                f"There are no annotations for SDoc {sdoc_id}"
-            )
+            raise NoDataToExportError(f"There are no annotations for SDoc {sdoc_id}")
 
         # export the data
         export_data = None
@@ -616,9 +600,7 @@ class ExportService(metaclass=SingletonMeta):
             export_format=export_format,
             fn=f"sdoc_{sdoc_id}_annotations_export",
         )
-        export_url = self.repo.get_temp_file_url(
-            export_file.name, relative=True
-        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
 
     def _export_multiple_adocs(
@@ -638,9 +620,7 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(export_file)
 
         # ZIP all files
-        export_zip = self.__create_export_zip(
-            "adocs_export.zip", exported_files
-        )
+        export_zip = self.__create_export_zip("adocs_export.zip", exported_files)
         return self.repo.get_temp_file_url(export_zip.name, relative=True)
 
     def _export_user_memos_from_proj(
@@ -672,9 +652,7 @@ class ExportService(metaclass=SingletonMeta):
             export_format=export_format,
             fn=f"user_{user_id}_memos_export",
         )
-        export_url = self.repo.get_temp_file_url(
-            export_file.name, relative=True
-        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
 
     def _export_project_codes(
@@ -695,9 +673,7 @@ class ExportService(metaclass=SingletonMeta):
                 export_format=export_format,
                 fn=f"project_{project_id}_codes",
             )
-            export_url = self.repo.get_temp_file_url(
-                export_file.name, relative=True
-            )
+            export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
             return export_url
         msg = f"No Codes to export in Project {project_id}"
         logger.error(msg)
@@ -720,9 +696,7 @@ class ExportService(metaclass=SingletonMeta):
         export_file = self.__write_export_data_to_temp_file(
             codes, export_format=export_format, fn=f"user_{user_id}_codes"
         )
-        export_url = self.repo.get_temp_file_url(
-            export_file.name, relative=True
-        )
+        export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
         return export_url
 
     def _export_user_data_from_proj(
@@ -741,10 +715,8 @@ class ExportService(metaclass=SingletonMeta):
             db=db, user_id=user_id, project_id=project_id
         )
 
-        exported_tags = (
-            self.__generate_export_dfs_for_all_document_tags_in_project(
-                db=db, project_id=project_id
-            )
+        exported_tags = self.__generate_export_dfs_for_all_document_tags_in_project(
+            db=db, project_id=project_id
         )
         logbook_content = self.__generate_content_for_logbook_export(
             db=db, project_id=project_id, user_id=user_id
@@ -889,9 +861,7 @@ class ExportService(metaclass=SingletonMeta):
 
         # write logbooks to files
         for user_id, logbook_content in exported_logbooks:
-            logbook_file = self.repo.create_temp_file(
-                f"user_{user_id}_logbook.md"
-            )
+            logbook_file = self.repo.create_temp_file(f"user_{user_id}_logbook.md")
             logbook_file.write_text(logbook_content)
             exported_files.append(logbook_file)
 
@@ -905,10 +875,8 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(export_file)
 
         # write all tags to one file
-        exported_tags = (
-            self.__generate_export_dfs_for_all_document_tags_in_project(
-                db=db, project_id=project_id
-            )
+        exported_tags = self.__generate_export_dfs_for_all_document_tags_in_project(
+            db=db, project_id=project_id
         )
         if len(exported_tags) > 0:
             exported_tag_df = pd.concat(exported_tags)
@@ -920,10 +888,8 @@ class ExportService(metaclass=SingletonMeta):
             exported_files.append(export_file)
 
         # write all sdoc metadata to one file
-        exported_metadata = (
-            self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
-                db=db, project_id=project_id
-            )
+        exported_metadata = self.__generate_export_dfs_for_all_sdoc_metadata_in_proj(
+            db=db, project_id=project_id
         )
         if len(exported_metadata) > 0:
             exported_metadata_df = pd.concat(exported_metadata)
@@ -979,9 +945,7 @@ class ExportService(metaclass=SingletonMeta):
                 export_format=export_format,
                 fn=f"project_{project_id}_tags",
             )
-            export_url = self.repo.get_temp_file_url(
-                export_file.name, relative=True
-            )
+            export_url = self.repo.get_temp_file_url(export_file.name, relative=True)
             return export_url
         msg = f"No DocumentTags to export in Project {project_id}"
         logger.error(msg)
@@ -991,21 +955,19 @@ class ExportService(metaclass=SingletonMeta):
         self, export_params: ExportJobParameters
     ) -> None:
         # TODO check all job type specific parameters
-        if export_params.export_format.value not in set(
-            i.value for i in ExportFormat
-        ):
+        if export_params.export_format.value not in set(i.value for i in ExportFormat):
             raise NoSuchExportFormatError(
                 export_format=export_params.export_format.value
             )
 
         with self.sqls.db_session() as db:
             crud_project.exists(
-                db=db, id=export_params.specific_export_job_parameters.project_id, raise_error=True
+                db=db,
+                id=export_params.specific_export_job_parameters.project_id,
+                raise_error=True,
             )
 
-    def prepare_export_job(
-        self, export_params: ExportJobParameters
-    ) -> ExportJobRead:
+    def prepare_export_job(self, export_params: ExportJobParameters) -> ExportJobRead:
         self._assert_all_requested_data_exists(export_params=export_params)
 
         exj_create = ExportJobCreate(parameters=export_params)
@@ -1037,9 +999,7 @@ class ExportService(metaclass=SingletonMeta):
     def start_export_job_sync(self, export_job_id: str) -> ExportJobRead:
         exj = self.get_export_job(export_job_id=export_job_id)
         if exj.status != ExportJobStatus.INIT:
-            raise ExportJobAlreadyStartedOrDoneError(
-                export_job_id=export_job_id
-            )
+            raise ExportJobAlreadyStartedOrDoneError(export_job_id=export_job_id)
 
         exj = self._update_export_job(
             status=ExportJobStatus.IN_PROGRESS, export_job_id=export_job_id
@@ -1053,15 +1013,15 @@ class ExportService(metaclass=SingletonMeta):
                     exj.parameters.export_job_type, None
                 )
                 if export_method is None:
-                    raise UnsupportedExportJobTypeError(
-                        exj.parameters.export_job_type
-                    )
+                    raise UnsupportedExportJobTypeError(exj.parameters.export_job_type)
 
                 # execute the export_method with the provided specific parameters
                 results_url = export_method(
                     self=self,
                     db=db,
-                    **exj.parameters.specific_export_job_parameters.dict(exclude={"export_job_type"})
+                    **exj.parameters.specific_export_job_parameters.dict(
+                        exclude={"export_job_type"}
+                    ),
                 )
 
             exj = self._update_export_job(

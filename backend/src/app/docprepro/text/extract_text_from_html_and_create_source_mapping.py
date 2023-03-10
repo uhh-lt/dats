@@ -11,7 +11,6 @@ from app.docprepro.util import update_sdoc_status
 
 
 class CustomLineHTMLParser(HTMLParser):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = None
@@ -27,14 +26,15 @@ class CustomLineHTMLParser(HTMLParser):
 
     def __call__(self, data: str) -> List[Dict[str, Union[str, int]]]:
         self.reset()
-        self.line_lengths = [0] + list(accumulate(len(line) for line in data.splitlines(keepends=True)))
+        self.line_lengths = [0] + list(
+            accumulate(len(line) for line in data.splitlines(keepends=True))
+        )
         self.feed(data)
         self.close()
         return self.result
 
 
 class HTMLTextMapper(CustomLineHTMLParser):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = []
@@ -58,7 +58,10 @@ class HTMLTextMapper(CustomLineHTMLParser):
             if match2 and match2.group(1):
                 self.end_spaces = len(match2.group(1))
 
-            self.text = {'text': data.strip(), 'start': self.current_index + start_spaces}
+            self.text = {
+                "text": data.strip(),
+                "start": self.current_index + start_spaces,
+            }
 
     def handle_starttag(self, tag, attrs):
         self.text_end()
@@ -71,9 +74,9 @@ class HTMLTextMapper(CustomLineHTMLParser):
 
     def text_end(self):
         if self.text:
-            self.text['end'] = self.current_index - self.end_spaces
+            self.text["end"] = self.current_index - self.end_spaces
             self.result.append(self.text)
-            self.text = ''
+            self.text = ""
             self.end_spaces = 0
 
     def close(self):
@@ -81,7 +84,9 @@ class HTMLTextMapper(CustomLineHTMLParser):
         self.text_end()
 
 
-def extract_text_from_html_and_create_source_mapping_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
+def extract_text_from_html_and_create_source_mapping_(
+    pptds: List[PreProTextDoc],
+) -> List[PreProTextDoc]:
     if len(pptds) == 0:
         return pptds
 
@@ -94,11 +99,15 @@ def extract_text_from_html_and_create_source_mapping_(pptds: List[PreProTextDoc]
 
         text2html_character_offsets = []
         for result in results:
-            text2html_character_offsets.extend(range(result['start'], result['end'] + 1))
+            text2html_character_offsets.extend(
+                range(result["start"], result["end"] + 1)
+            )
         pptd.text2html_character_offsets = text2html_character_offsets
 
         # Flo: update sdoc status
-        update_sdoc_status(sdoc_id=pptd.sdoc_id,
-                           sdoc_status=SDocStatus.extract_text_from_html_and_create_source_mapping)
+        update_sdoc_status(
+            sdoc_id=pptd.sdoc_id,
+            sdoc_status=SDocStatus.extract_text_from_html_and_create_source_mapping,
+        )
 
     return pptds

@@ -16,8 +16,13 @@ def test_create_get_delete_code(session: SQLService, project: int, user: int) ->
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
-    code = CodeCreate(name=name, color=color,
-                      description=description, project_id=project, user_id=user)
+    code = CodeCreate(
+        name=name,
+        color=color,
+        description=description,
+        project_id=project,
+        user_id=user,
+    )
 
     # create code
     with session.db_session() as sess:
@@ -78,15 +83,19 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
     content = "".join(random.choices(string.ascii_letters, k=30))
     starred = False
 
-    memo = MemoCreate(title=title, content=content, user_id=user,
-                      project_id=project, starred=starred)
+    memo = MemoCreate(
+        title=title, content=content, user_id=user, project_id=project, starred=starred
+    )
     with session.db_session() as sess:
-        db_obj = crud_memo.create_for_code(
-            db=sess, code_id=code, create_dto=memo)
+        db_obj = crud_memo.create_for_code(db=sess, code_id=code, create_dto=memo)
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-        memo_new = [MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                             attached_object_id=db_obj.id,
-                             attached_object_type=AttachedObjectType.code)]
+        memo_new = [
+            MemoRead(
+                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                attached_object_id=db_obj.id,
+                attached_object_type=AttachedObjectType.code,
+            )
+        ]
 
     assert len(memo_new) == 1
     assert memo_new[0].title == title

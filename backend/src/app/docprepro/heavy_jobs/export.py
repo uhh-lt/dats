@@ -6,7 +6,6 @@ from app.core.data.dto.export_job import ExportJobRead
 exs: ExportService = ExportService()
 
 
-
 def start_export_job_(export_job: ExportJobRead) -> None:
     logger.info(
         (

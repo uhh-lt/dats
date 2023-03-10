@@ -17,8 +17,9 @@ def test_create_delete_user(session: SQLService) -> None:
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
 
-    user = UserCreate(email=email, first_name=first_name,
-                      last_name=last_name, password=password)
+    user = UserCreate(
+        email=email, first_name=first_name, last_name=last_name, password=password
+    )
 
     with session.db_session() as sess:
         # create user
@@ -49,8 +50,9 @@ def test_update_user(session: SQLService, user: int) -> None:
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
 
-    user_update = UserUpdate(email=email, first_name=first_name,
-                             last_name=last_name, password=password)
+    user_update = UserUpdate(
+        email=email, first_name=first_name, last_name=last_name, password=password
+    )
 
     with session.db_session() as sess:
         crud_user.update(db=sess, id=user, update_dto=user_update)
@@ -67,8 +69,7 @@ def test_update_user(session: SQLService, user: int) -> None:
 def test_get_user_projects(session: SQLService, project: int, user: int) -> None:
     with session.db_session() as sess:
         db_obj = crud_user.read(db=sess, id=user)
-        user_projects = [ProjectRead.from_orm(
-            proj) for proj in db_obj.projects]
+        user_projects = [ProjectRead.from_orm(proj) for proj in db_obj.projects]
 
     assert len(user_projects) == 1
     assert user_projects[0].id == project

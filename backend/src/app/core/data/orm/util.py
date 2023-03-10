@@ -39,11 +39,17 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
     with SQLService().db_session() as db:
         if inspect(orm).detached:
             db.add(orm)
-        if isinstance(orm, AnnotationDocumentORM) or isinstance(orm, SourceDocumentMetadataORM):
+        if isinstance(orm, AnnotationDocumentORM) or isinstance(
+            orm, SourceDocumentMetadataORM
+        ):
             return orm.source_document.project_id
         elif isinstance(orm, CurrentCodeORM):
             return orm.code.project_id
-        elif isinstance(orm, SpanAnnotationORM) or isinstance(orm, BBoxAnnotationORM) or isinstance(orm, SpanGroupORM):
+        elif (
+            isinstance(orm, SpanAnnotationORM)
+            or isinstance(orm, BBoxAnnotationORM)
+            or isinstance(orm, SpanGroupORM)
+        ):
             return orm.annotation_document.source_document.project_id
 
     raise NotImplementedError(f"Unknown ORM: {type(orm)}")

@@ -17,6 +17,6 @@ def finish_preprocessing_(pptds: List[PreProTextDoc]) -> None:
     with SQLService().db_session() as db:
         for pptd in pptds:
             # update status
-            crud_sdoc.update_status(db=db,
-                                    sdoc_id=pptd.sdoc_id,
-                                    sdoc_status=SDocStatus.finished)
+            crud_sdoc.update_status(
+                db=db, sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.finished
+            )

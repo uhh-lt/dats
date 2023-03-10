@@ -15,7 +15,7 @@ UpdateDTOType = TypeVar("UpdateDTOType", bound=BaseModel)
 class NoSuchElementError(Exception):
     def __init__(self, model: Type[ORMModelType], **kwargs):
         self.model = model
-        self.model_name = model.__name__.replace('ORM', '')
+        self.model_name = model.__name__.replace("ORM", "")
         super().__init__(f"There exists no {self.model_name} with: {kwargs} !")
 
 
@@ -39,10 +39,14 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def read_by_ids(self, db: Session, ids: List[int]) -> List[ORMModelType]:
         return db.query(self.model).filter(self.model.id.in_(ids)).all()
 
-    def read_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ORMModelType]:
+    def read_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100
+    ) -> List[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def exists(self, db: Session, *, id: int, raise_error: bool = False) -> Optional[bool]:
+    def exists(
+        self, db: Session, *, id: int, raise_error: bool = False
+    ) -> Optional[bool]:
         exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
         if not exists and raise_error:
             raise NoSuchElementError(self.model, id=id)
@@ -58,15 +62,18 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         self.__create_action(db_obj=db_obj, action_type=ActionType.CREATE)
 
         return db_obj
-    
-    def create_multi(self, db: Session, *, create_dtos: List[CreateDTOType]) -> List[ORMModelType]:
+
+    def create_multi(
+        self, db: Session, *, create_dtos: List[CreateDTOType]
+    ) -> List[ORMModelType]:
         db_obj = [self.model(**jsonable_encoder(x)) for x in create_dtos]
         db.add_all(db_obj)
         db.commit()
         return db_obj
 
-
-    def update(self, db: Session, *, id: int, update_dto: UpdateDTOType) -> Optional[ORMModelType]:
+    def update(
+        self, db: Session, *, id: int, update_dto: UpdateDTOType
+    ) -> Optional[ORMModelType]:
         db_obj = self.read(db=db, id=id)
         obj_data = jsonable_encoder(db_obj)
         update_data = update_dto.dict(exclude_unset=True)
@@ -104,10 +111,12 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
                 from app.core.db.sql_service import SQLService
                 from app.core.data.crud.action import crud_action
 
-                create_dto = ActionCreate(project_id=proj_id,
-                                          user_id=SYSTEM_USER_ID,  # FIXME use correct user
-                                          action_type=action_type,
-                                          target_type=action_target_type,
-                                          target_id=db_obj.id)
+                create_dto = ActionCreate(
+                    project_id=proj_id,
+                    user_id=SYSTEM_USER_ID,  # FIXME use correct user
+                    action_type=action_type,
+                    target_type=action_target_type,
+                    target_id=db_obj.id,
+                )
                 with SQLService().db_session() as db:
                     crud_action.create(db=db, create_dto=create_dto)
