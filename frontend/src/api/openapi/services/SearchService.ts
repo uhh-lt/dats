@@ -293,8 +293,8 @@ export class SearchService {
   }
 
   /**
-   * Returns similar sentence SpanAnnotation according to a textual or visual query.
-   * Returns similar sentence SpanAnnotation according to a textual or visual query.
+   * Returns similar sentences according to a textual or visual query.
+   * Returns similar sentences according to a textual or visual query.
    * @returns SimSearchSentenceHit Successful Response
    * @throws ApiError
    */
@@ -322,8 +322,8 @@ export class SearchService {
   }
 
   /**
-   * Returns similar Image SourceDocuments according to a textual or visual query.
-   * Returns similar Image SourceDocuments according to a textual or visual query.
+   * Returns similar images according to a textual or visual query.
+   * Returns similar images according to a textual or visual query.
    * @returns SimSearchImageHit Successful Response
    * @throws ApiError
    */
