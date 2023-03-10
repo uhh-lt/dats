@@ -5,8 +5,6 @@ import React, { useMemo } from "react";
 import { DocumentTagRead, TagStat } from "../../../api/openapi";
 import TagHooks from "../../../api/TagHooks";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { sortStats } from "./utils";
 
 interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
@@ -18,11 +16,7 @@ function DocumentTagStats({ tagStats, handleClick, parentRef }: DocumentTagStats
   return (
     <>
       {tagStats.isSuccess ? (
-        <DocumentTagStatsContent
-          tagStats={tagStats.data}
-          handleClick={handleClick}
-          parentRef={parentRef}
-        />
+        <DocumentTagStatsContent tagStats={tagStats.data} handleClick={handleClick} parentRef={parentRef} />
       ) : tagStats.isError ? (
         <TabPanel value="tags">Error: {tagStats.error.message}</TabPanel>
       ) : tagStats.isLoading && tagStats.isFetching ? (
@@ -51,7 +45,7 @@ function DocumentTagStatsContent({ tagStats, handleClick, parentRef }: DocumentT
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...tagStats.map(t => t.global_count)), [tagStats]);
+  const maxValue = useMemo(() => Math.max(...tagStats.map((t) => t.global_count)), [tagStats]);
 
   return (
     <TabPanel

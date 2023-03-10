@@ -3,8 +3,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { SpanEntityDocumentFrequency } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { sortStats } from "./utils";
 
 interface CodeStatsProps {
   codeId: number;
@@ -22,7 +20,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef }: CodeStatsProps
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...codeStats.map(x => x.global_count)), [codeStats]);
+  const maxValue = useMemo(() => Math.max(...codeStats.map((x) => x.global_count)), [codeStats]);
 
   // render
   return (

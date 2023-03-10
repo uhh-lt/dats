@@ -1,19 +1,19 @@
 import { Box, BoxProps, Button, Stack } from "@mui/material";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { DocType, DocumentTagRead } from "../../../api/openapi";
+import SdocHooks from "../../../api/SdocHooks";
+import UserName from "../../../components/UserName";
+import { useAppDispatch } from "../../../plugins/ReduxHooks";
+import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
+import { SearchActions } from "../searchSlice";
+import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
+import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
+import DocumentTagChip from "./DocumentTagChip";
+import ImageViewer from "./ImageViewer";
+import TextViewer from "./TextViewer";
 import { useDeletableDocumentTags } from "./useDeletableDocumentTags";
 import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments";
-import React from "react";
-import TextViewer from "./TextViewer";
-import DocumentTagChip from "./DocumentTagChip";
-import SdocHooks from "../../../api/SdocHooks";
-import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
-import ImageViewer from "./ImageViewer";
-import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
-import UserName from "../../../components/UserName";
-import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
-import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { SearchActions } from "../searchSlice";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;

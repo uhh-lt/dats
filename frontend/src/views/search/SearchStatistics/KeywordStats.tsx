@@ -4,8 +4,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { KeywordStat } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { sortStats } from "./utils";
 
 interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
@@ -18,11 +16,7 @@ function KeywordStats({ keywordStats, handleClick, parentRef }: KeywordStatsProp
   return (
     <>
       {keywordStats.isSuccess ? (
-        <KeywordStatsContent
-          keywordStats={keywordStats.data}
-          handleClick={handleClick}
-          parentRef={parentRef}
-        />
+        <KeywordStatsContent keywordStats={keywordStats.data} handleClick={handleClick} parentRef={parentRef} />
       ) : keywordStats.isError ? (
         <TabPanel value="keywords">Error: {keywordStats.error.message}</TabPanel>
       ) : keywordStats.isLoading && keywordStats.isFetching ? (
@@ -51,7 +45,7 @@ function KeywordStatsContent({ keywordStats, handleClick, parentRef }: KeywordSt
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...keywordStats.map(x => x.global_count)), [keywordStats]);
+  const maxValue = useMemo(() => Math.max(...keywordStats.map((x) => x.global_count)), [keywordStats]);
 
   return (
     <TabPanel
