@@ -29,7 +29,6 @@ def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProIm
 
     # assume that all PPIDs come from the same project!
     proj_id = ppids[0].project_id
-    # get the actual sentence span annotations
     sdoc_ids = [ppid.sdoc_id for ppid in ppids]
 
     # load the images (and keep the files open!)
@@ -42,34 +41,42 @@ def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProIm
     # encode
     logger.debug(f"Encoding {len(ppids)} images...")
     try:
-        encoded_images = image_encoder.encode(sentences=images,
-                                              batch_size=image_encoder_batch_size,
-                                              show_progress_bar=True,
-                                              normalize_embeddings=True,
-                                              convert_to_numpy=True,
-                                              device=conf.docprepro.simsearch.text_encoder.device)
+        encoded_images = image_encoder.encode(
+            sentences=images,
+            batch_size=image_encoder_batch_size,
+            show_progress_bar=True,
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+            device=conf.docprepro.simsearch.text_encoder.device,
+        )
     except RuntimeError as e:
         logger.error(f"Thread Pool crashed: {e} ... Retrying!")
-        encoded_images = image_encoder.encode(sentences=images,
-                                              batch_size=image_encoder_batch_size,
-                                              show_progress_bar=True,
-                                              normalize_embeddings=True,
-                                              convert_to_numpy=True,
-                                              device=conf.docprepro.simsearch.text_encoder.device)
+        encoded_images = image_encoder.encode(
+            sentences=images,
+            batch_size=image_encoder_batch_size,
+            show_progress_bar=True,
+            normalize_embeddings=True,
+            convert_to_numpy=True,
+            device=conf.docprepro.simsearch.text_encoder.device,
+        )
 
     # close the image files again
     map(lambda image: image.close(), images)
 
     # add to index (with the IDs of the SDocs)
-    faisss.add_to_index(embeddings=encoded_images,
-                        embedding_ids=np.asarray(sdoc_ids),
-                        proj_id=proj_id,
-                        index_type=IndexType.IMAGE)
+    faisss.add_to_index(
+        embeddings=encoded_images,
+        embedding_ids=np.asarray(sdoc_ids),
+        proj_id=proj_id,
+        index_type=IndexType.IMAGE,
+    )
 
     with sqls.db_session() as db:
         for sdoc_id in sdoc_ids:
-            crud_sdoc.update_status(db=db,
-                                    sdoc_id=sdoc_id,
-                                    sdoc_status=SDocStatus.index_image_document_in_faiss)
+            crud_sdoc.update_status(
+                db=db,
+                sdoc_id=sdoc_id,
+                sdoc_status=SDocStatus.index_image_document_in_faiss,
+            )
 
     return ppids

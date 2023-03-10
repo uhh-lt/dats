@@ -14,7 +14,6 @@ from app.core.data.repo.repo_service import RepoService
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
-
     def create(self, db: Session, *, create_dto: ProjectCreate) -> ProjectORM:
         # 1) create the project
         dto_obj_data = jsonable_encoder(create_dto)
@@ -27,11 +26,14 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         # create action manually because we're not using crud base create
         from app.core.data.crud.action import crud_action
-        create_dto = ActionCreate(project_id=project_id,
-                                  user_id=SYSTEM_USER_ID,
-                                  action_type=ActionType.CREATE,
-                                  target_type=ActionTargetObjectType.project,
-                                  target_id=project_id)
+
+        create_dto = ActionCreate(
+            project_id=project_id,
+            user_id=SYSTEM_USER_ID,
+            action_type=ActionType.CREATE,
+            target_type=ActionTargetObjectType.project,
+            target_id=project_id,
+        )
         crud_action.create(db=db, create_dto=create_dto)
 
         # 2) associate the system user
@@ -62,11 +64,14 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         # create update action
         from app.core.data.crud.action import crud_action
-        create_dto = ActionCreate(project_id=proj_id,
-                                  user_id=SYSTEM_USER_ID,
-                                  action_type=ActionType.UPDATE,
-                                  target_type=ActionTargetObjectType.project,
-                                  target_id=proj_id)
+
+        create_dto = ActionCreate(
+            project_id=proj_id,
+            user_id=SYSTEM_USER_ID,
+            action_type=ActionType.UPDATE,
+            target_type=ActionTargetObjectType.project,
+            target_id=proj_id,
+        )
         crud_action.create(db=db, create_dto=create_dto)
         return user_db_obj
 
@@ -79,11 +84,14 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         # create update action
         from app.core.data.crud.action import crud_action
-        create_dto = ActionCreate(project_id=proj_id,
-                                  user_id=SYSTEM_USER_ID,
-                                  action_type=ActionType.UPDATE,
-                                  target_type=ActionTargetObjectType.project,
-                                  target_id=proj_id)
+
+        create_dto = ActionCreate(
+            project_id=proj_id,
+            user_id=SYSTEM_USER_ID,
+            action_type=ActionType.UPDATE,
+            target_type=ActionTargetObjectType.project,
+            target_id=proj_id,
+        )
         crud_action.create(db=db, create_dto=create_dto)
 
         return user_db_obj

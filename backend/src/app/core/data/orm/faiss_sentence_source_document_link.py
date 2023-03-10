@@ -14,5 +14,9 @@ class FaissSentenceSourceDocumentLinkORM(ORMBase):
     sentence_id = Column(Integer, index=True)
 
     # many to one
-    source_document_id = Column(Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), index=True)
-    source_document: "SourceDocumentORM" = relationship("SourceDocumentORM", passive_deletes=True)
+    source_document_id = Column(
+        Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), index=True
+    )
+    source_document: "SourceDocumentORM" = relationship(
+        "SourceDocumentORM", passive_deletes=True
+    )

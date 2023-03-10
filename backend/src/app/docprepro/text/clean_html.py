@@ -24,7 +24,6 @@ def clean_html_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
         if "html" in pptd.mime_type:
             logger.info(f"Cleaning html document!")
 
-
             soup = BeautifulSoup(content, "html.parser")
             # remove specific tags and their children completely
             for tag in tags_to_remove_completely:

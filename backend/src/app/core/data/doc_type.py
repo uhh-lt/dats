@@ -7,41 +7,49 @@ from frozendict import frozendict
 
 
 class DocType(str, Enum):
-    text = 'text'
-    image = 'image'
-    video = 'video'
-    audio = 'audio'
+    text = "text"
+    image = "image"
+    video = "video"
+    audio = "audio"
 
 
-__doc_type_to_mime_type_map = frozendict({
-    DocType.text: ["text/plain",
-                   "text/html",
-                   "application/pdf",
-                   "application/msword",  # .doc
-                   "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],  # .docx
-    DocType.image: ["image/jpeg", "image/png"],
-    DocType.audio: ["audio/mpeg",
-                    "audio/ogg",
-                    "audio/wave",
-                    "audio/webm",
-                    "audio/x-wav",
-                    "audio/x-pn-wav"],
-    DocType.video: ["video/mp4",
-                    "video/webm",
-                    "video/x-m4v",
-                    "video/x-msvideo",
-                    "video/quicktime"]
-})
+__doc_type_to_mime_type_map = frozendict(
+    {
+        DocType.text: [
+            "text/plain",
+            "text/html",
+            "application/pdf",
+            "application/msword",  # .doc
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ],  # .docx
+        DocType.image: ["image/jpeg", "image/png"],
+        DocType.audio: [
+            "audio/mpeg",
+            "audio/ogg",
+            "audio/wave",
+            "audio/webm",
+            "audio/x-wav",
+            "audio/x-pn-wav",
+        ],
+        DocType.video: [
+            "video/mp4",
+            "video/webm",
+            "video/x-m4v",
+            "video/x-msvideo",
+            "video/quicktime",
+        ],
+    }
+)
 
-__mime_type_to_doc_type_map = frozendict({
-    mime_type: doc_type
-    for doc_type, mime_types in __doc_type_to_mime_type_map.items()
-    for mime_type in __doc_type_to_mime_type_map[doc_type]
-})
+__mime_type_to_doc_type_map = frozendict(
+    {
+        mime_type: doc_type
+        for doc_type, mime_types in __doc_type_to_mime_type_map.items()
+        for mime_type in __doc_type_to_mime_type_map[doc_type]
+    }
+)
 
-__archive_mime_types__ = frozenset({
-    "application/zip"
-})
+__archive_mime_types__ = frozenset({"application/zip"})
 
 
 def get_doc_type(mime_type: str) -> Optional[DocType]:

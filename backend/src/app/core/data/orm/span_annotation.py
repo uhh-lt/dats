@@ -20,29 +20,52 @@ class SpanAnnotationORM(ORMBase):
     begin_token = Column(Integer, nullable=False, index=True)
     end_token = Column(Integer, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
+    updated = Column(
+        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+    )
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
-                                                    uselist=False,
-                                                    back_populates="span_annotation",
-                                                    passive_deletes=True)
+    object_handle: "ObjectHandleORM" = relationship(
+        "ObjectHandleORM",
+        uselist=False,
+        back_populates="span_annotation",
+        passive_deletes=True,
+    )
 
     # many to one
-    current_code_id = Column(Integer, ForeignKey('currentcode.id', ondelete="CASCADE"), nullable=False, index=True)
-    current_code: "CurrentCodeORM" = relationship("CurrentCodeORM", back_populates="span_annotations")
+    current_code_id = Column(
+        Integer,
+        ForeignKey("currentcode.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    current_code: "CurrentCodeORM" = relationship(
+        "CurrentCodeORM", back_populates="span_annotations"
+    )
 
-    annotation_document_id = Column(Integer,
-                                    ForeignKey('annotationdocument.id', ondelete="CASCADE"),
-                                    nullable=False,
-                                    index=True)
-    annotation_document: "AnnotationDocumentORM" = relationship("AnnotationDocumentORM",
-                                                                back_populates="span_annotations")
+    annotation_document_id = Column(
+        Integer,
+        ForeignKey("annotationdocument.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    annotation_document: "AnnotationDocumentORM" = relationship(
+        "AnnotationDocumentORM", back_populates="span_annotations"
+    )
 
-    span_text_id = Column(Integer, ForeignKey('spantext.id', ondelete="CASCADE"), nullable=False, index=True)
-    span_text: "SpanTextORM" = relationship("SpanTextORM", back_populates="span_annotations")
+    span_text_id = Column(
+        Integer,
+        ForeignKey("spantext.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    span_text: "SpanTextORM" = relationship(
+        "SpanTextORM", back_populates="span_annotations"
+    )
 
     # many to many
-    span_groups: List["SpanGroupORM"] = relationship("SpanGroupORM",
-                                                     secondary="SpanAnnotationSpanGroupLinkTable".lower(),
-                                                     back_populates="span_annotations")
+    span_groups: List["SpanGroupORM"] = relationship(
+        "SpanGroupORM",
+        secondary="SpanAnnotationSpanGroupLinkTable".lower(),
+        back_populates="span_annotations",
+    )

@@ -20,37 +20,38 @@ class ProjectORM(ORMBase):
     title = Column(String, nullable=False, unique=True, index=True)
     description = Column(String, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
+    updated = Column(
+        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+    )
 
-    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
-                                                    uselist=False,
-                                                    back_populates="project",
-                                                    passive_deletes=True)
+    object_handle: "ObjectHandleORM" = relationship(
+        "ObjectHandleORM", uselist=False, back_populates="project", passive_deletes=True
+    )
 
     # one to many
-    codes: List["CodeORM"] = relationship("CodeORM",
-                                          back_populates="project",
-                                          passive_deletes=True)
+    codes: List["CodeORM"] = relationship(
+        "CodeORM", back_populates="project", passive_deletes=True
+    )
 
-    source_documents: List["SourceDocumentORM"] = relationship("SourceDocumentORM",
-                                                               back_populates="project",
-                                                               passive_deletes=True)
+    source_documents: List["SourceDocumentORM"] = relationship(
+        "SourceDocumentORM", back_populates="project", passive_deletes=True
+    )
 
-    memos: List["MemoORM"] = relationship("MemoORM",
-                                          back_populates="project",
-                                          passive_deletes=True)
+    memos: List["MemoORM"] = relationship(
+        "MemoORM", back_populates="project", passive_deletes=True
+    )
 
-    document_tags: List["DocumentTagORM"] = relationship("DocumentTagORM",
-                                                         back_populates="project",
-                                                         passive_deletes=True)
+    document_tags: List["DocumentTagORM"] = relationship(
+        "DocumentTagORM", back_populates="project", passive_deletes=True
+    )
 
-    actions: List["ActionORM"] = relationship("ActionORM",
-                                              back_populates="project",
-                                              passive_deletes=True)
+    actions: List["ActionORM"] = relationship(
+        "ActionORM", back_populates="project", passive_deletes=True
+    )
     # many to many
-    users: List["UserORM"] = relationship("UserORM",
-                                          secondary="ProjectUserLinkTable".lower(),
-                                          back_populates="projects")
+    users: List["UserORM"] = relationship(
+        "UserORM", secondary="ProjectUserLinkTable".lower(), back_populates="projects"
+    )
 
 
 class ProjectUserLinkTable(ORMBase):

@@ -1,6 +1,14 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Integer, ForeignKey, String, DateTime, func, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    Integer,
+    ForeignKey,
+    String,
+    DateTime,
+    func,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -19,33 +27,43 @@ class CodeORM(ORMBase):
     description = Column(String, index=True)
     color = Column(String, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(DateTime, server_default=func.now(), onupdate=func.current_timestamp())
+    updated = Column(
+        DateTime, server_default=func.now(), onupdate=func.current_timestamp()
+    )
 
     # one to one
-    current_code: "CurrentCodeORM" = relationship("CurrentCodeORM",
-                                                  uselist=False,
-                                                  back_populates="code",
-                                                  passive_deletes=True)
+    current_code: "CurrentCodeORM" = relationship(
+        "CurrentCodeORM", uselist=False, back_populates="code", passive_deletes=True
+    )
 
-    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
-                                                    uselist=False,
-                                                    back_populates="code",
-                                                    passive_deletes=True)
+    object_handle: "ObjectHandleORM" = relationship(
+        "ObjectHandleORM", uselist=False, back_populates="code", passive_deletes=True
+    )
 
     # many to one
-    user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
     user: "UserORM" = relationship("UserORM", back_populates="codes")
 
-    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), nullable=False, index=True)
+    project_id = Column(
+        Integer,
+        ForeignKey("project.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     project: "ProjectORM" = relationship("ProjectORM", back_populates="codes")
 
     # hierarchy reference
-    parent_code_id = Column(Integer, ForeignKey('code.id', ondelete="CASCADE"))
+    parent_code_id = Column(Integer, ForeignKey("code.id", ondelete="CASCADE"))
     parent_code: "CodeORM" = relationship("CodeORM", remote_side=[id])
 
     __table_args__ = (
-        UniqueConstraint('user_id', 'project_id', 'name', 'parent_code_id',
-                         name='UC_name_unique_per_user_parent_and_project'),
+        UniqueConstraint(
+            "user_id",
+            "project_id",
+            "name",
+            "parent_code_id",
+            name="UC_name_unique_per_user_parent_and_project",
+        ),
     )
 
 
@@ -53,20 +71,24 @@ class CurrentCodeORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
-                                                    uselist=False,
-                                                    back_populates="current_code",
-                                                    passive_deletes=True)
+    object_handle: "ObjectHandleORM" = relationship(
+        "ObjectHandleORM",
+        uselist=False,
+        back_populates="current_code",
+        passive_deletes=True,
+    )
 
-    code_id = Column(Integer, ForeignKey('code.id', ondelete="CASCADE"), nullable=False, index=True)
+    code_id = Column(
+        Integer, ForeignKey("code.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     code: "CodeORM" = relationship("CodeORM", back_populates="current_code")
 
     # one to many
-    span_annotations: List["SpanAnnotationORM"] = relationship("SpanAnnotationORM",
-                                                               back_populates="current_code",
-                                                               passive_deletes=True)
+    span_annotations: List["SpanAnnotationORM"] = relationship(
+        "SpanAnnotationORM", back_populates="current_code", passive_deletes=True
+    )
 
     # one to many
-    bbox_annotations: List["BBoxAnnotationORM"] = relationship("BBoxAnnotationORM",
-                                                               back_populates="current_code",
-                                                               passive_deletes=True)
+    bbox_annotations: List["BBoxAnnotationORM"] = relationship(
+        "BBoxAnnotationORM", back_populates="current_code", passive_deletes=True
+    )

@@ -18,77 +18,93 @@ from .dto_base import UpdateDTOBase
 
 # Properties shared across all DTOs
 class MemoBaseDTO(BaseModel):
-    title: str = Field(description='Title of the Memo')
-    content: str = Field(description='Content of the Memo')
+    title: str = Field(description="Title of the Memo")
+    content: str = Field(description="Content of the Memo")
 
 
 # Properties to update
 class MemoUpdate(MemoBaseDTO, UpdateDTOBase):
-    title: Optional[str] = Field(description='Title of the Memo', default=None)
-    content: Optional[str] = Field(description='Content of the Memo', default=None)
-    starred: Optional[bool] = Field(description='Starred flag of the Memo', default=None)
+    title: Optional[str] = Field(description="Title of the Memo", default=None)
+    content: Optional[str] = Field(description="Content of the Memo", default=None)
+    starred: Optional[bool] = Field(
+        description="Starred flag of the Memo", default=None
+    )
 
 
 # Properties to create
 class MemoCreate(MemoBaseDTO):
-    user_id: int = Field(description='User the Memo belongs to')
-    project_id: int = Field(description='Project the Memo belongs to')
-    starred: Optional[bool] = Field(description='Starred flag of the Memo', default=False)
+    user_id: int = Field(description="User the Memo belongs to")
+    project_id: int = Field(description="Project the Memo belongs to")
+    starred: Optional[bool] = Field(
+        description="Starred flag of the Memo", default=False
+    )
 
 
 # Properties to read
 class MemoReadBaseDTO(MemoBaseDTO):
-    id: int = Field(description='ID of the Memo')
-    starred: bool = Field(description='Starred flag of the Memo')
-    user_id: int = Field(description='User the Memo belongs to')
-    project_id: int = Field(description='Project the Memo belongs to')
+    id: int = Field(description="ID of the Memo")
+    starred: bool = Field(description="Starred flag of the Memo")
+    user_id: int = Field(description="User the Memo belongs to")
+    project_id: int = Field(description="Project the Memo belongs to")
     created: datetime = Field(description="Created timestamp of the Memo")
     updated: datetime = Field(description="Updated timestamp of the Memo")
 
 
 # Properties in DB (as in ORM)
 class MemoInDB(MemoReadBaseDTO):
-    attached_to_id: int = Field(description='The ObjectHandle the Memo is attached to')
+    attached_to_id: int = Field(description="The ObjectHandle the Memo is attached to")
 
     class Config:
         orm_mode = True
 
 
 class MemoReadAnnotationDocument(MemoReadBaseDTO):
-    attached_annotation_document_id: int = Field(description='AnnotationDocument the Memo is attached to')
+    attached_annotation_document_id: int = Field(
+        description="AnnotationDocument the Memo is attached to"
+    )
 
 
 class MemoReadSourceDocument(MemoReadBaseDTO):
-    attached_source_document_id: int = Field(description='SourceDocument the Memo is attached to')
+    attached_source_document_id: int = Field(
+        description="SourceDocument the Memo is attached to"
+    )
 
 
 class MemoReadCode(MemoReadBaseDTO):
-    attached_code_id: int = Field(description='Code the Memo is attached to')
+    attached_code_id: int = Field(description="Code the Memo is attached to")
 
 
 class MemoReadSpanAnnotation(MemoReadBaseDTO):
-    attached_span_annotation_id: int = Field(description='SpanAnnotation the Memo is attached to')
+    attached_span_annotation_id: int = Field(
+        description="SpanAnnotation the Memo is attached to"
+    )
 
 
 class MemoReadProject(MemoReadBaseDTO):
-    attached_project_id: int = Field(description='Project the Memo is attached to')
+    attached_project_id: int = Field(description="Project the Memo is attached to")
 
 
 class MemoReadDocumentTag(MemoReadBaseDTO):
-    attached_document_tag_id: int = Field(description='DocumentTag the Memo is attached to')
+    attached_document_tag_id: int = Field(
+        description="DocumentTag the Memo is attached to"
+    )
 
 
 class AttachedObjectType(str, Enum):
-    annotation_document = 'annotation_document'
-    source_document = 'source_document'
-    code = 'code'
-    span_annotation = 'span_annotation'
-    span_group = 'span_group'
-    bbox_annotation = 'bbox_annotation'
-    project = 'project'
-    document_tag = 'document_tag'
+    annotation_document = "annotation_document"
+    source_document = "source_document"
+    code = "code"
+    span_annotation = "span_annotation"
+    span_group = "span_group"
+    bbox_annotation = "bbox_annotation"
+    project = "project"
+    document_tag = "document_tag"
 
 
 class MemoRead(MemoReadBaseDTO):
-    attached_object_id: int = Field(description='ID of the Object the Memo is attached to')
-    attached_object_type: AttachedObjectType = Field(description='Type of the Object the ID refers to')
+    attached_object_id: int = Field(
+        description="ID of the Object the Memo is attached to"
+    )
+    attached_object_type: AttachedObjectType = Field(
+        description="Type of the Object the ID refers to"
+    )

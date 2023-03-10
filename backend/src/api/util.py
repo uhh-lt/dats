@@ -2,6 +2,7 @@ from typing import Union, List, Optional
 
 from fastapi import HTTPException
 from loguru import logger
+from pydantic import BaseModel, Field
 from starlette import status
 
 from app.core.data.dto.memo import MemoRead, MemoInDB, AttachedObjectType
@@ -19,28 +20,33 @@ credentials_exception = HTTPException(
 )
 
 
-def get_object_memos(db_obj: Union[SourceDocumentORM,
-                                   DocumentTagORM,
-                                   CodeORM,
-                                   ProjectORM,
-                                   BBoxAnnotationORM,
-                                   SpanAnnotationORM],
-                     user_id: Optional[int] = None) -> Union[Optional[MemoRead],
-                                                             List[MemoRead]]:
+def get_object_memos(
+    db_obj: Union[
+        SourceDocumentORM,
+        DocumentTagORM,
+        CodeORM,
+        ProjectORM,
+        BBoxAnnotationORM,
+        SpanAnnotationORM,
+    ],
+    user_id: Optional[int] = None,
+) -> Union[Optional[MemoRead], List[MemoRead]]:
     if db_obj.object_handle is None:
         if user_id is None:
             return []
         return None
 
-    memo_as_in_db_dtos = [MemoInDB.from_orm(memo_db_obj)
-                          for memo_db_obj in db_obj.object_handle.attached_memos
-                          if user_id is None or memo_db_obj.user_id == user_id]
+    memo_as_in_db_dtos = [
+        MemoInDB.from_orm(memo_db_obj)
+        for memo_db_obj in db_obj.object_handle.attached_memos
+        if user_id is None or memo_db_obj.user_id == user_id
+    ]
 
     if user_id is not None:
         if len(memo_as_in_db_dtos) == 0:
             return None
         elif len(memo_as_in_db_dtos) > 1:
-            logger.error(f'More than one Memo for the specified User!')
+            logger.error(f"More than one Memo for the specified User!")
 
     object_types = {
         SourceDocumentORM: AttachedObjectType.source_document,
@@ -48,13 +54,17 @@ def get_object_memos(db_obj: Union[SourceDocumentORM,
         CodeORM: AttachedObjectType.code,
         ProjectORM: AttachedObjectType.project,
         BBoxAnnotationORM: AttachedObjectType.bbox_annotation,
-        SpanAnnotationORM: AttachedObjectType.span_annotation
+        SpanAnnotationORM: AttachedObjectType.span_annotation,
     }
 
-    memos = [MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                      attached_object_id=db_obj.id,
-                      attached_object_type=object_types[type(db_obj)])
-             for memo_as_in_db_dto in memo_as_in_db_dtos]
+    memos = [
+        MemoRead(
+            **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+            attached_object_id=db_obj.id,
+            attached_object_type=object_types[type(db_obj)],
+        )
+        for memo_as_in_db_dto in memo_as_in_db_dtos
+    ]
 
     if user_id is not None:
         return memos[0]

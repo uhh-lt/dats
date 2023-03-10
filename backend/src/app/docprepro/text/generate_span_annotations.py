@@ -43,7 +43,9 @@ def __load_spacy_models() -> Dict[str, Language]:
 spacy_models = __load_spacy_models()
 
 
-def generate_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDoc) -> PreProTextDoc:
+def generate_span_annotations_single_pptd(
+    doc: Doc, pptd: PreProTextDoc
+) -> PreProTextDoc:
     # add tokens, lemma, POS, and stopword; count word frequencies
     # TODO Flo: Do we want these as Codes/AutoSpans ?
     pptd.word_freqs = Counter()
@@ -58,20 +60,23 @@ def generate_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDoc) -> PreP
             pptd.word_freqs.update((token.text,))
 
     # sort the word freqs!
-    pptd.word_freqs = {k: v for (k, v) in sorted(pptd.word_freqs.items(),
-                                                 key=lambda i: i[1],
-                                                 reverse=True)}
+    pptd.word_freqs = {
+        k: v
+        for (k, v) in sorted(pptd.word_freqs.items(), key=lambda i: i[1], reverse=True)
+    }
     # use top-5 as keywords
     pptd.keywords = list(pptd.word_freqs.keys())[:5]
 
     # create AutoSpans for NER
     for ne in doc.ents:
-        auto = AutoSpan(code=f"{ne.label_}",
-                        start=ne.start_char,
-                        end=ne.end_char,
-                        text=ne.text,
-                        start_token=ne.start,
-                        end_token=ne.end)
+        auto = AutoSpan(
+            code=f"{ne.label_}",
+            start=ne.start_char,
+            end=ne.end_char,
+            text=ne.text,
+            start_token=ne.start,
+            end_token=ne.end,
+        )
         if auto.code not in pptd.spans:
             pptd.spans[auto.code] = list()
         pptd.spans[auto.code].append(auto)
@@ -79,27 +84,40 @@ def generate_span_annotations_single_pptd(doc: Doc, pptd: PreProTextDoc) -> PreP
     # create AutoSpans for Sentences
     pptd.sentences = list()
     for s in doc.sents:
-        auto = AutoSpan(code="SENTENCE",
-                        start=s.start_char,
-                        end=s.end_char,
-                        text=s.text,
-                        start_token=s.start,
-                        end_token=s.end)
+        auto = AutoSpan(
+            code="SENTENCE",
+            start=s.start_char,
+            end=s.end_char,
+            text=s.text,
+            start_token=s.start,
+            end_token=s.end,
+        )
         pptd.sentences.append(auto)
 
     # Flo: update sdoc status
-    update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.generate_span_annotations)
+    update_sdoc_status(
+        sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.generate_span_annotations
+    )
 
     return pptd
 
 
-def generate_span_annotations_sequentially(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
-    logger.info(f"Generating Automatic Span Annotations in spaCy sequential Mode for {len(pptds)} Documents...")
+def generate_span_annotations_sequentially(
+    pptds: List[PreProTextDoc],
+) -> List[PreProTextDoc]:
+    logger.info(
+        f"Generating Automatic Span Annotations in spaCy sequential Mode for {len(pptds)} Documents..."
+    )
 
-    for pptd in tqdm(pptds, desc="Generating Automatic Span Annotations in spaCy sequential Mode... "):
+    for pptd in tqdm(
+        pptds, desc="Generating Automatic Span Annotations in spaCy sequential Mode... "
+    ):
         # Flo: use the language specific model for each pptd
-        model = spacy_models[pptd.metadata["language"]] if pptd.metadata["language"] in spacy_models else spacy_models[
-            "default"]
+        model = (
+            spacy_models[pptd.metadata["language"]]
+            if pptd.metadata["language"] in spacy_models
+            else spacy_models["default"]
+        )
         doc: Doc = model(pptd.text)
         # Flo: generate the automatic span annotations
         pptd = generate_span_annotations_single_pptd(doc=doc, pptd=pptd)
@@ -107,20 +125,33 @@ def generate_span_annotations_sequentially(pptds: List[PreProTextDoc]) -> List[P
     return pptds
 
 
-def generate_span_annotations_pipeline(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
-    logger.info(f"Generating Automatic Span Annotations in spaCy Pipeline Mode for {len(pptds)} Documents...")
+def generate_span_annotations_pipeline(
+    pptds: List[PreProTextDoc],
+) -> List[PreProTextDoc]:
+    logger.info(
+        f"Generating Automatic Span Annotations in spaCy Pipeline Mode for {len(pptds)} Documents..."
+    )
 
     # Flo: first we have to sort the PreProTextDoc by language and extract the text from the pptds that we want to
     #  use with the models
-    pptds_data: Dict[str, List[Tuple[str, PreProTextDoc]]] = {lang: [] for lang in spacy_models.keys()}
+    pptds_data: Dict[str, List[Tuple[str, PreProTextDoc]]] = {
+        lang: [] for lang in spacy_models.keys()
+    }
     for pptd in pptds:
-        pptd_lang = pptd.metadata["language"] if pptd.metadata["language"] in spacy_models else "default"
+        pptd_lang = (
+            pptd.metadata["language"]
+            if pptd.metadata["language"] in spacy_models
+            else "default"
+        )
         pptds_data[pptd_lang].append((pptd.text, pptd))
 
     # Flo: now apply language specific model in pipeline mode
     for (lang, model) in spacy_models.items():
-        for doc, pptd in tqdm(model.pipe(pptds_data[lang], as_tuples=True), total=len(pptds_data[lang]),
-                              desc="Generating Automatic Span Annotations in spaCy Pipeline Mode... "):
+        for doc, pptd in tqdm(
+            model.pipe(pptds_data[lang], as_tuples=True),
+            total=len(pptds_data[lang]),
+            desc="Generating Automatic Span Annotations in spaCy Pipeline Mode... ",
+        ):
             generate_span_annotations_single_pptd(doc=doc, pptd=pptd)
 
     return pptds

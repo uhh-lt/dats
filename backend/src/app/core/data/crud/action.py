@@ -9,7 +9,6 @@ from app.core.data.orm.action import ActionORM
 
 
 class CRUDAction(CRUDBase[ActionORM, ActionCreate, None]):
-
     def create(self, db: Session, *, create_dto: ActionCreate) -> ActionORM:
         # we have to override this to avoid recursion
         dto_obj_data = jsonable_encoder(create_dto)
@@ -21,21 +20,27 @@ class CRUDAction(CRUDBase[ActionORM, ActionCreate, None]):
 
         return db_obj
 
-    def read_by_user_and_project(self,
-                                 db: Session,
-                                 user_id: int,
-                                 proj_id: int) -> List[ActionORM]:
-        return db.query(self.model).filter(self.model.user_id == user_id,
-                                           self.model.project_id == proj_id).all()
+    def read_by_user_and_project(
+        self, db: Session, user_id: int, proj_id: int
+    ) -> List[ActionORM]:
+        return (
+            db.query(self.model)
+            .filter(self.model.user_id == user_id, self.model.project_id == proj_id)
+            .all()
+        )
 
-    def read_by_user_and_project_and_action_type(self,
-                                                 db: Session,
-                                                 user_id: int,
-                                                 proj_id: int,
-                                                 action_type: ActionType) -> List[ActionORM]:
-        return db.query(self.model).filter(self.model.user_id == user_id,
-                                           self.model.project_id == proj_id,
-                                           self.model.action_type == action_type).all()
+    def read_by_user_and_project_and_action_type(
+        self, db: Session, user_id: int, proj_id: int, action_type: ActionType
+    ) -> List[ActionORM]:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.user_id == user_id,
+                self.model.project_id == proj_id,
+                self.model.action_type == action_type,
+            )
+            .all()
+        )
 
 
 crud_action = CRUDAction(ActionORM)

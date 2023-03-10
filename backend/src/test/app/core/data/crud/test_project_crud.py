@@ -20,14 +20,18 @@ from config import conf
 
 
 def get_number_of_system_codes() -> int:
-    def __count_codes_recursively(code_dict: Dict[str, Dict[str, Any]], num: int, names):
+    def __count_codes_recursively(
+        code_dict: Dict[str, Dict[str, Any]], num: int, names
+    ):
         for code_name in code_dict.keys():
             num += 1
             if code_name in names:
                 print(f"CODENAME: {code_name=}")
             names.add(code_name)
             if "children" in code_dict[code_name]:
-                num = __count_codes_recursively(code_dict[code_name]["children"], num, names)
+                num = __count_codes_recursively(
+                    code_dict[code_name]["children"], num, names
+                )
         return num
 
     return __count_codes_recursively(conf.system_codes, 0, set())
@@ -39,8 +43,7 @@ def test_update_project(session: SQLService, project: int) -> None:
 
     # update project title
     with session.db_session() as sess:
-        crud_project.update(
-            db=sess, id=project, update_dto=ProjectUpdate(title=title2))
+        crud_project.update(db=sess, id=project, update_dto=ProjectUpdate(title=title2))
 
     with session.db_session() as sess:
         p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
@@ -51,7 +54,8 @@ def test_update_project(session: SQLService, project: int) -> None:
     # update project description
     with session.db_session() as sess:
         crud_project.update(
-            db=sess, id=project, update_dto=ProjectUpdate(description=description2))
+            db=sess, id=project, update_dto=ProjectUpdate(description=description2)
+        )
 
     with session.db_session() as sess:
         p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
@@ -64,13 +68,15 @@ def test_update_project(session: SQLService, project: int) -> None:
     with pytest.raises(IntegrityError):
         with session.db_session() as sess:
             crud_project.update(
-                db=sess, id=project, update_dto=ProjectUpdate(title=None))
+                db=sess, id=project, update_dto=ProjectUpdate(title=None)
+            )
 
     # try update description to None
     with pytest.raises(IntegrityError):
         with session.db_session() as sess:
             crud_project.update(
-                db=sess, id=project, update_dto=ProjectUpdate(description=None))
+                db=sess, id=project, update_dto=ProjectUpdate(description=None)
+            )
 
     # check if nothing has changed
     with session.db_session() as sess:
@@ -96,8 +102,9 @@ def test_create_remove_project(session: SQLService) -> None:
     description = "Test description"
 
     with session.db_session() as sess:
-        id = crud_project.create(db=sess, create_dto=ProjectCreate(
-            title=title, description=description)).id
+        id = crud_project.create(
+            db=sess, create_dto=ProjectCreate(title=title, description=description)
+        ).id
 
     # check database again
     with session.db_session() as sess:
@@ -142,8 +149,9 @@ def test_project_users(session: SQLService, project: int, user: int) -> None:
     last_name = "".join(random.choices(string.ascii_letters, k=15))
     password = "".join(random.choices(string.ascii_letters, k=15))
 
-    user_three = UserCreate(email=email, first_name=first_name,
-                            last_name=last_name, password=password)
+    user_three = UserCreate(
+        email=email, first_name=first_name, last_name=last_name, password=password
+    )
 
     with session.db_session() as sess:
         db_user = crud_user.create(db=sess, create_dto=user_three)
@@ -196,8 +204,7 @@ def test_get_remove_project_codes(session: SQLService, project: int) -> None:
 def test_get_project_tags(session: SQLService, project: int) -> None:
     with session.db_session() as sess:
         proj_db_obj = crud_project.read(db=sess, id=project)
-        s = [DocumentTagRead.from_orm(tag)
-             for tag in proj_db_obj.document_tags]
+        s = [DocumentTagRead.from_orm(tag) for tag in proj_db_obj.document_tags]
 
     assert len(s) == 0
 
@@ -205,19 +212,31 @@ def test_get_project_tags(session: SQLService, project: int) -> None:
 # user codes
 
 
-def test_get_remove_project_system_user_codes(session: SQLService, project: int) -> None:
+def test_get_remove_project_system_user_codes(
+    session: SQLService, project: int
+) -> None:
     with session.db_session() as sess:
-        s = [CodeRead.from_orm(code_db_obj) for code_db_obj in
-             crud_code.read_by_user_and_project(db=sess, user_id=SYSTEM_USER_ID, proj_id=project)]
+        s = [
+            CodeRead.from_orm(code_db_obj)
+            for code_db_obj in crud_code.read_by_user_and_project(
+                db=sess, user_id=SYSTEM_USER_ID, proj_id=project
+            )
+        ]
 
     assert len(s) == get_number_of_system_codes()
 
     # remove user codes
 
     with session.db_session() as sess:
-        crud_code.remove_by_user_and_project(db=sess, user_id=SYSTEM_USER_ID, proj_id=project)
-        s = [CodeRead.from_orm(code_db_obj) for code_db_obj in
-             crud_code.read_by_user_and_project(db=sess, user_id=SYSTEM_USER_ID, proj_id=project)]
+        crud_code.remove_by_user_and_project(
+            db=sess, user_id=SYSTEM_USER_ID, proj_id=project
+        )
+        s = [
+            CodeRead.from_orm(code_db_obj)
+            for code_db_obj in crud_code.read_by_user_and_project(
+                db=sess, user_id=SYSTEM_USER_ID, proj_id=project
+            )
+        ]
 
     assert len(s) == 0
 
@@ -225,12 +244,17 @@ def test_get_remove_project_system_user_codes(session: SQLService, project: int)
 # user memos
 
 
-def test_get_add_remove_memos_project(session: SQLService, project: int, user: int) -> None:
+def test_get_add_remove_memos_project(
+    session: SQLService, project: int, user: int
+) -> None:
     with session.db_session() as sess:
         db_objs = crud_memo.read_by_user_and_project(
-            db=sess, user_id=user, proj_id=project, only_starred=False)
-        memo_list = [crud_memo.get_memo_read_dto_from_orm(
-            db=sess, db_obj=db_obj) for db_obj in db_objs]
+            db=sess, user_id=user, proj_id=project, only_starred=False
+        )
+        memo_list = [
+            crud_memo.get_memo_read_dto_from_orm(db=sess, db_obj=db_obj)
+            for db_obj in db_objs
+        ]
 
     assert len(memo_list) == 0
 
@@ -238,16 +262,24 @@ def test_get_add_remove_memos_project(session: SQLService, project: int, user: i
     title1 = "".join(random.choices(string.ascii_letters, k=30))
     content1 = "".join(random.choices(string.ascii_letters, k=30))
     starred1 = False
-    memo1 = MemoCreate(title=title1, content=content1,
-                       user_id=user, project_id=project, starred=starred1)
+    memo1 = MemoCreate(
+        title=title1,
+        content=content1,
+        user_id=user,
+        project_id=project,
+        starred=starred1,
+    )
 
     with session.db_session() as sess:
         db_obj = crud_memo.create_for_project(
-            db=sess, project_id=project, create_dto=memo1)
+            db=sess, project_id=project, create_dto=memo1
+        )
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-        memo1_obj = MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                             attached_object_id=project,
-                             attached_object_type=AttachedObjectType.project)
+        memo1_obj = MemoRead(
+            **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+            attached_object_id=project,
+            attached_object_type=AttachedObjectType.project,
+        )
 
     # print(f'{memo1_obj=}')
 
@@ -255,28 +287,42 @@ def test_get_add_remove_memos_project(session: SQLService, project: int, user: i
     title2 = "".join(random.choices(string.ascii_letters, k=30))
     content2 = "".join(random.choices(string.ascii_letters, k=30))
     starred2 = True
-    memo2 = MemoCreate(title=title2, content=content2,
-                       user_id=user, project_id=project, starred=starred2)
+    memo2 = MemoCreate(
+        title=title2,
+        content=content2,
+        user_id=user,
+        project_id=project,
+        starred=starred2,
+    )
 
     with session.db_session() as sess:
         db_obj = crud_memo.create_for_project(
-            db=sess, project_id=project, create_dto=memo2)
+            db=sess, project_id=project, create_dto=memo2
+        )
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-        memo2_obj = MemoRead(**memo_as_in_db_dto.dict(exclude={"attached_to"}),
-                             attached_object_id=project,
-                             attached_object_type=AttachedObjectType.project)
+        memo2_obj = MemoRead(
+            **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+            attached_object_id=project,
+            attached_object_type=AttachedObjectType.project,
+        )
 
     # print(f'{memo2_obj=}')
 
     with session.db_session() as sess:
         db_objs_unstarred = crud_memo.read_by_user_and_project(
-            db=sess, user_id=user, proj_id=project, only_starred=False)
-        memo_list_unstarred = [crud_memo.get_memo_read_dto_from_orm(
-            db=sess, db_obj=db_obj) for db_obj in db_objs_unstarred]
+            db=sess, user_id=user, proj_id=project, only_starred=False
+        )
+        memo_list_unstarred = [
+            crud_memo.get_memo_read_dto_from_orm(db=sess, db_obj=db_obj)
+            for db_obj in db_objs_unstarred
+        ]
         db_objs_starred = crud_memo.read_by_user_and_project(
-            db=sess, user_id=user, proj_id=project, only_starred=True)
-        memo_list_starred = [crud_memo.get_memo_read_dto_from_orm(
-            db=sess, db_obj=db_obj) for db_obj in db_objs_starred]
+            db=sess, user_id=user, proj_id=project, only_starred=True
+        )
+        memo_list_starred = [
+            crud_memo.get_memo_read_dto_from_orm(db=sess, db_obj=db_obj)
+            for db_obj in db_objs_starred
+        ]
 
     assert len(memo_list_unstarred) == 2
 
@@ -285,11 +331,13 @@ def test_get_add_remove_memos_project(session: SQLService, project: int, user: i
     # remove memos
 
     with session.db_session() as sess:
-        crud_memo.remove_by_user_and_project(
-            db=sess, user_id=user, proj_id=project)
+        crud_memo.remove_by_user_and_project(db=sess, user_id=user, proj_id=project)
         db_objs = crud_memo.read_by_user_and_project(
-            db=sess, user_id=user, proj_id=project, only_starred=False)
-        memo_list = [crud_memo.get_memo_read_dto_from_orm(
-            db=sess, db_obj=db_obj) for db_obj in db_objs]
+            db=sess, user_id=user, proj_id=project, only_starred=False
+        )
+        memo_list = [
+            crud_memo.get_memo_read_dto_from_orm(db=sess, db_obj=db_obj)
+            for db_obj in db_objs
+        ]
 
     assert len(memo_list) == 0

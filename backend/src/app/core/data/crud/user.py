@@ -20,7 +20,9 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
         create_dto.password = hashed_pwd
         return super().create(db=db, create_dto=create_dto)
 
-    def update(self, db: Session, *, id: int, update_dto: UserUpdate) -> Optional[UserORM]:
+    def update(
+        self, db: Session, *, id: int, update_dto: UserUpdate
+    ) -> Optional[UserORM]:
         # Flo: hashes the PW before storing in DB
         if update_dto.password:
             hashed_pwd = generate_password_hash(update_dto.password)
@@ -29,7 +31,9 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
 
     def remove_all_codes(self, db: Session, *, id: int) -> List[int]:
         db_obj = self.read(db=db, id=id)
-        statement = delete(CodeORM).where(CodeORM.user_id == db_obj.id).returning(CodeORM.id)
+        statement = (
+            delete(CodeORM).where(CodeORM.user_id == db_obj.id).returning(CodeORM.id)
+        )
         removed_ids = db.execute(statement).fetchall()
         db.commit()
         return list(map(lambda t: t[0], removed_ids))
@@ -49,8 +53,9 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
         user = self.read_by_email(db=db, email=user_login.username)
         if not user:
             return None
-        if not verify_password(plain_password=user_login.password,
-                               hashed_password=user.password):
+        if not verify_password(
+            plain_password=user_login.password, hashed_password=user.password
+        ):
             return None
         return user
 

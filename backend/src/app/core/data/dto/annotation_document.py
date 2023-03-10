@@ -5,8 +5,10 @@ from pydantic import BaseModel, Field
 
 # Properties shared across all DTOs
 class AnnotationDocumentBaseDTO(BaseModel):
-    source_document_id: int = Field(description='SourceDocument the AnnotationDocument relates to')
-    user_id: int = Field(description='User the AnnotationDocument belongs to')
+    source_document_id: int = Field(
+        description="SourceDocument the AnnotationDocument relates to"
+    )
+    user_id: int = Field(description="User the AnnotationDocument belongs to")
 
 
 # Properties for creation
@@ -22,7 +24,7 @@ class AnnotationDocumentCreate(AnnotationDocumentBaseDTO):
 
 # Properties for reading (as in ORM)
 class AnnotationDocumentRead(AnnotationDocumentBaseDTO):
-    id: int = Field(description='ID of the AnnotationDocument')
+    id: int = Field(description="ID of the AnnotationDocument")
     created: datetime = Field(description="Created timestamp of the AnnotationDocument")
     updated: datetime = Field(description="Updated timestamp of the AnnotationDocument")
 

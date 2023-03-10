@@ -19,15 +19,19 @@ class ActionORM(ORMBase):
     target_type = Column(String, nullable=False, index=True)
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship("ObjectHandleORM",
-                                                    uselist=False,
-                                                    back_populates="action",
-                                                    passive_deletes=True,
-                                                    foreign_keys="objecthandle.c.action_id")
+    object_handle: "ObjectHandleORM" = relationship(
+        "ObjectHandleORM",
+        uselist=False,
+        back_populates="action",
+        passive_deletes=True,
+        foreign_keys="objecthandle.c.action_id",
+    )
 
     # many to one
-    user_id = Column(Integer, ForeignKey('user.id', ondelete="CASCADE"), index=True)
+    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
     user: "UserORM" = relationship("UserORM", back_populates="actions")
 
-    project_id = Column(Integer, ForeignKey('project.id', ondelete="CASCADE"), index=True)
+    project_id = Column(
+        Integer, ForeignKey("project.id", ondelete="CASCADE"), index=True
+    )
     project: "ProjectORM" = relationship("ProjectORM", back_populates="actions")

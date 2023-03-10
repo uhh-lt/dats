@@ -18,13 +18,15 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
         if not db_obj:
             return super().create(db=db, create_dto=create_dto)
         return db_obj
-    
-    def create_multi(self, db: Session, *, create_dtos: List[SpanTextCreate]) -> List[SpanTextORM]:
+
+    def create_multi(
+        self, db: Session, *, create_dtos: List[SpanTextCreate]
+    ) -> List[SpanTextORM]:
         # Only create when not already present
         span_texts: List[SpanTextORM] = []
         to_create: List[SpanTextCreate] = []
         to_create_idx: List[int] = []
-        
+
         # TODO best would be "insert all (ignore existing) followed by get all"
         for i, create_dto in enumerate(create_dtos):
             db_obj = self.read_by_text(db=db, text=create_dto.text)
@@ -40,7 +42,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
 
     def read_by_text(self, db: Session, *, text: str) -> Optional[SpanTextORM]:
         return db.query(self.model.id).filter(self.model.text == text).first()
-    
+
     def read_all_by_text(self, db: Session, *, texts: List[str]) -> List[SpanTextORM]:
         return db.query(self.model.id).filter(self.model.text in texts)
 
