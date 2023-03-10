@@ -8,6 +8,7 @@ from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoRead
 from app.core.data.dto.util import PaginatedResults
+from app.core.data.dto.dto_base import UpdateDTOBase
 
 
 class SpanEntity(BaseModel):
@@ -196,6 +197,13 @@ class ElasticSearchMemoRead(BaseModel):
                                                                             "attached to"))
     updated: Optional[datetime] = Field(description="The created date of the Memo", default=datetime.now())
     created: Optional[datetime] = Field(description="The created date of the Memo", default=datetime.now())
+
+
+class ElasticSearchMemoUpdate(BaseModel, UpdateDTOBase):
+    memo_id: int = Field(description="The ID of the Memo as it is in the SQL DB")
+    title: Optional[str] = Field(description="The title of the Memo", default=None)
+    content: Optional[str] = Field(description="The content of the Memo", default=None)
+    starred: Optional[bool] = Field(description="Starred flag of the Memo", default=None)
 
 
 class ElasticMemoHit(ElasticSearchMemoRead):
