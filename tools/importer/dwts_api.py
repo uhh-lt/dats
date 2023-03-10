@@ -6,24 +6,24 @@ import requests
 
 
 class DWTSAPI:
-
     def __init__(self, base_path="http://localhost:14140/"):
         self.BASE_PATH = base_path
 
     def read_all_projects(self):
-        r = requests.get(self.BASE_PATH + 'project')
+        r = requests.get(self.BASE_PATH + "project")
         r.raise_for_status()
         return r.json()
 
     def get_sdoc_id_by_filename(self, proj_id: int, filename: str):
-        r = requests.post(self.BASE_PATH + 'search/lexical/sdoc/filename', data=json.dumps({
-            "proj_id": proj_id,
-            "filename_query": filename,
-            "prefix": False
-        }))
+        r = requests.post(
+            self.BASE_PATH + "search/lexical/sdoc/filename",
+            data=json.dumps(
+                {"proj_id": proj_id, "filename_query": filename, "prefix": False}
+            ),
+        )
         r.raise_for_status()
         r = r.json()
-        if len(r['hits']) == 0:
+        if len(r["hits"]) == 0:
             print(f"Could not find sdoc_id of file {filename}! Retrying...")
             sleep(1)
             self.get_sdoc_id_by_filename(proj_id, filename)
@@ -39,27 +39,33 @@ class DWTSAPI:
 
     def read_all_sdocs(self, project_id: int):
         # get all sdoc ids
-        r = requests.post(self.BASE_PATH + f"search/sdoc", data=json.dumps({
-            "proj_id": project_id,
-        }))
+        r = requests.post(
+            self.BASE_PATH + f"search/sdoc",
+            data=json.dumps(
+                {
+                    "proj_id": project_id,
+                }
+            ),
+        )
         r.raise_for_status()
         return r.json()
 
     def read_all_sdocs_by_tags(self, project_id: int, tags: List[int]):
         # get all sdoc ids
-        r = requests.post(self.BASE_PATH + f"search/sdoc", data=json.dumps({
-            "proj_id": project_id,
-            "tag_ids": tags,
-            "all_tags": False
-        }))
+        r = requests.post(
+            self.BASE_PATH + f"search/sdoc",
+            data=json.dumps(
+                {"proj_id": project_id, "tag_ids": tags, "all_tags": False}
+            ),
+        )
         r.raise_for_status()
         return r.json()
 
     def create_project(self, title: str, description: str):
-        r = requests.put(self.BASE_PATH + 'project', data=json.dumps({
-            "title": title,
-            "description": description
-        }))
+        r = requests.put(
+            self.BASE_PATH + "project",
+            data=json.dumps({"title": title, "description": description}),
+        )
         r.raise_for_status()
         project = r.json()
         print(f"Created project with id {project['id']}.")
@@ -83,12 +89,17 @@ class DWTSAPI:
         return r.json()
 
     def create_tag(self, title: str, description: str, color: str, project_id: int):
-        r = requests.put(self.BASE_PATH + f"doctag", data=json.dumps({
-            'title': title,
-            'description': description,
-            'color': color,
-            'project_id': project_id
-        }))
+        r = requests.put(
+            self.BASE_PATH + f"doctag",
+            data=json.dumps(
+                {
+                    "title": title,
+                    "description": description,
+                    "color": color,
+                    "project_id": project_id,
+                }
+            ),
+        )
         r.raise_for_status()
         tag = r.json()
         print(f"Created tag {tag['id']}")
@@ -107,19 +118,26 @@ class DWTSAPI:
             print(f"Could not apply tags {tag_ids} to documents {sdoc_ids}!")
             return
 
-        r = requests.patch(self.BASE_PATH + 'doctag/bulk/link', data=json.dumps({
-            'source_document_ids': sdoc_ids,
-            'document_tag_ids': tag_ids
-        }))
+        r = requests.patch(
+            self.BASE_PATH + "doctag/bulk/link",
+            data=json.dumps(
+                {"source_document_ids": sdoc_ids, "document_tag_ids": tag_ids}
+            ),
+        )
         r.raise_for_status()
         print(f"Applied tags {tag_ids} to all documents!")
 
     def create_origin_metadata(self, sdoc_id: int, url: str):
-        r = requests.put(self.BASE_PATH + 'metadata', data=json.dumps({
-            'key': 'origin',
-            'value': url,
-            'source_document_id': sdoc_id,
-            'read_only': True
-        }))
+        r = requests.put(
+            self.BASE_PATH + "metadata",
+            data=json.dumps(
+                {
+                    "key": "origin",
+                    "value": url,
+                    "source_document_id": sdoc_id,
+                    "read_only": True,
+                }
+            ),
+        )
         r.raise_for_status()
         print(f"Added metadata 'origin': '{url}' to sdoc {sdoc_id}!")

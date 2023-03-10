@@ -18,35 +18,39 @@ class SpiderBase(scrapy.Spider):
     def generate_filename(self, response) -> str:
         parsed_url = urlparse(response.url)
         article_slug = Path(parsed_url.path).stem
-        filename = slugify(f'{self.prefix}-{article_slug}')
+        filename = slugify(f"{self.prefix}-{article_slug}")
         return filename
 
     def write_raw_response(self, response, filename=None):
         if not filename:
             filename = self.generate_filename(response=response)
 
-        filename_with_extension = f'{filename}.html'
+        filename_with_extension = f"{filename}.html"
         try:
-            with open(self.output_dir / filename_with_extension, 'w', encoding='UTF-8') as f:
+            with open(
+                self.output_dir / filename_with_extension, "w", encoding="UTF-8"
+            ) as f:
                 f.write(response.body.decode(response.encoding))
         except UnicodeDecodeError:
-            with open(self.output_dir / filename_with_extension, 'wb') as f2:
+            with open(self.output_dir / filename_with_extension, "wb") as f2:
                 f2.write(response.body)
-        self.log(f'Saved raw html {filename_with_extension}')
+        self.log(f"Saved raw html {filename_with_extension}")
 
     def init_incel_item(self, response, html=None, filename=None) -> IncelItem:
         item = IncelItem()
-        item['url'] = response.url
-        item['file_name'] = filename if filename else self.generate_filename(response=response)
+        item["url"] = response.url
+        item["file_name"] = (
+            filename if filename else self.generate_filename(response=response)
+        )
 
         try:
-            item['raw_html'] = response.body.decode(response.encoding)
+            item["raw_html"] = response.body.decode(response.encoding)
         except UnicodeDecodeError:
-            item['raw_html'] = response.body
+            item["raw_html"] = response.body
 
-        item['extracted_html'] = html if html else ''
-        item['html'] = html if html else item['raw_html']
-        item['output_dir'] = str(self.output_dir)
+        item["extracted_html"] = html if html else ""
+        item["html"] = html if html else item["raw_html"]
+        item["output_dir"] = str(self.output_dir)
         return item
 
     def parse(self, response, **kwargs):

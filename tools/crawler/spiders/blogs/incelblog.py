@@ -8,11 +8,11 @@ class IncelblogSpider(SpiderBase):
     current_thread_page = 1
     current_pages = 0
     start_urls = [
-        'https://incel.blog/2022/',
-        'https://incel.blog/2021/',
-        'https://incel.blog/2020/'
+        "https://incel.blog/2022/",
+        "https://incel.blog/2021/",
+        "https://incel.blog/2020/",
     ]
-    
+
     # provide arguments using the -a option
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,7 +20,13 @@ class IncelblogSpider(SpiderBase):
     def parse(self, response, **kwargs):
         # skip the overview page and go to the other ones
         if response.url in self.start_urls:
-            urls = list(set(response.css('article > div > div.meta > div.title-wrap > h3 > a::attr(href)').getall()))
+            urls = list(
+                set(
+                    response.css(
+                        "article > div > div.meta > div.title-wrap > h3 > a::attr(href)"
+                    ).getall()
+                )
+            )
             for url in urls:
                 yield scrapy.Request(url, callback=self.parse)
         # parse the page

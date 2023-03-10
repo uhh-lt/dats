@@ -17,7 +17,6 @@ class ReadabilityOutput(TypedDict):
 
 
 class Readability:
-
     def __init__(self, port=6666):
         self.BASE_PATH = f"http://localhost:{port}/"
         command = f"node readability/readability_express.js -p {port}"
@@ -37,8 +36,11 @@ class Readability:
             return False
 
     def parse(self, html: str) -> ReadabilityOutput:
-        r = requests.post(self.BASE_PATH, json={
-            "html": html,
-        })
+        r = requests.post(
+            self.BASE_PATH,
+            json={
+                "html": html,
+            },
+        )
         r.raise_for_status()
         return r.json()

@@ -35,8 +35,14 @@ class BBCSpider(SpiderBase):
         # if on the overview page
         if response.url in self.start_urls:
             # get a list of all links
-            urls = [response.urljoin(x) for x in response.css(".qa-heading-link::attr(href)").getall()]
-            urls += [response.urljoin(x) for x in response.css(".gs-c-promo-heading::attr(href)").getall()]
+            urls = [
+                response.urljoin(x)
+                for x in response.css(".qa-heading-link::attr(href)").getall()
+            ]
+            urls += [
+                response.urljoin(x)
+                for x in response.css(".gs-c-promo-heading::attr(href)").getall()
+            ]
             urls = list(set(urls))
 
             # visit every discussion

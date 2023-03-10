@@ -16,10 +16,18 @@ parser.add_argument(
     dest="input_dir",
 )
 parser.add_argument(
-    "--backend_url", type=str, help="URL of the dwts backend api", default="http://localhost:5500/", dest="backend_url"
+    "--backend_url",
+    type=str,
+    help="URL of the dwts backend api",
+    default="http://localhost:5500/",
+    dest="backend_url",
 )
 parser.add_argument(
-    "--project_name", type=str, help="Name of the project to import to", default="import", dest="project_name"
+    "--project_name",
+    type=str,
+    help="Name of the project to import to",
+    default="import",
+    dest="project_name",
 )
 parser.add_argument(
     "--project_description",
@@ -43,7 +51,11 @@ parser.add_argument(
     dest="tag_description",
 )
 parser.add_argument(
-    "--is_json", help="Set if the input_dir contains JSON files", default=False, dest="is_json", action="store_true"
+    "--is_json",
+    help="Set if the input_dir contains JSON files",
+    default=False,
+    dest="is_json",
+    action="store_true",
 )
 args = parser.parse_args()
 
@@ -114,12 +126,19 @@ print("Upload success!!!")
 # create new tag if it does not exist
 tag = api.get_tag_by_title(proj_id=project["id"], title=args.tag_name)
 if tag is None:
-    tag = api.create_tag(title=args.tag_name, description=args.tag_description, color="blue", project_id=project["id"])
+    tag = api.create_tag(
+        title=args.tag_name,
+        description=args.tag_description,
+        color="blue",
+        project_id=project["id"],
+    )
 
 # apply tag to all untagged documents
 tag_ids = [tag["id"] for tag in api.read_all_tags(project_id=project["id"])]
 sdoc_ids = set(api.read_all_sdocs(project_id=project["id"]))
-tagged_sdoc_ids = set(api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids))
+tagged_sdoc_ids = set(
+    api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids)
+)
 untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
 api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
 
@@ -130,7 +149,9 @@ for filename, data in json_data.items():
 
     for image_name in data["image_names"]:
         if image_name:
-            sdoc_id = api.get_sdoc_id_by_filename(filename=image_name, proj_id=project["id"])
+            sdoc_id = api.get_sdoc_id_by_filename(
+                filename=image_name, proj_id=project["id"]
+            )
             api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
 
 print(f"(: FINISHED :)")

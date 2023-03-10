@@ -13,14 +13,15 @@ import magic
 
 
 class HTMLCleanPipeline:
-
     def process_item(self, item: IncelItem, spider):
-        html_content = item['html']
+        html_content = item["html"]
 
         # use cleaner to only include relevant attributes and to remove unwanted tags
-        safe_attrs = {'src', 'alt', 'href', 'title', 'width', 'height'}
-        kill_tags = ['object', 'iframe']
-        cleaner = clean.Cleaner(safe_attrs_only=True, safe_attrs=safe_attrs, kill_tags=kill_tags)
+        safe_attrs = {"src", "alt", "href", "title", "width", "height"}
+        kill_tags = ["object", "iframe"]
+        cleaner = clean.Cleaner(
+            safe_attrs_only=True, safe_attrs=safe_attrs, kill_tags=kill_tags
+        )
         html_content = cleaner.clean_html(html_content)
 
         # manually remove tags
@@ -43,5 +44,5 @@ class HTMLCleanPipeline:
         if "html" not in mime:
             html_content = f"<html>{html_content}</html>"
 
-        item['html'] = html_content
+        item["html"] = html_content
         return item

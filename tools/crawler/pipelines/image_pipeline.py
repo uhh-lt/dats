@@ -8,10 +8,9 @@ from crawler.spiders.utils import slugify
 
 
 class MyImagesPipeline(ImagesPipeline):
-
     def file_path(self, request, response=None, info=None, *, item=None):
         # the name of the html page (without .html)
-        file_name = item['file_name']
+        file_name = item["file_name"]
 
         # # find image name and image suffix
         image_path = Path(urlparse(request.url).path)  # the last part of the url
@@ -21,7 +20,9 @@ class MyImagesPipeline(ImagesPipeline):
 
         # might need to change suffix
         if response:
-            image_suffix = mimetypes.guess_extension(response.headers.get('Content-Type').decode())
+            image_suffix = mimetypes.guess_extension(
+                response.headers.get("Content-Type").decode()
+            )
             if image_suffix and not image_path.name.endswith(image_suffix):
                 name = f"{slugify(file_name + '-' + image_name)}{image_suffix}"
 
@@ -30,8 +31,8 @@ class MyImagesPipeline(ImagesPipeline):
     def item_completed(self, results, item, info):
         # collect images names
         # the image name of failed downloads are False
-        image_names = [result[1]['path'] if result[0] else False for result in results]
+        image_names = [result[1]["path"] if result[0] else False for result in results]
 
         # write item names
-        item['image_names'] = image_names
+        item["image_names"] = image_names
         return item

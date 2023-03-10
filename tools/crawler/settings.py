@@ -7,14 +7,14 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'crawler'
+BOT_NAME = "crawler"
 
-SPIDER_MODULES = ['crawler.spiders']
-NEWSPIDER_MODULE = 'crawler.spiders'
+SPIDER_MODULES = ["crawler.spiders"]
+NEWSPIDER_MODULE = "crawler.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.3'
+USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.3"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -67,15 +67,15 @@ DOWNLOAD_DELAY = 0.25
 #    'incel.pipelines.IncelPipeline': 300,
 # }
 ITEM_PIPELINES = {
-    'crawler.pipelines.readability_pipeline.ReadabilityPipeline': 1,
-    'crawler.pipelines.txtclean_pipeline.TXTCleanPipeline': 2,
-    'crawler.pipelines.htmlclean_pipeline.HTMLCleanPipeline': 3,
-    'crawler.pipelines.extract_image_pipeline.ExtractImagePipeline': 4,
-    'crawler.pipelines.image_pipeline.MyImagesPipeline': 5,
-    'crawler.pipelines.replace_image_pipeline.ReplaceImagePipeline': 6,
-    'crawler.pipelines.write_pipeline.WritePipeline': 7,
+    "crawler.pipelines.readability_pipeline.ReadabilityPipeline": 1,
+    "crawler.pipelines.txtclean_pipeline.TXTCleanPipeline": 2,
+    "crawler.pipelines.htmlclean_pipeline.HTMLCleanPipeline": 3,
+    "crawler.pipelines.extract_image_pipeline.ExtractImagePipeline": 4,
+    "crawler.pipelines.image_pipeline.MyImagesPipeline": 5,
+    "crawler.pipelines.replace_image_pipeline.ReplaceImagePipeline": 6,
+    "crawler.pipelines.write_pipeline.WritePipeline": 7,
 }
-IMAGES_STORE = 'data/images'
+IMAGES_STORE = "data/images"
 MEDIA_ALLOW_REDIRECTS = True
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -100,5 +100,5 @@ MEDIA_ALLOW_REDIRECTS = True
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # Set settings whose default value is deprecated to a future-proof value
-REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
-TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'
+REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
+TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"

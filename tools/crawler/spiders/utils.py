@@ -6,7 +6,9 @@ from typing import Union
 
 def validate_output_dir(output_dir: Union[str, None]) -> Path:
     if output_dir is None:
-        print("You have to provide an output directory with -a output_directory=/path/to/directory")
+        print(
+            "You have to provide an output directory with -a output_directory=/path/to/directory"
+        )
         exit()
 
     output_dir = Path(output_dir)
