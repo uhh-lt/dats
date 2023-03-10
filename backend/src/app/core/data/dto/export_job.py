@@ -49,7 +49,7 @@ class SingleProjectAllDataExportJobParams(SpecificExportJobParameters):
 
 class SingleProjectAllTagsExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_PROJECT_ALL_DATA,
+        default=ExportJobType.SINGLE_PROJECT_ALL_TAGS,
         const=True,
         description="The type of the export job (what to export)",
     )
@@ -84,7 +84,7 @@ class SingleUserAllMemosExportJobParams(SpecificExportJobParameters):
 
 class SingleUserLogbookExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_USER_ALL_MEMOS,
+        default=ExportJobType.SINGLE_USER_LOGBOOK,
         const=True,
         description="The type of the export job (what to export)",
     )
@@ -106,7 +106,7 @@ class SingleDocSingleUserAnnotationsExportJobParams(
     SpecificExportJobParameters
 ):
     export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS,
+        default=ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS,
         const=True,
         description="The type of the export job (what to export)",
     )
