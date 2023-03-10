@@ -10,7 +10,11 @@ export type TagStat = {
    */
   tag: DocumentTagRead;
   /**
-   * Number of occurrences of the document tag.
+   * Number of occurrences of the document tag in the filtered documents
    */
-  count: number;
+  filtered_count: number;
+  /**
+   * Number of occurrences of the document tag in all documents
+   */
+  global_count: number;
 };

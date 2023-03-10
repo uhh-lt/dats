@@ -129,12 +129,17 @@ export class SearchService {
    */
   public static searchTagStats({
     requestBody,
+    sortByGlobal = false,
   }: {
     requestBody: SearchSDocsQueryParameters;
+    sortByGlobal?: boolean;
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/tag_stats",
+      query: {
+        sort_by_global: sortByGlobal,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

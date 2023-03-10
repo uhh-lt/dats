@@ -10,18 +10,16 @@ import { sortStats } from "./utils";
 
 interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
-  tagTotalCountMap: Map<number, number>;
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
 }
 
-function DocumentTagStats({ tagStats, tagTotalCountMap, handleClick, parentRef }: DocumentTagStatsProps) {
+function DocumentTagStats({ tagStats, handleClick, parentRef }: DocumentTagStatsProps) {
   return (
     <>
       {tagStats.isSuccess ? (
         <DocumentTagStatsContent
           tagStats={tagStats.data}
-          tagTotalCountMap={tagTotalCountMap}
           handleClick={handleClick}
           parentRef={parentRef}
         />
@@ -40,12 +38,11 @@ export default DocumentTagStats;
 
 interface DocumentTagStatsContentProps {
   tagStats: TagStat[];
-  tagTotalCountMap: Map<number, number>;
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
 }
 
-function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, parentRef }: DocumentTagStatsContentProps) {
+function DocumentTagStatsContent({ tagStats, handleClick, parentRef }: DocumentTagStatsContentProps) {
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: tagStats.length,
@@ -53,13 +50,8 @@ function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, pare
     estimateSize: () => 35,
   });
 
-  const statsOrder = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
-  useMemo(() => {
-    sortStats(statsOrder, tagStats, tagTotalCountMap, (a: TagStat) => a.tag.id);
-  }, [tagStats, tagTotalCountMap, statsOrder]);
-
   // computed
-  const maxValue = useMemo(() => Math.max(...Array.from(tagTotalCountMap.values())), [tagTotalCountMap]);
+  const maxValue = useMemo(() => Math.max(...tagStats.map(t => t.global_count)), [tagStats]);
 
   return (
     <TabPanel
@@ -73,37 +65,17 @@ function DocumentTagStatsContent({ tagStats, tagTotalCountMap, handleClick, pare
     >
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         let tagStat = tagStats[virtualItem.index];
-
-        if (tagTotalCountMap.has(tagStat.tag.id)) {
-          return (
-            <DocumentTagStatButtonContent
-              tagId={tagStat.tag.id}
-              key={virtualItem.key}
-              term={""}
-              count={tagStat.count}
-              totalCount={tagTotalCountMap.get(tagStat.tag.id)!}
-              maxCount={maxValue}
-              translateY={virtualItem.start}
-              handleClick={() => handleClick(tagStat.tag.id)}
-            />
-          );
-        }
         return (
-          <div
+          <DocumentTagStatButtonContent
+            tagId={tagStat.tag.id}
             key={virtualItem.key}
-            style={{
-              width: "100%",
-              height: 30,
-              position: "absolute",
-              top: 0,
-              left: 0,
-              transform: `translateY(${virtualItem.start}px)`,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {tagStat.tag.title}: {tagStat.count} No total count... Why?
-          </div>
+            term={""}
+            count={tagStat.filtered_count}
+            totalCount={tagStat.global_count}
+            maxCount={maxValue}
+            translateY={virtualItem.start}
+            handleClick={() => handleClick(tagStat.tag.id)}
+          />
         );
       })}
     </TabPanel>

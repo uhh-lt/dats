@@ -55,19 +55,7 @@ function SearchStatistics({
   const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
   const codeStats = SearchHooks.useSearchEntityDocumentStats(projectId, filter, sortStatsByGlobal);
   const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter, sortStatsByGlobal);
-
-  const tagTotalCount = SearchHooks.useSearchTagStats(projectId, []);
-  const tagStats = SearchHooks.useSearchTagStats(projectId, filter);
-  const tagTotalCountMap = useMemo(() => {
-    // map from tag_id -> tag_count
-    const result = new Map<number, number>();
-    if (!tagTotalCount.data) return result;
-
-    tagTotalCount.data.forEach((stat) => {
-      result.set(stat.tag.id, stat.count);
-    });
-    return result;
-  }, [tagTotalCount.data]);
+  const tagStats = SearchHooks.useSearchTagStats(projectId, filter, sortStatsByGlobal);
 
   // computed
   const filteredProjectCodes = useMemo(() => {
@@ -125,7 +113,6 @@ function SearchStatistics({
           />
           <DocumentTagStats
             tagStats={tagStats}
-            tagTotalCountMap={tagTotalCountMap}
             handleClick={handleTagClick}
             parentRef={parentRef}
           />

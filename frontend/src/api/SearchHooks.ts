@@ -262,7 +262,7 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[], sortB
   );
 };
 
-const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
+const useSearchTagStats = (projectId: number, filters: SearchFilter[], sortStatsByGlobal: boolean) => {
   const { user } = useAuth();
   const resultModalities = useAppSelector((state) => state.search.resultModalities);
   return useQuery<TagStat[], Error>(
@@ -282,6 +282,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[]) => {
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
         },
+        sortByGlobal: sortStatsByGlobal,
       });
     },
     {

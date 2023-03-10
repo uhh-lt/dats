@@ -3386,6 +3386,14 @@
         "summary": "Returns TagStat for the given SourceDocuments.",
         "description": "Returns Stat for the given SourceDocuments.",
         "operationId": "search_tag_stats",
+        "parameters": [
+          {
+            "required": false,
+            "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
+            "name": "sort_by_global",
+            "in": "query"
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }
@@ -5388,7 +5396,7 @@
       },
       "TagStat": {
         "title": "TagStat",
-        "required": ["tag", "count"],
+        "required": ["tag", "filtered_count", "global_count"],
         "type": "object",
         "properties": {
           "tag": {
@@ -5396,7 +5404,16 @@
             "allOf": [{ "$ref": "#/components/schemas/DocumentTagRead" }],
             "description": "The counted document tag."
           },
-          "count": { "title": "Count", "type": "integer", "description": "Number of occurrences of the document tag." }
+          "filtered_count": {
+            "title": "Filtered Count",
+            "type": "integer",
+            "description": "Number of occurrences of the document tag in the filtered documents"
+          },
+          "global_count": {
+            "title": "Global Count",
+            "type": "integer",
+            "description": "Number of occurrences of the document tag in all documents"
+          }
         }
       },
       "UserAuthorizationHeaderData": {
