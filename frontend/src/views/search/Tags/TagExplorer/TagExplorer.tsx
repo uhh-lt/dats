@@ -20,6 +20,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import TagExplorerContextMenu from "./TagExplorerContextMenu";
 import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
 import Box from "@mui/material/Box";
+import ExporterButton from "../../../../features/Exporter/ExporterButton";
 
 interface TagSearchProps {
   handleAllDocumentsClick: () => void;
@@ -73,8 +74,11 @@ function TagExplorer({
         </ListItem>
       </List>
 
-      <Typography variant="h6" sx={{ mt: 1, px: 2 }}>
-        Tags:
+      <Typography variant="h6" component="div" sx={{ mt: 1, pl: 2 }} className="myShowMoreContainer">
+        Tags:{" "}
+        <span style={{ float: "right" }} className="myShowMoreMenu">
+          <ExporterButton tooltip="Export tagset" exporterConfig={{ test: 0 }} />
+        </span>
       </Typography>
       <List>
         {allTags.isLoading && <div>Loading!</div>}

@@ -177,7 +177,7 @@ function DocumentExplorerListItem({
           </div>
         }
         disablePadding
-        className="myShowMoreListItem"
+        className="myShowMoreContainer"
         {...props}
       >
         <ListItemButton component={RouterLink} to={`../annotation/${sdocId}`} selected={selectedSdocId === sdocId}>

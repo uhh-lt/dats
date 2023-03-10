@@ -8,6 +8,7 @@ import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
 import * as React from "react";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
+import ExporterButton from "../../../features/Exporter/ExporterButton";
 
 interface SearchResultsToolbarProps {
   searchResultDocumentIds: number[];
@@ -32,6 +33,7 @@ function SearchResultsToolbar({
             {numSelectedDocuments} selected
           </Typography>
           <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
+          <ExporterButton tooltip={`Export ${numSelectedDocuments} documents`} exporterConfig={{ test: 0 }} />
           <DeleteButton sdocId={-1} disabled />
         </>
       )}

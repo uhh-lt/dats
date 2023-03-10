@@ -10,6 +10,7 @@ import AnnotateButton from "./ToolBarElements/AnnotateButton";
 import { useParams } from "react-router-dom";
 import { AttachedObjectType } from "../../../api/openapi";
 import DownloadButton from "./ToolBarElements/DownloadButton";
+import ExporterButton from "../../../features/Exporter/ExporterButton";
 
 interface DocumentViewerToolbarProps {
   sdocId: number;
@@ -29,6 +30,7 @@ function DocumentViewerToolbar({ sdocId, searchResultIds }: DocumentViewerToolba
       <DeleteButton sdocId={sdocId} />
       <ToggleShowEntitiesButton />
       <DownloadButton sdocId={sdocId} />
+      <ExporterButton tooltip="Export document" exporterConfig={{ test: 0 }} />
 
       <Box sx={{ flexGrow: 1 }} />
 

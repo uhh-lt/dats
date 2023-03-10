@@ -1,17 +1,27 @@
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import { IconButton } from "@mui/material";
+import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import { useCallback } from "react";
-import ExporterAPI from "./ExporterAPI";
+import ExporterAPI, { ExporterConfig } from "./ExporterAPI";
 
-function ExporterButton() {
+interface ExporterButtonProps {
+  tooltip: string;
+  exporterConfig: ExporterConfig;
+  iconButtonProps?: IconButtonProps;
+}
+
+function ExporterButton({ tooltip, exporterConfig, iconButtonProps }: ExporterButtonProps) {
   const handleClick = useCallback(() => {
-    ExporterAPI.openExporterDialog({ test: 1 });
-  }, []);
+    ExporterAPI.openExporterDialog(exporterConfig);
+  }, [exporterConfig]);
 
   return (
-    <IconButton onClick={handleClick}>
-      <SaveAltIcon />
-    </IconButton>
+    <Tooltip title={tooltip}>
+      <span>
+        <IconButton onClick={handleClick} {...iconButtonProps}>
+          <SaveAltIcon />
+        </IconButton>
+      </span>
+    </Tooltip>
   );
 }
 

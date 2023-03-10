@@ -32,7 +32,7 @@ function TagListItem({ tagId, selectedTagId, handleClick, ...props }: TagListIte
             </div>
           }
           disablePadding
-          className="myShowMoreListItem"
+          className="myShowMoreContainer"
           {...props}
         >
           <ListItemButton selected={selectedTagId === tag.data.id} onClick={() => handleClick(tag.data.id)}>

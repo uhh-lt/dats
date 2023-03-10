@@ -1,10 +1,10 @@
 import eventBus from "../../EventBus";
 
-export interface ExporterEvent {
+export interface ExporterConfig {
   test: number;
 }
 
-function openExporterDialog(props: ExporterEvent) {
+function openExporterDialog(props: ExporterConfig) {
   eventBus.dispatch("open-exporter", props);
 }
 

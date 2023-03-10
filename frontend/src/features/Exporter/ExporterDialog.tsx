@@ -23,7 +23,7 @@ import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import eventBus from "../../EventBus";
 import { codesToTree } from "../../views/annotation/CodeExplorer/TreeUtils";
-import { ExporterEvent } from "./ExporterAPI";
+import { ExporterConfig } from "./ExporterAPI";
 import ExporterTreeSelect from "./ExporterTreeSelect";
 import ExporterItemSelectList from "./ExporterItemSelectList";
 
@@ -87,7 +87,7 @@ function ExporterDialog() {
   );
 
   // listen to open-memo event and open the dialog
-  const openModal = useCallback((event: CustomEventInit<ExporterEvent>) => {
+  const openModal = useCallback((event: CustomEventInit<ExporterConfig>) => {
     setOpen(true);
     // setExporterData(event.detail);
   }, []);
