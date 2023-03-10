@@ -12,4 +12,4 @@ jobs:
           options: "--verbose"
           src: "./backend/src"
           jupyter: true
-          version: "21.5b1"
+          version: "22.3.0"
