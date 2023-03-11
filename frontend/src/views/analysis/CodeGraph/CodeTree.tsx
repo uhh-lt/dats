@@ -1,138 +1,111 @@
-// @ts-nocheck
-//import { hierarchy, tree, zoom, select } from "d3";
-//import { useEffect, useRef, useState, React, Fragment } from "react";
-//import React, { useEffect, useRef } from "react";
-//import * as d3 from "d3";
-
-//interface CodeTreeProps {
-//  data: ICodeTree[];
-//}
-
-import React, { useEffect, useRef } from "react";
+// @ts-nocheck comment
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
+import { zoom } from "d3-zoom";
+import { ArrayId } from "./CodeGraph";
 
 interface CodeTreeProps {
   data: ICodeTree[];
 }
 
-const ForceLayout = ({ data }) => {
+interface Link {
+  source: string;
+  target: string;
+}
+
+interface NodeData {
+  id: ArrayId[];
+  name: string;
+  color: string;
+  // Add other properties here if needed
+}
+
+interface Node extends d3.SimulationNodeDatum {
+  data: NodeData;
+  x: number;
+  y: number;
+}
+
+const ForceLayout = ({ data }: CodeTreeProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const simulationRef = useRef<d3.Simulation<ICodeTree[], undefined> | null>(null);
+  const simulationRef = useRef<d3.Simulation<Node, Link> | null>(null);
+
+  const width = 1000;
+  const height = 1000;
+
+  const graphWidth = width / data.length;
+  const graphHeight = height / data.length;
+
+  const nodes: Node[] = data
+    .map((arr, index) =>
+      arr.map((obj) => ({
+        id: obj.id,
+        data: obj,
+        x: index * graphWidth + Math.random() * graphWidth,
+        y: index * graphHeight + Math.random() * graphHeight,
+      }))
+    )
+    .flat();
+
+  const links: Link[] = [];
+  data.forEach((arr) => {
+    for (let i = 0; i < arr?.length - 1; i++) {
+      links.push({ source: arr[i].id, target: arr[i + 1].id });
+    }
+  });
+
+  const simulation = d3
+    .forceSimulation(nodes)
+    .force(
+      "link",
+      d3.forceLink(links).id((d) => d.id)
+    )
+    .force("charge", d3.forceManyBody().strength(-1000))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("radial", d3.forceRadial(50, width / 2, height / 2))
+    .force("collide", d3.forceCollide().radius(10));
+
+  simulationRef.current = simulation;
+
+  const nodesElements = nodes.map((node) => (
+    <>
+      <circle key={`circle-${node.id}`} r={5} fill={node.data.color} cx={node.x} cy={node.y} />
+      <text key={`text-${node.id}`} x={node.x + 8} y={node.y + 4} fill="black">
+        {node.data.name}
+      </text>
+    </>
+  ));
+
+  const linksElements = links.map((link, index) => (
+    <line
+      key={index}
+      x1={link.source.x}
+      y1={link.source.y}
+      x2={link.target.x}
+      y2={link.target.y}
+      stroke="black"
+      strokeWidth="1"
+    />
+  ));
 
   useEffect(() => {
-    if (!svgRef.current) return;
-
-    const svg = d3.select(svgRef.current);
-
-    const width = +svg.attr("width");
-    const height = +svg.attr("height");
-
-    const links = [];
-    data.forEach((arr) => {
-      for (let i = 0; i < arr.length - 1; i++) {
-        links.push({ source: arr[i].id, target: arr[i + 1].id });
-      }
-    });
-
-    const simulation = d3
-      .forceSimulation(data.flat().map((d) => Object.assign({}, d)))
-      .force(
-        "link",
-        d3.forceLink(links).id((d) => d.id)
-      )
-      .force("charge", d3.forceManyBody().strength(-50))
-      .force("center", d3.forceCenter(width / 2, height / 2));
-
-    simulationRef.current = simulation;
-    simulation &&
-      simulation.on("tick", () => {
-        svg
-          .selectAll(".link")
-          .attr("x1", (d) => d?.source?.x!)
-          .attr("y1", (d) => d?.source?.y!)
-          .attr("x2", (d) => d?.target?.x!)
-          .attr("y2", (d) => d?.target?.y!);
-
-        svg
-          .selectAll(".node")
-          .attr("cx", (d) => d?.x!)
-          .attr("cy", (d) => d?.y!);
-      });
-
-    return () => {
-      simulation.stop();
-    };
-  }, [data]);
-
-  return (
-    <svg ref={svgRef} width={500} height={500}>
-      {data.map((arr) => arr.map((obj) => <circle key={obj.id} className="node" r={5} fill="red" />))}
-      {data.flatMap((arr, i) =>
-        arr
-          .slice(0, arr.length - 1)
-          .map((obj, j) => <line key={`${i}-${j}`} className="link" stroke="black" strokeWidth={1} />)
-      )}
-    </svg>
-  );
-};
-
-{
-  /*const ForceLayout = ({ data }) => {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const simulationRef = useRef<d3.Simulation<ICodeTree[], undefined> | null>(null);
-
-  useEffect(() => {
-    if (!svgRef.current) return;
-
-    const svg = d3.select(svgRef.current);
-
-    const width = +svg.attr("width");
-    const height = +svg.attr("height");
-
-    const nodes = data.map((arr) => arr.map((obj) => ({ id: obj.id, data: obj }))).flat();
-
-    const links = [];
-    data.forEach((arr) => {
-      for (let i = 0; i < arr.length - 1; i++) {
-        links.push({ source: arr[i].id, target: arr[i + 1].id });
-      }
-    });
-
-    const simulation = d3
-      .forceSimulation(nodes)
-      .force(
-        "link",
-        d3.forceLink(links).id((d) => d.id)
-      )
-      .force("charge", d3.forceManyBody().strength(-50))
-      .force("center", d3.forceCenter(width / 2, height / 2));
-
-    simulationRef.current = simulation;
-
-    const link = svg
-      .selectAll(".link")
-      .data(links)
-      .join("line")
-      .attr("class", "link")
-      .attr("stroke", "black")
-      .attr("stroke-width", "1");
-
-    const node = svg
-      .selectAll(".node")
-      .data(nodes)
-      .join("circle")
-      .attr("class", "node")
-      .attr("r", 5)
-      .attr("fill", "red");
-
     const ticked = () => {
-      link
-        .attr("x1", (d) => d.source.x!)
-        .attr("y1", (d) => d.source.y!)
-        .attr("x2", (d) => d.target.x!)
-        .attr("y2", (d) => d.target.y!);
+      svgRef.current &&
+        svgRef.current.querySelectorAll(".node").forEach((node, index) => {
+          const { x, y } = simulationRef.current!.nodes()[index];
+          node.setAttribute("cx", x.toString());
+          node.setAttribute("cy", y.toString());
+        });
 
-      node.attr("cx", (d) => d.x!).attr("cy", (d) => d.y!);
+      svgRef.current &&
+        svgRef.current.querySelectorAll(".link").forEach((link, index) => {
+          const { source, target } = simulationRef.current!.force("link")!.links()[index];
+          link.setAttribute("x1", source.x.toString());
+          link.setAttribute("y1", source.y.toString());
+          link.setAttribute("x2", target.x.toString());
+          link.setAttribute("y2", target.y.toString());
+        });
     };
 
     simulation.on("tick", ticked);
@@ -140,10 +113,32 @@ const ForceLayout = ({ data }) => {
     return () => {
       simulation.stop();
     };
-  }, [data]);
+  }, [data, nodes, links]);
 
-  return <svg ref={svgRef} width={500} height={500} />;
-}; */
-}
+  const [transform, setTransform] = useState(d3.zoomIdentity);
+  useEffect(() => {
+    const zoom = d3
+      .zoom()
+      .scaleExtent([0.1, 4])
+      .on("zoom", (event) => {
+        setTransform(event.transform);
+      });
+
+    d3.select(svgRef.current).call(zoom).on("dblclick.zoom", null);
+  }, []);
+
+  return (
+    <div>
+      <svg ref={svgRef} width={width} height={height} transform={transform} style={{ overflow: "auto" }}>
+        {data.map((arr, index) => (
+          <g key={index} transform={`translate(${index * graphWidth}, ${index * graphHeight})`}>
+            <g>{nodesElements.slice(index * arr.length, (index + 1) * arr.length)}</g>
+            <g>{linksElements.slice(index * (arr.length - 1), index * (arr.length - 1) + arr.length - 1)}</g>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+};
 
 export default ForceLayout;
