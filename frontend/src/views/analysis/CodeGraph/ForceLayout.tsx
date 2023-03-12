@@ -18,7 +18,6 @@ interface NodeData {
   id: ArrayId[];
   name: string;
   color: string;
-  // Add other properties here if needed
 }
 
 interface Node extends d3.SimulationNodeDatum {

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import CodeExplorer, { CodeExplorerHandle } from "../../annotation/CodeExplorer/CodeExplorer";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
-import ForceLayout from "./CodeTree";
+import ForceLayout from "./ForceLayout";
 
 import useComputeCodeTree from "./useComputeCodeTree";
 
