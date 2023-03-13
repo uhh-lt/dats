@@ -11,6 +11,7 @@ import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
 import TextAnnotator from "./TextAnnotator/TextAnnotator";
 import { DocType } from "../../api/openapi";
 import MemoExplorer from "./MemoExplorer/MemoExplorer";
+import ExporterButton from "../../features/Exporter/ExporterButton";
 
 function Annotation() {
   // global client state (URL)
@@ -95,6 +96,12 @@ function Annotation() {
                     Memo Explorer
                   </Button>
                 </ButtonGroup>
+                <div style={{ flexGrow: 1 }} />
+                <ExporterButton
+                  tooltip="Export codeset"
+                  exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
+                  iconButtonProps={{ edge: "end", color: "inherit" }}
+                />
               </Toolbar>
             </AppBar>
             {showCodeExplorer ? <CodeExplorer /> : <MemoExplorer sdocId={sourceDocumentId} />}
