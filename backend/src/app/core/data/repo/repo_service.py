@@ -4,29 +4,29 @@ import urllib.parse as url
 import uuid
 import zipfile
 from pathlib import Path
-from typing import Tuple, Optional, List, Union
+from typing import List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import magic
-from fastapi import UploadFile, HTTPException
-from loguru import logger
-
-from app.core.data.doc_type import get_doc_type, DocType
+from app.core.data.doc_type import DocType, get_doc_type
 from app.core.data.dto.source_document import (
+    SDOC_FILENAME_MAX_LENGTH,
+    SDOC_SUFFIX_MAX_LENGTH,
+    SDocStatus,
     SourceDocumentCreate,
     SourceDocumentRead,
-    SDocStatus,
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf
-
+from fastapi import HTTPException, UploadFile
+from loguru import logger
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...
 
 
 class SourceDocumentNotFoundInRepositoryError(Exception):
-    def __init__(self, sdoc: SourceDocumentRead, dst: str):
+    def __init__(self, sdoc: SourceDocumentRead, dst: Union[str, Path]):
         super().__init__(
             (
                 f"The original file of SourceDocument {sdoc.id} ({sdoc.filename}) cannot be found in "
@@ -36,14 +36,14 @@ class SourceDocumentNotFoundInRepositoryError(Exception):
 
 
 class FileNotFoundInRepositoryError(Exception):
-    def __init__(self, proj_id: int, filename: str, dst: str):
+    def __init__(self, proj_id: int, filename: Union[str, Path], dst: Union[str, Path]):
         super().__init__(
             f"The file '{filename}' of Project {proj_id} cannot be found in the DWTS Repository at {dst}"
         )
 
 
 class FileAlreadyExistsInRepositoryError(Exception):
-    def __init__(self, proj_id: int, filename: str, dst: str):
+    def __init__(self, proj_id: int, filename: Union[str, Path], dst: str):
         super().__init__(
             f"Cannot store the file '{filename}' of Project {proj_id} because there is a file with the "
             f"same name in the DWTS Repository at {dst}"
@@ -85,6 +85,21 @@ class RepoService(metaclass=SingletonMeta):
         cls.base_url = base_url
 
         return super(RepoService, cls).__new__(cls)
+
+    @staticmethod
+    def truncate_filename(filename: Union[str, Path]) -> str:
+        # convert to path if str
+        filename = Path(filename)
+        # we want to keep the last three suffixes (if they exist)
+        suffix = "".join(filename.suffixes[-3:])[-SDOC_SUFFIX_MAX_LENGTH:]
+        filename = filename.with_name(
+            # remove the suffixes to only truncate the true name / stem
+            # and then truncate to max length
+            filename.name.removesuffix(suffix)[:SDOC_FILENAME_MAX_LENGTH]
+        ).with_suffix(
+            suffix
+        )  # and add suffix again
+        return str(filename)
 
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
         try:
@@ -146,7 +161,8 @@ class RepoService(metaclass=SingletonMeta):
     def remove_all_project_sdoc_files(self, proj_id: int) -> None:
         logger.info(f"Removing all SourceDocument Files of project with ID={proj_id}")
         for f in map(
-            Path, os.scandir(self._get_project_repo_sdocs_root_path(proj_id=proj_id))
+            Path,
+            os.scandir(self._get_project_repo_sdocs_root_path(proj_id=proj_id)),
         ):
             logger.info(
                 f"Removing SourceDocument File {f.name} of project with ID={proj_id}"
@@ -154,9 +170,12 @@ class RepoService(metaclass=SingletonMeta):
             f.unlink(missing_ok=False)
 
     def generate_sdoc_filename(
-        self, filename: str, webp: bool = False, thumbnail: bool = False
+        self,
+        filename: Union[str, Path],
+        webp: bool = False,
+        thumbnail: bool = False,
     ) -> str:
-        filename = Path(filename)
+        filename = Path(self.truncate_filename(filename))
         if webp:
             if thumbnail:
                 return f"{filename}.thumbnail.webp"
@@ -175,7 +194,7 @@ class RepoService(metaclass=SingletonMeta):
         webp: bool = False,
         thumbnail: bool = False,
     ) -> Path:
-        filename = sdoc.filename
+        filename = Path(self.truncate_filename(sdoc.filename))
         if sdoc.doctype == DocType.image:
             filename = self.generate_sdoc_filename(
                 filename=filename, webp=webp, thumbnail=thumbnail
@@ -200,7 +219,10 @@ class RepoService(metaclass=SingletonMeta):
     def _get_project_repo_sdocs_root_path(self, proj_id: int) -> Path:
         return self.get_project_repo_root_path(proj_id=proj_id).joinpath("docs/")
 
-    def _get_dst_path_for_project_file(self, proj_id: int, filename: str) -> Path:
+    def _get_dst_path_for_project_file(
+        self, proj_id: int, filename: Union[str, Path]
+    ) -> Path:
+        filename = Path(self.truncate_filename(filename))
         return self._get_project_repo_sdocs_root_path(proj_id=proj_id).joinpath(
             f"{filename}"
         )
@@ -221,8 +243,9 @@ class RepoService(metaclass=SingletonMeta):
         return dst_path
 
     def _create_directory_structure_for_project_file(
-        self, proj_id: int, filename: str
-    ) -> Optional[Path]:
+        self, proj_id: int, filename: Union[str, Path]
+    ) -> Path:
+        filename = Path(self.truncate_filename(filename))
         dst_path = self._get_dst_path_for_project_file(
             proj_id=proj_id, filename=filename
         )
@@ -245,6 +268,8 @@ class RepoService(metaclass=SingletonMeta):
     def create_temp_file(self, fn: Optional[Union[str, Path]]) -> Path:
         if fn is None:
             fn = str(uuid.uuid4())
+
+        fn = Path(self.truncate_filename(fn))
         p = self.temp_files_root / fn
         if p.exists():
             logger.warning(f"Temporary File '{fn}' already exists and is removed now!")
@@ -254,7 +279,8 @@ class RepoService(metaclass=SingletonMeta):
 
         return p
 
-    def get_temp_file_url(self, fn: str, relative: bool = True) -> str:
+    def get_temp_file_url(self, fn: Union[str, Path], relative: bool = True) -> str:
+        fn = Path(self.truncate_filename(fn))
         p = self.temp_files_root / fn
         if not p.exists():
             raise FileNotFoundInRepositoryError(proj_id=-1, filename=fn, dst=p)
@@ -328,11 +354,12 @@ class RepoService(metaclass=SingletonMeta):
         self, proj_id: int, uploaded_file: UploadFile
     ) -> Path:
         try:
+            fn = Path(self.truncate_filename(uploaded_file.filename))
             in_project_dst = self._create_directory_structure_for_project_file(
-                proj_id=proj_id, filename=uploaded_file.filename
+                proj_id=proj_id, filename=fn
             )
             logger.info(
-                f"Storing Uploaded File {uploaded_file.filename} in Project {proj_id} Repo at {in_project_dst}"
+                f"Storing Uploaded File {fn} in Project {proj_id} Repo at {in_project_dst}"
             )
             real_file_size = 0
             with open(in_project_dst, "wb") as f:
@@ -342,7 +369,7 @@ class RepoService(metaclass=SingletonMeta):
                         raise HTTPException(
                             status_code=413,
                             detail=(
-                                f"File {uploaded_file.filename} is too large!"
+                                f"File {fn} is too large!"
                                 f" Maximum allowed size in bytes: {conf.api.max_upload_file_size}"
                             ),
                         )
@@ -355,10 +382,12 @@ class RepoService(metaclass=SingletonMeta):
         except Exception as e:
             # FIXME Flo: Throw or what?!
             logger.warning(f"Cannot store uploaded file! Error:\n  {e}")
+            raise e
 
     def build_source_document_create_dto_from_file(
-        self, proj_id: int, filename: str
+        self, proj_id: int, filename: Union[str, Path]
     ) -> Tuple[Path, SourceDocumentCreate]:
+        filename = Path(self.truncate_filename(filename))
         dst_path = self._get_dst_path_for_project_file(
             proj_id=proj_id, filename=filename
         )
