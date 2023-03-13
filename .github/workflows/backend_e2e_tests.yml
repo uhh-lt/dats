@@ -1,14 +1,7 @@
-name: Backend Tests
+name: Backend End2End Tests
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches:
-      - main
-      - mwp_v1
-    paths:
-      - 'backend/**'
   pull_request:
-    branches: 
+    branches:
       - main
       - mwp_v1
 
@@ -16,20 +9,20 @@ on:
   workflow_dispatch:
     inputs:
       logLevel:
-        description: 'Log level'
+        description: "Log level"
         required: true
-        default: 'warning'
+        default: "warning"
         type: choice
         options:
-        - info
-        - warning
-        - debug
+          - info
+          - warning
+          - debug
       tags:
-        description: 'Test scenario tags'
+        description: "Test scenario tags"
         required: false
         type: boolean
       environment:
-        description: 'Environment to run tests against'
+        description: "Environment to run tests against"
         type: environment
         required: true
 
@@ -46,7 +39,7 @@ jobs:
           echo "Log level: $LEVEL"
           echo "Tags: $TAGS"
           echo "Environment: $ENVIRONMENT"
-  run-test:
+  run-end2end-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Set Swap Space to 10GB
@@ -70,9 +63,6 @@ jobs:
           echo Waiting for containers to start...
           sleep 240
           cd ..
-      - name: Run CRUD tests
-        run: |
-          docker exec -i demo-dwts-backend-api-1 /opt/envs/dwts/bin/python -m pytest
       - name: Run Import Data End-To-End Test
         env:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
