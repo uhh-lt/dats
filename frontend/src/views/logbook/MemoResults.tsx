@@ -4,7 +4,8 @@ import { AttachedObjectType } from "../../api/openapi";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import MemoCard from "./MemoCard";
 import MemoResultsContextMenu from "./MemoResultsContextMenu";
-import { CardContent, List } from "@mui/material";
+import { Box, CardContent, List } from "@mui/material";
+import { BoxProps } from "@mui/system";
 
 interface MemoResultsProps {
   memoIds: number[];
@@ -17,7 +18,7 @@ export interface MemoCardContextMenuData {
   attachedObjectType: AttachedObjectType | undefined;
 }
 
-function MemoResults({ noResultsText, memoIds }: MemoResultsProps) {
+function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & BoxProps) {
   // virtualized results
   const containerRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
   const rowVirtualizer = useVirtualizer({
@@ -48,7 +49,7 @@ function MemoResults({ noResultsText, memoIds }: MemoResultsProps) {
         position={contextMenuPosition}
         handleClose={() => setContextMenuPosition(null)}
       />
-      <CardContent ref={containerRef} style={{ height: "100%", padding: 0, overflowY: "auto" }}>
+      <Box ref={containerRef} style={{ height: "100%", overflowY: "auto" }} {...props}>
         <List
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
@@ -63,6 +64,7 @@ function MemoResults({ noResultsText, memoIds }: MemoResultsProps) {
               ref={(element) => rowVirtualizer.measureElement(element)}
               dataIndex={virtualItem.index}
               style={{
+                paddingBottom: "8px",
                 width: "100%",
                 position: "absolute",
                 top: 0,
@@ -75,7 +77,7 @@ function MemoResults({ noResultsText, memoIds }: MemoResultsProps) {
           ))}
           {memoIds.length === 0 && <div>{noResultsText}</div>}
         </List>
-      </CardContent>
+      </Box>
     </>
   );
 }

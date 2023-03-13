@@ -93,6 +93,7 @@ function Logbook() {
           {memos.isError && <div>Error: {memos.error.message}</div>}
           {memos.isSuccess && (
             <MemoResults
+              sx={{ pl: 1 }}
               memoIds={memos.data
                 .filter((m) => !FILTER_OUT_TYPES.includes(m.attached_object_type))
                 .filter((m) => categories.includes(m.attached_object_type))
