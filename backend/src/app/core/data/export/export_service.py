@@ -585,7 +585,9 @@ class ExportService(metaclass=SingletonMeta):
         sdoc = crud_sdoc.read(db=db, id=sdoc_id)
         all_adocs = sdoc.annotation_documents
         if len(all_adocs) == 0:
-            raise NoDataToExportError(f"There are no annotations for SDoc {sdoc_id} in Project {project_id}")
+            raise NoDataToExportError(
+                f"There are no annotations for SDoc {sdoc_id} in Project {project_id}"
+            )
 
         # export the data
         export_data = None
