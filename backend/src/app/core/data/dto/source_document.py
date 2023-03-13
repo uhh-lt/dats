@@ -7,6 +7,9 @@ from pydantic import BaseModel, Field
 from app.core.data.doc_type import DocType
 from app.core.data.dto.util import PaginatedResults
 
+SDOC_FILENAME_MAX_LENGTH = 200
+SDOC_SUFFIX_MAX_LENGTH = 30
+
 
 class SDocStatus(str, Enum):
     undefined_or_erroneous = "undefined_or_erroneous"  # "undefined_or_erroneous"
@@ -75,7 +78,10 @@ class SDocStatus(str, Enum):
 
 # Properties shared across all DTOs
 class SourceDocumentBaseDTO(BaseModel):
-    filename: str = Field(description="Filename of the SourceDocument")
+    filename: str = Field(
+        description="Filename of the SourceDocument",
+        max_length=SDOC_FILENAME_MAX_LENGTH + SDOC_SUFFIX_MAX_LENGTH,
+    )
     content: str = Field(description="Content of the SourceDocument")
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
     status: SDocStatus = Field(description="Status of the SourceDocument")
@@ -134,7 +140,8 @@ class SourceDocumentTokens(BaseModel):
         description="The (textual) list Tokens of the SourceDocument the Tokens belong to."
     )
     token_character_offsets: Optional[List[Tuple[int, int]]] = Field(
-        description=("The list of character offsets of" " the Tokens"), default=None
+        description=("The list of character offsets of" " the Tokens"),
+        default=None,
     )
 
 
@@ -146,7 +153,8 @@ class SourceDocumentSentences(BaseModel):
         description="The Sentences of the SourceDocument the Sentences belong to."
     )
     sentence_character_offsets: Optional[List[Tuple[int, int]]] = Field(
-        description=("The list of character offsets of" " the Sentences"), default=None
+        description=("The list of character offsets of" " the Sentences"),
+        default=None,
     )
 
 
