@@ -22,9 +22,10 @@ interface ExporterSelectListProps {
   value: number[];
   onChange: (value: number[]) => void;
   itemsPerPage: number;
+  singleSelect: boolean;
 }
 
-function ExporterItemSelectList({ items, value, onChange, itemsPerPage }: ExporterSelectListProps) {
+function ExporterItemSelectList({ items, value, onChange, itemsPerPage, singleSelect }: ExporterSelectListProps) {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("");
 
@@ -50,16 +51,20 @@ function ExporterItemSelectList({ items, value, onChange, itemsPerPage }: Export
   };
 
   const handleToggle = (id: number) => () => {
-    const currentIndex = value.indexOf(id);
-    const newValue = [...value];
-
-    if (currentIndex === -1) {
-      newValue.push(id);
+    if (singleSelect) {
+      onChange([id]);
     } else {
-      newValue.splice(currentIndex, 1);
-    }
+      const currentIndex = value.indexOf(id);
+      const newValue = [...value];
 
-    onChange(newValue);
+      if (currentIndex === -1) {
+        newValue.push(id);
+      } else {
+        newValue.splice(currentIndex, 1);
+      }
+
+      onChange(newValue);
+    }
   };
 
   const handleToggleAll = () => {
@@ -73,15 +78,17 @@ function ExporterItemSelectList({ items, value, onChange, itemsPerPage }: Export
   return (
     <>
       <Toolbar disableGutters sx={{ px: 2 }}>
-        <Checkbox
-          edge="start"
-          tabIndex={-1}
-          disableRipple
-          sx={{ mr: 2 }}
-          indeterminate={value.length > 0 && value.length < items.length}
-          checked={value.length === items.length}
-          onChange={handleToggleAll}
-        />
+        {!singleSelect && (
+          <Checkbox
+            edge="start"
+            tabIndex={-1}
+            disableRipple
+            sx={{ mr: 2 }}
+            indeterminate={value.length > 0 && value.length < items.length}
+            checked={value.length === items.length}
+            onChange={handleToggleAll}
+          />
+        )}
         <TextField
           autoFocus
           fullWidth

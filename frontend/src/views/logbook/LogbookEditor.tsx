@@ -1,10 +1,30 @@
-import React from "react";
 import { Editor } from "@toast-ui/react-editor";
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import MemoHooks from "../../api/MemoHooks";
 import ProjectHooks from "../../api/ProjectHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import { useParams } from "react-router-dom";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import MemoHooks from "../../api/MemoHooks";
+import ExporterAPI from "../../features/Exporter/ExporterAPI";
+
+const toolbarItems = [
+  ["heading", "bold", "italic", "strike"],
+  ["hr", "quote"],
+  ["ul", "ol", "task", "indent", "outdent"],
+  ["table", "image", "link"],
+  ["code", "codeblock"],
+  // Using Option: Customize the last button
+  [
+    {
+      name: "export",
+      tooltip: "Export logbook",
+      command: "export",
+      className: "toastui-editor-toolbar-icons last",
+      style: { backgroundImage: "none" },
+      text: "↓",
+    },
+  ],
+];
 
 function LogbookEditor() {
   // local state
@@ -77,6 +97,21 @@ function LogbookEditor() {
     }
   };
 
+  // add custom commands to editor (export feature)
+  useEffect(() => {
+    if (!editorRef.current) return;
+
+    const editor = editorRef.current.getInstance();
+    editor.addCommand("markdown", "export", () => {
+      ExporterAPI.openExporterDialog({ type: "Logbook", singleUser: true, sdocId: -1, users: [] });
+      return true;
+    });
+    editor.addCommand("wysiwyg", "export", () => {
+      ExporterAPI.openExporterDialog({ type: "Logbook", singleUser: true, sdocId: -1, users: [] });
+      return true;
+    });
+  }, [editorRef]);
+
   return (
     <>
       {!projectMemo.isLoading && user.data ? (
@@ -90,6 +125,7 @@ function LogbookEditor() {
           hideModeSwitch={true}
           ref={editorRef}
           onBlur={() => handleSave()}
+          toolbarItems={toolbarItems}
         />
       ) : null}
     </>

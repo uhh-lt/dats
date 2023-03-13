@@ -30,7 +30,10 @@ function DocumentViewerToolbar({ sdocId, searchResultIds }: DocumentViewerToolba
       <DeleteButton sdocId={sdocId} />
       <ToggleShowEntitiesButton />
       <DownloadButton sdocId={sdocId} />
-      <ExporterButton tooltip="Export document" exporterConfig={{ test: 0 }} />
+      <ExporterButton
+        tooltip="Export annotations of this document"
+        exporterInfo={{ type: "Annotations", sdocId: sdocId, singleUser: true, users: [] }}
+      />
 
       <Box sx={{ flexGrow: 1 }} />
 

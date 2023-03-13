@@ -77,7 +77,10 @@ function TagExplorer({
       <Typography variant="h6" component="div" sx={{ mt: 1, pl: 2 }} className="myShowMoreContainer">
         Tags:{" "}
         <span style={{ float: "right" }} className="myShowMoreMenu">
-          <ExporterButton tooltip="Export tagset" exporterConfig={{ test: 0 }} />
+          <ExporterButton
+            tooltip="Export tagset"
+            exporterInfo={{ type: "Tagset", sdocId: -1, singleUser: false, users: [] }}
+          />
         </span>
       </Typography>
       <List>

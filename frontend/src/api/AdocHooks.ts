@@ -40,7 +40,6 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) => {
           AnnotationDocumentService.getAllSpanAnnotations({
             adocId: adocId,
             resolve: true,
-            includeSentences: true,
           }) as Promise<SpanAnnotationReadResolved[]>,
         select: selectEnabledAnnotations,
       })),

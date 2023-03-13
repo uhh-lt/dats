@@ -1,14 +1,12 @@
 import { Box, Toolbar, ToolbarProps, Typography } from "@mui/material";
-import TagMenuButton from "./ToolBarElements/TagMenuButton";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 import DeleteButton from "./ToolBarElements/DeleteButton";
 import TableNavigation from "./ToolBarElements/TableNavigation";
-import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
-import ToggleListViewButton from "./ToolBarElements/ToggleListViewButton";
-import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
-import * as React from "react";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import TagMenuButton from "./ToolBarElements/TagMenuButton";
 import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
-import ExporterButton from "../../../features/Exporter/ExporterButton";
+import ToggleListViewButton from "./ToolBarElements/ToggleListViewButton";
+import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
+import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
 
 interface SearchResultsToolbarProps {
   searchResultDocumentIds: number[];
@@ -33,7 +31,6 @@ function SearchResultsToolbar({
             {numSelectedDocuments} selected
           </Typography>
           <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
-          <ExporterButton tooltip={`Export ${numSelectedDocuments} documents`} exporterConfig={{ test: 0 }} />
           <DeleteButton sdocId={-1} disabled />
         </>
       )}

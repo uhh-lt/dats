@@ -2015,18 +2015,6 @@
             },
             "name": "resolve",
             "in": "query"
-          },
-          {
-            "description": "If true, the sentence span annotations are also returned",
-            "required": false,
-            "schema": {
-              "title": "Include Sentence Spans",
-              "type": "boolean",
-              "description": "If true, the sentence span annotations are also returned",
-              "default": false
-            },
-            "name": "include_sentences",
-            "in": "query"
           }
         ],
         "responses": {
@@ -3635,8 +3623,8 @@
     "/search/simsearch/sentences": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns similar sentence SpanAnnotation according to a textual or visual query.",
-        "description": "Returns similar sentence SpanAnnotation according to a textual or visual query.",
+        "summary": "Returns similar sentences according to a textual or visual query.",
+        "description": "Returns similar sentences according to a textual or visual query.",
         "operationId": "find_similar_sentences",
         "parameters": [
           { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
@@ -3676,8 +3664,8 @@
     "/search/simsearch/images": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns similar Image SourceDocuments according to a textual or visual query.",
-        "description": "Returns similar Image SourceDocuments according to a textual or visual query.",
+        "summary": "Returns similar images according to a textual or visual query.",
+        "description": "Returns similar images according to a textual or visual query.",
         "operationId": "find_similar_images",
         "parameters": [
           { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
@@ -3931,6 +3919,54 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreProProjectStatus" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/export": {
+      "post": {
+        "tags": ["export"],
+        "summary": "Returns the ExportJob for the given Parameters",
+        "description": "Returns the ExportJob for the given Parameters",
+        "operationId": "start_export_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/export/{export_job_id}": {
+      "get": {
+        "tags": ["export"],
+        "summary": "Returns the ExportJob for the given ID",
+        "description": "Returns the ExportJob for the given ID if it exists",
+        "operationId": "get_export_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Export Job Id", "type": "string" },
+            "name": "export_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -4385,6 +4421,92 @@
             "description": "The score of the SourceDocument that was found by a ES Query"
           }
         }
+      },
+      "ExportFormat": {
+        "title": "ExportFormat",
+        "enum": ["CSV", "JSON"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "ExportJobParameters": {
+        "title": "ExportJobParameters",
+        "required": ["export_job_type", "specific_export_job_parameters"],
+        "type": "object",
+        "properties": {
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          },
+          "export_format": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportFormat" }],
+            "description": "The format of the exported data.",
+            "default": "CSV"
+          },
+          "specific_export_job_parameters": {
+            "title": "Specific Export Job Parameters",
+            "anyOf": [
+              { "$ref": "#/components/schemas/SingleProjectAllDataExportJobParams" },
+              { "$ref": "#/components/schemas/SingleProjectAllTagsExportJobParams" },
+              { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
+              { "$ref": "#/components/schemas/SingleUserAllCodesExportJobParams" },
+              { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
+              { "$ref": "#/components/schemas/SingleUserLogbookExportJobParams" },
+              { "$ref": "#/components/schemas/SingleDocAllUserAnnotationsExportJobParams" },
+              { "$ref": "#/components/schemas/SingleDocSingleUserAnnotationsExportJobParams" }
+            ],
+            "description": "Specific parameters for the export job w.r.t it's type"
+          }
+        }
+      },
+      "ExportJobRead": {
+        "title": "ExportJobRead",
+        "required": ["id", "parameters", "created"],
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobStatus" }],
+            "description": "Status of the ExportJob",
+            "default": "init"
+          },
+          "results_url": {
+            "title": "Results Url",
+            "type": "string",
+            "description": "URL to download the results when done."
+          },
+          "id": { "title": "Id", "type": "string", "description": "ID of the ExportJob" },
+          "parameters": {
+            "title": "Parameters",
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobParameters" }],
+            "description": "The parameters of the export job that defines what to export!"
+          },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the ExportJob",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExportJobStatus": {
+        "title": "ExportJobStatus",
+        "enum": ["init", "in_progress", "done", "failed"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "ExportJobType": {
+        "title": "ExportJobType",
+        "enum": [
+          "SINGLE_PROJECT_ALL_DATA",
+          "SINGLE_PROJECT_ALL_TAGS",
+          "SINGLE_USER_ALL_DATA",
+          "SINGLE_USER_ALL_CODES",
+          "SINGLE_USER_ALL_MEMOS",
+          "SINGLE_USER_LOGBOOK",
+          "SINGLE_DOC_ALL_USER_ANNOTATIONS",
+          "SINGLE_DOC_SINGLE_USER_ANNOTATIONS"
+        ],
+        "type": "string",
+        "description": "An enumeration."
       },
       "FeedbackCreate": {
         "title": "FeedbackCreate",
@@ -4854,6 +4976,169 @@
             "title": "Sentence Id",
             "type": "integer",
             "description": "The sentence id with respect to the SourceDocument"
+          }
+        }
+      },
+      "SingleDocAllUserAnnotationsExportJobParams": {
+        "title": "SingleDocAllUserAnnotationsExportJobParams",
+        "required": ["project_id", "sdoc_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          },
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "The ID of the SDocument to get the data from."
+          }
+        }
+      },
+      "SingleDocSingleUserAnnotationsExportJobParams": {
+        "title": "SingleDocSingleUserAnnotationsExportJobParams",
+        "required": ["project_id", "sdoc_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          },
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "The ID of the SDocument to get the data from."
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer",
+            "description": "The ID of the User to get the data from."
+          }
+        }
+      },
+      "SingleProjectAllDataExportJobParams": {
+        "title": "SingleProjectAllDataExportJobParams",
+        "required": ["project_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          }
+        }
+      },
+      "SingleProjectAllTagsExportJobParams": {
+        "title": "SingleProjectAllTagsExportJobParams",
+        "required": ["project_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          }
+        }
+      },
+      "SingleUserAllCodesExportJobParams": {
+        "title": "SingleUserAllCodesExportJobParams",
+        "required": ["project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer",
+            "description": "The ID of the User to get the data from."
+          }
+        }
+      },
+      "SingleUserAllDataExportJobParams": {
+        "title": "SingleUserAllDataExportJobParams",
+        "required": ["project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer",
+            "description": "The ID of the User to get the data from."
+          }
+        }
+      },
+      "SingleUserAllMemosExportJobParams": {
+        "title": "SingleUserAllMemosExportJobParams",
+        "required": ["project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer",
+            "description": "The ID of the User to get the data from."
+          }
+        }
+      },
+      "SingleUserLogbookExportJobParams": {
+        "title": "SingleUserLogbookExportJobParams",
+        "required": ["project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": {
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
+            "description": "The type of the export job (what to export)"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer",
+            "description": "The ID of the User to get the data from."
           }
         }
       },

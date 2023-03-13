@@ -5,7 +5,7 @@ import { useCallback } from "react";
 
 function ExporterListItemButton() {
   const handleClick = useCallback(() => {
-    ExporterAPI.openExporterDialog({ test: 1 });
+    ExporterAPI.openExporterDialog({ type: "Project", sdocId: -1, singleUser: false, users: [] });
   }, []);
 
   return (
