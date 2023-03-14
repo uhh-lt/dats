@@ -2,6 +2,7 @@ import argparse
 import json
 from pathlib import Path
 from time import sleep
+from typing import List, Tuple
 
 import magic
 
@@ -57,6 +58,13 @@ parser.add_argument(
     dest="is_json",
     action="store_true",
 )
+parser.add_argument(
+    "--filter_duplicate_files_before_upload",
+    help="If true duplicate file (with the same name) will be filtered out before uploading!",
+    default=False,
+    dest="filter_duplicate_files_before_upload",
+    action="store_true",
+)
 args = parser.parse_args()
 
 api = DWTSAPI(base_path=args.backend_url)
@@ -77,17 +85,20 @@ if directory.is_file():
     exit()
 
 # read files from directory
-files = []
+#           dict_key        name, content, mime
+files: List[Tuple[str, Tuple[str, bytes, str]]] = []
 json_data = dict()
 for file in directory.iterdir():
     if not file.is_file():
         continue
 
-    filename = file.name  # if len(file.name) < 100 else file.stem[: (100 - len(file.suffix))] + file.suffix
+    filename = (
+        file.name
+    )  # if len(file.name) < 100 else file.stem[: (100 - len(file.suffix))] + file.suffix
 
     if args.is_json:
+        filename = file.name.replace(".json", ".html")
         try:
-            filename = filename.replace(".json", ".html")
             data = json.loads(file.read_bytes())
             json_data[filename] = data
             mime = magic.from_buffer(data["html"], mime=True)
@@ -100,7 +111,11 @@ for file in directory.iterdir():
         mime = magic.from_buffer(file_bytes, mime=True)
         files.append(("doc_files", (filename, file_bytes, mime)))
 
-num_files = api.upload_files(proj_id=project["id"], files=files)
+num_files = api.upload_files(
+    proj_id=project["id"],
+    files=files,
+    filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
+)
 
 # wait until procesing has started for files to upload
 status = api.read_project_status(project_id=project["id"])
@@ -116,6 +131,7 @@ while status["in_progress"]:
     print("Uploading documents...")
     sleep(5)
     status = api.read_project_status(project_id=project["id"])
+    print(f"Current status: {status}")
     # if num_sdocs_in_progress == status["num_sdocs_in_progress"]:
     #    no_change += 1
     #    if no_change == 12 * 5:
@@ -138,18 +154,27 @@ if tag is None:
 # apply tag to all untagged documents
 tag_ids = [tag["id"] for tag in api.read_all_tags(project_id=project["id"])]
 sdoc_ids = set(api.read_all_sdocs(project_id=project["id"]))
-tagged_sdoc_ids = set(api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids))
+tagged_sdoc_ids = set(
+    api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids)
+)
 untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
 api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
 
 # apply metadata
+applied = set()
 for filename, data in json_data.items():
     sdoc_id = api.get_sdoc_id_by_filename(filename=filename, proj_id=project["id"])
-    api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
+    if sdoc_id not in applied:
+        api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
+        applied.add(sdoc_id)
 
     for image_name in data["image_names"]:
         if image_name:
-            sdoc_id = api.get_sdoc_id_by_filename(filename=image_name, proj_id=project["id"])
-            api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
+            sdoc_id = api.get_sdoc_id_by_filename(
+                filename=image_name, proj_id=project["id"]
+            )
+            if sdoc_id not in applied:
+                api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
+                applied.add(sdoc_id)
 
 print("(: FINISHED :)")

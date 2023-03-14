@@ -6,11 +6,13 @@ from crawler.spiders.spider_base import SpiderBase
 class GlobalVoicesSpider(SpiderBase):
     name = "globalvoices"
     start_urls = [
-        f"https://globalvoices.org/-/world/western-europe,eastern-central-europe/page/{i}/" for i in range(50)
+        f"https://globalvoices.org/-/world/western-europe,eastern-central-europe/page/{i}/"
+        for i in range(50)
     ]
 
     start_urls += [
-        f"https://de.globalvoices.org/category/world/western-europe,eastern-central-europe/page/{i}/" for i in range(50)
+        f"https://de.globalvoices.org/category/world/western-europe,eastern-central-europe/page/{i}/"
+        for i in range(50)
     ]
 
     # provide arguments using the -a option

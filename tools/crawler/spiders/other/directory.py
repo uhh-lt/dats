@@ -15,7 +15,9 @@ class DirectorySpider(SpiderBase):
     def __init__(self, input_dir=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if input_dir is None:
-            self.log("You have to provide an input directory with -a input_directory=/path/to/directory")
+            self.log(
+                "You have to provide an input directory with -a input_directory=/path/to/directory"
+            )
             exit()
 
         self.input_dir = Path(input_dir)
