@@ -9,8 +9,10 @@ from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.db.sql_service import SQLService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
+from app.core.data.repo.repo_service import RepoService
 
-sql = SQLService(echo=False)
+sql: SQLService = SQLService(echo=False)
+repo: RepoService = RepoService()
 
 
 def create_sdoc_links_from_html_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
@@ -29,7 +31,7 @@ def create_sdoc_links_from_html_(pptds: List[PreProTextDoc]) -> List[PreProTextD
             create_dtos = [
                 SourceDocumentLinkCreate(
                     parent_source_document_id=pptd.sdoc_id,
-                    linked_source_document_filename=img_src,
+                    linked_source_document_filename=repo.truncate_filename(img_src),
                 )
                 for img_src in img_srcs
             ]

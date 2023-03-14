@@ -17,8 +17,8 @@ from app.docprepro.text import text_document_preprocessing_apply_async
 from config import conf
 
 cc = conf.docprepro.celery
-sql = SQLService()
-repo = RepoService()
+sql: SQLService = SQLService()
+repo: RepoService = RepoService()
 
 
 def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
