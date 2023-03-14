@@ -119,6 +119,14 @@ function ProjectDocuments({ project }: ProjectDocumentsProps) {
         <Typography variant="h6" color="inherit" component="div">
           Import documents
         </Typography>
+        <Typography
+          variant="body1"
+          color="inherit"
+          component="div"
+          sx={{ ml: 1, fontWeight: "bold", textDecoration: "underline" }}
+        >
+          (no sensitive data!)
+        </Typography>
         <Box sx={{ flexGrow: 1 }} />
         <input type="file" ref={fileInputRef} onChange={handleChange} multiple accept={allowedMimeTypes.toString()} />
         <LoadingButton
