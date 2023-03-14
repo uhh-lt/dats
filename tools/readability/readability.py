@@ -35,11 +35,12 @@ class Readability:
         except requests.exceptions.ConnectionError:
             return False
 
-    def parse(self, html: str) -> ReadabilityOutput:
+    def parse(self, html: str, url: str) -> ReadabilityOutput:
         r = requests.post(
             self.BASE_PATH,
             json={
                 "html": html,
+                "url": url,
             },
         )
         r.raise_for_status()
