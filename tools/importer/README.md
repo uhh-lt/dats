@@ -18,6 +18,14 @@ pip install python-magic
 ## Usage
 
 ```
+# import global voices
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/globalvoices/images --backend_url http://localhost:13120/ --project_name global_voices --tag_name news
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/globalvoices/json --backend_url http://localhost:13120/ --project_name global_voices --tag_name news --is_json
+
+# import wikinews
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/wikinews/images --backend_url http://localhost:13120/ --project_name wiki_news --tag_name news
+python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/wikinews/json --backend_url http://localhost:13120/ --project_name wiki_news --tag_name news --is_json
+
 # import demonews
 python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/demonews/images --backend_url http://localhost:18120/ --project_name demo_news --tag_name health
 python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/demonews/json --backend_url http://localhost:18120/ --project_name demo_news --tag_name health --is_json

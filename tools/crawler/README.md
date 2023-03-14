@@ -43,8 +43,14 @@ Check the following example commands to see how to use this tool:
 ## Examples
 
 ```
+# global voices
+scrapy crawl globalvoices -a prefix=gv -a output_dir=/home/tfischer/Development/dwts/data/globalvoices -s IMAGES_STORE=/home/tfischer/Development/dwts/data/globalvoices/images
+
 # demo news
 scrapy crawl generic -a prefix=demonews -a output_dir=/home/tfischer/Development/dwts/data/demonews -s IMAGES_STORE=/home/tfischer/Development/dwts/data/demonews/images
+
+# wikinews
+scrapy crawl generic -a prefix=wikinews -a output_dir=/home/tfischer/Development/dwts/data/wikinews -s IMAGES_STORE=/home/tfischer/Development/dwts/data/wikinews/images
 
 # bbc
 scrapy crawl bbc -a prefix=bbc -a output_dir=/home/tfischer/Development/dwts/data/bbc -s IMAGES_STORE=/home/tfischer/Development/dwts/data/bbc/images
