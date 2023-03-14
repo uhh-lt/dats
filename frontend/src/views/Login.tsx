@@ -108,6 +108,20 @@ function Login() {
           </CardActions>
         </Card>
       )}
+      <Card sx={{ width: "66%", borderColor: "red", mt: 4 }} variant="outlined" component={"div"}>
+        <CardContent>
+          <Typography component="div" align="justify">
+            You are about to enter the D-WISE Tool Suite Demo. Several projects are prepared, but you can also create
+            new projects and import your own data. This server is wiped regulary.{" "}
+            <u style={{ backgroundColor: "yellow" }}>Do not store sensitive data!</u>
+          </Typography>
+          <Typography sx={{ mt: 1 }}>
+            <b>User</b>: demo@example.org
+            <br />
+            <b>Password</b>: demo
+          </Typography>
+        </CardContent>
+      </Card>
     </Box>
   );
 }
