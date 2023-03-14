@@ -90,15 +90,17 @@ class RepoService(metaclass=SingletonMeta):
     def truncate_filename(filename: Union[str, Path]) -> str:
         # convert to path if str
         filename = Path(filename)
-        # we want to keep the last three suffixes (if they exist)
-        suffix = "".join(filename.suffixes[-3:])[-SDOC_SUFFIX_MAX_LENGTH:]
-        filename = filename.with_name(
-            # remove the suffixes to only truncate the true name / stem
-            # and then truncate to max length
-            filename.name.removesuffix(suffix)[:SDOC_FILENAME_MAX_LENGTH]
-        ).with_suffix(
-            suffix
-        )  # and add suffix again
+        if len(filename.name) > SDOC_FILENAME_MAX_LENGTH + SDOC_SUFFIX_MAX_LENGTH:
+            logger.warning(f'Filename "{filename.name}" is too long and gets truncated!')
+            # we want to keep the last three suffixes (if they exist)
+            suffix = "".join(filename.suffixes[-3:])[-SDOC_SUFFIX_MAX_LENGTH:]
+            filename = filename.with_name(
+                # remove the suffixes to only truncate the true name / stem
+                # and then truncate to max length
+                filename.name.removesuffix(suffix)[:SDOC_FILENAME_MAX_LENGTH]
+            ).with_suffix(
+                suffix
+            )  # and add suffix again
         return str(filename)
 
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
@@ -387,7 +389,7 @@ class RepoService(metaclass=SingletonMeta):
     def build_source_document_create_dto_from_file(
         self, proj_id: int, filename: Union[str, Path]
     ) -> Tuple[Path, SourceDocumentCreate]:
-        filename = Path(self.truncate_filename(filename))
+        filename = self.truncate_filename(filename)
         dst_path = self._get_dst_path_for_project_file(
             proj_id=proj_id, filename=filename
         )
