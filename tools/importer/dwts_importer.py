@@ -83,7 +83,7 @@ for file in directory.iterdir():
     if not file.is_file():
         continue
 
-    filename = file.name if len(file.name) > 255 else file.stem[: (255 - len(file.suffix))] + file.suffix
+    filename = file.name  # if len(file.name) < 100 else file.stem[: (100 - len(file.suffix))] + file.suffix
 
     if args.is_json:
         try:
