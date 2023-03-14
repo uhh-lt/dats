@@ -83,9 +83,11 @@ for file in directory.iterdir():
     if not file.is_file():
         continue
 
+    filename = file.name if len(file.name) > 255 else file.stem[: (255 - len(file.suffix))] + file.suffix
+
     if args.is_json:
         try:
-            filename = file.name.replace(".json", ".html")
+            filename = filename.replace(".json", ".html")
             data = json.loads(file.read_bytes())
             json_data[filename] = data
             mime = magic.from_buffer(data["html"], mime=True)
@@ -96,7 +98,7 @@ for file in directory.iterdir():
     else:
         file_bytes = file.read_bytes()
         mime = magic.from_buffer(file_bytes, mime=True)
-        files.append(("doc_files", (file.name, file_bytes, mime)))
+        files.append(("doc_files", (filename, file_bytes, mime)))
 
 num_files = api.upload_files(proj_id=project["id"], files=files)
 
@@ -136,9 +138,7 @@ if tag is None:
 # apply tag to all untagged documents
 tag_ids = [tag["id"] for tag in api.read_all_tags(project_id=project["id"])]
 sdoc_ids = set(api.read_all_sdocs(project_id=project["id"]))
-tagged_sdoc_ids = set(
-    api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids)
-)
+tagged_sdoc_ids = set(api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids))
 untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
 api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
 
@@ -149,9 +149,7 @@ for filename, data in json_data.items():
 
     for image_name in data["image_names"]:
         if image_name:
-            sdoc_id = api.get_sdoc_id_by_filename(
-                filename=image_name, proj_id=project["id"]
-            )
+            sdoc_id = api.get_sdoc_id_by_filename(filename=image_name, proj_id=project["id"])
             api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
 
-print(f"(: FINISHED :)")
+print("(: FINISHED :)")
