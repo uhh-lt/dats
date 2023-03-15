@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete, and_
 from sqlalchemy.orm import Session
+import srsly
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import (
@@ -163,6 +164,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
                 action_type=ActionType.DELETE,
                 target_type=ActionTargetObjectType.memo,
                 target_id=rid,
+                before_state="",  # FIXME: use the removed objects JSON
+                after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
         return removed_ids
@@ -200,6 +203,8 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
             action_type=ActionType.CREATE,
             target_type=ActionTargetObjectType.memo,
             target_id=db_obj.id,
+            before_state=None,
+            after_state=srsly.json_dumps(db_obj.as_dict()),
         )
         crud_action.create(db=db, create_dto=action_create_dto)
         return db_obj

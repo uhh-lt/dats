@@ -77,6 +77,8 @@ class CRUDAnnotationDocument(
                 action_type=ActionType.DELETE,
                 target_id=rid,
                 target_type=ActionTargetObjectType.annotation_document,
+                before_state="",
+                after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
         return removed_ids

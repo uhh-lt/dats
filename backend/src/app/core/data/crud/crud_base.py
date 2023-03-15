@@ -2,6 +2,8 @@ from typing import Generic, List, Optional, Type, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
+import srsly
+import copy
 from sqlalchemy.orm import Session
 
 from app.core.data.dto.action import ActionType, ActionCreate
@@ -66,26 +68,36 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def create_multi(
         self, db: Session, *, create_dtos: List[CreateDTOType]
     ) -> List[ORMModelType]:
-        db_obj = [self.model(**jsonable_encoder(x)) for x in create_dtos]
-        db.add_all(db_obj)
+        db_objs = [self.model(**jsonable_encoder(x)) for x in create_dtos]
+        db.add_all(db_objs)
         db.commit()
-        return db_obj
+
+        for db_obj in db_objs:
+            db.refresh(db_obj)
+            self.__create_action(db_obj=db_obj, action_type=ActionType.CREATE)
+
+        return db_objs
 
     def update(
         self, db: Session, *, id: int, update_dto: UpdateDTOType
     ) -> Optional[ORMModelType]:
-        db_obj = self.read(db=db, id=id)
-        obj_data = jsonable_encoder(db_obj)
+        before_db_obj = self.read(db=db, id=id)
+        after_db_obj = copy.copy(before_db_obj)
+        obj_data = jsonable_encoder(before_db_obj)
         update_data = update_dto.dict(exclude_unset=True)
         for field in obj_data:
             if field in update_data:
-                setattr(db_obj, field, update_data[field])
-        db.add(db_obj)
+                setattr(after_db_obj, field, update_data[field])
+        db.add(after_db_obj)
         db.commit()
-        db.refresh(db_obj)
+        db.refresh(after_db_obj)
 
-        self.__create_action(db_obj=db_obj, action_type=ActionType.CREATE)
-        return db_obj
+        self.__create_action(
+            db_obj=after_db_obj,
+            action_type=ActionType.UPDATE,
+            before_db_obj=before_db_obj,
+        )
+        return after_db_obj
 
     def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
         db_obj = self.read(db=db, id=id)
@@ -98,9 +110,16 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         return db_obj
 
     @staticmethod
-    def __create_action(db_obj: ORMModelType, action_type: ActionType) -> None:
+    def __create_action(
+        db_obj: ORMModelType,
+        action_type: ActionType,
+        before_db_obj: Optional[ORMModelType] = None,
+    ) -> None:
         # local import to avoid circular dependency
-        from app.core.data.orm.util import get_parent_project_id, get_action_target_type
+        from app.core.data.orm.util import (
+            get_parent_project_id,
+            get_action_target_type,
+        )
 
         action_target_type = get_action_target_type(db_obj)
         if action_target_type is not None:
@@ -111,12 +130,26 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
                 from app.core.db.sql_service import SQLService
                 from app.core.data.crud.action import crud_action
 
+                if action_type == ActionType.CREATE:
+                    before_state = None
+                    after_state = srsly.json_dumps(db_obj.as_dict())
+                elif action_type == ActionType.UPDATE:
+                    before_state = None
+                    if before_db_obj is not None:
+                        before_state = srsly.json_dumps(before_db_obj.as_dict())
+                    after_state = srsly.json_dumps(db_obj.as_dict())
+                elif action_type == ActionType.DELETE:
+                    before_state = srsly.json_dumps(db_obj.as_dict())
+                    after_state = None
+
                 create_dto = ActionCreate(
                     project_id=proj_id,
                     user_id=SYSTEM_USER_ID,  # FIXME use correct user
                     action_type=action_type,
                     target_type=action_target_type,
                     target_id=db_obj.id,
+                    before_state=before_state,
+                    after_state=after_state,
                 )
                 with SQLService().db_session() as db:
                     crud_action.create(db=db, create_dto=create_dto)

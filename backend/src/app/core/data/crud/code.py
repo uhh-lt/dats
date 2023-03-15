@@ -1,8 +1,9 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
+import srsly
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.current_code import crud_current_code
@@ -33,14 +34,16 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         # create the action manually since we are not using the crud base create
         from app.core.data.crud.action import crud_action
 
-        create_dto = ActionCreate(
+        action_create_dto = ActionCreate(
             project_id=create_dto.project_id,
             user_id=create_dto.user_id,
-            action_type=ActionType.UPDATE,
+            action_type=ActionType.CREATE,
             target_type=ActionTargetObjectType.code,
             target_id=db_obj.id,
+            before_state=None,
+            after_state=srsly.json_dumps(db_obj.as_dict()),
         )
-        crud_action.create(db=db, create_dto=create_dto)
+        crud_action.create(db=db, create_dto=action_create_dto)
 
         return db_obj
 
@@ -50,7 +53,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         created: List[CodeORM] = []
 
         def __create_recursively(
-            code_dict: Dict[str, Dict[str, Any]], parent_code_id: int = None
+            code_dict: Dict[str, Dict[str, Any]], parent_code_id: Optional[int] = None
         ):
             for code_name in code_dict.keys():
                 create_dto = CodeCreate(
@@ -185,6 +188,8 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 action_type=ActionType.CREATE,
                 target_type=ActionTargetObjectType.code,
                 target_id=rid,
+                before_state="",  # FIXME: use the removed objects JSON
+                after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
 
@@ -209,6 +214,8 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                 action_type=ActionType.CREATE,
                 target_type=ActionTargetObjectType.code,
                 target_id=rid,
+                before_state="",  # FIXME: use the removed objects JSON
+                after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
 

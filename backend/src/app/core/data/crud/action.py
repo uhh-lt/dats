@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
@@ -19,6 +19,12 @@ class CRUDAction(CRUDBase[ActionORM, ActionCreate, None]):
         db.refresh(db_obj)
 
         return db_obj
+
+    def update(self, db: Session, *, id: int, update_dto) -> Optional[ActionORM]:
+        raise NotImplementedError()
+
+    def remove(self, db: Session, *, id: int) -> Optional[ActionORM]:
+        raise NotImplementedError()
 
     def read_by_user_and_project(
         self, db: Session, user_id: int, proj_id: int

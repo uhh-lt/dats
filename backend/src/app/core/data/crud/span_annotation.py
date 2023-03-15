@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
+import srsly
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
@@ -38,14 +39,16 @@ class CRUDSpanAnnotation(
         # create action manually because we're not using crud base create
         from app.core.data.crud.action import crud_action
 
-        create_dto = ActionCreate(
+        action_create_dto = ActionCreate(
             project_id=db_obj.annotation_document.source_document.project_id,
             user_id=SYSTEM_USER_ID,  # FIXME use correct user
             action_type=ActionType.CREATE,
             target_type=ActionTargetObjectType.span_annotation,
             target_id=db_obj.id,
+            before_state=None,
+            after_state=srsly.json_dumps(db_obj.as_dict()),
         )
-        crud_action.create(db=db, create_dto=create_dto)
+        crud_action.create(db=db, create_dto=action_create_dto)
 
         return db_obj
 
@@ -108,6 +111,8 @@ class CRUDSpanAnnotation(
                 action_type=ActionType.DELETE,
                 target_type=ActionTargetObjectType.span_annotation,
                 target_id=rid,
+                before_state="",
+                after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
 
@@ -123,7 +128,7 @@ class CRUDSpanAnnotation(
         return db_obj
 
     def add_to_span_group(
-        self, db: Session, span_id: int, group_id: id
+        self, db: Session, span_id: int, group_id: int
     ) -> Optional[SpanAnnotationORM]:
         span_db_obj = self.read(db=db, id=span_id)
         group_db_obj = crud_span_group.read(db=db, id=group_id)
@@ -134,7 +139,7 @@ class CRUDSpanAnnotation(
         return span_db_obj
 
     def remove_from_span_group(
-        self, db: Session, span_id: int, group_id: id
+        self, db: Session, span_id: int, group_id: int
     ) -> Optional[SpanAnnotationORM]:
         span_db_obj = self.read(db=db, id=span_id)
         group_db_obj = crud_span_group.read(db=db, id=group_id)

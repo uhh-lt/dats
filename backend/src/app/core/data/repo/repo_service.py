@@ -91,7 +91,9 @@ class RepoService(metaclass=SingletonMeta):
         # convert to path if str
         filename = Path(filename)
         if len(filename.name) > SDOC_FILENAME_MAX_LENGTH + SDOC_SUFFIX_MAX_LENGTH:
-            logger.warning(f'Filename "{filename.name}" is too long and gets truncated!')
+            logger.warning(
+                f'Filename "{filename.name}" is too long and gets truncated!'
+            )
             # we want to keep the last three suffixes (if they exist)
             suffix = "".join(filename.suffixes[-3:])[-SDOC_SUFFIX_MAX_LENGTH:]
             filename = filename.with_name(

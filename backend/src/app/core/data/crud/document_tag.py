@@ -34,6 +34,8 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
                 action_type=ActionType.DELETE,
                 target_type=ActionTargetObjectType.document_tag,
                 target_id=rid,
+                before_state="",  # FIXME: use the removed objects JSON
+                after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
         return removed_ids
@@ -73,6 +75,8 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
                 action_type=ActionType.UPDATE,
                 target_type=ActionTargetObjectType.source_document,
                 target_id=sid,
+                before_state="",  # FIXME: What to put there?
+                after_state="",  # FIXME: What to put there?
             )
             crud_action.create(db=db, create_dto=create_dto)
 
@@ -106,6 +110,8 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
                 action_type=ActionType.UPDATE,
                 target_type=ActionTargetObjectType.source_document,
                 target_id=sid,
+                before_state="",  # FIXME: What to put there?
+                after_state="",  # FIXME: What to put there?
             )
             crud_action.create(db=db, create_dto=create_dto)
 

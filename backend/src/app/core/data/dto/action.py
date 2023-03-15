@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class ActionType(str, Enum):
@@ -28,6 +29,12 @@ class ActionBaseDTO(BaseModel):
     target_id: int = Field(description="ID of the Target of the Action")
     target_type: ActionTargetObjectType = Field(
         description="Type of the Target the target_id refers to"
+    )
+    before_state: Optional[str] = Field(
+        description="The before state of the target object in JSON.", default=None
+    )
+    after_state: Optional[str] = Field(
+        description="The after state of the target object in JSON.", default=None
     )
 
 

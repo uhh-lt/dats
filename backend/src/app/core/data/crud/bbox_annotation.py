@@ -47,6 +47,8 @@ class CRUDBBoxAnnotation(
                 action_type=ActionType.DELETE,
                 target_type=ActionTargetObjectType.bbox_annotation,
                 target_id=rid,
+                before_state="",  # FIXME: use the removed objects JSON
+                after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
 

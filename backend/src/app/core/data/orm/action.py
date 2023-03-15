@@ -17,6 +17,8 @@ class ActionORM(ORMBase):
     action_type = Column(String, nullable=False, index=True)
     target_id = Column(Integer, nullable=False, index=True)
     target_type = Column(String, nullable=False, index=True)
+    before_state = Column(String, nullable=True)
+    after_state = Column(String, nullable=True)
 
     # one to one
     object_handle: "ObjectHandleORM" = relationship(

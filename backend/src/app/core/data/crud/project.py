@@ -1,4 +1,5 @@
 from typing import Optional
+import srsly
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
@@ -27,14 +28,16 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # create action manually because we're not using crud base create
         from app.core.data.crud.action import crud_action
 
-        create_dto = ActionCreate(
+        action_create_dto = ActionCreate(
             project_id=project_id,
             user_id=SYSTEM_USER_ID,
             action_type=ActionType.CREATE,
             target_type=ActionTargetObjectType.project,
             target_id=project_id,
+            before_state=None,
+            after_state=srsly.json_dumps(db_obj.as_dict()),
         )
-        crud_action.create(db=db, create_dto=create_dto)
+        crud_action.create(db=db, create_dto=action_create_dto)
 
         # 2) associate the system user
         self.associate_user(db=db, proj_id=project_id, user_id=SYSTEM_USER_ID)
@@ -65,14 +68,14 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # create update action
         from app.core.data.crud.action import crud_action
 
-        create_dto = ActionCreate(
+        action_create_dto = ActionCreate(
             project_id=proj_id,
             user_id=SYSTEM_USER_ID,
             action_type=ActionType.UPDATE,
             target_type=ActionTargetObjectType.project,
             target_id=proj_id,
         )
-        crud_action.create(db=db, create_dto=create_dto)
+        crud_action.create(db=db, create_dto=action_create_dto)
         return user_db_obj
 
     def dissociate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
@@ -85,14 +88,14 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # create update action
         from app.core.data.crud.action import crud_action
 
-        create_dto = ActionCreate(
+        action_create_dto = ActionCreate(
             project_id=proj_id,
             user_id=SYSTEM_USER_ID,
             action_type=ActionType.UPDATE,
             target_type=ActionTargetObjectType.project,
             target_id=proj_id,
         )
-        crud_action.create(db=db, create_dto=create_dto)
+        crud_action.create(db=db, create_dto=action_create_dto)
 
         return user_db_obj
 
