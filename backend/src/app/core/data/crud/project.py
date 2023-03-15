@@ -74,6 +74,8 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
             action_type=ActionType.UPDATE,
             target_type=ActionTargetObjectType.project,
             target_id=proj_id,
+            before_state='',  # FIXME: what to put here
+            after_state='',  # FIXME: what to put here
         )
         crud_action.create(db=db, create_dto=action_create_dto)
         return user_db_obj
@@ -94,6 +96,8 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
             action_type=ActionType.UPDATE,
             target_type=ActionTargetObjectType.project,
             target_id=proj_id,
+            before_state='',  # FIXME: what to put here
+            after_state='',  # FIXME: what to put here
         )
         crud_action.create(db=db, create_dto=action_create_dto)
 
