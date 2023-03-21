@@ -7,6 +7,11 @@ from loguru import logger
 
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
+from app.core.data.dto.crawler_job import (
+    CrawlerJobCreate,
+    CrawlerJobRead,
+    CrawlerJobUpdate,
+)
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -115,6 +120,62 @@ class RedisService(metaclass=SingletonMeta):
         logger.debug(f"Deleted ExportJob {key}")
         return exj
 
+    def store_crawler_job(
+        self, crawler_job: Union[CrawlerJobCreate, CrawlerJobRead]
+    ) -> Optional[CrawlerJobRead]:
+        client = self._get_client("crawler")
+
+        if isinstance(crawler_job, CrawlerJobCreate):
+            key = self._generate_random_key()
+            exj = CrawlerJobRead(id=key, created=datetime.now(), **crawler_job.dict())
+        elif isinstance(crawler_job, CrawlerJobRead):
+            key = crawler_job.id
+            exj = crawler_job
+
+        if client.set(key.encode("utf-8"), exj.json()) != 1:
+            logger.error("Cannot store CrawlerJob!")
+            return None
+
+        logger.debug(f"Successfully stored CrawlerJob {key}!")
+
+        return exj
+
+    def load_crawler_job(self, key: str) -> Optional[CrawlerJobRead]:
+        client = self._get_client("crawler")
+        exj = client.get(key.encode("utf-8"))
+        if exj is None:
+            logger.error(f"CrawlerJob with ID {key} does not exist!")
+            return None
+        else:
+            logger.debug(f"Successfully loaded CrawlerJob {key}")
+            return CrawlerJobRead.parse_raw(exj)
+
+    def update_crawler_job(
+        self, key: str, update: CrawlerJobUpdate
+    ) -> Optional[CrawlerJobRead]:
+        exj = self.load_crawler_job(key=key)
+        if exj is None:
+            logger.error(f"Cannot update CrawlerJob {key}")
+            return None
+        data = exj.dict()
+        data.update(**update.dict())
+        exj = CrawlerJobRead(**data)
+        exj = self.store_crawler_job(crawler_job=exj)
+        if exj is not None:
+            logger.debug(f"Updated CrawlerJob {key}")
+            return exj
+        else:
+            logger.error(f"Cannot update CrawlerJob {key}")
+
+    def delete_crawler_job(self, key: str) -> Optional[CrawlerJobRead]:
+        exj = self.load_crawler_job(key=key)
+        client = self._get_client("crawler")
+        if exj is None or client.delete(key.encode("utf-8")) != 1:
+            logger.error(f"Cannot delete CrawlerJob {key}")
+            return None
+        logger.debug(f"Deleted CrawlerJob {key}")
+        return exj
+
     def store_feedback(self, feedback: FeedbackCreate) -> Optional[FeedbackRead]:
         client = self._get_client("feedback")
         key = self._generate_random_key()
@@ -125,10 +186,10 @@ class RedisService(metaclass=SingletonMeta):
             created=datetime.now(),
         )
         if client.set(key.encode("utf-8"), fb.json()) != 1:
-            logger.error(f"Cannot store Feedback!")
+            logger.error("Cannot store Feedback!")
             return None
 
-        logger.debug(f"Successfully stored Feedback!")
+        logger.debug("Successfully stored Feedback!")
 
         return fb
 
