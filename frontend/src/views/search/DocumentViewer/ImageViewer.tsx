@@ -18,6 +18,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
   const gRef = useRef<SVGGElement>(null);
   const bboxRef = useRef<SVGGElement>(null);
   const textRef = useRef<SVGGElement>(null);
+  const imgRef = useRef<SVGImageElement>(null);
   const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
   const imgContainerHeight = 500;
@@ -58,6 +59,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
 
     const portWidth: number = svgRef.current!.clientWidth;
     let xCentering = portWidth / 2 - (width * scaledRatio) / 2;
+    imgRef.current!.setAttribute("x", "" + xCentering);
 
     // add & remove nodes
     rect
@@ -66,10 +68,10 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
         (enter) =>
           enter
             .append("rect")
-            .attr("x", (d) => d.x_min)
-            .attr("y", (d) => d.y_min)
-            .attr("width", (d) => d.x_max - d.x_min)
-            .attr("height", (d) => d.y_max - d.y_min)
+            .attr("x", (d) => scaledRatio * d.x_min + xCentering)
+            .attr("y", (d) => scaledRatio * d.y_min)
+            .attr("width", (d) => scaledRatio * (d.x_max - d.x_min))
+            .attr("height", (d) => scaledRatio * (d.y_max - d.y_min))
             .attr("fill", "transparent")
             .attr("stroke", (d) => d.code.color)
             .attr("stroke-width", 3),
@@ -90,8 +92,10 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
         (enter) =>
           enter
             .append("text")
-            .attr("x", (d) => d.x_min + 3)
-            .attr("y", (d) => d.y_max - 3)
+            .attr("x", (d) => scaledRatio * (d.x_min + 3) + xCentering)
+            .attr("y", (d) => scaledRatio * (d.y_max - 3))
+            .attr("width", (d) => scaledRatio * (d.x_max - d.x_min))
+            .attr("height", (d) => scaledRatio * (d.y_max - d.y_min))
             .attr("fill", "white")
             .attr("stroke", "black")
             .attr("stroke-width", 0.75)
@@ -102,7 +106,6 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
         (update) => update.attr("x", (d) => d.x_min),
         (exit) => exit.remove()
       );
-    d3.select(gRef.current).attr("transform", `translate(${xCentering}, 0) scale(${scaledRatio})`);
   }, [width, height, annotations.data, showEntities, sdoc.content]);
 
   return (
@@ -110,7 +113,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
       {annotations.isError && <span>{annotations.error.message}</span>}
       <svg ref={svgRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
-          <image href={sdoc.content} />
+          <image ref={imgRef} href={sdoc.content} height={imgContainerHeight} />
           <g ref={bboxRef}></g>
           <g ref={textRef}></g>
         </g>
