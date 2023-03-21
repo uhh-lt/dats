@@ -62,7 +62,7 @@ function ProjectDocuments({ project }: ProjectProps) {
       ? (uploadProgress.num_sdocs_finished /
           (uploadProgress.num_sdocs_finished + uploadProgress.num_sdocs_in_progress)) *
         100
-      : 0;
+      : -1;
 
   // automatically fetch new documents when button is visible
   // TODO: switch to virtualization
@@ -155,7 +155,7 @@ function ProjectDocuments({ project }: ProjectProps) {
           Upload File{files.length > 1 ? "s" : ""}
         </LoadingButton>
       </Toolbar>
-      {progress > 0 && <LinearProgressWithLabel value={progress} />}
+      {progress >= 0 && <LinearProgressWithLabel value={progress} />}
       <Divider />
       {projectDocuments.isLoading && <CardContent>Loading project documents...</CardContent>}
       {projectDocuments.isError && (
