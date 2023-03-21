@@ -366,6 +366,22 @@ class RepoService(metaclass=SingletonMeta):
         logger.info(f"Extracting archive at {archive_path_in_project}... Done!")
         return extracted_file_paths
 
+    def move_file_to_project_sdoc_files(self, proj_id: int, src_file: Path) -> Path:
+        if not (src_file.exists() and src_file.is_file()):
+            raise ValueError(f"File {src_file} does not exist!")
+
+        fn = Path(self.truncate_filename(src_file.name))
+        in_project_dst = self._create_directory_structure_for_project_file(
+            proj_id=proj_id, filename=fn
+        )
+
+        # move the file
+        logger.info(
+            f"Moving {src_file} to Project {proj_id} SDoc files at {in_project_dst}!"
+        )
+        src_file.rename(in_project_dst)
+        return in_project_dst
+
     def store_uploaded_file_in_project_repo(
         self, proj_id: int, uploaded_file: UploadFile
     ) -> Path:
