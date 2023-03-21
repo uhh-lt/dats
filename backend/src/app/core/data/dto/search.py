@@ -104,7 +104,7 @@ class SearchSDocsQueryParameters(BaseModel):
         default=None,
     )
 
-    file_name: Optional[str] = Field(
+    filename: Optional[str] = Field(
         description=(
             "Filename that have to be present in"
             " the SourceDocuments Filename (via Elasticsearch)"

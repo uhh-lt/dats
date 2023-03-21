@@ -74,14 +74,14 @@ class SearchService(metaclass=SingletonMeta):
                     ]
                 )
 
-            if query_params.file_name:
+            if query_params.filename:
                 sdocs_ids.append(
                     [
                         hit.sdoc_id
                         for hit in ElasticSearchService()
                         .search_sdocs_by_prefix_filename(
                             proj_id=query_params.proj_id,
-                            filename_prefix=query_params.file_name,
+                            filename_prefix=query_params.filename,
                             **skip_limit
                         )
                         .hits
