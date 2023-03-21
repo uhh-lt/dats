@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { AppBar, Box, Button, Card, CardContent, Tabs, Toolbar, Typography } from "@mui/material";
+import { AppBar, Box, Button, Card, CardContent, Stack, Tabs, Toolbar, Typography } from "@mui/material";
 import Tab from "@mui/material/Tab";
 import TabPanel from "@mui/lab/TabPanel";
 import { LoadingButton, TabContext } from "@mui/lab";
@@ -13,6 +13,13 @@ import ProjectDetails from "./ProjectDetails";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
+import { ProjectRead } from "../../../api/openapi";
+import ProjectTags from "./ProjectTags";
+import ProjectGuidelines from "./ProjectGuidelines";
+
+export interface ProjectProps {
+  project: ProjectRead;
+}
 
 function ProjectUpdate() {
   const { user } = useAuth();
@@ -48,45 +55,38 @@ function ProjectUpdate() {
   };
 
   return (
-    <Card className="myFlexContainer mh100">
+    <Card className="myFlexContainer h100">
       <TabContext value={tab}>
         <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
-          <Toolbar variant="dense" sx={{ flexDirection: "column", alignItems: "flex-start" }} disableGutters>
-            <Toolbar variant="dense" sx={{ width: "100%" }}>
-              <Typography variant="h6" color="inherit" component="div">
-                {project.isSuccess ? project.data.title : "Project name"}
-              </Typography>
-              <Box sx={{ flexGrow: 1 }} />
-              <LoadingButton
-                variant="contained"
-                color="error"
-                startIcon={<DeleteIcon />}
-                sx={{ mr: 1 }}
-                onClick={handleClickRemoveProject}
-                disabled={!project.isSuccess}
-                loading={deleteProjectMutation.isLoading}
-                loadingPosition="start"
-              >
-                Delete
-              </LoadingButton>
-              <Button variant="contained" startIcon={<CloseIcon />} component={Link} to="/projects">
-                Close
-              </Button>
-            </Toolbar>
-            <Tabs
-              value={tab}
-              onChange={handleChangeTab}
-              variant="scrollable"
-              scrollButtons="auto"
-              aria-label="scrollable auto tabs example"
-              textColor="inherit"
+          <Stack direction="row" sx={{ px: 2, pt: 2 }}>
+            <Typography variant="h6" color="inherit" component="div">
+              {project.isSuccess ? project.data.title : "Project name"}
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+            <LoadingButton
+              variant="contained"
+              color="error"
+              startIcon={<DeleteIcon />}
+              sx={{ mr: 1 }}
+              onClick={handleClickRemoveProject}
+              disabled={!project.isSuccess}
+              loading={deleteProjectMutation.isLoading}
+              loadingPosition="start"
             >
-              <Tab label="Details" value="1" />
-              <Tab label="Documents" value="2" />
-              <Tab label="User" value="3" />
-              <Tab label="Codes" value="4" />
-            </Tabs>
-          </Toolbar>
+              Delete
+            </LoadingButton>
+            <Button variant="contained" startIcon={<CloseIcon />} component={Link} to="/projects">
+              Close
+            </Button>
+          </Stack>
+          <Tabs value={tab} onChange={handleChangeTab} variant="scrollable" textColor="inherit">
+            <Tab label="Details" value="1" />
+            <Tab label="Documents" value="2" />
+            <Tab label="User" value="3" />
+            <Tab label="Codes" value="4" />
+            <Tab label="Tags" value="5" />
+            <Tab label="Guidelines" value="6" />
+          </Tabs>
         </AppBar>
         {project.isLoading && <CardContent>Loading project...</CardContent>}
         {project.isError && <CardContent>An error occurred while loading project {projectId}...</CardContent>}
@@ -103,6 +103,12 @@ function ProjectUpdate() {
             </TabPanel>
             <TabPanel value="4" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectCodes project={project.data} />
+            </TabPanel>
+            <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectTags project={project.data} />
+            </TabPanel>
+            <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectGuidelines project={project.data} />
             </TabPanel>
           </React.Fragment>
         )}
