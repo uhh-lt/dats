@@ -76,7 +76,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
             .attr("stroke", (d) => d.code.color)
             .attr("stroke-width", 3),
 
-        (update) => update.attr("x", (d) => d.x_min + xCentering),
+        (update) => update.attr("x", (d) => scaledRatio * d.x_min + xCentering),
         (exit) => exit.remove()
       );
 
@@ -103,7 +103,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
 
             .text((d) => d.code.name),
 
-        (update) => update.attr("x", (d) => d.x_min + xCentering),
+        (update) => update.attr("x", (d) => scaledRatio * (d.x_min + 3) + xCentering),
         (exit) => exit.remove()
       );
   }, [width, height, annotations.data, showEntities, sdoc.content]);
