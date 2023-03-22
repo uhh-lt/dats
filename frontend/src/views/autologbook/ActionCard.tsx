@@ -74,12 +74,21 @@ function ActionCard({ actionType, userId, targetObjectType, beforeState, afterSt
   }, [afterState, beforeState, targetObjectType]);
 
   let backgroundColor;
+  let updateDescription: string = "";
   switch (actionType) {
     case ActionType.CREATE:
       backgroundColor = "rgba(0, 255, 0, 0.2)";
       break;
     case ActionType.UPDATE:
       backgroundColor = "rgba(255, 180, 30, 0.2)";
+      updateDescription = "Property Changelog:\n";
+      for (let key in Object.keys(beforeStateObj)) {
+        let beforeProp: any = beforeStateObj[key];
+        let afterProp: any = afterStateObj[key];
+        if (beforeProp !== afterProp) {
+          updateDescription += `${key}: ${beforeProp} -> ${afterProp}\n`;
+        }
+      }
       break;
     case ActionType.DELETE:
       backgroundColor = "rgba(255, 87, 51, 0.2)";
@@ -127,7 +136,7 @@ function ActionCard({ actionType, userId, targetObjectType, beforeState, afterSt
             {readableObjectType(targetObjectType)}: {targetName}
           </Typography>
         </Tooltip>
-        {expanded && <Typography sx={{ mb: 1.0 }}>Demo Text</Typography>}
+        {expanded && updateDescription && <Typography sx={{ mb: 1.0 }}>{updateDescription}</Typography>}
         <Typography variant="body2">
           {executedAt}
           {actionType === ActionType.UPDATE && (
