@@ -19,13 +19,13 @@ import {
   SpanAnnotationReadResolved,
 } from "../../api/openapi";
 import UserHooks from "../../api/UserHooks";
-import useGetActionCardsActionTarget from "./useGetActionCardsActionTarget";
 
 interface ActionCardProps {
   actionType: ActionType;
   userId: number;
   targetObjectType: ActionTargetObjectType;
-  targetId: number;
+  beforeState: string | undefined;
+  afterState: string | undefined;
   executedAt: string;
 }
 
@@ -33,11 +33,45 @@ export const readableObjectType = (type: ActionTargetObjectType) => {
   return type.valueOf().split("_").map(capitalize).join(" ");
 };
 
-function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt }: ActionCardProps) {
+const stateStringToObject = (state: string | undefined, targetObjectType: ActionTargetObjectType) => {
+  if (!state) return;
+
+  const parsedState: any = JSON.parse(state);
+  switch (targetObjectType) {
+    case ActionTargetObjectType.MEMO:
+      return parsedState as MemoRead;
+    case ActionTargetObjectType.PROJECT:
+      return parsedState as ProjectRead;
+    case ActionTargetObjectType.DOCUMENT_TAG:
+      return parsedState as DocumentTagRead;
+    case ActionTargetObjectType.SOURCE_DOCUMENT:
+      return parsedState as SourceDocumentRead;
+    case ActionTargetObjectType.SPAN_ANNOTATION:
+      return parsedState as SpanAnnotationReadResolved;
+    case ActionTargetObjectType.BBOX_ANNOTATION:
+      return parsedState as BBoxAnnotationReadResolvedCode;
+    case ActionTargetObjectType.CODE:
+    default:
+      return parsedState as CodeRead;
+  }
+};
+
+function ActionCard({ actionType, userId, targetObjectType, beforeState, afterState, executedAt }: ActionCardProps) {
   const [expanded, setExpanded] = useState(false);
   const toggleExpanded = () => {
     setExpanded((oldExpanded) => !oldExpanded);
   };
+
+  console.log(targetObjectType);
+  console.log(actionType);
+  console.log(beforeState);
+  console.log(afterState);
+
+  const { beforeStateObj, afterStateObj } = useMemo(() => {
+    const beforeStateObj: any = stateStringToObject(beforeState, targetObjectType);
+    const afterStateObj: any = stateStringToObject(afterState, targetObjectType);
+    return { beforeStateObj, afterStateObj };
+  }, [afterState, beforeState, targetObjectType]);
 
   let backgroundColor;
   switch (actionType) {
@@ -54,28 +88,22 @@ function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt
       backgroundColor = null;
   }
 
-  const targetObject = useGetActionCardsActionTarget(targetObjectType)(targetId);
   const targetName = useMemo(() => {
-    if (!targetObject.data) return "Loading";
-
     switch (targetObjectType) {
       case ActionTargetObjectType.MEMO:
-        return (targetObject?.data! as MemoRead).title;
       case ActionTargetObjectType.PROJECT:
-        return (targetObject?.data! as ProjectRead).title;
       case ActionTargetObjectType.DOCUMENT_TAG:
-        return (targetObject?.data! as DocumentTagRead).title;
+        return afterStateObj ? afterStateObj.title : beforeStateObj.title;
       case ActionTargetObjectType.SOURCE_DOCUMENT:
-        return (targetObject?.data! as SourceDocumentRead).filename;
+        return afterStateObj ? afterStateObj.filename : beforeStateObj.filename;
       case ActionTargetObjectType.SPAN_ANNOTATION:
-        return (targetObject?.data! as SpanAnnotationReadResolved).code.name;
       case ActionTargetObjectType.BBOX_ANNOTATION:
-        return (targetObject?.data! as BBoxAnnotationReadResolvedCode).code.name;
+        return afterStateObj ? afterStateObj.code.name : beforeStateObj.code.name;
       case ActionTargetObjectType.CODE:
       default:
-        return (targetObject?.data! as CodeRead).name;
+        return afterStateObj ? afterStateObj.name : beforeStateObj.name;
     }
-  }, [targetObject.data, targetObjectType]);
+  }, [afterStateObj, beforeStateObj, targetObjectType]);
 
   const user = UserHooks.useGetUser(userId)?.data;
   let userName: string;
@@ -84,6 +112,8 @@ function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt
   } else {
     userName = user.first_name + " " + user.last_name;
   }
+
+  // TODO: ausklappbare Beschreibung der Veränderungen bei einem Update
 
   return (
     <Card variant="outlined" sx={{ width: "100%", backgroundColor: backgroundColor }}>
@@ -100,11 +130,13 @@ function ActionCard({ actionType, userId, targetObjectType, targetId, executedAt
         {expanded && <Typography sx={{ mb: 1.0 }}>Demo Text</Typography>}
         <Typography variant="body2">
           {executedAt}
-          <IconButton
-            children={expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-            onClick={toggleExpanded}
-            style={{ position: "absolute", bottom: 16, right: 10 }}
-          />
+          {actionType === ActionType.UPDATE && (
+            <IconButton
+              children={expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              onClick={toggleExpanded}
+              style={{ position: "absolute", bottom: 16, right: 10 }}
+            />
+          )}
         </Typography>
       </CardContent>
     </Card>

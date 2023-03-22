@@ -91,7 +91,8 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
                 actionType={action.action_type}
                 userId={action.user_id}
                 targetObjectType={action.target_type}
-                targetId={action.target_id}
+                beforeState={action.before_state}
+                afterState={action.after_state}
                 executedAt={reformatTimestamp(action.executed)}
               />
             </ListItem>
