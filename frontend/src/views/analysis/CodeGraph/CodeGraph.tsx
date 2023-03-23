@@ -15,7 +15,7 @@ export interface ArrayId {
 const CodeGraph = () => {
   // local state
   const codeExplorerRef = useRef<CodeExplorerHandle>(null);
-  const [graphData, setGraphData] = useState<ICodeTree[] | undefined>(undefined);
+  const [graphData, setGraphData] = useState({});
 
   // custom hooks
   const { codeTree, codes } = useComputeCodeTree();
@@ -24,65 +24,24 @@ const CodeGraph = () => {
   console.log("codeTree", codeTree);
   console.log("codes", codes.data);
 
-  function handleMatchData(ids: ArrayId[], data: ICodeTree) {
-    const matched: ICodeTree[] = [];
+  function handleMatchData(selectedIds: number[], data: any[]) {
+    // find all selected codes in the data based on selectedIds
+    const nodes = data.filter((code) => selectedIds.includes(code.id));
 
-    data.forEach((arr) => {
-      if (Array.isArray(arr)) {
-        const objs = [];
-        arr.forEach((obj) => {
-          if (ids.includes(obj.id)) {
-            objs.push(obj);
-          }
-        });
-
-        if (objs.length > 0) {
-          // Group objects by parent_code_id
-          const groupedObjs = objs.reduce((acc, curr) => {
-            const key = curr.parent_code_id;
-            if (!acc[key]) {
-              acc[key] = [];
-            }
-            acc[key].push(curr);
-            return acc;
-          }, {});
-
-          // Push grouped objects to matched array
-          Object.values(groupedObjs).forEach((group) => {
-            matched.push(group);
-          });
-        }
-      } else {
-        if (ids.includes(arr.id)) {
-          matched.push([arr]);
-        }
+    // there is a link between two selected codes if the parent_code_id of the child code is the id of the parent code
+    const links = [];
+    nodes.forEach((node) => {
+      // the link is directional and starts from the parent code to the child code
+      if (
+        node.parent_code_id !== null &&
+        node.parent_code_id !== undefined &&
+        selectedIds.includes(node.parent_code_id)
+      ) {
+        links.push({ source: node.parent_code_id, target: node.id });
       }
     });
 
-    const grouped = matched.reduce((groups, arr) => {
-      if (Array.isArray(arr)) {
-        arr.forEach((obj) => {
-          const key = obj.parent_code_id !== null && obj.parent_code_id !== undefined ? obj.parent_code_id : obj.id;
-          if (!groups[key]) {
-            groups[key] = [];
-          }
-          groups[key].push(obj);
-        });
-      } else {
-        const obj = arr;
-        const key = obj.parent_code_id !== null && obj.parent_code_id !== undefined ? obj.parent_code_id : obj.id;
-        if (!groups[key]) {
-          groups[key] = [];
-        }
-        groups[key].push(obj);
-      }
-      return groups;
-    }, {});
-
-    const groupedArray: SetSt = Object.values(grouped);
-
-    setMatchedData(groupedArray);
-    return groupedArray;
+    return { nodes, links };
   }
 
   const handleGenerateGraph = () => {
@@ -91,7 +50,9 @@ const CodeGraph = () => {
     const checkedCodeIds = codeExplorerRef.current.getCheckedCodeIds();
     console.log("checkedCodeIds", checkedCodeIds);
     if (checkedCodeIds.length > 0) {
+      console.log("handleMatchData", handleMatchData(checkedCodeIds, codes.data));
       setGraphData(handleMatchData(checkedCodeIds, codes.data));
+      console.log("graphData", graphData);
     } else {
       setGraphData(undefined);
     }
@@ -114,7 +75,9 @@ const CodeGraph = () => {
             </Button>
           </Stack>
         </Box>
-        <div className="myFlexFillAllContainer">{graphData !== undefined && <ForceLayout data={graphData} />}</div>
+        <div className="myFlexFillAllContainer">
+          {(graphData !== undefined || graphData !== null) && <ForceLayout data={graphData} />}
+        </div>
       </Grid>
     </Grid>
   );
