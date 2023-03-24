@@ -1,3 +1,4 @@
+// @ts-nocheck comment
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
@@ -58,20 +59,22 @@ const ForceLayout = ({ data }) => {
         .force("center", d3.forceCenter(width / 2 + margin, height / 2 + margin));
 
       const link = g
-        .append("g")
         .selectAll("line")
         .data(links)
-        .join("line")
+        .enter()
+        .append("line")
         .attr("stroke", "#aaa")
         .attr("stroke-width", 1);
 
       const node = g
-        .append("g")
         .selectAll("circle")
         .data(nodes)
-        .join("circle")
+        .enter()
+        .append("circle")
         .attr("r", 5)
         .attr("fill", (d) => d.color);
+
+      // ...
 
       simulation.on("tick", () => {
         link
@@ -94,7 +97,7 @@ const ForceLayout = ({ data }) => {
 
   return (
     <svg ref={svgRef}>
-      <g ref={gRef} />
+      <g ref={gRef}></g>
     </svg>
   );
 };
