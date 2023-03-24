@@ -15,10 +15,17 @@ from app.docprepro.util import update_sdoc_status
 
 repo = RepoService()
 
+
 def thumbnail(image: BytesIO, filename: Path, thumbnail_size: int = 256):
     with Image.open(BytesIO(image)) as im:
         im.thumbnail((thumbnail_size, thumbnail_size))
-        im.save(repo.generate_sdoc_filename(filename, webp=True, thumbnail=True), "WEBP", quality=50, lossless=True, method=6)
+        im.save(
+            repo.generate_sdoc_filename(filename, webp=True, thumbnail=True),
+            "WEBP",
+            quality=50,
+            lossless=True,
+            method=6,
+        )
 
 
 def generate_webp_thumbnails_(ppvds: List[PreProVideoDoc]) -> List[PreProVideoDoc]:
@@ -27,17 +34,19 @@ def generate_webp_thumbnails_(ppvds: List[PreProVideoDoc]) -> List[PreProVideoDo
         probe = ffmpeg.probe(filename)
         time = float(probe["format"]["duration"]) // 2
 
-        width = probe['streams'][0]['width']
+        width = probe["streams"][0]["width"]
         try:
             image, _ = (
-                ffmpeg
-                .input(filename, ss=time)
-                .filter('scale', width, -1)
-                .output('pipe:', vframes=1, format='image2', vcodec='png')
+                ffmpeg.input(filename, ss=time)
+                .filter("scale", width, -1)
+                .output("pipe:", vframes=1, format="image2", vcodec="png")
                 .run(quiet=True)
             )
         except ffmpeg.Error as e:
             logger.error(e)
         thumbnail(image, filename)
-        update_sdoc_status(sdoc_id=ppvd.sdoc_id, sdoc_status=SDocStatus.generate_webp_thumbnails_from_video)
+        update_sdoc_status(
+            sdoc_id=ppvd.sdoc_id,
+            sdoc_status=SDocStatus.generate_webp_thumbnails_from_video,
+        )
     return ppvds

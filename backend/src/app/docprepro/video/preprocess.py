@@ -19,10 +19,20 @@ def import_video_document(
 ) -> List[PreProVideoDoc]:
     return import_video_document_(doc_file_path, project_id, mime_type)
 
-@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
+
+@celery_worker.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 5},
+)
 def generate_webp_thumbnails(ppvds: List[PreProVideoDoc]) -> List[PreProVideoDoc]:
     return generate_webp_thumbnails_(ppvds)
 
-@celery_worker.task(acks_late=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 5, 'countdown': 5})
+
+@celery_worker.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 5},
+)
 def create_ppad_from_ppvd(ppvds: List[PreProVideoDoc]) -> List[PreProAudioDoc]:
     return create_ppad_from_ppvd_(ppvds)

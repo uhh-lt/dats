@@ -14,6 +14,7 @@ from app.docprepro.util import update_sdoc_status
 
 sql = SQLService(echo=False)
 
+
 def convert_to_pcm_(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
     for ppad in tqdm(ppads, desc="Converting mediafile to uncompressed wav"):
         update_sdoc_status(
@@ -37,8 +38,12 @@ def convert_to_pcm_(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
         ppad.uncompressed_fn = wav_file
 
         # Store file in database
-        ppad_uncomp = import_audio_document_(wav_file, ppad.project_id, mime_type="audio/x-wav")[0] #TODO: Use project enums
-        
+        ppad_uncomp = import_audio_document_(
+            wav_file, ppad.project_id, mime_type="audio/x-wav"
+        )[
+            0
+        ]  # TODO: Use project enums
+
         ppad.uncompressed_fn = ppad_uncomp.audio_dst
         ppad.uncompressed_sdoc_id = ppad_uncomp.sdoc_id
 
@@ -52,14 +57,23 @@ def convert_to_pcm_(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
 
     return ppads
 
-def create_sdoc_link_ppad_(ppad: PreProAudioDoc, parent_source_document_id: int) -> PreProAudioDoc:
+
+def create_sdoc_link_ppad_(
+    ppad: PreProAudioDoc, parent_source_document_id: int
+) -> PreProAudioDoc:
 
     with sql.db_session() as db:
-        create_dtos = [SourceDocumentLinkCreate(parent_source_document_id=parent_source_document_id,
-                                                linked_source_document_filename=str(ppad.audio_dst),
-                                                linked_source_document_id=ppad.sdoc_id)]
+        create_dtos = [
+            SourceDocumentLinkCreate(
+                parent_source_document_id=parent_source_document_id,
+                linked_source_document_filename=str(ppad.audio_dst),
+                linked_source_document_id=ppad.sdoc_id,
+            )
+        ]
         # Persist the link
         crud_sdoc_link.create_multi(db=db, create_dtos=create_dtos)
 
         # Update sdoc status
-        update_sdoc_status(sdoc_id=ppad.sdoc_id, sdoc_status=SDocStatus.create_sdoc_links_from_audio)
+        update_sdoc_status(
+            sdoc_id=ppad.sdoc_id, sdoc_status=SDocStatus.create_sdoc_links_from_audio
+        )

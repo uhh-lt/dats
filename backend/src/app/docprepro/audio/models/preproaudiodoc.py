@@ -19,6 +19,6 @@ class PreProAudioDoc(BaseModel):
 
     uncompressed_fn: Optional[Path]
     uncompressed_sdoc_id: Optional[int]
-    
+
     transcript_sdoc_fn: Optional[Path]
     transcript_sdoc_id: Optional[int]

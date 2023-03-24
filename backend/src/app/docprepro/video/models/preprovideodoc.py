@@ -18,6 +18,4 @@ class PreProVideoDoc(BaseModel):
 
     # word_level_transcriptions: List[WordLevelTranscription] = Field(default=list())
 
-    # transcript_sdoc_fn: Optional[Path]
-    # transcript_sdoc_id: Optional[int]
-    #TODO: sdoc_link_audio_uncompressed
+    # TODO: sdoc_link_audio_uncompressed
