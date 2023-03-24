@@ -21,14 +21,12 @@ def import_video_document_(
     # persist in db
     dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
 
-    # create ppad
-    ppvd = PreProVideoDoc(
-        project_id=sdoc_db_obj.project_id,
-        sdoc_id=sdoc_db_obj.id,
-        video_dst=dst,
-        mime_type=mime_type,
-    )
-    ffmpeg_probe = ffmpeg.probe(dst)["format"]
+    # create ppvd
+    ppvd = PreProVideoDoc(project_id=sdoc_db_obj.project_id,
+                          sdoc_id=sdoc_db_obj.id,
+                          video_dst=dst,
+                          mime_type=mime_type)
+    ffmpeg_probe = ffmpeg.probe(dst)['format']
     # store image metadata as SourceDocumentMetadata
     for meta in ffmpeg_probe:
         sdoc_meta_create_dto = SourceDocumentMetadataCreate(
