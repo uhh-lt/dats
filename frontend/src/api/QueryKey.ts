@@ -122,4 +122,7 @@ export const QueryKey = {
 
   // export
   EXPORT_JOB: "exportJob",
+
+  // crawler
+  CRAWLER_JOB: "crawlerJob",
 };
