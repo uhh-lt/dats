@@ -346,6 +346,35 @@
         }
       }
     },
+    "/user/{user_id}/adocs": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns all Adocs of the User",
+        "description": "Returns all Adocs of the User with the given ID",
+        "operationId": "get_user_adocs",
+        "parameters": [
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response User-Get User Adocs",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnotationDocumentRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/project": {
       "get": {
         "tags": ["project"],
@@ -3974,6 +4003,54 @@
           }
         }
       }
+    },
+    "/crawler": {
+      "post": {
+        "tags": ["crawler"],
+        "summary": "Returns the CrawlerJob for the given Parameters",
+        "description": "Returns the CrawlerJob for the given Parameters",
+        "operationId": "start_crawler_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/crawler/{crawler_job_id}": {
+      "get": {
+        "tags": ["crawler"],
+        "summary": "Returns the CrawlerJob for the given ID",
+        "description": "Returns the CrawlerJob for the given ID if it exists",
+        "operationId": "get_crawler_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Crawler Job Id", "type": "string" },
+            "name": "crawler_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4356,6 +4433,69 @@
           "description": { "title": "Description", "type": "string", "description": "Description of the Code" },
           "parent_code_id": { "title": "Parent Code Id", "type": "integer", "description": "Parent of the Code" }
         }
+      },
+      "CrawlerJobParameters": {
+        "title": "CrawlerJobParameters",
+        "required": ["project_id", "urls"],
+        "type": "object",
+        "properties": {
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "The ID of the Project to import the crawled data."
+          },
+          "urls": {
+            "title": "Urls",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of URLs to crawl."
+          }
+        }
+      },
+      "CrawlerJobRead": {
+        "title": "CrawlerJobRead",
+        "required": ["id", "parameters", "output_dir", "images_store_path", "created"],
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/CrawlerJobStatus" }],
+            "description": "Status of the CrawlerJob",
+            "default": "INIT"
+          },
+          "id": { "title": "Id", "type": "string", "description": "ID of the CrawlerJob" },
+          "parameters": {
+            "title": "Parameters",
+            "allOf": [{ "$ref": "#/components/schemas/CrawlerJobParameters" }],
+            "description": "The parameters of the export job that defines what to export!"
+          },
+          "output_dir": {
+            "title": "Output Dir",
+            "type": "string",
+            "description": "Internal temporary output directory for the crawled data."
+          },
+          "images_store_path": {
+            "title": "Images Store Path",
+            "type": "string",
+            "description": "Internal temporary output directory for the crawled images."
+          },
+          "crawled_data_zip_path": {
+            "title": "Crawled Data Zip Path",
+            "type": "string",
+            "description": "Path to the ZIP that contains the data of the CrawlerJob"
+          },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the CrawlerJob",
+            "format": "date-time"
+          }
+        }
+      },
+      "CrawlerJobStatus": {
+        "title": "CrawlerJobStatus",
+        "enum": ["INIT", "IN PROGRESS", "DONE", "FAILED"],
+        "type": "string",
+        "description": "An enumeration."
       },
       "DocType": {
         "title": "DocType",
@@ -4926,8 +5066,8 @@
             "items": { "type": "string" },
             "description": "List of SearchTerms that have to be present in the SourceDocuments content (via Elasticsearch)"
           },
-          "file_name": {
-            "title": "File Name",
+          "filename": {
+            "title": "Filename",
             "type": "string",
             "description": "Filename that have to be present in the SourceDocuments Filename (via Elasticsearch)"
           },

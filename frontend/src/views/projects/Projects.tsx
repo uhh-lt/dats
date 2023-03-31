@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Box,
   Card,
   CardActionArea,
   CardActions,
@@ -20,6 +21,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import ProjectContextMenu from "./ProjectContextMenu";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import { ProjectRead } from "../../api/openapi";
+import RecentActivity from "./RecentActivity";
 
 function Projects() {
   const { user } = useAuth();
@@ -35,51 +37,54 @@ function Projects() {
   };
 
   return (
-    <Container maxWidth="xl">
-      <Toolbar sx={{ p: "0px !important" }}>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          All Projects
-          {/*All Projects {user.data && `of ${user.data.email}`}*/}
-        </Typography>
-      </Toolbar>
+    <Container maxWidth="xl" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {projects.isLoading && <div>Loading!</div>}
       {projects.isError && <div>Error: {projects.error.message}</div>}
       {projects.isSuccess && (
         <>
-          <Grid container spacing={2}>
-            <Grid item>
-              <Card
-                sx={{
-                  width: 420,
-                  border: "3px dashed lightgray",
-                  boxShadow: 0,
-                }}
-              >
-                <CardActionArea component={Link} to="/projectsettings">
-                  <CardContent
-                    sx={{
-                      height: 250,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
-                      CREATE NEW PROJECT
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
+          <RecentActivity />
+          <Toolbar sx={{ p: "0px !important" }}>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              All Projects
+              {/*All Projects {user.data && `of ${user.data.email}`}*/}
+            </Typography>
+          </Toolbar>
+          <Box display={"flex"} style={{ flexGrow: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <Grid container spacing={2} style={{ flexGrow: 1, overflow: "auto", minHeight: "100%", paddingBottom: 20 }}>
+              <Grid item>
+                <Card
+                  sx={{
+                    width: 420,
+                    border: "3px dashed lightgray",
+                    boxShadow: 0,
+                  }}
+                >
+                  <CardActionArea component={Link} to="/projectsettings">
+                    <CardContent
+                      sx={{
+                        height: 250,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
+                        CREATE NEW PROJECT
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+              {projects.data.map((project) => (
+                <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>
+              ))}
             </Grid>
-            {projects.data.map((project) => (
-              <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>
-            ))}
-          </Grid>
-          <ProjectContextMenu
-            projectId={contextMenuData}
-            position={contextMenuPosition}
-            handleClose={() => setContextMenuPosition(null)}
-          />
+            <ProjectContextMenu
+              projectId={contextMenuData}
+              position={contextMenuPosition}
+              handleClose={() => setContextMenuPosition(null)}
+            />
+          </Box>
         </>
       )}
     </Container>

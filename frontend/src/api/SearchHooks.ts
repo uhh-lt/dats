@@ -107,7 +107,7 @@ const filterSearchQueryFn = async (
       tag_ids: filter.tags.length > 0 ? filter.tags : undefined,
       keywords: filter.keywords.length > 0 ? filter.keywords : undefined,
       search_terms: filter.terms.length > 0 ? filter.terms : undefined,
-      file_name: filter.filenames.length > 0 ? filter.filenames[0] : undefined,
+      filename: filter.filenames.length > 0 ? filter.filenames[0] : undefined,
       metadata: filter.metadata.length > 0 ? filter.metadata : undefined,
       doc_types: resultModalities.length > 0 ? resultModalities : undefined,
       all_tags: true,
@@ -224,12 +224,11 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
           search_terms: terms.length > 0 ? terms : undefined,
-          file_name: filenames.length > 0 ? filenames[0] : undefined,
+          filename: filenames.length > 0 ? filenames[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
         },
-        
       });
       return new Map(Object.entries(data.stats).map((x) => [parseInt(x[0]), x[1]]));
     }
@@ -251,7 +250,7 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[], sortB
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
           search_terms: terms.length > 0 ? terms : undefined,
-          file_name: filenames.length > 0 ? filenames[0] : undefined,
+          filename: filenames.length > 0 ? filenames[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
@@ -277,7 +276,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[], sortStats
           tag_ids: tags.length > 0 ? tags : undefined,
           keywords: keywords.length > 0 ? keywords : undefined,
           search_terms: terms.length > 0 ? terms : undefined,
-          file_name: filenames.length > 0 ? filenames[0] : undefined,
+          filename: filenames.length > 0 ? filenames[0] : undefined,
           metadata: metadata.length > 0 ? metadata : undefined,
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,

@@ -26,7 +26,7 @@ export type SearchSDocsQueryParameters = {
   /**
    * Filename that have to be present in the SourceDocuments Filename (via Elasticsearch)
    */
-  file_name?: string;
+  filename?: string;
   /**
    * List of SpanEntities that have to be present in the SourceDocuments
    */
