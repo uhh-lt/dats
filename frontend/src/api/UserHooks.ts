@@ -38,6 +38,7 @@ const useGetAllCodes = (userId: number) => {
 };
 
 const useGetAllAdocs = (userId: number | undefined) => {
+  console.log("here");
   return useQuery<AnnotationDocumentRead[], Error>(
     [QueryKey.USER_ADOCS, userId],
     () => UserService.getUserAdocs({ userId: userId! }),
