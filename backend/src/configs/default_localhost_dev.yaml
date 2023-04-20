@@ -68,7 +68,6 @@ docprepro:
       user: ${oc.env:RABBITMQ_USER, dwtsuser}
       password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
 
-
 postgres:
   host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
   port: ${oc.env:POSTGRES_PORT, 5432}
@@ -100,8 +99,8 @@ elasticsearch:
     docs: configs/default_sdoc_index_mapping.json
     memos: configs/default_memo_index_mapping.json
   index_settings:
-    docs:
-    memos:
+    docs: configs/default_sdoc_index_settings.json
+    memos: configs/default_memo_index_settings.json
 
 faiss:
   # see https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
