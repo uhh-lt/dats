@@ -22,7 +22,7 @@ def convert_to_pcm_(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
             sdoc_status=SDocStatus.convert_mediafile_to_uncompressed_audio,
         )
         file_path = ppad.audio_dst
-        wav_file = file_path.with_suffix(".wav")
+        wav_file = file_path.with_suffix(".uncompressed.wav")
 
         # Create 16khz Mono PCM File
         try:
@@ -36,19 +36,6 @@ def convert_to_pcm_(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
             logger.error(e)
 
         ppad.uncompressed_fn = wav_file
-
-        # Store file in database
-        ppad_uncomp = import_audio_document_(
-            wav_file, ppad.project_id, mime_type="audio/x-wav"
-        )[
-            0
-        ]  # TODO: Use project enums
-
-        ppad.uncompressed_fn = ppad_uncomp.audio_dst
-        ppad.uncompressed_sdoc_id = ppad_uncomp.sdoc_id
-
-        # Create sdoc link
-        create_sdoc_link_ppad_(ppad_uncomp, ppad.sdoc_id)
 
         # Update sdoc status of source document to finish
         # Robert: This is in my opinion the (actual) best place to set the finish status because now only the
