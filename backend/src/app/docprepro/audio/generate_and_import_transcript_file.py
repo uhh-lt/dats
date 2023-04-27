@@ -31,7 +31,7 @@ def generate_and_import_transcript_file_(
         )  # TODO: sdoc_id is not ideal
 
         transcription = " ".join([a.text for a in ppad.word_level_transcriptions])
-        path_transcription = ppad.audio_dst.with_suffix(".txt")
+        path_transcription = ppad.audio_dst.with_suffix(".transcription.txt")
         project_id = ppad.project_id
         mime_type = "text/plain"  # TODO: Use project enums
 
@@ -43,6 +43,7 @@ def generate_and_import_transcript_file_(
             logger.error(
                 f"IOError while creating file {str(path_transcription)}. Errormsg: {e}"
             )
+            raise e
 
         # Import transcript textfile to database and create pptd
         pptd = import_text_document_(
