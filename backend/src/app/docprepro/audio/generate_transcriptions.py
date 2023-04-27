@@ -3,6 +3,7 @@ from typing import List
 from tqdm import tqdm
 import numpy as np
 from scipy.io import wavfile
+from whisper_timestamped import Whisper
 
 from app.core.data.dto.source_document import SDocStatus
 from app.core.db.sql_service import SQLService
@@ -11,13 +12,14 @@ from app.docprepro.audio.models.wordleveltranscription import WordLevelTranscrip
 from app.docprepro.util import update_sdoc_status
 from config import conf
 
+
 sql = SQLService(echo=False)
 
 OPTIONS = conf.docprepro.audio.whisper.options
 
 
 def generate_transcriptions_(
-    ppads: List[PreProAudioDoc], whisper, whisper_model
+    ppads: List[PreProAudioDoc], whisper: Whisper, whisper_model: Whisper
 ) -> List[PreProAudioDoc]:
     for ppad in tqdm(ppads, desc="Generating transcriptions"):
         update_sdoc_status(
