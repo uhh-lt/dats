@@ -21,18 +21,15 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { ProjectRead, UserRead } from "../../../api/openapi";
+import { UserRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
 import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import { ProjectProps } from "./ProjectUpdate";
 
-interface ProjectUsersProps {
-  project: ProjectRead;
-}
-
-function ProjectUsers({ project }: ProjectUsersProps) {
+function ProjectUsers({ project }: ProjectProps) {
   const [selectedUser, setSelectedUser] = useState<UserRead | null>(null);
 
   // query all users that belong to the project
@@ -104,8 +101,8 @@ function ProjectUsers({ project }: ProjectUsersProps) {
   };
 
   return (
-    <React.Fragment>
-      <Toolbar variant="dense">
+    <Box display="flex" className="myFlexContainer h100">
+      <Toolbar variant="dense" className="myFlexFitContentContainer">
         <Stack direction="row" spacing={2} sx={{ width: "100%", alignItems: "center" }}>
           <Box sx={{ flex: "1 1 0", display: "flex", alignItems: "center" }}>
             <Typography variant="h6" color="inherit" component="div">
@@ -149,9 +146,9 @@ function ProjectUsers({ project }: ProjectUsersProps) {
         <CardContent>An error occurred while loading project users for project {project.id}...</CardContent>
       )}
       {projectUsers.isSuccess && (
-        <Stack direction="row" spacing={2} sx={{ width: "100%" }}>
-          <Box sx={{ flex: "1 1 0" }}>
-            <List>
+        <Stack direction="row" spacing={2} className="myFlexFillAllContainer">
+          <Box style={{ float: "left", width: "50%", overflow: "auto" }}>
+            <List style={{ maxHeight: "100%" }}>
               {projectUsers.data.map((user) => (
                 <ListItem
                   disablePadding
@@ -174,7 +171,7 @@ function ProjectUsers({ project }: ProjectUsersProps) {
               ))}
             </List>
           </Box>
-          <Box sx={{ flex: "1 1 0" }}>
+          <Box style={{ overflow: "auto" }}>
             <FormGroup>
               <FormControlLabel control={<Checkbox defaultChecked />} label="Can Search?" />
               <FormControlLabel control={<Checkbox defaultChecked />} label="Can upload files?" />
@@ -190,7 +187,7 @@ function ProjectUsers({ project }: ProjectUsersProps) {
         handleClose={() => setContextMenuPosition(null)}
         onDeleteUser={handleClickRemoveUser}
       />
-    </React.Fragment>
+    </Box>
   );
 }
 

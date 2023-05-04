@@ -1,7 +1,6 @@
-import { CardContent, Divider, TextField, Toolbar, Typography } from "@mui/material";
+import { Box, CardContent, Divider, TextField, Toolbar, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
-import { ProjectRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton";
 import CodeEditDialog from "../../annotation/CodeExplorer/CodeEditDialog";
@@ -9,12 +8,9 @@ import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEna
 import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
+import { ProjectProps } from "./ProjectUpdate";
 
-interface ProjectCodesProps {
-  project: ProjectRead;
-}
-
-function ProjectCodes({ project }: ProjectCodesProps) {
+function ProjectCodes({ project }: ProjectProps) {
   // local state
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
   const [codeFilter, setCodeFilter] = useState<string>("");
@@ -89,8 +85,8 @@ function ProjectCodes({ project }: ProjectCodesProps) {
   };
 
   return (
-    <>
-      <Toolbar variant="dense" style={{ paddingRight: "8px" }}>
+    <Box display="flex" className="myFlexContainer h100">
+      <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
         <Typography variant="h6" color="inherit" component="div">
           Filter codes
         </Typography>
@@ -132,7 +128,7 @@ function ProjectCodes({ project }: ProjectCodesProps) {
           <CodeEditDialog codes={projectCodes.data} />
         </>
       )}
-    </>
+    </Box>
   );
 }
 

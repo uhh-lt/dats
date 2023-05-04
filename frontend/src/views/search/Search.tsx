@@ -223,7 +223,7 @@ function Search() {
           />
         </Grid>
         <Grid item md={10} className="myFlexContainer h100">
-          <Box className="myFlexFitContent">
+          <Box className="myFlexFitContentContainer">
             <Stack direction="row" style={{ flexWrap: "wrap", gap: "8px" }}>
               {filters.length > 0 && <Typography variant="h6">Filter:</Typography>}
               {filters.map((filter) => (
