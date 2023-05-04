@@ -1,19 +1,15 @@
-import { Box, CardActions, CardContent, Divider, Stack, TextField } from "@mui/material";
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import SaveIcon from "@mui/icons-material/Save";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { ProjectRead } from "../../../api/openapi";
-import ProjectHooks from "../../../api/ProjectHooks";
 import { ErrorMessage } from "@hookform/error-message";
+import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
+import { Box, CardActions, CardContent, Divider, Stack, TextField } from "@mui/material";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import { ProjectProps } from "./ProjectProps";
 
-interface ProjectDetailsProps {
-  project: ProjectRead;
-}
-
-function ProjectDetails({ project }: ProjectDetailsProps) {
+function ProjectDetails({ project }: ProjectProps) {
   const { user } = useAuth();
   const {
     register,

@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import React, { useMemo, useState } from "react";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { ProjectProps } from "./ProjectUpdate";
+import { ProjectProps } from "./ProjectProps";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import ProjectTagsContextMenu from "./ProjectTagsContextMenu";

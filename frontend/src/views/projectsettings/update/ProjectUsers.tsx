@@ -27,7 +27,7 @@ import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
 import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import { ProjectProps } from "./ProjectUpdate";
+import { ProjectProps } from "./ProjectProps";
 
 function ProjectUsers({ project }: ProjectProps) {
   const [selectedUser, setSelectedUser] = useState<UserRead | null>(null);

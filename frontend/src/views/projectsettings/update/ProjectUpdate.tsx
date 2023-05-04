@@ -1,25 +1,20 @@
-import React, { useState } from "react";
-import { AppBar, Box, Button, Card, CardContent, Stack, Tabs, Toolbar, Typography } from "@mui/material";
-import Tab from "@mui/material/Tab";
-import TabPanel from "@mui/lab/TabPanel";
-import { LoadingButton, TabContext } from "@mui/lab";
-import ProjectDocuments from "./ProjectDocuments";
-import ProjectUsers from "./ProjectUsers";
-import ProjectCodes from "./ProjectCodes";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { Link, useNavigate, useParams } from "react-router-dom";
 import CloseIcon from "@mui/icons-material/Close";
-import ProjectDetails from "./ProjectDetails";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { LoadingButton, TabContext } from "@mui/lab";
+import TabPanel from "@mui/lab/TabPanel";
+import { AppBar, Box, Button, Card, CardContent, Stack, Tabs, Typography } from "@mui/material";
+import Tab from "@mui/material/Tab";
+import React, { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
-import { ProjectRead } from "../../../api/openapi";
-import ProjectTags from "./ProjectTags";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import ProjectCodes from "./ProjectCodes";
+import ProjectDetails from "./ProjectDetails";
+import ProjectDocuments from "./ProjectDocuments";
 import ProjectGuidelines from "./ProjectGuidelines";
-
-export interface ProjectProps {
-  project: ProjectRead;
-}
+import ProjectTags from "./ProjectTags";
+import ProjectUsers from "./ProjectUsers";
 
 function ProjectUpdate() {
   const { user } = useAuth();

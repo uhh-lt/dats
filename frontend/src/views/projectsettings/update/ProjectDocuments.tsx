@@ -1,4 +1,6 @@
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
+import { LoadingButton } from "@mui/lab";
 import {
   Box,
   CardContent,
@@ -10,22 +12,19 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Paper,
   Toolbar,
   Tooltip,
   Typography,
 } from "@mui/material";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import DeleteIcon from "@mui/icons-material/Delete";
+import React, { ChangeEvent, useEffect, useRef, useState } from "react";
+import { useInView } from "react-intersection-observer";
+import PreProHooks from "../../../api/PreProHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
-import { LoadingButton } from "@mui/lab";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
-import { useInView } from "react-intersection-observer";
-import { ProjectProps } from "./ProjectUpdate";
-import PreProHooks from "../../../api/PreProHooks";
+import { ProjectProps } from "./ProjectProps";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();

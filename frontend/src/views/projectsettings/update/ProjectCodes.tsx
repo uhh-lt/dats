@@ -8,7 +8,7 @@ import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEna
 import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
-import { ProjectProps } from "./ProjectUpdate";
+import { ProjectProps } from "./ProjectProps";
 
 function ProjectCodes({ project }: ProjectProps) {
   // local state

@@ -19,7 +19,7 @@ import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
 import { LoadingButton } from "@mui/lab";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import { ProjectProps } from "./ProjectUpdate";
+import { ProjectProps } from "./ProjectProps";
 import { SourceDocumentRead } from "../../../api/openapi";
 import ProjectGuidelinesContextMenu from "./ProjectGuidelinesContextMenu";
 
