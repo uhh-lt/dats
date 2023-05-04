@@ -1,51 +1,42 @@
 .myTableRow {
-    cursor: pointer;
-    position: relative;
+  cursor: pointer;
+  position: relative;
 }
 
 .myTableRow:not(:hover) span.myQuickMenu {
-    position:absolute;
-    right: 0;
-    margin-right: 16px;
-    visibility: hidden;
+  position: absolute;
+  right: 0;
+  margin-right: 16px;
+  visibility: hidden;
 }
 
 .myTableRow:hover .myTableCell {
-    padding: 6px 16px;
-}
-
-.myTag {
-    margin: -4px 0;
-    text-align: center;
-    padding: 2px 4px;
-    margin-right: 4px;
-    border-radius: 8px;
-    border: 1px solid;
+  padding: 6px 16px;
 }
 
 .resizer {
-    position: absolute;
-    right: 0;
-    top: 0;
-    height: 100%;
-    width: 5px;
-    background: rgba(0, 0, 0, 0.5);
-    cursor: col-resize;
-    user-select: none;
-    touch-action: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
 }
 
 .resizer.isResizing {
-    background: #1976d2;
-    opacity: 1;
+  background: #1976d2;
+  opacity: 1;
 }
 
 @media (hover: hover) {
-    .resizer {
-        opacity: 0;
-    }
+  .resizer {
+    opacity: 0;
+  }
 
-    *:hover > .resizer {
-        opacity: 1;
-    }
+  *:hover > .resizer {
+    opacity: 1;
+  }
 }

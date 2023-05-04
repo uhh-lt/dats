@@ -88,7 +88,7 @@ function SearchResultCardBase({
             ) : undefined
           }
         />
-        <CardContent sx={{ pt: 0 }}>
+        <CardContent sx={{ pt: 0, pb: 1 }}>
           {sdoc.isSuccess ? (
             <>{renderContent(sdoc.data)}</>
           ) : sdoc.isError ? (
@@ -100,13 +100,15 @@ function SearchResultCardBase({
               Loading ...
             </Typography>
           )}
-          <Stack direction={"row"} sx={{ alignItems: "center", height: 22 }}>
-            {tags.isLoading && <>...</>}
-            {tags.isError && <>{tags.error.message}</>}
-            {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}
-          </Stack>
         </CardContent>
       </CardActionArea>
+      <CardContent sx={{ py: 0 }}>
+        <Stack direction={"row"}>
+          {tags.isLoading && <>...</>}
+          {tags.isError && <>{tags.error.message}</>}
+          {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}
+        </Stack>
+      </CardContent>
       <CardActions>
         <AnnotateButton projectId={projectId} sdocId={sdocId} />
         <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} edge="end" />

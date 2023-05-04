@@ -1,36 +1,36 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import * as React from "react";
-import { useCallback, useContext, useEffect, useMemo } from "react";
 import { Divider, Grid, Stack, Typography } from "@mui/material";
-import DocumentViewer from "./DocumentViewer/DocumentViewer";
-import SearchResultsView from "./SearchResults/SearchResultsView";
-import TagExplorer from "./Tags/TagExplorer/TagExplorer";
-import SearchBar from "./SearchBar/SearchBar";
+import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useForm } from "react-hook-form";
-import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import { SpanEntityDocumentFrequency } from "../../api/openapi";
 import { isNumber } from "lodash";
+import { useCallback, useContext, useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import ProjectHooks from "../../api/ProjectHooks";
+import SearchHooks from "../../api/SearchHooks";
+import { SpanEntityDocumentFrequency } from "../../api/openapi";
+import { AppBarContext } from "../../layouts/TwoBarLayout";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { SettingsActions } from "../settings/settingsSlice";
+import DocumentViewer from "./DocumentViewer/DocumentViewer";
+import { QueryType } from "./QueryType";
+import SearchBar from "./SearchBar/SearchBar";
 import {
+  SearchFilter,
   createCodeFilter,
-  createDocumentTagFilter,
   createFilenameFilter,
   createKeywordFilter,
   createSentenceFilter,
   createTermFilter,
-  SearchFilter,
 } from "./SearchFilter";
-import { SearchActions } from "./searchSlice";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import SearchFilterChip from "./SearchFilterChip";
+import SearchResultsView from "./SearchResults/SearchResultsView";
+import SearchStatistics from "./SearchStatistics/SearchStatistics";
+import TagExplorer from "./Tags/TagExplorer/TagExplorer";
 import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
 import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
-import Box from "@mui/material/Box";
-import SearchHooks from "../../api/SearchHooks";
-import { QueryType } from "./QueryType";
-import ProjectHooks from "../../api/ProjectHooks";
-import { SettingsActions } from "../settings/settingsSlice";
+import { useAddTagFilter } from "./hooks/useAddTagFilter";
+import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
+import { SearchActions } from "./searchSlice";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -85,14 +85,7 @@ function Search() {
   }, [filters]);
 
   // handle navigation
-  const navigateIfNecessary = useCallback(
-    (to: string) => {
-      if (to !== location.pathname) {
-        navigate(to);
-      }
-    },
-    [location.pathname, navigate]
-  );
+  const navigateIfNecessary = useNavigateIfNecessary();
   const handleResultClick = (sdocId: number) => {
     // remove doc/:docId from url (if it exists) then add new doc id
     let url = removeTrailingSlash(location.pathname.split("/doc")[0]);
@@ -141,14 +134,7 @@ function Search() {
     },
     [dispatch, navigateIfNecessary, projectId]
   );
-  const handleAddTagFilter = useCallback(
-    (tagId: number) => {
-      dispatch(SearchActions.addFilter(createDocumentTagFilter(tagId)));
-      dispatch(SearchActions.clearSelectedDocuments());
-      navigateIfNecessary(`/project/${projectId}/search/`);
-    },
-    [dispatch, navigateIfNecessary, projectId]
-  );
+  const handleAddTagFilter = useAddTagFilter();
   const handleAddTextFilter = useCallback(
     (text: string) => {
       dispatch(SearchActions.addFilter(createTermFilter(text)));
