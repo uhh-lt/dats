@@ -9,7 +9,6 @@ from app.core.data.dto import ProjectRead
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoRead
-from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import (
     UserAuthorizationHeaderData,
     UserCreate,
@@ -240,13 +239,13 @@ async def get_user_adocs(
 @router.get(
     "/{user_id}/recent_activity",
     tags=tags,
-    response_model=List[int],
+    response_model=List[AnnotationDocumentRead],
     summary="Returns sdoc ids of sdocs the User recently modified (annotated)",
     description="Returns the top k sdoc ids that the User recently modified (annotated)",
 )
 async def recent_activity(
     *, user_id: int, k: int, db: Session = Depends(get_db_session)
-) -> List[int]:
+) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
 
     # get all adocs of a user
@@ -259,4 +258,4 @@ async def recent_activity(
     user_adocs.sort(key=lambda adoc: adoc.updated, reverse=True)
 
     # get the topk k sdocs associated with the adocs
-    return [adoc.source_document_id for adoc in user_adocs[:k]]
+    return [adoc for adoc in user_adocs[:k]]
