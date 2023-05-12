@@ -279,10 +279,16 @@ export class UserService {
   /**
    * Returns sdoc ids of sdocs the User recently modified (annotated)
    * Returns the top k sdoc ids that the User recently modified (annotated)
-   * @returns number Successful Response
+   * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */
-  public static recentActivity({ userId, k }: { userId: number; k: number }): CancelablePromise<Array<number>> {
+  public static recentActivity({
+    userId,
+    k,
+  }: {
+    userId: number;
+    k: number;
+  }): CancelablePromise<Array<AnnotationDocumentRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}/recent_activity",

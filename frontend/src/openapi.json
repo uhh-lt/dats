@@ -390,7 +390,11 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": { "title": "Response User-Recent Activity", "type": "array", "items": { "type": "integer" } }
+                "schema": {
+                  "title": "Response User-Recent Activity",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnotationDocumentRead" }
+                }
               }
             }
           },

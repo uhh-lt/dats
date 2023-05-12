@@ -48,7 +48,7 @@ const useGetAllAdocs = (userId: number | undefined) => {
 };
 
 const useGetRecentActivity = (userId: number | undefined, k: number) => {
-  return useQuery<number[], Error>(
+  return useQuery<AnnotationDocumentRead[], Error>(
     [QueryKey.USER_ACTIVITY, userId],
     () => UserService.recentActivity({ userId: userId!, k: k }),
     {
