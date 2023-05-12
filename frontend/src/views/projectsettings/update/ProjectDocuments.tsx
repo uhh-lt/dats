@@ -153,6 +153,16 @@ function ProjectDocuments({ project }: ProjectProps) {
         <Typography variant="h6" color="inherit" component="div">
           Import documents
         </Typography>
+        {process.env.REACT_APP_STABILITY === "UNSTABLE" && (
+          <Typography
+            variant="body1"
+            color="inherit"
+            component="div"
+            sx={{ ml: 1, fontWeight: "bold", textDecoration: "underline" }}
+          >
+            (no sensitive data!)
+          </Typography>
+        )}
         <Box sx={{ flexGrow: 1 }} />
         <input type="file" ref={fileInputRef} onChange={handleChange} multiple accept={allowedMimeTypes.toString()} />
         <LoadingButton
