@@ -81,23 +81,24 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def update(
         self, db: Session, *, id: int, update_dto: UpdateDTOType
     ) -> Optional[ORMModelType]:
-        before_db_obj = self.read(db=db, id=id)
-        after_db_obj = copy.copy(before_db_obj)
-        obj_data = jsonable_encoder(before_db_obj)
+        db_obj = self.read(db=db, id=id)
+        before_db_obj = copy.copy(db_obj)
+        obj_data = jsonable_encoder(db_obj)
         update_data = update_dto.dict(exclude_unset=True)
         for field in obj_data:
             if field in update_data:
-                setattr(after_db_obj, field, update_data[field])
-        db.add(after_db_obj)
+                setattr(db_obj, field, update_data[field])
+        db.add(db_obj)
         db.commit()
-        db.refresh(after_db_obj)
+        db.refresh(db_obj)
 
         self.__create_action(
-            db_obj=after_db_obj,
+            db_obj=db_obj,
             action_type=ActionType.UPDATE,
             before_db_obj=before_db_obj,
         )
-        return after_db_obj
+
+        return db_obj
 
     def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
         db_obj = self.read(db=db, id=id)
