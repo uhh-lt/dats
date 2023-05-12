@@ -1,41 +1,29 @@
-import React from "react";
-import { Box, List, ListItem, ListItemButton, Typography } from "@mui/material";
+import { Box, List, ListItem, ListItemButton } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import SdocHooks from "../../api/SdocHooks";
 import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import SdocHooks from "../../api/SdocHooks";
-import { useNavigate } from "react-router-dom";
-import LexicalSearchResultCard from "../search/SearchResults/Cards/LexicalSearchResultCard";
-import { SourceDocumentRead } from "../../api/openapi";
 
 function RecentActivity() {
   const { user } = useAuth();
 
-  // router
-  const navigate = useNavigate();
-
   // global server stat - react query
-  const recentSdocIds = UserHooks.useGetRecentActivity(user.data?.id, 5);
-
-  // events
-  const handleClick = (sdoc: SourceDocumentRead) => {
-    navigate(`../project/${sdoc.project_id}/search/doc/${sdoc.id}`);
-  };
+  const recentAdocs = UserHooks.useGetRecentActivity(user.data?.id, 5);
 
   return (
     <>
-      {recentSdocIds.isLoading && <div>Loading!</div>}
-      {recentSdocIds.isError && <div>Error: {recentSdocIds.error.message}</div>}
-      {recentSdocIds.isSuccess && (
-        <>
-          <Typography variant={"h6"} paddingY={2}>
-            Continue where you left
-          </Typography>
-          <Box sx={{ py: 2, overflowX: "auto" }}>
-            {recentSdocIds.data.map((sdocId) => (
-              <LexicalSearchResultCard key={sdocId} sdocId={sdocId} handleClick={handleClick} />
+      {recentAdocs.isLoading && <div>Loading!</div>}
+      {recentAdocs.isError && <div>Error: {recentAdocs.error.message}</div>}
+      {recentAdocs.isSuccess && (
+        <Box style={{ maxHeight: "200px", overflow: "auto" }}>
+          <List disablePadding>
+            {recentAdocs.data.map((adoc) => (
+              <ListItem disablePadding>
+                <RecentActivityButton sdocId={adoc.source_document_id} updateTS={new Date(adoc.updated)} />
+              </ListItem>
             ))}
-          </Box>
-        </>
+          </List>
+        </Box>
       )}
     </>
   );
@@ -47,8 +35,11 @@ interface RecentActivityButtonProps {
 }
 
 function RecentActivityButton({ sdocId, updateTS }: RecentActivityButtonProps) {
-  const sdoc = SdocHooks.useGetDocument(sdocId);
+  // router
   const navigate = useNavigate();
+
+  // global server stat - react query
+  const sdoc = SdocHooks.useGetDocument(sdocId);
 
   return (
     <>

@@ -43,42 +43,53 @@ function Projects() {
         {projects.isError && <div>Error: {projects.error.message}</div>}
         {projects.isSuccess && (
           <>
-            <RecentActivity />
-            <Toolbar sx={{ p: "0px !important" }}>
-              <Typography variant="h6">
-                All Projects
-                {/*All Projects {user.data && `of ${user.data.email}`}*/}
-              </Typography>
-            </Toolbar>
             <Grid container spacing={2}>
-              <Grid item>
-                <Card
-                  sx={{
-                    width: 420,
-                    border: "3px dashed lightgray",
-                    boxShadow: 0,
-                  }}
-                >
-                  <CardActionArea component={Link} to="/projectsettings">
-                    <CardContent
+              <Grid item sm={9}>
+                <Toolbar sx={{ p: "0px !important" }}>
+                  <Typography variant="h6">
+                    All Projects
+                    {/*All Projects {user.data && `of ${user.data.email}`}*/}
+                  </Typography>
+                </Toolbar>
+
+                <Grid container spacing={2}>
+                  <Grid item sm={4}>
+                    <Card
                       sx={{
-                        height: 250,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        border: "3px dashed lightgray",
+                        boxShadow: 0,
                       }}
                     >
-                      <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
-                        CREATE NEW PROJECT
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
+                      <CardActionArea component={Link} to="/projectsettings">
+                        <CardContent
+                          sx={{
+                            height: 250,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Typography variant="h5" fontWeight={700} color="text.secondary" mb={5}>
+                            CREATE NEW PROJECT
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                    </Card>
+                  </Grid>
+                  {projects.data.map((project) => (
+                    <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>
+                  ))}
+                </Grid>
               </Grid>
-              {projects.data.map((project) => (
-                <ProjectCard key={project.id} project={project} onContextMenu={onContextMenu}></ProjectCard>
-              ))}
+
+              <Grid item sm={3}>
+                <Toolbar sx={{ p: "0px !important" }}>
+                  <Typography variant="h6">Recent Activity</Typography>
+                </Toolbar>
+                <RecentActivity />
+              </Grid>
             </Grid>
+
             <ProjectContextMenu
               projectId={contextMenuData}
               position={contextMenuPosition}
@@ -99,8 +110,8 @@ interface ProjectCardProps {
 function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
   const preProStatus = PreProHooks.useGetPreProProjectStatus(project.id);
   return (
-    <Grid item>
-      <Card sx={{ width: 420 }} onContextMenu={onContextMenu(project.id)}>
+    <Grid item sm={4}>
+      <Card onContextMenu={onContextMenu(project.id)}>
         <CardActionArea component={Link} to={`/project/${project.id}/search`}>
           <CardContent sx={{ padding: "0px !important" }}>
             <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
