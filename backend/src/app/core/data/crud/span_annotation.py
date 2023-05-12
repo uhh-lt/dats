@@ -14,8 +14,6 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from backend.src.app.core.data.dto.span_annotation import SpanAnnotationUpdate
-
 
 class CRUDSpanAnnotation(
     CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanAnnotationUpdate]
