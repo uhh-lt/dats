@@ -17,9 +17,8 @@ class AnnotationDocumentCreate(AnnotationDocumentBaseDTO):
 
 
 # Properties for updating
-# Flo: We do not want to update AnnotationDocuments manually
-# class AnnotationDocumentUpdate(AnnotationDocumentBaseDTO):
-#     pass
+class AnnotationDocumentUpdate(BaseModel):
+    updated: datetime = Field(description="Updated timestamp of the AnnotationDocument")
 
 
 # Properties for reading (as in ORM)

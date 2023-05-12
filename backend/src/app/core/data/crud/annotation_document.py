@@ -1,3 +1,4 @@
+import datetime
 from typing import Optional, List
 
 from sqlalchemy import delete
@@ -10,19 +11,32 @@ from app.core.data.crud.crud_base import (
     NoSuchElementError,
 )
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
-from app.core.data.dto.annotation_document import AnnotationDocumentCreate
+from app.core.data.dto.action import (
+    ActionType,
+    ActionTargetObjectType,
+    ActionCreate,
+)
+from app.core.data.dto.annotation_document import (
+    AnnotationDocumentCreate,
+    AnnotationDocumentUpdate,
+)
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 
 
 class CRUDAnnotationDocument(
-    CRUDBase[AnnotationDocumentORM, AnnotationDocumentCreate, None]
+    CRUDBase[AnnotationDocumentORM, AnnotationDocumentCreate, AnnotationDocumentUpdate]
 ):
-    def update(
-        self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> ORMModelType:
-        # Flo: We no not want to update AnnotationDocument
-        raise NotImplementedError()
+    def update_timestamp(
+        self, db: Session, *, id: int
+    ) -> Optional[AnnotationDocumentORM]:
+        self.update(
+            db=db,
+            id=id,
+            update_dto=AnnotationDocumentUpdate(updated=datetime.datetime.now()),
+        )
+
+    def read_by_user(self, db: Session, *, user_id: int) -> List[AnnotationDocumentORM]:
+        return db.query(self.model).filter(self.model.user_id == user_id).all()
 
     def read_by_sdoc_and_user(
         self, db: Session, *, sdoc_id: int, user_id: int, raise_error: bool = True
@@ -30,7 +44,8 @@ class CRUDAnnotationDocument(
         db_obj = (
             db.query(self.model)
             .filter(
-                self.model.source_document_id == sdoc_id, self.model.user_id == user_id
+                self.model.source_document_id == sdoc_id,
+                self.model.user_id == user_id,
             )
             .first()
         )
@@ -44,7 +59,8 @@ class CRUDAnnotationDocument(
         exists = (
             db.query(self.model)
             .filter(
-                self.model.source_document_id == sdoc_id, self.model.user_id == user_id
+                self.model.source_document_id == sdoc_id,
+                self.model.user_id == user_id,
             )
             .first()
             is not None
@@ -77,7 +93,7 @@ class CRUDAnnotationDocument(
                 action_type=ActionType.DELETE,
                 target_id=rid,
                 target_type=ActionTargetObjectType.annotation_document,
-                before_state='',  # FIXME: use the removed objects JSON
+                before_state="",  # FIXME: use the removed objects JSON
                 after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
