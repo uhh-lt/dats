@@ -1,6 +1,5 @@
-from typing import List
+from typing import List, Optional
 
-import srsly
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import SYSTEM_USER_ID
@@ -19,55 +18,12 @@ class CRUDBBoxAnnotation(
         self, db: Session, *, create_dto: BBoxAnnotationCreate
     ) -> BBoxAnnotationORM:
         # create the BboxAnnotation
-        dto_obj_data = jsonable_encoder(create_dto.dict())
-        # noinspection PyArgumentList
-        db_obj = self.model(**dto_obj_data)
-        db.add(db_obj)
-        db.commit()
-
-        db.refresh(db_obj)
+        db_obj = super().create(db=db, create_dto=create_dto)
 
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=create_dto.annotation_document_id)
 
-        # create action manually because we're not using crud base create
-        from app.core.data.crud.action import crud_action
-
-        action_create_dto = ActionCreate(
-            project_id=db_obj.annotation_document.source_document.project_id,
-            user_id=SYSTEM_USER_ID,  # FIXME use correct user
-            action_type=ActionType.CREATE,
-            target_type=ActionTargetObjectType.span_annotation,
-            target_id=db_obj.id,
-            before_state=None,
-            after_state=srsly.json_dumps(db_obj.as_dict()),
-        )
-        crud_action.create(db=db, create_dto=action_create_dto)
-
         return db_obj
-
-    def create_multi(
-        self, db: Session, *, create_dtos: List[BBoxAnnotationCreate]
-    ) -> List[BBoxAnnotationORM]:
-        # create the BboxAnnotation
-        dto_objs_data = [
-            jsonable_encoder(create_dto.dict()) for create_dto in create_dtos
-        ]
-        # noinspection PyArgumentList
-        db_objs = [self.model(**dto_obj_data) for dto_obj_data in dto_objs_data]
-        db.add_all(db_objs)
-        db.commit()
-
-        # update all affected annotation documents' timestamp
-        adoc_ids = list(
-            set([create_dto.annotation_document_id for create_dto in create_dtos])
-        )
-        for adoc_id in adoc_ids:
-            crud_adoc.update_timestamp(db=db, id=adoc_id)
-
-        # we do not create actions manually here: why?
-
-        return db_objs
 
     def read_by_adoc(
         self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 100
@@ -79,6 +35,22 @@ class CRUDBBoxAnnotation(
             .limit(limit)
             .all()
         )
+
+    def update(
+        self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate
+    ) -> Optional[BBoxAnnotationORM]:
+        bbox_anno = super().update(db, id=id, update_dto=update_dto)
+        # update the annotation document's timestamp
+        crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
+
+        return bbox_anno
+
+    def remove(self, db: Session, *, id: int) -> Optional[BBoxAnnotationORM]:
+        bbox_anno = super().remove(db, id=id)
+        # update the annotation document's timestamp
+        crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
+
+        return bbox_anno
 
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         statement = (
@@ -107,6 +79,9 @@ class CRUDBBoxAnnotation(
                 after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
+
+        # update the annotation document's timestamp
+        crud_adoc.update_timestamp(db=db, id=adoc_id)
 
         return removed_ids
 

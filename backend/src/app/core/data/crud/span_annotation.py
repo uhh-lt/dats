@@ -14,6 +14,8 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
+from backend.src.app.core.data.dto.span_annotation import SpanAnnotationUpdate
+
 
 class CRUDSpanAnnotation(
     CRUDBase[SpanAnnotationORM, SpanAnnotationCreate, SpanAnnotationUpdate]
@@ -101,6 +103,24 @@ class CRUDSpanAnnotation(
 
         return query.all()
 
+    def update(
+        self, db: Session, *, id: int, update_dto: SpanAnnotationUpdate
+    ) -> Optional[SpanAnnotationORM]:
+        span_anno = super().update(db, id=id, update_dto=update_dto)
+
+        # update the annotation document's timestamp
+        crud_adoc.update_timestamp(db=db, id=span_anno.annotation_document_id)
+
+        return span_anno
+
+    def remove(self, db: Session, *, id: int) -> Optional[SpanAnnotationORM]:
+        span_anno = super().remove(db, id=id)
+
+        # update the annotation document's timestamp
+        crud_adoc.update_timestamp(db=db, id=span_anno.annotation_document_id)
+
+        return span_anno
+
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
         statement = (
             delete(self.model)
@@ -128,6 +148,9 @@ class CRUDSpanAnnotation(
                 after_state=None,
             )
             crud_action.create(db=db, create_dto=create_dto)
+
+        # update the annotation document's timestamp
+        crud_adoc.update_timestamp(db=db, id=adoc_id)
 
         return removed_ids
 

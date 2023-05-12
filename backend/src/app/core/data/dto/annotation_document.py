@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from backend.src.app.core.data.dto.dto_base import UpdateDTOBase
+from app.core.data.dto.dto_base import UpdateDTOBase
 
 
 # Properties shared across all DTOs
