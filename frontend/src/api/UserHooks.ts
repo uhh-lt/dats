@@ -47,6 +47,16 @@ const useGetAllAdocs = (userId: number | undefined) => {
   );
 };
 
+const useGetRecentActivity = (userId: number | undefined, k: number) => {
+  return useQuery<number[], Error>(
+    [QueryKey.USER_ACTIVITY, userId],
+    () => UserService.recentActivity({ userId: userId!, k: k }),
+    {
+      enabled: !!userId,
+    }
+  );
+};
+
 const UserHooks = {
   useGetProjects,
   useGetUser,
@@ -54,6 +64,7 @@ const UserHooks = {
   useRegister,
   useGetAllCodes,
   useGetAllAdocs,
+  useGetRecentActivity,
 };
 
 export default UserHooks;

@@ -275,4 +275,26 @@ export class UserService {
       },
     });
   }
+
+  /**
+   * Returns sdoc ids of sdocs the User recently modified (annotated)
+   * Returns the top k sdoc ids that the User recently modified (annotated)
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static recentActivity({ userId, k }: { userId: number; k: number }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{user_id}/recent_activity",
+      path: {
+        user_id: userId,
+      },
+      query: {
+        k: k,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

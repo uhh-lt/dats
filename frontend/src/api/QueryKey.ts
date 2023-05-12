@@ -26,6 +26,8 @@ export const QueryKey = {
   USER_MEMOS: "userMemos",
   // all annotation documents of a user (by user id)
   USER_ADOCS: "userAdocs",
+  // recently modified sdoc ids of a user (by user id)
+  USER_ACTIVITY: "userActivity",
 
   // a memo (by memo id)
   MEMO: "memo",
