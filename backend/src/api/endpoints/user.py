@@ -240,7 +240,7 @@ async def get_user_adocs(
 @router.get(
     "/{user_id}/recent_activity",
     tags=tags,
-    response_model=List[AnnotationDocumentRead],
+    response_model=List[int],
     summary="Returns sdoc ids of sdocs the User recently modified (annotated)",
     description="Returns the top k sdoc ids that the User recently modified (annotated)",
 )
