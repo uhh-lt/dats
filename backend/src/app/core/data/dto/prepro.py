@@ -14,6 +14,7 @@ class PreProProjectStatus(BaseModel):
     num_sdocs_finished: int = Field(
         description="Number of SourceDocuments preprocessing has finished."
     )
+    num_sdocs_total: int = Field(description="Number of total SourceDocuments.")
 
 
 class PreProSDocStatus(BaseModel):

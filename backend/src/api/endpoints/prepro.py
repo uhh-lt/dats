@@ -32,4 +32,5 @@ async def get_project_prepro_status(
         in_progress=all_sdocs > finished_sdocs,
         num_sdocs_in_progress=all_sdocs - finished_sdocs,
         num_sdocs_finished=finished_sdocs,
+        num_sdocs_total=all_sdocs,
     )
