@@ -1,18 +1,18 @@
 from typing import List, Optional
 
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import delete
-from sqlalchemy.orm import Session
 import srsly
-
+from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
+from app.core.data.dto.action import ActionCreate, ActionTargetObjectType, ActionType
 from app.core.data.dto.span_annotation import SpanAnnotationCreate, SpanAnnotationUpdate
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.span_annotation import SpanAnnotationORM
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import delete
+from sqlalchemy.orm import Session
 
 
 class CRUDSpanAnnotation(
@@ -35,6 +35,9 @@ class CRUDSpanAnnotation(
         db.commit()
 
         db.refresh(db_obj)
+
+        # update the annotation document's timestamp
+        crud_adoc.update_timestamp(db=db, id=create_dto.annotation_document_id)
 
         # create action manually because we're not using crud base create
         from app.core.data.crud.action import crud_action
@@ -74,6 +77,16 @@ class CRUDSpanAnnotation(
             db_obj.span_text_id = span_text_orm.id
         db.add_all(db_objs)
         db.commit()
+
+        # update all affected annotation documents' timestamp
+        adoc_ids = list(
+            set([create_dto.annotation_document_id for create_dto in create_dtos])
+        )
+        for adoc_id in adoc_ids:
+            crud_adoc.update_timestamp(db=db, id=adoc_id)
+
+        # we do not create actions manually here: why?
+
         return db_objs
 
     def read_by_adoc(
