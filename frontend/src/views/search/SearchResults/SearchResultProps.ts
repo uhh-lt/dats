@@ -1,7 +1,8 @@
 import * as React from "react";
+import { SourceDocumentRead } from "../../../api/openapi";
 
 export interface SearchResultEventHandlerProps {
-  handleClick: (sdocId: number) => void;
+  handleClick: (sdoc: SourceDocumentRead) => void;
   handleOnContextMenu?: (sdocId: number) => (event: React.MouseEvent) => void;
   handleOnCheckboxChange?: (event: React.ChangeEvent<HTMLInputElement>, sdocId: number) => void;
 }

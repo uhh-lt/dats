@@ -4,38 +4,38 @@ import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import SdocHooks from "../../api/SdocHooks";
 import { useNavigate } from "react-router-dom";
+import LexicalSearchResultCard from "../search/SearchResults/Cards/LexicalSearchResultCard";
+import { SourceDocumentRead } from "../../api/openapi";
 
 function RecentActivity() {
   const { user } = useAuth();
-  const userAdocs = UserHooks.useGetAllAdocs(user.data?.id);
-  const adocsSortedByUpdated = userAdocs.data?.sort((a, b) => {
-    const aDate = Date.parse(a.updated);
-    const bDate = Date.parse(b.updated);
-    return aDate > bDate ? 1 : aDate < bDate ? -1 : 0;
-  });
+
+  // router
+  const navigate = useNavigate();
+
+  // global server stat - react query
+  const recentSdocIds = UserHooks.useGetRecentActivity(user.data?.id, 5);
+
+  // events
+  const handleClick = (sdoc: SourceDocumentRead) => {
+    navigate(`../project/${sdoc.project_id}/search/doc/${sdoc.id}`);
+  };
 
   return (
     <>
-      {userAdocs.isLoading && <div>Loading!</div>}
-      {userAdocs.isError && <div>Error: {userAdocs.error.message}</div>}
-      {userAdocs.isSuccess && (
-        <Box maxHeight={300}>
+      {recentSdocIds.isLoading && <div>Loading!</div>}
+      {recentSdocIds.isError && <div>Error: {recentSdocIds.error.message}</div>}
+      {recentSdocIds.isSuccess && (
+        <>
           <Typography variant={"h6"} paddingY={2}>
             Continue where you left
           </Typography>
-          <Typography paddingBottom={2}>
-            <b>Recent activity (past 7 days):</b>
-          </Typography>
-          <Box style={{ maxHeight: "200px", overflow: "auto" }}>
-            <List disablePadding>
-              {adocsSortedByUpdated!.map((adoc) => (
-                <ListItem disablePadding style={{ width: 600 }}>
-                  <RecentActivityButton sdocId={adoc.source_document_id} updateTS={new Date(adoc.updated)} />
-                </ListItem>
-              ))}
-            </List>
+          <Box sx={{ py: 2, overflowX: "auto" }}>
+            {recentSdocIds.data.map((sdocId) => (
+              <LexicalSearchResultCard key={sdocId} sdocId={sdocId} handleClick={handleClick} />
+            ))}
           </Box>
-        </Box>
+        </>
       )}
     </>
   );
