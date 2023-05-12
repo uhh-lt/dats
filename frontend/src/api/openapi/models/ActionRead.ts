@@ -19,6 +19,14 @@ export type ActionRead = {
    */
   target_type: ActionTargetObjectType;
   /**
+   * The before state of the target object in JSON.
+   */
+  before_state?: string;
+  /**
+   * The after state of the target object in JSON.
+   */
+  after_state?: string;
+  /**
    * ID of the Action
    */
   id: number;

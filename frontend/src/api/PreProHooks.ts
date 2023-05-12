@@ -14,12 +14,11 @@ const usePollPreProProjectStatus = (projectId: number) =>
     {
       enabled: true,
       refetchInterval(data, _) {
-        console.log(data?.in_progress, data?.num_sdocs_finished, data?.num_sdocs_in_progress);
         if (!data) {
           return 1000;
         }
-        if (data.in_progress) {
-          return data.num_sdocs_finished === data.num_sdocs_in_progress ? false : 1000;
+        if (data.num_sdocs_total > data.num_sdocs_in_progress) {
+          return 1000;
         }
         return false;
       },

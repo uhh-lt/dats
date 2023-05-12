@@ -19,4 +19,8 @@ export type PreProProjectStatus = {
    * Number of SourceDocuments preprocessing has finished.
    */
   num_sdocs_finished: number;
+  /**
+   * Number of total SourceDocuments.
+   */
+  num_sdocs_total: number;
 };

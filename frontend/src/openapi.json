@@ -3992,6 +3992,16 @@
             "allOf": [{ "$ref": "#/components/schemas/ActionTargetObjectType" }],
             "description": "Type of the Target the target_id refers to"
           },
+          "before_state": {
+            "title": "Before State",
+            "type": "string",
+            "description": "The before state of the target object in JSON."
+          },
+          "after_state": {
+            "title": "After State",
+            "type": "string",
+            "description": "The after state of the target object in JSON."
+          },
           "id": { "title": "Id", "type": "integer", "description": "ID of the Action" },
           "user_id": { "title": "User Id", "type": "integer", "description": "User the Action belongs to" },
           "project_id": { "title": "Project Id", "type": "integer", "description": "Project the Action belongs to" },
@@ -4788,7 +4798,7 @@
       },
       "PreProProjectStatus": {
         "title": "PreProProjectStatus",
-        "required": ["project_id", "in_progress", "num_sdocs_in_progress", "num_sdocs_finished"],
+        "required": ["project_id", "in_progress", "num_sdocs_in_progress", "num_sdocs_finished", "num_sdocs_total"],
         "type": "object",
         "properties": {
           "project_id": {
@@ -4810,6 +4820,11 @@
             "title": "Num Sdocs Finished",
             "type": "integer",
             "description": "Number of SourceDocuments preprocessing has finished."
+          },
+          "num_sdocs_total": {
+            "title": "Num Sdocs Total",
+            "type": "integer",
+            "description": "Number of total SourceDocuments."
           }
         }
       },
@@ -5304,7 +5319,12 @@
         "required": ["filename", "content", "doctype", "status", "project_id", "id", "created", "updated"],
         "type": "object",
         "properties": {
-          "filename": { "title": "Filename", "type": "string", "description": "Filename of the SourceDocument" },
+          "filename": {
+            "title": "Filename",
+            "maxLength": 230,
+            "type": "string",
+            "description": "Filename of the SourceDocument"
+          },
           "content": { "title": "Content", "type": "string", "description": "Content of the SourceDocument" },
           "doctype": {
             "allOf": [{ "$ref": "#/components/schemas/DocType" }],
