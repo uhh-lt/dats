@@ -37,7 +37,9 @@ allowedMimeTypes.push("application/pdf");
 allowedMimeTypes.push("application/msword");
 allowedMimeTypes.push("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
-function LinearProgressWithLabel(props: Omit<LinearProgressProps, "value"> & { current: number; max: number }) {
+function LinearProgressWithLabel(
+  props: Omit<LinearProgressProps, "value"> & { current: number; max: number; indeterminate: boolean }
+) {
   return (
     <Tooltip
       title={
@@ -50,7 +52,7 @@ function LinearProgressWithLabel(props: Omit<LinearProgressProps, "value"> & { c
       <Box sx={{ display: "flex", alignItems: "center", px: 3 }}>
         <Box sx={{ width: "100%", mr: 1 }}>
           <LinearProgress
-            variant="determinate"
+            variant={props.indeterminate ? "indeterminate" : "determinate"}
             style={{ height: 6, borderRadius: 5, ...props.style }}
             value={(props.current / props.max) * 100}
             {...props}
@@ -80,6 +82,7 @@ function ProjectDocuments({ project }: ProjectProps) {
   }, [inView, projectDocuments]);
 
   // file upload
+  const [waiting, setWaiting] = useState<boolean>(false);
   const [files, setFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -106,11 +109,13 @@ function ProjectDocuments({ project }: ProjectProps) {
               severity: "success",
             });
             // FIXME: selbst mit initialen Timeout vor neuem rerender gibt das Backend für in_progress false zurück
-            setTimeout(() => setFiles([]), 2000);
+            setTimeout(() => setWaiting(false), 5000);
             if (fileInputRef.current) {
               fileInputRef.current.files = null;
               fileInputRef.current.value = "";
             }
+            setFiles([]);
+            setWaiting(true);
           },
         }
       );
@@ -162,7 +167,9 @@ function ProjectDocuments({ project }: ProjectProps) {
           Upload File{files.length > 1 ? "s" : ""}
         </LoadingButton>
       </Toolbar>
+      {waiting}
       <LinearProgressWithLabel
+        indeterminate={waiting}
         current={uploadProgress?.num_sdocs_finished || 0}
         max={uploadProgress?.num_sdocs_total || 0}
       />
