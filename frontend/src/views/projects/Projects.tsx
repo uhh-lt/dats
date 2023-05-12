@@ -37,20 +37,20 @@ function Projects() {
   };
 
   return (
-    <Container maxWidth="xl" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {projects.isLoading && <div>Loading!</div>}
-      {projects.isError && <div>Error: {projects.error.message}</div>}
-      {projects.isSuccess && (
-        <>
-          <RecentActivity />
-          <Toolbar sx={{ p: "0px !important" }}>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              All Projects
-              {/*All Projects {user.data && `of ${user.data.email}`}*/}
-            </Typography>
-          </Toolbar>
-          <Box display={"flex"} style={{ flexGrow: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-            <Grid container spacing={2} style={{ flexGrow: 1, overflow: "auto", minHeight: "100%", paddingBottom: 20 }}>
+    <Box sx={{ height: "100%", overflowY: "auto", pb: 2 }}>
+      <Container maxWidth="xl">
+        {projects.isLoading && <div>Loading!</div>}
+        {projects.isError && <div>Error: {projects.error.message}</div>}
+        {projects.isSuccess && (
+          <>
+            <RecentActivity />
+            <Toolbar sx={{ p: "0px !important" }}>
+              <Typography variant="h6">
+                All Projects
+                {/*All Projects {user.data && `of ${user.data.email}`}*/}
+              </Typography>
+            </Toolbar>
+            <Grid container spacing={2}>
               <Grid item>
                 <Card
                   sx={{
@@ -84,10 +84,10 @@ function Projects() {
               position={contextMenuPosition}
               handleClose={() => setContextMenuPosition(null)}
             />
-          </Box>
-        </>
-      )}
-    </Container>
+          </>
+        )}
+      </Container>
+    </Box>
   );
 }
 
