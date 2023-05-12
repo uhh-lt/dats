@@ -1,24 +1,26 @@
-from typing import Optional, List, Dict
-
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from typing import Dict, List, Optional
 
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from api.util import credentials_exception
+from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
+from app.core.data.dto import ProjectRead
+from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoRead
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.user import (
-    UserRead,
-    UserCreate,
-    UserUpdate,
-    UserLogin,
     UserAuthorizationHeaderData,
+    UserCreate,
+    UserLogin,
+    UserRead,
+    UserUpdate,
 )
 from app.core.security import generate_jwt
-from app.core.data.dto import ProjectRead
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/user")
 tags = ["user"]
@@ -61,7 +63,8 @@ async def login(
     user_login_form_data: OAuth2PasswordRequestForm = Depends()
 ) -> UserAuthorizationHeaderData:
     user_login = UserLogin(
-        username=user_login_form_data.username, password=user_login_form_data.password
+        username=user_login_form_data.username,
+        password=user_login_form_data.password,
     )
     user = crud_user.authenticate(db=db, user_login=user_login)
     if not user:
@@ -215,3 +218,45 @@ async def delete_user_memos(
 ) -> List[int]:
     # TODO Flo: only if the user has access?
     return crud_user.remove_all_memos(db=db, id=user_id)
+
+
+@router.get(
+    "/{user_id}/adocs",
+    tags=tags,
+    response_model=List[AnnotationDocumentRead],
+    summary="Returns all Adocs of the User",
+    description="Returns all Adocs of the User with the given ID",
+)
+async def get_user_adocs(
+    *, user_id: int, db: Session = Depends(get_db_session)
+) -> List[AnnotationDocumentRead]:
+    # TODO Flo: only if the user has access?
+    return [
+        AnnotationDocumentRead.from_orm(db_obj)
+        for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
+    ]
+
+
+@router.get(
+    "/{user_id}/recent_activity",
+    tags=tags,
+    response_model=List[AnnotationDocumentRead],
+    summary="Returns sdoc ids of sdocs the User recently modified (annotated)",
+    description="Returns the top k sdoc ids that the User recently modified (annotated)",
+)
+async def recent_activity(
+    *, user_id: int, k: int, db: Session = Depends(get_db_session)
+) -> List[int]:
+    # TODO Flo: only if the user has access?
+
+    # get all adocs of a user
+    user_adocs = [
+        AnnotationDocumentRead.from_orm(db_obj)
+        for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
+    ]
+
+    # sort by updated (desc)
+    user_adocs.sort(key=lambda adoc: adoc.updated, reverse=True)
+
+    # get the topk k sdocs associated with the adocs
+    return [adoc.source_document_id for adoc in user_adocs[:k]]
