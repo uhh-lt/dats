@@ -37,16 +37,30 @@ allowedMimeTypes.push("application/pdf");
 allowedMimeTypes.push("application/msword");
 allowedMimeTypes.push("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
-function LinearProgressWithLabel(props: LinearProgressProps & { value: number }) {
+function LinearProgressWithLabel(props: Omit<LinearProgressProps, "value"> & { current: number; max: number }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "center" }}>
-      <Box sx={{ width: "100%", mr: 1 }}>
-        <LinearProgress variant="determinate" {...props} />
+    <Tooltip
+      title={
+        props.current === props.max
+          ? `Status: All ${props.max} documents are processed.`
+          : `Status: ${props.current} of ${props.max} documents are processed.`
+      }
+      followCursor
+    >
+      <Box sx={{ display: "flex", alignItems: "center", px: 3 }}>
+        <Box sx={{ width: "100%", mr: 1 }}>
+          <LinearProgress
+            variant="determinate"
+            style={{ height: 6, borderRadius: 5, ...props.style }}
+            value={(props.current / props.max) * 100}
+            {...props}
+          />
+        </Box>
+        <Box sx={{ minWidth: 35 }}>
+          <Typography variant="body2" color="text.secondary">{`${props.current}/${props.max}`}</Typography>
+        </Box>
       </Box>
-      <Box sx={{ minWidth: 35 }}>
-        <Typography variant="body2" color="text.secondary">{`${Math.round(props.value)}%`}</Typography>
-      </Box>
-    </Box>
+    </Tooltip>
   );
 }
 
@@ -56,12 +70,6 @@ function ProjectDocuments({ project }: ProjectProps) {
   // global server state (react-query)
   const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(project.id);
   const uploadProgress = PreProHooks.usePollPreProProjectStatus(project.id).data;
-  const progress =
-    uploadProgress && uploadProgress.in_progress
-      ? (uploadProgress.num_sdocs_finished /
-          (uploadProgress.num_sdocs_finished + uploadProgress.num_sdocs_in_progress)) *
-        100
-      : -1;
 
   // automatically fetch new documents when button is visible
   // TODO: switch to virtualization
@@ -154,7 +162,11 @@ function ProjectDocuments({ project }: ProjectProps) {
           Upload File{files.length > 1 ? "s" : ""}
         </LoadingButton>
       </Toolbar>
-      {progress >= 0 && <LinearProgressWithLabel value={progress} />}
+      <LinearProgressWithLabel
+        current={uploadProgress?.num_sdocs_finished || 0}
+        max={uploadProgress?.num_sdocs_total || 0}
+      />
+
       <Divider />
       {projectDocuments.isLoading && <CardContent>Loading project documents...</CardContent>}
       {projectDocuments.isError && (
