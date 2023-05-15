@@ -12,7 +12,6 @@ const usePollPreProProjectStatus = (projectId: number) =>
     [QueryKey.PREPRO_PROJECT_STATUS, projectId],
     () => PreproService.getProjectPreproStatus({ projId: projectId }),
     {
-      enabled: true,
       refetchInterval(data, _) {
         if (!data) {
           return 1000;

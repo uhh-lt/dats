@@ -25,6 +25,8 @@ import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenu
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
+import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
+import CircularProgressWithLabel from "../../../components/CircularProgressWithLabel";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
@@ -37,41 +39,15 @@ allowedMimeTypes.push("application/pdf");
 allowedMimeTypes.push("application/msword");
 allowedMimeTypes.push("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
-function LinearProgressWithLabel(
-  props: Omit<LinearProgressProps, "value"> & { current: number; max: number; indeterminate: boolean }
-) {
-  return (
-    <Tooltip
-      title={
-        props.current === props.max
-          ? `Status: All ${props.max} documents are processed.`
-          : `Status: ${props.current} of ${props.max} documents are processed.`
-      }
-      followCursor
-    >
-      <Box sx={{ display: "flex", alignItems: "center", px: 3 }}>
-        <Box sx={{ width: "100%", mr: 1 }}>
-          <LinearProgress
-            variant={props.indeterminate ? "indeterminate" : "determinate"}
-            style={{ height: 6, borderRadius: 5, ...props.style }}
-            value={(props.current / props.max) * 100}
-            {...props}
-          />
-        </Box>
-        <Box sx={{ minWidth: 35 }}>
-          <Typography variant="body2" color="text.secondary">{`${props.current}/${props.max}`}</Typography>
-        </Box>
-      </Box>
-    </Tooltip>
-  );
-}
-
 function ProjectDocuments({ project }: ProjectProps) {
   const { ref, inView } = useInView();
 
   // global server state (react-query)
-  const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(project.id);
-  const uploadProgress = PreProHooks.usePollPreProProjectStatus(project.id).data;
+  const uploadProgress = PreProHooks.usePollPreProProjectStatus(project.id);
+  const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(
+    project.id,
+    uploadProgress.data?.in_progress || false
+  );
 
   // automatically fetch new documents when button is visible
   // TODO: switch to virtualization
@@ -109,7 +85,10 @@ function ProjectDocuments({ project }: ProjectProps) {
               severity: "success",
             });
             // FIXME: selbst mit initialen Timeout vor neuem rerender gibt das Backend für in_progress false zurück
-            setTimeout(() => setWaiting(false), 5000);
+            setTimeout(() => {
+              setWaiting(false);
+              uploadProgress.refetch();
+            }, 5000);
             if (fileInputRef.current) {
               fileInputRef.current.files = null;
               fileInputRef.current.value = "";
@@ -179,11 +158,15 @@ function ProjectDocuments({ project }: ProjectProps) {
       </Toolbar>
       {waiting}
       <LinearProgressWithLabel
-        indeterminate={waiting}
-        current={uploadProgress?.num_sdocs_finished || 0}
-        max={uploadProgress?.num_sdocs_total || 0}
+        variant={waiting ? "indeterminate" : "determinate"}
+        current={uploadProgress.data?.num_sdocs_finished || 0}
+        max={uploadProgress.data?.num_sdocs_total || 0}
+        tooltip={
+          uploadProgress.data?.num_sdocs_finished === uploadProgress.data?.num_sdocs_total
+            ? `Status: All ${uploadProgress.data?.num_sdocs_total} documents are processed.`
+            : `Status: ${uploadProgress.data?.num_sdocs_finished} of ${uploadProgress.data?.num_sdocs_total} documents are processed.`
+        }
       />
-
       <Divider />
       {projectDocuments.isLoading && <CardContent>Loading project documents...</CardContent>}
       {projectDocuments.isError && (

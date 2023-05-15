@@ -60,7 +60,7 @@ const useGetProjectDocuments = (projectId: number) =>
     })
   );
 
-const useGetProjectDocumentsInfinite = (projectId: number) =>
+const useGetProjectDocumentsInfinite = (projectId: number, refetch: boolean) =>
   useInfiniteQuery(
     [QueryKey.PROJECT_SDOCS_INFINITE, projectId],
     async ({ pageParam = 0 }) =>
@@ -71,6 +71,7 @@ const useGetProjectDocumentsInfinite = (projectId: number) =>
       }),
     {
       getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.next_page_offset : undefined),
+      refetchInterval: refetch ? 1000 : false,
     }
   );
 
