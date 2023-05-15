@@ -17,7 +17,7 @@ const usePollPreProProjectStatus = (projectId: number) =>
         if (!data) {
           return 1000;
         }
-        if (data.num_sdocs_total > data.num_sdocs_in_progress) {
+        if (data.num_sdocs_total > data.num_sdocs_finished) {
           return 1000;
         }
         return false;
