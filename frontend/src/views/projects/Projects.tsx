@@ -83,9 +83,6 @@ function Projects() {
               </Grid>
 
               <Grid item sm={3}>
-                <Toolbar sx={{ p: "0px !important" }}>
-                  <Typography variant="h6">Recent Activity</Typography>
-                </Toolbar>
                 <RecentActivity />
               </Grid>
             </Grid>

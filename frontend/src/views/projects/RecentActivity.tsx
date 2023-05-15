@@ -1,8 +1,26 @@
-import { Box, List, ListItem, ListItemButton } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Card,
+  CardActionArea,
+  CardContent,
+  CardHeader,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  Stack,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
 import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
+import ProjectHooks from "../../api/ProjectHooks";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import InfoIcon from "@mui/icons-material/Info";
 
 function RecentActivity() {
   const { user } = useAuth();
@@ -12,18 +30,20 @@ function RecentActivity() {
 
   return (
     <>
+      <Toolbar sx={{ p: "0px !important" }}>
+        <Typography variant="h6">Recent Activity</Typography>
+        <Tooltip title="Recently annotated documents">
+          <InfoIcon sx={{ ml: 1 }} />
+        </Tooltip>
+      </Toolbar>
       {recentAdocs.isLoading && <div>Loading!</div>}
       {recentAdocs.isError && <div>Error: {recentAdocs.error.message}</div>}
       {recentAdocs.isSuccess && (
-        <Box style={{ maxHeight: "200px", overflow: "auto" }}>
-          <List disablePadding>
-            {recentAdocs.data.map((adoc) => (
-              <ListItem disablePadding>
-                <RecentActivityButton sdocId={adoc.source_document_id} updateTS={new Date(adoc.updated)} />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
+        <Stack rowGap={1}>
+          {recentAdocs.data.map((adoc) => (
+            <RecentActivityCard sdocId={adoc.source_document_id} updateTS={new Date(adoc.updated)} />
+          ))}
+        </Stack>
       )}
     </>
   );
@@ -34,21 +54,34 @@ interface RecentActivityButtonProps {
   updateTS: Date;
 }
 
-function RecentActivityButton({ sdocId, updateTS }: RecentActivityButtonProps) {
+function RecentActivityCard({ sdocId, updateTS }: RecentActivityButtonProps) {
   // router
   const navigate = useNavigate();
 
   // global server stat - react query
   const sdoc = SdocHooks.useGetDocument(sdocId);
+  const project = ProjectHooks.useGetProject(sdoc.data?.project_id);
 
   return (
     <>
       {sdoc.isLoading && <div>Loading!</div>}
       {sdoc.isError && <div>Error: {sdoc.error.message}</div>}
-      {sdoc.isSuccess && (
-        <ListItemButton onClick={() => navigate(`../project/${sdoc.data.project_id}/search/doc/${sdocId}`)}>{`${
-          sdoc.data.filename
-        } | ${updateTS.toLocaleTimeString()} ${updateTS.toDateString()}`}</ListItemButton>
+      {sdoc.isSuccess && project.isSuccess && (
+        <Card variant="outlined">
+          <CardActionArea onClick={() => navigate(`../project/${sdoc.data.project_id}/search/doc/${sdocId}`)}>
+            <CardContent>
+              <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                {project.data.title}
+              </Typography>
+              <Typography variant="h5" component="div">
+                {sdoc.data.filename}
+              </Typography>
+              <Typography sx={{ fontSize: 14 }} color="text.secondary">
+                {`${updateTS.toLocaleTimeString()} ${updateTS.toDateString()}`}
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+        </Card>
       )}
     </>
   );
