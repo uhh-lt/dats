@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter
 
 from app.core.data.dto.crawler_job import (
@@ -41,3 +42,20 @@ async def get_crawler_job(
 ) -> CrawlerJobRead:
     # TODO Flo: only if the user has access?
     return cs.get_crawler_job(crawler_job_id=crawler_job_id)
+
+
+@router.get(
+    "/project/{project_id}",
+    tags=tags,
+    response_model=List[CrawlerJobRead],
+    summary="Returns all CrawlerJobs for the given project ID",
+    description="Returns all CrawlerJobs for the given project ID if it exists",
+)
+async def get_all_crawler_jobs(
+    *,
+    project_id: int,
+) -> List[CrawlerJobRead]:
+    # TODO Flo: only if the user has access?
+    crawler_jobs = cs.get_all_crawler_jobs(project_id=project_id)
+    crawler_jobs.sort(key=lambda x: x.created, reverse=True)
+    return crawler_jobs

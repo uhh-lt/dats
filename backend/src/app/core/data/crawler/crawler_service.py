@@ -1,5 +1,5 @@
 from loguru import logger
-from typing import Optional
+from typing import List, Optional
 import subprocess
 from pathlib import Path
 import os
@@ -176,6 +176,9 @@ class CrawlerService(metaclass=SingletonMeta):
             raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id)
 
         return cj
+
+    def get_all_crawler_jobs(self, project_id: Optional[int]) -> List[CrawlerJobRead]:
+        return self.redis.get_all_crawler_jobs(project_id=project_id)
 
     def _update_crawler_job(
         self,

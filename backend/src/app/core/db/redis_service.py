@@ -142,6 +142,7 @@ class RedisService(metaclass=SingletonMeta):
 
     def load_crawler_job(self, key: str) -> Optional[CrawlerJobRead]:
         client = self._get_client("crawler")
+
         exj = client.get(key.encode("utf-8"))
         if exj is None:
             logger.error(f"CrawlerJob with ID {key} does not exist!")
@@ -175,6 +176,20 @@ class RedisService(metaclass=SingletonMeta):
             return None
         logger.debug(f"Deleted CrawlerJob {key}")
         return exj
+
+    def get_all_crawler_jobs(self, project_id: Optional[int]) -> List[CrawlerJobRead]:
+        client = self._get_client("crawler")
+        all_crawler_jobs: List[CrawlerJobRead] = [
+            self.load_crawler_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        if project_id is None:
+            return all_crawler_jobs
+        else:
+            return [
+                job
+                for job in all_crawler_jobs
+                if job.parameters.project_id == project_id
+            ]
 
     def store_feedback(self, feedback: FeedbackCreate) -> Optional[FeedbackRead]:
         client = self._get_client("feedback")
