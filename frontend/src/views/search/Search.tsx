@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
-import { SpanEntityDocumentFrequency } from "../../api/openapi";
+import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { SettingsActions } from "../settings/settingsSlice";
@@ -86,10 +86,10 @@ function Search() {
 
   // handle navigation
   const navigateIfNecessary = useNavigateIfNecessary();
-  const handleResultClick = (sdocId: number) => {
+  const handleResultClick = (sdoc: SourceDocumentRead) => {
     // remove doc/:docId from url (if it exists) then add new doc id
     let url = removeTrailingSlash(location.pathname.split("/doc")[0]);
-    navigate(`${url}/doc/${sdocId}`);
+    navigate(`${url}/doc/${sdoc.id}`);
     dispatch(SearchActions.clearSelectedDocuments());
   };
 

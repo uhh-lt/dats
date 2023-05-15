@@ -19,10 +19,11 @@ import SearchResultSentenceTable from "./Tables/SearchResultSentenceTable";
 import ImageSimilaritySearchResultCard from "./Cards/ImageSimilaritySearchResultCard";
 import SentenceSimilaritySearchResultCard from "./Cards/SentenceSimilaritySearchResultCard";
 import ImageSimilaritySearchResultTable from "./Tables/ImageSimilaritySearchResultTable";
+import { SourceDocumentRead } from "../../../api/openapi";
 
 interface SearchResultsViewProps {
   searchResults: SearchResults<any>;
-  handleResultClick: (sdocId: number) => void;
+  handleResultClick: (sdoc: SourceDocumentRead) => void;
   className?: string;
 }
 

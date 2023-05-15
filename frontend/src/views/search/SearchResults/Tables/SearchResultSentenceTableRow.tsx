@@ -42,7 +42,7 @@ function SearchResultSentenceTableRow({
   return (
     <TableRow
       hover
-      onClick={() => handleClick(hit.sdoc_id)}
+      onClick={sdoc.isSuccess ? () => handleClick(sdoc.data) : undefined}
       role="checkbox"
       aria-checked={isSelected}
       tabIndex={-1}

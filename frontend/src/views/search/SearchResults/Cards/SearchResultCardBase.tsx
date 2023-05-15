@@ -67,7 +67,7 @@ function SearchResultCardBase({
       raised={isSelected || (parseInt(urlSdocId || "") === sdocId && selectedDocumentIds.length === 0)}
       {...props}
     >
-      <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data.id)}>
+      <CardActionArea onClick={() => sdoc.isSuccess && handleClick(sdoc.data)}>
         <StyledCardHeader
           title={
             <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>

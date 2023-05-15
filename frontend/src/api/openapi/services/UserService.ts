@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AnnotationDocumentRead } from "../models/AnnotationDocumentRead";
 import type { Body_user_login } from "../models/Body_user_login";
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoRead } from "../models/MemoRead";
@@ -249,6 +250,53 @@ export class UserService {
       url: "/user/{user_id}/memo",
       path: {
         user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all Adocs of the User
+   * Returns all Adocs of the User with the given ID
+   * @returns AnnotationDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static getUserAdocs({ userId }: { userId: number }): CancelablePromise<Array<AnnotationDocumentRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{user_id}/adocs",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns sdoc ids of sdocs the User recently modified (annotated)
+   * Returns the top k sdoc ids that the User recently modified (annotated)
+   * @returns AnnotationDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static recentActivity({
+    userId,
+    k,
+  }: {
+    userId: number;
+    k: number;
+  }): CancelablePromise<Array<AnnotationDocumentRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/user/{user_id}/recent_activity",
+      path: {
+        user_id: userId,
+      },
+      query: {
+        k: k,
       },
       errors: {
         422: `Validation Error`,

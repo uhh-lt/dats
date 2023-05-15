@@ -346,6 +346,65 @@
         }
       }
     },
+    "/user/{user_id}/adocs": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns all Adocs of the User",
+        "description": "Returns all Adocs of the User with the given ID",
+        "operationId": "get_user_adocs",
+        "parameters": [
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response User-Get User Adocs",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnotationDocumentRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/user/{user_id}/recent_activity": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns sdoc ids of sdocs the User recently modified (annotated)",
+        "description": "Returns the top k sdoc ids that the User recently modified (annotated)",
+        "operationId": "recent_activity",
+        "parameters": [
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" },
+          { "required": true, "schema": { "title": "K", "type": "integer" }, "name": "k", "in": "query" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response User-Recent Activity",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnotationDocumentRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/project": {
       "get": {
         "tags": ["project"],

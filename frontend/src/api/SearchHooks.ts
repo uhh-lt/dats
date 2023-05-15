@@ -229,7 +229,6 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
           doc_types: resultModalities.length > 0 ? resultModalities : undefined,
           all_tags: true,
         },
-        
       });
       return new Map(Object.entries(data.stats).map((x) => [parseInt(x[0]), x[1]]));
     }

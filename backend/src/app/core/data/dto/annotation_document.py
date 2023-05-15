@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.core.data.dto.dto_base import UpdateDTOBase
+
 
 # Properties shared across all DTOs
 class AnnotationDocumentBaseDTO(BaseModel):
@@ -17,9 +19,8 @@ class AnnotationDocumentCreate(AnnotationDocumentBaseDTO):
 
 
 # Properties for updating
-# Flo: We do not want to update AnnotationDocuments manually
-# class AnnotationDocumentUpdate(AnnotationDocumentBaseDTO):
-#     pass
+class AnnotationDocumentUpdate(BaseModel, UpdateDTOBase):
+    updated: datetime = Field(description="Updated timestamp of the AnnotationDocument")
 
 
 # Properties for reading (as in ORM)
