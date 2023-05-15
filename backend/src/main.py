@@ -206,7 +206,7 @@ def main() -> None:
         port=port,
         log_level=conf.logging.level.lower(),
         # debug=True,
-        reload=True,
+        reload=False,
     )
 
 
