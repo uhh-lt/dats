@@ -1,8 +1,25 @@
-import { useState, useCallback, useMemo } from "react";
-import ReactFlow, { Controls, Background, applyNodeChanges, NodeChange } from "reactflow";
+import { useCallback, useMemo, useState } from "react";
+import ReactFlow, { applyNodeChanges, Background, Controls, NodeChange, Position } from "reactflow";
 import "reactflow/dist/style.css";
-import { MemoRead } from "../../api/openapi";
-import MemoNode from "./MemoNode";
+import { AttachedObjectType, MemoRead } from "../../api/openapi";
+import MemoNode from "./nodes/MemoNode";
+import SdocNode from "./nodes/SdocNode";
+import TagNode from "./nodes/TagNode";
+
+const getAttachedTypeNodeCode = (type: AttachedObjectType | undefined) => {
+  switch (type) {
+    case AttachedObjectType.DOCUMENT_TAG:
+      return "tag";
+    case AttachedObjectType.CODE:
+      return "code";
+    case AttachedObjectType.SOURCE_DOCUMENT:
+      return "sdoc";
+    case AttachedObjectType.SPAN_ANNOTATION:
+      return "span";
+    case AttachedObjectType.BBOX_ANNOTATION:
+      return "bbox";
+  }
+};
 
 interface MemoFlowProps {
   memos: MemoRead[];
@@ -24,14 +41,45 @@ function MemoFlow({ memos }: MemoFlowProps) {
     };
   });
 
-  const initialEdges = [{ id: "1-2", source: "1", target: "2", label: "to the", type: "smoothstep" }];
+  const nodeTypes = useMemo(() => ({ memo: MemoNode, sdoc: SdocNode, tag: TagNode }), []);
 
-  const nodeTypes = useMemo(() => ({ memo: MemoNode }), []);
-
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState([]);
+  const [nodes, setNodes] = useState<any[]>(initialNodes);
+  const [edges, setEdges] = useState<any[]>([]);
 
   const onNodesChange = useCallback((changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
+
+  const handleNodeExpand = useCallback(
+    (evt: any, data: any) => {
+      // TODO: Einklappen von Nodes, wenn auf die bereits verbundene Handle oder die Verbindung geklickt wird
+      const node = nodes.filter((node) => node.id === data.nodeId)[0];
+      const nodeType = getAttachedTypeNodeCode(node.data.attached_object_type);
+      const newNodeId = `${nodeType}-${node.data.attached_object_id}`;
+      // FIXME: falls die Node schon aufgeklappt war, muss die Node nur noch umpositioniert und an die
+      //  andere Handle geknüpft werden (momentan wird eine neue Node mit gleicher ID erzeugt)
+      nodes.push({
+        id: newNodeId,
+        type: nodeType,
+        data: {
+          objId: node.data.attached_object_id,
+          position: data.handleType === "target" ? Position.Top : Position.Bottom,
+          isSelected: false,
+        },
+        position: {
+          x: node.position.x,
+          y: node.position.y + (data.handleType === "target" ? -30 : node.height + 30),
+        },
+      });
+      setNodes([...nodes]);
+      if (data.handleType === "target") {
+        // edge can have a label when setting a string property "label"
+        edges.push({ id: `${newNodeId}+${data.nodeId}`, source: newNodeId, target: data.nodeId, type: "smoothstep" });
+      } else {
+        edges.push({ id: `${data.nodeId}+${newNodeId}`, source: data.nodeId, target: newNodeId, type: "smoothstep" });
+      }
+      setEdges([...edges]);
+    },
+    [nodes, edges]
+  );
 
   const clearSelection = useCallback(() => {
     nodes.forEach((node, index) => {
@@ -58,22 +106,6 @@ function MemoFlow({ memos }: MemoFlowProps) {
     [nodes]
   );
 
-  /*
-  const addNode = () => {
-    setNodes((prevState) => {
-      prevState.push({
-        id: "sdoc-1",
-        data: 1, // attached object id
-        type: "sdoc", //attached object type,
-        position: { x: 220 + 10, y: 0 },
-      });
-    });
-    setEdges((prevState) => {
-      prevState.push();
-    });
-  };
-   */
-
   return (
     <div style={{ height: "100%" }}>
       <ReactFlow
@@ -83,13 +115,13 @@ function MemoFlow({ memos }: MemoFlowProps) {
         onPaneClick={clearSelection}
         onNodeClick={selectNode}
         onNodeDragStart={selectNode}
+        onConnectStart={handleNodeExpand}
         nodeTypes={nodeTypes}
         fitView
       >
         <Background />
         <Controls />
       </ReactFlow>
-      {/* ContextMenu */}
     </div>
   );
 }
