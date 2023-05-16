@@ -1,26 +1,27 @@
-import React, { useRef } from "react";
+import AddIcon from "@mui/icons-material/Add";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import {
   Box,
   Button,
-  CardContent,
+  CircularProgress,
+  Collapse,
   Divider,
+  Link,
   List,
-  ListItem,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
   Toolbar,
   Typography,
 } from "@mui/material";
-import { CrawlerJobParameters, CrawlerJobRead, CrawlerJobStatus, ProjectRead } from "../../../api/openapi";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
+import React, { useRef } from "react";
+import CrawlerHooks from "../../../api/CrawlerHooks";
+import { CrawlerJobRead, CrawlerJobStatus, ProjectRead } from "../../../api/openapi";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
-
-const listUrlsReadable = (params: CrawlerJobParameters) => {
-  if (params && params.urls) {
-    return params.urls.join("\n");
-  }
-  return "";
-};
 
 interface ProjectCrawlersProps {
   project: ProjectRead;
@@ -28,62 +29,87 @@ interface ProjectCrawlersProps {
 
 function ProjectCrawlers({ project }: ProjectCrawlersProps) {
   // global server state (react-query)
-  const projectCrawlers = {
-    isLoading: false,
-    isError: false,
-    isSuccess: true,
-    data: [
-      {
-        status: CrawlerJobStatus.IN_PROGRESS,
-        id: "test",
-        parameters: {
-          project_id: 1,
-          urls: ["https://www.tagesschau.de/ausland/ungarn-putin-haftbefehl-ukraine-101.html"],
-        } as CrawlerJobParameters,
-        output_dir: "",
-        images_store_path: "",
-        created: "",
-      } as CrawlerJobRead,
-    ],
-  }; // CrawlerHooks.useGetCrawlerJobs(project.id);
+  const crawlerJobs = CrawlerHooks.useGetAllCrawlerJobs(project.id);
 
   // local state
   const crawlDialogRef = useRef<CrawlerRunDialogHandle>(null);
 
   return (
-    <React.Fragment>
+    <>
       <Toolbar variant="dense">
         <Typography variant="h6" color="inherit" component="div">
-          Crawl URLs
+          Monitor crawler jobs
         </Typography>
         <Box sx={{ flexGrow: 1 }} />
         <Button
           variant="contained"
           component="label"
-          startIcon={<UploadFileIcon />}
+          startIcon={<AddIcon />}
           onClick={() => crawlDialogRef.current!.open()}
         >
-          Input URLs
+          New Job
         </Button>
       </Toolbar>
       <Divider />
-      {projectCrawlers.isLoading && <CardContent>Loading project documents...</CardContent>}
-      {projectCrawlers.isError && (
-        <CardContent>An error occurred while loading project documents for project {project.id}...</CardContent>
-      )}
-      {projectCrawlers.isSuccess && (
+      {crawlerJobs.isLoading && <>Loading crawler jobs...</>}
+      {crawlerJobs.isError && <>An error occurred while loading crawler jobs for project {project.id}...</>}
+      {crawlerJobs.isSuccess && (
         <List>
-          {projectCrawlers.data.map((job) => (
-            <ListItem disablePadding key={job.id}>
-              <ListItemButton>
-                <ListItemText primary={job.id} secondary={listUrlsReadable(job.parameters)} />
-              </ListItemButton>
-            </ListItem>
+          {crawlerJobs.data.map((job) => (
+            <CrawlerJobListItem key={job.id} crawlerJob={job} />
           ))}
         </List>
       )}
       <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
-    </React.Fragment>
+    </>
+  );
+}
+
+function CrawlerJobListItem({ crawlerJob }: { crawlerJob: CrawlerJobRead }) {
+  // global server state (react-query)
+  const crawlerJobStatus = CrawlerHooks.useGetCrawlerJob(crawlerJob.id, crawlerJob);
+
+  // local state
+  const [expanded, setExpanded] = React.useState(false);
+  const date = new Date(crawlerJob.created);
+
+  const handleExpandClick = () => {
+    setExpanded(!expanded);
+  };
+
+  return (
+    <>
+      <ListItemButton onClick={handleExpandClick}>
+        {crawlerJobStatus.isSuccess && (
+          <ListItemIcon>
+            {crawlerJobStatus.data.status === CrawlerJobStatus.INIT ? (
+              <InfoOutlinedIcon sx={{ color: "info.main" }} />
+            ) : crawlerJobStatus.data.status === CrawlerJobStatus.IN_PROGRESS ? (
+              <CircularProgress color="secondary" size={24} />
+            ) : crawlerJobStatus.data.status === CrawlerJobStatus.DONE ? (
+              <TaskAltIcon sx={{ color: "success.main" }} />
+            ) : (
+              <ErrorOutlineIcon sx={{ color: "error.main" }} />
+            )}
+          </ListItemIcon>
+        )}
+        <ListItemText
+          primary={`Job: ${crawlerJob.id}`}
+          secondary={`${date.toLocaleTimeString()}, ${date.toDateString()}`}
+        />
+        {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
+      </ListItemButton>
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding dense>
+          {crawlerJob.parameters.urls.map((url, index) => (
+            <ListItemButton key={index} component={Link} href={url} target="_blank">
+              <ListItemIcon></ListItemIcon>
+              <ListItemText primary={url} />
+            </ListItemButton>
+          ))}
+        </List>
+      </Collapse>
+    </>
   );
 }
 

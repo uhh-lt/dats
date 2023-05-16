@@ -1,26 +1,10 @@
-import {
-  Avatar,
-  Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  CardHeader,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  Stack,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import { Card, CardActionArea, CardContent, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import ProjectHooks from "../../api/ProjectHooks";
 import SdocHooks from "../../api/SdocHooks";
 import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import ProjectHooks from "../../api/ProjectHooks";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import InfoIcon from "@mui/icons-material/Info";
 
 function RecentActivity() {
   const { user } = useAuth();

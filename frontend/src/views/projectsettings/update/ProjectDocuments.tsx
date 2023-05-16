@@ -3,6 +3,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { LoadingButton } from "@mui/lab";
 import {
   Box,
+  Button,
   CardContent,
   Divider,
   IconButton,
@@ -27,6 +28,7 @@ import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
 import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
 import CircularProgressWithLabel from "../../../components/CircularProgressWithLabel";
+import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
@@ -48,6 +50,8 @@ function ProjectDocuments({ project }: ProjectProps) {
     project.id,
     uploadProgress.data?.in_progress || false
   );
+  // ^ refetching is not working perfectly: during upload, new documents are uploaded.
+  // however, once the uploadd is finished (in_progress = false), the last batch of new documents are not fetched.
 
   // automatically fetch new documents when button is visible
   // TODO: switch to virtualization
@@ -56,6 +60,9 @@ function ProjectDocuments({ project }: ProjectProps) {
       projectDocuments.fetchNextPage();
     }
   }, [inView, projectDocuments]);
+
+  // crawler / url import
+  const crawlDialogRef = useRef<CrawlerRunDialogHandle>(null);
 
   // file upload
   const [waiting, setWaiting] = useState<boolean>(false);
@@ -155,6 +162,15 @@ function ProjectDocuments({ project }: ProjectProps) {
         >
           Upload File{files.length > 1 ? "s" : ""}
         </LoadingButton>
+        <Button
+          sx={{ ml: 1 }}
+          variant="contained"
+          component="label"
+          startIcon={<UploadFileIcon />}
+          onClick={() => crawlDialogRef.current!.open()}
+        >
+          Import URLs
+        </Button>
       </Toolbar>
       {waiting}
       <LinearProgressWithLabel
@@ -225,6 +241,7 @@ function ProjectDocuments({ project }: ProjectProps) {
         handleClose={() => setContextMenuPosition(null)}
         onDeleteDocument={handleClickDeleteFile}
       />
+      <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
     </Box>
   );
 }
