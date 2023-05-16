@@ -1,6 +1,7 @@
 import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
 import annoReducer from "../views/annotation/annoSlice";
 import searchReducer from "../views/search/searchSlice";
+import codeGraphReducer from "../views/analysis/CodeGraph/codeGraphSlice";
 import logbookReducer from "../views/logbook/logbookSlice";
 import autologbookReducer from "../views/autologbook/autologbookSlice";
 import settingsReducer from "../views/settings/settingsSlice";
@@ -17,6 +18,7 @@ const persistedReducer = persistReducer(persistConfig, settingsReducer);
 export const store = configureStore({
   reducer: {
     annotations: annoReducer,
+    codeGraph: codeGraphReducer,
     search: searchReducer,
     logbook: logbookReducer,
     autologbook: autologbookReducer,

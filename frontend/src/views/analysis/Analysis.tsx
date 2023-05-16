@@ -26,6 +26,16 @@ function Analysis() {
                 color={"#77dd77"}
               />
             </Grid>
+
+            <Grid item>
+              <AnalysisCard
+                to={"code-graph"}
+                title={"Code Graph"}
+                description={"Tree view of all the codes in the project."}
+                color={"#77dd77"}
+              />
+            </Grid>
+
             {range(0, 4).map((i) => (
               <Grid item key={i}>
                 <AnalysisCard
