@@ -10,6 +10,11 @@ from app.core.data.dto.crawler_job import (
 )
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
+from app.core.data.dto.preprocessing_job import (
+    PreprocessingJobCreate,
+    PreprocessingJobRead,
+    PreprocessingJobUpdate,
+)
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
@@ -187,6 +192,86 @@ class RedisService(metaclass=SingletonMeta):
             return [
                 job
                 for job in all_crawler_jobs
+                if job.parameters.project_id == project_id
+            ]
+
+    def store_preprocessing_job(
+        self,
+        preprocessing_job: Union[PreprocessingJobCreate, PreprocessingJobRead],
+    ) -> Optional[PreprocessingJobRead]:
+        client = self._get_client("preprocessing")
+
+        if isinstance(preprocessing_job, PreprocessingJobCreate):
+            key = self._generate_random_key()
+            ppj = PreprocessingJobRead(
+                id=key,
+                created=datetime.now(),
+                updated=datetime.now(),
+                **preprocessing_job.dict(),
+            )
+        elif isinstance(preprocessing_job, PreprocessingJobRead):
+            key = preprocessing_job.id
+            ppj = preprocessing_job
+
+        if client.set(key.encode("utf-8"), ppj.json()) != 1:
+            logger.error("Cannot store PreprocessingJob!")
+            return None
+
+        logger.debug(f"Successfully stored PreprocessingJob {key}!")
+
+        return ppj
+
+    def load_preprocessing_job(self, key: str) -> Optional[PreprocessingJobRead]:
+        client = self._get_client("preprocessing")
+
+        ppj = client.get(key.encode("utf-8"))
+        if ppj is None:
+            logger.error(f"PreprocessingJob with ID {key} does not exist!")
+            return None
+        else:
+            logger.debug(f"Successfully loaded PreprocessingJob {key}")
+            return PreprocessingJobRead.parse_raw(ppj)
+
+    def update_preprocessing_job(
+        self, key: str, update: PreprocessingJobUpdate
+    ) -> Optional[PreprocessingJobRead]:
+        ppj = self.load_preprocessing_job(key=key)
+        if ppj is None:
+            logger.error(f"Cannot update PreprocessingJob {key}")
+            return None
+        ppj.updated = datetime.now()
+        data = ppj.dict()
+        data.update(**update.dict())
+        ppj = PreprocessingJobRead(**data)
+        ppj = self.store_preprocessing_job(preprocessing_job=ppj)
+        if ppj is not None:
+            logger.debug(f"Updated PreprocessingJob {key}")
+            return ppj
+        else:
+            logger.error(f"Cannot update PreprocessingJob {key}")
+
+    def delete_preprocessing_job(self, key: str) -> Optional[PreprocessingJobRead]:
+        ppj = self.load_preprocessing_job(key=key)
+        client = self._get_client("preprocessing")
+        if ppj is None or client.delete(key.encode("utf-8")) != 1:
+            logger.error(f"Cannot delete PreprocessingJob {key}")
+            return None
+        logger.debug(f"Deleted PreprocessingJob {key}")
+        return ppj
+
+    def get_all_preprocessing_jobs(
+        self, project_id: Optional[int] = None
+    ) -> List[PreprocessingJobRead]:
+        client = self._get_client("preprocessing")
+        all_preprocessing_jobs: List[PreprocessingJobRead] = [
+            self.load_preprocessing_job(str(key, "utf-8")) for key in client.keys()
+        ]
+        if project_id is None:
+            return all_preprocessing_jobs
+        else:
+            return [
+                job
+                for job in all_preprocessing_jobs
                 if job.parameters.project_id == project_id
             ]
 
