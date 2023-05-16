@@ -19,7 +19,7 @@ from app.core.startup import startup
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
-    startup(reset_data=False)
+    startup(reset_data=False, sql_echo=True)
     os.environ["STARTUP_DONE"] = "1"
 
 from api.endpoints import annotation_document  # noqa E402

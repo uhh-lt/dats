@@ -35,6 +35,7 @@ def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
     )
     mime_type = uploaded_file.content_type
     doc_type = get_doc_type(mime_type=mime_type)
+
     if doc_type == DocType.text:
         text_document_preprocessing_apply_async(
             doc_file_path=file_path, project_id=proj_id, mime_type=mime_type
