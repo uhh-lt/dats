@@ -33,7 +33,7 @@ class CrawlerJobBaseDTO(BaseModel):
 # Properties to create
 class CrawlerJobCreate(CrawlerJobBaseDTO):
     parameters: CrawlerJobParameters = Field(
-        description="The parameters of the export job that defines what to export!"
+        description="The parameters of the crawler job that defines what to crawl!"
     )
     output_dir: str = Field(
         description="Internal temporary output directory for the crawled data."
@@ -64,7 +64,7 @@ class CrawlerJobUpdate(CrawlerJobBaseDTO, UpdateDTOBase):
 class CrawlerJobRead(CrawlerJobBaseDTO):
     id: str = Field(description="ID of the CrawlerJob")
     parameters: CrawlerJobParameters = Field(
-        description="The parameters of the export job that defines what to export!"
+        description="The parameters of the crawler job that defines what to crawl!"
     )
     output_dir: str = Field(
         description="Internal temporary output directory for the crawled data."
