@@ -1,11 +1,17 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CrawlerJobRead, CrawlerJobStatus, CrawlerService } from "./openapi";
 import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient";
 
-const useStartCrawlerJob = () => useMutation(CrawlerService.startCrawlerJob);
+const useStartCrawlerJob = () =>
+  useMutation(CrawlerService.startCrawlerJob, {
+    onSuccess: (job) => {
+      // force refetch of all crawler jobs when adding a new one
+      queryClient.invalidateQueries([QueryKey.PROJECT_CRAWLER_JOBS, job.parameters.project_id]);
+    },
+  });
 
-const useGetCrawlerJob = (crawlerJobId: string | undefined) => {
-  // filter out all disabled code ids
+const useGetCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
   return useQuery<CrawlerJobRead, Error>(
     [QueryKey.CRAWLER_JOB, crawlerJobId],
     () =>
@@ -30,6 +36,20 @@ const useGetCrawlerJob = (crawlerJobId: string | undefined) => {
         }
         return false;
       },
+      initialData,
+    }
+  );
+};
+
+const useGetAllCrawlerJobs = (projectId: number | undefined) => {
+  return useQuery<CrawlerJobRead[], Error>(
+    [QueryKey.PROJECT_CRAWLER_JOBS, projectId],
+    () =>
+      CrawlerService.getAllCrawlerJobs({
+        projectId: projectId!,
+      }),
+    {
+      enabled: !!projectId,
     }
   );
 };
@@ -37,6 +57,7 @@ const useGetCrawlerJob = (crawlerJobId: string | undefined) => {
 const CrawlerHooks = {
   useGetCrawlerJob,
   useStartCrawlerJob,
+  useGetAllCrawlerJobs,
 };
 
 export default CrawlerHooks;
