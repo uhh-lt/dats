@@ -100,7 +100,7 @@ function CrawlerJobListItem({ crawlerJob }: { crawlerJob: CrawlerJobRead }) {
         {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
       </ListItemButton>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding dense>
+        <List component="div" disablePadding dense sx={{ maxHeight: 180, overflowY: "auto" }}>
           {crawlerJob.parameters.urls.map((url, index) => (
             <ListItemButton key={index} component={Link} href={url} target="_blank">
               <ListItemIcon></ListItemIcon>
