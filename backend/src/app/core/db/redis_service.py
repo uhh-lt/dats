@@ -131,55 +131,55 @@ class RedisService(metaclass=SingletonMeta):
 
         if isinstance(crawler_job, CrawlerJobCreate):
             key = self._generate_random_key()
-            exj = CrawlerJobRead(id=key, created=datetime.now(), **crawler_job.dict())
+            cj = CrawlerJobRead(id=key, created=datetime.now(), **crawler_job.dict())
         elif isinstance(crawler_job, CrawlerJobRead):
             key = crawler_job.id
-            exj = crawler_job
+            cj = crawler_job
 
-        if client.set(key.encode("utf-8"), exj.json()) != 1:
+        if client.set(key.encode("utf-8"), cj.json()) != 1:
             logger.error("Cannot store CrawlerJob!")
             return None
 
         logger.debug(f"Successfully stored CrawlerJob {key}!")
 
-        return exj
+        return cj
 
     def load_crawler_job(self, key: str) -> Optional[CrawlerJobRead]:
         client = self._get_client("crawler")
 
-        exj = client.get(key.encode("utf-8"))
-        if exj is None:
+        cj = client.get(key.encode("utf-8"))
+        if cj is None:
             logger.error(f"CrawlerJob with ID {key} does not exist!")
             return None
         else:
             logger.debug(f"Successfully loaded CrawlerJob {key}")
-            return CrawlerJobRead.parse_raw(exj)
+            return CrawlerJobRead.parse_raw(cj)
 
     def update_crawler_job(
         self, key: str, update: CrawlerJobUpdate
     ) -> Optional[CrawlerJobRead]:
-        exj = self.load_crawler_job(key=key)
-        if exj is None:
+        cj = self.load_crawler_job(key=key)
+        if cj is None:
             logger.error(f"Cannot update CrawlerJob {key}")
             return None
-        data = exj.dict()
+        data = cj.dict()
         data.update(**update.dict())
-        exj = CrawlerJobRead(**data)
-        exj = self.store_crawler_job(crawler_job=exj)
-        if exj is not None:
+        cj = CrawlerJobRead(**data)
+        cj = self.store_crawler_job(crawler_job=cj)
+        if cj is not None:
             logger.debug(f"Updated CrawlerJob {key}")
-            return exj
+            return cj
         else:
             logger.error(f"Cannot update CrawlerJob {key}")
 
     def delete_crawler_job(self, key: str) -> Optional[CrawlerJobRead]:
-        exj = self.load_crawler_job(key=key)
+        cj = self.load_crawler_job(key=key)
         client = self._get_client("crawler")
-        if exj is None or client.delete(key.encode("utf-8")) != 1:
+        if cj is None or client.delete(key.encode("utf-8")) != 1:
             logger.error(f"Cannot delete CrawlerJob {key}")
             return None
         logger.debug(f"Deleted CrawlerJob {key}")
-        return exj
+        return cj
 
     def get_all_crawler_jobs(
         self, project_id: Optional[int] = None
