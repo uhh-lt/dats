@@ -2,24 +2,22 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 import { AppBar, Button, Checkbox, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
-import Tree, { Node } from "ts-tree-structure";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi";
-import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
-import MemoButton from "../../../features/memo-dialog/MemoButton";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import MemoButton from "../../../features/Memo/MemoButton";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { ContextMenuPosition } from "../../projects/ProjectContextMenu2";
-import { AnnoActions } from "../annoSlice";
+import useComputeCodeTree from "./useComputeCodeTree";
 import SpanCreationDialog, { CodeCreationDialogHandle } from "../SpanContextMenu/SpanCreationDialog";
+import { AnnoActions } from "../annoSlice";
 import CodeEditButton from "./CodeEditButton";
 import CodeEditDialog from "./CodeEditDialog";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeTreeView from "./CodeTreeView";
 import ICodeTree from "./ICodeTree";
-import { codesToTree, flatTree, flatTreeWithRoot } from "./TreeUtils";
+import { flatTree, flatTreeWithRoot } from "./TreeUtils";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
@@ -34,12 +32,9 @@ export interface CodeExplorerHandle {
 const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperProps>(
   ({ showToolbar, showCheckboxes, showCreateCodeButton, ...props }, ref) => {
     const { user } = useAuth();
-    const { projectId } = useParams() as { projectId: string };
-    const projId = parseInt(projectId);
 
-    // global server state
-    // TODO: this is not the correct query, we are actually not interested in all codes!
-    const allCodes = ProjectHooks.useGetAllCodes(projId);
+    // custom hooks
+    const { codeTree, allCodes } = useComputeCodeTree();
 
     // global client state (redux)
     const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
@@ -48,16 +43,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperPro
 
     // local state
     const codeCreationDialogRef = useRef<CodeCreationDialogHandle>(null);
-
-    // computed
-    const codeTree: Node<ICodeTree> | null = useMemo(() => {
-      if (allCodes.data) {
-        const tree = new Tree();
-        return tree.parse<ICodeTree>(codesToTree(allCodes.data));
-      } else {
-        return null;
-      }
-    }, [allCodes.data]);
 
     // effects
     // update global client state when selection changes
@@ -121,56 +106,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperPro
           return [...prevCheckedCodeIds, ...codeIds.filter((id) => !prevCheckedCodeIds.includes(id))];
         }
       });
-
-      // console.log(codeIds);
-      // console.log("ids");
-
-      // const { checked } = event.target;
-      // let newCheckBoxes = checkBoxes.slice();
-      // const index = newCheckBoxes.findIndex((item) => item.code.id === node.code.id);
-
-      // if (checked) {
-      //   const nodesToAdd = getNodesToAdd(node);
-      //   const nodesToAddIds = nodesToAdd.map((n) => n.code.id);
-      //   newCheckBoxes = newCheckBoxes.filter((item) => !nodesToAddIds.includes(item.code.id));
-      //   newCheckBoxes.push(...nodesToAdd);
-      // } else {
-      //   const nodesToRemove = getNodesToRemove(node);
-      //   const nodesToRemoveIds = nodesToRemove.map((n) => n.code.id);
-      //   newCheckBoxes = newCheckBoxes.filter((item) => !nodesToRemoveIds.includes(item.code.id));
-      // }
-
-      // dispatch(CheckBoxActions.toggleCheckBox(newCheckBoxes));
     };
-
-    // const getNodesToAdd = (node: any) => {
-    //   const nodes: any[] = [node];
-
-    //   if (node.children) {
-    //     node.children.forEach((child: any) => {
-    //       if (!isChecked(child)) {
-    //         nodes.push(...getNodesToAdd(child));
-    //       }
-    //     });
-    //   }
-
-    //   return nodes;
-    // };
-
-    // const getNodesToRemove = (node: any) => {
-    //   const nodes: any[] = [];
-
-    //   if (node.children) {
-    //     node.children.forEach((child: any) => {
-    //       if (isChecked(child)) {
-    //         nodes.push(...getNodesToRemove(child));
-    //       }
-    //     });
-    //   }
-
-    //   nodes.push(node);
-    //   return nodes;
-    // };
 
     const isChecked = (node: ICodeTree): boolean => {
       // a node is checked if it's id as well as all of its children are in the checkedCodeIds array
@@ -237,7 +173,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperPro
               )}
               openContextMenu={onContextMenu}
             />
-
             <CodeEditDialog codes={allCodes.data} />
             <SpanCreationDialog ref={codeCreationDialogRef} />
             <CodeExplorerContextMenu
