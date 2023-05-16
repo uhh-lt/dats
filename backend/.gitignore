@@ -9,6 +9,11 @@ models_cache
 backend/src/logs
 backend/logs
 
+# npm stuff for python readability
+src/node_modules
+src/package.json
+src/package-lock.json
+
 # Created by https://www.toptal.com/developers/gitignore/api/webstorm+all,pycharm+all
 # Edit at https://www.toptal.com/developers/gitignore?templates=webstorm+all,pycharm+all
 

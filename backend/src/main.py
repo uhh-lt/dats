@@ -36,6 +36,12 @@ from app.core.data.export.export_service import (
     NoDataToExportError,
     NoSuchExportJobError,
     NoSuchExportFormatError,
+)  # noqa E402
+from app.core.data.crawler.crawler_service import (
+    NoDataToCrawlError,
+    NoSuchCrawlerJobError,
+    CrawlerJobPreparationError,
+    CrawlerJobAlreadyStartedOrDoneError,
 )
 from api.endpoints import (
     general,
@@ -55,6 +61,7 @@ from api.endpoints import (
     analysis,
     prepro,
     export,
+    crawler,
 )  # noqa E402
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from config import conf  # noqa E402
@@ -98,6 +105,21 @@ app.add_middleware(GZipMiddleware, minimum_size=500)
 @app.exception_handler(NoSuchElementError)
 async def no_such_element_error_handler(_, exc: NoSuchElementError):
     return PlainTextResponse(str(exc), status_code=404)
+
+
+@app.exception_handler(NoDataToCrawlError)
+async def no_data_to_crawl_handler(_, exc: NoDataToCrawlError):
+    return PlainTextResponse(str(exc), status_code=400)
+
+
+@app.exception_handler(NoSuchCrawlerJobError)
+async def no_such_crawler_job_handler(_, exc: NoSuchCrawlerJobError):
+    return PlainTextResponse(str(exc), status_code=404)
+
+
+@app.exception_handler(CrawlerJobPreparationError)
+async def crawler_job_preparation_error_handler(_, exc: CrawlerJobPreparationError):
+    return PlainTextResponse(str(exc), status_code=500)
 
 
 @app.exception_handler(NoDataToExportError)
@@ -191,6 +213,7 @@ app.include_router(feedback.router)
 app.include_router(analysis.router)
 app.include_router(prepro.router)
 app.include_router(export.router)
+app.include_router(crawler.router)
 
 
 def main() -> None:

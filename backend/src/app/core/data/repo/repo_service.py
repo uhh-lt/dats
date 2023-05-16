@@ -66,7 +66,7 @@ class UnsupportedDocTypeForSourceDocument(Exception):
 
 class ErroneousArchiveException(Exception):
     def __init__(self, archive_path: Path):
-        super().__init__(f"Error with Archive {archive_path}.")
+        super().__init__(f"Error with Archive {archive_path}")
 
 
 class RepoService(metaclass=SingletonMeta):
@@ -204,7 +204,7 @@ class RepoService(metaclass=SingletonMeta):
                 filename=filename, webp=webp, thumbnail=thumbnail
             )
 
-        dst_path = self._get_dst_path_for_project_file(
+        dst_path = self._get_dst_path_for_project_sdoc_file(
             proj_id=sdoc.project_id, filename=filename
         )
         if raise_if_not_exists and not dst_path.exists():
@@ -223,7 +223,7 @@ class RepoService(metaclass=SingletonMeta):
     def _get_project_repo_sdocs_root_path(self, proj_id: int) -> Path:
         return self.get_project_repo_root_path(proj_id=proj_id).joinpath("docs/")
 
-    def _get_dst_path_for_project_file(
+    def _get_dst_path_for_project_sdoc_file(
         self, proj_id: int, filename: Union[str, Path]
     ) -> Path:
         filename = Path(self.truncate_filename(filename))
@@ -250,26 +250,22 @@ class RepoService(metaclass=SingletonMeta):
         self, proj_id: int, filename: Union[str, Path]
     ) -> Path:
         filename = Path(self.truncate_filename(filename))
-        dst_path = self._get_dst_path_for_project_file(
+        dst_path = self._get_dst_path_for_project_sdoc_file(
             proj_id=proj_id, filename=filename
         )
-        try:
-            if dst_path.exists():
-                logger.warning(
-                    "Cannot store uploaded file because a file with the same name already exists!"
-                )
-                raise FileAlreadyExistsInRepositoryError(
-                    proj_id=proj_id, filename=filename, dst=str(dst_path)
-                )
-            elif not dst_path.parent.exists():
-                dst_path.parent.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            # FIXME Flo: Throw or what?!
-            logger.warning(f"Cannot store uploaded file! Error: {e}")
+        if dst_path.exists():
+            logger.warning(
+                "Cannot store uploaded file because a file with the same name already exists!"
+            )
+            raise FileAlreadyExistsInRepositoryError(
+                proj_id=proj_id, filename=filename, dst=str(dst_path)
+            )
+        elif not dst_path.parent.exists():
+            dst_path.parent.mkdir(parents=True, exist_ok=True)
 
         return dst_path
 
-    def create_temp_file(self, fn: Optional[Union[str, Path]]) -> Path:
+    def create_temp_file(self, fn: Optional[Union[str, Path]] = None) -> Path:
         if fn is None:
             fn = str(uuid.uuid4())
 
@@ -280,6 +276,22 @@ class RepoService(metaclass=SingletonMeta):
             p.unlink()
         Path(p).touch()
         logger.info(f"Created Temporary File at {p}")
+
+        return p
+
+    def create_temp_dir(self, name: Optional[Union[str, Path]] = None) -> Path:
+        if name is None:
+            name = str(uuid.uuid4())
+
+        name = Path(self.truncate_filename(name))
+        p = self.temp_files_root / name
+        if p.exists():
+            logger.warning(
+                f"Temporary Directory '{name}' already exists and is removed now!"
+            )
+            shutil.rmtree(str(p))
+        Path(p).mkdir(parents=True)
+        logger.info(f"Created Temporary Directory at {p}")
 
         return p
 
@@ -313,7 +325,7 @@ class RepoService(metaclass=SingletonMeta):
     def extract_archive_in_project(
         self, proj_id: int, archive_path: Path
     ) -> List[Path]:
-        archive_path_in_project = self._get_dst_path_for_project_file(
+        archive_path_in_project = self._get_dst_path_for_project_sdoc_file(
             proj_id=proj_id, filename=archive_path.name
         )
         dst = archive_path_in_project.parent
@@ -354,6 +366,22 @@ class RepoService(metaclass=SingletonMeta):
         logger.info(f"Extracting archive at {archive_path_in_project}... Done!")
         return extracted_file_paths
 
+    def move_file_to_project_sdoc_files(self, proj_id: int, src_file: Path) -> Path:
+        if not (src_file.exists() and src_file.is_file()):
+            raise ValueError(f"File {src_file} does not exist!")
+
+        fn = Path(self.truncate_filename(src_file.name))
+        in_project_dst = self._create_directory_structure_for_project_file(
+            proj_id=proj_id, filename=fn
+        )
+
+        # move the file
+        logger.info(
+            f"Moving {src_file} to Project {proj_id} SDoc files at {in_project_dst}!"
+        )
+        src_file.rename(in_project_dst)
+        return in_project_dst
+
     def store_uploaded_file_in_project_repo(
         self, proj_id: int, uploaded_file: UploadFile
     ) -> Path:
@@ -392,7 +420,7 @@ class RepoService(metaclass=SingletonMeta):
         self, proj_id: int, filename: Union[str, Path]
     ) -> Tuple[Path, SourceDocumentCreate]:
         filename = self.truncate_filename(filename)
-        dst_path = self._get_dst_path_for_project_file(
+        dst_path = self._get_dst_path_for_project_sdoc_file(
             proj_id=proj_id, filename=filename
         )
         if not dst_path.exists():

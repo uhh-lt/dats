@@ -82,6 +82,7 @@ redis:
   clients:
     feedback: 1 # name: redis db index -- DO NOT USE DB 0, it's reserved for RabbitMQ!
     export: 2
+    crawler: 3
 
 logging:
   max_file_size: 500 # MB

@@ -15,6 +15,7 @@ import ProjectDocuments from "./ProjectDocuments";
 import ProjectGuidelines from "./ProjectGuidelines";
 import ProjectTags from "./ProjectTags";
 import ProjectUsers from "./ProjectUsers";
+import ProjectCrawlers from "./ProjectCrawlers";
 
 function ProjectUpdate() {
   const { user } = useAuth();
@@ -81,6 +82,7 @@ function ProjectUpdate() {
             <Tab label="Codes" value="4" />
             <Tab label="Tags" value="5" />
             <Tab label="Guidelines" value="6" />
+            <Tab label="Crawlers" value="7" />
           </Tabs>
         </AppBar>
         {project.isLoading && <CardContent>Loading project...</CardContent>}
@@ -104,6 +106,9 @@ function ProjectUpdate() {
             </TabPanel>
             <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectGuidelines project={project.data} />
+            </TabPanel>
+            <TabPanel value="7" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectCrawlers project={project.data} />
             </TabPanel>
           </React.Fragment>
         )}

@@ -13,6 +13,8 @@ export const QueryKey = {
   PROJECT_CODES: "projectCodes",
   // all tags of a project (by project id)
   PROJECT_TAGS: "projectTags",
+  // all crawler jobs of a project (by project id)
+  PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
 
   // all users
   USERS: "users",
@@ -122,4 +124,7 @@ export const QueryKey = {
 
   // export
   EXPORT_JOB: "exportJob",
+
+  // crawler
+  CRAWLER_JOB: "crawlerJob",
 };
