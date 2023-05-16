@@ -4081,6 +4081,40 @@
           }
         }
       }
+    },
+    "/crawler/project/{project_id}": {
+      "get": {
+        "tags": ["crawler"],
+        "summary": "Returns all CrawlerJobs for the given project ID",
+        "description": "Returns all CrawlerJobs for the given project ID if it exists",
+        "operationId": "get_all_crawler_jobs",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Crawler-Get All Crawler Jobs",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CrawlerJobRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {

@@ -49,4 +49,23 @@ export class CrawlerService {
       },
     });
   }
+
+  /**
+   * Returns all CrawlerJobs for the given project ID
+   * Returns all CrawlerJobs for the given project ID if it exists
+   * @returns CrawlerJobRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllCrawlerJobs({ projectId }: { projectId: number }): CancelablePromise<Array<CrawlerJobRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/crawler/project/{project_id}",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
