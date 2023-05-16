@@ -182,7 +182,9 @@ class RedisService(metaclass=SingletonMeta):
         logger.debug(f"Deleted CrawlerJob {key}")
         return exj
 
-    def get_all_crawler_jobs(self, project_id: Optional[int]) -> List[CrawlerJobRead]:
+    def get_all_crawler_jobs(
+        self, project_id: Optional[int] = None
+    ) -> List[CrawlerJobRead]:
         client = self._get_client("crawler")
         all_crawler_jobs: List[CrawlerJobRead] = [
             self.load_crawler_job(str(key, "utf-8")) for key in client.keys()
