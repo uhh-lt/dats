@@ -1,11 +1,11 @@
+import { Box, List } from "@mui/material";
+import { BoxProps } from "@mui/system";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useRef, useState } from "react";
 import { AttachedObjectType } from "../../api/openapi";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import MemoCard from "./MemoCard";
 import MemoResultsContextMenu from "./MemoResultsContextMenu";
-import { Box, CardContent, List } from "@mui/material";
-import { BoxProps } from "@mui/system";
 
 interface MemoResultsProps {
   memoIds: number[];

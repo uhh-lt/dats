@@ -7,8 +7,6 @@ import {
   CardContent,
   Divider,
   IconButton,
-  LinearProgress,
-  LinearProgressProps,
   List,
   ListItem,
   ListItemButton,
@@ -23,12 +21,11 @@ import PreProHooks from "../../../api/PreProHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SdocHooks from "../../../api/SdocHooks";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
-import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
-import CircularProgressWithLabel from "../../../components/CircularProgressWithLabel";
-import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
