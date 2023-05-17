@@ -1,28 +1,16 @@
 from typing import List, Optional
 
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import delete, and_
-from sqlalchemy.orm import Session
-import srsly
-
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.action import (
-    ActionType,
-    ActionTargetObjectType,
-    ActionCreate,
-)
+from app.core.data.dto.action import ActionType
 from app.core.data.dto.memo import (
+    AttachedObjectType,
     MemoCreate,
     MemoInDB,
     MemoRead,
-    AttachedObjectType,
     MemoUpdate,
 )
 from app.core.data.dto.object_handle import ObjectHandleCreate
-from app.core.data.dto.search import (
-    ElasticSearchMemoCreate,
-    ElasticSearchMemoUpdate,
-)
+from app.core.data.dto.search import ElasticSearchMemoCreate, ElasticSearchMemoUpdate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
@@ -34,6 +22,9 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.search.elasticsearch_service import ElasticSearchService
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
@@ -145,30 +136,27 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
     def remove_by_user_and_project(
         self, db: Session, user_id: int, proj_id: int
     ) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.user_id == user_id, self.model.project_id == proj_id)
-            .returning(self.model.id)
+        # find all memos to be removed
+        query = db.query(self.model).filter(
+            self.model.user_id == user_id, self.model.project_id == proj_id
         )
-        removed_ids = db.execute(statement).fetchall()
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
+
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
+                action_type=ActionType.DELETE,
+                before_state=before_state,
+            )
+
+        # delete the adocs
+        query.delete()
         db.commit()
 
-        removed_ids = list(map(lambda t: t[0], removed_ids))
-
-        from app.core.data.crud.action import crud_action
-
-        for rid in removed_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=user_id,
-                action_type=ActionType.DELETE,
-                target_type=ActionTargetObjectType.memo,
-                target_id=rid,
-                before_state="",  # FIXME: use the removed objects JSON
-                after_state=None,
-            )
-            crud_action.create(db=db, create_dto=create_dto)
-        return removed_ids
+        return ids
 
     def exists_for_user_and_object_handle(
         self, db: Session, *, user_id: int, attached_to_id: int
@@ -195,18 +183,11 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         db.commit()
         db.refresh(db_obj)
 
-        from app.core.data.crud.action import crud_action
-
-        action_create_dto = ActionCreate(
-            project_id=create_dto.project_id,
-            user_id=create_dto.user_id,
-            action_type=ActionType.CREATE,
-            target_type=ActionTargetObjectType.memo,
-            target_id=db_obj.id,
-            before_state=None,
-            after_state=srsly.json_dumps(db_obj.as_dict()),
+        # create action
+        after_state = self._get_action_state_from_orm(db_obj)
+        self._create_action(
+            db_obj=db_obj, action_type=ActionType.CREATE, after_state=after_state
         )
-        crud_action.create(db=db, create_dto=action_create_dto)
         return db_obj
 
     def create_for_code(
@@ -424,7 +405,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         attached_object_id: int,
         attached_object_type: AttachedObjectType,
     ):
-
         esmemo = ElasticSearchMemoCreate(
             title=memo_orm.title,
             content=memo_orm.content,
@@ -442,7 +422,6 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
     def __update_memo_in_elasticsearch(
         memo_orm: MemoORM,
     ):
-
         update_es_dto = ElasticSearchMemoUpdate(
             memo_id=memo_orm.id,
             title=memo_orm.title,

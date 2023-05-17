@@ -1,20 +1,14 @@
 import datetime
 from typing import Optional, List
 
-from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import (
     CRUDBase,
-    UpdateDTOType,
-    ORMModelType,
     NoSuchElementError,
 )
-from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.action import (
     ActionType,
-    ActionTargetObjectType,
-    ActionCreate,
 )
 from app.core.data.dto.annotation_document import (
     AnnotationDocumentCreate,
@@ -70,34 +64,25 @@ class CRUDAnnotationDocument(
         return exists
 
     def remove_by_sdoc(self, db: Session, *, sdoc_id: int) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.source_document_id == sdoc_id)
-            .returning(self.model.id)
-        )
-        removed_ids = db.execute(statement).fetchall()
+        # find all adocs to be removed
+        query = db.query(self.model).filter(self.model.source_document_id == sdoc_id)
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
+
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
+                action_type=ActionType.DELETE,
+                before_state=before_state,
+            )
+
+        # delete the adocs
+        query.delete()
         db.commit()
 
-        removed_ids = list(map(lambda t: t[0], removed_ids))
-
-        from app.core.data.crud.source_document import crud_sdoc
-
-        proj_id = crud_sdoc.read(db=db, id=sdoc_id).project_id
-
-        from app.core.data.crud.action import crud_action
-
-        for rid in removed_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=SYSTEM_USER_ID,
-                action_type=ActionType.DELETE,
-                target_id=rid,
-                target_type=ActionTargetObjectType.annotation_document,
-                before_state="",  # FIXME: use the removed objects JSON
-                after_state=None,
-            )
-            crud_action.create(db=db, create_dto=create_dto)
-        return removed_ids
+        return ids
 
 
 crud_adoc = CRUDAnnotationDocument(AnnotationDocumentORM)

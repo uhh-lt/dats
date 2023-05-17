@@ -1,16 +1,15 @@
-from typing import Optional, List
-
-from loguru import logger
-from sqlalchemy.orm import Session
+from typing import List, Optional
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from app.core.data.dto.action import ActionType
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataCreate,
     SourceDocumentMetadataUpdate,
 )
-
-from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class CRUDSourceDocumentMetadata(
@@ -20,6 +19,32 @@ class CRUDSourceDocumentMetadata(
         SourceDocumentMetadataUpdate,
     ]
 ):
+    def create(
+        self, db: Session, *, create_dto: SourceDocumentMetadataCreate
+    ) -> SourceDocumentMetadataORM:
+        from app.core.data.crud.source_document import crud_sdoc
+
+        # create before_state
+        sdoc_orm = crud_sdoc.read(db=db, id=create_dto.source_document_id)
+        before_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
+
+        # create metadata
+        metadata_orm = super().create(db, create_dto=create_dto)
+
+        # create after state
+        sdoc_orm = crud_sdoc.read(db=db, id=create_dto.source_document_id)
+        after_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
+
+        # create action
+        crud_sdoc._create_action(
+            db_obj=sdoc_orm,
+            action_type=ActionType.UPDATE,
+            before_state=before_state,
+            after_state=after_state,
+        )
+
+        return metadata_orm
+
     def update(
         self, db: Session, *, metadata_id: int, update_dto: SourceDocumentMetadataUpdate
     ) -> Optional[SourceDocumentMetadataORM]:
@@ -33,7 +58,28 @@ class CRUDSourceDocumentMetadata(
             )
             return db_obj
         else:
-            return super().update(db, id=metadata_id, update_dto=update_dto)
+            from app.core.data.crud.source_document import crud_sdoc
+
+            # create before_state
+            sdoc_orm = db_obj.source_document
+            before_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
+
+            # update metadata
+            metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
+
+            # create after state
+            sdoc_orm = metadata_orm.source_document
+            after_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
+
+            # create action
+            crud_sdoc._create_action(
+                db_obj=sdoc_orm,
+                action_type=ActionType.UPDATE,
+                before_state=before_state,
+                after_state=after_state,
+            )
+
+            return metadata_orm
 
     def read_by_sdoc_and_key(
         self, db: Session, sdoc_id: int, key: str

@@ -1,44 +1,37 @@
 from typing import List
 
-from sqlalchemy import delete
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
+from app.core.data.dto.action import ActionType
 from app.core.data.dto.document_tag import DocumentTagCreate, DocumentTagUpdate
 from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
 )
+from sqlalchemy import delete
+from sqlalchemy.orm import Session
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.project_id == proj_id)
-            .returning(self.model.id)
-        )
-        removed_ids = db.execute(statement).fetchall()
+        # find all document tags to be removed
+        query = db.query(self.model).filter(self.model.project_id == proj_id)
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
+
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
+                action_type=ActionType.DELETE,
+                before_state=before_state,
+            )
+
+        # delete the adocs
+        query.delete()
         db.commit()
 
-        removed_ids = list(map(lambda t: t[0], removed_ids))
-
-        from app.core.data.crud.action import crud_action
-
-        for rid in removed_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=SYSTEM_USER_ID,
-                action_type=ActionType.DELETE,
-                target_type=ActionTargetObjectType.document_tag,
-                target_id=rid,
-                before_state="",  # FIXME: use the removed objects JSON
-                after_state=None,
-            )
-            crud_action.create(db=db, create_dto=create_dto)
-        return removed_ids
+        return ids
 
     def link_multiple_document_tags(
         self, db: Session, *, sdoc_ids: List[int], tag_ids: List[int]
@@ -46,6 +39,16 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         """
         Links all SDocs with all DocTags
         """
+
+        # create before state
+        from app.core.data.crud.source_document import crud_sdoc
+
+        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        before_states = [
+            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        ]
+
+        # insert links (sdoc <-> tag)
         from sqlalchemy.dialects.postgresql import insert
 
         insert_values = [
@@ -63,22 +66,22 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         new_rows = db.execute(insert_stmt, insert_values).fetchall()
         db.commit()
 
-        # get the project id (assuming all doc tags and sdocs are in the same project!)
-        proj_id = self.read(db, tag_ids[0]).project_id
+        # create after state
+        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        after_states = [
+            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        ]
 
-        from app.core.data.crud.action import crud_action
-
-        for sid in sdoc_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=SYSTEM_USER_ID,  # FIXME use correct user
+        # create actions
+        for db_obj, before_state, after_state in zip(
+            sdoc_orms, before_states, after_states
+        ):
+            crud_sdoc._create_action(
+                db_obj=db_obj,
                 action_type=ActionType.UPDATE,
-                target_type=ActionTargetObjectType.source_document,
-                target_id=sid,
-                before_state="",  # FIXME: What to put there?
-                after_state="",  # FIXME: What to put there?
+                before_state=before_state,
+                after_state=after_state,
             )
-            crud_action.create(db=db, create_dto=create_dto)
 
         return len(new_rows)
 
@@ -88,6 +91,15 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         """
         Unlinks all DocTags with all SDocs
         """
+        # create before state
+        from app.core.data.crud.source_document import crud_sdoc
+
+        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        before_states = [
+            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        ]
+
+        # remove links (sdoc <-> tag)
         del_rows = db.execute(
             delete(SourceDocumentDocumentTagLinkTable)
             .where(
@@ -98,22 +110,22 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         ).fetchall()
         db.commit()
 
-        # get the project id (assuming all doc tags and sdocs are in the same project!)
-        proj_id = self.read(db, tag_ids[0]).project_id
+        # create after state
+        sdoc_orms = crud_sdoc.read_by_ids(db, sdoc_ids)
+        after_states = [
+            crud_sdoc._get_action_state_from_orm(sdoc_orm) for sdoc_orm in sdoc_orms
+        ]
 
-        from app.core.data.crud.action import crud_action
-
-        for sid in sdoc_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=SYSTEM_USER_ID,  # FIXME use correct user
+        # create actions
+        for db_obj, before_state, after_state in zip(
+            sdoc_orms, before_states, after_states
+        ):
+            crud_sdoc._create_action(
+                db_obj=db_obj,
                 action_type=ActionType.UPDATE,
-                target_type=ActionTargetObjectType.source_document,
-                target_id=sid,
-                before_state="",  # FIXME: What to put there?
-                after_state="",  # FIXME: What to put there?
+                before_state=before_state,
+                after_state=after_state,
             )
-            crud_action.create(db=db, create_dto=create_dto)
 
         return len(del_rows)
 

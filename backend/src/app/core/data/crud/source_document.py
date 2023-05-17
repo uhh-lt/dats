@@ -1,27 +1,25 @@
-from typing import List, Set, Optional, Tuple
+from typing import List, Optional, Set, Tuple
 
-from sqlalchemy import delete, func, and_, or_, desc
-from sqlalchemy.orm import Session
-
-from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
+from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
+from app.core.data.dto.action import ActionType
 from app.core.data.dto.search import (
+    KeyValue,
     SpanEntity,
-    SpanEntityFrequency,
-    TagStat,
     SpanEntityDocumentFrequency,
     SpanEntityDocumentFrequencyResult,
-    KeyValue,
+    SpanEntityFrequency,
+    TagStat,
 )
 from app.core.data.dto.source_document import (
+    SDocStatus,
     SourceDocumentCreate,
     SourceDocumentRead,
-    SDocStatus,
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from app.core.data.orm.code import CurrentCodeORM, CodeORM
+from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
@@ -32,6 +30,8 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
@@ -71,32 +71,80 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
     def link_document_tag(
         self, db: Session, *, sdoc_id: int, tag_id: int
     ) -> SourceDocumentORM:
+        # create before_state
         sdoc_db_obj = self.read(db=db, id=sdoc_id)
+        before_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
+
+        # link tag
         doc_tag_db_obj = crud_document_tag.read(db=db, id=tag_id)
         sdoc_db_obj.document_tags.append(doc_tag_db_obj)
         db.add(sdoc_db_obj)
         db.commit()
+
+        # create after state
         db.refresh(sdoc_db_obj)
+        after_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
+
+        # create action
+        self._create_action(
+            db_obj=sdoc_db_obj,
+            action_type=ActionType.UPDATE,
+            before_state=before_state,
+            after_state=after_state,
+        )
+
         return sdoc_db_obj
 
     def unlink_document_tag(
         self, db: Session, *, sdoc_id: int, tag_id: int
     ) -> SourceDocumentORM:
+        # create before_state
         sdoc_db_obj = self.read(db=db, id=sdoc_id)
+        before_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
+
+        # remove tag
         doc_tag_db_obj = crud_document_tag.read(db=db, id=tag_id)
         sdoc_db_obj.document_tags.remove(doc_tag_db_obj)
         db.commit()
+
+        # create after state
         db.refresh(sdoc_db_obj)
+        after_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
+
+        # create action
+        self._create_action(
+            db_obj=sdoc_db_obj,
+            action_type=ActionType.UPDATE,
+            before_state=before_state,
+            after_state=after_state,
+        )
+
         return sdoc_db_obj
 
     def unlink_all_document_tags(
         self, db: Session, *, sdoc_id: int
     ) -> SourceDocumentORM:
-        db_obj = self.read(db=db, id=sdoc_id)
-        db_obj.document_tags = []
+        # create before_state
+        sdoc_db_obj = self.read(db=db, id=sdoc_id)
+        before_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
+
+        # remove all tags
+        sdoc_db_obj.document_tags = []
         db.commit()
-        db.refresh(db_obj)
-        return db_obj
+
+        # create after state
+        db.refresh(sdoc_db_obj)
+        after_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
+
+        # create action
+        self._create_action(
+            db_obj=sdoc_db_obj,
+            action_type=ActionType.UPDATE,
+            before_state=before_state,
+            after_state=after_state,
+        )
+
+        return sdoc_db_obj
 
     def remove(self, db: Session, *, id: int) -> Optional[SourceDocumentORM]:
         sdoc_db_obj = super().remove(db=db, id=id)
@@ -107,19 +155,28 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         return sdoc_db_obj
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.project_id == proj_id)
-            .returning(self.model.id)
-        )
-        removed_ids = db.execute(statement).fetchall()
+        # find all sdocs to be removed
+        query = db.query(self.model).filter(self.model.project_id == proj_id)
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
+
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
+                action_type=ActionType.DELETE,
+                before_state=before_state,
+            )
+
+        # delete the sdocs
+        query.delete()
         db.commit()
-        removed_ids = list(map(lambda t: t[0], removed_ids))
 
         # remove files from repo
         RepoService().remove_all_project_sdoc_files(proj_id=proj_id)
 
-        return removed_ids
+        return ids
 
     def read_by_project_and_document_tag(
         self,
@@ -374,7 +431,6 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         skip: Optional[int] = None,
         limit: Optional[int] = None,
     ) -> List[int]:
-
         query = db.query(self.model.id)
 
         if only_finished:
@@ -664,7 +720,6 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
     def collect_tag_stats(
         self, db: Session, *, sdoc_ids: Set[int] = None
     ) -> List[TagStat]:
-
         # SELECT t.title, count(t.id) FROM documenttag t
         # JOIN sourcedocumentdocumenttaglinktable lt ON lt.document_tag_id = t.id
         # WHERE lt.source_document_id in (1, 2, 3)
@@ -706,7 +761,6 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         ]
 
     def collect_linked_sdoc_ids(self, db: Session, *, sdoc_id: int) -> List[int]:
-
         # SELECT * FROM sourcedocumentlink sl
         # WHERE (sl.linked_source_document_id = 1 OR
         #       sl.parent_source_document_id = 1) and sl.linked_source_document_id IS NOT NULL

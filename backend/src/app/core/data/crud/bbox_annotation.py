@@ -1,13 +1,17 @@
 from typing import List, Optional
 
+import srsly
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionCreate, ActionTargetObjectType, ActionType
-from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate, BBoxAnnotationUpdate
+from app.core.data.dto.action import ActionType
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationCreate,
+    BBoxAnnotationRead,
+    BBoxAnnotationReadResolvedCode,
+    BBoxAnnotationUpdate,
+)
+from app.core.data.dto.code import CodeRead
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 
@@ -53,37 +57,43 @@ class CRUDBBoxAnnotation(
         return bbox_anno
 
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.annotation_document_id == adoc_id)
-            .returning(self.model.id)
+        # find all bbox annotations to be removed
+        query = db.query(self.model).filter(
+            self.model.annotation_document_id == adoc_id
         )
-        removed_ids = db.execute(statement).fetchall()
-        db.commit()
-        removed_ids = list(map(lambda t: t[0], removed_ids))
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
 
-        from app.core.data.crud.annotation_document import crud_adoc
-
-        proj_id = crud_adoc.read(db=db, id=adoc_id).source_document.project_id
-
-        from app.core.data.crud.action import crud_action
-
-        for rid in removed_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=SYSTEM_USER_ID,
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
                 action_type=ActionType.DELETE,
-                target_type=ActionTargetObjectType.bbox_annotation,
-                target_id=rid,
-                before_state="",  # FIXME: use the removed objects JSON
-                after_state=None,
+                before_state=before_state,
             )
-            crud_action.create(db=db, create_dto=create_dto)
 
         # update the annotation document's timestamp
+        from app.core.data.crud.annotation_document import crud_adoc
+
         crud_adoc.update_timestamp(db=db, id=adoc_id)
 
-        return removed_ids
+        # delete the bbox annotations
+        query.delete()
+        db.commit()
+
+        return ids
+
+    def _get_action_user_id_from_orm(self, db_obj: BBoxAnnotationORM) -> int:
+        return db_obj.annotation_document.user_id
+
+    def _get_action_state_from_orm(self, db_obj: BBoxAnnotationORM) -> str | None:
+        return srsly.json_dumps(
+            BBoxAnnotationReadResolvedCode(
+                **BBoxAnnotationRead.from_orm(db_obj).dict(exclude={"current_code_id"}),
+                code=CodeRead.from_orm(db_obj.current_code.code),
+            ).dict()
+        )
 
 
 crud_bbox_anno = CRUDBBoxAnnotation(BBoxAnnotationORM)
