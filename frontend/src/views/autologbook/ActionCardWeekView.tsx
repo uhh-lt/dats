@@ -1,8 +1,8 @@
-import React, { useRef } from "react";
-import ActionCard from "./ActionCard";
-import { ActionRead } from "../../api/openapi";
-import { Card, CardContent, CardHeader, List, ListItem } from "@mui/material";
+import { Card, CardContent, CardHeader } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import React, { useRef } from "react";
+import { ActionRead } from "../../api/openapi";
+import ActionCard from "./ActionCard";
 
 interface ActionCardWeekViewProps {
   actions: ActionRead[];
@@ -13,21 +13,19 @@ function ActionCardWeekView({ actions, day }: ActionCardWeekViewProps) {
   const dateHeader: string = day.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
 
   return (
-    <>
-      <Card variant="outlined" style={{ width: "100%", height: "100%", backgroundColor: "whitesmoke" }}>
-        <CardHeader
-          style={{ backgroundColor: "#1976d2", color: "white", padding: "8px" }}
-          title={dateHeader}
-          titleTypographyProps={{
-            variant: "h6",
-            style: {
-              textAlign: "center",
-            },
-          }}
-        />
-        <ActionCardWeekViewContent actions={actions} />
-      </Card>
-    </>
+    <Card variant="outlined" style={{ width: "100%", height: "100%", backgroundColor: "whitesmoke" }}>
+      <CardHeader
+        style={{ backgroundColor: "#1976d2", color: "white", padding: "8px" }}
+        title={dateHeader}
+        titleTypographyProps={{
+          variant: "h6",
+          style: {
+            textAlign: "center",
+          },
+        }}
+      />
+      <ActionCardWeekViewContent actions={actions} />
+    </Card>
   );
 }
 
@@ -37,26 +35,11 @@ interface ActionCardWeekViewContentProps {
   actions: ActionRead[];
 }
 
-// reformat datetime to better readable format
-const reformatTimestamp = (ts: string) => {
-  // TODO: only necessary to show the time, because we have a calendar view
-  let date = new Date(ts);
-  let options: Intl.DateTimeFormatOptions = {
-    day: "numeric",
-    year: "numeric",
-    month: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  };
-  return date.toLocaleDateString("en-GB", options);
-};
-
 function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) {
   const listRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
 
   // The virtualizer
-  const rowVirtualizer = useVirtualizer({
+  const virtualizer = useVirtualizer({
     count: actions.length || 0,
     getScrollElement: () => listRef.current,
     estimateSize: () => 155,
@@ -64,41 +47,31 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
 
   return (
     <CardContent ref={listRef} style={{ height: "94%", overflowY: "auto", padding: 0 }}>
-      <List
+      <div
         style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
+          height: `${virtualizer.getTotalSize()}px`,
           width: "100%",
           position: "relative",
         }}
       >
-        {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-          let action = actions[virtualItem.index];
-          return (
-            <ListItem
-              key={virtualItem.key}
-              // @ts-ignore
-              ref={(element) => rowVirtualizer.measureElement(element)}
-              data-index={virtualItem.index}
-              style={{
-                padding: 5,
-                position: "absolute",
-                top: 0,
-                left: 0,
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-            >
-              <ActionCard
-                actionType={action.action_type}
-                userId={action.user_id}
-                targetObjectType={action.target_type}
-                beforeState={action.before_state}
-                afterState={action.after_state}
-                executedAt={reformatTimestamp(action.executed)}
-              />
-            </ListItem>
-          );
-        })}
-      </List>
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <div
+            key={virtualItem.key}
+            ref={virtualizer.measureElement}
+            data-index={virtualItem.index}
+            style={{
+              width: "100%",
+              padding: 5,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              transform: `translateY(${virtualItem.start}px)`,
+            }}
+          >
+            <ActionCard action={actions[virtualItem.index]} />
+          </div>
+        ))}
+      </div>
     </CardContent>
   );
 }

@@ -8,8 +8,8 @@ import { Add, Edit, Remove } from "@mui/icons-material";
 import { ActionTargetObjectType } from "../../api/openapi";
 import { useEffect } from "react";
 import { useAuth } from "../../auth/AuthProvider";
-import { readableObjectType } from "./ActionCard";
 import Tooltip from "@mui/material/Tooltip";
+import { actionTarget2Title } from "./utils";
 
 const entityValueArray = Object.values(ActionTargetObjectType);
 
@@ -152,7 +152,7 @@ export function ActionFilters() {
               <>
                 {entityFilter.map((entity, index) => (
                   <React.Fragment key={entity}>
-                    {readableObjectType(entityValueArray[entity])}
+                    {actionTarget2Title[entityValueArray[entity]]}
                     {index < entityFilter.length - 1 && ", "}
                   </React.Fragment>
                 ))}
@@ -166,7 +166,7 @@ export function ActionFilters() {
           return (
             <MenuItem key={index} value={index} disabled={!inEntities}>
               <Checkbox checked={entityFilter?.includes(index)} />
-              <ListItemText>{readableObjectType(entity)}</ListItemText>
+              <ListItemText>{actionTarget2Title[entity]}</ListItemText>
             </MenuItem>
           );
         })}
