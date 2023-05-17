@@ -3,13 +3,12 @@ import {
   ActionTargetObjectType,
   ActionType,
   BBoxAnnotationRead,
-  BBoxAnnotationReadResolvedCode,
   CodeRead,
   DocumentTagRead,
   MemoRead,
   ProjectRead,
   SourceDocumentRead,
-  SpanAnnotationReadResolved,
+  SpanAnnotationRead,
 } from "../../api/openapi";
 
 export const formatTimestampAsTime = (timestamp: string): string => {
@@ -63,8 +62,8 @@ export const action2TargetTitle = (action: ActionRead): string | undefined => {
       case ActionTargetObjectType.SOURCE_DOCUMENT:
         return (parsedObject as SourceDocumentRead).filename;
       case ActionTargetObjectType.SPAN_ANNOTATION:
-        const spanAnno = parsedObject as SpanAnnotationReadResolved;
-        return `${spanAnno.span_text} (${spanAnno.code.name})`;
+        const spanAnno = parsedObject as SpanAnnotationRead;
+        return `${spanAnno.span_text_id} (${spanAnno.current_code_id})`;
       case ActionTargetObjectType.BBOX_ANNOTATION:
         const bboxAnno = parsedObject as BBoxAnnotationRead;
         return `Code: ${bboxAnno.current_code_id} Coordinates: ${bboxAnno.x_min}, ${bboxAnno.y_min}, ${bboxAnno.x_max}, ${bboxAnno.y_max}`;
