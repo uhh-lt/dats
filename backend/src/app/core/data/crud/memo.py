@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+import srsly
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.memo import (
@@ -21,6 +22,7 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
+from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import and_
@@ -432,6 +434,16 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         ElasticSearchService().update_memo_in_index(
             proj_id=memo_orm.project_id, update=update_es_dto
         )
+
+    def _get_action_user_id_from_orm(self, db_obj: MemoORM) -> int:
+        return db_obj.user_id
+
+    def _get_action_state_from_orm(self, db_obj: MemoORM) -> str | None:
+        # TODO ASK FLO: HOW do i get db obj here?
+        with SQLService().db_session() as db:
+            return srsly.json_dumps(
+                self.get_memo_read_dto_from_orm(db=db, db_obj=db_obj).dict()
+            )
 
 
 crud_memo = CRUDMemo(MemoORM)

@@ -1,8 +1,13 @@
 from typing import List
 
+import srsly
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
-from app.core.data.dto.document_tag import DocumentTagCreate, DocumentTagUpdate
+from app.core.data.dto.document_tag import (
+    DocumentTagCreate,
+    DocumentTagRead,
+    DocumentTagUpdate,
+)
 from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
@@ -128,6 +133,9 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             )
 
         return len(del_rows)
+
+    def _get_action_state_from_orm(self, db_obj: DocumentTagORM) -> str | None:
+        return srsly.json_dumps(DocumentTagRead.from_orm(db_obj).dict())
 
 
 crud_document_tag = CRUDDocumentTag(DocumentTagORM)

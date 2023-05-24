@@ -1,17 +1,23 @@
 from typing import Optional
-import srsly
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
+import srsly
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import crud_user, SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
-from app.core.data.dto.project import ProjectCreate, ProjectUpdate
+from app.core.data.dto.action import ActionType
+from app.core.data.dto.project import (
+    ProjectCreate,
+    ProjectRead,
+    ProjectReadAction,
+    ProjectUpdate,
+)
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.data.dto.user import UserRead
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
@@ -101,6 +107,15 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         )
 
         return user_db_obj
+
+    def _get_action_state_from_orm(self, db_obj: ProjectORM) -> str | None:
+        return srsly.json_dumps(
+            ProjectReadAction(
+                **ProjectRead.from_orm(db_obj).dict(),
+                users=[UserRead.from_orm(user) for user in db_obj.users],
+                num_sdocs=len(db_obj.source_documents)
+            ).dict()
+        )
 
 
 crud_project = CRUDProject(ProjectORM)

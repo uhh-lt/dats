@@ -63,6 +63,7 @@ class CRUDSourceDocumentMetadata(
             # create before_state
             sdoc_orm = db_obj.source_document
             before_state = crud_sdoc._get_action_state_from_orm(db_obj=sdoc_orm)
+            db.expunge(db_obj)
 
             # update metadata
             metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)

@@ -1,11 +1,18 @@
 from typing import List, Optional
 
+import srsly
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
 from app.core.data.dto.action import ActionType
-from app.core.data.dto.span_annotation import SpanAnnotationCreate, SpanAnnotationUpdate
+from app.core.data.dto.code import CodeRead
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationCreate,
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+    SpanAnnotationUpdate,
+)
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from fastapi.encoders import jsonable_encoder
@@ -166,6 +173,20 @@ class CRUDSpanAnnotation(
         db.commit()
         db.refresh(span_db_obj)
         return span_db_obj
+
+    def _get_action_user_id_from_orm(self, db_obj: SpanAnnotationORM) -> int:
+        return db_obj.annotation_document.user_id
+
+    def _get_action_state_from_orm(self, db_obj: SpanAnnotationORM) -> str | None:
+        return srsly.json_dumps(
+            SpanAnnotationReadResolved(
+                **SpanAnnotationRead.from_orm(db_obj).dict(
+                    exclude={"current_code_id", "span_text_id"}
+                ),
+                code=CodeRead.from_orm(db_obj.current_code.code),
+                span_text=db_obj.span_text.text,
+            ).dict()
+        )
 
 
 crud_span_anno = CRUDSpanAnnotation(SpanAnnotationORM)

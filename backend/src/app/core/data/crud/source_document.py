@@ -1,10 +1,12 @@
 from typing import List, Optional, Set, Tuple
 
+import srsly
 from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
 from app.core.data.dto.action import ActionType
+from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.search import (
     KeyValue,
     SpanEntity,
@@ -17,7 +19,9 @@ from app.core.data.dto.source_document import (
     SDocStatus,
     SourceDocumentCreate,
     SourceDocumentRead,
+    SourceDocumentReadAction,
 )
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import (
@@ -788,6 +792,19 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             for (parent_sdoc_id, linked_sdoc_id) in res
             if linked_sdoc_id is not None
         ]
+
+    def _get_action_state_from_orm(self, db_obj: SourceDocumentORM) -> str | None:
+        return srsly.json_dumps(
+            SourceDocumentReadAction(
+                **SourceDocumentRead.from_orm(db_obj).dict(),
+                tags=[DocumentTagRead.from_orm(tag) for tag in db_obj.document_tags],
+                metadata=[
+                    SourceDocumentMetadataRead.from_orm(metadata)
+                    for metadata in db_obj.metadata_
+                ],
+                # TODO: can we get the keywords?
+            ).dict()
+        )
 
 
 crud_sdoc = CRUDSourceDocument(SourceDocumentORM)

@@ -1,10 +1,11 @@
 from typing import Any, Dict, List, Optional
 
+import srsly
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.action import ActionType
-from app.core.data.dto.code import CodeCreate, CodeUpdate
+from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.current_code import CurrentCodeCreate
 from app.core.data.orm.code import CodeORM
 from app.util.color import get_next_color
@@ -202,6 +203,14 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.commit()
 
         return ids
+
+    def _get_action_user_id_from_orm(self, db_obj: CodeORM) -> int:
+        return db_obj.user_id
+
+    def _get_action_state_from_orm(self, db_obj: CodeORM) -> str | None:
+        return srsly.json_dumps(
+            CodeRead.from_orm(db_obj).dict(),
+        )
 
 
 crud_code = CRUDCode(CodeORM)
