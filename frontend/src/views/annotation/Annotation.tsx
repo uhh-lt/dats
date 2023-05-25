@@ -104,7 +104,11 @@ function Annotation() {
                 />
               </Toolbar>
             </AppBar>
-            {showCodeExplorer ? <CodeExplorer /> : <MemoExplorer sdocId={sourceDocumentId} />}
+            {showCodeExplorer ? (
+              <CodeExplorer showCreateCodeButton={true} />
+            ) : (
+              <MemoExplorer sdocId={sourceDocumentId} />
+            )}
           </Paper>
         </Grid>
       </Grid>
