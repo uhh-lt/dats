@@ -201,25 +201,6 @@ export class UserService {
   }
 
   /**
-   * Removes all Codes of the User
-   * Removes all Codes of the User with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteUserCodes({ userId }: { userId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/user/{user_id}/code",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Returns all Memos of the User
    * Returns all Memos of the User with the given ID
    * @returns MemoRead Successful Response
@@ -228,25 +209,6 @@ export class UserService {
   public static getUserMemos({ userId }: { userId: number }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/user/{user_id}/memo",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Removes all Memos of the User
-   * Removes all Memos of the User with the given ID if it exists
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static deleteUserMemos({ userId }: { userId: number }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
       url: "/user/{user_id}/memo",
       path: {
         user_id: userId,
