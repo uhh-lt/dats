@@ -67,8 +67,8 @@ class CRUDAction(CRUDBase[ActionORM, ActionCreate, None]):
                 self.model.action_type.in_(action_types),
                 self.model.target_type.in_(action_targets),
                 self.model.executed.between(
-                    datetime.fromtimestamp(timestamp_from),
-                    datetime.fromtimestamp(timestamp_to),
+                    datetime.fromtimestamp(timestamp_from / 1000.0),
+                    datetime.fromtimestamp(timestamp_to / 1000.0),
                 ),
             )
             .all()
