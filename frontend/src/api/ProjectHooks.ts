@@ -1,5 +1,8 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import queryClient from "../plugins/ReactQueryClient";
+import { QueryKey } from "./QueryKey";
 import {
+  ActionQueryParameters,
   ActionRead,
   CodeRead,
   DocumentTagRead,
@@ -11,8 +14,6 @@ import {
   ProjectUpdate,
   UserRead,
 } from "./openapi";
-import { QueryKey } from "./QueryKey";
-import queryClient from "../plugins/ReactQueryClient";
 import { useSelectEnabledCodes } from "./utils";
 
 //tags
@@ -206,6 +207,13 @@ const useGetActions = (projectId: number, userId: number) =>
     }
   );
 
+const useQueryActions = (requestBody: ActionQueryParameters) =>
+  useQuery<ActionRead[], Error>([QueryKey.ACTIONS_QUERY, requestBody], () =>
+    ProjectService.queryActionsOfProject({
+      requestBody: requestBody,
+    })
+  );
+
 const ProjectHooks = {
   // tags
   useGetAllTags,
@@ -230,6 +238,7 @@ const ProjectHooks = {
   useCreateMemo,
   // actions
   useGetActions,
+  useQueryActions,
 };
 
 export default ProjectHooks;

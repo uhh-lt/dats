@@ -1,16 +1,18 @@
 import os
 
+from app.core.data.dto.project import ProjectReadAction
+from app.core.data.dto.source_document import SourceDocumentReadAction
+from app.core.startup import startup
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import PlainTextResponse
 from fastapi.routing import APIRoute
 from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
-
-from app.core.startup import startup
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
@@ -19,51 +21,51 @@ if not STARTUP_DONE:
     startup(reset_data=False)
     os.environ["STARTUP_DONE"] = "1"
 
+from api.endpoints import annotation_document  # noqa E402
+from api.endpoints import (
+    analysis,
+    bbox_annotation,
+    code,
+    crawler,
+    document_tag,
+    export,
+    feedback,
+    general,
+    memo,
+    metadata,
+    prepro,
+    project,
+    search,
+    source_document,
+    span_annotation,
+    span_group,
+    user,
+)
+from app.core.data.crawler.crawler_service import (
+    CrawlerJobAlreadyStartedOrDoneError,
+    CrawlerJobPreparationError,
+    NoDataToCrawlError,
+    NoSuchCrawlerJobError,
+)
+from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
 from app.core.data.crud.source_document import (
     SourceDocumentPreprocessingUnfinishedError,
 )
-from app.core.data.repo.repo_service import (
-    RepoService,
-    SourceDocumentNotFoundInRepositoryError,
-    FileNotFoundInRepositoryError,
-)  # noqa E402
-from app.core.search.elasticsearch_service import (
-    NoSuchSourceDocumentInElasticSearchError,
-    NoSuchMemoInElasticSearchError,
-)  # noqa E402
-from app.core.data.export.export_service import (
+from app.core.data.export.export_service import (  # noqa E402
     ExportJobPreparationError,
     NoDataToExportError,
-    NoSuchExportJobError,
     NoSuchExportFormatError,
-)  # noqa E402
-from app.core.data.crawler.crawler_service import (
-    NoDataToCrawlError,
-    NoSuchCrawlerJobError,
-    CrawlerJobPreparationError,
-    CrawlerJobAlreadyStartedOrDoneError,
+    NoSuchExportJobError,
 )
-from api.endpoints import (
-    general,
-    project,
-    user,
-    source_document,
-    code,
-    annotation_document,
-    memo,
-    span_annotation,
-    document_tag,
-    span_group,
-    bbox_annotation,
-    search,
-    metadata,
-    feedback,
-    analysis,
-    prepro,
-    export,
-    crawler,
-)  # noqa E402
-from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
+from app.core.data.repo.repo_service import (  # noqa E402
+    FileNotFoundInRepositoryError,
+    RepoService,
+    SourceDocumentNotFoundInRepositoryError,
+)
+from app.core.search.elasticsearch_service import (  # noqa E402
+    NoSuchMemoInElasticSearchError,
+    NoSuchSourceDocumentInElasticSearchError,
+)
 from config import conf  # noqa E402
 
 
@@ -74,11 +76,35 @@ def custom_generate_unique_id(route: APIRoute):
 
 # create the FastAPI app
 app = FastAPI(
-    title="D-WISE Tool Suite Backend API",
-    description="The REST API for the D-WISE Tool Suite Backend",
-    version="alpha_mwp_1",
+    # title="D-WISE Tool Suite Backend API",
+    # description="The REST API for the D-WISE Tool Suite Backend",
+    # version="alpha_mwp_1",
     generate_unique_id_function=custom_generate_unique_id,
 )
+
+
+# customize openapi schema
+# we need to add some DTOs manually, because they are not used in any endpoint, but needed in the frontend nonetheless
+def custom_openapi():
+    # if app.openapi_schema:
+    #     return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="D-WISE Tool Suite Backend API",
+        version="beta_mwp_1",
+        description="The REST API for the D-WISE Tool Suite Backend.",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["schemas"][
+        "SourceDocumentReadAction"
+    ] = SourceDocumentReadAction.schema(ref_template="#/components/schemas/{model}")
+    openapi_schema["components"]["schemas"][
+        "ProjectReadAction"
+    ] = ProjectReadAction.schema(ref_template="#/components/schemas/{model}")
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
 
 # Handle CORS
 # TODO Flo: Handle CORS via ReverseProxy in FrontEnd!

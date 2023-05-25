@@ -1,176 +1,153 @@
-import { ButtonGroup, Checkbox, IconButton, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import * as React from "react";
-import Typography from "@mui/material/Typography";
-import UserName from "../../components/UserName";
-import { AutologbookActions } from "./autologbookSlice";
 import { Add, Edit, Remove } from "@mui/icons-material";
-import { ActionTargetObjectType } from "../../api/openapi";
-import { useEffect } from "react";
-import { useAuth } from "../../auth/AuthProvider";
-import { readableObjectType } from "./ActionCard";
+import { ButtonGroup, Checkbox, IconButton, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import * as React from "react";
+import { useEffect } from "react";
+import ProjectHooks from "../../api/ProjectHooks";
+import { ActionTargetObjectType, ActionType } from "../../api/openapi";
+import { useAuth } from "../../auth/AuthProvider";
+import UserName from "../../components/UserName";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { AutologbookActions } from "./autologbookSlice";
+import { actionTarget2Title } from "./utils";
 
-const entityValueArray = Object.values(ActionTargetObjectType);
+const actionTargetValues = Object.values(ActionTargetObjectType);
+
+interface ActionFiltersProps {
+  projectId: number;
+}
 
 /**
  * The filter task bar on the top left of the Autologbook viewer.
  * Filter functions are applied in Autologbook.tsx
  */
-export function ActionFilters() {
+export function ActionFilters({ projectId }: ActionFiltersProps) {
   const { user } = useAuth();
+
+  // global server state (react-query)
+  const users = ProjectHooks.useGetAllUsers(projectId);
 
   // global state (redux)
   const dispatch = useAppDispatch();
-  const showCreated = useAppSelector((state) => state.autologbook.showCreated);
-  const showUpdated = useAppSelector((state) => state.autologbook.showUpdated);
-  const showDeleted = useAppSelector((state) => state.autologbook.showDeleted);
-  const entityFilter = useAppSelector((state) => state.autologbook.entityFilter);
-  const userFilter = useAppSelector((state) => state.autologbook.userFilter);
-  const visibleUserIds = useAppSelector((state) => state.autologbook.visibleUserIds);
-  const visibleEntityIds = useAppSelector((state) => state.autologbook.visibleEntityIds);
+  const userIds = useAppSelector((state) => state.autologbook.userIds);
+  const actionTypes = useAppSelector((state) => state.autologbook.actionTypes);
+  const actionTargets = useAppSelector((state) => state.autologbook.actionTargets);
 
-  // init user filter with logged in user
+  // init userIds with logged in user
   useEffect(() => {
     if (user.data) {
-      dispatch(AutologbookActions.setUserFilter([user.data.id]));
+      dispatch(AutologbookActions.setUserIds([user.data.id]));
     }
   }, [dispatch, user.data]);
 
-  const handleUserFilterChange = (event: SelectChangeEvent<number[]>) => {
-    if (userFilter !== undefined && visibleUserIds !== undefined) {
-      let newFilter: number[] = [];
-      let selected: number[] = event.target.value as number[];
-      let selectedSet: Set<number> = new Set<number>(selected);
-      for (let userId of visibleUserIds) {
-        if (selectedSet.has(userId)) {
-          if (userFilter.includes(userId)) {
-            newFilter.push(userId);
-          }
-        } else if (!userFilter.includes(userId)) {
-          newFilter.push(userId);
-        }
-      }
-      dispatch(AutologbookActions.setUserFilter(newFilter));
-    }
+  const handleUserIdsChange = (event: SelectChangeEvent<number[]>) => {
+    dispatch(AutologbookActions.setUserIds(event.target.value as number[]));
   };
 
-  const handleEntityFilterChange = (event: SelectChangeEvent<number[]>) => {
-    if (entityFilter !== undefined && visibleEntityIds !== undefined) {
-      let newFilter: number[] = [];
-      let selected: number[] = event.target.value as number[];
-      let selectedSet: Set<number> = new Set<number>(selected);
-      for (let entityId of visibleEntityIds) {
-        if (selectedSet.has(entityId)) {
-          if (entityFilter.includes(entityId)) {
-            newFilter.push(entityId);
-          }
-        } else if (!entityFilter.includes(entityId)) {
-          newFilter.push(entityId);
-        }
-      }
-      dispatch(AutologbookActions.setEntityFilter(newFilter));
-    }
+  const handleActionTargetsChange = (event: SelectChangeEvent<ActionTargetObjectType[]>) => {
+    dispatch(AutologbookActions.setActionTargets(event.target.value as ActionTargetObjectType[]));
   };
 
   // render
   return (
     <>
-      <Typography component="div" variant="h5" style={{ paddingTop: 10, paddingBottom: 14, paddingRight: 12 }}>
-        Filters:
-      </Typography>
+      {users.isSuccess && (
+        <>
+          <Typography component="div" variant="h5" style={{ paddingTop: 10, paddingBottom: 14, paddingRight: 12 }}>
+            Filters:
+          </Typography>
 
-      <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
-        Users:
-      </Typography>
-      <Select
-        size="small"
-        sx={{ backgroundColor: "white", mr: 1, maxWidth: 300, overflow: "hidden" }}
-        multiple
-        value={visibleUserIds || []}
-        onChange={handleUserFilterChange}
-        renderValue={() => (
-          <>
-            {userFilter.map((x, index) => (
-              <React.Fragment key={x}>
-                <UserName userId={x} />
-                {index < userFilter.length - 1 && ", "}
-              </React.Fragment>
-            ))}
-          </>
-        )}
-      >
-        {visibleUserIds?.map((user) => (
-          <MenuItem key={user} value={user}>
-            <Checkbox checked={userFilter?.includes(user)} />
-            <ListItemText>
-              <UserName userId={user} />
-            </ListItemText>
-          </MenuItem>
-        ))}
-      </Select>
-
-      <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
-        Actions:
-      </Typography>
-      <ButtonGroup sx={{ backgroundColor: "white", mr: 1, border: "1px solid grey" }}>
-        <Tooltip title={"Create-Actions"}>
-          <IconButton
-            children={<Add />}
-            color={showCreated ? "primary" : "default"}
-            onClick={() => dispatch(AutologbookActions.toggleCreated())}
-          />
-        </Tooltip>
-        <Tooltip title={"Edit-Actions"}>
-          <IconButton
-            children={<Edit />}
-            color={showUpdated ? "primary" : "default"}
-            onClick={() => dispatch(AutologbookActions.toggleUpdated())}
-          />
-        </Tooltip>
-        <Tooltip title={"Delete-Actions"}>
-          <IconButton
-            children={<Remove />}
-            color={showDeleted ? "primary" : "default"}
-            onClick={() => dispatch(AutologbookActions.toggleDeleted())}
-          />
-        </Tooltip>
-      </ButtonGroup>
-
-      <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
-        Entities:
-      </Typography>
-      <Select
-        size="small"
-        sx={{ backgroundColor: "white", maxWidth: 300, overflow: "hidden" }}
-        multiple
-        value={visibleEntityIds || []}
-        onChange={handleEntityFilterChange}
-        renderValue={() => {
-          if (entityFilter && entityFilter.length > 0) {
-            return (
+          <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
+            Users:
+          </Typography>
+          <Select
+            size="small"
+            sx={{ backgroundColor: "white", mr: 1, maxWidth: 300, overflow: "hidden" }}
+            multiple
+            value={userIds}
+            onChange={handleUserIdsChange}
+            renderValue={() => (
               <>
-                {entityFilter.map((entity, index) => (
-                  <React.Fragment key={entity}>
-                    {readableObjectType(entityValueArray[entity])}
-                    {index < entityFilter.length - 1 && ", "}
+                {users.data.map((x, index) => (
+                  <React.Fragment key={x.id}>
+                    <UserName userId={x.id} />
+                    {index < userIds.length - 1 && ", "}
                   </React.Fragment>
                 ))}
               </>
-            );
-          }
-        }}
-      >
-        {entityValueArray.map((entity, index) => {
-          let inEntities = visibleEntityIds?.includes(index);
-          return (
-            <MenuItem key={index} value={index} disabled={!inEntities}>
-              <Checkbox checked={entityFilter?.includes(index)} />
-              <ListItemText>{readableObjectType(entity)}</ListItemText>
-            </MenuItem>
-          );
-        })}
-      </Select>
+            )}
+          >
+            {users.data.map((user) => (
+              <MenuItem key={user.id} value={user.id}>
+                <Checkbox checked={userIds.includes(user.id)} />
+                <ListItemText>
+                  <UserName userId={user.id} />
+                </ListItemText>
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
+            Actions:
+          </Typography>
+          <ButtonGroup sx={{ backgroundColor: "white", mr: 1, border: "1px solid grey" }}>
+            <Tooltip title={"Create-Actions"}>
+              <IconButton
+                children={<Add />}
+                color={actionTypes.includes(ActionType.CREATE) ? "primary" : "default"}
+                onClick={() => dispatch(AutologbookActions.toggleCreated())}
+              />
+            </Tooltip>
+            <Tooltip title={"Edit-Actions"}>
+              <IconButton
+                children={<Edit />}
+                color={actionTypes.includes(ActionType.UPDATE) ? "primary" : "default"}
+                onClick={() => dispatch(AutologbookActions.toggleUpdated())}
+              />
+            </Tooltip>
+            <Tooltip title={"Delete-Actions"}>
+              <IconButton
+                children={<Remove />}
+                color={actionTypes.includes(ActionType.DELETE) ? "primary" : "default"}
+                onClick={() => dispatch(AutologbookActions.toggleDeleted())}
+              />
+            </Tooltip>
+          </ButtonGroup>
+
+          <Typography fontSize={18} color="inherit" component="div" sx={{ mr: 1 }}>
+            Entities:
+          </Typography>
+          <Select
+            size="small"
+            sx={{ backgroundColor: "white", maxWidth: 300, overflow: "hidden" }}
+            multiple
+            value={actionTargets}
+            onChange={handleActionTargetsChange}
+            renderValue={() => {
+              return (
+                <>
+                  {actionTargets.map((actionTarget, index) => (
+                    <React.Fragment key={actionTarget}>
+                      {actionTarget2Title[actionTarget]}
+                      {index < actionTargets.length - 1 && ", "}
+                    </React.Fragment>
+                  ))}
+                </>
+              );
+            }}
+          >
+            {actionTargetValues.map((actionTarget) => {
+              return (
+                <MenuItem key={actionTarget} value={actionTarget} disabled={false}>
+                  <Checkbox checked={actionTargets.includes(actionTarget)} />
+                  <ListItemText>{actionTarget2Title[actionTarget]}</ListItemText>
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </>
+      )}
     </>
   );
 }

@@ -1,13 +1,11 @@
 from typing import Generic, List, Optional, Type, TypeVar
 
+import srsly
+from app.core.data.dto.action import ActionCreate, ActionType
+from app.core.data.orm.orm_base import ORMBase
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-import srsly
-import copy
 from sqlalchemy.orm import Session
-
-from app.core.data.dto.action import ActionType, ActionCreate
-from app.core.data.orm.orm_base import ORMBase
 
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
 CreateDTOType = TypeVar("CreateDTOType", bound=BaseModel)
@@ -61,7 +59,11 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.commit()
         db.refresh(db_obj)
 
-        self.__create_action(db_obj=db_obj, action_type=ActionType.CREATE)
+        after_state = self._get_action_state_from_orm(db_obj=db_obj)
+
+        self._create_action(
+            db_obj=db_obj, action_type=ActionType.CREATE, after_state=after_state
+        )
 
         return db_obj
 
@@ -74,7 +76,10 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
         for db_obj in db_objs:
             db.refresh(db_obj)
-            self.__create_action(db_obj=db_obj, action_type=ActionType.CREATE)
+            after_state = self._get_action_state_from_orm(db_obj=db_obj)
+            self._create_action(
+                db_obj=db_obj, action_type=ActionType.CREATE, after_state=after_state
+            )
 
         return db_objs
 
@@ -82,7 +87,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         self, db: Session, *, id: int, update_dto: UpdateDTOType
     ) -> Optional[ORMModelType]:
         db_obj = self.read(db=db, id=id)
-        before_db_obj = copy.copy(db_obj)
+        before_state = self._get_action_state_from_orm(db_obj=db_obj)
+
         obj_data = jsonable_encoder(db_obj)
         update_data = update_dto.dict(exclude_unset=True)
         for field in obj_data:
@@ -92,65 +98,78 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db.commit()
         db.refresh(db_obj)
 
-        self.__create_action(
+        after_state = self._get_action_state_from_orm(db_obj=db_obj)
+
+        self._create_action(
             db_obj=db_obj,
             action_type=ActionType.UPDATE,
-            before_db_obj=before_db_obj,
+            before_state=before_state,
+            after_state=after_state,
         )
 
         return db_obj
 
     def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
         db_obj = self.read(db=db, id=id)
+        before_state = self._get_action_state_from_orm(db_obj=db_obj)
 
-        self.__create_action(db_obj=db_obj, action_type=ActionType.DELETE)
+        self._create_action(
+            db_obj=db_obj, action_type=ActionType.DELETE, before_state=before_state
+        )
 
         # delete the ORM after the action created so that we can read its ID
         db.delete(db_obj)
         db.commit()
         return db_obj
 
-    @staticmethod
-    def __create_action(
+    # TODO: remove_multi ?
+
+    def _get_action_user_id_from_orm(self, db_obj: ORMModelType) -> int:
+        from app.core.data.crud.user import SYSTEM_USER_ID
+
+        return SYSTEM_USER_ID
+
+    def _get_action_state_from_orm(self, db_obj: ORMModelType) -> Optional[str]:
+        return srsly.json_dumps(db_obj.as_dict())
+
+    def _create_action(
+        self,
         db_obj: ORMModelType,
         action_type: ActionType,
-        before_db_obj: Optional[ORMModelType] = None,
+        before_state: Optional[str] = None,
+        after_state: Optional[str] = None,
     ) -> None:
         # local import to avoid circular dependency
-        from app.core.data.orm.util import (
-            get_parent_project_id,
-            get_action_target_type,
-        )
+        from app.core.data.orm.util import get_action_target_type, get_parent_project_id
 
         action_target_type = get_action_target_type(db_obj)
-        if action_target_type is not None:
+        if action_target_type is None:
+            return
 
-            proj_id = get_parent_project_id(db_obj)
-            if proj_id is not None:
-                from app.core.data.crud.user import SYSTEM_USER_ID
-                from app.core.db.sql_service import SQLService
-                from app.core.data.crud.action import crud_action
+        proj_id = get_parent_project_id(db_obj)
+        if proj_id is None:
+            return
 
-                if action_type == ActionType.CREATE:
-                    before_state = None
-                    after_state = srsly.json_dumps(db_obj.as_dict())
-                elif action_type == ActionType.UPDATE:
-                    before_state = None
-                    if before_db_obj is not None:
-                        before_state = srsly.json_dumps(before_db_obj.as_dict())
-                    after_state = srsly.json_dumps(db_obj.as_dict())
-                elif action_type == ActionType.DELETE:
-                    before_state = srsly.json_dumps(db_obj.as_dict())
-                    after_state = None
+        from app.core.data.crud.action import crud_action
+        from app.core.db.sql_service import SQLService
 
-                create_dto = ActionCreate(
-                    project_id=proj_id,
-                    user_id=SYSTEM_USER_ID,  # FIXME use correct user
-                    action_type=action_type,
-                    target_type=action_target_type,
-                    target_id=db_obj.id,
-                    before_state=before_state,
-                    after_state=after_state,
-                )
-                with SQLService().db_session() as db:
-                    crud_action.create(db=db, create_dto=create_dto)
+        if action_type == ActionType.CREATE and after_state is None:
+            raise ValueError("after_state must be provided for CREATE action")
+        elif action_type == ActionType.UPDATE and (
+            after_state is None or before_state is None
+        ):
+            raise ValueError("before_state and after_state must be provided for UPDATE")
+        elif action_type == ActionType.DELETE and before_state is None:
+            raise ValueError("before_state must be provided for DELETE action")
+
+        create_dto = ActionCreate(
+            project_id=proj_id,
+            user_id=self._get_action_user_id_from_orm(db_obj=db_obj),
+            action_type=action_type,
+            target_type=action_target_type,
+            target_id=db_obj.id,
+            before_state=before_state,
+            after_state=after_state,
+        )
+        with SQLService().db_session() as db:
+            crud_action.create(db=db, create_dto=create_dto)

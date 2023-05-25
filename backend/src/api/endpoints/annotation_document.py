@@ -111,7 +111,7 @@ async def delete_all_span_annotations(
     *, db: Session = Depends(get_db_session), adoc_id: int
 ) -> List[int]:
     # TODO Flo: only if the user has access? What to return?
-    return crud_span_anno.remove_by_adoc(db=db, id=adoc_id)
+    return crud_span_anno.remove_by_adoc(db=db, adoc_id=adoc_id)
 
 
 @router.get(
@@ -154,7 +154,7 @@ async def delete_all_bbox_annotations(
     *, db: Session = Depends(get_db_session), adoc_id: int
 ) -> List[int]:
     # TODO Flo: only if the user has access? What to return?
-    return crud_bbox_anno.remove_by_adoc(db=db, id=adoc_id)
+    return crud_bbox_anno.remove_by_adoc(db=db, adoc_id=adoc_id)
 
 
 @router.get(

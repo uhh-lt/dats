@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ActionQueryParameters } from "../models/ActionQueryParameters";
 import type { ActionRead } from "../models/ActionRead";
 import type { Body_project_upload_project_sdoc } from "../models/Body_project_upload_project_sdoc";
 import type { CodeRead } from "../models/CodeRead";
@@ -498,6 +499,28 @@ export class ProjectService {
         proj_id: projId,
         user_id: userId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all Actions
+   * Returns all Actions of the Project
+   * @returns ActionRead Successful Response
+   * @throws ApiError
+   */
+  public static queryActionsOfProject({
+    requestBody,
+  }: {
+    requestBody: ActionQueryParameters;
+  }): CancelablePromise<Array<ActionRead>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/project/{proj_id}/actions",
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

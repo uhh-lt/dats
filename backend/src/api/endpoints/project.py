@@ -1,10 +1,6 @@
-from typing import List, Dict
-from typing import Optional
+from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, UploadFile, HTTPException, File, Query
-from sqlalchemy.orm import Session
-
-from api.dependencies import skip_limit_params, get_db_session
+from api.dependencies import get_db_session, skip_limit_params
 from api.util import get_object_memos
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
@@ -13,18 +9,20 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import mime_type_supported
-from app.core.data.dto import ProjectRead, ProjectCreate, ProjectUpdate
-from app.core.data.dto.action import ActionRead
+from app.core.data.dto import ProjectCreate, ProjectRead, ProjectUpdate
+from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
+from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.source_document import (
-    SourceDocumentRead,
     PaginatedSourceDocumentReads,
+    SourceDocumentRead,
 )
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.util import preprocess_uploaded_file
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
@@ -386,6 +384,33 @@ async def get_user_actions_of_project(
 ) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
     return crud_action.read_by_user_and_project(db=db, proj_id=proj_id, user_id=user_id)
+
+
+@router.post(
+    "/{proj_id}/actions",
+    tags=tags,
+    response_model=List[ActionRead],
+    summary="Returns all Actions",
+    description="Returns all Actions of the Project",
+)
+async def query_actions_of_project(
+    *,
+    query_params: ActionQueryParameters,
+    db: Session = Depends(get_db_session),
+) -> List[ActionRead]:
+    # TODO Flo: only if the user has access?
+    return [
+        ActionRead.from_orm(action)
+        for action in crud_action.read_by(
+            db=db,
+            proj_id=query_params.proj_id,
+            user_ids=query_params.user_ids,
+            action_types=query_params.action_types,
+            action_targets=query_params.action_targets,
+            timestamp_from=query_params.timestamp_from,
+            timestamp_to=query_params.timestamp_to,
+        )
+    ]
 
 
 @router.delete(

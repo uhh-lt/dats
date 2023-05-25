@@ -1,17 +1,23 @@
 from typing import Optional
-import srsly
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
+import srsly
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import crud_user, SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
-from app.core.data.dto.project import ProjectCreate, ProjectUpdate
+from app.core.data.dto.action import ActionType
+from app.core.data.dto.project import (
+    ProjectCreate,
+    ProjectRead,
+    ProjectReadAction,
+    ProjectUpdate,
+)
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.data.dto.user import UserRead
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
@@ -25,27 +31,21 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         db.refresh(db_obj)
         project_id = db_obj.id
 
-        # create action manually because we're not using crud base create
-        from app.core.data.crud.action import crud_action
-
-        action_create_dto = ActionCreate(
-            project_id=project_id,
-            user_id=SYSTEM_USER_ID,
+        # 2) create action
+        after_state = self._get_action_state_from_orm(db_obj=db_obj)
+        self._create_action(
+            db_obj=db_obj,
             action_type=ActionType.CREATE,
-            target_type=ActionTargetObjectType.project,
-            target_id=project_id,
-            before_state=None,
-            after_state=srsly.json_dumps(db_obj.as_dict()),
+            after_state=after_state,
         )
-        crud_action.create(db=db, create_dto=action_create_dto)
 
-        # 2) associate the system user
+        # 3) associate the system user
         self.associate_user(db=db, proj_id=project_id, user_id=SYSTEM_USER_ID)
 
-        # 3) create system codes
+        # 4) create system codes
         crud_code.create_system_codes_for_project(db=db, proj_id=project_id)
 
-        # 4) create repo directory structure
+        # 5) create repo directory structure
         RepoService().create_directory_structure_for_project(proj_id=project_id)
 
         return db_obj
@@ -59,49 +59,63 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         return proj_db_obj
 
     def associate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+        # create before_state
         proj_db_obj = self.read(db=db, id=proj_id)
+        before_state = self._get_action_state_from_orm(db_obj=proj_db_obj)
+
+        # add user to project
         user_db_obj = crud_user.read(db=db, id=user_id)
         proj_db_obj.users.append(user_db_obj)
         db.add(proj_db_obj)
         db.commit()
 
-        # create update action
-        from app.core.data.crud.action import crud_action
+        # create after_state
+        db.refresh(proj_db_obj)
+        after_state = self._get_action_state_from_orm(db_obj=proj_db_obj)
 
-        action_create_dto = ActionCreate(
-            project_id=proj_id,
-            user_id=SYSTEM_USER_ID,
+        # create update action
+        self._create_action(
+            db_obj=proj_db_obj,
             action_type=ActionType.UPDATE,
-            target_type=ActionTargetObjectType.project,
-            target_id=proj_id,
-            before_state="",  # FIXME: what to put here
-            after_state="",  # FIXME: what to put here
+            before_state=before_state,
+            after_state=after_state,
         )
-        crud_action.create(db=db, create_dto=action_create_dto)
+
         return user_db_obj
 
     def dissociate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+        # create before_state
         proj_db_obj = self.read(db=db, id=proj_id)
+        before_state = self._get_action_state_from_orm(db_obj=proj_db_obj)
+
+        # remove user from project
         user_db_obj = crud_user.read(db=db, id=user_id)
         proj_db_obj.users.remove(user_db_obj)
         db.add(proj_db_obj)
         db.commit()
 
-        # create update action
-        from app.core.data.crud.action import crud_action
+        # create after_state
+        db.refresh(proj_db_obj)
+        after_state = self._get_action_state_from_orm(db_obj=proj_db_obj)
 
-        action_create_dto = ActionCreate(
-            project_id=proj_id,
-            user_id=SYSTEM_USER_ID,
+        # create update action
+        self._create_action(
+            db_obj=proj_db_obj,
             action_type=ActionType.UPDATE,
-            target_type=ActionTargetObjectType.project,
-            target_id=proj_id,
-            before_state="",  # FIXME: what to put here
-            after_state="",  # FIXME: what to put here
+            before_state=before_state,
+            after_state=after_state,
         )
-        crud_action.create(db=db, create_dto=action_create_dto)
 
         return user_db_obj
+
+    def _get_action_state_from_orm(self, db_obj: ProjectORM) -> str | None:
+        return srsly.json_dumps(
+            ProjectReadAction(
+                **ProjectRead.from_orm(db_obj).dict(),
+                users=[UserRead.from_orm(user) for user in db_obj.users],
+                num_sdocs=len(db_obj.source_documents)
+            ).dict()
+        )
 
 
 crud_project = CRUDProject(ProjectORM)

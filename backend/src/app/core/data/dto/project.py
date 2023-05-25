@@ -1,6 +1,7 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
+from app.core.data.dto.user import UserRead
 from pydantic import BaseModel, Field
 
 from .dto_base import UpdateDTOBase
@@ -33,3 +34,8 @@ class ProjectRead(ProjectBaseDTO):
 
     class Config:
         orm_mode = True
+
+
+class ProjectReadAction(ProjectRead):
+    users: List[UserRead] = Field(description="Users of the Project")
+    num_sdocs: int = Field(description="Number of Sdocs in the Project")

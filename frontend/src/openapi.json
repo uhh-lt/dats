@@ -2,8 +2,8 @@
   "openapi": "3.0.2",
   "info": {
     "title": "D-WISE Tool Suite Backend API",
-    "description": "The REST API for the D-WISE Tool Suite Backend",
-    "version": "alpha_mwp_1"
+    "description": "The REST API for the D-WISE Tool Suite Backend.",
+    "version": "beta_mwp_1"
   },
   "paths": {
     "/heartbeat": {
@@ -261,33 +261,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "delete": {
-        "tags": ["user"],
-        "summary": "Removes all Codes of the User",
-        "description": "Removes all Codes of the User with the given ID if it exists",
-        "operationId": "delete_user_codes",
-        "parameters": [
-          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response User-Delete User Codes",
-                  "type": "array",
-                  "items": { "type": "integer" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/user/{user_id}/memo": {
@@ -308,33 +281,6 @@
                   "title": "Response User-Get User Memos",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/MemoRead" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["user"],
-        "summary": "Removes all Memos of the User",
-        "description": "Removes all Memos of the User with the given ID if it exists",
-        "operationId": "delete_user_memos",
-        "parameters": [
-          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response User-Delete User Memos",
-                  "type": "array",
-                  "items": { "type": "integer" }
                 }
               }
             }
@@ -975,6 +921,36 @@
               "application/json": {
                 "schema": {
                   "title": "Response Project-Get User Actions Of Project",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ActionRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/project/{proj_id}/actions": {
+      "post": {
+        "tags": ["project"],
+        "summary": "Returns all Actions",
+        "description": "Returns all Actions of the Project",
+        "operationId": "query_actions_of_project",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionQueryParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Project-Query Actions Of Project",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ActionRead" }
                 }
@@ -4119,6 +4095,36 @@
   },
   "components": {
     "schemas": {
+      "ActionQueryParameters": {
+        "title": "ActionQueryParameters",
+        "required": ["proj_id", "user_ids", "action_types", "action_targets", "timestamp_from", "timestamp_to"],
+        "type": "object",
+        "properties": {
+          "proj_id": { "title": "Proj Id", "type": "integer", "description": "ID of the Project" },
+          "user_ids": {
+            "title": "User Ids",
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "IDs of the Users"
+          },
+          "action_types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ActionType" },
+            "description": "Types of the Actions"
+          },
+          "action_targets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ActionTargetObjectType" },
+            "description": "Types of the Action Targets"
+          },
+          "timestamp_from": {
+            "title": "Timestamp From",
+            "type": "integer",
+            "description": "Start date of the Actions"
+          },
+          "timestamp_to": { "title": "Timestamp To", "type": "integer", "description": "End date of the Actions" }
+        }
+      },
       "ActionRead": {
         "title": "ActionRead",
         "required": ["action_type", "target_id", "target_type", "id", "user_id", "project_id", "executed"],
@@ -5996,6 +6002,219 @@
           },
           "msg": { "title": "Message", "type": "string" },
           "type": { "title": "Error Type", "type": "string" }
+        }
+      },
+      "SourceDocumentReadAction": {
+        "title": "SourceDocumentReadAction",
+        "type": "object",
+        "properties": {
+          "filename": {
+            "title": "Filename",
+            "description": "Filename of the SourceDocument",
+            "maxLength": 230,
+            "type": "string"
+          },
+          "content": { "title": "Content", "description": "Content of the SourceDocument", "type": "string" },
+          "doctype": {
+            "description": "DOCTYPE of the SourceDocument",
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }]
+          },
+          "status": {
+            "description": "Status of the SourceDocument",
+            "allOf": [{ "$ref": "#/components/schemas/SDocStatus" }]
+          },
+          "project_id": {
+            "title": "Project Id",
+            "description": "Project the SourceDocument belongs to",
+            "type": "integer"
+          },
+          "id": { "title": "Id", "description": "ID of the SourceDocument", "type": "integer" },
+          "created": {
+            "title": "Created",
+            "description": "The created timestamp of the SourceDocument",
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "description": "Updated timestamp of the Memo",
+            "type": "string",
+            "format": "date-time"
+          },
+          "tags": {
+            "title": "Tags",
+            "description": "Tags of the SourceDocument",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" }
+          },
+          "metadata": {
+            "title": "Metadata",
+            "description": "Metadata of the SourceDocument",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" }
+          }
+        },
+        "required": [
+          "filename",
+          "content",
+          "doctype",
+          "status",
+          "project_id",
+          "id",
+          "created",
+          "updated",
+          "tags",
+          "metadata"
+        ],
+        "definitions": {
+          "DocType": {
+            "title": "DocType",
+            "description": "An enumeration.",
+            "enum": ["text", "image", "video", "audio"],
+            "type": "string"
+          },
+          "SDocStatus": {
+            "title": "SDocStatus",
+            "description": "An enumeration.",
+            "enum": [
+              "undefined_or_erroneous",
+              "import_text_document",
+              "import_image_document",
+              "import_audio_document",
+              "import_video_document",
+              "convert_to_webp_and_generate_thumbnails",
+              "clean_html",
+              "extract_text_from_html_and_create_source_mapping",
+              "detect_language",
+              "generate_image_captions",
+              "create_pptd_from_caption",
+              "generate_span_annotations",
+              "generate_bbox_annotations",
+              "add_custom_html_tags",
+              "create_sdoc_links_from_html",
+              "store_metadata_in_db",
+              "store_span_annotations_in_db",
+              "store_bbox_annotations_in_db",
+              "store_document_in_elasticsearch",
+              "index_image_document_in_faiss",
+              "index_text_document_in_faiss",
+              "finished"
+            ],
+            "type": "string"
+          },
+          "DocumentTagRead": {
+            "title": "DocumentTagRead",
+            "type": "object",
+            "properties": {
+              "title": { "title": "Title", "description": "Title of the DocumentTag", "type": "string" },
+              "description": {
+                "title": "Description",
+                "description": "Description of the DocumentTag",
+                "type": "string"
+              },
+              "color": { "title": "Color", "description": "Color of the Code", "type": "string" },
+              "id": { "title": "Id", "description": "ID of the DocumentTag", "type": "integer" },
+              "project_id": {
+                "title": "Project Id",
+                "description": "Project the DocumentTag belongs to",
+                "type": "integer"
+              },
+              "created": {
+                "title": "Created",
+                "description": "Created timestamp of the DocumentTag",
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated": {
+                "title": "Updated",
+                "description": "Updated timestamp of the DocumentTag",
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": ["title", "color", "id", "project_id", "created", "updated"]
+          },
+          "SourceDocumentMetadataRead": {
+            "title": "SourceDocumentMetadataRead",
+            "type": "object",
+            "properties": {
+              "key": { "title": "Key", "description": "Key of the SourceDocumentMetadata", "type": "string" },
+              "value": { "title": "Value", "description": "Value of the SourceDocumentMetadata", "type": "string" },
+              "id": { "title": "Id", "description": "ID of the SourceDocumentMetadata", "type": "integer" },
+              "read_only": {
+                "title": "Read Only",
+                "description": "Flag that tells if the SourceDocumentMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.",
+                "default": false,
+                "type": "boolean"
+              },
+              "source_document_id": {
+                "title": "Source Document Id",
+                "description": "SourceDocument the SourceDocumentMetadata belongs to",
+                "type": "integer"
+              }
+            },
+            "required": ["key", "value", "id", "source_document_id"]
+          }
+        }
+      },
+      "ProjectReadAction": {
+        "title": "ProjectReadAction",
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "description": "Title of the Project", "type": "string" },
+          "description": { "title": "Description", "description": "Description of the Project", "type": "string" },
+          "id": { "title": "Id", "description": "ID of the Project", "type": "integer" },
+          "created": {
+            "title": "Created",
+            "description": "Created timestamp of the Project",
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "description": "Updated timestamp of the Project",
+            "type": "string",
+            "format": "date-time"
+          },
+          "users": {
+            "title": "Users",
+            "description": "Users of the Project",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserRead" }
+          },
+          "num_sdocs": { "title": "Num Sdocs", "description": "Number of Sdocs in the Project", "type": "integer" }
+        },
+        "required": ["title", "description", "id", "created", "updated", "users", "num_sdocs"],
+        "definitions": {
+          "UserRead": {
+            "title": "UserRead",
+            "type": "object",
+            "properties": {
+              "email": { "title": "Email", "description": "E-Mail of the User", "type": "string", "format": "email" },
+              "first_name": { "title": "First Name", "description": "First name of the User", "type": "string" },
+              "last_name": { "title": "Last Name", "description": "Last name of the User", "type": "string" },
+              "id": { "title": "Id", "description": "ID of the User", "type": "integer" },
+              "password": {
+                "title": "Password",
+                "description": "Hashed password of the User",
+                "exclude": true,
+                "type": "string"
+              },
+              "created": {
+                "title": "Created",
+                "description": "Created timestamp of the User",
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated": {
+                "title": "Updated",
+                "description": "Updated timestamp of the User",
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": ["email", "first_name", "last_name", "id", "password", "created", "updated"]
+          }
         }
       }
     },

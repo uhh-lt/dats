@@ -6,6 +6,7 @@ export { CancelablePromise, CancelError } from "./core/CancelablePromise";
 export { OpenAPI } from "./core/OpenAPI";
 export type { OpenAPIConfig } from "./core/OpenAPI";
 
+export type { ActionQueryParameters } from "./models/ActionQueryParameters";
 export type { ActionRead } from "./models/ActionRead";
 export { ActionTargetObjectType } from "./models/ActionTargetObjectType";
 export { ActionType } from "./models/ActionType";
@@ -51,6 +52,7 @@ export type { PaginatedSourceDocumentReads } from "./models/PaginatedSourceDocum
 export type { PreProProjectStatus } from "./models/PreProProjectStatus";
 export type { ProjectCreate } from "./models/ProjectCreate";
 export type { ProjectRead } from "./models/ProjectRead";
+export type { ProjectReadAction } from "./models/ProjectReadAction";
 export type { ProjectUpdate } from "./models/ProjectUpdate";
 export { SDocStatus } from "./models/SDocStatus";
 export type { SearchSDocsQueryParameters } from "./models/SearchSDocsQueryParameters";
@@ -74,6 +76,7 @@ export type { SourceDocumentMetadataCreate } from "./models/SourceDocumentMetada
 export type { SourceDocumentMetadataRead } from "./models/SourceDocumentMetadataRead";
 export type { SourceDocumentMetadataUpdate } from "./models/SourceDocumentMetadataUpdate";
 export type { SourceDocumentRead } from "./models/SourceDocumentRead";
+export type { SourceDocumentReadAction } from "./models/SourceDocumentReadAction";
 export type { SourceDocumentSentences } from "./models/SourceDocumentSentences";
 export type { SourceDocumentTokens } from "./models/SourceDocumentTokens";
 export type { SpanAnnotationCreate } from "./models/SpanAnnotationCreate";

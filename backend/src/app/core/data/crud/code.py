@@ -1,19 +1,17 @@
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import delete
-from sqlalchemy.orm import Session
 import srsly
-
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionType, ActionTargetObjectType, ActionCreate
-from app.core.data.dto.code import CodeCreate, CodeUpdate
+from app.core.data.dto.action import ActionType
+from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.current_code import CurrentCodeCreate
 from app.core.data.orm.code import CodeORM
 from app.util.color import get_next_color
 from config import conf
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
@@ -32,18 +30,12 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         db.refresh(db_obj)
 
         # create the action manually since we are not using the crud base create
-        from app.core.data.crud.action import crud_action
-
-        action_create_dto = ActionCreate(
-            project_id=create_dto.project_id,
-            user_id=create_dto.user_id,
+        after_state = self._get_action_state_from_orm(db_obj=db_obj)
+        self._create_action(
+            db_obj=db_obj,
             action_type=ActionType.CREATE,
-            target_type=ActionTargetObjectType.code,
-            target_id=db_obj.id,
-            before_state=None,
-            after_state=srsly.json_dumps(db_obj.as_dict()),
+            after_state=after_state,
         )
-        crud_action.create(db=db, create_dto=action_create_dto)
 
         return db_obj
 
@@ -169,57 +161,56 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def remove_by_user_and_project(
         self, db: Session, user_id: int, proj_id: int
     ) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.user_id == user_id, self.model.project_id == proj_id)
-            .returning(self.model.id)
+        # find all codes to be removed
+        query = db.query(self.model).filter(
+            self.model.user_id == user_id, self.model.project_id == proj_id
         )
-        removed_ids = db.execute(statement).fetchall()
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
+
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
+                action_type=ActionType.DELETE,
+                before_state=before_state,
+            )
+
+        # delete the adocs
+        query.delete()
         db.commit()
 
-        removed_ids = list(map(lambda t: t[0], removed_ids))
-
-        from app.core.data.crud.action import crud_action
-
-        for rid in removed_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=user_id,
-                action_type=ActionType.CREATE,
-                target_type=ActionTargetObjectType.code,
-                target_id=rid,
-                before_state="",  # FIXME: use the removed objects JSON
-                after_state=None,
-            )
-            crud_action.create(db=db, create_dto=create_dto)
-
-        return removed_ids
+        return ids
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.project_id == proj_id)
-            .returning(self.model.id)
-        )
-        removed_ids = db.execute(statement).fetchall()
-        db.commit()
-        removed_ids = list(map(lambda t: t[0], removed_ids))
+        # find all codes to be removed
+        query = db.query(self.model).filter(self.model.project_id == proj_id)
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
 
-        from app.core.data.crud.action import crud_action
-
-        for rid in removed_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=SYSTEM_USER_ID,
-                action_type=ActionType.CREATE,
-                target_type=ActionTargetObjectType.code,
-                target_id=rid,
-                before_state="",  # FIXME: use the removed objects JSON
-                after_state=None,
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
+                action_type=ActionType.DELETE,
+                before_state=before_state,
             )
-            crud_action.create(db=db, create_dto=create_dto)
 
-        return removed_ids
+        # delete the adocs
+        query.delete()
+        db.commit()
+
+        return ids
+
+    def _get_action_user_id_from_orm(self, db_obj: CodeORM) -> int:
+        return db_obj.user_id
+
+    def _get_action_state_from_orm(self, db_obj: CodeORM) -> str | None:
+        return srsly.json_dumps(
+            CodeRead.from_orm(db_obj).dict(),
+        )
 
 
 crud_code = CRUDCode(CodeORM)

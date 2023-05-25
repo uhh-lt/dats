@@ -6,6 +6,8 @@ from pydantic import BaseModel, Field
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.util import PaginatedResults
+from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 
 SDOC_FILENAME_MAX_LENGTH = 200
 SDOC_SUFFIX_MAX_LENGTH = 30
@@ -108,6 +110,13 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
 
     class Config:
         orm_mode = True
+
+
+class SourceDocumentReadAction(SourceDocumentRead):
+    tags: List[DocumentTagRead] = Field(description="Tags of the SourceDocument")
+    metadata: List[SourceDocumentMetadataRead] = Field(
+        description="Metadata of the SourceDocument"
+    )
 
 
 class PaginatedSourceDocumentReads(PaginatedResults):

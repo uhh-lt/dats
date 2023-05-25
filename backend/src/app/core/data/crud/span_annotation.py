@@ -5,13 +5,17 @@ from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
-from app.core.data.crud.user import SYSTEM_USER_ID
-from app.core.data.dto.action import ActionCreate, ActionTargetObjectType, ActionType
-from app.core.data.dto.span_annotation import SpanAnnotationCreate, SpanAnnotationUpdate
+from app.core.data.dto.action import ActionType
+from app.core.data.dto.code import CodeRead
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationCreate,
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+    SpanAnnotationUpdate,
+)
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
 
@@ -34,24 +38,19 @@ class CRUDSpanAnnotation(
         db.add(db_obj)
         db.commit()
 
+        # create after state
         db.refresh(db_obj)
+        after_state = self._get_action_state_from_orm(db_obj=db_obj)
 
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=create_dto.annotation_document_id)
 
         # create action manually because we're not using crud base create
-        from app.core.data.crud.action import crud_action
-
-        action_create_dto = ActionCreate(
-            project_id=db_obj.annotation_document.source_document.project_id,
-            user_id=SYSTEM_USER_ID,  # FIXME use correct user
+        self._create_action(
+            db_obj=db_obj,
             action_type=ActionType.CREATE,
-            target_type=ActionTargetObjectType.span_annotation,
-            target_id=db_obj.id,
-            before_state=None,
-            after_state=srsly.json_dumps(db_obj.as_dict()),
+            after_state=after_state,
         )
-        crud_action.create(db=db, create_dto=action_create_dto)
 
         return db_obj
 
@@ -120,37 +119,30 @@ class CRUDSpanAnnotation(
         return span_anno
 
     def remove_by_adoc(self, db: Session, *, adoc_id: int) -> List[int]:
-        statement = (
-            delete(self.model)
-            .where(self.model.annotation_document_id == adoc_id)
-            .returning(self.model.id)
+        # find all span annotations to be removed
+        query = db.query(self.model).filter(
+            self.model.annotation_document_id == adoc_id
         )
-        removed_ids = db.execute(statement).fetchall()
-        db.commit()
-        removed_ids = list(map(lambda t: t[0], removed_ids))
+        removed_orms = query.all()
+        ids = [removed_orm.id for removed_orm in removed_orms]
 
-        from app.core.data.crud.annotation_document import crud_adoc
-
-        proj_id = crud_adoc.read(db=db, id=adoc_id).source_document.project_id
-
-        from app.core.data.crud.action import crud_action
-
-        for rid in removed_ids:
-            create_dto = ActionCreate(
-                project_id=proj_id,
-                user_id=SYSTEM_USER_ID,
+        # create actions
+        for removed_orm in removed_orms:
+            before_state = self._get_action_state_from_orm(removed_orm)
+            self._create_action(
+                db_obj=removed_orm,
                 action_type=ActionType.DELETE,
-                target_type=ActionTargetObjectType.span_annotation,
-                target_id=rid,
-                before_state="",
-                after_state=None,
+                before_state=before_state,
             )
-            crud_action.create(db=db, create_dto=create_dto)
+
+        # delete the sdocs
+        query.delete()
+        db.commit()
 
         # update the annotation document's timestamp
         crud_adoc.update_timestamp(db=db, id=adoc_id)
 
-        return removed_ids
+        return ids
 
     def remove_from_all_span_groups(
         self, db: Session, span_id: int
@@ -181,6 +173,20 @@ class CRUDSpanAnnotation(
         db.commit()
         db.refresh(span_db_obj)
         return span_db_obj
+
+    def _get_action_user_id_from_orm(self, db_obj: SpanAnnotationORM) -> int:
+        return db_obj.annotation_document.user_id
+
+    def _get_action_state_from_orm(self, db_obj: SpanAnnotationORM) -> str | None:
+        return srsly.json_dumps(
+            SpanAnnotationReadResolved(
+                **SpanAnnotationRead.from_orm(db_obj).dict(
+                    exclude={"current_code_id", "span_text_id"}
+                ),
+                code=CodeRead.from_orm(db_obj.current_code.code),
+                span_text=db_obj.span_text.text,
+            ).dict()
+        )
 
 
 crud_span_anno = CRUDSpanAnnotation(SpanAnnotationORM)
