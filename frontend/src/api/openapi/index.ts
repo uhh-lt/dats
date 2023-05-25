@@ -6,6 +6,7 @@ export { CancelablePromise, CancelError } from "./core/CancelablePromise";
 export { OpenAPI } from "./core/OpenAPI";
 export type { OpenAPIConfig } from "./core/OpenAPI";
 
+export type { ActionQueryParameters } from "./models/ActionQueryParameters";
 export type { ActionRead } from "./models/ActionRead";
 export { ActionTargetObjectType } from "./models/ActionTargetObjectType";
 export { ActionType } from "./models/ActionType";

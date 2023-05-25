@@ -934,6 +934,36 @@
         }
       }
     },
+    "/project/{proj_id}/actions": {
+      "post": {
+        "tags": ["project"],
+        "summary": "Returns all Actions",
+        "description": "Returns all Actions of the Project",
+        "operationId": "query_actions_of_project",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionQueryParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Project-Query Actions Of Project",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ActionRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/project/{proj_id}/memo": {
       "get": {
         "tags": ["project"],
@@ -4065,6 +4095,36 @@
   },
   "components": {
     "schemas": {
+      "ActionQueryParameters": {
+        "title": "ActionQueryParameters",
+        "required": ["proj_id", "user_ids", "action_types", "action_targets", "timestamp_from", "timestamp_to"],
+        "type": "object",
+        "properties": {
+          "proj_id": { "title": "Proj Id", "type": "integer", "description": "ID of the Project" },
+          "user_ids": {
+            "title": "User Ids",
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "IDs of the Users"
+          },
+          "action_types": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ActionType" },
+            "description": "Types of the Actions"
+          },
+          "action_targets": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ActionTargetObjectType" },
+            "description": "Types of the Action Targets"
+          },
+          "timestamp_from": {
+            "title": "Timestamp From",
+            "type": "integer",
+            "description": "Start date of the Actions"
+          },
+          "timestamp_to": { "title": "Timestamp To", "type": "integer", "description": "End date of the Actions" }
+        }
+      },
       "ActionRead": {
         "title": "ActionRead",
         "required": ["action_type", "target_id", "target_type", "id", "user_id", "project_id", "executed"],
