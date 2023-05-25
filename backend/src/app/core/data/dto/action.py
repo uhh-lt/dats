@@ -1,8 +1,8 @@
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class ActionType(str, Enum):
@@ -53,3 +53,14 @@ class ActionRead(ActionBaseDTO):
 
     class Config:
         orm_mode = True
+
+
+class ActionQueryParameters(BaseModel):
+    proj_id: int = Field(description="ID of the Project")
+    user_ids: List[int] = Field(description="IDs of the Users")
+    action_types: List[ActionType] = Field(description="Types of the Actions")
+    action_targets: List[ActionTargetObjectType] = Field(
+        description="Types of the Action Targets"
+    )
+    timestamp_from: int = Field(description="Start date of the Actions")
+    timestamp_to: int = Field(description="End date of the Actions")
