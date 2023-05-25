@@ -54,6 +54,8 @@ export const QueryKey = {
 
   // all actions of a project from a user (by project id, user id)
   ACTION: "action",
+  // all actions of a project by query parameters
+  ACTIONS_QUERY: "actionsQuery",
 
   // a single document (by document id)
   SDOC: "sdoc",
