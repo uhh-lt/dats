@@ -6,17 +6,15 @@ import ActionCard from "./ActionCard";
 
 interface ActionCardWeekViewProps {
   actions: ActionRead[];
-  day: Date;
+  day: string;
 }
 
 function ActionCardWeekView({ actions, day }: ActionCardWeekViewProps) {
-  const dateHeader: string = day.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
-
   return (
     <Card variant="outlined" style={{ width: "100%", height: "100%", backgroundColor: "whitesmoke" }}>
       <CardHeader
         style={{ backgroundColor: "#1976d2", color: "white", padding: "8px" }}
-        title={dateHeader}
+        title={day}
         titleTypographyProps={{
           variant: "h6",
           style: {
@@ -46,7 +44,7 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
   });
 
   return (
-    <CardContent ref={listRef} style={{ height: "94%", overflowY: "auto", padding: 0 }}>
+    <CardContent ref={listRef} style={{ height: "96%", overflowY: "auto", padding: 0 }}>
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,

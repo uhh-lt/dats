@@ -1,75 +1,84 @@
-import { ChangeEvent } from "react";
-import { IconButton, TextField, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import { AutologbookActions, getWeekNumber } from "./autologbookSlice";
+import {
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { ChangeEvent } from "react";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { AutologbookActions } from "./autologbookSlice";
 
-interface ActionDateFunctionsProps {
-  weekDays: Date[];
-}
+const weekString = (dayStart: number, dayEnd: number) => {
+  let start = new Date(dayStart).toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
+  let end = new Date(dayEnd).toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
 
-function ActionDateFunctions({ weekDays }: ActionDateFunctionsProps) {
+  return `${start} - ${end}`;
+};
+
+const yyyyMMdd = (date: Date) => {
+  return date.toISOString().split("T")[0];
+};
+
+function ActionDateFunctions() {
   // global state (redux)
   const dispatch = useAppDispatch();
-  const year = useAppSelector((state) => state.autologbook.year);
+  const visibleDays = useAppSelector((state) => state.autologbook.visibleDays);
+  const timestampFrom = useAppSelector((state) => state.autologbook.timestampFrom);
+  const timestampTo = useAppSelector((state) => state.autologbook.timestampTo);
 
-  const locale = "en-GB";
+  const handleDateChange = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+    let dateTo = new Date(e.target.value);
+    let dateFrom = new Date(e.target.value);
+    dateFrom.setDate(dateFrom.getDate() - (visibleDays - 1));
 
-  const startDate: Date = weekDays[0];
-  const endDate: Date = weekDays[weekDays.length - 1];
-
-  const weekString = (weekStart: Date, weekEnd: Date) => {
-    let startDay: number = weekStart.getDate();
-    let endDay: number = weekEnd.getDate();
-    if (weekStart.getMonth() === weekEnd.getMonth()) {
-      let month = weekStart.toLocaleString(locale, { month: "long" });
-      return `${startDay}. - ${endDay}. ${month} ${year}`;
-    } else {
-      let startMonth = weekStart.toLocaleString(locale, { month: "short" });
-      let endMonth = weekEnd.toLocaleString(locale, { month: "short" });
-      if (weekStart.getMonth() === 11) {
-        return `${startDay}. ${startMonth} ${year} - ${endDay}. ${endMonth} ${year + 1}`;
-      } else {
-        return `${startDay}. ${startMonth} - ${endDay}. ${endMonth} ${year}`;
-      }
-    }
+    dispatch(AutologbookActions.setTimestampTo(dateTo.getTime()));
+    dispatch(AutologbookActions.setTimestampFrom(dateFrom.getTime()));
   };
 
-  const weekStartString = (weekStart: Date) => {
-    let month = weekStart.toLocaleString(locale, { month: "2-digit" });
-    let day = weekStart.toLocaleString(locale, { day: "2-digit" });
-    return `${weekStart.getFullYear()}-${month}-${day}`;
-  };
-
-  const weekStartDate: string = weekStartString(startDate);
-
-  const newDateHandler = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-    let date = new Date(e.target.value);
-    date.setDate(date.getDate() - 1);
-    dispatch(AutologbookActions.setYear(date.getFullYear()));
-    dispatch(AutologbookActions.setWeek(getWeekNumber(date)));
+  const handleVisibleDaysChange = (event: SelectChangeEvent<number>) => {
+    dispatch(AutologbookActions.setVisibleDays(event.target.value as number));
   };
 
   return (
     <>
-      <IconButton children={<ArrowBackIosNewIcon />} onClick={() => dispatch(AutologbookActions.prevWeek())} />
+      <IconButton children={<ArrowBackIosNewIcon />} onClick={() => dispatch(AutologbookActions.prev())} />
       <Typography fontSize={22} component="div" sx={{ minWidth: 280, textAlign: "center" }}>
-        {weekString(startDate, endDate)}
+        {weekString(timestampFrom, timestampTo)}
       </Typography>
-      <IconButton children={<ArrowForwardIosIcon />} onClick={() => dispatch(AutologbookActions.nextWeek())} />
+      <IconButton children={<ArrowForwardIosIcon />} onClick={() => dispatch(AutologbookActions.next())} />
       <TextField
         id="date"
-        label="Selected Week"
-        value={weekStartDate}
+        label="Selected Day"
+        value={yyyyMMdd(new Date(timestampTo))}
         type="date"
         size="small"
-        onChange={(e) => newDateHandler(e)}
+        onChange={handleDateChange}
         sx={{ marginLeft: 1.7, marginRight: 2, width: 160 }}
         InputLabelProps={{
           shrink: true,
         }}
       />
+      <FormControl>
+        <InputLabel id="days-label">Settings</InputLabel>
+        <Select
+          labelId="days-label"
+          size="small"
+          value={visibleDays}
+          label="Settings"
+          onChange={handleVisibleDaysChange}
+        >
+          <MenuItem value={4}>Four</MenuItem>
+          <MenuItem value={5}>Five</MenuItem>
+          <MenuItem value={6}>Six</MenuItem>
+          <MenuItem value={7}>Seven</MenuItem>
+        </Select>
+      </FormControl>
     </>
   );
 }

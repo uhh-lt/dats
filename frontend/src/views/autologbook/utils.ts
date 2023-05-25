@@ -2,13 +2,13 @@ import {
   ActionRead,
   ActionTargetObjectType,
   ActionType,
-  BBoxAnnotationRead,
+  BBoxAnnotationReadResolvedCode,
   CodeRead,
   DocumentTagRead,
   MemoRead,
   ProjectRead,
   SourceDocumentRead,
-  SpanAnnotationRead,
+  SpanAnnotationReadResolved,
 } from "../../api/openapi";
 
 export const formatTimestampAsTime = (timestamp: string): string => {
@@ -47,8 +47,6 @@ export const action2TargetTitle = (action: ActionRead): string | undefined => {
     return undefined;
   }
 
-  console.log(obj);
-
   // parse the JSON string into an object
   try {
     const parsedObject: any = JSON.parse(obj);
@@ -62,11 +60,11 @@ export const action2TargetTitle = (action: ActionRead): string | undefined => {
       case ActionTargetObjectType.SOURCE_DOCUMENT:
         return (parsedObject as SourceDocumentRead).filename;
       case ActionTargetObjectType.SPAN_ANNOTATION:
-        const spanAnno = parsedObject as SpanAnnotationRead;
-        return `${spanAnno.span_text_id} (${spanAnno.current_code_id})`;
+        const spanAnno = parsedObject as SpanAnnotationReadResolved;
+        return `${spanAnno.span_text} (${spanAnno.code.name})`;
       case ActionTargetObjectType.BBOX_ANNOTATION:
-        const bboxAnno = parsedObject as BBoxAnnotationRead;
-        return `Code: ${bboxAnno.current_code_id} Coordinates: ${bboxAnno.x_min}, ${bboxAnno.y_min}, ${bboxAnno.x_max}, ${bboxAnno.y_max}`;
+        const bboxAnno = parsedObject as BBoxAnnotationReadResolvedCode;
+        return `Code: ${bboxAnno.code.name} Coordinates: ${bboxAnno.x_min}, ${bboxAnno.y_min}, ${bboxAnno.x_max}, ${bboxAnno.y_max}`;
       case ActionTargetObjectType.CODE:
         return (parsedObject as CodeRead).name;
       default:
@@ -77,23 +75,72 @@ export const action2TargetTitle = (action: ActionRead): string | undefined => {
   }
 };
 
-export const prettyPrintActionState = (input: string | undefined | null): string => {
+export const parseActionState = (input: string | undefined | null): any => {
   if (input === undefined) {
-    return "state is undefined!";
+    throw new Error("state is undefined!");
   }
 
   if (input === null) {
-    return "state is null!";
+    throw new Error("state is null!");
   }
 
   if (input.trim() === "") {
-    return "state is '' (empty)!";
+    throw new Error("state is '' (empty)!");
   }
 
   try {
     const parsedObject: any = JSON.parse(input);
-    return JSON.stringify(parsedObject, null, 2);
+    return parsedObject;
   } catch (e) {
-    return "Could not parse state as JSON (json is invalid)!";
+    throw new Error("Could not parse state as JSON (json is invalid)!");
   }
+};
+
+export const generateActionStrings = (before: string | undefined, after: string | undefined) => {
+  const result = {
+    before: "",
+    after: "",
+  };
+
+  let beforeObj: Record<string, any> = {};
+  try {
+    beforeObj = parseActionState(before);
+  } catch (e: any) {
+    result.before = e.message;
+  }
+
+  let afterObj: Record<string, any> = {};
+  try {
+    afterObj = parseActionState(after);
+  } catch (e: any) {
+    result.after = e.message;
+  }
+
+  if (result.before === "" && result.after === "") {
+    const keysToDelete = [];
+    for (const [key, value] of Object.entries(beforeObj)) {
+      let afterProp: any = afterObj[key];
+      if (value === afterProp) {
+        keysToDelete.push(key);
+      }
+    }
+
+    for (const key of keysToDelete) {
+      delete beforeObj[key];
+      delete afterObj[key];
+    }
+
+    result.before = JSON.stringify(beforeObj, null, 2);
+    result.after = JSON.stringify(afterObj, null, 2);
+  }
+
+  if (result.before === "") {
+    result.before = JSON.stringify(beforeObj, null, 2);
+  }
+
+  if (result.after === "") {
+    result.after = JSON.stringify(afterObj, null, 2);
+  }
+
+  return result;
 };

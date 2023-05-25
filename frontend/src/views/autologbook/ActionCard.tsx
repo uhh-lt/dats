@@ -13,8 +13,9 @@ import {
   actionTarget2Title,
   actionType2Color,
   formatTimestampAsTime,
-  prettyPrintActionState,
+  generateActionStrings,
 } from "./utils";
+import _ from "lodash";
 
 interface ActionCardProps {
   action: ActionRead;
@@ -28,6 +29,8 @@ function ActionCard({ action }: ActionCardProps) {
   };
 
   const targetObjectTitle = useMemo(() => action2TargetTitle(action), [action]);
+
+  const actionStrings = generateActionStrings(action.before_state, action.after_state);
 
   return (
     <Card variant="outlined" sx={{ width: "100%", backgroundColor: actionType2Color[action.action_type] }}>
@@ -64,7 +67,7 @@ function ActionCard({ action }: ActionCardProps) {
               overflowX: "auto",
             }}
           >
-            {prettyPrintActionState(action.before_state)}
+            {actionStrings.before}
           </pre>
           <Typography>After:</Typography>
           <pre
@@ -74,7 +77,7 @@ function ActionCard({ action }: ActionCardProps) {
               overflowX: "auto",
             }}
           >
-            {prettyPrintActionState(action.after_state)}
+            {actionStrings.after}
           </pre>
         </CardContent>
       </Collapse>
