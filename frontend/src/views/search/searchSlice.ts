@@ -15,7 +15,6 @@ interface SearchState {
   isSplitView: boolean;
   isShowEntities: boolean;
   isShowTags: boolean;
-  isListView: boolean;
   page: number;
   rowsPerPage: number;
   resultModalities: DocType[];
@@ -29,7 +28,6 @@ const initialState: SearchState = {
   isSplitView: false,
   isShowEntities: true,
   isShowTags: true,
-  isListView: false,
   page: 0,
   rowsPerPage: 10,
   resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
@@ -144,9 +142,6 @@ export const searchSlice = createSlice({
     },
     toggleShowTags: (state) => {
       state.isShowTags = !state.isShowTags;
-    },
-    toggleListView: (state) => {
-      state.isListView = !state.isListView;
     },
     setRowsPerPage: (state, action: PayloadAction<number>) => {
       state.rowsPerPage = action.payload;

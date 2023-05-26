@@ -12,7 +12,6 @@ import DownloadButton from "./ToolBarElements/DownloadButton";
 import TableNavigation from "./ToolBarElements/TableNavigation";
 import TagMenuButton from "./ToolBarElements/TagMenuButton";
 import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
-import ToggleListViewButton from "./ToolBarElements/ToggleListViewButton";
 import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton";
 import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
 import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
@@ -41,7 +40,6 @@ function SearchToolbar({
 
   // global client state (redux)
   const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
-  const isListView = useAppSelector((state) => state.search.isListView);
 
   return (
     <AppBar
@@ -69,7 +67,7 @@ function SearchToolbar({
             }}
             sx={{ borderRight: (theme) => (isSplitView ? `1px solid ${theme.palette.grey[400]}` : undefined) }}
           >
-            {!isListView && <ToggleAllDocumentsButton sdocIds={searchResultDocumentIds} />}
+            <ToggleAllDocumentsButton sdocIds={searchResultDocumentIds} />
             {numSelectedDocuments > 0 && (
               <>
                 <Typography color="inherit" variant="subtitle1" component="div">
@@ -82,7 +80,6 @@ function SearchToolbar({
             <Box sx={{ flexGrow: 1 }} />
             <TableNavigation numDocuments={numSearchResults} />
             <ToggleShowTagsButton />
-            <ToggleListViewButton />
             <ToggleSplitViewButton />
           </Box>
         )}

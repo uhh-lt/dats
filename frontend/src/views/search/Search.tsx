@@ -50,7 +50,6 @@ function Search() {
 
   // redux (global client state)
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
-  const isListView = useAppSelector((state) => state.search.isListView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
   const searchType = useAppSelector((state) => state.search.searchType);
   const filters = useAppSelector((state) => state.search.filters);
@@ -67,12 +66,8 @@ function Search() {
 
   const numSearchResults = useMemo(() => {
     if (!searchResults.data) return 0;
-    // in list view we show every single sentence
-    if (isListView) {
-      return searchResults.data.getNumberOfHits();
-    }
     return searchResults.data.getAggregatedNumberOfHits();
-  }, [isListView, searchResults.data]);
+  }, [searchResults.data]);
 
   const viewDocument = Boolean(sdocId);
 

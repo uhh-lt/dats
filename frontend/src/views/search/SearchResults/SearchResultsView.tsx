@@ -1,12 +1,7 @@
+import { Container, Typography } from "@mui/material";
 import * as React from "react";
 import { useCallback, useState } from "react";
-import { Box, Typography } from "@mui/material";
-import SearchResultContextMenu from "./SearchResultContextMenu";
-import "./SearchResults.css";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { SearchActions } from "../searchSlice";
-import LexicalSearchResultCard from "./Cards/LexicalSearchResultCard";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import { useResizeDetector } from "react-resize-detector";
 import { useParams } from "react-router-dom";
 import {
   ImageSimilaritySearchResults,
@@ -14,13 +9,15 @@ import {
   SearchResults,
   SentenceSimilaritySearchResults,
 } from "../../../api/SearchHooks";
-import SearchResultDocumentTable from "./Tables/SearchResultDocumentTable";
-import SearchResultSentenceTable from "./Tables/SearchResultSentenceTable";
-import ImageSimilaritySearchResultCard from "./Cards/ImageSimilaritySearchResultCard";
-import SentenceSimilaritySearchResultCard from "./Cards/SentenceSimilaritySearchResultCard";
-import ImageSimilaritySearchResultTable from "./Tables/ImageSimilaritySearchResultTable";
 import { SourceDocumentRead } from "../../../api/openapi";
-import { useResizeDetector } from "react-resize-detector";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { SearchActions } from "../searchSlice";
+import ImageSimilaritySearchResultCard from "./Cards/ImageSimilaritySearchResultCard";
+import LexicalSearchResultCard from "./Cards/LexicalSearchResultCard";
+import SentenceSimilaritySearchResultCard from "./Cards/SentenceSimilaritySearchResultCard";
+import SearchResultContextMenu from "./SearchResultContextMenu";
+import "./SearchResults.css";
 
 interface SearchResultsViewProps {
   searchResults: SearchResults<any>;
@@ -37,7 +34,6 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const page = useAppSelector((state) => state.search.page);
   const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
-  const isListView = useAppSelector((state) => state.search.isListView);
   const dispatch = useAppDispatch();
 
   // context menu
@@ -59,6 +55,10 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
   }, []);
 
   React.useLayoutEffect(() => {
+    if (searchResults instanceof SentenceSimilaritySearchResults) {
+      dispatch(SearchActions.setRowsPerPage(searchResults.getAggregatedNumberOfHits()));
+      return;
+    }
     if (width && height) {
       let numCardsX = Math.floor(width / 300);
       numCardsX = width - numCardsX * 300 - (numCardsX - 1) * 15 > 0 ? numCardsX : numCardsX - 1;
@@ -66,12 +66,10 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
       let numCardsY = Math.floor(height / 370);
       numCardsY = height - numCardsY * 370 - (numCardsY - 1) * 15 > 0 ? numCardsY : numCardsY - 1;
 
-      console.log("numCardsX: " + numCardsX);
-      console.log("numCardsY: " + numCardsY);
-
       dispatch(SearchActions.setRowsPerPage(numCardsX * numCardsY));
+      return;
     }
-  }, [dispatch, width, height]);
+  }, [dispatch, width, height, searchResults]);
 
   // handle selection
   const handleChange = useCallback(
@@ -87,116 +85,79 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
   }
 
   let resultsView = null;
+  const isSentenceSimilaritySearchResult = searchResults instanceof SentenceSimilaritySearchResults;
 
   if (searchResults instanceof LexicalSearchResults) {
-    if (isListView) {
-      resultsView = (
-        <SearchResultDocumentTable
-          searchResults={searchResults}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          handleClick={handleResultClick}
-          handleOnContextMenu={openContextMenu}
-          handleOnCheckboxChange={handleChange}
-        />
-      );
-    } else {
-      resultsView = (
-        <Box
-          ref={ref}
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            placeContent: "flex-start",
-            gap: "15px",
-            overflowY: "auto",
-            p: 2,
-            width: "100%",
-          }}
-          className={className}
-        >
-          {searchResults
-            .getSearchResultSDocIds()
-            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-            .map((sdocId) => (
-              <LexicalSearchResultCard
-                key={sdocId}
-                sdocId={sdocId}
-                handleClick={handleResultClick}
-                handleOnContextMenu={openContextMenu}
-                handleOnCheckboxChange={handleChange}
-              />
-            ))}
-        </Box>
-      );
-    }
+    resultsView = (
+      <>
+        {searchResults
+          .getSearchResultSDocIds()
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((sdocId) => (
+            <LexicalSearchResultCard
+              key={sdocId}
+              sdocId={sdocId}
+              handleClick={handleResultClick}
+              handleOnContextMenu={openContextMenu}
+              handleOnCheckboxChange={handleChange}
+            />
+          ))}
+      </>
+    );
   } else if (searchResults instanceof SentenceSimilaritySearchResults) {
-    if (isListView) {
-      resultsView = (
-        <SearchResultSentenceTable
-          searchResults={searchResults}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          handleClick={handleResultClick}
-          handleOnContextMenu={openContextMenu}
-          handleOnCheckboxChange={handleChange}
-        />
-      );
-    } else {
-      resultsView = (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "16px", overflowY: "auto", p: 2 }} className={className}>
-          {Array.from(searchResults.getResults().entries())
-            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-            .map(([sdocId, hits]) => (
-              <SentenceSimilaritySearchResultCard
-                key={sdocId}
-                sdocId={sdocId}
-                hits={hits}
-                handleClick={handleResultClick}
-                handleOnContextMenu={openContextMenu}
-                handleOnCheckboxChange={handleChange}
-              />
-            ))}
-        </Box>
-      );
-    }
+    resultsView = (
+      <>
+        {Array.from(searchResults.getResults().entries())
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map(([sdocId, hits]) => (
+            <SentenceSimilaritySearchResultCard
+              key={sdocId}
+              sdocId={sdocId}
+              hits={hits}
+              handleClick={handleResultClick}
+              handleOnContextMenu={openContextMenu}
+              handleOnCheckboxChange={handleChange}
+            />
+          ))}
+      </>
+    );
   } else if (searchResults instanceof ImageSimilaritySearchResults) {
-    if (isListView) {
-      resultsView = (
-        <ImageSimilaritySearchResultTable
-          searchResults={searchResults}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          handleClick={handleResultClick}
-          handleOnContextMenu={openContextMenu}
-          handleOnCheckboxChange={handleChange}
-        />
-      );
-    } else {
-      resultsView = (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "16px", overflowY: "auto", p: 2 }} className={className}>
-          {searchResults
-            .getResults()
-            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-            .map((hit) => (
-              <ImageSimilaritySearchResultCard
-                key={hit.sdoc_id}
-                sdocId={hit.sdoc_id}
-                hit={hit}
-                handleClick={handleResultClick}
-                handleOnContextMenu={openContextMenu}
-                handleOnCheckboxChange={handleChange}
-              />
-            ))}
-        </Box>
-      );
-    }
+    resultsView = (
+      <>
+        {searchResults
+          .getResults()
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((hit) => (
+            <ImageSimilaritySearchResultCard
+              key={hit.sdoc_id}
+              sdocId={hit.sdoc_id}
+              hit={hit}
+              handleClick={handleResultClick}
+              handleOnContextMenu={openContextMenu}
+              handleOnCheckboxChange={handleChange}
+            />
+          ))}
+      </>
+    );
   } else {
-    return <>Search Result Type is not supported :(</>;
+    resultsView = <>Search Result Type is not supported :(</>;
   }
 
   return (
-    <>
+    <Container
+      ref={ref}
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        placeContent: "flex-start",
+        gap: "15px",
+        overflowY: "auto",
+        p: 2,
+        width: "100%",
+        maxWidth: isSentenceSimilaritySearchResult ? undefined : "100% !important",
+      }}
+      className={className}
+    >
       {resultsView}
       <SearchResultContextMenu
         projectId={projectId}
@@ -204,6 +165,6 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
         handleClose={closeContextMenu}
         position={contextMenuPosition}
       />
-    </>
+    </Container>
   );
 }
