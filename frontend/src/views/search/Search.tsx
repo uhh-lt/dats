@@ -1,4 +1,4 @@
-import { Divider, Grid, Stack, Typography } from "@mui/material";
+import { Container, Divider, Grid, Stack, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
 import { isNumber } from "lodash";
@@ -26,8 +26,7 @@ import SearchFilterChip from "./SearchFilterChip";
 import SearchResultsView from "./SearchResults/SearchResultsView";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
 import TagExplorer from "./Tags/TagExplorer/TagExplorer";
-import DocumentViewerToolbar from "./ToolBar/DocumentViewerToolbar";
-import SearchResultsToolbar from "./ToolBar/SearchResultsToolbar";
+import SearchToolbar from "./ToolBar/SearchToolbar";
 import { useAddTagFilter } from "./hooks/useAddTagFilter";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
 import { SearchActions } from "./searchSlice";
@@ -190,8 +189,18 @@ function Search() {
           placeholder="Search documents..."
         />
       </Portal>
-      <Grid container columnSpacing={2} className="h100" sx={{ py: 1 }}>
-        <Grid item md={2} className="h100">
+      <Grid container className="h100">
+        <Grid
+          item
+          md={2}
+          className="h100"
+          sx={{
+            zIndex: (theme) => theme.zIndex.appBar,
+            bgcolor: (theme) => theme.palette.background.paper,
+            borderRight: "1px solid #e8eaed",
+            boxShadow: 4,
+          }}
+        >
           <TagExplorer
             sx={{ height: "50%", overflowY: "auto", pt: 0 }}
             selectedTag={selectedTag}
@@ -208,55 +217,64 @@ function Search() {
             handleCodeClick={handleAddCodeFilter}
           />
         </Grid>
-        <Grid item md={10} className="myFlexContainer h100">
-          <Box className="myFlexFitContentContainer">
-            <Stack direction="row" style={{ flexWrap: "wrap", gap: "8px" }}>
-              {filters.length > 0 && <Typography variant="h6">Filter:</Typography>}
-              {filters.map((filter) => (
-                <SearchFilterChip key={filter.id} filter={filter} handleDelete={handleRemoveFilter} />
-              ))}
-            </Stack>
-          </Box>
-          <Grid container className="myFlexFillAllContainer">
-            <Grid
-              item
-              md={isSplitView ? 6 : 12}
-              display={isSplitView || !viewDocument ? "flex" : "none"}
-              className="myFlexContainer h100"
-            >
-              <SearchResultsToolbar
-                searchResultDocumentIds={searchResultDocumentIds}
-                numSearchResults={numSearchResults}
-                className="myFlexFitContentContainer"
-              />
-              <>
-                {searchResults.isLoading && <div>Loading!</div>}
-                {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
-                {searchResults.isSuccess && (
-                  <SearchResultsView
-                    searchResults={searchResults.data}
-                    handleResultClick={handleResultClick}
-                    className="myFlexFillAllContainer"
+        <Grid
+          item
+          md={10}
+          className="h100"
+          sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
+        >
+          <SearchToolbar
+            sdocId={sdocId ? parseInt(sdocId) : undefined}
+            searchResultDocumentIds={searchResultDocumentIds}
+            numSearchResults={numSearchResults}
+            isSplitView={isSplitView}
+            viewDocument={viewDocument}
+          />
+          <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
+            {filters.length > 0 && (
+              <Stack direction="row" sx={{ p: 2 }} style={{ flexWrap: "wrap", gap: "8px" }}>
+                {filters.map((filter) => (
+                  <SearchFilterChip key={filter.id} filter={filter} handleDelete={handleRemoveFilter} />
+                ))}
+              </Stack>
+            )}
+            <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
+              <Grid
+                item
+                md={isSplitView ? 6 : 12}
+                display={isSplitView || !viewDocument ? "flex" : "none"}
+                className="h100"
+              >
+                <>
+                  {searchResults.isLoading && <div>Loading!</div>}
+                  {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
+                  {searchResults.isSuccess && (
+                    <SearchResultsView
+                      searchResults={searchResults.data}
+                      handleResultClick={handleResultClick}
+                      className="h100"
+                    />
+                  )}
+                </>
+              </Grid>
+              <Grid
+                item
+                md={isSplitView ? 6 : 12}
+                display={isSplitView || viewDocument ? "flex" : "none"}
+                className="h100"
+              >
+                <Container className="h100" sx={{ py: 2, overflowY: "auto" }}>
+                  <DocumentViewer
+                    sdocId={sdocId ? parseInt(sdocId) : undefined}
+                    handleTagClick={handleAddTagFilter}
+                    showEntities={isShowEntities}
+                    isIdleContent={<Typography>Click a document to read it :)</Typography>}
+                    raised
                   />
-                )}
-              </>
+                </Container>
+              </Grid>
             </Grid>
-            <Grid
-              item
-              md={isSplitView ? 6 : 12}
-              display={isSplitView || viewDocument ? "flex" : "none"}
-              className="myFlexContainer h100"
-            >
-              {sdocId && <DocumentViewerToolbar sdocId={parseInt(sdocId)} searchResultIds={searchResultDocumentIds} />}
-              <DocumentViewer
-                sdocId={sdocId ? parseInt(sdocId) : undefined}
-                handleTagClick={handleAddTagFilter}
-                showEntities={isShowEntities}
-                className="myFlexFillAllContainer"
-                isIdleContent={<Typography>Click a document to read it :)</Typography>}
-              />
-            </Grid>
-          </Grid>
+          </Box>
         </Grid>
       </Grid>
     </>

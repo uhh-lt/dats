@@ -20,6 +20,7 @@ import ImageSimilaritySearchResultCard from "./Cards/ImageSimilaritySearchResult
 import SentenceSimilaritySearchResultCard from "./Cards/SentenceSimilaritySearchResultCard";
 import ImageSimilaritySearchResultTable from "./Tables/ImageSimilaritySearchResultTable";
 import { SourceDocumentRead } from "../../../api/openapi";
+import { useResizeDetector } from "react-resize-detector";
 
 interface SearchResultsViewProps {
   searchResults: SearchResults<any>;
@@ -29,6 +30,8 @@ interface SearchResultsViewProps {
 
 export default function SearchResultsView({ searchResults, handleResultClick, className }: SearchResultsViewProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
+
+  const { width, height, ref } = useResizeDetector();
 
   // redux (global client state)
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
@@ -54,6 +57,21 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
   const closeContextMenu = useCallback(() => {
     setContextMenuPosition(null);
   }, []);
+
+  React.useLayoutEffect(() => {
+    if (width && height) {
+      let numCardsX = Math.floor(width / 300);
+      numCardsX = width - numCardsX * 300 - (numCardsX - 1) * 15 > 0 ? numCardsX : numCardsX - 1;
+
+      let numCardsY = Math.floor(height / 370);
+      numCardsY = height - numCardsY * 370 - (numCardsY - 1) * 15 > 0 ? numCardsY : numCardsY - 1;
+
+      console.log("numCardsX: " + numCardsX);
+      console.log("numCardsY: " + numCardsY);
+
+      dispatch(SearchActions.setRowsPerPage(numCardsX * numCardsY));
+    }
+  }, [dispatch, width, height]);
 
   // handle selection
   const handleChange = useCallback(
@@ -84,7 +102,19 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
       );
     } else {
       resultsView = (
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: "16px", overflowY: "auto", p: 2 }} className={className}>
+        <Box
+          ref={ref}
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            placeContent: "flex-start",
+            gap: "15px",
+            overflowY: "auto",
+            p: 2,
+            width: "100%",
+          }}
+          className={className}
+        >
           {searchResults
             .getSearchResultSDocIds()
             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)

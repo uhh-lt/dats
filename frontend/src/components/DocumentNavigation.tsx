@@ -1,8 +1,8 @@
-import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
-import { useNavigate, useParams } from "react-router-dom";
+import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface DocumentNavigationProps {
   idsToNavigate: number[];

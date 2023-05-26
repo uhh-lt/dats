@@ -115,6 +115,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         projectId={sdoc.project_id}
         sentences={sentences}
         doHighlighting={true}
+        style={{ zIndex: 1 }}
       />
       <SentenceContextMenu ref={sentenceContextMenuRef} />
       <ImageContextMenu ref={imageContextMenuRef} />

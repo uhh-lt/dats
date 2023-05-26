@@ -1,12 +1,11 @@
-import TablePagination from "@mui/material/TablePagination";
-import * as React from "react";
+import FirstPageIcon from "@mui/icons-material/FirstPage";
+import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
+import LastPageIcon from "@mui/icons-material/LastPage";
 import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
-import LastPageIcon from "@mui/icons-material/LastPage";
-import FirstPageIcon from "@mui/icons-material/FirstPage";
-import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
-import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
+import * as React from "react";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
 import { SearchActions } from "../../searchSlice";
 
@@ -77,23 +76,19 @@ function TableNavigation({ numDocuments }: TableNavigationProps) {
   const handleChangePage = (event: unknown, newPage: number) => {
     dispatch(SearchActions.setPage(newPage));
   };
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(SearchActions.setRowsPerPage(parseInt(event.target.value, 10)));
-    dispatch(SearchActions.setPage(0));
-  };
+
+  const text = `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, numDocuments)} of ${numDocuments}`;
 
   return (
-    <TablePagination
-      rowsPerPageOptions={[5, 10, 25]}
-      count={numDocuments}
-      rowsPerPage={rowsPerPage}
-      page={page}
-      component={"div"}
-      onPageChange={handleChangePage}
-      onRowsPerPageChange={handleChangeRowsPerPage}
-      ActionsComponent={TablePaginationActions}
-      variant="body"
-    />
+    <>
+      {text}
+      <TablePaginationActions
+        count={numDocuments}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
+      />
+    </>
   );
 }
 

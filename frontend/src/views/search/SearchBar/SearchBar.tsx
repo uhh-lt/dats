@@ -97,6 +97,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
             border: `1px solid rgba(0, 0, 0, 0.12)`,
             borderBottom: "none",
           }),
+          zIndex: (theme) => theme.zIndex.appBar + 1,
         }}
       >
         <Tooltip title={"Search"}>
@@ -124,7 +125,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
           open={open}
           anchorEl={anchorEl}
           disablePortal
-          sx={{ zIndex: 900, width: "800px" }}
+          sx={{ zIndex: (theme) => theme.zIndex.appBar + 1, width: "800px" }}
           style={{ marginTop: "-3px !important" }}
         >
           <Card
