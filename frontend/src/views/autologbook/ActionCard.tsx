@@ -15,7 +15,6 @@ import {
   formatTimestampAsTime,
   generateActionStrings,
 } from "./utils";
-import _ from "lodash";
 
 interface ActionCardProps {
   action: ActionRead;

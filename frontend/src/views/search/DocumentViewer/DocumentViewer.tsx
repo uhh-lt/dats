@@ -1,8 +1,8 @@
-import { Box, BoxProps, Button, Card, CardContent, CardProps, Stack } from "@mui/material";
+import { Box, Button, Card, CardContent, CardProps, Stack } from "@mui/material";
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { DocType, DocumentTagRead } from "../../../api/openapi";
 import SdocHooks from "../../../api/SdocHooks";
+import { DocType, DocumentTagRead } from "../../../api/openapi";
 import UserName from "../../../components/UserName";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";

@@ -1,21 +1,21 @@
-import { AppBar, AppBarProps, Box, Divider, Toolbar, Typography } from "@mui/material";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import DeleteButton from "./ToolBarElements/DeleteButton";
-import TableNavigation from "./ToolBarElements/TableNavigation";
-import TagMenuButton from "./ToolBarElements/TagMenuButton";
-import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
-import ToggleListViewButton from "./ToolBarElements/ToggleListViewButton";
-import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
-import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
+import { AppBar, AppBarProps, Box, Toolbar, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { AttachedObjectType } from "../../../api/openapi";
 import DocumentNavigation from "../../../components/DocumentNavigation";
 import ExporterButton from "../../../features/Exporter/ExporterButton";
 import MemoButton from "../../../features/Memo/MemoButton";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 import AnnotateButton from "./ToolBarElements/AnnotateButton";
 import BackButton from "./ToolBarElements/BackButton";
+import DeleteButton from "./ToolBarElements/DeleteButton";
 import DownloadButton from "./ToolBarElements/DownloadButton";
+import TableNavigation from "./ToolBarElements/TableNavigation";
+import TagMenuButton from "./ToolBarElements/TagMenuButton";
+import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
+import ToggleListViewButton from "./ToolBarElements/ToggleListViewButton";
 import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton";
+import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
+import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
 
 interface DocumentViewerToolbarProps {
   sdocId: number | undefined | null;
