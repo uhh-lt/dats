@@ -23,7 +23,7 @@ def generate_transcriptions_(
 ) -> List[PreProAudioDoc]:
     for ppad in tqdm(ppads, desc="Generating transcriptions"):
         update_sdoc_status(
-            sdoc_id=ppad.uncompressed_sdoc_id,
+            sdoc_id=ppad.sdoc_id,
             sdoc_status=SDocStatus.generate_transcription,
         )
         wav_file = str(ppad.uncompressed_fn)

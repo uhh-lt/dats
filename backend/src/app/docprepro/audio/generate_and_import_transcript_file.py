@@ -26,7 +26,7 @@ def generate_and_import_transcript_file_(
         ppads, desc="Create Transcript file and import file to database..."
     ):
         update_sdoc_status(
-            sdoc_id=ppad.uncompressed_sdoc_id,
+            sdoc_id=ppad.sdoc_id,
             sdoc_status=SDocStatus.create_transcript_file,
         )  # TODO: sdoc_id is not ideal
 
@@ -51,7 +51,7 @@ def generate_and_import_transcript_file_(
         )
 
         update_sdoc_status(
-            sdoc_id=ppad.uncompressed_sdoc_id, sdoc_status=SDocStatus.finished
+            sdoc_id=ppad.sdoc_id, sdoc_status=SDocStatus.finished
         )  # TODO: sdoc_id is not ideal
         # TODO: Setting the uncompressed audio to finished seems here the most correct place
 
