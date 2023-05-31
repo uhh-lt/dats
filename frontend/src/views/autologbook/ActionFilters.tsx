@@ -69,12 +69,14 @@ export function ActionFilters({ projectId }: ActionFiltersProps) {
             onChange={handleUserIdsChange}
             renderValue={() => (
               <>
-                {users.data.map((x, index) => (
-                  <React.Fragment key={x.id}>
-                    <UserName userId={x.id} />
-                    {index < userIds.length - 1 && ", "}
-                  </React.Fragment>
-                ))}
+                {users.data
+                  .filter((x) => userIds.includes(x.id))
+                  .map((x, index) => (
+                    <React.Fragment key={x.id}>
+                      <UserName userId={x.id} />
+                      {index < userIds.length - 1 && ", "}
+                    </React.Fragment>
+                  ))}
               </>
             )}
           >
