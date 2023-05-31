@@ -1,6 +1,5 @@
 import { Link, Typography, TypographyProps } from "@mui/material";
 import SdocHooks from "../../../api/SdocHooks";
-import React from "react";
 
 interface DocumentLinkToOriginalProps {
   sdocId: number;
@@ -13,7 +12,7 @@ function DocumentLinkToOriginal({ sdocId, title, ...props }: DocumentLinkToOrigi
   return (
     <Typography {...props}>
       {url.isSuccess ? (
-        <Link href={url.data} underline="hover" color="inherit" target={"_blank"}>
+        <Link href={encodeURI(url.data)} underline="hover" color="inherit" target={"_blank"}>
           {title}
         </Link>
       ) : url.isError ? (
