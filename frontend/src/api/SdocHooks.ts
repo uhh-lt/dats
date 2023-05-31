@@ -31,7 +31,7 @@ const fetchSdoc = async (sdocId: number) => {
       break;
     case DocType.IMAGE:
       const url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
-      sdoc.content = process.env.REACT_APP_CONTENT + "/" + url;
+      sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
       break;
   }
   return sdoc;
@@ -264,7 +264,7 @@ const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
     () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: webp }),
     {
       enabled: !!sdocId,
-      select: (url) => process.env.REACT_APP_CONTENT + "/" + url,
+      select: (url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + url),
     }
   );
 

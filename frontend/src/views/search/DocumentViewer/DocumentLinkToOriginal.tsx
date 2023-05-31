@@ -12,7 +12,7 @@ function DocumentLinkToOriginal({ sdocId, title, ...props }: DocumentLinkToOrigi
   return (
     <Typography {...props}>
       {url.isSuccess ? (
-        <Link href={encodeURI(url.data)} underline="hover" color="inherit" target={"_blank"}>
+        <Link href={url.data} underline="hover" color="inherit" target={"_blank"}>
           {title}
         </Link>
       ) : url.isError ? (
