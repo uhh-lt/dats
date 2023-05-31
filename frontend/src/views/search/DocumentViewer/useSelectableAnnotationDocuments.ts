@@ -4,7 +4,7 @@ import SdocHooks from "../../../api/SdocHooks";
 
 export function useSelectableAnnotationDocuments(sdocId: number | undefined) {
   // state
-  const [selectedAdoc, setSelectedAdoc] = useState<AnnotationDocumentRead | null>(null);
+  const [selectedAdoc, setSelectedAdoc] = useState<AnnotationDocumentRead | undefined>(undefined);
 
   // queries
   const annotationDocuments = SdocHooks.useGetAllAnnotationDocuments(sdocId);
@@ -14,7 +14,7 @@ export function useSelectableAnnotationDocuments(sdocId: number | undefined) {
     if (annotationDocuments.data) {
       setSelectedAdoc(annotationDocuments.data[0]);
     } else {
-      setSelectedAdoc(null);
+      setSelectedAdoc(undefined);
     }
   }, [annotationDocuments.data]);
 
@@ -25,7 +25,7 @@ export function useSelectableAnnotationDocuments(sdocId: number | undefined) {
 
   return {
     annotationDocuments,
-    selectedAdoc: selectedAdoc?.source_document_id === sdocId ? selectedAdoc : null,
+    selectedAdoc: selectedAdoc?.source_document_id === sdocId ? selectedAdoc : undefined,
     handleSelectAnnotationDocument,
   };
 }

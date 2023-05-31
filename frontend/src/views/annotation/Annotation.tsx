@@ -1,17 +1,21 @@
-import { AppBar, Button, ButtonGroup, Grid, Paper, Portal, Toolbar, Typography } from "@mui/material";
-import React, { useContext, useState } from "react";
-import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
+import { TabContext, TabPanel } from "@mui/lab";
+import { Box, Card, CardContent, Container, Grid, Portal, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
-import CodeExplorer from "./CodeExplorer/CodeExplorer";
 import SdocHooks from "../../api/SdocHooks";
+import { DocType, DocumentTagRead } from "../../api/openapi";
+import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useSelectOrCreateCurrentUsersAnnotationDocument } from "./useSelectOrCreateCurrentUsersAnnotationDocument";
+import DocumentLinkToOriginal from "../search/DocumentViewer/DocumentLinkToOriginal";
+import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata";
+import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip";
+import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
+import CodeExplorer from "./CodeExplorer/CodeExplorer";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
-import TextAnnotator from "./TextAnnotator/TextAnnotator";
-import { DocType } from "../../api/openapi";
 import MemoExplorer from "./MemoExplorer/MemoExplorer";
-import ExporterButton from "../../features/Exporter/ExporterButton";
+import TextAnnotator from "./TextAnnotator/TextAnnotator";
+import { useSelectOrCreateCurrentUsersAnnotationDocument } from "./useSelectOrCreateCurrentUsersAnnotationDocument";
 
 function Annotation() {
   // global client state (URL)
@@ -25,11 +29,12 @@ function Annotation() {
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
   const metadata = SdocHooks.useGetMetadata(sourceDocumentId);
   const annotationDocument = useSelectOrCreateCurrentUsersAnnotationDocument(sourceDocumentId);
+  const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sourceDocumentId);
 
-  // ui event handler
-  const [showCodeExplorer, setShowCodeExplorer] = useState(true);
-  const toggleShowCodeExplorer = () => {
-    setShowCodeExplorer(!showCodeExplorer);
+  // tabs
+  const [tab, setTab] = useState("code");
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string): void => {
+    setTab(newValue);
   };
 
   return (
@@ -39,77 +44,106 @@ function Annotation() {
           {sourceDocument.isSuccess ? `Annotator: ${sourceDocument.data.filename}` : "Annotator"}
         </Typography>
       </Portal>
-      <Grid container columnSpacing={2} className="h100">
-        <Grid item md={3} className="h100">
+      <Grid container className="h100">
+        <Grid
+          item
+          md={3}
+          className="h100"
+          sx={{
+            zIndex: (theme) => theme.zIndex.appBar,
+            bgcolor: (theme) => theme.palette.background.paper,
+            borderRight: "1px solid #e8eaed",
+            boxShadow: 4,
+          }}
+        >
           <DocumentExplorer sx={{ overflow: "auto", height: "100%" }} />
         </Grid>
-        <Grid item md={6} className="h100 myFlexContainer">
-          <AnnotationDocumentSelector sdocId={sourceDocumentId} />
-          {sdocId ? (
-            <>
-              {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
-                <>
-                  {sourceDocument.data.doctype === DocType.IMAGE ? (
-                    <ImageAnnotator
-                      sdoc={sourceDocument.data}
-                      adoc={annotationDocument}
-                      height={parseInt(metadata.data.get("height")!.value)}
-                    />
-                  ) : sourceDocument.data.doctype === DocType.TEXT ? (
-                    <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
-                  ) : (
-                    <div>ERROR! This DocType is not (yet) supported!</div>
-                  )}
-                </>
-              ) : sourceDocument.isError ? (
-                <div>Error: {sourceDocument.error.message}</div>
-              ) : (
-                <div>Loading...</div>
-              )}
-            </>
-          ) : (
-            <div>Please select a document from the Document Explorer :)</div>
-          )}
+        <Grid
+          item
+          md={6}
+          className="h100 myFlexContainer"
+          sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
+        >
+          {/* <AnnotationDocumentSelector className="myFlexFitContentContainer" sdocId={sourceDocumentId} /> */}
+          <Container className="myFlexFillAllContainer" sx={{ py: 2, overflowY: "auto" }}>
+            <Card raised>
+              <CardContent>
+                {sdocId ? (
+                  <>
+                    {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
+                      <>
+                        <Stack spacing={2}>
+                          <DocumentLinkToOriginal
+                            sdocId={sourceDocumentId}
+                            title={sourceDocument.data.filename}
+                            variant={"h3"}
+                            style={{ margin: 0 }}
+                          />
+                          <div>
+                            {documentTags.isLoading && <span>Loading tags...</span>}
+                            {documentTags.isError && <span>{documentTags.error.message}</span>}
+                            {documentTags.isSuccess &&
+                              documentTags.data.map((tag: DocumentTagRead) => (
+                                <DocumentTagChip key={tag.id} tagId={tag.id} handleDelete={handleDeleteDocumentTag} />
+                              ))}
+                          </div>
+                          <Box>
+                            <DocumentMetadata sdocId={sourceDocumentId} metadata={metadata} />
+                            <AnnotationDocumentSelector sdocId={sourceDocumentId} />
+                          </Box>
+                          {sourceDocument.data.doctype === DocType.IMAGE ? (
+                            <ImageAnnotator
+                              sdoc={sourceDocument.data}
+                              adoc={annotationDocument}
+                              height={parseInt(metadata.data.get("height")!.value)}
+                            />
+                          ) : sourceDocument.data.doctype === DocType.TEXT ? (
+                            <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
+                          ) : (
+                            <div>ERROR! This DocType is not (yet) supported!</div>
+                          )}
+                        </Stack>
+                      </>
+                    ) : sourceDocument.isError ? (
+                      <div>Error: {sourceDocument.error.message}</div>
+                    ) : (
+                      <div>Loading...</div>
+                    )}
+                  </>
+                ) : (
+                  <div>Please select a document from the Document Explorer :)</div>
+                )}
+              </CardContent>
+            </Card>
+          </Container>
         </Grid>
-        <Grid item md={3} className="h100">
-          {/*<CodeExplorer showToolbar sx={{ height: "100%" }} />*/}
-          {/*<MemoExplorer showToolbar sx={{ height: "100%" }} sdocId={1} />*/}
-
-          <Paper square className="myFlexContainer h100" elevation={1}>
-            <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
-              <Toolbar variant="dense">
-                <ButtonGroup>
-                  <Button
-                    onClick={() => toggleShowCodeExplorer()}
-                    variant={showCodeExplorer ? "contained" : "outlined"}
-                    color="primary"
-                    sx={{ color: "primary.contrastText" }}
-                  >
-                    Code Explorer
-                  </Button>
-                  <Button
-                    onClick={() => toggleShowCodeExplorer()}
-                    variant={!showCodeExplorer ? "contained" : "outlined"}
-                    color="primary"
-                    sx={{ color: "primary.contrastText" }}
-                  >
-                    Memo Explorer
-                  </Button>
-                </ButtonGroup>
-                <div style={{ flexGrow: 1 }} />
-                <ExporterButton
-                  tooltip="Export codeset"
-                  exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
-                  iconButtonProps={{ edge: "end", color: "inherit" }}
-                />
-              </Toolbar>
-            </AppBar>
-            {showCodeExplorer ? (
-              <CodeExplorer showCreateCodeButton={true} />
-            ) : (
-              <MemoExplorer sdocId={sourceDocumentId} />
-            )}
-          </Paper>
+        <Grid
+          item
+          md={3}
+          className="h100 myFlexContainer"
+          sx={{
+            zIndex: (theme) => theme.zIndex.appBar,
+            bgcolor: (theme) => theme.palette.background.paper,
+            borderLeft: "1px solid #e8eaed",
+            boxShadow: 4,
+          }}
+        >
+          <TabContext value={tab}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
+              <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
+                <Tab label="Code Explorer" value="code" />
+                <Tab label="Memo Explorer" value="memo" />
+              </Tabs>
+            </Box>
+            <Box className="myFlexFillAllContainer">
+              <TabPanel value="code" style={{ padding: 0 }} className="h100">
+                <CodeExplorer showButtons={true} />
+              </TabPanel>
+              <TabPanel value="memo" style={{ padding: 0 }} className="h100">
+                <MemoExplorer sdocId={sourceDocumentId} />
+              </TabPanel>
+            </Box>
+          </TabContext>
         </Grid>
       </Grid>
     </>

@@ -6,7 +6,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 
 interface DocumentTagChipProps {
   tagId: number;
-  handleClick: (tag: DocumentTagRead) => void;
+  handleClick?: (tag: DocumentTagRead) => void;
   handleDelete: (tag: DocumentTagRead) => void;
 }
 
@@ -21,7 +21,7 @@ function DocumentTagChip({ tagId, handleClick, handleDelete }: DocumentTagChipPr
         <Chip
           label={tag.data.title}
           variant="outlined"
-          onClick={() => handleClick(tag.data)}
+          onClick={handleClick ? () => handleClick(tag.data) : undefined}
           onDelete={() => handleDelete(tag.data)}
           sx={{ borderColor: tag.data.color, color: tag.data.color }}
           deleteIcon={

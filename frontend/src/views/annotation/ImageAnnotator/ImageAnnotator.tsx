@@ -287,7 +287,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
 
   return (
     <>
-      <Toolbar variant="dense">
+      <Toolbar variant="dense" disableGutters>
         <ButtonGroup>
           <Button onClick={() => toggleZoom()} variant={isZooming ? "contained" : "outlined"}>
             Zoom
@@ -314,7 +314,12 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
         onDelete={onCodeSelectorDeleteCode}
         onClose={onCodeSelectorClose}
       />
-      <svg ref={svgRef} width="100%" height="100%" style={{ cursor: isZooming ? "move" : "auto" }}>
+      <svg
+        ref={svgRef}
+        width="100%"
+        height={Math.max(500, height) + "px"}
+        style={{ cursor: isZooming ? "move" : "auto" }}
+      >
         <g ref={gZoomRef}>
           <g ref={gDragRef} style={{ cursor: isZooming ? "move" : "crosshair" }}>
             <image ref={imgRef} href={sdoc.content} style={{ outline: "1px solid black" }} />

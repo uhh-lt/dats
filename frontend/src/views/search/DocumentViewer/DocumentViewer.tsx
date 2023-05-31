@@ -1,12 +1,12 @@
-import { Box, Button, Card, CardContent, CardProps, Stack } from "@mui/material";
+import { Box, Card, CardContent, CardProps, Stack } from "@mui/material";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../../api/SdocHooks";
 import { DocType, DocumentTagRead } from "../../../api/openapi";
-import UserName from "../../../components/UserName";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
 import { SearchActions } from "../searchSlice";
+import { DocumentAdocSelector } from "./DocumentAdocSelector";
 import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
 import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import DocumentTagChip from "./DocumentTagChip";
@@ -68,22 +68,18 @@ function DocumentViewer({
                 />
               ))}
           </div>
-          <DocumentMetadata sdocId={sdocId} metadata={metadata} />
-          <Stack direction={"row"} alignItems="center">
-            <b>Annotations:</b>
-            {annotationDocuments.isLoading && <span>Loading tags...</span>}
+          <Box>
+            <DocumentMetadata sdocId={sdocId} metadata={metadata} />
+            {annotationDocuments.isLoading && <span>Loading annotation documents...</span>}
             {annotationDocuments.isError && <span>{annotationDocuments.error.message}</span>}
-            {annotationDocuments.isSuccess &&
-              annotationDocuments.data.map((adoc) => (
-                <Button
-                  key={adoc.id}
-                  onClick={() => handleSelectAnnotationDocument(adoc)}
-                  sx={{ color: selectedAdoc?.id === adoc.id ? "red" : "black" }}
-                >
-                  <UserName userId={adoc.user_id} />
-                </Button>
-              ))}
-          </Stack>
+            {annotationDocuments.isSuccess && selectedAdoc && (
+              <DocumentAdocSelector
+                annotationDocuments={annotationDocuments.data}
+                handleSelectAnnotationDocument={handleSelectAnnotationDocument}
+                selectedAdoc={selectedAdoc}
+              />
+            )}
+          </Box>
 
           {sdoc.isSuccess && selectedAdoc && (
             <>

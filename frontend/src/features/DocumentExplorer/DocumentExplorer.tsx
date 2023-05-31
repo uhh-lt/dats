@@ -3,6 +3,8 @@ import ImageIcon from "@mui/icons-material/Image";
 import LabelIcon from "@mui/icons-material/Label";
 import {
   AppBar,
+  Box,
+  BoxProps,
   FormControl,
   List,
   ListItem,
@@ -11,7 +13,6 @@ import {
   ListItemProps,
   ListItemText,
   MenuItem,
-  Paper,
   Select,
   SelectChangeEvent,
   Stack,
@@ -23,10 +24,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import * as React from "react";
 import { useCallback, useRef, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
-import { AttachedObjectType, DocType } from "../../api/openapi";
 import ProjectHooks from "../../api/ProjectHooks";
 import SdocHooks from "../../api/SdocHooks";
 import SearchHooks from "../../api/SearchHooks";
+import { AttachedObjectType, DocType } from "../../api/openapi";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import DocumentNavigation from "../../components/DocumentNavigation";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
@@ -34,7 +35,7 @@ import { AnnoActions } from "../../views/annotation/annoSlice";
 import MemoButton from "../Memo/MemoButton";
 import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
 
-function DocumentExplorer({ ...props }) {
+function DocumentExplorer({ ...props }: BoxProps) {
   // router
   const { projectId, sdocId } = useParams() as { projectId: string; sdocId: string | undefined };
 
@@ -76,8 +77,22 @@ function DocumentExplorer({ ...props }) {
   }, []);
 
   return (
-    <Paper square className="myFlexContainer" {...props}>
-      <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+    <Box className="myFlexContainer" {...props}>
+      <AppBar
+        position="relative"
+        className="myFlexFitContentContainer"
+        variant="outlined"
+        sx={{
+          backgroundColor: (theme) => theme.palette.background.paper,
+          zIndex: (theme) => theme.zIndex.appBar,
+          color: (theme) => theme.palette.text.primary,
+          borderTop: 0,
+          borderBottom: 1,
+          borderLeft: 0,
+          borderRight: 0,
+          borderColor: "divider",
+        }}
+      >
         <Toolbar variant="dense">
           <Stack direction="row" sx={{ width: "100%", justifyContent: "space-between", alignItems: "center" }}>
             <Typography variant="h6" color="inherit" component="div" className="overflow-ellipsis">
@@ -154,7 +169,7 @@ function DocumentExplorer({ ...props }) {
         handleClose={closeContextMenu}
         position={contextMenuPosition}
       />
-    </Paper>
+    </Box>
   );
 }
 

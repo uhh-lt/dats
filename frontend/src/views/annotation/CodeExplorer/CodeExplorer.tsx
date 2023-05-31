@@ -1,14 +1,14 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
-import { AppBar, Button, Checkbox, Divider, Paper, PaperProps, Toolbar } from "@mui/material";
+import { AppBar, Box, BoxProps, Button, Checkbox, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import ExporterButton from "../../../features/Exporter/ExporterButton";
 import MemoButton from "../../../features/Memo/MemoButton";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import useComputeCodeTree from "./useComputeCodeTree";
 import SpanCreationDialog, { CodeCreationDialogHandle } from "../SpanContextMenu/SpanCreationDialog";
 import { AnnoActions } from "../annoSlice";
 import CodeEditButton from "./CodeEditButton";
@@ -18,19 +18,20 @@ import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeTreeView from "./CodeTreeView";
 import ICodeTree from "./ICodeTree";
 import { flatTree, flatTreeWithRoot } from "./TreeUtils";
+import useComputeCodeTree from "./useComputeCodeTree";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
   showCheckboxes?: boolean;
-  showCreateCodeButton?: boolean;
+  showButtons?: boolean;
 }
 
 export interface CodeExplorerHandle {
   getCheckedCodeIds: () => number[];
 }
 
-const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperProps>(
-  ({ showToolbar, showCheckboxes, showCreateCodeButton, ...props }, ref) => {
+const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps>(
+  ({ showToolbar, showCheckboxes, showButtons, ...props }, ref) => {
     const { user } = useAuth();
 
     // custom hooks
@@ -130,19 +131,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperPro
       <>
         {user.isSuccess && allCodes.isSuccess && codeTree ? (
           <>
-            {showCreateCodeButton && (
-              <>
-                <Button
-                  variant="contained"
-                  onClick={() => codeCreationDialogRef.current!.open()}
-                  startIcon={<AddBoxIcon />}
-                  sx={{ my: 0.5, mx: 2 }}
-                >
-                  Add Code
-                </Button>
-                <Divider />
-              </>
-            )}
             <CodeTreeView
               className="myFlexFillAllContainer"
               data={codeTree.model}
@@ -192,22 +180,43 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & PaperPro
     );
 
     return (
-      <>
-        {showToolbar ? (
-          <Paper square className="myFlexContainer" {...props} elevation={1}>
-            <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
-              <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
-                <Typography variant="h6" color="inherit" component="div">
-                  Code Explorer
-                </Typography>
-              </Toolbar>
-            </AppBar>
-            {content}
-          </Paper>
-        ) : (
-          <>{content}</>
+      <Box className="h100 myFlexContainer" {...props}>
+        {showToolbar && (
+          <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+            <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
+              <Typography variant="h6" color="inherit" component="div">
+                Code Explorer
+              </Typography>
+            </Toolbar>
+          </AppBar>
         )}
-      </>
+        {showButtons && (
+          <Stack
+            direction="row"
+            className="myFlexFitContentContainer"
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              p: 1,
+            }}
+          >
+            <Button
+              variant="contained"
+              onClick={() => codeCreationDialogRef.current!.open()}
+              startIcon={<AddBoxIcon />}
+              sx={{ flexGrow: 1, mr: 1 }}
+            >
+              Add Code
+            </Button>
+            <ExporterButton
+              tooltip="Export codeset"
+              exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
+              iconButtonProps={{ color: "inherit" }}
+            />
+          </Stack>
+        )}
+        {content}
+      </Box>
     );
   }
 );

@@ -24,7 +24,7 @@ function TopBar(props: AppBarProps) {
   };
 
   return (
-    <AppBar position="static" {...props}>
+    <AppBar position="static" sx={{ zIndex: (theme) => theme.zIndex.appBar }} {...props}>
       <Toolbar disableGutters>
         <Grid container>
           <Grid item xs={2} sx={{ pl: 3 }}>

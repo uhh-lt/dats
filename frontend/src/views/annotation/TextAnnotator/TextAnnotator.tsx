@@ -294,6 +294,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         projectId={sdoc.project_id}
         sentences={undefined}
         doHighlighting={false}
+        style={{ zIndex: 1 }}
       />
     </>
   );

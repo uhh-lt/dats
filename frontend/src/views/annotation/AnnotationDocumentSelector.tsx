@@ -1,6 +1,7 @@
 import SdocHooks from "../../api/SdocHooks";
 import {
   AppBar,
+  AppBarProps,
   Checkbox,
   FormControl,
   ListItemText,
@@ -27,7 +28,7 @@ interface AnnotationDocumentSelectorProps {
  * The selected (visible) annotation documents are stored in the redux store.
  * @param sdocId the id of the SourceDocument to select annotation documents for
  */
-export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelectorProps) {
+export function AnnotationDocumentSelector({ sdocId, ...props }: AnnotationDocumentSelectorProps & AppBarProps) {
   // global client state (context)
   const { user } = useAuth();
 
@@ -67,12 +68,22 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
 
   // render
   return (
-    <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+    <AppBar
+      position="relative"
+      variant="outlined"
+      sx={{
+        backgroundColor: (theme) => theme.palette.grey[100],
+        color: (theme) => theme.palette.text.primary,
+        borderTop: 0,
+        ...props.sx,
+      }}
+      {...props}
+    >
       <Toolbar variant="dense">
         <FormControl size="small" fullWidth>
           <Stack direction="row" sx={{ width: "100%", alignItems: "center" }}>
-            <Typography variant="h6" color="inherit" component="div" className="overflow-ellipsis" flexShrink={0}>
-              Visible annotations:
+            <Typography variant="body1" color="inherit" component="div" className="overflow-ellipsis" flexShrink={0}>
+              Annotations
             </Typography>
             <Select
               sx={{ ml: 1, backgroundColor: "white" }}

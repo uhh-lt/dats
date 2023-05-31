@@ -2,7 +2,7 @@ import { Link, Typography, TypographyProps } from "@mui/material";
 import SdocHooks from "../../../api/SdocHooks";
 
 interface DocumentLinkToOriginalProps {
-  sdocId: number;
+  sdocId: number | undefined;
   title: string;
 }
 
