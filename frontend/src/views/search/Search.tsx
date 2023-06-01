@@ -264,7 +264,6 @@ function Search() {
                     handleTagClick={handleAddTagFilter}
                     showEntities={isShowEntities}
                     isIdleContent={<Typography>Click a document to read it :)</Typography>}
-                    raised
                   />
                 </Container>
               </Grid>

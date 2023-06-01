@@ -82,6 +82,7 @@ function DocumentExplorer({ ...props }: BoxProps) {
         position="relative"
         className="myFlexFitContentContainer"
         variant="outlined"
+        elevation={0}
         sx={{
           backgroundColor: (theme) => theme.palette.background.paper,
           zIndex: (theme) => theme.zIndex.appBar,

@@ -45,6 +45,7 @@ function SearchToolbar({
     <AppBar
       position="relative"
       variant="outlined"
+      elevation={0}
       sx={{
         backgroundColor: (theme) => theme.palette.background.paper,
         minHeight: "52px",

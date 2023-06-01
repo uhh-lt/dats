@@ -34,6 +34,7 @@ export function DocumentAdocSelector({
     <AppBar
       position="relative"
       variant="outlined"
+      elevation={0}
       sx={{
         backgroundColor: (theme) => theme.palette.grey[100],
         color: (theme) => theme.palette.text.primary,

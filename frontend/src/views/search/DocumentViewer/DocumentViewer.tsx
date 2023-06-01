@@ -28,7 +28,7 @@ function DocumentViewer({
   showEntities,
   isIdleContent,
   ...props
-}: DocumentViewerProps & CardProps) {
+}: DocumentViewerProps & Omit<CardProps, "raised">) {
   const navigate = useNavigate();
 
   // queries
@@ -47,7 +47,7 @@ function DocumentViewer({
   }
 
   return (
-    <Card {...props}>
+    <Card raised {...props}>
       <CardContent>
         <Stack spacing={2}>
           {sdoc.isLoading && <h1 style={{ margin: 0 }}>Loading...</h1>}
