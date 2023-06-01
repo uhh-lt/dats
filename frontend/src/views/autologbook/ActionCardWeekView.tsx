@@ -11,8 +11,13 @@ interface ActionCardWeekViewProps {
 
 function ActionCardWeekView({ actions, day }: ActionCardWeekViewProps) {
   return (
-    <Card variant="outlined" style={{ width: "100%", height: "100%", backgroundColor: "whitesmoke" }}>
+    <Card
+      variant="outlined"
+      style={{ width: "100%", height: "100%", backgroundColor: "whitesmoke" }}
+      className="h100 myFlexContainer"
+    >
       <CardHeader
+        className="myFlexFitContentContainer"
         style={{ backgroundColor: "#1976d2", color: "white", padding: "8px" }}
         title={day}
         titleTypographyProps={{
@@ -44,7 +49,7 @@ function ActionCardWeekViewContent({ actions }: ActionCardWeekViewContentProps) 
   });
 
   return (
-    <CardContent ref={listRef} style={{ height: "96%", overflowY: "auto", padding: 0 }}>
+    <CardContent ref={listRef} style={{ overflowY: "auto", padding: 0 }} className="myFlexFillAllContainer">
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
