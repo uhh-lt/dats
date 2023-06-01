@@ -21,6 +21,7 @@ import { renderTextCellExpand } from "./renderTextCellExpand";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import AnalysisHooks, { ICodeFrequencies, ICodeOccurrence } from "../../../api/AnalysisHooks";
+import { useAuth } from "../../../auth/AuthProvider";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID", hide: true },
@@ -75,13 +76,14 @@ function allSpans(codeStatistics: ICodeFrequencies): ICodeOccurrence[] {
 
 function CodeFrequency() {
   // global client state (context)
+  const userId = useAuth().user.data?.id;
   const appBarContainerRef = useContext(AppBarContext);
 
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // custom hook
-  const data = AnalysisHooks.useAnalyseCodeFrequencies(projectId);
+  const data = AnalysisHooks.useAnalyseCodeFrequencies(projectId, userId);
 
   // local state
   const [selectedStatistic, setSelectedStatistic] = useState<ICodeFrequencies>();

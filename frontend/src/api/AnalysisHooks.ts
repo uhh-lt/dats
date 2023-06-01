@@ -19,12 +19,12 @@ export interface ICodeFrequencies {
   children: ICodeFrequencies[];
 }
 
-const useAnalyseCodeFrequencies = (projectId: number) =>
+const useAnalyseCodeFrequencies = (projectId: number, userId: number | undefined) =>
   useQuery<ICodeFrequencies, Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId], () =>
     AnalysisService.frequencyAnalysis({
       requestBody: {
         proj_id: projectId,
-        user_ids: [SYSTEM_USER_ID],
+        user_ids: userId ? [SYSTEM_USER_ID, userId] : [SYSTEM_USER_ID],
       },
     })
   );
