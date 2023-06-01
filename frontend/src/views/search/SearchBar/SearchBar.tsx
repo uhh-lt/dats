@@ -124,15 +124,10 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
         <Popper
           open={open}
           anchorEl={anchorEl}
-          disablePortal
           sx={{ zIndex: (theme) => theme.zIndex.appBar + 1, width: "800px" }}
           style={{ marginTop: "-3px !important" }}
         >
-          <Card
-            elevation={0}
-            variant="outlined"
-            sx={{ borderTop: "none", borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-          >
+          <Card variant="outlined" sx={{ borderTop: "none", borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
             <CardContent>
               <FormControl component="fieldset" variant="standard" sx={{ mr: 3 }}>
                 <FormLabel component="legend">Result modalities</FormLabel>
