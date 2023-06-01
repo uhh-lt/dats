@@ -89,7 +89,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
 
         query = query.filter(
             and_(
-                AnnotationDocumentORM.user_id == user_id,
+                MemoORM.user_id == user_id,
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
         )
@@ -111,7 +111,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
 
         query = query.filter(
             and_(
-                AnnotationDocumentORM.user_id == user_id,
+                MemoORM.user_id == user_id,
                 AnnotationDocumentORM.source_document_id == sdoc_id,
             )
         )
