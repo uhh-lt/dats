@@ -43,7 +43,7 @@ docprepro:
 
   audio:
     whisper:
-      model: "tiny"
+      model: "base"
       device: cpu
       options:
         beam_size: 5
