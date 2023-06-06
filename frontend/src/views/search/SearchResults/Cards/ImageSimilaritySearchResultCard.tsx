@@ -2,7 +2,7 @@ import { CardMedia, CardProps, Tooltip, Typography } from "@mui/material";
 import { SearchResultProps } from "../SearchResultProps";
 import * as React from "react";
 import { DocType, SimSearchImageHit } from "../../../../api/openapi";
-import { simSearchColorScale, toThumbnailUrl } from "../../utils";
+import SdocHooks from "../../../../api/SdocHooks";
 import SearchResultCardBase from "./SearchResultCardBase";
 
 export interface ImageSimilaritySearchResultCardProps extends SearchResultProps {
@@ -10,6 +10,8 @@ export interface ImageSimilaritySearchResultCardProps extends SearchResultProps 
 }
 
 function ImageSimilaritySearchResultCard({ hit, ...props }: ImageSimilaritySearchResultCardProps & CardProps) {
+  const thumbnailUrl = SdocHooks.useGetThumbnailURL(props.sdocId).data ?? '';
+
   return (
     <SearchResultCardBase
       {...props}
@@ -26,7 +28,7 @@ function ImageSimilaritySearchResultCard({ hit, ...props }: ImageSimilaritySearc
                   sx={{ mb: 1.5, border: `5px solid ${simSearchColorScale(hit.score)}` }}
                   component="img"
                   height="200"
-                  image={toThumbnailUrl(sdoc.content)}
+                  image={thumbnailUrl}
                   alt="Paella dish"
                 />
               </Tooltip>

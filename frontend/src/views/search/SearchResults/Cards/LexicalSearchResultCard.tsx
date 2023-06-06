@@ -1,13 +1,13 @@
-import { CardMedia, CardProps, Typography } from "@mui/material";
+import { CardContent, CardMedia, CardProps, Typography } from "@mui/material";
 import { SearchResultProps } from "../SearchResultProps";
 import SdocHooks from "../../../../api/SdocHooks";
 import * as React from "react";
 import { DocType, SourceDocumentRead } from "../../../../api/openapi";
-import { toThumbnailUrl } from "../../utils";
 import SearchResultCardBase from "./SearchResultCardBase";
 import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import ReactWordcloud, { OptionsProp, Word } from "react-wordcloud";
 import { useMemo } from "react";
+import Audiofile from '@mui/icons-material/AudioFile';
 
 function LexicalSearchResultCard({
   sdocId,
@@ -16,6 +16,7 @@ function LexicalSearchResultCard({
   handleOnCheckboxChange,
   ...props
 }: SearchResultProps & CardProps) {
+  const thumbnailUrl = SdocHooks.useGetThumbnailURL(sdocId).data ?? '';
   return (
     <SearchResultCardBase
       sdocId={sdocId}
@@ -32,8 +33,22 @@ function LexicalSearchResultCard({
               sx={{ mb: 1.5 }}
               component="img"
               height="200"
-              image={toThumbnailUrl(sdoc.content)}
+              image={thumbnailUrl}
               alt="Paella dish"
+            />
+          ) : sdoc.doctype === DocType.AUDIO ? (
+            <CardContent
+              sx={{ mb: 1.5, display: "flex", justifyContent: "center", alignItems: "center", height: 200 }}
+            >
+              <Audiofile sx={{ fontSize: 150 }} />
+            </CardContent>
+          ) : sdoc.doctype === DocType.VIDEO ? (
+            <CardMedia
+              sx={{ mb: 1.5 }}
+              component="img"
+              height="200"
+              image={thumbnailUrl}
+              alt="Tofu meatballs"
             />
           ) : (
             <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
