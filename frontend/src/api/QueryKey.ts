@@ -81,6 +81,8 @@ export const QueryKey = {
   SDOC_CONTENT: "sdocContent",
   // url of a document (by document id)
   SDOC_URL: "sdocURL",
+  // thumbnail url of a document (by document id)
+  SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
   // linked sdoc ids of a document (by document id)
   SDOC_LINKS: "sdocLinks",
   // id of a single SourceDocument (by project id and filename)

@@ -268,6 +268,16 @@ const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
     }
   );
 
+const useGetThumbnailURL = (sdocId: number | undefined) =>
+  useQuery<string, Error>(
+    [QueryKey.SDOC_THUMBNAIL_URL, sdocId],
+    () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: true, thumbnail: true }),
+    {
+      enabled: !!sdocId,
+      select: (thumbnail_url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + thumbnail_url),
+    }
+  );
+
 const useGetMetadata = (sdocId: number | undefined) =>
   useQuery<Map<string, SourceDocumentMetadataRead>, Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
@@ -319,6 +329,7 @@ const SdocHooks = {
   useCreateMemo,
   // metadata
   useGetURL,
+  useGetThumbnailURL,
   useGetMetadata,
   useGetWordFrequencies,
 };
