@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import srsly
 from app.core.data.crud.crud_base import CRUDBase
@@ -134,7 +134,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
         return len(del_rows)
 
-    def _get_action_state_from_orm(self, db_obj: DocumentTagORM) -> str | None:
+    def _get_action_state_from_orm(self, db_obj: DocumentTagORM) -> Optional[str]:
         return srsly.json_dumps(DocumentTagRead.from_orm(db_obj).dict())
 
 

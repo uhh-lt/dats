@@ -793,7 +793,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             if linked_sdoc_id is not None
         ]
 
-    def _get_action_state_from_orm(self, db_obj: SourceDocumentORM) -> str | None:
+    def _get_action_state_from_orm(self, db_obj: SourceDocumentORM) -> Optional[str]:
         return srsly.json_dumps(
             SourceDocumentReadAction(
                 **SourceDocumentRead.from_orm(db_obj).dict(),

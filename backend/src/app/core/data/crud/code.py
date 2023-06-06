@@ -207,7 +207,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def _get_action_user_id_from_orm(self, db_obj: CodeORM) -> int:
         return db_obj.user_id
 
-    def _get_action_state_from_orm(self, db_obj: CodeORM) -> str | None:
+    def _get_action_state_from_orm(self, db_obj: CodeORM) -> Optional[str]:
         return srsly.json_dumps(
             CodeRead.from_orm(db_obj).dict(),
         )

@@ -87,7 +87,7 @@ class CRUDBBoxAnnotation(
     def _get_action_user_id_from_orm(self, db_obj: BBoxAnnotationORM) -> int:
         return db_obj.annotation_document.user_id
 
-    def _get_action_state_from_orm(self, db_obj: BBoxAnnotationORM) -> str | None:
+    def _get_action_state_from_orm(self, db_obj: BBoxAnnotationORM) -> Optional[str]:
         return srsly.json_dumps(
             BBoxAnnotationReadResolvedCode(
                 **BBoxAnnotationRead.from_orm(db_obj).dict(exclude={"current_code_id"}),
