@@ -2,6 +2,7 @@ import { CardMedia, CardProps, Tooltip, Typography } from "@mui/material";
 import { SearchResultProps } from "../SearchResultProps";
 import * as React from "react";
 import { DocType, SimSearchImageHit } from "../../../../api/openapi";
+import { simSearchColorScale } from "../../utils";
 import SdocHooks from "../../../../api/SdocHooks";
 import SearchResultCardBase from "./SearchResultCardBase";
 
