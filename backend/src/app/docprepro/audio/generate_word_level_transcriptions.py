@@ -36,7 +36,7 @@ def load_whisper_model() -> whisper_timestamped.Whisper:
 
 
 def generate_word_level_transcriptions_(
-    ppads: List[PreProAudioDoc]
+    ppads: List[PreProAudioDoc],
 ) -> List[PreProAudioDoc]:
     whisper_model = load_whisper_model()
     for ppad in tqdm(ppads, desc="Generating transcriptions"):

@@ -26,7 +26,9 @@ import_video_document = "app.docprepro.video.preprocess.import_video_document"
 generate_webp_thumbnails = "app.docprepro.video.preprocess.generate_webp_thumbnails"
 create_ppad_from_ppvd = "app.docprepro.video.preprocess.create_ppad_from_ppvd"
 convert_to_pcm = "app.docprepro.audio.preprocess.convert_to_pcm"
-generate_transcriptions = "app.docprepro.audio.preprocess.generate_word_level_transcriptions"
+generate_transcriptions = (
+    "app.docprepro.audio.preprocess.generate_word_level_transcriptions"
+)
 generate_and_import_transcript_file = (
     "app.docprepro.audio.preprocess.generate_and_import_transcript_file"
 )
