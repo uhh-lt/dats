@@ -1,4 +1,4 @@
-import { CardContent, CardMedia, CardProps, Typography } from "@mui/material";
+import { Box, CardContent, CardMedia, CardProps, Typography } from "@mui/material";
 import { SearchResultProps } from "../SearchResultProps";
 import SdocHooks from "../../../../api/SdocHooks";
 import * as React from "react";
@@ -8,6 +8,7 @@ import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import ReactWordcloud, { OptionsProp, Word } from "react-wordcloud";
 import { useMemo } from "react";
 import Audiofile from '@mui/icons-material/AudioFile';
+import PlayCircleFilledWhiteIcon from '@mui/icons-material/PlayCircleFilledWhite';
 
 function LexicalSearchResultCard({
   sdocId,
@@ -43,13 +44,16 @@ function LexicalSearchResultCard({
               <Audiofile sx={{ fontSize: 150 }} />
             </CardContent>
           ) : sdoc.doctype === DocType.VIDEO ? (
-            <CardMedia
-              sx={{ mb: 1.5 }}
-              component="img"
-              height="200"
-              image={thumbnailUrl}
-              alt="Tofu meatballs"
-            />
+            <Box sx={{ position: 'relative', height: 200 }}>
+              <PlayCircleFilledWhiteIcon sx={{ fontSize: 75, top: 'calc(50% - 37.5px)', left: 'calc(50% - 37.5px)', position: "absolute", color: 'rgba(0, 0, 0, 0.666)' }} />
+              <CardMedia
+                sx={{ mb: 1.5 }}
+                component="img"
+                height="200"
+                image={thumbnailUrl}
+                alt="Tofu meatballs"
+              />
+            </Box>
           ) : (
             <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
               DOC TYPE IS NOT SUPPORTED
