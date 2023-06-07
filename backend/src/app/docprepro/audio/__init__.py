@@ -1,27 +1,23 @@
 from pathlib import Path
 from typing import Any, List
 
-# noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
-from app.docprepro.text import (
-    store_document_in_elasticsearch,
-    finish_preprocessing,
-    store_span_annotations_in_db,
-    generate_span_annotations,
-    resolve_sdoc_links,
-    clean_html,
-    extract_text_from_html_and_create_source_mapping,
-    detect_language,
-    create_sdoc_links_from_html,
-    add_custom_html_tags,
-    store_metadata_in_db,
-    index_text_document_in_faiss,
-)
-
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
-
-from app.docprepro.text import finish_preprocessing
+from app.docprepro.text import (
+    add_custom_html_tags,
+    clean_html,
+    create_sdoc_links_from_html,
+    detect_language,
+    extract_text_from_html_and_create_source_mapping,
+    finish_preprocessing,
+    generate_span_annotations,
+    index_text_document_in_faiss,
+    resolve_sdoc_links,
+    store_document_in_elasticsearch,
+    store_metadata_in_db,
+    store_span_annotations_in_db,
+)
 
 # Flo: Task names (as they could be imported)
 import_audio_document = "app.docprepro.audio.preprocess.import_audio_document"
