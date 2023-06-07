@@ -18,13 +18,13 @@ sql = SQLService(echo=False)
 OPTIONS = conf.docprepro.audio.whisper.options
 
 
-def generate_transcriptions_(
+def generate_word_level_transcriptions_(
     ppads: List[PreProAudioDoc], whisper: Whisper, whisper_model: Whisper
 ) -> List[PreProAudioDoc]:
     for ppad in tqdm(ppads, desc="Generating transcriptions"):
         update_sdoc_status(
             sdoc_id=ppad.sdoc_id,
-            sdoc_status=SDocStatus.generate_transcription,
+            sdoc_status=SDocStatus.generate_word_level_transcriptions,
         )
         wav_file = str(ppad.uncompressed_fn)
 

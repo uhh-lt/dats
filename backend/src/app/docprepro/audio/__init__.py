@@ -26,7 +26,9 @@ from app.docprepro.text import finish_preprocessing
 # Flo: Task names (as they could be imported)
 import_audio_document = "app.docprepro.audio.preprocess.import_audio_document"
 convert_to_pcm = "app.docprepro.audio.preprocess.convert_to_pcm"
-generate_transcriptions = "app.docprepro.audio.preprocess.generate_transcriptions"
+generate_word_level_transcriptions = (
+    "app.docprepro.audio.preprocess.generate_word_level_transcriptions"
+)
 generate_and_import_transcript_file = (
     "app.docprepro.audio.preprocess.generate_and_import_transcript_file"
 )
@@ -45,7 +47,7 @@ def audio_document_preprocessing_apply_async(
             },
         )
         | Signature(convert_to_pcm)
-        | Signature(generate_transcriptions)
+        | Signature(generate_word_level_transcriptions)
         | Signature(generate_and_import_transcript_file)
         |
         # Text pipeline
@@ -70,7 +72,7 @@ def audio_document_preprocessing_without_import_apply_async(
 ) -> Any:
     audio_document_preprocessing = (
         Signature(convert_to_pcm, kwargs={"ppads": ppads})
-        | Signature(generate_transcriptions)
+        | Signature(generate_word_level_transcriptions)
         | Signature(generate_and_import_transcript_file)
         |
         # Text pipeline

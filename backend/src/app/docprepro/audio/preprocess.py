@@ -12,7 +12,9 @@ from app.docprepro.audio.import_audio_document import import_audio_document_
 from app.docprepro.audio.convert_to_pcm import convert_to_pcm_
 
 # from app.docprepro.audio.create_pptd_from_ppad import create_pptd_from_ppad_
-from app.docprepro.audio.generate_transcriptions import generate_transcriptions_
+from app.docprepro.audio.generate_transcriptions import (
+    generate_word_level_transcriptions_,
+)
 from app.docprepro.audio.generate_and_import_transcript_file import (
     generate_and_import_transcript_file_,
 )
@@ -55,10 +57,12 @@ def convert_to_pcm(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def generate_transcriptions(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
+def generate_word_level_transcriptions(
+    ppads: List[PreProAudioDoc],
+) -> List[PreProAudioDoc]:
     global whisper
     global whisper_model
-    return generate_transcriptions_(ppads, whisper, whisper_model)
+    return generate_word_level_transcriptions_(ppads, whisper, whisper_model)
 
 
 @celery_worker.task(
