@@ -64,5 +64,15 @@ def import_audio_document_(
         sdoc_id=ppad.sdoc_id, sdoc_status=SDocStatus.import_audio_document
     )
 
+    # here we hacky create the adoc for the SU since we dont have audio annos yet
+    adoc_db = crud_adoc.read_by_sdoc_and_user(
+        db=db, sdoc_id=ppad.sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
+    )
+    if not adoc_db:
+        adoc_create = AnnotationDocumentCreate(
+            source_document_id=ppad.sdoc_id, user_id=SYSTEM_USER_ID
+        )
+        adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
+
     # return a list so that we can use text PrePro also with archives which contain multiple docs
     return [ppad]
