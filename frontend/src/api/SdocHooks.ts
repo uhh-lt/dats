@@ -24,13 +24,18 @@ const fetchSdoc = async (sdocId: number) => {
   const sdoc = await SourceDocumentService.getById({
     sdocId: sdocId!,
   });
+  let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
   switch (sdoc.doctype) {
     case DocType.TEXT:
       const x = await SourceDocumentService.getHtml({ sdocId: sdocId, onlyFinished: true });
       sdoc.content = x.html;
       break;
     case DocType.IMAGE:
-      const url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
+      url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
+      sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
+      break;
+    case DocType.VIDEO:
+    case DocType.AUDIO:
       sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
       break;
   }
