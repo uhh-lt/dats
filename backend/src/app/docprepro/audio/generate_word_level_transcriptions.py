@@ -77,11 +77,30 @@ def generate_word_level_transcriptions_(
                 )
                 ppad.word_level_transcriptions.append(wlt)
 
+    store_word_level_transcriptions(ppads=ppads)
+
     return ppads
 
 
 def store_word_level_transcriptions(
     ppads: List[PreProAudioDoc],
 ) -> List[PreProAudioDoc]:
-    pass
+    # TODO we store the WLTs in the sdoc meta data but this has to be changed!
+    sdoc_meta_create_dtos = []
+    for ppad in ppads:
+        wlt = list(map(lambda wlt: wlt.dict(), ppad.word_level_transcriptions))
+
+        sdoc_meta_create_dtos.append(
+            SourceDocumentMetadataCreate(
+                key="word_level_transcriptions",
+                value=json.dumps(wlt),
+                source_document_id=ppad.sdoc_id,
+                read_only=True,
+            )
+        )
+
+    # persist SourceDocumentMetadata
+    with sql.db_session() as db:
+        crud_sdoc_meta.create_multi(db=db, create_dtos=sdoc_meta_create_dtos)
+
     return ppads
