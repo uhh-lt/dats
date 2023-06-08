@@ -10,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 import { UseQueryResult } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { SourceDocumentMetadataRead } from "../../../../api/openapi";
 import DocumentKeywordsRow from "./DocumentKeywordsRow";
 import DocumentMetadataAddButton from "./DocumentMetadataAddButton";
@@ -44,14 +43,7 @@ interface DocumentMetadataProps {
 }
 
 function DocumentMetadata({ sdocId, metadata }: DocumentMetadataProps) {
-  // computed
-  const filteredMetadata = useMemo(() => {
-    if (metadata.data) {
-      const metadatas = Array.from(metadata.data.values());
-      return metadatas.filter((x) => x.key !== "word_frequencies").sort((a, b) => a.id - b.id);
-    }
-    return [];
-  }, [metadata.data]);
+  const metadatas = Array.from(metadata.isSuccess ? metadata.data.values() : []);
 
   return (
     <MyAccordion disableGutters square elevation={0} variant="outlined">
@@ -64,7 +56,7 @@ function DocumentMetadata({ sdocId, metadata }: DocumentMetadataProps) {
         {metadata.isSuccess && (
           <Grid container rowSpacing={2} columnSpacing={1}>
             <DocumentKeywordsRow sdocId={sdocId} />
-            {filteredMetadata.map((data) => (
+            {metadatas.map((data) => (
               <DocumentMetadataRow key={data.id} metadata={data} />
             ))}
             <DocumentMetadataAddButton sdocId={sdocId!} />
