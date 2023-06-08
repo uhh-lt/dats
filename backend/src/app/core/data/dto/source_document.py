@@ -29,6 +29,20 @@ class SDocStatus(str, Enum):
 
     convert_to_webp_and_generate_thumbnails = "convert_to_webp_and_generate_thumbnails"  # "converted imported image to .webp and created a thumbnail"
 
+    convert_mediafile_to_uncompressed_audio = "convert_mediafile_to_uncompressed_audio"  # "converts mediafile to uncompressed audio"
+    create_sdoc_links_from_audio = "create_sdoc_links_from_audio"  # "extracted sdoc links from audio and stored in the db"
+    generate_word_level_transcriptions = (
+        "generate_word_level_transcriptions"  # "generate word level transcriptions"
+    )
+    create_transcript_file = "create_transcript_file"  # "create transcript file"
+    create_pptd_from_ppad = "create_pptd_from_ppad"  # "created pptds from ppads
+    create_sdoc_links_from_text = "create_sdoc_links_from_text"  # "extracted sdoc links from text and stored in the db"
+
+    generate_webp_thumbnails_from_video = (
+        "generate_webp_thumbnails_from_video"  # "generate webp thumbnail from video"
+    )
+    create_ppad_from_ppvd = "create_ppad_from_ppvd"  # "created ppads from ppvds
+
     clean_html = "clean_html"  # "cleaned html of text document"
     extract_text_from_html_and_create_source_mapping = "extract_text_from_html_and_create_source_mapping"  # "created html2text source mapping "
 

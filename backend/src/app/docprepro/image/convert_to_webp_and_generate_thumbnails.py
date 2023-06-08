@@ -10,7 +10,7 @@ from app.core.data.repo.repo_service import RepoService
 from app.docprepro.image import PreProImageDoc
 from app.docprepro.util import update_sdoc_status
 
-repo = RepoService()
+repo: RepoService = RepoService()
 
 
 def convert_to_webp(

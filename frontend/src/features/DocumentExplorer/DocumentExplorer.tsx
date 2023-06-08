@@ -1,4 +1,6 @@
 import ArticleIcon from "@mui/icons-material/Article";
+import AudioFileIcon from '@mui/icons-material/AudioFile';
+import VideoFileIcon from '@mui/icons-material/VideoFile';
 import ImageIcon from "@mui/icons-material/Image";
 import LabelIcon from "@mui/icons-material/Label";
 import {
@@ -174,6 +176,13 @@ function DocumentExplorer({ ...props }: BoxProps) {
   );
 }
 
+const docTypeToIcon: Record<DocType, React.ReactElement> = {
+  [DocType.TEXT]: <ArticleIcon />,
+  [DocType.IMAGE]: <ImageIcon />,
+  [DocType.VIDEO]: <VideoFileIcon />,
+  [DocType.AUDIO]: <AudioFileIcon />,
+};
+
 function DocumentExplorerListItem({
   sdocId,
   selectedSdocId,
@@ -182,6 +191,7 @@ function DocumentExplorerListItem({
   const sdoc = SdocHooks.useGetDocumentNoContent(sdocId);
 
   const title = sdoc.isSuccess ? sdoc.data.filename : sdoc.isError ? sdoc.error.message : "Loading...";
+
 
   return (
     <Tooltip title={title} placement="top-start" enterDelay={500} followCursor>
@@ -198,7 +208,7 @@ function DocumentExplorerListItem({
       >
         <ListItemButton component={RouterLink} to={`../annotation/${sdocId}`} selected={selectedSdocId === sdocId}>
           {sdoc.isSuccess && (
-            <ListItemIcon>{sdoc.data.doctype === DocType.TEXT ? <ArticleIcon /> : <ImageIcon />}</ListItemIcon>
+            <ListItemIcon>{docTypeToIcon[sdoc.data.doctype]}</ListItemIcon>
           )}
           <ListItemText primary={title} sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} />
         </ListItemButton>

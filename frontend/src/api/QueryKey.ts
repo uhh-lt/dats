@@ -75,12 +75,16 @@ export const QueryKey = {
   SDOC_KEYWORDS: "sdocKeywords",
   // word frequencies of a document (by document id)
   SDOC_WORD_FREQUENCIES: "sdocFrequencies",
+  // word frequencies of a document (by document id)
+  SDOC_WORD_LEVEL_TRANSCRIPTIONS: "sdocTranscriptions",
   // sentences of a document (by document id)
   SDOC_SENTENCES: "sdocSentences",
   // content of a document (by document id)
   SDOC_CONTENT: "sdocContent",
   // url of a document (by document id)
   SDOC_URL: "sdocURL",
+  // thumbnail url of a document (by document id)
+  SDOC_THUMBNAIL_URL: "sdocThumbnailURL",
   // linked sdoc ids of a document (by document id)
   SDOC_LINKS: "sdocLinks",
   // id of a single SourceDocument (by project id and filename)

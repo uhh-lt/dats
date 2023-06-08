@@ -3,13 +3,16 @@ from typing import List
 
 import ffmpeg
 
+from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
+from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.dto.annotation_document import AnnotationDocumentCreate
+from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
+from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
 
 sql = SQLService(echo=False)
 repo = RepoService()
@@ -21,7 +24,7 @@ def import_video_document_(
     # persist in db
     dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
 
-    # create ppad
+    # create ppvd
     ppvd = PreProVideoDoc(
         project_id=sdoc_db_obj.project_id,
         sdoc_id=sdoc_db_obj.id,
@@ -55,6 +58,16 @@ def import_video_document_(
     with sql.db_session() as db:
         crud_sdoc_meta.create(db=db, create_dto=sdoc_meta_create_dto)
     ppvd.metadata[sdoc_meta_create_dto.key] = sdoc_meta_create_dto.value
+
+    # here we hacky create the adoc for the SU since we dont have video annos yet
+    adoc_db = crud_adoc.read_by_sdoc_and_user(
+        db=db, sdoc_id=ppvd.sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
+    )
+    if not adoc_db:
+        adoc_create = AnnotationDocumentCreate(
+            source_document_id=ppvd.sdoc_id, user_id=SYSTEM_USER_ID
+        )
+        adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
 
     # update sdoc status
     update_sdoc_status(

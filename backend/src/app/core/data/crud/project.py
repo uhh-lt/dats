@@ -108,7 +108,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return user_db_obj
 
-    def _get_action_state_from_orm(self, db_obj: ProjectORM) -> str | None:
+    def _get_action_state_from_orm(self, db_obj: ProjectORM) -> Optional[str]:
         return srsly.json_dumps(
             ProjectReadAction(
                 **ProjectRead.from_orm(db_obj).dict(),

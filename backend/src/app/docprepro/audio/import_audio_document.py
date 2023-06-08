@@ -3,8 +3,11 @@ from typing import List
 
 import ffmpeg
 
+from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
+from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.dto.annotation_document import AnnotationDocumentCreate
+from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
@@ -60,6 +63,16 @@ def import_audio_document_(
     update_sdoc_status(
         sdoc_id=ppad.sdoc_id, sdoc_status=SDocStatus.import_audio_document
     )
+
+    # here we hacky create the adoc for the SU since we dont have audio annos yet
+    adoc_db = crud_adoc.read_by_sdoc_and_user(
+        db=db, sdoc_id=ppad.sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
+    )
+    if not adoc_db:
+        adoc_create = AnnotationDocumentCreate(
+            source_document_id=ppad.sdoc_id, user_id=SYSTEM_USER_ID
+        )
+        adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
 
     # return a list so that we can use text PrePro also with archives which contain multiple docs
     return [ppad]

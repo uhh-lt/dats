@@ -42,7 +42,9 @@ dependencies:
   - conda-forge::pandas=1.5.3
   - conda-forge::scrapy=2.8.0
   - conda-forge::readability-lxml=0.8.1
+  - git=2.34.1
   - pip:
       - faiss-gpu==1.7.2
       - black
       - rope
+      - git+https://github.com/linto-ai/whisper-timestamped.git@d767f4fc3b401c78c20d55515b382838ca3c86aa

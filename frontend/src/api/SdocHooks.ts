@@ -24,13 +24,18 @@ const fetchSdoc = async (sdocId: number) => {
   const sdoc = await SourceDocumentService.getById({
     sdocId: sdocId!,
   });
+  let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
   switch (sdoc.doctype) {
     case DocType.TEXT:
       const x = await SourceDocumentService.getHtml({ sdocId: sdocId, onlyFinished: true });
       sdoc.content = x.html;
       break;
     case DocType.IMAGE:
-      const url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
+      url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
+      sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
+      break;
+    case DocType.VIDEO:
+    case DocType.AUDIO:
       sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
       break;
   }
@@ -268,6 +273,16 @@ const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
     }
   );
 
+const useGetThumbnailURL = (sdocId: number | undefined) =>
+  useQuery<string, Error>(
+    [QueryKey.SDOC_THUMBNAIL_URL, sdocId],
+    () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: true, thumbnail: true }),
+    {
+      enabled: !!sdocId,
+      select: (thumbnail_url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + thumbnail_url),
+    }
+  );
+
 const useGetMetadata = (sdocId: number | undefined) =>
   useQuery<Map<string, SourceDocumentMetadataRead>, Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
@@ -288,6 +303,15 @@ const useGetWordFrequencies = (sdocId: number | undefined) =>
   useQuery<SourceDocumentMetadataRead, Error>(
     [QueryKey.SDOC_WORD_FREQUENCIES, sdocId],
     () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_frequencies" }),
+    {
+      enabled: !!sdocId,
+    }
+  );
+
+const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentMetadataRead, Error>(
+    [QueryKey.SDOC_WORD_LEVEL_TRANSCRIPTIONS, sdocId],
+    () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_level_transcriptions" }),
     {
       enabled: !!sdocId,
     }
@@ -319,8 +343,10 @@ const SdocHooks = {
   useCreateMemo,
   // metadata
   useGetURL,
+  useGetThumbnailURL,
   useGetMetadata,
   useGetWordFrequencies,
+  useGetWordLevelTranscriptions
 };
 
 export default SdocHooks;

@@ -438,7 +438,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
     def _get_action_user_id_from_orm(self, db_obj: MemoORM) -> int:
         return db_obj.user_id
 
-    def _get_action_state_from_orm(self, db_obj: MemoORM) -> str | None:
+    def _get_action_state_from_orm(self, db_obj: MemoORM) -> Optional[str]:
         # TODO ASK FLO: HOW do i get db obj here?
         with SQLService().db_session() as db:
             return srsly.json_dumps(

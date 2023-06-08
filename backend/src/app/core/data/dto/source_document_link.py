@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class SourceDocumentLinkBase(BaseModel):
@@ -11,7 +12,10 @@ class SourceDocumentLinkBase(BaseModel):
 
 
 class SourceDocumentLinkCreate(SourceDocumentLinkBase):
-    pass
+    linked_source_document_id: Optional[int] = Field(
+        description="ID of the linked SourceDocument.",
+        default=None,
+    )
 
 
 class SourceDocumentLinkRead(SourceDocumentLinkBase):

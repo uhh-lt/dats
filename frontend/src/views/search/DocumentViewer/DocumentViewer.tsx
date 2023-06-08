@@ -12,6 +12,8 @@ import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import DocumentTagChip from "./DocumentTagChip";
 import ImageViewer from "./ImageViewer";
 import TextViewer from "./TextViewer";
+import VideoViewer from "./VideoViewer";
+import AudioViewer from "./AudioViewer";
 import { useDeletableDocumentTags } from "./useDeletableDocumentTags";
 import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments";
 
@@ -80,7 +82,6 @@ function DocumentViewer({
               />
             )}
           </Box>
-
           {sdoc.isSuccess && selectedAdoc && (
             <>
               {sdoc.data.doctype === DocType.TEXT && (
@@ -96,6 +97,25 @@ function DocumentViewer({
                     showEntities={showEntities}
                     width={parseInt(metadata.data.get("width")!.value)}
                     height={parseInt(metadata.data.get("height")!.value)}
+                  />
+                </>
+              )}
+              {sdoc.data.doctype === DocType.AUDIO && (
+                <>
+                  <AudioViewer
+                    sdoc={sdoc.data}
+                    adoc={selectedAdoc}
+                    showEntities={showEntities}
+                    height={200}
+                  />
+                </>
+              )}
+              {sdoc.data.doctype === DocType.VIDEO && metadata.isSuccess && (
+                <>
+                  <VideoViewer
+                    sdoc={sdoc.data}
+                    adoc={selectedAdoc}
+                    showEntities={showEntities}
                   />
                 </>
               )}

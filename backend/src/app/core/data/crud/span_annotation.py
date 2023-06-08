@@ -177,7 +177,7 @@ class CRUDSpanAnnotation(
     def _get_action_user_id_from_orm(self, db_obj: SpanAnnotationORM) -> int:
         return db_obj.annotation_document.user_id
 
-    def _get_action_state_from_orm(self, db_obj: SpanAnnotationORM) -> str | None:
+    def _get_action_state_from_orm(self, db_obj: SpanAnnotationORM) -> Optional[str]:
         return srsly.json_dumps(
             SpanAnnotationReadResolved(
                 **SpanAnnotationRead.from_orm(db_obj).dict(

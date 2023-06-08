@@ -41,6 +41,14 @@ docprepro:
       num_beams: 4
       device: cpu
 
+  audio:
+    whisper:
+      model: "base"
+      device: cpu
+      options:
+        beam_size: 5
+        best_of: 5
+
   simsearch:
     # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
     image_encoder:
