@@ -289,11 +289,21 @@ async def get_file_url(
     description="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
 )
 async def get_all_metadata(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    exclude_csv: Optional[str] = "word_level_transcriptions,word_frequencies"
 ) -> List[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return [SourceDocumentMetadataRead.from_orm(meta) for meta in sdoc_db_obj.metadata_]
+    metadata = [
+        SourceDocumentMetadataRead.from_orm(meta)
+        for meta in sdoc_db_obj.metadata_
+    ]
+    if exclude_csv is not None:
+        exclude = exclude_csv.split(",")
+        metadata = [meta for meta in metadata if meta.key not in exclude]
+    return metadata
 
 
 @router.get(
