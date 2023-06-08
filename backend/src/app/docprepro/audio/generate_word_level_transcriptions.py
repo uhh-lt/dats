@@ -1,21 +1,27 @@
-from functools import lru_cache
+import json
 import os
+from functools import lru_cache
 from typing import List
-
-from loguru import logger
 import numpy as np
-from scipy.io import wavfile
 import torch
+from loguru import logger
+from scipy.io import wavfile
 from tqdm import tqdm
 import whisper_timestamped
 
+from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document import SDocStatus
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataCreate,
+)
 from app.core.db.sql_service import SQLService
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
-from app.docprepro.audio.models.wordleveltranscription import WordLevelTranscription
+from app.docprepro.audio.models.wordleveltranscription import (
+    WordLevelTranscription,
+)
 from app.docprepro.util import update_sdoc_status
-from config import conf
 
+from config import conf
 
 sql = SQLService(echo=False)
 
@@ -65,7 +71,6 @@ def generate_word_level_transcriptions_(
         for segment in result["segments"]:
             for word in segment["words"]:
                 wlt = WordLevelTranscription(
-                    sdoc_id=ppad.sdoc_id,
                     text=word["text"],
                     start_ms=int(word["start"] * 1000),
                     end_ms=int(word["end"] * 1000),
