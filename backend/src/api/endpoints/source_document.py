@@ -205,6 +205,14 @@ async def get_keywords(
     if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+
+    # if the sdoc is audio or video we return the keywords of the transcript
+    if sdoc_db_obj.doctype == DocType.audio or sdoc_db_obj.doctype == DocType.video:
+        linked_sdocs = crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
+        if not len(linked_sdocs) == 1:
+            raise ValueError(f"Cannot find transcript for SDoc {sdoc_id}")
+        sdoc_id = linked_sdocs[0]
+
     return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(
         sdoc_id=sdoc_id, proj_id=sdoc_db_obj.project_id
     )
