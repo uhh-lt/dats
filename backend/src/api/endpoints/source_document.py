@@ -12,7 +12,12 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoInDB, MemoCreate, MemoRead, AttachedObjectType
+from app.core.data.dto.memo import (
+    MemoInDB,
+    MemoCreate,
+    MemoRead,
+    AttachedObjectType,
+)
 from app.core.data.dto.source_document import (
     SourceDocumentRead,
     SourceDocumentContent,
@@ -47,7 +52,9 @@ async def get_by_id(
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     if not only_if_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.get_status(
+            db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True
+        )
 
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return SourceDocumentRead.from_orm(db_obj)
@@ -86,14 +93,18 @@ async def get_content(
 ) -> Optional[SourceDocumentContent]:
     # TODO Flo: only if the user has access?
     if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.get_status(
+            db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True
+        )
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
         return ElasticSearchService().get_sdoc_content_by_sdoc_id(
             sdoc_id=sdoc_db_obj.id, proj_id=sdoc_db_obj.project_id
         )
-    url = RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+    url = RepoService().get_sdoc_url(
+        sdoc=SourceDocumentRead.from_orm(sdoc_db_obj)
+    )
     return SourceDocumentContent(source_document_id=sdoc_id, content=url)
 
 
@@ -115,14 +126,18 @@ async def get_html(
 ) -> Optional[SourceDocumentHTML]:
     # TODO Flo: only if the user has access?
     if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.get_status(
+            db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True
+        )
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
         return ElasticSearchService().get_sdoc_html_by_sdoc_id(
             sdoc_id=sdoc_db_obj.id, proj_id=sdoc_db_obj.project_id
         )
-    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+    return RepoService().get_sdoc_url(
+        sdoc=SourceDocumentRead.from_orm(sdoc_db_obj)
+    )
 
 
 @router.get(
@@ -144,7 +159,9 @@ async def get_tokens(
     )
 ) -> Optional[SourceDocumentTokens]:
     if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.get_status(
+            db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True
+        )
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_tokens_by_sdoc_id(
@@ -173,7 +190,9 @@ async def get_sentences(
     )
 ) -> Optional[SourceDocumentSentences]:
     if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.get_status(
+            db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True
+        )
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_sentences_by_sdoc_id(
@@ -198,7 +217,9 @@ async def get_keywords(
 ) -> Optional[SourceDocumentKeywords]:
     # TODO Flo: only if the user has access?
     if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
+        crud_sdoc.get_status(
+            db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True
+        )
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(
         sdoc_id=sdoc_db_obj.id, proj_id=sdoc_db_obj.project_id
@@ -406,7 +427,9 @@ async def link_tag(
     *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
+    sdoc_db_obj = crud_sdoc.link_document_tag(
+        db=db, sdoc_id=sdoc_id, tag_id=tag_id
+    )
     return SourceDocumentRead.from_orm(sdoc_db_obj)
 
 
@@ -421,7 +444,9 @@ async def unlink_tag(
     *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.unlink_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
+    sdoc_db_obj = crud_sdoc.unlink_document_tag(
+        db=db, sdoc_id=sdoc_id, tag_id=tag_id
+    )
     return SourceDocumentRead.from_orm(sdoc_db_obj)
 
 
@@ -492,8 +517,11 @@ async def get_user_memo(
 async def get_related_user_memos(
     *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
 ) -> List[MemoRead]:
-    db_objs = crud_memo.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id)
+    db_objs = crud_memo.read_by_user_and_sdoc(
+        db=db, user_id=user_id, sdoc_id=sdoc_id
+    )
     memos = [
-        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
+        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
+        for db_obj in db_objs
     ]
     return memos
