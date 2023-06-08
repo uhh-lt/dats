@@ -75,6 +75,8 @@ export const QueryKey = {
   SDOC_KEYWORDS: "sdocKeywords",
   // word frequencies of a document (by document id)
   SDOC_WORD_FREQUENCIES: "sdocFrequencies",
+  // word frequencies of a document (by document id)
+  SDOC_WORD_LEVEL_TRANSCRIPTIONS: "sdocTranscriptions",
   // sentences of a document (by document id)
   SDOC_SENTENCES: "sdocSentences",
   // content of a document (by document id)
