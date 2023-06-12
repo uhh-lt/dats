@@ -1370,7 +1370,17 @@
         "description": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
         "operationId": "get_all_metadata",
         "parameters": [
-          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" }
+          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
+          {
+            "required": false,
+            "schema": {
+              "title": "Exclude Csv",
+              "type": "string",
+              "default": "word_level_transcriptions,word_frequencies"
+            },
+            "name": "exclude_csv",
+            "in": "query"
+          }
         ],
         "responses": {
           "200": {
@@ -5088,7 +5098,7 @@
           "convert_to_webp_and_generate_thumbnails",
           "convert_mediafile_to_uncompressed_audio",
           "create_sdoc_links_from_audio",
-          "generate_transcription",
+          "generate_word_level_transcriptions",
           "create_transcript_file",
           "create_pptd_from_ppad",
           "create_sdoc_links_from_text",
@@ -6093,7 +6103,7 @@
               "convert_to_webp_and_generate_thumbnails",
               "convert_mediafile_to_uncompressed_audio",
               "create_sdoc_links_from_audio",
-              "generate_transcription",
+              "generate_word_level_transcriptions",
               "create_transcript_file",
               "create_pptd_from_ppad",
               "create_sdoc_links_from_text",

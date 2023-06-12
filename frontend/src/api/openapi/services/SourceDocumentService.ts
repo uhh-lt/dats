@@ -299,12 +299,21 @@ export class SourceDocumentService {
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getAllMetadata({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+  public static getAllMetadata({
+    sdocId,
+    excludeCsv = "word_level_transcriptions,word_frequencies",
+  }: {
+    sdocId: number;
+    excludeCsv?: string;
+  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata",
       path: {
         sdoc_id: sdocId,
+      },
+      query: {
+        exclude_csv: excludeCsv,
       },
       errors: {
         422: `Validation Error`,
