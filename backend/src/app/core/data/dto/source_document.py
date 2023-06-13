@@ -34,6 +34,9 @@ class SDocStatus(str, Enum):
     generate_word_level_transcriptions = (
         "generate_word_level_transcriptions"  # "generate word level transcriptions"
     )
+    generate_webp_thumbnails_from_audio = (
+        "generate_webp_thumbnails_from_audio"  # "generate webp thumbnail from audio"
+    )
     create_transcript_file = "create_transcript_file"  # "create transcript file"
     create_pptd_from_ppad = "create_pptd_from_ppad"  # "created pptds from ppads
     create_sdoc_links_from_text = "create_sdoc_links_from_text"  # "extracted sdoc links from text and stored in the db"

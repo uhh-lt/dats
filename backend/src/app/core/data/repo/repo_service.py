@@ -199,7 +199,11 @@ class RepoService(metaclass=SingletonMeta):
         thumbnail: bool = False,
     ) -> Path:
         filename = Path(self.truncate_filename(sdoc.filename))
-        if sdoc.doctype == DocType.image or sdoc.doctype == DocType.video:
+        if (
+            sdoc.doctype == DocType.image
+            or sdoc.doctype == DocType.video
+            or sdoc.doctype == DocType.audio
+        ):
             filename = self.generate_sdoc_filename(
                 filename=filename, webp=webp, thumbnail=thumbnail
             )

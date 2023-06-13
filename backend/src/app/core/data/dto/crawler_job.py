@@ -41,6 +41,12 @@ class CrawlerJobCreate(CrawlerJobBaseDTO):
     images_store_path: str = Field(
         description="Internal temporary output directory for the crawled images."
     )
+    videos_store_path: str = Field(
+        description="Internal temporary output directory for the crawled videos."
+    )
+    audios_store_path: str = Field(
+        description="Internal temporary output directory for the crawled audios."
+    )
 
 
 # Properties to update
@@ -65,6 +71,12 @@ class CrawlerJobRead(CrawlerJobBaseDTO):
     )
     images_store_path: str = Field(
         description="Internal temporary output directory for the crawled images."
+    )
+    videos_store_path: str = Field(
+        description="Internal temporary output directory for the crawled videos."
+    )
+    audios_store_path: str = Field(
+        description="Internal temporary output directory for the crawled audios."
     )
     crawled_data_zip_path: Optional[str] = Field(
         default=None,

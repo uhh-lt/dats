@@ -9,7 +9,6 @@ from app.core.data.crawler.utils import slugify
 
 
 class CustomImagesDownloadPipeline(ImagesPipeline):
-
     # Override this method for custom image filenames
     # https://docs.scrapy.org/en/latest/topics/media-pipeline.html#custom-file-naming
     def file_path(
@@ -24,7 +23,7 @@ class CustomImagesDownloadPipeline(ImagesPipeline):
             # the name of the html page (without .html)
             filename = item["filename"]
 
-            # # find image name and image suffix
+            # find image name and image suffix
             image_path = Path(urlparse(request.url).path)  # the last part of the url
             image_name = image_path.stem  # the name (without the extension)
             image_suffix = image_path.suffix

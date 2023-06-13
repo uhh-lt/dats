@@ -45,11 +45,17 @@ if __name__ == "__main__":
 
         # resolve relative path
         cj.images_store_path = str(repo.repo_root / cj.images_store_path)
+        cj.videos_store_path = str(repo.repo_root / cj.videos_store_path)
+        cj.audios_store_path = str(repo.repo_root / cj.audios_store_path)
         cj.output_dir = str(repo.repo_root / cj.output_dir)
 
         logger.info(f"Storing output at {cj.output_dir}!")
 
-        settings = get_settings(images_store_path=Path(cj.images_store_path))
+        settings = get_settings(
+            images_store_path=Path(cj.images_store_path),
+            videos_store_path=Path(cj.videos_store_path),
+            audios_store_path=Path(cj.audios_store_path),
+        )
 
         logger.info("Starting Scrapy CrawlerProcess! ... ")
         process: CrawlerProcess = CrawlerProcess(settings=settings)

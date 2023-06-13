@@ -154,15 +154,23 @@ class CrawlerService(metaclass=SingletonMeta):
         temp_output_dir = self.repo.create_temp_dir()
         temp_images_store_path = temp_output_dir / "images"
         temp_images_store_path.mkdir()
+        temp_videos_store_path = temp_output_dir / "videos"
+        temp_videos_store_path.mkdir()
+        temp_audios_store_path = temp_output_dir / "audios"
+        temp_audios_store_path.mkdir()
 
         # relative directories to communicate with the celery workers
         temp_output_dir = temp_output_dir.relative_to(self.repo.repo_root)
         temp_images_store_path = temp_images_store_path.relative_to(self.repo.repo_root)
+        temp_videos_store_path = temp_videos_store_path.relative_to(self.repo.repo_root)
+        temp_audios_store_path = temp_audios_store_path.relative_to(self.repo.repo_root)
 
         cj_create = CrawlerJobCreate(
             parameters=crawler_params,
             output_dir=str(temp_output_dir),
             images_store_path=str(temp_images_store_path),
+            videos_store_path=str(temp_videos_store_path),
+            audios_store_path=str(temp_audios_store_path),
         )
         cj_read = self.redis.store_crawler_job(crawler_job=cj_create)
         if cj_read is None:

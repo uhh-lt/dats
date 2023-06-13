@@ -42,6 +42,7 @@ dependencies:
   - conda-forge::pandas=1.5.3
   - conda-forge::scrapy=2.8.0
   - conda-forge::readability-lxml=0.8.1
+  - conda-forge::matplotlib=3.7.1
   - git=2.34.1
   - pip:
       - faiss-gpu==1.7.2

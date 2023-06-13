@@ -89,15 +89,15 @@ def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
             )
             image_document_preprocessing_without_import_apply_async(ppids=ppids)
             ppids = []
-        if len(ppads) >= conf.docprepro.celery.batch_size.image:
+        if len(ppads) >= conf.docprepro.celery.batch_size.audio:
             logger.info(
-                f"Sending batch of {len(ppids)} audio documents to image preprocessing celery worker!"
+                f"Sending batch of {len(ppads)} audio documents to audio preprocessing celery worker!"
             )
             audio_document_preprocessing_without_import_apply_async(ppads=ppads)
             ppads = []
-        if len(ppvds) >= conf.docprepro.celery.batch_size.image:
+        if len(ppvds) >= conf.docprepro.celery.batch_size.video:
             logger.info(
-                f"Sending batch of {len(ppids)} video documents to image preprocessing celery worker!"
+                f"Sending batch of {len(ppvds)} video documents to video preprocessing celery worker!"
             )
             video_document_preprocessing_without_import_apply_async(ppvds=ppvds)
             ppvds = []
