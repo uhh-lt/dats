@@ -70,7 +70,7 @@ function DocumentViewer({
                 />
               ))}
           </div>
-          <Box>
+          <div>
             <DocumentMetadata sdocId={sdocId} metadata={metadata} />
             {annotationDocuments.isLoading && <span>Loading annotation documents...</span>}
             {annotationDocuments.isError && <span>{annotationDocuments.error.message}</span>}
@@ -81,43 +81,26 @@ function DocumentViewer({
                 selectedAdoc={selectedAdoc}
               />
             )}
-          </Box>
+          </div>
           {sdoc.isSuccess && selectedAdoc && (
             <>
               {sdoc.data.doctype === DocType.TEXT && (
-                <>
-                  <TextViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
-                </>
+                <TextViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
               )}
               {sdoc.data.doctype === DocType.IMAGE && metadata.isSuccess && (
-                <>
-                  <ImageViewer
-                    sdoc={sdoc.data}
-                    adoc={selectedAdoc}
-                    showEntities={showEntities}
-                    width={parseInt(metadata.data.get("width")!.value)}
-                    height={parseInt(metadata.data.get("height")!.value)}
-                  />
-                </>
+                <ImageViewer
+                  sdoc={sdoc.data}
+                  adoc={selectedAdoc}
+                  showEntities={showEntities}
+                  width={parseInt(metadata.data.get("width")!.value)}
+                  height={parseInt(metadata.data.get("height")!.value)}
+                />
               )}
               {sdoc.data.doctype === DocType.AUDIO && (
-                <>
-                  <AudioViewer
-                    sdoc={sdoc.data}
-                    adoc={selectedAdoc}
-                    showEntities={showEntities}
-                    height={200}
-                  />
-                </>
+                <AudioViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} height={200} />
               )}
-              {sdoc.data.doctype === DocType.VIDEO && metadata.isSuccess && (
-                <>
-                  <VideoViewer
-                    sdoc={sdoc.data}
-                    adoc={selectedAdoc}
-                    showEntities={showEntities}
-                  />
-                </>
+              {sdoc.data.doctype === DocType.VIDEO && (
+                <VideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
               )}
             </>
           )}

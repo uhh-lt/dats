@@ -308,10 +308,22 @@ const useGetWordFrequencies = (sdocId: number | undefined) =>
     }
   );
 
+interface WordLevelTranscription {
+  text: string;
+  start_ms: number;
+  end_ms: number;
+}
+
 const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentMetadataRead, Error>(
+  useQuery<WordLevelTranscription[], Error>(
     [QueryKey.SDOC_WORD_LEVEL_TRANSCRIPTIONS, sdocId],
-    () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_level_transcriptions" }),
+    async () => {
+      const metadata = await SourceDocumentService.readMetadataByKey({
+        sdocId: sdocId!,
+        metadataKey: "word_level_transcriptions",
+      });
+      return JSON.parse(metadata.value) as WordLevelTranscription[];
+    },
     {
       enabled: !!sdocId,
     }
@@ -346,7 +358,7 @@ const SdocHooks = {
   useGetThumbnailURL,
   useGetMetadata,
   useGetWordFrequencies,
-  useGetWordLevelTranscriptions
+  useGetWordLevelTranscriptions,
 };
 
 export default SdocHooks;

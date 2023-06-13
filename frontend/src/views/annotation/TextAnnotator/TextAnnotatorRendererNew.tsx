@@ -13,6 +13,8 @@ import { FilterType, SearchFilter } from "../../search/SearchFilter";
 import { SearchActions } from "../../search/searchSlice";
 import { IToken } from "./IToken";
 import SdocImageLink from "./SdocImageLink";
+import SdocVideoLink from "./SdocVideoLink";
+import SdocAudioLink from "./SdocAudioLink";
 
 const htmlToReactParser = new Parser();
 
@@ -208,6 +210,66 @@ function TextAnnotationRendererNew({
               return (
                 <SdocImageLink
                   key={`image-link-${filename}`}
+                  filename={filename}
+                  toPrefix={isViewer ? `../search/doc/` : `../annotation/`}
+                  projectId={projectId}
+                />
+              );
+            }
+          },
+        },
+        // processing of videos
+        {
+          shouldProcessNode: function (node: any) {
+            return node.name === "video";
+          },
+          processNode: function (node: any, children: any[], index: any) {
+            let filename = undefined;
+            // check if node has a src attribute
+            if (node && node.attribs && node.attribs.src) {
+              filename = node.attribs.src;
+            } else {
+              // check if node has a source child with a src attribute
+              let source = children.find((child) => child.type === "source");
+              if (source && source.props.hasOwnProperty("src")) {
+                filename = source.props.src;
+              }
+            }
+            // if a filename was found, create a link to the video
+            if (filename) {
+              return (
+                <SdocVideoLink
+                  key={`video-link-${filename}`}
+                  filename={filename}
+                  toPrefix={isViewer ? `../search/doc/` : `../annotation/`}
+                  projectId={projectId}
+                />
+              );
+            }
+          },
+        },
+        // processing of audios
+        {
+          shouldProcessNode: function (node: any) {
+            return node.name === "audio";
+          },
+          processNode: function (node: any, children: any[], index: any) {
+            let filename = undefined;
+            // check if node has a src attribute
+            if (node && node.attribs && node.attribs.src) {
+              filename = node.attribs.src;
+            } else {
+              // check if node has a source child with a src attribute
+              let source = children.find((child) => child.type === "source");
+              if (source && source.props.hasOwnProperty("src")) {
+                filename = source.props.src;
+              }
+            }
+            // if a filename was found, create a link to the video
+            if (filename) {
+              return (
+                <SdocAudioLink
+                  key={`audio-link-${filename}`}
                   filename={filename}
                   toPrefix={isViewer ? `../search/doc/` : `../annotation/`}
                   projectId={projectId}
