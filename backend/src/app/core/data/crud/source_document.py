@@ -213,15 +213,18 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         return query.all()
 
-    def get_number_of_sdocs_in_project_by_status(
-        self, db: Session, *, proj_id: int, status: SDocStatus
+    def get_number_of_sdocs_in_project(
+        self, db: Session, *, proj_id: int, status: Optional[SDocStatus] = None
     ) -> int:
-        return (
-            db.query(self.model)
-            .filter(self.model.project_id == proj_id, self.model.status == status)
-            .with_entities(func.count())
-            .scalar()
-        )
+        query = db.query(self.model)
+        if status is not None:
+            query = query.filter(
+                self.model.project_id == proj_id, self.model.status == status
+            )
+        else:
+            query = query.filter(self.model.project_id == proj_id)
+        return query.with_entities(func.count()).scalar()
+
 
     def read_by_project(
         self,
