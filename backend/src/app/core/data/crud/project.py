@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 import srsly
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import crud_user, SYSTEM_USER_ID
 from app.core.data.dto.action import ActionType
@@ -17,6 +18,7 @@ from app.core.data.dto.project import (
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.sql_service import SQLService
 from app.core.data.dto.user import UserRead
 
 
@@ -109,11 +111,13 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         return user_db_obj
 
     def _get_action_state_from_orm(self, db_obj: ProjectORM) -> Optional[str]:
+        with SQLService().db_session() as db:
+            num_sdocs = crud_sdoc.get_number_of_sdocs_in_project(db=db, proj_id=db_obj.id)
         return srsly.json_dumps(
             ProjectReadAction(
                 **ProjectRead.from_orm(db_obj).dict(),
                 users=[UserRead.from_orm(user) for user in db_obj.users],
-                num_sdocs=len(db_obj.source_documents)
+                num_sdocs=num_sdocs
             ).dict()
         )
 

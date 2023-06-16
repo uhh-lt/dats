@@ -3,6 +3,7 @@ from typing import List, Optional, Set, Tuple
 import srsly
 from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
 from app.core.data.crud.document_tag import crud_document_tag
+from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
 from app.core.data.dto.action import ActionType
@@ -34,6 +35,7 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.sql_service import SQLService
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
@@ -797,14 +799,14 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         ]
 
     def _get_action_state_from_orm(self, db_obj: SourceDocumentORM) -> Optional[str]:
+        with SQLService().db_session() as db:
+            metadata = crud_sdoc_meta.read_by_sdoc(db, sdoc_id=db_obj.id)
+
         return srsly.json_dumps(
             SourceDocumentReadAction(
                 **SourceDocumentRead.from_orm(db_obj).dict(),
                 tags=[DocumentTagRead.from_orm(tag) for tag in db_obj.document_tags],
-                metadata=[
-                    SourceDocumentMetadataRead.from_orm(metadata)
-                    for metadata in db_obj.metadata_
-                ],
+                metadata=[SourceDocumentMetadataRead.from_orm(md) for md in metadata],
                 # TODO: can we get the keywords?
             ).dict()
         )
