@@ -114,5 +114,17 @@ class CRUDSourceDocumentMetadata(
 
         return list(map(lambda t: t[0], query.all()))
 
+    def read_by_sdoc(
+        self, db: Session, sdoc_id: int
+    ) -> List[SourceDocumentMetadataORM]:
+        db_objs = (
+            db.query(self.model)
+            .filter(self.model.source_document_id == sdoc_id)
+            .all()
+        )
+        if not db_objs:
+            raise NoSuchElementError(self.model, source_document_id=sdoc_id)
+        return db_objs
+
 
 crud_sdoc_meta = CRUDSourceDocumentMetadata(SourceDocumentMetadataORM)
