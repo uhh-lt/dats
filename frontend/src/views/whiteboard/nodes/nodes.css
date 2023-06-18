@@ -1,6 +1,8 @@
 .node-header {
     display: block;
     color: white;
+    min-width: 110px;
+    inline-size: min-content;
 }
 
 .memo-node {
@@ -49,4 +51,17 @@
     border-radius: 5px;
     overflow: hidden;
     border: 1px solid lightgray;
+}
+
+.span-node {
+    max-width: 160px;
+    border: 1px solid darkgray;
+    padding: 4px;
+    border-radius: 5px;
+}
+
+.bbox-node {
+    border: 1px solid darkgray;
+    padding: 4px;
+    border-radius: 5px;
 }

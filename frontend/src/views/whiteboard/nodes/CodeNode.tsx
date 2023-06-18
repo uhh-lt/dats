@@ -2,17 +2,16 @@ import React, { useCallback } from "react";
 import { Position } from "reactflow";
 import { Card, CardContent, CardHeader, Stack, Typography } from "@mui/material";
 import "./nodes.css";
-import TagHooks from "../../../api/TagHooks";
 import LabelIcon from "@mui/icons-material/Label";
+import CodeHooks from "../../../api/CodeHooks";
 import { NodeProps } from "./MemoNode";
 import ExpandHandle from "./ExpandHandle";
 
-function TagNode({ data, isConnectable }: NodeProps) {
-  const tag: any = TagHooks.useGetTag(data.objId);
-  const title = tag.isLoading ? "Loading" : tag.isError ? "Error" : tag.isSuccess ? tag.data.title : "";
-  const hasDescription = tag.isSuccess && tag.data.description;
+function CodeNode({ data, isConnectable }: NodeProps) {
+  const code: any = CodeHooks.useGetCode(data.objId);
+  const name = code.isLoading ? "Loading" : code.isError ? "Error" : code.isSuccess ? code.data.name : "";
 
-  // TODO: use <input> with onChange to edit a tag (name and description)
+  // TODO: use <input> with onChange to edit a code (name and description)
   const onChange = useCallback((evt: any) => {
     console.log(evt.target.value);
   }, []);
@@ -24,19 +23,19 @@ function TagNode({ data, isConnectable }: NodeProps) {
       )}
       <CardHeader
         titleTypographyProps={{ fontSize: 12, fontWeight: "bold" }}
-        style={{ padding: hasDescription ? "0 0 4px" : 1 }}
+        style={{ padding: "0 0 4px" }}
         className="node-header"
         title={
           <Stack direction="row" paddingRight={1}>
-            <LabelIcon style={{ color: tag.data?.color, blockSize: 18 }} />
-            {"Tag: " + title}
+            <LabelIcon style={{ color: code.data?.color, blockSize: 18 }} />
+            {"Code: " + name}
           </Stack>
         }
       />
-      {hasDescription && (
+      {code.isSuccess && code.data.description && (
         <CardContent className="tag-content" style={{ padding: 2, maxHeight: data.isSelected ? 120 : 50 }}>
           <Typography fontSize={10} textAlign={"center"}>
-            {tag.data.description}
+            {code.data.description}
           </Typography>
         </CardContent>
       )}
@@ -47,4 +46,4 @@ function TagNode({ data, isConnectable }: NodeProps) {
   );
 }
 
-export default TagNode;
+export default CodeNode;

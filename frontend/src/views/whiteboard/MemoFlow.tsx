@@ -5,6 +5,9 @@ import { AttachedObjectType, MemoRead } from "../../api/openapi";
 import MemoNode from "./nodes/MemoNode";
 import SdocNode from "./nodes/SdocNode";
 import TagNode from "./nodes/TagNode";
+import CodeNode from "./nodes/CodeNode";
+import SpanAnnotationNode from "./nodes/SpanAnnotationNode";
+import BboxAnnotationNode from "./nodes/BboxAnnotationNode";
 
 const getAttachedTypeNodeCode = (type: AttachedObjectType | undefined) => {
   switch (type) {
@@ -35,50 +38,165 @@ function MemoFlow({ memos }: MemoFlowProps) {
       id: memo.id.toString(),
       data: memo,
       type: "memo",
-      position: { x: 220 * index, y: 0 },
+      position: { x: 220 * (index % 4), y: 120 * Math.floor(index / 4) },
       zIndex: index,
       selected: false,
     };
   });
 
-  const nodeTypes = useMemo(() => ({ memo: MemoNode, sdoc: SdocNode, tag: TagNode }), []);
+  const nodeTypes = useMemo(
+    () => ({
+      memo: MemoNode,
+      sdoc: SdocNode,
+      tag: TagNode,
+      code: CodeNode,
+      span: SpanAnnotationNode,
+      bbox: BboxAnnotationNode,
+    }),
+    []
+  );
 
   const [nodes, setNodes] = useState<any[]>(initialNodes);
   const [edges, setEdges] = useState<any[]>([]);
+
+  const nodesIndexOfId = useCallback(
+    (nodeId: string) => {
+      let index = -1;
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].id === nodeId) {
+          return i;
+        }
+      }
+      return index;
+    },
+    [nodes]
+  );
+
+  const extendNode = useCallback(
+    (srcNode: any, attachedNodeId: string, extNodeType: string | undefined, position: Position) => {
+      nodes.push({
+        id: attachedNodeId,
+        type: extNodeType,
+        data: {
+          objId: srcNode.data.attached_object_id,
+          position: position,
+          isSelected: false,
+        },
+        position: {
+          x: srcNode.position.x,
+          y: srcNode.position.y + (position === Position.Top ? -120 : srcNode.height + 30),
+        },
+      });
+      setNodes([...nodes]);
+      if (position === Position.Bottom) {
+        // edge can have a label when setting a string property "label"
+        edges.push({
+          id: `${srcNode.id}+${attachedNodeId}`,
+          source: srcNode.id,
+          target: attachedNodeId,
+          type: "smoothstep",
+        });
+      } else {
+        edges.push({
+          id: `${attachedNodeId}+${srcNode.id}`,
+          source: attachedNodeId,
+          target: srcNode.id,
+          type: "smoothstep",
+        });
+      }
+      setEdges([...edges]);
+    },
+    [edges, nodes]
+  );
+
+  const removeNode = useCallback(
+    (nodeId: string) => {
+      let nodeIdx = nodesIndexOfId(nodeId);
+      for (let i = 0; i < edges.length; i++) {
+        if (edges[i].source === nodeId || edges[i].target === nodeId) {
+          edges.splice(i, 1);
+          break;
+        }
+      }
+      setEdges([...edges]);
+      nodes.splice(nodeIdx, 1);
+      setNodes([...nodes]);
+    },
+    [edges, nodes, nodesIndexOfId]
+  );
 
   const onNodesChange = useCallback((changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
 
   const handleNodeExpand = useCallback(
     (evt: any, data: any) => {
-      // TODO: Einklappen von Nodes, wenn auf die bereits verbundene Handle oder die Verbindung geklickt wird
-      const node = nodes.filter((node) => node.id === data.nodeId)[0];
-      const nodeType = getAttachedTypeNodeCode(node.data.attached_object_type);
-      const newNodeId = `${nodeType}-${node.data.attached_object_id}`;
-      // FIXME: falls die Node schon aufgeklappt war, muss die Node nur noch umpositioniert und an die
-      //  andere Handle geknüpft werden (momentan wird eine neue Node mit gleicher ID erzeugt)
-      nodes.push({
-        id: newNodeId,
-        type: nodeType,
-        data: {
-          objId: node.data.attached_object_id,
-          position: data.handleType === "target" ? Position.Top : Position.Bottom,
-          isSelected: false,
-        },
-        position: {
-          x: node.position.x,
-          y: node.position.y + (data.handleType === "target" ? -30 : node.height + 30),
-        },
-      });
-      setNodes([...nodes]);
-      if (data.handleType === "target") {
-        // edge can have a label when setting a string property "label"
-        edges.push({ id: `${newNodeId}+${data.nodeId}`, source: newNodeId, target: data.nodeId, type: "smoothstep" });
-      } else {
-        edges.push({ id: `${data.nodeId}+${newNodeId}`, source: data.nodeId, target: newNodeId, type: "smoothstep" });
+      let node = undefined;
+      for (let i = 0; i < nodes.length; i++) {
+        if (data.nodeId === nodes[i].id) {
+          node = nodes[i];
+          if (node.type !== "memo") {
+            removeNode(node.id);
+            return;
+          }
+          break;
+        }
       }
-      setEdges([...edges]);
+      const nodeType = getAttachedTypeNodeCode(node.data.attached_object_type);
+      const attachedNodeId = `${nodeType}-${node.data.attached_object_id}`;
+      let attachedNodeIdx = -1;
+      for (let i = 0; i < nodes.length; i++) {
+        if (attachedNodeId === nodes[i].id) {
+          attachedNodeIdx = i;
+        }
+      }
+      const isHandleTarget = data.handleType === "target";
+      if (attachedNodeIdx >= 0) {
+        for (let i = 0; i < edges.length; i++) {
+          let edge = edges[i];
+          if (edge.source === node.id) {
+            // attached node was on bottom
+            removeNode(attachedNodeId);
+            if (isHandleTarget) {
+              // recreate attached node on top
+              // TODO: it seems like these 2 cases do not work, because handles are in a conditional, as stated here:
+              //  https://github.com/wbkd/react-flow/issues/2364
+              extendNode(node, attachedNodeId, nodeType, Position.Top);
+            }
+            return;
+          } else if (edge.target === node.id) {
+            // attached node was on top
+            removeNode(attachedNodeId);
+            if (!isHandleTarget) {
+              extendNode(node, attachedNodeId, nodeType, Position.Bottom);
+            }
+            return;
+          }
+        }
+      } else {
+        // Attached node does not exist yet => expand new node
+        extendNode(node, attachedNodeId, nodeType, isHandleTarget ? Position.Top : Position.Bottom);
+      }
     },
-    [nodes, edges]
+    [nodes, edges, removeNode, extendNode]
+  );
+
+  const edgeRemove = useCallback(
+    (evt: any, edgeData: any) => {
+      for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i];
+        if (edgeData.source === nodes[i].id) {
+          if (node.type !== "memo") {
+            removeNode(node.id);
+            return;
+          }
+        } else if (edgeData.target === nodes[i].id) {
+          if (node.type !== "memo") {
+            removeNode(node.id);
+            return;
+          }
+        }
+      }
+    },
+    [nodes, removeNode]
   );
 
   const clearSelection = useCallback(() => {
@@ -114,6 +232,7 @@ function MemoFlow({ memos }: MemoFlowProps) {
         onNodesChange={onNodesChange}
         onPaneClick={clearSelection}
         onNodeClick={selectNode}
+        onEdgeClick={edgeRemove}
         onNodeDragStart={selectNode}
         onConnectStart={handleNodeExpand}
         nodeTypes={nodeTypes}

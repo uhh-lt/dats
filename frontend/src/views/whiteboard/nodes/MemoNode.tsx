@@ -4,16 +4,19 @@ import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import "./nodes.css";
 import ExpandHandle from "./ExpandHandle";
 
-interface MemoNodeProps {
+export interface NodeProps {
   data: any;
   isConnectable: boolean;
 }
 
-function MemoNode({ data, isConnectable }: MemoNodeProps) {
+function MemoNode({ data, isConnectable }: NodeProps) {
   // TODO: use <input> with onChange to edit a memo
   const onChange = useCallback((evt: any) => {
     console.log(evt.target.value);
   }, []);
+
+  // TODO: select the color of the node depending on the type of object that the memo connects to?
+  //  maybe show a text of the object type when hovering over handle
 
   return (
     <Card className="memo-node" style={{ backgroundColor: data.isSelected ? "#FDDA0D" : "lightgreen" }}>

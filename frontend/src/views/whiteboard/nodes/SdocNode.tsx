@@ -1,28 +1,22 @@
 import React from "react";
-import { Handle, Position } from "reactflow";
+import { Position } from "reactflow";
 import { Card, CardContent, CardHeader, CardMedia, Link, Typography } from "@mui/material";
 import "./nodes.css";
 import SdocHooks from "../../../api/SdocHooks";
 import { DocType, SourceDocumentRead } from "../../../api/openapi";
 import { toThumbnailUrl } from "../../search/utils";
+import { NodeProps } from "./MemoNode";
+import ExpandHandle from "./ExpandHandle";
 
-interface SdocNodeProps {
-  data: any;
-  isConnectable: boolean;
-}
-
-function SdocNode({ data, isConnectable }: SdocNodeProps) {
+function SdocNode({ data, isConnectable }: NodeProps) {
   const sdoc: any = SdocHooks.useGetDocument(data.objId);
   const docType = sdoc.data?.doctype;
   const title = sdoc.isLoading ? "Loading" : sdoc.isError ? "Error" : sdoc.isSuccess ? sdoc.data.filename : "";
 
-  // TODO: make the title <Link to={...}> to the page of the document
-  // TODO: double click on the node could open the respective document in a new tab
-
   return (
     <Card className="sdoc-node" style={{ backgroundColor: data.isSelected ? "#FDDA0D" : "#AF7C7B" }}>
       {data.position === Position.Bottom && (
-        <Handle id={data.id} type="target" position={Position.Top} isConnectable={isConnectable} />
+        <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
       )}
       <CardHeader
         titleTypographyProps={{ fontSize: 8, fontWeight: "bold" }}
@@ -50,7 +44,7 @@ function SdocNode({ data, isConnectable }: SdocNodeProps) {
         {sdoc.isSuccess ? (
           <>
             {docType === DocType.IMAGE ? (
-              <CardMedia component="img" height={60} image={toThumbnailUrl(sdoc.data.content)} alt="Paella dish" />
+              <CardMedia component="img" height={60} image={toThumbnailUrl(sdoc.data.content)} alt="Thumbnail" />
             ) : docType === DocType.TEXT ? (
               <TextPreview sdoc={sdoc.data} />
             ) : (
@@ -66,7 +60,7 @@ function SdocNode({ data, isConnectable }: SdocNodeProps) {
         )}
       </CardContent>
       {data.position === Position.Top && (
-        <Handle id={data.id} type="source" position={Position.Bottom} isConnectable={isConnectable} />
+        <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
       )}
     </Card>
   );
