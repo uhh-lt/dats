@@ -65,6 +65,8 @@ docprepro:
     batch_size:
       text: 200
       image: 10
+      audio: 10
+      video: 10
     backend:
       host: ${oc.env:REDIS_HOST, localhost}
       port: ${oc.env:REDIS_PORT, 6379}
