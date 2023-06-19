@@ -122,8 +122,6 @@ class CRUDSourceDocumentMetadata(
             .filter(self.model.source_document_id == sdoc_id)
             .all()
         )
-        if not db_objs:
-            raise NoSuchElementError(self.model, source_document_id=sdoc_id)
         return db_objs
 
 
