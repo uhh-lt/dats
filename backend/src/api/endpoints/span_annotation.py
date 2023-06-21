@@ -10,10 +10,10 @@ from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
 from app.core.data.dto.span_annotation import (
+    SpanAnnotationCreateWithCodeId,
     SpanAnnotationRead,
-    SpanAnnotationUpdate,
-    SpanAnnotationCreate,
     SpanAnnotationReadResolved,
+    SpanAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.span_group import SpanGroupRead
 
@@ -31,11 +31,11 @@ tags = ["spanAnnotation"]
 async def add_span_annotation(
     *,
     db: Session = Depends(get_db_session),
-    span: SpanAnnotationCreate,
+    span: SpanAnnotationCreateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_span_anno.create(db=db, create_dto=span)
+    db_obj = crud_span_anno.createWithCodeId(db=db, create_dto=span)
     span_dto = SpanAnnotationRead.from_orm(db_obj)
     if resolve_code:
         return SpanAnnotationReadResolved(
@@ -84,7 +84,7 @@ async def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
-    span_anno: SpanAnnotationUpdate,
+    span_anno: SpanAnnotationUpdateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?

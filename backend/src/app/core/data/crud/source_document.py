@@ -227,7 +227,6 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
             query = query.filter(self.model.project_id == proj_id)
         return query.with_entities(func.count()).scalar()
 
-
     def read_by_project(
         self,
         db: Session,

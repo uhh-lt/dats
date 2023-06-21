@@ -22,9 +22,21 @@ class BBoxAnnotationCreate(BBoxAnnotationBaseDTO):
     )
 
 
+class BBoxAnnotationCreateWithCodeId(BBoxAnnotationBaseDTO):
+    code_id: int = Field(description="Code the BBoxAnnotation refers to")
+    annotation_document_id: int = Field(
+        description="AnnotationDocument the BBoxAnnotation refers to"
+    )
+
+
 # Properties for updating
-class BBoxAnnotationUpdate(BBoxAnnotationBaseDTO, UpdateDTOBase):
+class BBoxAnnotationUpdate(BaseModel, UpdateDTOBase):
     current_code_id: int = Field(description="CurrentCode the BBoxAnnotation refers to")
+
+
+# Properties for updating
+class BBoxAnnotationUpdateWithCodeId(BaseModel, UpdateDTOBase):
+    code_id: int = Field(description="Code the BBoxAnnotation refers to")
 
 
 # Properties for reading (as in ORM)

@@ -6,9 +6,11 @@ from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationCreate,
+    BBoxAnnotationCreateWithCodeId,
     BBoxAnnotationRead,
     BBoxAnnotationReadResolvedCode,
     BBoxAnnotationUpdate,
+    BBoxAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
@@ -29,6 +31,26 @@ class CRUDBBoxAnnotation(
 
         return db_obj
 
+    def create_with_code_id(
+        self, db: Session, *, create_dto: BBoxAnnotationCreateWithCodeId
+    ) -> BBoxAnnotationORM:
+
+        from app.core.data.crud.code import crud_code
+
+        db_code = crud_code.read(db=db, id=create_dto.code_id)
+        ccid = db_code.current_code.id
+
+        create_dto_with_ccid = BBoxAnnotationCreate(
+            x_min=create_dto.x_min,
+            x_max=create_dto.x_max,
+            y_min=create_dto.y_min,
+            y_max=create_dto.y_max,
+            current_code_id=ccid,
+            annotation_document_id=create_dto.annotation_document_id,
+        )
+
+        return self.create(db=db, create_dto=create_dto_with_ccid)
+
     def read_by_adoc(
         self, db: Session, *, adoc_id: int, skip: int = 0, limit: int = 100
     ) -> List[BBoxAnnotationORM]:
@@ -48,6 +70,25 @@ class CRUDBBoxAnnotation(
         crud_adoc.update_timestamp(db=db, id=bbox_anno.annotation_document_id)
 
         return bbox_anno
+
+    def update_with_code_id(
+        self, db: Session, *, update_dto: BBoxAnnotationUpdateWithCodeId
+    ) -> BBoxAnnotationORM:
+
+        from app.core.data.crud.code import crud_code
+
+        db_code = crud_code.read(db=db, id=update_dto.code_id)
+        ccid = db_code.current_code.id
+
+        update_dto_with_ccid = BBoxAnnotationUpdate(
+            x_min=update_dto.x_min,
+            x_max=update_dto.x_max,
+            y_min=update_dto.y_min,
+            y_max=update_dto.y_max,
+            current_code_id=ccid,
+        )
+
+        return self.update(db=db, id=id, update_dto=update_dto_with_ccid)
 
     def remove(self, db: Session, *, id: int) -> Optional[BBoxAnnotationORM]:
         bbox_anno = super().remove(db, id=id)

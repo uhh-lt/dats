@@ -112,7 +112,9 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
     def _get_action_state_from_orm(self, db_obj: ProjectORM) -> Optional[str]:
         with SQLService().db_session() as db:
-            num_sdocs = crud_sdoc.get_number_of_sdocs_in_project(db=db, proj_id=db_obj.id)
+            num_sdocs = crud_sdoc.get_number_of_sdocs_in_project(
+                db=db, proj_id=db_obj.id
+            )
         return srsly.json_dumps(
             ProjectReadAction(
                 **ProjectRead.from_orm(db_obj).dict(),

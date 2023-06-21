@@ -118,9 +118,7 @@ class CRUDSourceDocumentMetadata(
         self, db: Session, sdoc_id: int
     ) -> List[SourceDocumentMetadataORM]:
         db_objs = (
-            db.query(self.model)
-            .filter(self.model.source_document_id == sdoc_id)
-            .all()
+            db.query(self.model).filter(self.model.source_document_id == sdoc_id).all()
         )
         return db_objs
 

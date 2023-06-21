@@ -9,6 +9,7 @@ from app.core.data.dto.action import ActionType
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationCreate,
+    SpanAnnotationCreateWithCodeId,
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
     SpanAnnotationUpdate,
@@ -53,6 +54,26 @@ class CRUDSpanAnnotation(
         )
 
         return db_obj
+
+    def create_with_code_id(
+        self, db: Session, *, create_dto: SpanAnnotationCreateWithCodeId
+    ) -> SpanAnnotationORM:
+        from app.core.data.crud.code import crud_code
+
+        db_code = crud_code.read(db=db, id=create_dto.code_id)
+        ccid = db_code.current_code.id
+
+        create_dto_with_ccid = SpanAnnotationCreate(
+            begin=create_dto.begin,
+            end=create_dto.end,
+            span_text=create_dto.span_text,
+            begin_token=create_dto.begin_token,
+            end_token=create_dto.end_token,
+            current_code_id=ccid,
+            annotation_document_id=create_dto.annotation_document_id,
+        )
+
+        return self.create(db=db, create_dto=create_dto_with_ccid)
 
     def create_multi(
         self, db: Session, *, create_dtos: List[SpanAnnotationCreate]
@@ -109,6 +130,20 @@ class CRUDSpanAnnotation(
         crud_adoc.update_timestamp(db=db, id=span_anno.annotation_document_id)
 
         return span_anno
+
+    def update_with_code_id(
+        self, db: Session, *, update_dto: SpanAnnotationCreateWithCodeId
+    ) -> SpanAnnotationORM:
+        from app.core.data.crud.code import crud_code
+
+        db_code = crud_code.read(db=db, id=update_dto.code_id)
+        ccid = db_code.current_code.id
+
+        update_dto_with_ccid = SpanAnnotationUpdate(
+            current_code_id=ccid,
+        )
+
+        return self.update(db=db, id=id, update_dto=update_dto_with_ccid)
 
     def remove(self, db: Session, *, id: int) -> Optional[SpanAnnotationORM]:
         span_anno = super().remove(db, id=id)

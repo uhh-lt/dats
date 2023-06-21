@@ -8,10 +8,10 @@ from api.util import get_object_memos
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationCreateWithCodeId,
     BBoxAnnotationRead,
     BBoxAnnotationReadResolvedCode,
-    BBoxAnnotationCreate,
-    BBoxAnnotationUpdate,
+    BBoxAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
@@ -30,11 +30,11 @@ tags = ["bboxAnnotation"]
 async def add_bbox_annotation(
     *,
     db: Session = Depends(get_db_session),
-    span: BBoxAnnotationCreate,
+    bbox: BBoxAnnotationCreateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_bbox_anno.create(db=db, create_dto=span)
+    db_obj = crud_bbox_anno.createWithCodeId(db=db, create_dto=bbox)
     bbox_dto = BBoxAnnotationRead.from_orm(db_obj)
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
@@ -81,7 +81,7 @@ async def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
-    bbox_anno: BBoxAnnotationUpdate,
+    bbox_anno: BBoxAnnotationUpdateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
