@@ -4,7 +4,7 @@ import {
   SpanAnnotationRead,
   SpanAnnotationReadResolved,
   SpanAnnotationService,
-  SpanAnnotationUpdate,
+  SpanAnnotationUpdateWithCodeId,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
@@ -31,7 +31,7 @@ const useCreateAnnotation = () =>
         if (fakeAnnotationIndex !== undefined && fakeAnnotationIndex !== -1) {
           const fakeAnnotation = old![fakeAnnotationIndex];
           // we already created a fake annotation, that is correct as is
-          if (fakeAnnotation.code.id === newSpanAnnotation.requestBody.current_code_id) {
+          if (fakeAnnotation.code.id === newSpanAnnotation.requestBody.code_id) {
             return old;
           }
           // we already created a fake annotation, but the code is different
@@ -40,7 +40,7 @@ const useCreateAnnotation = () =>
             ...fakeAnnotation,
             code: {
               ...fakeAnnotation.code,
-              id: newSpanAnnotation.requestBody.current_code_id,
+              id: newSpanAnnotation.requestBody.code_id,
             },
           };
           return result;
@@ -53,7 +53,7 @@ const useCreateAnnotation = () =>
             name: "",
             color: "",
             description: "",
-            id: newSpanAnnotation.requestBody.current_code_id,
+            id: newSpanAnnotation.requestBody.code_id,
             project_id: 0,
             user_id: 0,
             created: "",
@@ -93,7 +93,7 @@ const useUpdateSpan = () =>
   useMutation(
     (variables: {
       spanAnnotationToUpdate: SpanAnnotationRead | SpanAnnotationReadResolved;
-      requestBody: SpanAnnotationUpdate;
+      requestBody: SpanAnnotationUpdateWithCodeId;
       resolve?: boolean | undefined;
     }) =>
       SpanAnnotationService.updateById({
@@ -134,7 +134,7 @@ const useUpdateSpan = () =>
             ...oldSpanAnnotation,
             code: {
               ...oldSpanAnnotation.code,
-              id: updateData.requestBody.current_code_id,
+              id: updateData.requestBody.code_id,
             },
           };
           return result;

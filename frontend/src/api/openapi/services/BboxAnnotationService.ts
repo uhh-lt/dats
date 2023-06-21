@@ -1,10 +1,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BBoxAnnotationCreate } from "../models/BBoxAnnotationCreate";
+import type { BBoxAnnotationCreateWithCodeId } from "../models/BBoxAnnotationCreateWithCodeId";
 import type { BBoxAnnotationRead } from "../models/BBoxAnnotationRead";
 import type { BBoxAnnotationReadResolvedCode } from "../models/BBoxAnnotationReadResolvedCode";
-import type { BBoxAnnotationUpdate } from "../models/BBoxAnnotationUpdate";
+import type { BBoxAnnotationUpdateWithCodeId } from "../models/BBoxAnnotationUpdateWithCodeId";
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
@@ -24,7 +24,7 @@ export class BboxAnnotationService {
     requestBody,
     resolve = true,
   }: {
-    requestBody: BBoxAnnotationCreate;
+    requestBody: BBoxAnnotationCreateWithCodeId;
     /**
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
@@ -110,7 +110,7 @@ export class BboxAnnotationService {
     resolve = true,
   }: {
     bboxId: number;
-    requestBody: BBoxAnnotationUpdate;
+    requestBody: BBoxAnnotationUpdateWithCodeId;
     /**
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */

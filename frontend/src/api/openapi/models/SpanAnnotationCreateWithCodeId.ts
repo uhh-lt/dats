@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type SpanAnnotationCreate = {
+export type SpanAnnotationCreateWithCodeId = {
   /**
    * Begin of the SpanAnnotation in characters
    */
@@ -24,9 +24,9 @@ export type SpanAnnotationCreate = {
    */
   span_text: string;
   /**
-   * CurrentCode the SpanAnnotation refers to
+   * Code the SpanAnnotation refers to
    */
-  current_code_id: number;
+  code_id: number;
   /**
    * AnnotationDocument the SpanAnnotation refers to
    */

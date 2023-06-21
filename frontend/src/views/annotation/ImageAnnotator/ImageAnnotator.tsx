@@ -205,7 +205,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
       createMutation.mutate(
         {
           requestBody: {
-            current_code_id: code.id,
+            code_id: code.id,
             annotation_document_id: adoc.id,
             x_min: x,
             x_max: x + width,
@@ -239,7 +239,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
           bboxToUpdate: selectedBbox,
           resolve: true,
           requestBody: {
-            current_code_id: code.id,
+            code_id: code.id,
             x_min: selectedBbox.x_min,
             x_max: selectedBbox.x_max,
             y_min: selectedBbox.y_min,

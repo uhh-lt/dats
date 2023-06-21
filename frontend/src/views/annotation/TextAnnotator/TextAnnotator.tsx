@@ -2,7 +2,7 @@ import {
   AnnotationDocumentRead,
   BBoxAnnotationReadResolvedCode,
   SourceDocumentRead,
-  SpanAnnotationCreate,
+  SpanAnnotationCreateWithCodeId,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
 import React, { MouseEvent, useRef, useState } from "react";
@@ -26,7 +26,7 @@ interface AnnotatorRemasteredProps {
 function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // local state
   const spanContextMenuRef = useRef<CodeSelectorHandle>(null);
-  const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreate | undefined>(undefined);
+  const [fakeAnnotation, setFakeAnnotation] = useState<SpanAnnotationCreateWithCodeId | undefined>(undefined);
 
   // global client state (redux)
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
@@ -126,8 +126,8 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       .map((t) => t.text)
       .join(" ");
 
-    const requestBody: SpanAnnotationCreate = {
-      current_code_id: codes[0].id,
+    const requestBody: SpanAnnotationCreateWithCodeId = {
+      code_id: codes[0].id,
       annotation_document_id: adoc.id,
       begin: tokenData[begin_token].beginChar,
       end: tokenData[end_token].endChar,
@@ -155,7 +155,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
           name: "",
           color: "",
           description: "",
-          id: requestBody.current_code_id,
+          id: requestBody.code_id,
           project_id: 0,
           user_id: 0,
           created: "",
@@ -209,7 +209,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       {
         spanAnnotationToUpdate: annotation as SpanAnnotationReadResolved,
         requestBody: {
-          current_code_id: code.id,
+          code_id: code.id,
         },
       },
       {
@@ -228,7 +228,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       {
         requestBody: {
           ...fakeAnnotation,
-          current_code_id: code.id,
+          code_id: code.id,
         },
       },
       {

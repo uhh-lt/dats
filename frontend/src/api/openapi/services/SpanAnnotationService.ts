@@ -4,10 +4,10 @@
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
-import type { SpanAnnotationCreate } from "../models/SpanAnnotationCreate";
+import type { SpanAnnotationCreateWithCodeId } from "../models/SpanAnnotationCreateWithCodeId";
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
-import type { SpanAnnotationUpdate } from "../models/SpanAnnotationUpdate";
+import type { SpanAnnotationUpdateWithCodeId } from "../models/SpanAnnotationUpdateWithCodeId";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -25,7 +25,7 @@ export class SpanAnnotationService {
     requestBody,
     resolve = true,
   }: {
-    requestBody: SpanAnnotationCreate;
+    requestBody: SpanAnnotationCreateWithCodeId;
     /**
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
@@ -111,7 +111,7 @@ export class SpanAnnotationService {
     resolve = true,
   }: {
     spanId: number;
-    requestBody: SpanAnnotationUpdate;
+    requestBody: SpanAnnotationUpdateWithCodeId;
     /**
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */

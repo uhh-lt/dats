@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type BBoxAnnotationCreate = {
+export type BBoxAnnotationCreateWithCodeId = {
   /**
    * Absolute x_min coordinate of the BBoxAnnotation
    */
@@ -20,9 +20,9 @@ export type BBoxAnnotationCreate = {
    */
   y_max: number;
   /**
-   * CurrentCode the BBoxAnnotation refers to
+   * Code the BBoxAnnotation refers to
    */
-  current_code_id: number;
+  code_id: number;
   /**
    * AnnotationDocument the BBoxAnnotation refers to
    */

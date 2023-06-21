@@ -3,7 +3,7 @@ import {
   BBoxAnnotationRead,
   BBoxAnnotationReadResolvedCode,
   BboxAnnotationService,
-  BBoxAnnotationUpdate,
+  BBoxAnnotationUpdateWithCodeId,
   CancelablePromise,
   MemoRead,
 } from "./openapi";
@@ -35,7 +35,7 @@ const useCreateAnnotation = () =>
             name: "",
             color: "",
             description: "",
-            id: newBbox.requestBody.current_code_id,
+            id: newBbox.requestBody.code_id,
             project_id: 0,
             user_id: 0,
             created: "",
@@ -75,7 +75,7 @@ const useUpdate = () =>
   useMutation(
     (variables: {
       bboxToUpdate: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode;
-      requestBody: BBoxAnnotationUpdate;
+      requestBody: BBoxAnnotationUpdateWithCodeId;
       resolve?: boolean | undefined;
     }) =>
       BboxAnnotationService.updateById({
@@ -113,7 +113,7 @@ const useUpdate = () =>
             ...oldBboxAnnotation,
             code: {
               ...oldBboxAnnotation.code,
-              id: updateData.requestBody.current_code_id,
+              id: updateData.requestBody.code_id,
             },
           };
           return result;

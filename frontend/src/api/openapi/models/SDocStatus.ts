@@ -15,6 +15,7 @@ export enum SDocStatus {
   CONVERT_MEDIAFILE_TO_UNCOMPRESSED_AUDIO = "convert_mediafile_to_uncompressed_audio",
   CREATE_SDOC_LINKS_FROM_AUDIO = "create_sdoc_links_from_audio",
   GENERATE_WORD_LEVEL_TRANSCRIPTIONS = "generate_word_level_transcriptions",
+  GENERATE_WEBP_THUMBNAILS_FROM_AUDIO = "generate_webp_thumbnails_from_audio",
   CREATE_TRANSCRIPT_FILE = "create_transcript_file",
   CREATE_PPTD_FROM_PPAD = "create_pptd_from_ppad",
   CREATE_SDOC_LINKS_FROM_TEXT = "create_sdoc_links_from_text",

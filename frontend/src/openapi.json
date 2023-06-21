@@ -2289,7 +2289,9 @@
           }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreate" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationCreateWithCodeId" } }
+          },
           "required": true
         },
         "responses": {
@@ -2406,7 +2408,9 @@
           }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationUpdate" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SpanAnnotationUpdateWithCodeId" } }
+          },
           "required": true
         },
         "responses": {
@@ -2788,7 +2792,9 @@
           }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreate" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationCreateWithCodeId" } }
+          },
           "required": true
         },
         "responses": {
@@ -2905,7 +2911,9 @@
           }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationUpdate" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/BBoxAnnotationUpdateWithCodeId" } }
+          },
           "required": true
         },
         "responses": {
@@ -4260,9 +4268,9 @@
         "type": "string",
         "description": "An enumeration."
       },
-      "BBoxAnnotationCreate": {
-        "title": "BBoxAnnotationCreate",
-        "required": ["x_min", "x_max", "y_min", "y_max", "current_code_id", "annotation_document_id"],
+      "BBoxAnnotationCreateWithCodeId": {
+        "title": "BBoxAnnotationCreateWithCodeId",
+        "required": ["x_min", "x_max", "y_min", "y_max", "code_id", "annotation_document_id"],
         "type": "object",
         "properties": {
           "x_min": {
@@ -4285,11 +4293,7 @@
             "type": "integer",
             "description": "Absolute y_max coordinate of the BBoxAnnotation"
           },
-          "current_code_id": {
-            "title": "Current Code Id",
-            "type": "integer",
-            "description": "CurrentCode the BBoxAnnotation refers to"
-          },
+          "code_id": { "title": "Code Id", "type": "integer", "description": "Code the BBoxAnnotation refers to" },
           "annotation_document_id": {
             "title": "Annotation Document Id",
             "type": "integer",
@@ -4407,36 +4411,12 @@
           }
         }
       },
-      "BBoxAnnotationUpdate": {
-        "title": "BBoxAnnotationUpdate",
-        "required": ["x_min", "x_max", "y_min", "y_max", "current_code_id"],
+      "BBoxAnnotationUpdateWithCodeId": {
+        "title": "BBoxAnnotationUpdateWithCodeId",
+        "required": ["code_id"],
         "type": "object",
         "properties": {
-          "x_min": {
-            "title": "X Min",
-            "type": "integer",
-            "description": "Absolute x_min coordinate of the BBoxAnnotation"
-          },
-          "x_max": {
-            "title": "X Max",
-            "type": "integer",
-            "description": "Absolute x_max coordinate of the BBoxAnnotation"
-          },
-          "y_min": {
-            "title": "Y Min",
-            "type": "integer",
-            "description": "Absolute y_min coordinate of the BBoxAnnotation"
-          },
-          "y_max": {
-            "title": "Y Max",
-            "type": "integer",
-            "description": "Absolute y_max coordinate of the BBoxAnnotation"
-          },
-          "current_code_id": {
-            "title": "Current Code Id",
-            "type": "integer",
-            "description": "CurrentCode the BBoxAnnotation refers to"
-          }
+          "code_id": { "title": "Code Id", "type": "integer", "description": "Code the BBoxAnnotation refers to" }
         }
       },
       "Body_project-upload_project_sdoc": {
@@ -4534,7 +4514,15 @@
       },
       "CrawlerJobRead": {
         "title": "CrawlerJobRead",
-        "required": ["id", "parameters", "output_dir", "images_store_path", "created"],
+        "required": [
+          "id",
+          "parameters",
+          "output_dir",
+          "images_store_path",
+          "videos_store_path",
+          "audios_store_path",
+          "created"
+        ],
         "type": "object",
         "properties": {
           "status": {
@@ -4557,6 +4545,16 @@
             "title": "Images Store Path",
             "type": "string",
             "description": "Internal temporary output directory for the crawled images."
+          },
+          "videos_store_path": {
+            "title": "Videos Store Path",
+            "type": "string",
+            "description": "Internal temporary output directory for the crawled videos."
+          },
+          "audios_store_path": {
+            "title": "Audios Store Path",
+            "type": "string",
+            "description": "Internal temporary output directory for the crawled audios."
           },
           "crawled_data_zip_path": {
             "title": "Crawled Data Zip Path",
@@ -5099,6 +5097,7 @@
           "convert_mediafile_to_uncompressed_audio",
           "create_sdoc_links_from_audio",
           "generate_word_level_transcriptions",
+          "generate_webp_thumbnails_from_audio",
           "create_transcript_file",
           "create_pptd_from_ppad",
           "create_sdoc_links_from_text",
@@ -5630,17 +5629,9 @@
           }
         }
       },
-      "SpanAnnotationCreate": {
-        "title": "SpanAnnotationCreate",
-        "required": [
-          "begin",
-          "end",
-          "begin_token",
-          "end_token",
-          "span_text",
-          "current_code_id",
-          "annotation_document_id"
-        ],
+      "SpanAnnotationCreateWithCodeId": {
+        "title": "SpanAnnotationCreateWithCodeId",
+        "required": ["begin", "end", "begin_token", "end_token", "span_text", "code_id", "annotation_document_id"],
         "type": "object",
         "properties": {
           "begin": { "title": "Begin", "type": "integer", "description": "Begin of the SpanAnnotation in characters" },
@@ -5660,11 +5651,7 @@
             "type": "string",
             "description": "The SpanText the SpanAnnotation spans."
           },
-          "current_code_id": {
-            "title": "Current Code Id",
-            "type": "integer",
-            "description": "CurrentCode the SpanAnnotation refers to"
-          },
+          "code_id": { "title": "Code Id", "type": "integer", "description": "Code the SpanAnnotation refers to" },
           "annotation_document_id": {
             "title": "Annotation Document Id",
             "type": "integer",
@@ -5788,16 +5775,12 @@
           }
         }
       },
-      "SpanAnnotationUpdate": {
-        "title": "SpanAnnotationUpdate",
-        "required": ["current_code_id"],
+      "SpanAnnotationUpdateWithCodeId": {
+        "title": "SpanAnnotationUpdateWithCodeId",
+        "required": ["code_id"],
         "type": "object",
         "properties": {
-          "current_code_id": {
-            "title": "Current Code Id",
-            "type": "integer",
-            "description": "CurrentCode the SpanAnnotation refers to"
-          }
+          "code_id": { "title": "Code Id", "type": "integer", "description": "Code the SpanAnnotation refers to" }
         }
       },
       "SpanEntity": {
@@ -6104,6 +6087,7 @@
               "convert_mediafile_to_uncompressed_audio",
               "create_sdoc_links_from_audio",
               "generate_word_level_transcriptions",
+              "generate_webp_thumbnails_from_audio",
               "create_transcript_file",
               "create_pptd_from_ppad",
               "create_sdoc_links_from_text",

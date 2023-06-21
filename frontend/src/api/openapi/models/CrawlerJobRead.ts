@@ -27,6 +27,14 @@ export type CrawlerJobRead = {
    */
   images_store_path: string;
   /**
+   * Internal temporary output directory for the crawled videos.
+   */
+  videos_store_path: string;
+  /**
+   * Internal temporary output directory for the crawled audios.
+   */
+  audios_store_path: string;
+  /**
    * Path to the ZIP that contains the data of the CrawlerJob
    */
   crawled_data_zip_path?: string;
