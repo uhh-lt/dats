@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Box, Button, Card, CardActions, CardContent, TextField, Typography } from "@mui/material";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
@@ -44,6 +44,14 @@ function Login() {
       });
   };
   const handleError = (data: any) => console.error(data);
+
+  useEffect(() => {
+    if (!navigator.userAgent.includes("Chrome")) {
+      alert(
+        "Please use the Chrome browser for the best experience! We cannot guarantee that the DWTS works properly in other browsers."
+      );
+    }
+  }, []);
 
   return (
     <Box
