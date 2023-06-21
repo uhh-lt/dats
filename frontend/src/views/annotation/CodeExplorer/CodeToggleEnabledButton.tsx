@@ -1,8 +1,8 @@
 import { IconButton, IconButtonProps } from "@mui/material";
 import React from "react";
 import Tooltip from "@mui/material/Tooltip";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import ToggleOffIcon from "@mui/icons-material/ToggleOff";
+import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import ICodeTree from "./ICodeTree";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { flatTree } from "./TreeUtils";
@@ -30,10 +30,10 @@ function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: I
   };
 
   return (
-    <Tooltip title="Enable/disable code project-wide">
+    <Tooltip title={isDisabled ? "Enable code project-wide" : "Disable code project-wide"}>
       <span>
         <IconButton onClick={handleClick} {...props} disabled={!code}>
-          {!isDisabled ? <VisibilityIcon /> : <VisibilityOffIcon />}
+          {!isDisabled ? <ToggleOnIcon /> : <ToggleOffIcon />}
         </IconButton>
       </span>
     </Tooltip>
