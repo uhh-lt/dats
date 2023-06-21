@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     Column,
-    Integer,
-    ForeignKey,
-    String,
     DateTime,
-    func,
+    ForeignKey,
+    Integer,
+    String,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import relationship
 
@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
-    from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
     from app.core.data.orm.source_document_link import SourceDocumentLinkORM
+    from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 
 
 class SourceDocumentORM(ORMBase):

@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -12,23 +12,18 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import (
-    MemoInDB,
-    MemoCreate,
-    MemoRead,
-    AttachedObjectType,
-)
+from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.source_document import (
-    SourceDocumentRead,
     SourceDocumentContent,
-    SourceDocumentTokens,
-    SourceDocumentKeywords,
     SourceDocumentHTML,
+    SourceDocumentKeywords,
+    SourceDocumentRead,
     SourceDocumentSentences,
+    SourceDocumentTokens,
 )
 from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataUpdate,
     SourceDocumentMetadataRead,
+    SourceDocumentMetadataUpdate,
 )
 from app.core.data.repo.repo_service import RepoService
 from app.core.search.elasticsearch_service import ElasticSearchService

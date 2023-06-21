@@ -6,8 +6,8 @@
 #     https://docs.scrapy.org/en/latest/topics/settings.html
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-from typing import Dict, Any, Union
 from pathlib import Path
+from typing import Any, Dict, Union
 
 __settings = {
     "BOT_NAME": "crawler",

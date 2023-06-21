@@ -16,9 +16,9 @@ if not STARTUP_DONE:
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.code import CodeRead, CodeCreate
+from app.core.data.dto.code import CodeCreate, CodeRead
 from app.core.data.dto.project import ProjectCreate
-from app.core.data.dto.user import UserRead, UserCreate
+from app.core.data.dto.user import UserCreate, UserRead
 from app.core.db.sql_service import SQLService
 
 

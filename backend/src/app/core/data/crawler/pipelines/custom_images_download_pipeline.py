@@ -4,6 +4,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from scrapy.pipelines.images import ImagesPipeline
+
 from app.core.data.crawler.crawled_item import CrawledItem
 from app.core.data.crawler.utils import slugify
 

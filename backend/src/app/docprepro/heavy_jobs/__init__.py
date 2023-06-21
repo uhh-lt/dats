@@ -4,10 +4,10 @@ from typing import Any
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
-from app.core.data.dto.export_job import ExportJobRead, ExportJobParameters
-from app.core.data.export.export_service import ExportService
 from app.core.data.crawler.crawler_service import CrawlerService
-from app.core.data.dto.crawler_job import CrawlerJobRead, CrawlerJobParameters
+from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
+from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
+from app.core.data.export.export_service import ExportService
 
 import_uploaded_archive_task = "app.docprepro.heavy_jobs.tasks.import_uploaded_archive"
 start_export_job_task = "app.docprepro.heavy_jobs.tasks.start_export_job"

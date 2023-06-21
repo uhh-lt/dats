@@ -3,9 +3,9 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.user import UserCreate, UserUpdate, UserLogin
+from app.core.data.dto.user import UserCreate, UserLogin, UserUpdate
 from app.core.data.orm.user import UserORM
-from app.core.security import verify_password, generate_password_hash
+from app.core.security import generate_password_hash, verify_password
 
 SYSTEM_USER_ID: int = 1
 

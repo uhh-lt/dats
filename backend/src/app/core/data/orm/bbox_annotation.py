@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, func
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
+    from app.core.data.orm.annotation_document import AnnotationDocumentORM
     from app.core.data.orm.code import CurrentCodeORM
     from app.core.data.orm.object_handle import ObjectHandleORM
-    from app.core.data.orm.annotation_document import AnnotationDocumentORM
 
 
 class BBoxAnnotationORM(ORMBase):

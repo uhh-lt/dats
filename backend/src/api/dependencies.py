@@ -1,6 +1,6 @@
-from typing import Optional, Dict, Generator
+from typing import Dict, Generator, Optional
 
-from fastapi import Query, Depends
+from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError

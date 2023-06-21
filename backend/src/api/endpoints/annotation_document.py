@@ -1,16 +1,16 @@
-from typing import Optional, List, Dict, Union
+from typing import Dict, List, Optional, Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import skip_limit_params, resolve_code_param, get_db_session
+from api.dependencies import get_db_session, resolve_code_param, skip_limit_params
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.annotation_document import (
-    AnnotationDocumentRead,
     AnnotationDocumentCreate,
+    AnnotationDocumentRead,
 )
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,

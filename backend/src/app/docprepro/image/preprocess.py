@@ -3,8 +3,13 @@ from typing import List
 
 import torch
 from loguru import logger
-from transformers import DetrFeatureExtractor, DetrForObjectDetection
-from transformers import VisionEncoderDecoderModel, ViTFeatureExtractor, AutoTokenizer
+from transformers import (
+    AutoTokenizer,
+    DetrFeatureExtractor,
+    DetrForObjectDetection,
+    VisionEncoderDecoderModel,
+    ViTFeatureExtractor,
+)
 
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.convert_to_webp_and_generate_thumbnails import (

@@ -1,26 +1,25 @@
-from loguru import logger
-from pathlib import Path
 import shutil
+from pathlib import Path
+
+from loguru import logger
+from scrapy.crawler import CrawlerProcess
+from twisted.internet import asyncioreactor
 
 from app.core.data.repo.repo_service import RepoService
 
-from scrapy.crawler import CrawlerProcess
-
-from twisted.internet import asyncioreactor
-
 asyncioreactor.install()
+
+import argparse
 
 from twisted.internet import reactor
 
-import argparse
-from app.core.data.dto.crawler_job import CrawlerJobStatus
-
-from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
-from app.core.data.crawler.crawler_settings import get_settings
 from app.core.data.crawler.crawler_service import (
-    CrawlerService,
     CrawlerJobAlreadyStartedOrDoneError,
+    CrawlerService,
 )
+from app.core.data.crawler.crawler_settings import get_settings
+from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
+from app.core.data.dto.crawler_job import CrawlerJobStatus
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

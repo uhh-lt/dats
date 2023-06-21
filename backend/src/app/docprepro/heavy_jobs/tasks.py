@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import Tuple
 
+from app.core.data.dto.crawler_job import CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobRead
 from app.docprepro.celery.celery_worker import celery_worker
+from app.docprepro.heavy_jobs.crawl import start_crawler_job_
 from app.docprepro.heavy_jobs.export import start_export_job_
 from app.docprepro.heavy_jobs.preprocess import import_uploaded_archive_
-from app.docprepro.heavy_jobs.crawl import start_crawler_job_
-from app.core.data.dto.crawler_job import CrawlerJobRead
 
 
 @celery_worker.task(acks_late=True)

@@ -1,6 +1,9 @@
 from typing import List, Optional
 
 import srsly
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
@@ -16,8 +19,6 @@ from app.core.data.dto.span_annotation import (
 )
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.span_annotation import SpanAnnotationORM
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 
 
 class CRUDSpanAnnotation(

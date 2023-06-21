@@ -1,6 +1,7 @@
 import random
-from typing import Dict, Tuple
 from itertools import cycle
+from typing import Dict, Tuple
+
 from frozendict import frozendict
 
 """

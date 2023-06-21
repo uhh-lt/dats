@@ -1,9 +1,6 @@
 from fastapi import APIRouter
 
-from app.core.data.dto.export_job import (
-    ExportJobParameters,
-    ExportJobRead,
-)
+from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
 from app.docprepro.heavy_jobs import prepare_and_start_export_job_async
 

@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
+    from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
 
 

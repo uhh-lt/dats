@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Optional, Union
 
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError

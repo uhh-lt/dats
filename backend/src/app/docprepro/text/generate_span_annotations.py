@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 import spacy
 from loguru import logger

@@ -2,8 +2,8 @@ from typing import List
 
 import numpy as np
 import torch
-from PIL import Image
 from loguru import logger
+from PIL import Image
 
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.source_document import SDocStatus
@@ -11,7 +11,7 @@ from app.core.db.sql_service import SQLService
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
-from app.docprepro.simsearch.util import load_image, image_encoder
+from app.docprepro.simsearch.util import image_encoder, load_image
 from config import conf
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!

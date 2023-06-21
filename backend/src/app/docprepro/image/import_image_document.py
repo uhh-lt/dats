@@ -4,7 +4,7 @@ from typing import List
 from PIL import Image
 
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
+from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService

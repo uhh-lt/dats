@@ -1,6 +1,7 @@
 import logging
-from app.core.data.crawler.spiders.spider_base import SpiderBase
 from typing import List, Set, Union
+
+from app.core.data.crawler.spiders.spider_base import SpiderBase
 
 
 class ListOfURLSSpider(SpiderBase):

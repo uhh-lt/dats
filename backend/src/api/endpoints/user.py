@@ -1,5 +1,9 @@
 from typing import Dict, List, Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from api.util import credentials_exception
 from app.core.data.crud.annotation_document import crud_adoc
@@ -17,9 +21,6 @@ from app.core.data.dto.user import (
     UserUpdate,
 )
 from app.core.security import generate_jwt
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/user")
 tags = ["user"]

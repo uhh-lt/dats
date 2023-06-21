@@ -1,6 +1,8 @@
 from typing import List, Optional
+
 from fastapi import APIRouter
-from app.core.data.dto.feedback import FeedbackRead, FeedbackCreate
+
+from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.db.redis_service import RedisService
 
 router = APIRouter(prefix="/feedback")

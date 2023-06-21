@@ -1,11 +1,11 @@
-from typing import Union, List, Optional
+from typing import List, Optional, Union
 
 from fastapi import HTTPException
 from loguru import logger
 from pydantic import BaseModel, Field
 from starlette import status
 
-from app.core.data.dto.memo import MemoRead, MemoInDB, AttachedObjectType
+from app.core.data.dto.memo import AttachedObjectType, MemoInDB, MemoRead
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM

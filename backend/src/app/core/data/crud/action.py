@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
-from app.core.data.dto.action import ActionTargetObjectType, ActionType, ActionCreate
+from app.core.data.dto.action import ActionCreate, ActionTargetObjectType, ActionType
 from app.core.data.orm.action import ActionORM
 
 

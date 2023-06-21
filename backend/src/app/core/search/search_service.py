@@ -1,4 +1,4 @@
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
 from PIL.Image import Image
 
@@ -8,16 +8,16 @@ from app.core.data.crud.faiss_sentence_source_document_link import (
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import (
     SearchSDocsQueryParameters,
-    SimSearchSentenceHit,
     SimSearchImageHit,
+    SimSearchSentenceHit,
 )
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
 from app.docprepro.simsearch import (
-    find_similar_sentences_apply_async,
     find_similar_images_apply_async,
+    find_similar_sentences_apply_async,
 )
 from app.util.singleton_meta import SingletonMeta
 

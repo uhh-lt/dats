@@ -1,4 +1,4 @@
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc

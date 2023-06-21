@@ -1,8 +1,8 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional, Union
 
 from pydantic import BaseModel, Field
-from enum import Enum
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 

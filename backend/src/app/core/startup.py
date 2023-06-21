@@ -82,10 +82,9 @@ def __init_services__(
     reset_elasticsearch: bool = False,
 ) -> None:
     # import celery workers to configure
-    from app.docprepro.celery.celery_worker import celery_worker
-
     # import and init RepoService
     from app.core.data.repo.repo_service import RepoService
+    from app.docprepro.celery.celery_worker import celery_worker
 
     repos = RepoService()
     if create_root_repo_directory_structure:
@@ -111,10 +110,11 @@ def __init_services__(
 
 
 def __create_system_user__() -> None:
-    from app.core.db.sql_service import SQLService
+    from pydantic import EmailStr
+
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
-    from pydantic import EmailStr
+    from app.core.db.sql_service import SQLService
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):

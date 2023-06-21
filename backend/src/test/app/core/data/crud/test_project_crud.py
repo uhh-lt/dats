@@ -1,6 +1,6 @@
 import random
 import string
-from typing import Dict, Any
+from typing import Any, Dict
 
 import pytest
 from sqlalchemy.exc import IntegrityError
@@ -9,12 +9,12 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
-from app.core.data.crud.user import crud_user, SYSTEM_USER_ID
+from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoInDB, MemoCreate, AttachedObjectType, MemoRead
+from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
-from app.core.data.dto.user import UserRead, UserCreate
+from app.core.data.dto.user import UserCreate, UserRead
 from app.core.db.sql_service import SQLService
 from config import conf
 

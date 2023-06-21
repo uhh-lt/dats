@@ -1,9 +1,8 @@
 from typing import Any, List, Union
 
-from PIL.Image import Image
-
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
+from PIL.Image import Image
 
 # Flo: Task names (as they could be imported). Has to be defined before PreProTextDoc!
 index_text_document_in_faiss = (

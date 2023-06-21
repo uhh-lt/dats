@@ -1,12 +1,11 @@
 from pathlib import Path
 from typing import List
 
+from loguru import logger
 from tqdm import tqdm
 
-from loguru import logger
-
 from app.core.data.crud.source_document_link import crud_sdoc_link
-from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
+from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService

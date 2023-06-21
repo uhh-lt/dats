@@ -1,16 +1,16 @@
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends
 from requests import Session
 
-from api.dependencies import resolve_code_param, get_db_session
+from api.dependencies import get_db_session, resolve_code_param
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
 )
-from app.core.data.dto.span_group import SpanGroupRead, SpanGroupUpdate, SpanGroupCreate
+from app.core.data.dto.span_group import SpanGroupCreate, SpanGroupRead, SpanGroupUpdate
 
 router = APIRouter(prefix="/spangroup")
 tags = ["spanGroup"]

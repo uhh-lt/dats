@@ -1,17 +1,17 @@
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, func, Sequence
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Sequence, func
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
+    from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+    from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.span_annotation import SpanAnnotationORM
-    from app.core.data.orm.user import UserORM
-    from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.span_group import SpanGroupORM
-    from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+    from app.core.data.orm.user import UserORM
 
 annotation_document_id_sequence = Sequence(name="annotation_document_id_sequence")
 

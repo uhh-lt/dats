@@ -1,7 +1,7 @@
 import re
 from html.parser import HTMLParser
 from itertools import accumulate
-from typing import Union, Dict, List
+from typing import Dict, List, Union
 
 from tqdm import tqdm
 

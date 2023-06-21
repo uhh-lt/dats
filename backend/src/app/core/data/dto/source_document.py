@@ -1,13 +1,13 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
 from app.core.data.doc_type import DocType
-from app.core.data.dto.util import PaginatedResults
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
+from app.core.data.dto.util import PaginatedResults
 
 SDOC_FILENAME_MAX_LENGTH = 200
 SDOC_SUFFIX_MAX_LENGTH = 30

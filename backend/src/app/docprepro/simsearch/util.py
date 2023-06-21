@@ -2,8 +2,8 @@ from pathlib import Path
 from typing import Union
 
 import numpy as np
-from PIL import Image
 from loguru import logger
+from PIL import Image
 from sentence_transformers import SentenceTransformer
 
 from app.core.data.crud.source_document import crud_sdoc

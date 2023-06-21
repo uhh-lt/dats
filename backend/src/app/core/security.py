@@ -1,7 +1,7 @@
 import binascii
 import os
 from datetime import datetime, timedelta
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from jose import jwt
 from loguru import logger

@@ -7,7 +7,7 @@ from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.user import crud_user
 from app.core.data.dto import ProjectRead
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.user import UserRead, UserCreate, UserUpdate
+from app.core.data.dto.user import UserCreate, UserRead, UserUpdate
 from app.core.db.sql_service import SQLService
 
 

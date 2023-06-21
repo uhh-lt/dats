@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Any, Optional, Set, List, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import srsly
 from elasticsearch import Elasticsearch, helpers
@@ -8,23 +8,23 @@ from omegaconf import OmegaConf
 
 from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.search import (
+    ElasticMemoHit,
     ElasticSearchDocumentCreate,
+    ElasticSearchDocumentHit,
     ElasticSearchDocumentRead,
     ElasticSearchMemoCreate,
     ElasticSearchMemoRead,
-    ElasticSearchDocumentHit,
     ElasticSearchMemoUpdate,
+    KeywordStat,
     PaginatedElasticSearchDocumentHits,
     PaginatedMemoSearchResults,
-    ElasticMemoHit,
-    KeywordStat,
 )
 from app.core.data.dto.source_document import (
     SourceDocumentContent,
-    SourceDocumentTokens,
-    SourceDocumentKeywords,
     SourceDocumentHTML,
+    SourceDocumentKeywords,
     SourceDocumentSentences,
+    SourceDocumentTokens,
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf

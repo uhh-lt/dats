@@ -2,25 +2,21 @@ import json
 import os
 from functools import lru_cache
 from typing import List
+
 import numpy as np
 import torch
+import whisper_timestamped
 from loguru import logger
 from scipy.io import wavfile
 from tqdm import tqdm
-import whisper_timestamped
 
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document import SDocStatus
-from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataCreate,
-)
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.db.sql_service import SQLService
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
-from app.docprepro.audio.models.wordleveltranscription import (
-    WordLevelTranscription,
-)
+from app.docprepro.audio.models.wordleveltranscription import WordLevelTranscription
 from app.docprepro.util import update_sdoc_status
-
 from config import conf
 
 sql = SQLService(echo=False)

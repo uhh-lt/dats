@@ -1,5 +1,7 @@
 from typing import List
+
 from scrapy import Selector
+
 from app.core.data.crawler.crawled_item import CrawledItem
 
 

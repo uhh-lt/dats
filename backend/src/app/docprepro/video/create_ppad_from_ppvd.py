@@ -2,8 +2,8 @@ from typing import List
 
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
-from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
 from app.docprepro.util import update_sdoc_status
+from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
 
 
 def create_ppad_from_ppvd_(ppvds: List[PreProVideoDoc]) -> List[PreProAudioDoc]:

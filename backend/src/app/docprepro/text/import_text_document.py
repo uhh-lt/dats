@@ -1,15 +1,15 @@
 import os
 from pathlib import Path
-from typing import Tuple, List
+from typing import List, Tuple
 
 from loguru import logger
 from tika import parser
 
-from app.core.data.dto.source_document import SourceDocumentRead, SDocStatus
+from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
-from app.docprepro.util import update_sdoc_status, persist_as_sdoc
+from app.docprepro.util import persist_as_sdoc, update_sdoc_status
 
 # TODO Flo: Do we want this in the config ?
 TIKA_SUPPORTED_FILE_EXTENSIONS = [".docx", ".doc", ".pdf"]

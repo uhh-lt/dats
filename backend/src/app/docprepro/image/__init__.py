@@ -7,11 +7,11 @@ from celery import Signature
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch import index_image_document_in_faiss
 from app.docprepro.text import (
-    store_document_in_elasticsearch,
     finish_preprocessing,
-    store_span_annotations_in_db,
     generate_span_annotations,
     resolve_sdoc_links,
+    store_document_in_elasticsearch,
+    store_span_annotations_in_db,
 )
 
 # Flo: Task names (as they could be imported)

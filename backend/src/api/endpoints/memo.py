@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_db_session
 from app.core.data.crud.memo import crud_memo
-from app.core.data.dto.memo import MemoUpdate, MemoRead
+from app.core.data.dto.memo import MemoRead, MemoUpdate
 
 router = APIRouter(prefix="/memo")
 tags = ["memo"]

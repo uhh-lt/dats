@@ -1,8 +1,8 @@
-import ffmpeg
-from tqdm import tqdm
-
 from typing import List
+
+import ffmpeg
 from loguru import logger
+from tqdm import tqdm
 
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.dto.source_document import SDocStatus

@@ -7,8 +7,8 @@ from api.util import get_object_memos
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
-from app.core.data.dto.code import CodeRead, CodeUpdate, CodeCreate
-from app.core.data.dto.memo import MemoCreate, MemoInDB, MemoRead, AttachedObjectType
+from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
+from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.db.sql_service import SQLService
 
 

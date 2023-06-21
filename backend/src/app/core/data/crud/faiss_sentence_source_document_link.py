@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType, ORMModelType
+from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
 from app.core.data.dto.faiss_sentence_source_document_link import (
     FaissSentenceSourceDocumentLinkCreate,
 )

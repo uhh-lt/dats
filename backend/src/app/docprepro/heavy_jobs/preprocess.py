@@ -6,17 +6,17 @@ from tqdm import tqdm
 
 from app.core.data.doc_type import DocType, get_doc_type
 from app.core.data.repo.repo_service import (
+    FileNotFoundInRepositoryError,
     RepoService,
     UnsupportedDocTypeForSourceDocument,
-    FileNotFoundInRepositoryError,
 )
 from app.core.db.sql_service import SQLService
+from app.docprepro.audio import audio_document_preprocessing_without_import_apply_async
+from app.docprepro.audio.import_audio_document import import_audio_document_
 from app.docprepro.image import image_document_preprocessing_without_import_apply_async
 from app.docprepro.image.import_image_document import import_image_document_
 from app.docprepro.text import text_document_preprocessing_without_import_apply_async
 from app.docprepro.text.import_text_document import import_text_document_
-from app.docprepro.audio import audio_document_preprocessing_without_import_apply_async
-from app.docprepro.audio.import_audio_document import import_audio_document_
 from app.docprepro.video import video_document_preprocessing_without_import_apply_async
 from app.docprepro.video.import_video_document import import_video_document_
 from config import conf

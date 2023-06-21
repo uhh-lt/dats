@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 
 from scrapy.http import Request
 from scrapy.pipelines.files import FilesPipeline
-from app.core.data.crawler.crawled_item import CrawledItem
 
+from app.core.data.crawler.crawled_item import CrawledItem
 
 from ..utils import slugify
 

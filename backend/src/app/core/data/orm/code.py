@@ -2,22 +2,22 @@ from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
     Column,
-    Integer,
-    ForeignKey,
-    String,
     DateTime,
-    func,
+    ForeignKey,
+    Integer,
+    String,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.project import ProjectORM
-    from app.core.data.orm.object_handle import ObjectHandleORM
-    from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+    from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.span_annotation import SpanAnnotationORM
     from app.core.data.orm.user import UserORM
 
 

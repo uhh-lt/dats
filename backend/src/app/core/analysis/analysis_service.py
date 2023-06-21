@@ -1,12 +1,12 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
-from sqlalchemy import func, and_
+from sqlalchemy import and_, func
 
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
     AnalysisQueryParameters,
-    CodeOccurrence,
     CodeFrequencies,
+    CodeOccurrence,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead

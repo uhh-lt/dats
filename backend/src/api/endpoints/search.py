@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -6,19 +6,19 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import (
-    SearchSDocsQueryParameters,
-    SpanEntityFrequency,
+    KeywordStat,
+    MemoContentQuery,
+    MemoTitleQuery,
     PaginatedElasticSearchDocumentHits,
+    PaginatedMemoSearchResults,
+    SearchSDocsQueryParameters,
+    SimSearchImageHit,
+    SimSearchSentenceHit,
     SourceDocumentContentQuery,
     SourceDocumentFilenameQuery,
-    MemoContentQuery,
-    PaginatedMemoSearchResults,
-    MemoTitleQuery,
-    KeywordStat,
-    TagStat,
     SpanEntityDocumentFrequencyResult,
-    SimSearchSentenceHit,
-    SimSearchImageHit,
+    SpanEntityFrequency,
+    TagStat,
 )
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService

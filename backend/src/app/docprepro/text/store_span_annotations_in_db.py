@@ -9,8 +9,8 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
-from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.code import CodeCreate
+from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.db.sql_service import SQLService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc

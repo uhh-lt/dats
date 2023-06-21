@@ -1,8 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 
-from app.core.data.dto.user import UserRead
 from pydantic import BaseModel, Field
+
+from app.core.data.dto.user import UserRead
 
 from .dto_base import UpdateDTOBase
 

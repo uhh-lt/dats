@@ -3,11 +3,12 @@ from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
+
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.repo.repo_service import RepoService
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.util import update_sdoc_status
-from tqdm import tqdm
 
 repo = RepoService()
 

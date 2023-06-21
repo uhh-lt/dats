@@ -1,7 +1,7 @@
 from typing import List
 
-from tqdm import tqdm
 from loguru import logger
+from tqdm import tqdm
 
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc

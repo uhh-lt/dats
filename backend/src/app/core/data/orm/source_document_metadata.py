@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Integer, ForeignKey, String, Boolean, UniqueConstraint
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class SourceDocumentMetadataORM(ORMBase):
