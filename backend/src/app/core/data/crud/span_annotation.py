@@ -132,7 +132,7 @@ class CRUDSpanAnnotation(
         return span_anno
 
     def update_with_code_id(
-        self, db: Session, *, update_dto: SpanAnnotationCreateWithCodeId
+        self, db: Session, *, id: int, update_dto: SpanAnnotationCreateWithCodeId
     ) -> SpanAnnotationORM:
         from app.core.data.crud.code import crud_code
 

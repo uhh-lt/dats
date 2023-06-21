@@ -72,7 +72,7 @@ class CRUDBBoxAnnotation(
         return bbox_anno
 
     def update_with_code_id(
-        self, db: Session, *, update_dto: BBoxAnnotationUpdateWithCodeId
+        self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdateWithCodeId
     ) -> BBoxAnnotationORM:
 
         from app.core.data.crud.code import crud_code

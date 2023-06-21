@@ -35,7 +35,7 @@ async def add_span_annotation(
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_span_anno.createWithCodeId(db=db, create_dto=span)
+    db_obj = crud_span_anno.create_with_code_id(db=db, create_dto=span)
     span_dto = SpanAnnotationRead.from_orm(db_obj)
     if resolve_code:
         return SpanAnnotationReadResolved(
@@ -88,7 +88,7 @@ async def update_by_id(
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_span_anno.update(db=db, id=span_id, update_dto=span_anno)
+    db_obj = crud_span_anno.update_with_code_id(db=db, id=span_id, update_dto=span_anno)
     span_dto = SpanAnnotationRead.from_orm(db_obj)
     if resolve_code:
         return SpanAnnotationReadResolved(

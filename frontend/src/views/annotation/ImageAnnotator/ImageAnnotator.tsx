@@ -240,10 +240,6 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
           resolve: true,
           requestBody: {
             code_id: code.id,
-            x_min: selectedBbox.x_min,
-            x_max: selectedBbox.x_max,
-            y_min: selectedBbox.y_min,
-            y_max: selectedBbox.y_max,
           },
         },
         {

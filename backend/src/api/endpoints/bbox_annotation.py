@@ -34,7 +34,7 @@ async def add_bbox_annotation(
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_bbox_anno.createWithCodeId(db=db, create_dto=bbox)
+    db_obj = crud_bbox_anno.create_with_code_id(db=db, create_dto=bbox)
     bbox_dto = BBoxAnnotationRead.from_orm(db_obj)
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
@@ -85,7 +85,7 @@ async def update_by_id(
     resolve_code: bool = Depends(resolve_code_param)
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
-    db_obj = crud_bbox_anno.update(db=db, id=bbox_id, update_dto=bbox_anno)
+    db_obj = crud_bbox_anno.update_with_code_id(db=db, id=bbox_id, update_dto=bbox_anno)
     bbox_dto = BBoxAnnotationRead.from_orm(db_obj)
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
