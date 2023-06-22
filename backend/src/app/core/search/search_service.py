@@ -35,6 +35,9 @@ class SearchService(metaclass=SingletonMeta):
         with self.sqls.db_session() as db:
             sdocs_ids = []
 
+            if crud_sdoc.count_by_project(db=db, proj_id=query_params.proj_id) == 0:
+                return sdocs_ids
+
             if query_params.span_entities:
                 sdocs_ids.append(
                     crud_sdoc.get_ids_by_span_entities(

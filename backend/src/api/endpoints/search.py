@@ -105,6 +105,8 @@ async def search_keyword_stats(
     sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
         query_params=query_params
     )
+    if len(sdoc_ids) == 0:
+        return []
     keyword_stats = ElasticSearchService().get_sdoc_keyword_counts_by_sdoc_ids(
         proj_id=query_params.proj_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
