@@ -47,7 +47,6 @@ def convert_to_pcm_(ppads: List[PreProAudioDoc]) -> List[PreProAudioDoc]:
 def create_sdoc_link_ppad_(
     ppad: PreProAudioDoc, parent_source_document_id: int
 ) -> PreProAudioDoc:
-
     with sql.db_session() as db:
         create_dtos = [
             SourceDocumentLinkCreate(

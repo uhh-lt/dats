@@ -21,7 +21,6 @@ sql = SQLService()
 
 def store_span_annotations_in_db_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     with sql.db_session() as db:
-
         for pptd in tqdm(pptds, desc="Persisting Automatic SpanAnnotations... "):
             # create AnnoDoc for system user
             # Flo: since we're sending the automatically generated caption from image docs as pptds it could be

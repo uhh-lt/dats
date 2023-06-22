@@ -709,7 +709,6 @@ class ExportService(metaclass=SingletonMeta):
         project_id: int,
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
-
         (
             exported_adocs,
             exported_memos,

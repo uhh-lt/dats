@@ -66,7 +66,6 @@ def generate_and_import_transcript_file_(
 def create_sdoc_link_pptd_(
     pptd: PreProTextDoc, parent_source_document_id: int
 ) -> PreProTextDoc:
-
     with sql.db_session() as db:
         create_dtos = [
             SourceDocumentLinkCreate(

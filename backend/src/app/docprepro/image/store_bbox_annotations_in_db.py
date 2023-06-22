@@ -21,7 +21,6 @@ sql = SQLService(echo=False)
 
 def store_bbox_annotations_in_db_(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
     with sql.db_session() as db:
-
         for ppid in tqdm(ppids, desc="Persisting automatic BBox Annotations..."):
             # create AnnoDoc for system user
             adoc_create = AnnotationDocumentCreate(
