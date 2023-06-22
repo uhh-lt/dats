@@ -1,12 +1,49 @@
+from typing import List
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from api.dependencies import get_db_session
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.prepro import PreProProjectStatus
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from app.core.data.dto.preprocessing_job import PreprocessingJobRead
+from app.core.db.redis_service import RedisService
 
 router = APIRouter(prefix="/prepro")
 tags = ["prepro"]
+
+
+@router.get(
+    "/{prepro_job_id}",
+    tags=tags,
+    response_model=PreprocessingJobRead,
+    summary="Returns the PreprocessingJob for the given ID",
+    description="Returns the PreprocessingJob for the given ID if it exists",
+)
+async def get_prepro_job(
+    *,
+    prepro_job_id: str,
+) -> PreprocessingJobRead:
+    # TODO Flo: only if the user has access?
+    return redis.get_prepro_job(prepro_job_id=prepro_job_id)
+
+
+@router.get(
+    "/project/{project_id}",
+    tags=tags,
+    response_model=List[PreprocessingJobRead],
+    summary="Returns all PreprocessingJobs for the given project ID",
+    description="Returns all PreprocessingJobs for the given project ID if it exists",
+)
+async def get_all_prepro_jobs(
+    *,
+    project_id: int,
+) -> List[PreprocessingJobRead]:
+    # TODO Flo: only if the user has access?
+    prepro_jobs = redis.get_all_prepro_jobs(project_id=project_id)
+    prepro_jobs.sort(key=lambda x: x.created, reverse=True)
+    return prepro_jobs
 
 
 @router.get(
