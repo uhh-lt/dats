@@ -56,7 +56,6 @@ def store_document_in_elasticsearch_(pptds: List[PreProTextDoc]) -> List[PreProT
                 sdoc_status=SDocStatus.store_document_in_elasticsearch,
             )
     else:
-
         es.bulk_add_documents_to_index(proj_id=proj_id, esdocs=esdocs)
 
         # Flo: update sdoc status

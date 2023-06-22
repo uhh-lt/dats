@@ -642,7 +642,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
         limit: Optional[int] = None,
         skip: Optional[int] = None,
     ) -> PaginatedMemoSearchResults:
-
         # add user to query
         query["bool"]["must"].append({"match": {"user_id": user_id}})
         if starred is not None:

@@ -146,7 +146,7 @@ def generate_span_annotations_pipeline(
         pptds_data[pptd_lang].append((pptd.text, pptd))
 
     # Flo: now apply language specific model in pipeline mode
-    for (lang, model) in spacy_models.items():
+    for lang, model in spacy_models.items():
         for doc, pptd in tqdm(
             model.pipe(pptds_data[lang], as_tuples=True),
             total=len(pptds_data[lang]),
