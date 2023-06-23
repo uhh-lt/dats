@@ -17,6 +17,7 @@ class PreprocessingJobStatus(str, Enum):
 
 
 class PreprocessingJobPayload(BaseModel):
+    project_id: int = Field(description="The ID of the Project.")
     file_path: Path = Field(
         description="The filepath of the document to be preprocessed."
     )
