@@ -19,11 +19,12 @@ import { useForm } from "react-hook-form";
 import CodeHooks from "../../../api/CodeHooks";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { CodeRead } from "../../../api/openapi";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { HexColorPicker } from "react-colorful";
 import SaveIcon from "@mui/icons-material/Save";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { contrastiveColors } from "../colors";
+import { AnnoActions } from "../annoSlice";
 
 interface CodeCreationDialogProps {
   onCreateSuccess?: (code: CodeRead) => void;
@@ -55,6 +56,9 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
     formState: { errors },
     reset,
   } = useForm();
+
+  // redux
+  const dispatch = useAppDispatch();
 
   // mutations
   const createCodeMutation = CodeHooks.useCreateCode();
@@ -105,6 +109,16 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
               text: `Added new Code ${data.name}!`,
               severity: "success",
             });
+
+            // if we add a new code successfully, we want to show the code in the code explorer
+            // this means, we have to expand the parent codes, so the new code is visible
+            const codesToExpand = [];
+            let parentCodeId = data.parent_code_id;
+            while (parentCodeId) {
+              codesToExpand.push(parentCodeId);
+              parentCodeId = codes.data?.find((code) => code.id === parentCodeId)?.parent_code_id;
+            }
+            dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             closeCodeCreateDialog();
             if (onCreateSuccess) onCreateSuccess(data);
           },

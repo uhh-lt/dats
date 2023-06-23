@@ -60,6 +60,18 @@ export const annoSlice = createSlice({
     setExpandedParentCodeIds: (state, action: PayloadAction<string[]>) => {
       state.expandedCodeIds = action.payload;
     },
+    expandCode: (state, action: PayloadAction<string>) => {
+      if (state.expandedCodeIds.indexOf(action.payload) === -1) {
+        state.expandedCodeIds.push(action.payload);
+      }
+    },
+    expandCodes: (state, action: PayloadAction<string[]>) => {
+      for (const codeId of action.payload) {
+        if (state.expandedCodeIds.indexOf(codeId) === -1) {
+          state.expandedCodeIds.push(codeId);
+        }
+      }
+    },
     setSelectedDocumentTagId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedDocumentTagId = action.payload;
     },
