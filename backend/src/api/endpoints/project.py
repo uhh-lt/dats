@@ -17,7 +17,12 @@ from app.core.data.dto import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.memo import (
+    AttachedObjectType,
+    MemoCreate,
+    MemoInDB,
+    MemoRead,
+)
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
     SourceDocumentRead,

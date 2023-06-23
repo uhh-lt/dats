@@ -11,8 +11,6 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
 
-from app.core.data.dto.project import ProjectReadAction
-from app.core.data.dto.source_document import SourceDocumentReadAction
 from app.core.startup import startup
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
@@ -22,8 +20,8 @@ if not STARTUP_DONE:
     startup(reset_data=False, sql_echo=True)
     os.environ["STARTUP_DONE"] = "1"
 
-from api.endpoints import annotation_document  # noqa E402
-from api.endpoints import (
+from api.endpoints import (  # noqa E402
+    annotation_document,
     analysis,
     bbox_annotation,
     code,
@@ -43,14 +41,18 @@ from api.endpoints import (
     user,
     analysis_table,
 )
-from app.core.data.crawler.crawler_service import (
+from app.core.data.crawler.crawler_service import (  # noqa E402
     CrawlerJobAlreadyStartedOrDoneError,
     CrawlerJobPreparationError,
     NoDataToCrawlError,
     NoSuchCrawlerJobError,
 )
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
-from app.core.data.crud.source_document import (
+from app.core.data.dto.project import ProjectReadAction  # noqa E402
+from app.core.data.dto.source_document import (  # noqa E402
+    SourceDocumentReadAction,
+)
+from app.core.data.crud.source_document import (  # noqa E402
     SourceDocumentPreprocessingUnfinishedError,
 )
 from app.core.data.export.export_service import (  # noqa E402
