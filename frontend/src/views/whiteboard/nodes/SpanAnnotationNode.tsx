@@ -18,9 +18,7 @@ function SpanAnnotationNode({ data, isConnectable }: NodeProps) {
 
   return (
     <Card className="span-node" style={{ backgroundColor: data.isSelected ? "#FDDA0D" : "#AF7C7B" }}>
-      {data.position === Position.Bottom && (
-        <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
-      )}
+      <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
       <CardHeader
         titleTypographyProps={{ fontSize: 12, fontWeight: "bold" }}
         style={{ padding: 1 }}
@@ -42,9 +40,7 @@ function SpanAnnotationNode({ data, isConnectable }: NodeProps) {
           </>
         }
       />
-      {data.position === Position.Top && (
-        <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
-      )}
+      <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
     </Card>
   );
 }

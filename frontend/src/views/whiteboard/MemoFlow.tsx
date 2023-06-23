@@ -79,7 +79,6 @@ function MemoFlow({ memos }: MemoFlowProps) {
         type: extNodeType,
         data: {
           objId: srcNode.data.attached_object_id,
-          position: position,
           isSelected: false,
         },
         position: {
@@ -157,7 +156,7 @@ function MemoFlow({ memos }: MemoFlowProps) {
             removeNode(attachedNodeId);
             if (isHandleTarget) {
               // recreate attached node on top
-              // TODO: it seems like these 2 cases do not work, because handles are in a conditional, as stated here:
+              // handles can not be in a conditional, as stated here:
               //  https://github.com/wbkd/react-flow/issues/2364
               extendNode(node, attachedNodeId, nodeType, Position.Top);
             }

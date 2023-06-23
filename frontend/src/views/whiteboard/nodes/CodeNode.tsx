@@ -18,9 +18,7 @@ function CodeNode({ data, isConnectable }: NodeProps) {
 
   return (
     <Card className="tag-node" style={{ backgroundColor: data.isSelected ? "#FDDA0D" : "#AF7C7B" }}>
-      {data.position === Position.Bottom && (
-        <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
-      )}
+      <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
       <CardHeader
         titleTypographyProps={{ fontSize: 12, fontWeight: "bold" }}
         style={{ padding: "0 0 4px" }}
@@ -39,9 +37,7 @@ function CodeNode({ data, isConnectable }: NodeProps) {
           </Typography>
         </CardContent>
       )}
-      {data.position === Position.Top && (
-        <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
-      )}
+      <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
     </Card>
   );
 }
