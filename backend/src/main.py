@@ -63,6 +63,7 @@ from app.core.data.repo.repo_service import (  # noqa E402
     FileNotFoundInRepositoryError,
     RepoService,
     SourceDocumentNotFoundInRepositoryError,
+    FileAlreadyExistsInRepositoryError,
 )
 from app.core.search.elasticsearch_service import (  # noqa E402
     NoSuchMemoInElasticSearchError,
@@ -201,6 +202,13 @@ async def file_not_found_in_repository_error_handler(
     _, exc: FileNotFoundInRepositoryError
 ):
     return PlainTextResponse(str(exc), status_code=500)
+
+
+@app.exception_handler(FileAlreadyExistsInRepositoryError)
+async def file_already_exists_in_repository_error_handler(
+    _, exc: FileAlreadyExistsInRepositoryError
+):
+    return PlainTextResponse(str(exc), status_code=406)
 
 
 @app.exception_handler(IntegrityError)
