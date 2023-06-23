@@ -87,8 +87,6 @@ class PreprocessingService(metaclass=SingletonMeta):
                     archive_file_path=payload.file_path, project_id=proj_id
                 )
 
-        create_dto = PreprocessingJobCreate(
-            project_id=proj_id, payloads=payloads
-        )
+        create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
 
         return self.redis.store_preprocessing_job(preprocessing_job=create_dto)

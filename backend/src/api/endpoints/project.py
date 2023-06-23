@@ -1,5 +1,8 @@
 from typing import Dict, List, Optional
 
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy.orm import Session
+
 from api.dependencies import get_db_session, skip_limit_params
 from api.util import get_object_memos
 from app.core.data.crud.action import crud_action
@@ -9,32 +12,20 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.doc_type import mime_type_supported
 from app.core.data.dto import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import (
-    AttachedObjectType,
-    MemoCreate,
-    MemoInDB,
-    MemoRead,
-)
+from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
     SourceDocumentRead,
 )
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
-from app.core.data.dto.preprocessing_job import (
-    PreprocessingJobCreate,
-    PreprocessingJobRead,
-)
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.db.redis_service import RedisService
-from app.docprepro.util import preprocess_uploaded_file
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from sqlalchemy.orm import Session
+from app.preprocessing.preprocessing_service import PreprocessingService
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
@@ -178,7 +169,7 @@ async def get_project_sdocs(
 @router.put(
     "/{proj_id}/sdoc",
     tags=tags,
-    response_model=PreprocessingJobRead,
+    response_model=Optional[PreprocessingJobRead],
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
 )
@@ -191,31 +182,12 @@ async def upload_project_sdoc(
     uploaded_files: List[UploadFile] = File(
         ...,
         description=(
-            "File(s) that get uploaded and "
-            "represented by the SourceDocument(s)"
+            "File(s) that get uploaded and " "represented by the SourceDocument(s)"
         ),
     ),
-) -> PreprocessingJobRead:
-    payloads = []
-    for uploaded_file in uploaded_files:
-        if not mime_type_supported(mime_type=uploaded_file.content_type):
-            raise HTTPException(
-                detail=f"Document with MIME type {uploaded_file.content_type} not supported!",
-                status_code=406,
-            )
-        payloads.append(
-            preprocess_uploaded_file(
-                proj_id=proj_id, uploaded_file=uploaded_file
-            )
-        )
-
-    create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
-
-    read_dto = RedisService().store_preprocessing_job(
-        preprocessing_job=create_dto
-    )
-
-    return read_dto
+) -> Optional[PreprocessingJobRead]:
+    pps: PreprocessingService = PreprocessingService()
+    return pps.import_uploaded_documents(proj_id=proj_id, uploaded_files=uploaded_files)
 
 
 @router.delete(
@@ -243,9 +215,7 @@ async def associate_user_to_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.associate_user(
-        db=db, proj_id=proj_id, user_id=user_id
-    )
+    user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
@@ -260,9 +230,7 @@ async def dissociate_user_from_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.dissociate_user(
-        db=db, proj_id=proj_id, user_id=user_id
-    )
+    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
@@ -371,9 +339,7 @@ async def remove_user_codes_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[int]:
     # TODO Flo: only if the user has access?
-    return crud_code.remove_by_user_and_project(
-        db=db, user_id=user_id, proj_id=proj_id
-    )
+    return crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
 @router.get(
@@ -399,8 +365,7 @@ async def get_user_memos_of_project(
         db=db, user_id=user_id, proj_id=proj_id, only_starred=only_starred
     )
     return [
-        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
-        for db_obj in db_objs
+        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
     ]
 
 
@@ -415,9 +380,7 @@ async def get_user_actions_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
-    return crud_action.read_by_user_and_project(
-        db=db, proj_id=proj_id, user_id=user_id
-    )
+    return crud_action.read_by_user_and_project(db=db, proj_id=proj_id, user_id=user_id)
 
 
 @router.post(
@@ -458,9 +421,7 @@ async def remove_user_memos_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[int]:
     # TODO Flo: only if the user has access?
-    return crud_memo.remove_by_user_and_project(
-        db=db, user_id=user_id, proj_id=proj_id
-    )
+    return crud_memo.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
 @router.put(
@@ -473,9 +434,7 @@ async def remove_user_memos_of_project(
 async def add_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, memo: MemoCreate
 ) -> Optional[MemoRead]:
-    db_obj = crud_memo.create_for_project(
-        db=db, project_id=proj_id, create_dto=memo
-    )
+    db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),
