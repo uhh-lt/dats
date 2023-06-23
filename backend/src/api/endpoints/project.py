@@ -189,15 +189,12 @@ async def upload_project_sdoc(
     uploaded_files: List[UploadFile] = File(
         ...,
         description=(
-            "File(s) that get uploaded and "
-            "represented by the SourceDocument(s)"
+            "File(s) that get uploaded and " "represented by the SourceDocument(s)"
         ),
     ),
 ) -> Optional[PreprocessingJobRead]:
     pps: PreprocessingService = PreprocessingService()
-    return pps.import_uploaded_documents(
-        proj_id=proj_id, uploaded_files=uploaded_files
-    )
+    return pps.import_uploaded_documents(proj_id=proj_id, uploaded_files=uploaded_files)
 
 
 @router.delete(
@@ -225,9 +222,7 @@ async def associate_user_to_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.associate_user(
-        db=db, proj_id=proj_id, user_id=user_id
-    )
+    user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
@@ -242,9 +237,7 @@ async def dissociate_user_from_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.dissociate_user(
-        db=db, proj_id=proj_id, user_id=user_id
-    )
+    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
@@ -353,9 +346,7 @@ async def remove_user_codes_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[int]:
     # TODO Flo: only if the user has access?
-    return crud_code.remove_by_user_and_project(
-        db=db, user_id=user_id, proj_id=proj_id
-    )
+    return crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
 @router.get(
@@ -381,8 +372,7 @@ async def get_user_memos_of_project(
         db=db, user_id=user_id, proj_id=proj_id, only_starred=only_starred
     )
     return [
-        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
-        for db_obj in db_objs
+        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
     ]
 
 
@@ -397,9 +387,7 @@ async def get_user_actions_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
-    return crud_action.read_by_user_and_project(
-        db=db, proj_id=proj_id, user_id=user_id
-    )
+    return crud_action.read_by_user_and_project(db=db, proj_id=proj_id, user_id=user_id)
 
 
 @router.post(
@@ -440,9 +428,7 @@ async def remove_user_memos_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[int]:
     # TODO Flo: only if the user has access?
-    return crud_memo.remove_by_user_and_project(
-        db=db, user_id=user_id, proj_id=proj_id
-    )
+    return crud_memo.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
 @router.put(
@@ -455,9 +441,7 @@ async def remove_user_memos_of_project(
 async def add_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, memo: MemoCreate
 ) -> Optional[MemoRead]:
-    db_obj = crud_memo.create_for_project(
-        db=db, project_id=proj_id, create_dto=memo
-    )
+    db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),

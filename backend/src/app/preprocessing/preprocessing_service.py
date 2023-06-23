@@ -49,13 +49,14 @@ class PreprocessingService(metaclass=SingletonMeta):
 
             payloads.append(
                 PreprocessingJobPayload(
-                    file_path=file_path, mime_type=mime_type, doc_type=doc_type
+                    project_id=proj_id,
+                    file_path=file_path,
+                    mime_type=mime_type,
+                    doc_type=doc_type,
                 )
             )
 
-        logger.info(
-            f"Starting to import {len(payloads)} documents asynchronously!"
-        )
+        logger.info(f"Starting to import {len(payloads)} documents asynchronously!")
 
         for payload in payloads:
             if payload.doc_type == DocType.text:
