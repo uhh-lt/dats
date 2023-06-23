@@ -1,12 +1,13 @@
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, validator
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.dto_base import UpdateDTOBase
+from app.core.data.dto.source_document import SDocStatus
 
 
 class PreprocessingJobStatus(str, Enum):
@@ -23,6 +24,11 @@ class PreprocessingJobPayload(BaseModel):
     )
     mime_type: str = Field(description="The MIME type of the file.")
     doc_type: DocType = Field(description="The DocType of the file.")
+    # TODO rename SDocStatus and move to this file!
+    status: SDocStatus = Field(
+        description="The status of the payload in the preprocessing pipeline.",
+        default=SDocStatus.init,
+    )
 
 
 # Properties shared across all DTOs
