@@ -4,7 +4,9 @@ from typing import List, Optional, Tuple
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataRead,
+)
 from app.core.data.dto.util import PaginatedResults
 from pydantic import BaseModel, Field
 
@@ -13,6 +15,7 @@ SDOC_SUFFIX_MAX_LENGTH = 30
 
 
 class SDocStatus(str, Enum):
+    init = "initializing"  # "initializing"
     undefined_or_erroneous = "undefined_or_erroneous"  # "undefined_or_erroneous"
 
     import_text_document = "import_text_document"  # "imported uploaded text document"
