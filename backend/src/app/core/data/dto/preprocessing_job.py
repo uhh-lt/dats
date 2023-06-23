@@ -37,7 +37,7 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
     project_id: int = Field(
         description="The ID of the Project for which the PreprocessingJob is executed."
     )
-    payloads: Dict[str, PreprocessingJobPayload] = Field(
+    payloads: List[PreprocessingJobPayload] = Field(
         description="Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
     )
 
@@ -60,7 +60,7 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
     project_id: int = Field(
         description="The ID of the Project for which the PreprocessingJob is executed."
     )
-    payloads: Dict[str, PreprocessingJobPayload] = Field(
+    payloads: List[PreprocessingJobPayload] = Field(
         description="Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
     )
     created: datetime = Field(description="Created timestamp of the PreprocessingJob")
