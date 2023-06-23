@@ -52,8 +52,10 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
       if (selectedCodeId && codeTree) {
         let parentCode = codeTree.first((node) => node.model.code.id === selectedCodeId);
         dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode!.model)));
+      } else if (allCodes.data) {
+        dispatch(AnnoActions.setCodesForSelection(allCodes.data));
       } else {
-        dispatch(AnnoActions.setCodesForSelection(allCodes.data || []));
+        dispatch(AnnoActions.setCodesForSelection([]));
       }
     }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
 
@@ -162,7 +164,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
               openContextMenu={onContextMenu}
             />
             <CodeEditDialog codes={allCodes.data} />
-            <SpanCreationDialog ref={codeCreationDialogRef} />
             <CodeExplorerContextMenu
               node={contextMenuData}
               position={contextMenuPosition}
@@ -216,6 +217,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
           </Stack>
         )}
         {content}
+        <SpanCreationDialog ref={codeCreationDialogRef} />
       </Box>
     );
   }
