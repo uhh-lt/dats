@@ -66,8 +66,9 @@ function FloatingFeedbackButton() {
       {isLoggedIn ? (
         <Fab
           color="primary"
+          size="medium"
           onClick={openFeedbackDialog}
-          sx={{ position: "absolute", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar + 1 }}
+          sx={{ position: "absolute", bottom: 8, right: 8, zIndex: (theme) => theme.zIndex.appBar + 1 }}
         >
           <FeedbackIcon />
         </Fab>
