@@ -12,15 +12,17 @@ const persistConfig = {
   storage: storage,
 };
 
-const persistedReducer = persistReducer(persistConfig, settingsReducer);
+// store slices in local storage
+const persistedSettingsReducer = persistReducer(persistConfig, settingsReducer);
+const persistedAnnoReducer = persistReducer(persistConfig, annoReducer);
 
 export const store = configureStore({
   reducer: {
-    annotations: annoReducer,
+    annotations: persistedAnnoReducer,
     search: searchReducer,
     logbook: logbookReducer,
     autologbook: autologbookReducer,
-    settings: persistedReducer,
+    settings: persistedSettingsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
