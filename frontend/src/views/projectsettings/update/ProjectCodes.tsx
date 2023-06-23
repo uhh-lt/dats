@@ -9,6 +9,7 @@ import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
 import { ProjectProps } from "./ProjectProps";
+import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton";
 
 function ProjectCodes({ project }: ProjectProps) {
   // local state
@@ -120,6 +121,7 @@ function ProjectCodes({ project }: ProjectProps) {
             onCollapseClick={handleCollapseClick}
             renderActions={(node) => (
               <>
+                <CodeToggleVisibilityButton code={node} />
                 <CodeEditButton code={node.code} />
                 <CodeToggleEnabledButton code={node} />
               </>
