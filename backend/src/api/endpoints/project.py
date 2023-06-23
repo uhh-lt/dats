@@ -28,14 +28,11 @@ from app.core.data.dto.source_document import (
 )
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.preprocessing_job import (
-    PreprocessingJobCreate,
     PreprocessingJobRead,
 )
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.db.redis_service import RedisService
-from app.docprepro.util import preprocess_uploaded_file
-from app.core.data.doc_type import mime_type_supported
+from app.preprocessing.preprocessing_service import PreprocessingService
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
@@ -179,7 +176,7 @@ async def get_project_sdocs(
 @router.put(
     "/{proj_id}/sdoc",
     tags=tags,
-    response_model=PreprocessingJobRead,
+    response_model=Optional[PreprocessingJobRead],
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
 )
@@ -196,27 +193,11 @@ async def upload_project_sdoc(
             "represented by the SourceDocument(s)"
         ),
     ),
-) -> PreprocessingJobRead:
-    payloads = []
-    for uploaded_file in uploaded_files:
-        if not mime_type_supported(mime_type=uploaded_file.content_type):
-            raise HTTPException(
-                detail=f"Document with MIME type {uploaded_file.content_type} not supported!",
-                status_code=406,
-            )
-        payloads.append(
-            preprocess_uploaded_file(
-                proj_id=proj_id, uploaded_file=uploaded_file
-            )
-        )
-
-    create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
-
-    read_dto = RedisService().store_preprocessing_job(
-        preprocessing_job=create_dto
+) -> Optional[PreprocessingJobRead]:
+    pps: PreprocessingService = PreprocessingService()
+    return pps.import_uploaded_documents(
+        proj_id=proj_id, uploaded_files=uploaded_files
     )
-
-    return read_dto
 
 
 @router.delete(
