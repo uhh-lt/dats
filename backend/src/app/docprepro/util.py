@@ -8,6 +8,7 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.doc_type import DocType, get_doc_type, is_archive_file
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
@@ -23,7 +24,9 @@ sql: SQLService = SQLService()
 repo: RepoService = RepoService()
 
 
-def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
+def preprocess_uploaded_file(
+    proj_id: int, uploaded_file: UploadFile
+) -> PreprocessingJobPayload:
     # Flo: For some magical reason we have to update celery configs here again. Most probably because FastAPI or
     #  Starlette reset kombu serialization settings which in turn affects the celery worker configs. Another issue
     #  might be that we're launching this in as a BackgroundTask (i.e. in a separate Process or Thread)
@@ -56,6 +59,10 @@ def preprocess_uploaded_file(proj_id: int, uploaded_file: UploadFile) -> None:
         import_uploaded_archive_apply_async(
             archive_file_path=file_path, project_id=proj_id
         )
+
+    return PreprocessingJobPayload(
+        file_path=file_path, mime_type=mime_type, doc_type=doc_type
+    )
 
 
 def persist_as_sdoc(
