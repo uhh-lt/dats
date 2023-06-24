@@ -4,6 +4,7 @@ import searchReducer from "../views/search/searchSlice";
 import logbookReducer from "../views/logbook/logbookSlice";
 import autologbookReducer from "../views/autologbook/autologbookSlice";
 import settingsReducer from "../views/settings/settingsSlice";
+import analysisReducer from "../views/analysis/analysisSlice";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 
@@ -19,6 +20,7 @@ const persistedAnnoReducer = persistReducer(persistConfig, annoReducer);
 export const store = configureStore({
   reducer: {
     annotations: persistedAnnoReducer,
+    analysis: analysisReducer,
     search: searchReducer,
     logbook: logbookReducer,
     autologbook: autologbookReducer,

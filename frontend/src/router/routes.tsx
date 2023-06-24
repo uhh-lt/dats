@@ -18,10 +18,10 @@ import Search from "../views/search/Search";
 import RequireAuth from "../auth/RequireAuth";
 import User from "../views/User";
 import Feedback from "../views/Feedback";
-import CodeFrequency from "../views/analysis/CodeFrequency/CodeFrequency";
 import Settings from "../views/settings/Settings";
 import Autologbook from "../views/autologbook/Autologbook";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
+import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis";
 
 const routes: RouteObject[] = [
   {
@@ -127,7 +127,7 @@ const routes: RouteObject[] = [
       },
       {
         path: "/project/:projectId/analysis/frequency",
-        element: <CodeFrequency />,
+        element: <CodeFrequencyAnalysis />,
       },
       {
         path: "/project/:projectId/analysis/code-graph",
