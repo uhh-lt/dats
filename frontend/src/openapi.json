@@ -3935,21 +3935,78 @@
         }
       }
     },
-    "/analysis/frequency_analysis": {
+    "/analysis/code_frequencies": {
       "post": {
         "tags": ["analysis"],
         "summary": "Returns all SourceDocument IDs that match the query parameters.",
         "description": "Returns all SourceDocument Ids that match the query parameters.",
-        "operationId": "frequency_analysis",
+        "operationId": "code_frequencies",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          }
+        ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisQueryParameters" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-code_frequencies" } }
+          },
           "required": true
         },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "title": "Response Analysis-Frequency Analysis", "type": "object" } }
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Code Frequencies",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeFrequency" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/code_occurrences": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns all SourceDocument IDs that match the query parameters.",
+        "description": "Returns all SourceDocument Ids that match the query parameters.",
+        "operationId": "code_occurrences",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          { "required": true, "schema": { "title": "Code Id", "type": "integer" }, "name": "code_id", "in": "query" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "title": "User Ids", "type": "array", "items": { "type": "integer" } } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Code Occurrences",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CodeOccurrence" }
+                }
+              }
             }
           },
           "422": {
@@ -4200,20 +4257,6 @@
         "type": "string",
         "description": "An enumeration."
       },
-      "AnalysisQueryParameters": {
-        "title": "AnalysisQueryParameters",
-        "required": ["user_ids", "proj_id"],
-        "type": "object",
-        "properties": {
-          "user_ids": {
-            "title": "User Ids",
-            "type": "array",
-            "items": { "type": "integer" },
-            "description": "The user ids dictate which codes are analysed."
-          },
-          "proj_id": { "title": "Proj Id", "type": "integer", "description": "The ID of the Project to analyse." }
-        }
-      },
       "AnnotationDocumentCreate": {
         "title": "AnnotationDocumentCreate",
         "required": ["source_document_id", "user_id"],
@@ -4419,6 +4462,15 @@
           "code_id": { "title": "Code Id", "type": "integer", "description": "Code the BBoxAnnotation refers to" }
         }
       },
+      "Body_analysis-code_frequencies": {
+        "title": "Body_analysis-code_frequencies",
+        "required": ["user_ids", "code_ids"],
+        "type": "object",
+        "properties": {
+          "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } },
+          "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } }
+        }
+      },
       "Body_project-upload_project_sdoc": {
         "title": "Body_project-upload_project_sdoc",
         "required": ["doc_files"],
@@ -4456,6 +4508,42 @@
           "parent_code_id": { "title": "Parent Code Id", "type": "integer", "description": "Parent of the Code" },
           "project_id": { "title": "Project Id", "type": "integer", "description": "Project the Code belongs to" },
           "user_id": { "title": "User Id", "type": "integer", "description": "User the Code belongs to" }
+        }
+      },
+      "CodeFrequency": {
+        "title": "CodeFrequency",
+        "required": ["code_id", "count"],
+        "type": "object",
+        "properties": {
+          "code_id": { "title": "Code Id", "type": "integer", "description": "The id of the code." },
+          "count": { "title": "Count", "type": "integer", "description": "The number of occurrences of the code." }
+        }
+      },
+      "CodeOccurrence": {
+        "title": "CodeOccurrence",
+        "required": ["sdoc", "code", "text", "count"],
+        "type": "object",
+        "properties": {
+          "sdoc": {
+            "title": "Sdoc",
+            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "description": "The SourceDocument where the Code occurs."
+          },
+          "code": {
+            "title": "Code",
+            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
+            "description": "The occuring Code."
+          },
+          "text": {
+            "title": "Text",
+            "type": "string",
+            "description": "A text span of the SourceDocument annotated with the Code."
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer",
+            "description": "The number of occurrences of the text span annotated with the Code in the SourceDocument."
+          }
         }
       },
       "CodeRead": {

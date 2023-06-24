@@ -124,6 +124,7 @@ export const QueryKey = {
   SEARCH_SENTENCE_SIMILARITY: "searchSentenceSimilarity",
 
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
+  ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
 
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",

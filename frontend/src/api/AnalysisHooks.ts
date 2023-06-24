@@ -1,36 +1,30 @@
 import { useQuery } from "@tanstack/react-query";
-import { AnalysisService, CodeRead, SourceDocumentRead } from "./openapi";
+import { AnalysisService, CodeFrequency, CodeOccurrence } from "./openapi";
 import { QueryKey } from "./QueryKey";
-import { SYSTEM_USER_ID } from "../utils/GlobalConstants";
 
-// todo: temp! Delete when backend route is typed
-export interface ICodeOccurrence {
-  sdoc: SourceDocumentRead;
-  code: CodeRead;
-  text: string;
-  count: number;
-}
-
-export interface ICodeFrequencies {
-  code: CodeRead | undefined;
-  count: number;
-  aggregated_count: number;
-  occurrences: ICodeOccurrence[];
-  children: ICodeFrequencies[];
-}
-
-const useAnalyseCodeFrequencies = (projectId: number, userId: number | undefined) =>
-  useQuery<ICodeFrequencies, Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId], () =>
-    AnalysisService.frequencyAnalysis({
+const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
+  useQuery<CodeFrequency[], Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds], () =>
+    AnalysisService.codeFrequencies({
+      projectId,
       requestBody: {
-        proj_id: projectId,
-        user_ids: userId ? [SYSTEM_USER_ID, userId] : [SYSTEM_USER_ID],
+        user_ids: userIds,
+        code_ids: codeIds,
       },
     })
   );
 
+const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number) =>
+  useQuery<CodeOccurrence[], Error>([QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId], () =>
+    AnalysisService.codeOccurrences({
+      projectId,
+      codeId,
+      requestBody: userIds,
+    })
+  );
+
 const AnalysisHooks = {
-  useAnalyseCodeFrequencies,
+  useCodeFrequencies,
+  useCodeOccurrences,
 };
 
 export default AnalysisHooks;

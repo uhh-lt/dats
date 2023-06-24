@@ -120,11 +120,16 @@ const useDeleteProject = () =>
   );
 
 // users
-const useGetAllUsers = (projectId: number) =>
-  useQuery<UserRead[], Error>([QueryKey.PROJECT_USERS, projectId], () =>
-    ProjectService.getProjectUsers({
-      projId: projectId,
-    })
+const useGetAllUsers = (projectId: number | undefined) =>
+  useQuery<UserRead[], Error>(
+    [QueryKey.PROJECT_USERS, projectId],
+    () =>
+      ProjectService.getProjectUsers({
+        projId: projectId!,
+      }),
+    {
+      enabled: !!projectId,
+    }
   );
 const useAddUser = () =>
   useMutation(ProjectService.associateUserToProject, {
