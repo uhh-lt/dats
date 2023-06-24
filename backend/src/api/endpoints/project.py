@@ -267,7 +267,9 @@ async def get_project_codes(
 ) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     proj_db_obj = crud_project.read(db=db, id=proj_id)
-    return [CodeRead.from_orm(code) for code in proj_db_obj.codes]
+    result = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
+    result.sort(key=lambda c: c.id)
+    return result
 
 
 @router.delete(
