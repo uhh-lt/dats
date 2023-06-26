@@ -1,4 +1,6 @@
-import React, { forwardRef, useImperativeHandle, useState } from "react";
+import { ErrorMessage } from "@hookform/error-message";
+import SaveIcon from "@mui/icons-material/Save";
+import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Button,
@@ -7,24 +9,30 @@ import {
   DialogContent,
   DialogTitle,
   MenuItem,
-  rgbToHex,
   Stack,
   TextField,
+  rgbToHex,
 } from "@mui/material";
-import { ErrorMessage } from "@hookform/error-message";
-import { LoadingButton } from "@mui/lab";
-import { useParams } from "react-router-dom";
-import { useAuth } from "../../../auth/AuthProvider";
-import { useForm } from "react-hook-form";
-import CodeHooks from "../../../api/CodeHooks";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { CodeRead } from "../../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
 import { HexColorPicker } from "react-colorful";
-import SaveIcon from "@mui/icons-material/Save";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
+import CodeHooks from "../../../api/CodeHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { contrastiveColors } from "../colors";
+import { CodeRead } from "../../../api/openapi";
+import { useAuth } from "../../../auth/AuthProvider";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import { AnnoActions } from "../annoSlice";
+import { contrastiveColors } from "../colors";
+
+type CodeCreateValues = {
+  parentCodeId: number | undefined;
+  name: string;
+  color: string;
+  description: string;
+};
 
 interface CodeCreationDialogProps {
   onCreateSuccess?: (code: CodeRead) => void;
@@ -43,9 +51,11 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   const parentCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const codes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
+  // computed
+  const parentCodes = useMemo(() => codes.data?.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes.data]);
+
   // local state
   const [isCodeCreateDialogOpen, setIsCodeCreateDialogOpen] = useState(false);
-  const [selectedParent, setSelectedParent] = useState(parentCodeId);
   const [color, setColor] = useState("#000000");
 
   // react form
@@ -55,7 +65,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
     setValue,
     formState: { errors },
     reset,
-  } = useForm();
+  } = useForm<CodeCreateValues>();
 
   // redux
   const dispatch = useAppDispatch();
@@ -77,7 +87,6 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
     setValue("color", randomHexColor);
     setColor(randomHexColor);
     setIsCodeCreateDialogOpen(true);
-    setSelectedParent(parentCodeId);
   };
 
   const closeCodeCreateDialog = () => {
@@ -90,7 +99,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   };
 
   // react form handlers
-  const handleSubmitCodeCreateDialog = (data: any) => {
+  const handleSubmitCodeCreateDialog: SubmitHandler<CodeCreateValues> = (data) => {
     if (user.data) {
       createCodeMutation.mutate(
         {
@@ -100,7 +109,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
             color: data.color,
             project_id: parseInt(projectId),
             user_id: user.data.id,
-            parent_code_id: selectedParent,
+            parent_code_id: data.parentCodeId,
           },
         },
         {
@@ -127,7 +136,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
     }
   };
 
-  const handleErrorCodeCreateDialog = (data: any) => console.error(data);
+  const handleErrorCodeCreateDialog: SubmitErrorHandler<CodeCreateValues> = (data) => console.error(data);
 
   // rendering
   return (
@@ -141,14 +150,20 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
               select
               label="Parent Code"
               variant="filled"
-              value={selectedParent}
-              onChange={(e) => setSelectedParent(parseInt(e.target.value))}
+              defaultValue={
+                parentCodes && parentCodes.findIndex((code) => code.id === parentCodeId) !== -1
+                  ? parentCodeId
+                  : undefined
+              }
+              {...register("parentCodeId")}
+              error={Boolean(errors.parentCodeId)}
+              helperText={<ErrorMessage errors={errors} name="parentCodeId" />}
             >
               <MenuItem value={undefined}>No parent</MenuItem>
-              {codes.data &&
-                codes.data.map((codeSet) => (
-                  <MenuItem key={codeSet.id} value={codeSet.id}>
-                    {codeSet.name}
+              {parentCodes &&
+                parentCodes.map((code) => (
+                  <MenuItem key={code.id} value={code.id}>
+                    {code.name}
                   </MenuItem>
                 ))}
             </TextField>

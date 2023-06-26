@@ -1,7 +1,7 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
 import { CodeRead, CodeUpdate } from "../../../api/openapi";
 import CodeHooks from "../../../api/CodeHooks";
@@ -12,6 +12,13 @@ import ColorUtils from "../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
+
+type CodeEditValues = {
+  parentCodeId: number | undefined;
+  name: string;
+  color: string;
+  description: string;
+};
 
 interface CodeEditDialogProps {
   codes: CodeRead[];
@@ -25,20 +32,48 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     formState: { errors },
     reset,
     setValue,
-  } = useForm();
+  } = useForm<CodeEditValues>();
 
   // local state
-  const [code, setCode] = useState<CodeRead | null>(null);
+  const [code, setCode] = useState<CodeRead>();
   const [open, setOpen] = useState(false);
-  const [selectedParent, setSelectedParent] = useState(-1);
   const [color, setColor] = useState("#000000");
+
+  // computed
+  const parentCodes = useMemo(() => codes.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes]);
+
+  const resetForm = useCallback(
+    (code: CodeRead | undefined) => {
+      if (code) {
+        const c = ColorUtils.rgbStringToHex(code.color) || code.color;
+        reset({
+          name: code.name,
+          description: code.description,
+          color: c,
+          parentCodeId: code.parent_code_id || -1,
+        });
+        console.log({
+          name: code.name,
+          description: code.description,
+          color: c,
+          parentCodeId: code.parent_code_id || -1,
+        });
+        setColor(c);
+      }
+    },
+    [reset]
+  );
 
   // listen to event
   // create a (memoized) function that stays the same across re-renders
-  const onOpenEditCode = useCallback((event: CustomEventInit) => {
-    setOpen(true);
-    setCode(event.detail);
-  }, []);
+  const onOpenEditCode = useCallback(
+    (event: CustomEventInit) => {
+      setOpen(true);
+      setCode(event.detail);
+      resetForm(event.detail);
+    },
+    [resetForm]
+  );
 
   useEffect(() => {
     eventBus.on("open-edit-code", onOpenEditCode);
@@ -47,26 +82,12 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     };
   }, [onOpenEditCode]);
 
-  // initialize form when code changes
-  useEffect(() => {
-    if (code) {
-      const c = ColorUtils.rgbStringToHex(code.color) || code.color;
-      reset({
-        name: code.name,
-        description: code.description,
-        color: c,
-      });
-      setSelectedParent(!code.parent_code_id ? -1 : code.parent_code_id);
-      setColor(c);
-    }
-  }, [code, reset]);
-
   // mutations
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const deleteCodeMutation = CodeHooks.useDeleteCode();
 
   // form handling
-  const handleCodeUpdate = (data: any) => {
+  const handleCodeUpdate: SubmitHandler<CodeEditValues> = (data) => {
     if (code) {
       // only allow updating of color for SYSTEM CODES
       let requestBody: CodeUpdate = {
@@ -78,7 +99,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           ...requestBody,
           name: data.name,
           description: data.description,
-          ...(selectedParent !== -1 && { parent_code_id: selectedParent }),
+          parent_code_id: data.parentCodeId,
         };
       }
 
@@ -99,7 +120,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       );
     }
   };
-  const handleError = (data: any) => console.error(data);
+  const handleError: SubmitErrorHandler<CodeEditValues> = (data) => console.error(data);
   const handleCodeDelete = () => {
     // disallow deleting of SYSTEM CODES
     if (code && code.user_id !== SYSTEM_USER_ID) {
@@ -120,6 +141,25 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     }
   };
 
+  let menuItems: React.ReactNode[];
+  if (!code || code.user_id === SYSTEM_USER_ID) {
+    menuItems = codes
+      .filter((c) => c.id !== code?.id)
+      .map((code) => (
+        <MenuItem key={code.id} value={code.id}>
+          {code.name}
+        </MenuItem>
+      ));
+  } else {
+    menuItems = parentCodes
+      .filter((c) => c.id !== code?.id)
+      .map((code) => (
+        <MenuItem key={code.id} value={code.id}>
+          {code.name}
+        </MenuItem>
+      ));
+  }
+
   return (
     <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleCodeUpdate, handleError)}>
@@ -127,24 +167,21 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
         <DialogContent>
           <Stack spacing={3}>
             <TextField
+              key={code?.id}
               fullWidth
               select
               label="Parent Code"
               variant="filled"
-              value={selectedParent}
-              onChange={(e) => setSelectedParent(parseInt(e.target.value))}
+              defaultValue={code?.parent_code_id || -1}
+              {...register("parentCodeId")}
+              error={Boolean(errors.parentCodeId)}
+              helperText={<ErrorMessage errors={errors} name="parentCodeId" />}
               disabled={!code || code.user_id === SYSTEM_USER_ID}
             >
               <MenuItem key={-1} value={-1}>
                 No parent
               </MenuItem>
-              {codes
-                .filter((c) => c.id !== code?.id)
-                .map((code) => (
-                  <MenuItem key={code.id} value={code.id}>
-                    {code.name}
-                  </MenuItem>
-                ))}
+              {menuItems}
             </TextField>
             <TextField
               label="Name"
