@@ -12,6 +12,8 @@ import ColorUtils from "../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
+import { AnnoActions } from "../annoSlice";
+import { useAppDispatch } from "../../../plugins/ReduxHooks";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -38,6 +40,9 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   const [code, setCode] = useState<CodeRead>();
   const [open, setOpen] = useState(false);
   const [color, setColor] = useState("#000000");
+
+  // redux
+  const dispatch = useAppDispatch();
 
   // computed
   const parentCodes = useMemo(() => codes.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes]);
@@ -110,6 +115,19 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
         },
         {
           onSuccess: (data: CodeRead) => {
+            // check if we updated the parent code
+            if (data.parent_code_id !== code.parent_code_id) {
+              // if we edited a code successfully, we want to show the code in the code explorer
+              // this means, we might have to expand the parent codes, so the new code is visible
+              const codesToExpand = [];
+              let parentCodeId = data.parent_code_id;
+              while (parentCodeId) {
+                codesToExpand.push(parentCodeId);
+                parentCodeId = codes.find((code) => code.id === parentCodeId)?.parent_code_id;
+              }
+              dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
+            }
+
             setOpen(false); // close dialog
             SnackbarAPI.openSnackbar({
               text: `Updated code ${data.name}`,

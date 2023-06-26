@@ -26,7 +26,7 @@ import {
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
 
-interface ICodeFilter extends ICode {
+interface ICodeFilter extends CodeRead {
   title: string;
 }
 
@@ -34,7 +34,7 @@ const filter = createFilterOptions<ICodeFilter>();
 
 interface CodeSelectorProps {
   onClose?: (reason?: "backdropClick" | "escapeKeyDown") => void;
-  onAdd?: (code: ICode) => void;
+  onAdd?: (code: CodeRead, isNewCode: boolean) => void;
   onEdit?: (annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode, newCode: ICode) => void;
   onDelete?: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode) => void;
 }
@@ -66,16 +66,14 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     const [autoCompleteValue, setAutoCompleteValue] = useState<ICodeFilter | null>(null);
 
     // computed
-    const codeOptions: ICodeFilter[] = useMemo(
-      () =>
-        codes.map((c) => {
-          return {
-            ...c,
-            title: c.name,
-          };
-        }),
-      [codes]
-    );
+    const codeOptions: ICodeFilter[] = useMemo(() => {
+      return codes.map((c) => {
+        return {
+          ...c,
+          title: c.name,
+        };
+      });
+    }, [codes]);
 
     // exposed methods (via ref)
     useImperativeHandle(ref, () => ({
@@ -134,7 +132,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
         return;
       }
 
-      submit(newValue);
+      submit(newValue, false);
     };
 
     const handleEdit = (
@@ -152,13 +150,13 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     };
 
     // submit the code selector (either we edited or created a new code)
-    const submit = (code: ICode) => {
+    const submit = (code: CodeRead, isNewCode: boolean) => {
       // when the user selected an annotation to edit, we were editing
       if (editingAnnotation !== undefined) {
         if (onEdit) onEdit(editingAnnotation, code);
         // otherwise, we opened this to add a new code
       } else {
-        if (onAdd) onAdd(code);
+        if (onAdd) onAdd(code, isNewCode);
       }
       closeCodeSelector();
     };
@@ -209,6 +207,11 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
                     name: inputValue.trim(),
                     id: -1,
                     color: "",
+                    created: "",
+                    updated: "",
+                    description: "",
+                    project_id: -1,
+                    user_id: -1,
                   });
                 }
 

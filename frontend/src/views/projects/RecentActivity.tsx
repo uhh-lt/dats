@@ -25,7 +25,7 @@ function RecentActivity() {
       {recentAdocs.isSuccess && (
         <Stack rowGap={1}>
           {recentAdocs.data.map((adoc) => (
-            <RecentActivityCard sdocId={adoc.source_document_id} updateTS={new Date(adoc.updated)} />
+            <RecentActivityCard key={adoc.id} sdocId={adoc.source_document_id} updateTS={new Date(adoc.updated)} />
           ))}
         </Stack>
       )}

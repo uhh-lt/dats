@@ -1,6 +1,7 @@
 import {
   AnnotationDocumentRead,
   BBoxAnnotationReadResolvedCode,
+  CodeRead,
   SourceDocumentRead,
   SpanAnnotationCreateWithCodeId,
   SpanAnnotationReadResolved,
@@ -222,7 +223,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       }
     );
   };
-  const handleCodeSelectorAddCode = (code: ICode) => {
+  const handleCodeSelectorAddCode = (code: CodeRead, isNewCode: boolean) => {
     if (!fakeAnnotation) return;
     createMutation.mutate(
       {
@@ -233,7 +234,10 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       },
       {
         onSuccess: (spanAnnotation) => {
-          dispatch(AnnoActions.moveCodeToTop(code));
+          if (!isNewCode) {
+            // if we use an existing code to annotate, we move it to the top
+            dispatch(AnnoActions.moveCodeToTop(code));
+          }
           SnackbarAPI.openSnackbar({
             text: `Created Span Annotation ${spanAnnotation.id}`,
             severity: "success",

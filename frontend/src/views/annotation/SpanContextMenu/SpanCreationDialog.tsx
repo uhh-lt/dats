@@ -28,14 +28,14 @@ import { AnnoActions } from "../annoSlice";
 import { contrastiveColors } from "../colors";
 
 type CodeCreateValues = {
-  parentCodeId: number | undefined;
+  parentCodeId: string | number;
   name: string;
   color: string;
   description: string;
 };
 
 interface CodeCreationDialogProps {
-  onCreateSuccess?: (code: CodeRead) => void;
+  onCreateSuccess?: (code: CodeRead, isNewCode: boolean) => void;
 }
 
 export interface CodeCreationDialogHandle {
@@ -101,6 +101,12 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   // react form handlers
   const handleSubmitCodeCreateDialog: SubmitHandler<CodeCreateValues> = (data) => {
     if (user.data) {
+      let pcid: number | undefined = undefined;
+      if (typeof data.parentCodeId === "string") {
+        pcid = parseInt(data.parentCodeId);
+      } else {
+        pcid = data.parentCodeId;
+      }
       createCodeMutation.mutate(
         {
           requestBody: {
@@ -109,7 +115,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
             color: data.color,
             project_id: parseInt(projectId),
             user_id: user.data.id,
-            parent_code_id: data.parentCodeId,
+            parent_code_id: pcid === -1 ? undefined : pcid,
           },
         },
         {
@@ -129,7 +135,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
             }
             dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             closeCodeCreateDialog();
-            if (onCreateSuccess) onCreateSuccess(data);
+            if (onCreateSuccess) onCreateSuccess(data, true);
           },
         }
       );
@@ -151,15 +157,13 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
               label="Parent Code"
               variant="filled"
               defaultValue={
-                parentCodes && parentCodes.findIndex((code) => code.id === parentCodeId) !== -1
-                  ? parentCodeId
-                  : undefined
+                parentCodes && parentCodes.findIndex((code) => code.id === parentCodeId) !== -1 ? parentCodeId : -1
               }
               {...register("parentCodeId")}
               error={Boolean(errors.parentCodeId)}
               helperText={<ErrorMessage errors={errors} name="parentCodeId" />}
             >
-              <MenuItem value={undefined}>No parent</MenuItem>
+              <MenuItem value={-1}>No parent</MenuItem>
               {parentCodes &&
                 parentCodes.map((code) => (
                   <MenuItem key={code.id} value={code.id}>

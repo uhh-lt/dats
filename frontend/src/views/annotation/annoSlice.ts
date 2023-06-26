@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../store/store";
-import { ICode } from "./TextAnnotator/ICode";
+import { CodeRead } from "../../api/openapi";
 
 export interface AnnoState {
-  codesForSelection: ICode[];
+  codesForSelection: CodeRead[];
   selectedDocumentTagId: number | undefined;
   selectedCodeId: number | undefined;
   expandedCodeIds: string[];
@@ -26,7 +26,7 @@ export const annoSlice = createSlice({
   name: "anno",
   initialState,
   reducers: {
-    setCodesForSelection: (state, action: PayloadAction<ICode[]>) => {
+    setCodesForSelection: (state, action: PayloadAction<CodeRead[]>) => {
       state.codesForSelection = action.payload;
     },
     toggleCodeVisibility: (state, action: PayloadAction<number[]>) => {
@@ -81,7 +81,7 @@ export const annoSlice = createSlice({
     setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
       state.visibleUserIds = action.payload;
     },
-    moveCodeToTop: (state, action: PayloadAction<ICode>) => {
+    moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
       // makes most recently used order
       const codeId = action.payload.id;
       const idx = state.codesForSelection.findIndex((t) => t.id === codeId);

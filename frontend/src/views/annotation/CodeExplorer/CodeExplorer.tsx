@@ -51,9 +51,9 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
     useEffect(() => {
       if (selectedCodeId && codeTree) {
         let parentCode = codeTree.first((node) => node.model.code.id === selectedCodeId);
-        if (parentCode) {
+        if (parentCode && parentCode.model) {
           // the selected code was found -> we update the codes for selection
-          dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode!.model)));
+          dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model)));
         } else {
           // the selected code was not found -> the selected code was invalid (probabily because of local storage / project change...)
           dispatch(AnnoActions.setSelectedParentCodeId(undefined));
