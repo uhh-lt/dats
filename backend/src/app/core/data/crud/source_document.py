@@ -430,6 +430,47 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         return list(map(lambda row: row.id, query.all()))
 
+    def get_ids_by_starts_with_metadata_name(
+        self,
+        db: Session,
+        *,
+        proj_id: int,
+        starts_with: str,
+        only_finished: bool = True,
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> List[int]:
+        query = db.query(self.model.id).join(
+            SourceDocumentMetadataORM,
+            self.model.id == SourceDocumentMetadataORM.source_document_id,
+        )
+
+        # fixme: how to filter by only_finished?
+        if only_finished:
+            query = query.filter(
+                and_(
+                    self.model.project_id == proj_id,
+                    self.model.status == SDocStatus.finished,
+                    "name" == SourceDocumentMetadataORM.key,
+                    SourceDocumentMetadataORM.value.startswith(starts_with),
+                )
+            )
+        else:
+            query = query.filter(
+                and_(
+                    self.model.project_id == proj_id,
+                    "name" == SourceDocumentMetadataORM.key,
+                    SourceDocumentMetadataORM.value.startswith(starts_with),
+                )
+            )
+
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        return list(map(lambda row: row.id, query.all()))
+
     def get_ids_by_doc_types_and_project_id(
         self,
         db: Session,

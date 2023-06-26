@@ -24,7 +24,6 @@ from app.util.singleton_meta import SingletonMeta
 
 class SearchService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-
         cls.sqls = SQLService()
         return super(SearchService, cls).__new__(cls)
 
@@ -76,16 +75,12 @@ class SearchService(metaclass=SingletonMeta):
 
             if query_params.filename:
                 sdocs_ids.append(
-                    [
-                        hit.sdoc_id
-                        for hit in ElasticSearchService()
-                        .search_sdocs_by_prefix_filename(
-                            proj_id=query_params.proj_id,
-                            filename_prefix=query_params.filename,
-                            **skip_limit
-                        )
-                        .hits
-                    ]
+                    crud_sdoc.get_ids_by_starts_with_metadata_name(
+                        db=db,
+                        proj_id=query_params.proj_id,
+                        starts_with=query_params.filename,
+                        **skip_limit
+                    )
                 )
 
             if query_params.keywords:
