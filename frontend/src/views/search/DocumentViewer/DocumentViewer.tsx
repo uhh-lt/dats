@@ -6,14 +6,14 @@ import { DocType, DocumentTagRead } from "../../../api/openapi";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
 import { SearchActions } from "../searchSlice";
+import AudioViewer from "./AudioViewer";
 import { DocumentAdocSelector } from "./DocumentAdocSelector";
-import DocumentLinkToOriginal from "./DocumentLinkToOriginal";
 import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
+import DocumentNameEditable from "./DocumentNameEditable";
 import DocumentTagChip from "./DocumentTagChip";
 import ImageViewer from "./ImageViewer";
 import TextViewer from "./TextViewer";
 import VideoViewer from "./VideoViewer";
-import AudioViewer from "./AudioViewer";
 import { useDeletableDocumentTags } from "./useDeletableDocumentTags";
 import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments";
 
@@ -52,11 +52,7 @@ function DocumentViewer({
     <Card raised {...props}>
       <CardContent>
         <Stack spacing={2}>
-          {sdoc.isLoading && <h1 style={{ margin: 0 }}>Loading...</h1>}
-          {sdoc.isError && <h1 style={{ margin: 0 }}>{sdoc.error.message}</h1>}
-          {sdoc.isSuccess && (
-            <DocumentLinkToOriginal sdocId={sdocId} title={sdoc.data.filename} variant={"h3"} style={{ margin: 0 }} />
-          )}
+          <DocumentNameEditable sdocId={sdocId} variant={"h3"} style={{ margin: 0 }} />
           <div>
             {documentTags.isLoading && <span>Loading tags...</span>}
             {documentTags.isError && <span>{documentTags.error.message}</span>}

@@ -6,6 +6,7 @@ import {
   DocType,
   DocumentTagRead,
   MemoRead,
+  MetadataService,
   ProjectService,
   SourceDocumentContent,
   SourceDocumentKeywords,
@@ -24,31 +25,43 @@ const fetchSdoc = async (sdocId: number) => {
   const sdoc = await SourceDocumentService.getById({
     sdocId: sdocId!,
   });
-  let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
+
+  const name = await SourceDocumentService.readMetadataByKey({ sdocId: sdocId, metadataKey: "name" });
+  sdoc.filename = name.value;
+
   switch (sdoc.doctype) {
     case DocType.TEXT:
       const x = await SourceDocumentService.getHtml({ sdocId: sdocId, onlyFinished: true });
       sdoc.content = x.html;
       break;
     case DocType.IMAGE:
+      let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
       url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
       sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
       break;
     case DocType.VIDEO:
     case DocType.AUDIO:
-      sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
+      let url2 = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
+      sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url2);
       break;
   }
+
   return sdoc;
 };
 
 const useGetDocumentNoContent = (sdocId: number | undefined) =>
   useQuery<SourceDocumentRead, Error>(
     [QueryKey.SDOC_NO_CONTENT, sdocId],
-    () =>
-      SourceDocumentService.getById({
+    async () => {
+      const sdoc = await SourceDocumentService.getById({
         sdocId: sdocId!,
-      }),
+      });
+
+      const name = await SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "name" });
+      sdoc.filename = name.value;
+
+      return sdoc;
+    },
     {
       enabled: !!sdocId,
     }
@@ -262,6 +275,24 @@ const useCreateMemo = () =>
     },
   });
 
+// name
+const useGetName = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentMetadataRead, Error>(
+    [QueryKey.SDOC_NAME, sdocId],
+    async () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "name" }),
+    {
+      enabled: !!sdocId,
+    }
+  );
+
+const useUpdateName = () =>
+  useMutation(MetadataService.updateById, {
+    onSuccess: (metadata) => {
+      queryClient.invalidateQueries([QueryKey.SDOC, metadata.source_document_id]);
+      queryClient.setQueryData([QueryKey.SDOC_NAME, metadata.source_document_id], metadata);
+    },
+  });
+
 // metadata
 const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
   useQuery<string, Error>(
@@ -287,7 +318,10 @@ const useGetMetadata = (sdocId: number | undefined) =>
   useQuery<Map<string, SourceDocumentMetadataRead>, Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
     async () => {
-      const metadatas = await SourceDocumentService.getAllMetadata({ sdocId: sdocId! });
+      const metadatas = await SourceDocumentService.getAllMetadata({
+        sdocId: sdocId!,
+        excludeCsv: "word_level_transcriptions,word_frequencies,name",
+      });
       const result = new Map<string, SourceDocumentMetadataRead>();
       metadatas.forEach((metadata) => {
         result.set(metadata.key, metadata);
@@ -353,6 +387,9 @@ const SdocHooks = {
   useGetMemo,
   useGetRelatedMemos,
   useCreateMemo,
+  // name
+  useGetName,
+  useUpdateName,
   // metadata
   useGetURL,
   useGetThumbnailURL,

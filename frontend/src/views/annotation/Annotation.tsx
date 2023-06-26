@@ -6,8 +6,8 @@ import SdocHooks from "../../api/SdocHooks";
 import { DocType, DocumentTagRead } from "../../api/openapi";
 import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
-import DocumentLinkToOriginal from "../search/DocumentViewer/DocumentLinkToOriginal";
 import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata";
+import DocumentNameEditable from "../search/DocumentViewer/DocumentNameEditable";
 import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip";
 import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
@@ -73,12 +73,7 @@ function Annotation() {
                     {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
                       <>
                         <Stack spacing={2}>
-                          <DocumentLinkToOriginal
-                            sdocId={sourceDocumentId}
-                            title={sourceDocument.data.filename}
-                            variant={"h3"}
-                            style={{ margin: 0 }}
-                          />
+                          <DocumentNameEditable sdocId={sourceDocument.data.id} variant={"h3"} style={{ margin: 0 }} />
                           <div>
                             {documentTags.isLoading && <span>Loading tags...</span>}
                             {documentTags.isError && <span>{documentTags.error.message}</span>}

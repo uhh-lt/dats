@@ -59,6 +59,8 @@ export const QueryKey = {
 
   // a single document (by document id)
   SDOC: "sdoc",
+  // the name of a single document (by document id)
+  SDOC_NAME: "sdocName",
   // a single document without content (by document id)
   SDOC_NO_CONTENT: "sdocNoContent",
   // a single document (by adoc id)
