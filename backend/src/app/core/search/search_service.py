@@ -160,15 +160,13 @@ class SearchService(metaclass=SingletonMeta):
         FaissIndexService().index_exists(
             proj_id=proj_id, index_type=IndexType.IMAGE, raise_if_not_exists=True
         )
+
         # perform the simsearch and get the sdoc ids with scores
-        top_k: Dict[int, float] = find_similar_images_apply_async(
+        top_k_similar: Dict[int, float] = find_similar_images_apply_async(
             proj_id=proj_id, query=query, top_k=top_k
         ).get()
 
-        with self.sqls.db_session() as db:
-            sdoc_orms = crud_sdoc.read_by_ids(db=db, ids=list(top_k.keys()))
-
         return [
-            SimSearchImageHit(sdoc_id=sdoc_orm.id, score=score)
-            for sdoc_orm, score in zip(sdoc_orms, top_k.values())
+            SimSearchImageHit(sdoc_id=sdoc_id, score=score)
+            for sdoc_id, score in top_k_similar.items()
         ]
