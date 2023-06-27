@@ -61,7 +61,10 @@ def preprocess_uploaded_file(
         )
 
     return PreprocessingJobPayload(
-        file_path=file_path, mime_type=mime_type, doc_type=doc_type
+        project_id=proj_id,
+        file_path=file_path,
+        mime_type=mime_type,
+        doc_type=doc_type,
     )
 
 

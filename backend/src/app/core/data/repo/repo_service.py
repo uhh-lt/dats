@@ -327,6 +327,23 @@ class RepoService(metaclass=SingletonMeta):
             return relative_url
         return url.urljoin(self.base_url, relative_url)
 
+    def get_url_from_file_in_repo(
+        self,
+        file_path: Path,
+        relative: bool = True,
+        webp: bool = False,
+        thumbnail: bool = False,
+    ) -> str:
+        if not file_path.exists():
+            msg = f"File {file_path} not found in Repository!"
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+
+        relative_url = str(file_path.relative_to(self.repo_root))
+        if relative:
+            return relative_url
+        return url.urljoin(self.base_url, relative_url)
+
     def extract_archive_in_project(
         self, proj_id: int, archive_path: Path
     ) -> List[Path]:
