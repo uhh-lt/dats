@@ -1,17 +1,71 @@
-import html
-import re
 from typing import List
 
-from bs4 import BeautifulSoup
+from app.core.data.dto.source_document import SDocStatus
+from app.docprepro.text.html_cleaning_utils import (
+    add_readability_watermark,
+    apply_readability,
+    build_html_cleaning_pipeline,
+    clean_html_tags_and_attrs,
+    ensure_html_mime_type,
+    has_readability_watermark,
+    regex_replace,
+    remove_unresolved_links,
+    string_replace,
+    string_strip,
+    unescape_html,
+)
+from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from app.docprepro.util import update_sdoc_status
 from loguru import logger
 from tqdm import tqdm
 
-from app.core.data.dto.source_document import SDocStatus
-from app.docprepro.text.models.preprotextdoc import PreProTextDoc
-from app.docprepro.util import update_sdoc_status
+cleaning_pipeline = build_html_cleaning_pipeline(
+    [
+        remove_unresolved_links,  # todo: remove unresolved images / video / audio... but how?
+        clean_html_tags_and_attrs(
+            tags_to_kill=["head", "script", "iframe", "object"],
+            tags_to_remove=["html", "body", "span", "div", "article"],
+            attrs_to_keep=[
+                "src",
+                "alt",
+                "href",
+                "title",
+                "width",
+                "height",
+                "target",
+            ],
+        ),
+        string_replace(replace={"\n": "", "&lt;": "❮", "&gt;": "❯"}),
+        regex_replace(pattern=r"\s+", replacement=" "),
+        string_strip,
+        unescape_html,
+    ]
+)
 
-tags_to_remove_completely = ["head", "script", "iframe", "object"]
-tags_to_remove = ["html", "body"]
+cleaning_with_readability_pipeline = build_html_cleaning_pipeline(
+    [
+        clean_html_tags_and_attrs(
+            tags_to_kill=["head", "script", "iframe", "object"],
+            tags_to_remove=["span", "div"],
+            attrs_to_keep=[
+                "src",
+                "alt",
+                "href",
+                "title",
+                "width",
+                "height",
+                "target",
+            ],
+        ),
+        string_replace(replace={"\n": "", "&lt;": "❮", "&gt;": "❯"}),
+        regex_replace(pattern=r"\s+", replacement=" "),
+        string_strip,
+        unescape_html,
+        apply_readability,
+        ensure_html_mime_type,
+        add_readability_watermark,
+    ]
+)
 
 
 def clean_html_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
@@ -19,30 +73,15 @@ def clean_html_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
         return pptds
 
     for pptd in tqdm(pptds, desc="Parsing html... "):
-        # remove redundant white spaces
-        content = re.sub(r"\s+", " ", pptd.html).strip()
         if "html" in pptd.mime_type:
-            logger.info(f"Cleaning html document!")
+            if not has_readability_watermark(pptd.html):
+                # here, we apply the same cleaning pipeline as in the crawler
+                logger.info("Cleaning html document with readability!")
+                pptd.html = cleaning_with_readability_pipeline(pptd.html)
 
-            soup = BeautifulSoup(content, "html.parser")
-            # remove specific tags and their children completely
-            for tag in tags_to_remove_completely:
-                for s in soup.select(tag):
-                    s.extract()
-            # remove specific tags but keep their children
-            for tag in tags_to_remove:
-                for s in soup.select(tag):
-                    s.unwrap()
-            content = str(soup)
+            logger.info("Cleaning html document!")
+            pptd.html = cleaning_pipeline(pptd.html)
 
-        # resolve html special characters to their respective unicode character
-        content = content.replace("&lt;", "❮")
-        content = content.replace("&gt;", "❯")
-        content = html.unescape(content)
-
-        pptd.html = content
-
-        # Flo: update sdoc status
         update_sdoc_status(sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.clean_html)
 
     return pptds
