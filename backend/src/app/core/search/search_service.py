@@ -135,23 +135,26 @@ class SearchService(metaclass=SingletonMeta):
         FaissIndexService().index_exists(
             proj_id=proj_id, index_type=IndexType.TEXT, raise_if_not_exists=True
         )
-        # perform the simsearch and get the span anno ids with scores
-        top_k: Dict[int, float] = find_similar_sentences_apply_async(
+        # perform the simsearch and get the ids of the faiss sentence links
+        top_k_similar: Dict[int, float] = find_similar_sentences_apply_async(
             proj_id=proj_id, query=query, top_k=top_k
         ).get()
 
         with self.sqls.db_session() as db:
-            faiss_links = crud_faiss_sentence_link.read_by_ids(
-                db=db, ids=list(top_k.keys())
-            )
+            faiss_links = {
+                link.id: link
+                for link in crud_faiss_sentence_link.read_by_ids(
+                    db=db, ids=list(top_k_similar.keys())
+                )
+            }
 
             return [
                 SimSearchSentenceHit(
-                    sdoc_id=faiss_link.source_document_id,
+                    sdoc_id=faiss_links[link_id].source_document_id,
                     score=score,
-                    sentence_id=faiss_link.sentence_id,
+                    sentence_id=faiss_links[link_id].sentence_id,
                 )
-                for faiss_link, score in zip(faiss_links, top_k.values())
+                for link_id, score in top_k_similar.items()
             ]
 
     def find_similar_images(

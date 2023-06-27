@@ -78,17 +78,17 @@ def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProText
                 device=conf.docprepro.simsearch.text_encoder.device,
             )
 
-        # bulk insert links and return ids
+        # insert links and return created link ids
         with sqls.db_session() as db:
-            embedding_ids = [
+            faiss_sentence_link_ids = [
                 crud_faiss_sentence_link.create(db=db, create_dto=link).id
                 for link in links
             ]
 
-        # add to index (with the IDs of the SpanAnnotation IDs)
+        # add to index (with the IDs of the faiss sentence links)
         faisss.add_to_index(
             embeddings=encoded_sentences,
-            embedding_ids=np.asarray(embedding_ids),
+            embedding_ids=np.asarray(faiss_sentence_link_ids),
             proj_id=proj_id,
             index_type=IndexType.TEXT,
         )
