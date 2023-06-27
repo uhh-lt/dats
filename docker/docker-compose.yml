@@ -36,7 +36,7 @@ services:
       - "${REDIS_EXPOSED:-6379}:6379"
     volumes:
       - "redis_data_demo:/var/lib/redis/data"
-    command: redis-server --requirepass "${REDIS_PASSWORD:-dwts123}"
+    command: redis-server --requirepass "${REDIS_PASSWORD:-dwts123}" --save 60 1
     networks:
       - dwts_demo_network
 
