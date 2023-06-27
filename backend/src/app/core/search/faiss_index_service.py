@@ -188,6 +188,8 @@ class FaissIndexService(metaclass=SingletonMeta):
         if index.ntotal <= 0:
             logger.error(f"{index_type} Index for Project {proj_id} is empty!")
             raise FaissIndexEmptyError(proj_id=proj_id, index_type=index_type)
+        elif top_k > index.ntotal:
+            top_k = index.ntotal
 
         # noinspection PyArgumentList
         dists, ids = index.search(query, top_k)
