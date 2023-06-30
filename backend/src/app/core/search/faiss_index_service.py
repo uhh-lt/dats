@@ -197,3 +197,51 @@ class FaissIndexService(metaclass=SingletonMeta):
         ids: np.ndarray(dtype=int, shape=(1,)) = ids.squeeze().tolist()
 
         return dict(zip(ids, dists))
+
+    def search_index_with_threshold(
+        self,
+        proj_id: int,
+        index_type: IndexType,
+        query: np.ndarray,
+        threshold: float = 0.8,
+    ) -> Dict[int, float]:
+        if query.ndim == 1:
+            query = query[np.newaxis]
+        assert self.index_exists(
+            proj_id=proj_id, index_type=index_type, raise_if_not_exists=True
+        )
+
+        # load or create the index
+        index = self.create_or_load_index_for_project(
+            proj_id=proj_id, index_type=index_type
+        )
+
+        if index.ntotal <= 0:
+            logger.error(f"{index_type} Index for Project {proj_id} is empty!")
+            raise FaissIndexEmptyError(proj_id=proj_id, index_type=index_type)
+
+        if threshold >= 1.0 or threshold < 0.0:
+            logger.error("Threshold must be between 0.0 and 1.0!")
+            raise ValueError
+
+        # search the index
+        k = 100
+        lowest_score = 1.1
+        dists = []
+        ids = []
+        while lowest_score > threshold:
+            if k > index.ntotal:
+                k = index.ntotal
+
+            # noinspection PyArgumentList
+            dists, ids = index.search(query, k)
+            dists = dists.squeeze().tolist()
+            ids = ids.squeeze().tolist()
+            lowest_score = dists[-1]
+
+            if k == index.ntotal:
+                break
+            k *= 2
+
+        # filter the results
+        return dict([(idx, dist) for idx, dist in zip(ids, dists) if dist >= threshold])

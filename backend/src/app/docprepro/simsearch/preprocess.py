@@ -3,7 +3,10 @@ from typing import Dict, List, Union
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch.find_similar_images import find_similar_images_
-from app.docprepro.simsearch.find_similar_sentences import find_similar_sentences_
+from app.docprepro.simsearch.find_similar_sentences import (
+    find_similar_sentences_,
+    find_similar_sentences_with_embedding_with_threshold_,
+)
 from app.docprepro.simsearch.index_image_document_in_faiss import (
     index_image_document_in_faiss_,
 )
@@ -52,3 +55,16 @@ def find_similar_sentences(
     proj_id: int, query: Union[str, int], top_k: int = 10
 ) -> Dict[int, float]:
     return find_similar_sentences_(proj_id, query, top_k)
+
+
+@celery_worker.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 5},
+)
+def find_similar_sentences_with_embedding_with_threshold(
+    proj_id: int, query_sentences: List[str], threshold: float
+) -> Dict[int, float]:
+    return find_similar_sentences_with_embedding_with_threshold_(
+        proj_id, query_sentences, threshold
+    )
