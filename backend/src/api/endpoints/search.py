@@ -259,3 +259,18 @@ async def find_similar_images(
     return SearchService().find_similar_images(
         proj_id=proj_id, query=query, top_k=top_k
     )
+
+
+@router.post(
+    "/simsearch/sentences_threshold",
+    tags=tags,
+    response_model=List[SimSearchSentenceHit],
+    summary="Returns similar sentences according to a averaged representation of multiple query sentences.",
+    description="Returns similar sentences according to a averaged representation of multiple query sentences.",
+)
+async def find_similar_sentences_with_threshold(
+    proj_id: int, sentences: List[str], threshold: int = 10
+) -> List[SimSearchSentenceHit]:
+    return SearchService().find_similar_sentences_with_threshold(
+        proj_id=proj_id, sentences=sentences, threshold=threshold
+    )

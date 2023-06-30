@@ -22,6 +22,7 @@ import Settings from "../views/settings/Settings";
 import Autologbook from "../views/autologbook/Autologbook";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis";
+import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis";
 
 const routes: RouteObject[] = [
   {
@@ -132,6 +133,10 @@ const routes: RouteObject[] = [
       {
         path: "/project/:projectId/analysis/code-graph",
         element: <CodeGraph />,
+      },
+      {
+        path: "/project/:projectId/analysis/timeline",
+        element: <TimelineAnalysis />,
       },
       {
         path: "/project/:projectId/logbook",

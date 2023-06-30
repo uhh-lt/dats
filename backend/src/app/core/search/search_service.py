@@ -18,6 +18,7 @@ from app.core.search.index_type import IndexType
 from app.docprepro.simsearch import (
     find_similar_images_apply_async,
     find_similar_sentences_apply_async,
+    find_similar_sentences_with_embedding_with_threshold_apply_async,
 )
 from app.util.singleton_meta import SingletonMeta
 
@@ -173,3 +174,36 @@ class SearchService(metaclass=SingletonMeta):
             SimSearchImageHit(sdoc_id=sdoc_id, score=score)
             for sdoc_id, score in top_k_similar.items()
         ]
+
+    def find_similar_sentences_with_threshold(
+        self, proj_id: int, sentences: List[str], threshold: int = 10
+    ) -> List[SimSearchSentenceHit]:
+        FaissIndexService().index_exists(
+            proj_id=proj_id, index_type=IndexType.TEXT, raise_if_not_exists=True
+        )
+
+        # perform the simsearch and get the ids of the faiss sentence links
+        similar_sentences: Dict[
+            int, float
+        ] = find_similar_sentences_with_embedding_with_threshold_apply_async(
+            proj_id=proj_id,
+            query_sentences=sentences,
+            threshold=threshold / 100.0,
+        ).get()
+
+        with self.sqls.db_session() as db:
+            faiss_links = {
+                link.id: link
+                for link in crud_faiss_sentence_link.read_by_ids(
+                    db=db, ids=list(similar_sentences.keys())
+                )
+            }
+
+            return [
+                SimSearchSentenceHit(
+                    sdoc_id=faiss_links[link_id].source_document_id,
+                    score=score,
+                    sentence_id=faiss_links[link_id].sentence_id,
+                )
+                for link_id, score in similar_sentences.items()
+            ]

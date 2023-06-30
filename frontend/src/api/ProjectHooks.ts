@@ -12,9 +12,11 @@ import {
   ProjectRead,
   ProjectService,
   ProjectUpdate,
+  SourceDocumentMetadataRead,
   UserRead,
 } from "./openapi";
 import { useSelectEnabledCodes } from "./utils";
+import ProjectGuidelines from "../views/projectsettings/update/ProjectGuidelines";
 
 //tags
 const useGetAllTags = (projectId: number) =>
@@ -219,6 +221,17 @@ const useQueryActions = (requestBody: ActionQueryParameters) =>
     })
   );
 
+// metadata
+const useGetMetadataByKey = (projectId: number, metadataKey: string) =>
+  useQuery<SourceDocumentMetadataRead[], Error>(
+    [QueryKey.PROJECT_METADATA_BY_METADATA_KEY, projectId, metadataKey],
+    () =>
+      ProjectService.getProjectMetadataByMetadataKey({
+        projId: projectId,
+        metadataKey: metadataKey,
+      })
+  );
+
 const ProjectHooks = {
   // tags
   useGetAllTags,
@@ -244,6 +257,8 @@ const ProjectHooks = {
   // actions
   useGetActions,
   useQueryActions,
+  // metadata
+  useGetMetadataByKey,
 };
 
 export default ProjectHooks;

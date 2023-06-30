@@ -1068,6 +1068,41 @@
         }
       }
     },
+    "/project/{proj_id}/metadata/{metadata_key}": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns all SourceDocumentMetadata of the project that have the specified metadata_key",
+        "description": "Returns all SourceDocumentMetadata of the project that have the specified metadata_key",
+        "operationId": "get_project_metadata_by_metadata_key",
+        "parameters": [
+          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "path" },
+          {
+            "required": true,
+            "schema": { "title": "Metadata Key", "type": "string" },
+            "name": "metadata_key",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Project-Get Project Metadata By Metadata Key",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["sourceDocument"],
@@ -3755,6 +3790,47 @@
         }
       }
     },
+    "/search/simsearch/sentences_threshold": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns similar sentences according to a averaged representation of multiple query sentences.",
+        "description": "Returns similar sentences according to a averaged representation of multiple query sentences.",
+        "operationId": "find_similar_sentences_with_threshold",
+        "parameters": [
+          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
+          {
+            "required": false,
+            "schema": { "title": "Threshold", "type": "integer", "default": 10 },
+            "name": "threshold",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "title": "Sentences", "type": "array", "items": { "type": "string" } } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Search-Find Similar Sentences With Threshold",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/metadata": {
       "put": {
         "tags": ["metadata"],
@@ -4016,6 +4092,64 @@
         }
       }
     },
+    "/analysis/timeline_analysis": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Perform timeline analysis.",
+        "description": "Perform timeline analysis.",
+        "operationId": "timeline_analysis",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": { "title": "Threshold", "type": "integer" },
+            "name": "threshold",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": { "title": "Metadata Key", "type": "string" },
+            "name": "metadata_key",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Concepts",
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/AnalysisConcept" }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Timeline Analysis",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TimelineAnalysisResult" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/prepro/project/{proj_id}/status": {
       "get": {
         "tags": ["prepro"],
@@ -4256,6 +4390,20 @@
         "enum": ["CREATE", "UPDATE", "DELETE"],
         "type": "string",
         "description": "An enumeration."
+      },
+      "AnalysisConcept": {
+        "title": "AnalysisConcept",
+        "required": ["name", "sentences"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string", "description": "The nane of the concept." },
+          "sentences": {
+            "title": "Sentences",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The sentences describing the concept."
+          }
+        }
       },
       "AnnotationDocumentCreate": {
         "title": "AnnotationDocumentCreate",
@@ -6018,6 +6166,23 @@
             "type": "integer",
             "description": "Number of occurrences of the document tag in all documents"
           }
+        }
+      },
+      "TimelineAnalysisResult": {
+        "title": "TimelineAnalysisResult",
+        "required": ["concept_name", "date", "sentence", "score", "sdoc_id", "context"],
+        "type": "object",
+        "properties": {
+          "concept_name": { "title": "Concept Name", "type": "string", "description": "The name of the concept." },
+          "date": { "title": "Date", "type": "string", "description": "The date of document." },
+          "sentence": { "title": "Sentence", "type": "string", "description": "The similar sentence." },
+          "score": { "title": "Score", "type": "number", "description": "The similarity score." },
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "The id of the SourceDocument the similar sentence belongs to."
+          },
+          "context": { "title": "Context", "type": "string", "description": "The context of the similar sentence." }
         }
       },
       "UserAuthorizationHeaderData": {

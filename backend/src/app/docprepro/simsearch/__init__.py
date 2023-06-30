@@ -13,6 +13,7 @@ index_image_document_in_faiss = (
 )
 find_similar_images = "app.docprepro.simsearch.preprocess.find_similar_images"
 find_similar_sentences = "app.docprepro.simsearch.preprocess.find_similar_sentences"
+find_similar_sentences_with_embedding_with_threshold = "app.docprepro.simsearch.preprocess.find_similar_sentences_with_embedding_with_threshold"
 
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 
@@ -43,4 +44,17 @@ def find_similar_images_apply_async(
 ) -> Any:
     return Signature(
         find_similar_images, kwargs={"proj_id": proj_id, "query": query, "top_k": top_k}
+    ).apply_async()
+
+
+def find_similar_sentences_with_embedding_with_threshold_apply_async(
+    proj_id: int, query_sentences: List[str], threshold: float
+) -> Any:
+    return Signature(
+        find_similar_sentences_with_embedding_with_threshold,
+        kwargs={
+            "proj_id": proj_id,
+            "query_sentences": query_sentences,
+            "threshold": threshold,
+        },
     ).apply_async()

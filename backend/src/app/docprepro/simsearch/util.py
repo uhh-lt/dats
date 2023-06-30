@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 
 import numpy as np
 from loguru import logger
@@ -81,4 +81,21 @@ def encode_query(query: Union[str, int]) -> np.ndarray:
     else:
         raise NotImplementedError("Only Strings or Images are supported as Query!")
 
-    return encoded_query
+
+def encode_text_queries(queries: List[str]) -> np.ndarray:
+    # embedd queries
+    encoded_query = text_encoder.encode(
+        sentences=queries,
+        batch_size=1,
+        show_progress_bar=False,
+        normalize_embeddings=True,
+        device="cpu",
+    )
+
+    # average embeddings
+    query_embedding: np.ndarray = np.array(encoded_query).mean(axis=0)
+
+    # normalize averaged embedding
+    query_embedding: np.ndarray = query_embedding / np.linalg.norm(query_embedding)
+
+    return query_embedding

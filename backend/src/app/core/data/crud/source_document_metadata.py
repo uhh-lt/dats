@@ -95,6 +95,19 @@ class CRUDSourceDocumentMetadata(
             raise NoSuchElementError(self.model, key=key, source_document_id=sdoc_id)
         return db_obj
 
+    def read_by_project_and_key(
+        self, db: Session, project_id: int, key: str
+    ) -> List[SourceDocumentMetadataORM]:
+        db_objs = (
+            db.query(self.model)
+            .join(
+                SourceDocumentORM, SourceDocumentORM.id == self.model.source_document_id
+            )
+            .filter(SourceDocumentORM.project_id == project_id, self.model.key == key)
+            .all()
+        )
+        return db_objs
+
     def read_by_project(
         self,
         db: Session,

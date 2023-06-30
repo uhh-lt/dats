@@ -349,4 +349,34 @@ export class SearchService {
       },
     });
   }
+
+  /**
+   * Returns similar sentences according to a averaged representation of multiple query sentences.
+   * Returns similar sentences according to a averaged representation of multiple query sentences.
+   * @returns SimSearchSentenceHit Successful Response
+   * @throws ApiError
+   */
+  public static findSimilarSentencesWithThreshold({
+    projId,
+    requestBody,
+    threshold = 10,
+  }: {
+    projId: number;
+    requestBody: Array<string>;
+    threshold?: number;
+  }): CancelablePromise<Array<SimSearchSentenceHit>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/simsearch/sentences_threshold",
+      query: {
+        proj_id: projId,
+        threshold: threshold,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
