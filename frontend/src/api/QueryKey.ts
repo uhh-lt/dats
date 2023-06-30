@@ -15,6 +15,8 @@ export const QueryKey = {
   PROJECT_TAGS: "projectTags",
   // all crawler jobs of a project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
+  // all metadata of a project (by project id and metadata key)
+  PROJECT_METADATA_BY_METADATA_KEY: "projectMetadataByMetadataKey",
 
   // all users
   USERS: "users",
@@ -127,6 +129,7 @@ export const QueryKey = {
 
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
+  ANALYSIS_TIMELINE: "anaylsisTimeline",
 
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",

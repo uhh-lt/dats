@@ -12,6 +12,7 @@ import type { PaginatedSourceDocumentReads } from "../models/PaginatedSourceDocu
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
+import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { UserRead } from "../models/UserRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -617,6 +618,32 @@ export class ProjectService {
       },
       query: {
         only_finished: onlyFinished,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all SourceDocumentMetadata of the project that have the specified metadata_key
+   * Returns all SourceDocumentMetadata of the project that have the specified metadata_key
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getProjectMetadataByMetadataKey({
+    projId,
+    metadataKey,
+  }: {
+    projId: number;
+    metadataKey: string;
+  }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/metadata/{metadata_key}",
+      path: {
+        proj_id: projId,
+        metadata_key: metadataKey,
       },
       errors: {
         422: `Validation Error`,
