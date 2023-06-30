@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db_session, skip_limit_params
 from api.util import get_object_memos
 from app.core.data.crud.action import crud_action
+from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
@@ -21,6 +22,7 @@ from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
     SourceDocumentRead,
 )
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.util import preprocess_uploaded_file
@@ -499,3 +501,23 @@ async def resolve_filename(
     return crud_sdoc.filename2id(
         db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
     )
+
+
+@router.get(
+    "/{proj_id}/metadata/{metadata_key}",
+    tags=tags,
+    response_model=List[SourceDocumentMetadataRead],
+    summary="Returns all SourceDocumentMetadata of the project that have the specified metadata_key",
+    description=(
+        "Returns all SourceDocumentMetadata of the project that have the specified metadata_key"
+    ),
+)
+async def get_project_metadata_by_metadata_key(
+    *, db: Session = Depends(get_db_session), proj_id: int, metadata_key: str
+) -> List[SourceDocumentMetadataRead]:
+    return [
+        SourceDocumentMetadataRead.from_orm(db_obj)
+        for db_obj in crud_sdoc_meta.read_by_project_and_key(
+            db=db, project_id=proj_id, key=metadata_key
+        )
+    ]
