@@ -36,7 +36,16 @@ function Analysis() {
               />
             </Grid>
 
-            {range(0, 4).map((i) => (
+            <Grid item>
+              <AnalysisCard
+                to={"timeline"}
+                title={"Timeline Analysis"}
+                description={"Analyse the occurrence of concepts over time."}
+                color={"#77dd77"}
+              />
+            </Grid>
+
+            {range(0, 3).map((i) => (
               <Grid item key={i}>
                 <AnalysisCard
                   to={""}
