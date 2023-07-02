@@ -197,7 +197,7 @@ function Search() {
           }}
         >
           <TagExplorer
-            sx={{ height: "50%", overflowY: "auto", pt: 0 }}
+            sx={{ height: "50%", pt: 0 }}
             selectedTag={selectedTag}
             handleAllDocumentsClick={handleClearSearch}
             handleNewDocumentsClick={handleClearSearch}

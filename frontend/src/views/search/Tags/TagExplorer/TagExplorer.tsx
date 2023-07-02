@@ -1,3 +1,4 @@
+import StorageIcon from "@mui/icons-material/Storage";
 import {
   BoxProps,
   Divider,
@@ -8,19 +9,16 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
+import Box from "@mui/material/Box";
 import React, { useState } from "react";
-import TagCreationButton from "../TagCreate/TagCreationButton";
-import TagManageButton from "../TagManage/TagManageButton";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../../api/ProjectHooks";
-import TagListItem from "./TagListItem";
-import TagEditDialog from "../TagEdit/TagEditDialog";
-import StorageIcon from "@mui/icons-material/Storage";
-import DownloadIcon from "@mui/icons-material/Download";
-import TagExplorerContextMenu from "./TagExplorerContextMenu";
 import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
-import Box from "@mui/material/Box";
 import ExporterButton from "../../../../features/Exporter/ExporterButton";
+import TagCreationButton from "../TagCreate/TagCreationButton";
+import TagEditDialog from "../TagEdit/TagEditDialog";
+import TagExplorerContextMenu from "./TagExplorerContextMenu";
+import TagListItem from "./TagListItem";
 
 interface TagSearchProps {
   handleAllDocumentsClick: () => void;
@@ -53,8 +51,8 @@ function TagExplorer({
   };
 
   return (
-    <Box {...props}>
-      <List>
+    <Box {...props} className="myFlexContainer">
+      <List className="myFlexFitContentContainer">
         <ListItem disablePadding>
           <ListItemButton onClick={() => handleAllDocumentsClick()}>
             <ListItemIcon>
@@ -64,17 +62,22 @@ function TagExplorer({
           </ListItemButton>
         </ListItem>
 
-        <ListItem disablePadding>
+        {/* <ListItem disablePadding>
           <ListItemButton onClick={() => handleNewDocumentsClick()} disabled>
             <ListItemIcon>
               <DownloadIcon />
             </ListItemIcon>
             <ListItemText primary="New documents" />
           </ListItemButton>
-        </ListItem>
+        </ListItem> */}
       </List>
 
-      <Typography variant="h6" component="div" sx={{ mt: 1, pl: 2 }} className="myShowMoreContainer">
+      <Typography
+        variant="h6"
+        component="div"
+        sx={{ mt: 1, pl: 2 }}
+        className="myShowMoreContainer myFlexFitContentContainer"
+      >
         Tags:{" "}
         <span style={{ float: "right" }} className="myShowMoreMenu">
           <ExporterButton
@@ -83,7 +86,7 @@ function TagExplorer({
           />
         </span>
       </Typography>
-      <List>
+      <List className="myFlexFillAllContainer">
         {allTags.isLoading && <div>Loading!</div>}
         {allTags.isError && <div>Error: {allTags.error.message}</div>}
         {allTags.isSuccess && (
@@ -99,9 +102,11 @@ function TagExplorer({
             ))}
           </>
         )}
+      </List>
+      <List>
         <Divider />
         <TagCreationButton tagName={""} />
-        <TagManageButton />
+        {/* <TagManageButton /> */}
       </List>
       <TagEditDialog />
       <TagExplorerContextMenu
