@@ -103,7 +103,7 @@ function SearchResultCardBase({
         </CardContent>
       </CardActionArea>
       <CardContent sx={{ py: 0 }}>
-        <Stack direction={"row"}>
+        <Stack direction={"row"} spacing={0.5} sx={{ overflowX: "auto" }}>
           {tags.isLoading && <>...</>}
           {tags.isError && <>{tags.error.message}</>}
           {tags.isSuccess && isShowTags && tags.data.map((tag) => <SearchResultTag key={tag.id} tagId={tag.id} />)}

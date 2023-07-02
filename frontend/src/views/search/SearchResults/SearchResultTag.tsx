@@ -1,5 +1,4 @@
-import { Button } from "@mui/material";
-import TagHooks from "../../../api/TagHooks";
+import DocumentTagChip from "../DocumentViewer/DocumentTagChip";
 import { useAddTagFilter } from "../hooks/useAddTagFilter";
 
 interface SearchResultTagProps {
@@ -7,24 +6,9 @@ interface SearchResultTagProps {
 }
 
 function SearchResultTag({ tagId }: SearchResultTagProps) {
-  // global server state (react query)
-  const tag = TagHooks.useGetTag(tagId);
-
   const handleAddTagFilter = useAddTagFilter();
 
-  return (
-    <>
-      {tag.isSuccess ? (
-        <Button
-          variant="outlined"
-          style={{ color: tag.data.color, borderColor: tag.data.color, padding: 0 }}
-          onClick={() => handleAddTagFilter(tag.data.id)}
-        >
-          {tag.data.title}
-        </Button>
-      ) : null}
-    </>
-  );
+  return <DocumentTagChip tagId={tagId} handleClick={(tag) => handleAddTagFilter(tag.id)} />;
 }
 
 export default SearchResultTag;

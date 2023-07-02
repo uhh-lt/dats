@@ -53,7 +53,7 @@ function DocumentViewer({
       <CardContent>
         <Stack spacing={2}>
           <DocumentNameEditable sdocId={sdocId} variant={"h3"} style={{ margin: 0 }} />
-          <div>
+          <Stack direction="row" spacing={0.5}>
             {documentTags.isLoading && <span>Loading tags...</span>}
             {documentTags.isError && <span>{documentTags.error.message}</span>}
             {documentTags.isSuccess &&
@@ -65,7 +65,7 @@ function DocumentViewer({
                   handleDelete={handleDeleteDocumentTag}
                 />
               ))}
-          </div>
+          </Stack>
           <div>
             <DocumentMetadata sdocId={sdocId} metadata={metadata} />
             {annotationDocuments.isLoading && <span>Loading annotation documents...</span>}
