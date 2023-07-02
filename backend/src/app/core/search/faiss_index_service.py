@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 from typing import Dict, Tuple
 
@@ -225,7 +226,7 @@ class FaissIndexService(metaclass=SingletonMeta):
             raise ValueError
 
         # search the index
-        k = 100
+        k = math.floor(0.1 * index.ntotal)
         lowest_score = 1.1
         dists = []
         ids = []
