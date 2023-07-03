@@ -81,6 +81,8 @@ def encode_query(query: Union[str, int]) -> np.ndarray:
     else:
         raise NotImplementedError("Only Strings or Images are supported as Query!")
 
+    return encoded_query
+
 
 def encode_text_queries(queries: List[str]) -> np.ndarray:
     # embedd queries
