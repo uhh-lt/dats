@@ -6,7 +6,7 @@ const queryClient = new QueryClient({
     onError: (error) => {
       SnackbarAPI.openSnackbar({
         // @ts-ignore
-        text: error.message,
+        text: error.message + (error.body.detail ? ": " + error.body.detail : ""),
         severity: "error",
       });
     },
