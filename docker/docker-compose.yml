@@ -19,10 +19,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-dwtsuser}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dwts123}
     ports:
-      - "${RABBIT1_EXPOSED:-4369}:4369"
-      - "${RABBIT2_EXPOSED:-5672}:5672"
-      - "${RABBIT3_EXPOSED:-25672}:25672"
-      - "${RABBIT_EXPOSED:-15672}:15672"
+      - "${RABBIT_EXPOSED:-5672}:5672"
     volumes:
       - "rabbitmq_data_demo:/var/lib/rabbitmq/data"
     networks:
@@ -61,7 +58,6 @@ services:
       - elasticsearch_data_demo:/usr/share/elasticsearch/data
     ports:
       - "${ELASTICSEARCH_EXPOSED:-9200}:9200"
-      - "${ELASTICSEARCH1_EXPOSED:-9300}:9300"
     networks:
       - dwts_demo_network
 
