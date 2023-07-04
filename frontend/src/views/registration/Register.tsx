@@ -38,6 +38,10 @@ function Register() {
     setShowPassword(event.target.checked);
   };
 
+  // mail
+  const mail = useRef();
+  mail.current = watch("mail", "");
+
   // registration
   const registerUserMutation = UserHooks.useRegister();
 
@@ -117,6 +121,19 @@ function Register() {
               error={Boolean(errors.mail)}
               helperText={<ErrorMessage errors={errors} name="mail" />}
             />
+            <TextField
+              variant="outlined"
+              fullWidth
+              label="E-Mail Confirm"
+              type="email"
+              margin="dense"
+              {...register("confirmMail", {
+                required: "E-Mail is required",
+                validate: (value) => value === mail.current || "E-Mails do not match!",
+              })}
+              error={Boolean(errors.confirmMail)}
+              helperText={<ErrorMessage errors={errors} name="confirmMail" />}
+            />
 
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 0.5 }}>
               <TextField
@@ -126,6 +143,17 @@ function Register() {
                 fullWidth
                 {...register("password", {
                   required: "Password is required",
+                  validate: (value) => {
+                    return (
+                      [
+                        /[a-z]/, // lowercase
+                        /[A-Z]/, // uppercase
+                        /[0-9]/, // number
+                        /[^a-zA-Z0-9]/, // special character
+                      ].every((pattern) => pattern.test(value)) ||
+                      "Password must contain at least one lowercase letter, uppercase letter, number and special character!"
+                    );
+                  },
                   minLength: {
                     value: 8,
                     message: "Password too short! (minimum 8 characters)",
@@ -136,19 +164,19 @@ function Register() {
               />
               <TextField
                 variant="outlined"
-                label="Confirm"
+                label="Password Confirm"
                 type={showPassword ? "text" : "password"}
                 fullWidth
-                {...register("confirm", {
+                {...register("confirmPassword", {
                   required: "Password is required",
                   validate: (value) => value === password.current || "Passwords do not match!",
                 })}
-                error={Boolean(errors.confirm)}
-                helperText={<ErrorMessage errors={errors} name="confirm" />}
+                error={Boolean(errors.confirmPassword)}
+                helperText={<ErrorMessage errors={errors} name="confirmPassword" />}
               />
             </Stack>
             <FormHelperText sx={{ ml: 1.8 }}>
-              Use 8 or more characters with a mix of letters, numbers & symbols
+              Use 8 or more characters with a mix of uppercase letters, lowercase letters, numbers & symbols
             </FormHelperText>
             <FormGroup sx={{ ml: 1 }}>
               <FormControlLabel
