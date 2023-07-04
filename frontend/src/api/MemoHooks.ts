@@ -12,24 +12,31 @@ const useUpdateMemo = () =>
   useMutation(MemoService.updateById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.MEMO, data.id]);
+      queryClient.setQueryData([QueryKey.MEMO, data.id], data);
       switch (data.attached_object_type) {
         case AttachedObjectType.PROJECT:
           queryClient.invalidateQueries([QueryKey.MEMO_PROJECT, data.attached_object_id, data.user_id]);
+          queryClient.setQueryData([QueryKey.MEMO_PROJECT, data.attached_object_id, data.user_id], data);
           break;
         case AttachedObjectType.SOURCE_DOCUMENT:
           queryClient.invalidateQueries([QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id]);
+          queryClient.setQueryData([QueryKey.MEMO_SDOC, data.attached_object_id, data.user_id], data);
           break;
         case AttachedObjectType.DOCUMENT_TAG:
           queryClient.invalidateQueries([QueryKey.MEMO_TAG, data.attached_object_id, data.user_id]);
+          queryClient.setQueryData([QueryKey.MEMO_TAG, data.attached_object_id, data.user_id], data);
           break;
         case AttachedObjectType.CODE:
           queryClient.invalidateQueries([QueryKey.MEMO_CODE, data.attached_object_id, data.user_id]);
+          queryClient.setQueryData([QueryKey.MEMO_CODE, data.attached_object_id, data.user_id], data);
           break;
         case AttachedObjectType.SPAN_ANNOTATION:
           queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id, data.user_id]);
+          queryClient.setQueryData([QueryKey.MEMO_SPAN_ANNOTATION, data.attached_object_id, data.user_id], data);
           break;
         case AttachedObjectType.BBOX_ANNOTATION:
           queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id]);
+          queryClient.setQueryData([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id], data);
           break;
         case AttachedObjectType.ANNOTATION_DOCUMENT:
           console.error("Annotation document memo update not implemented");
