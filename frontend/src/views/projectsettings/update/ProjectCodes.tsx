@@ -1,5 +1,17 @@
-import { Box, CardContent, Divider, TextField, Toolbar, Typography } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
+import {
+  Box,
+  CardContent,
+  Divider,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  TextField,
+  Toolbar,
+  Typography,
+} from "@mui/material";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Tree from "ts-tree-structure";
 import ProjectHooks from "../../../api/ProjectHooks";
 import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton";
@@ -10,11 +22,27 @@ import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
 import { ProjectProps } from "./ProjectProps";
 import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton";
+import AddIcon from "@mui/icons-material/Add";
+import SpanCreationDialog, { CodeCreationDialogHandle } from "../../annotation/SpanContextMenu/SpanCreationDialog";
+import { CodeRead } from "../../../api/openapi";
 
 function ProjectCodes({ project }: ProjectProps) {
   // local state
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
   const [codeFilter, setCodeFilter] = useState<string>("");
+  const expandCodes = useCallback((codesToExpand: string[]) => {
+    setExpandedCodeIds((prev) => {
+      for (const codeId of codesToExpand) {
+        if (prev.indexOf(codeId) === -1) {
+          prev.push(codeId);
+        }
+      }
+      return prev.slice();
+    });
+  }, []);
+
+  // local state
+  const codeCreationDialogRef = useRef<CodeCreationDialogHandle>(null);
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(project.id, true);
@@ -69,13 +97,13 @@ function ProjectCodes({ project }: ProjectProps) {
   // effects
   // automatically expand filtered nodes
   useEffect(() => {
-    setExpandedCodeIds(Array.from(nodesToExpand).map((id) => id.toString()));
-  }, [nodesToExpand]);
+    expandCodes(Array.from(nodesToExpand).map((id) => id.toString()));
+  }, [expandCodes, nodesToExpand]);
 
   // ui event handlers
   const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
-    setExpandedCodeIds([nodeId, ...expandedCodeIds]);
+    expandCodes([nodeId]);
   };
   const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
@@ -83,6 +111,17 @@ function ProjectCodes({ project }: ProjectProps) {
     const newCodeIds = [...expandedCodeIds];
     newCodeIds.splice(id, 1);
     setExpandedCodeIds(newCodeIds);
+  };
+  const onCreateCodeSuccess = (code: CodeRead, isNewCode: boolean) => {
+    // if we add a new code successfully, we want to show the code in the code explorer
+    // this means, we have to expand the parent codes, so the new code is visible
+    const codesToExpand = [];
+    let parentCodeId = code.parent_code_id;
+    while (parentCodeId) {
+      codesToExpand.push(parentCodeId);
+      parentCodeId = projectCodes.data?.find((code) => code.id === parentCodeId)?.parent_code_id;
+    }
+    expandCodes(codesToExpand.map((id) => id.toString()));
   };
 
   return (
@@ -109,6 +148,17 @@ function ProjectCodes({ project }: ProjectProps) {
       {projectCodes.isError && (
         <CardContent>An error occurred while loading project codes for project {project.id}...</CardContent>
       )}
+      <List disablePadding>
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => codeCreationDialogRef.current!.open()}>
+            <ListItemIcon>
+              <AddIcon />
+            </ListItemIcon>
+            <ListItemText primary="Add new code" />
+          </ListItemButton>
+        </ListItem>
+      </List>
+      <SpanCreationDialog ref={codeCreationDialogRef} onCreateSuccess={onCreateCodeSuccess} />
       {projectCodes.isSuccess && codeTree && (
         <>
           <CodeTreeView
