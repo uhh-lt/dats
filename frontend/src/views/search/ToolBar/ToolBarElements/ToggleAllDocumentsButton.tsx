@@ -1,8 +1,7 @@
 import Checkbox from "@mui/material/Checkbox";
 import * as React from "react";
-import { useEffect, useMemo } from "react";
-import { SearchActions } from "../../searchSlice";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
+import { SearchActions } from "../../searchSlice";
 
 interface ToggleAllDocumentsButtonProps {
   sdocIds: number[];
@@ -12,25 +11,11 @@ function ToggleAllDocumentsButton({ sdocIds }: ToggleAllDocumentsButtonProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
   const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
-  const page = useAppSelector((state) => state.search.page);
-  const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
-
-  // computed
-  const numTotalDocuments = useMemo(
-    () => sdocIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).length,
-    [page, rowsPerPage, sdocIds]
-  );
-
-  // effects
-  // clear all selected documents when the page changes
-  useEffect(() => {
-    dispatch(SearchActions.clearSelectedDocuments());
-  }, [dispatch, page, rowsPerPage]);
 
   // ui event handlers
   const handleToggleAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      dispatch(SearchActions.setSelectedDocuments(sdocIds.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)));
+      dispatch(SearchActions.setSelectedDocuments(sdocIds));
       return;
     }
     dispatch(SearchActions.clearSelectedDocuments());
@@ -40,8 +25,8 @@ function ToggleAllDocumentsButton({ sdocIds }: ToggleAllDocumentsButtonProps) {
     <>
       <Checkbox
         color="primary"
-        indeterminate={numSelectedDocuments > 0 && numSelectedDocuments < numTotalDocuments}
-        checked={numTotalDocuments > 0 && numSelectedDocuments === numTotalDocuments}
+        indeterminate={numSelectedDocuments > 0 && numSelectedDocuments < sdocIds.length}
+        checked={numSelectedDocuments === sdocIds.length}
         onChange={handleToggleAllClick}
         inputProps={{
           "aria-label": "select all desserts",
