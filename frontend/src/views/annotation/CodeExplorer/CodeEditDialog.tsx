@@ -19,7 +19,7 @@ type CodeEditValues = {
   parentCodeId: number | undefined;
   name: string;
   color: string;
-  description: string;
+  description: string | undefined;
 };
 
 interface CodeEditDialogProps {
@@ -52,12 +52,6 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       if (code) {
         const c = ColorUtils.rgbStringToHex(code.color) || code.color;
         reset({
-          name: code.name,
-          description: code.description,
-          color: c,
-          parentCodeId: code.parent_code_id || -1,
-        });
-        console.log({
           name: code.name,
           description: code.description,
           color: c,
@@ -104,7 +98,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           ...requestBody,
           name: data.name,
           description: data.description,
-          parent_code_id: data.parentCodeId,
+          parent_code_id: data.parentCodeId === -1 ? undefined : data.parentCodeId,
         };
       }
 
@@ -237,7 +231,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               label="Description"
               fullWidth
               variant="standard"
-              {...register("description", { required: "Description is required" })}
+              {...register("description")}
               error={Boolean(errors.description)}
               helperText={<ErrorMessage errors={errors} name="description" />}
               disabled={!code || code.user_id === SYSTEM_USER_ID}
