@@ -120,7 +120,6 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
             variant="contained"
             color="success"
             type="submit"
-            disabled={startCrawlerMutation.isSuccess}
             loading={startCrawlerMutation.isLoading}
             loadingPosition="start"
             startIcon={<PlayCircle />}
