@@ -1,9 +1,13 @@
 from typing import List, Optional
 
-from fastapi import APIRouter
-
+from api.dependencies import get_db_session
+from app.core.data.crud.user import crud_user
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
+from app.core.data.dto.user import UserRead
 from app.core.db.redis_service import RedisService
+from app.core.mail.mail_service import MailService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/feedback")
 tags = ["feedback"]
@@ -40,3 +44,28 @@ async def get_by_id(*, feedback_id: str) -> Optional[FeedbackRead]:
 )
 async def get_all() -> Optional[List[FeedbackRead]]:
     return RedisService().get_all_feedbacks()
+
+
+@router.post(
+    "/reply_to/{feedback_id}",
+    tags=tags,
+    response_model=str,
+    summary="Reply to the Feedback",
+    description="Sends an e-mail to the User that created the Feedback with the given message.",
+)
+async def reply_to(
+    *, db: Session = Depends(get_db_session), feedback_id: str, message: str
+) -> str:
+    # todo: load_feedback should raise exception, if it does not exist!
+    feedback: Optional[FeedbackRead] = RedisService().load_feedback(key=feedback_id)
+    if feedback is None:
+        return f"Feedback with id {feedback_id} not found."
+
+    user = crud_user.read(db=db, id=feedback.user_id)
+
+    await MailService().send_feedback_response_mail(
+        user=UserRead.from_orm(user),
+        feedback=feedback,
+        message=message,
+    )
+    return "email has been sent"
