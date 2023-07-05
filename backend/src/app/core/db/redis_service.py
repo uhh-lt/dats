@@ -243,7 +243,7 @@ class RedisService(metaclass=SingletonMeta):
             return None
         ppj.updated = datetime.now()
         data = ppj.dict()
-        data.update(**update.dict())
+        data.update(**update.dict(exclude_none=True))
         ppj = PreprocessingJobRead(**data)
         ppj = self.store_preprocessing_job(preprocessing_job=ppj)
         if ppj is not None:
