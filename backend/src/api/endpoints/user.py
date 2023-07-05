@@ -20,6 +20,7 @@ from app.core.data.dto.user import (
     UserRead,
     UserUpdate,
 )
+from app.core.mail.mail_service import MailService
 from app.core.security import generate_jwt
 
 router = APIRouter(prefix="/user")
@@ -44,6 +45,7 @@ async def register(
         )
 
     db_user = crud_user.create(db=db, create_dto=user)
+    await MailService().send_welcome_mail(user=UserRead.from_orm(db_user))
     return UserRead.from_orm(db_user)
 
 
