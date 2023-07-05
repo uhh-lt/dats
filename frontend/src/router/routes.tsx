@@ -17,7 +17,7 @@ import ProjectSettings from "../views/projectsettings/ProjectSettings";
 import Search from "../views/search/Search";
 import RequireAuth from "../auth/RequireAuth";
 import User from "../views/User";
-import Feedback from "../views/Feedback";
+import Feedback from "../views/feedback/Feedback";
 import Settings from "../views/settings/Settings";
 import Autologbook from "../views/autologbook/Autologbook";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
