@@ -1,9 +1,9 @@
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, PrivateAttr, validator
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.dto_base import UpdateDTOBase
@@ -59,6 +59,10 @@ class PreprocessingJobUpdate(PreprocessingJobBaseDTO, UpdateDTOBase):
     status: Optional[PreprocessingJobStatus] = Field(
         default=None, description="Status of the PreprocessingJob"
     )
+    payloads: Optional[List[PreprocessingJobPayload]] = Field(
+        default=None,
+        description="Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob",
+    )
 
 
 # Properties to read
@@ -72,3 +76,24 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
     )
     created: datetime = Field(description="Created timestamp of the PreprocessingJob")
     updated: datetime = Field(description="Updated timestamp of the PreprocessingJob")
+
+    _fn_to_payload_idx: Dict[str, int] = PrivateAttr(default_factory=dict)
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        self._fn_to_payload_idx = {
+            v.file_path.name: k for k, v in dict(enumerate(self.payloads)).items()
+        }
+
+    def update_payload(
+        self, payload: PreprocessingJobPayload
+    ) -> PreprocessingJobUpdate:
+        pl_idx = self._fn_to_payload_idx.get(payload.file_path.name, None)
+        if pl_idx is None:
+            KeyError(
+                f"There exists no PreprocessingJobPayload for the file {payload.file_path.name}"
+            )
+        self.payloads[pl_idx] = payload
+
+        return PreprocessingJobUpdate(status=self.status, payloads=self.payloads)
