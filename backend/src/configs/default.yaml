@@ -85,6 +85,18 @@ postgres:
   user: ${oc.env:POSTGRES_USER, dwtsuser}
   password: ${oc.env:POSTGRES_PASSWORD, dwts123}
 
+mail:
+  enabled: ${oc.env:MAIL_ENABLED, False}
+  mail: ${oc.env:MAIL_FROM, dwise@uni-hamburg.de}
+  user: ${oc.env:MAIL_USERNAME, "user"}
+  password: ${oc.env:MAIL_PASSWORD, "pass"}
+  server: ${oc.env:MAIL_SERVER, exchange.uni-hamburg.de}
+  port: ${oc.env:MAIL_PORT, 587}
+  starttls: ${oc.env:MAIL_STARTTLS, True}
+  ssl_tls: ${oc.env:MAIL_SSL_TLS, False}
+  use_credentials: ${oc.env:MAIL_USE_CREDENTIALS, True}
+  validate_certs: ${oc.env:MAIL_VALIDATE_CERTS, True}
+
 redis:
   host: ${oc.env:REDIS_HOST, localhost}
   port: ${oc.env:REDIS_PORT, 6379}
