@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -13,20 +13,22 @@ from app.core.db.redis_service import RedisService
 router = APIRouter(prefix="/prepro")
 tags = ["prepro"]
 
+redis: RedisService = RedisService()
+
 
 @router.get(
     "/{prepro_job_id}",
     tags=tags,
-    response_model=PreprocessingJobRead,
+    response_model=Optional[PreprocessingJobRead],
     summary="Returns the PreprocessingJob for the given ID",
     description="Returns the PreprocessingJob for the given ID if it exists",
 )
 async def get_prepro_job(
     *,
     prepro_job_id: str,
-) -> PreprocessingJobRead:
+) -> Optional[PreprocessingJobRead]:
     # TODO Flo: only if the user has access?
-    return redis.get_prepro_job(prepro_job_id=prepro_job_id)
+    return redis.load_preprocessing_job(key=prepro_job_id)
 
 
 @router.get(
@@ -41,7 +43,7 @@ async def get_all_prepro_jobs(
     project_id: int,
 ) -> List[PreprocessingJobRead]:
     # TODO Flo: only if the user has access?
-    prepro_jobs = redis.get_all_prepro_jobs(project_id=project_id)
+    prepro_jobs = redis.get_all_preprocessing_jobs(project_id=project_id)
     prepro_jobs.sort(key=lambda x: x.created, reverse=True)
     return prepro_jobs
 

@@ -275,7 +275,7 @@ class RedisService(metaclass=SingletonMeta):
             return [
                 job
                 for job in all_preprocessing_jobs
-                if job.parameters.project_id == project_id
+                if job.project_id == project_id
             ]
 
     def store_feedback(self, feedback: FeedbackCreate) -> Optional[FeedbackRead]:
