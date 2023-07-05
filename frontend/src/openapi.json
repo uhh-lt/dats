@@ -4011,6 +4011,33 @@
         }
       }
     },
+    "/feedback/reply_to/{feedback_id}": {
+      "post": {
+        "tags": ["feedback"],
+        "summary": "Reply to the Feedback",
+        "description": "Sends an e-mail to the User that created the Feedback with the given message.",
+        "operationId": "reply_to",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Feedback Id", "type": "string" },
+            "name": "feedback_id",
+            "in": "path"
+          },
+          { "required": true, "schema": { "title": "Message", "type": "string" }, "name": "message", "in": "query" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "title": "Response Feedback-Reply To", "type": "string" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/analysis/code_frequencies": {
       "post": {
         "tags": ["analysis"],
@@ -4137,6 +4164,40 @@
               "application/json": {
                 "schema": {
                   "title": "Response Analysis-Timeline Analysis",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TimelineAnalysisResult" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/email": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Perform timeline analysis.",
+        "description": "Perform timeline analysis.",
+        "operationId": "simple_send",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Email", "type": "string", "format": "email" },
+            "name": "email",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Simple Send",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/TimelineAnalysisResult" }
                 }

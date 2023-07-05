@@ -101,4 +101,23 @@ export class AnalysisService {
       },
     });
   }
+
+  /**
+   * Perform timeline analysis.
+   * Perform timeline analysis.
+   * @returns TimelineAnalysisResult Successful Response
+   * @throws ApiError
+   */
+  public static simpleSend({ email }: { email: string }): CancelablePromise<Array<TimelineAnalysisResult>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/email",
+      query: {
+        email: email,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

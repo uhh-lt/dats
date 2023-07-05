@@ -58,4 +58,26 @@ export class FeedbackService {
       },
     });
   }
+
+  /**
+   * Reply to the Feedback
+   * Sends an e-mail to the User that created the Feedback with the given message.
+   * @returns string Successful Response
+   * @throws ApiError
+   */
+  public static replyTo({ feedbackId, message }: { feedbackId: string; message: string }): CancelablePromise<string> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/feedback/reply_to/{feedback_id}",
+      path: {
+        feedback_id: feedbackId,
+      },
+      query: {
+        message: message,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
