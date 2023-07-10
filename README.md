@@ -3,6 +3,8 @@
 This is the repository for the D-WISE Tool Suite (DWTS) - an outcome of
 the [D-WISE Project](https://www.dwise.uni-hamburg.de/)
 
+_Please also have a look at our [Wiki](https://github.com/uhh-lt/dwts/wiki) for more information and How-To's_
+
 ## Try it out!
 - test the online demo at [https://dwts.ltdemos.informatik.uni-hamburg.de/](https://dwts.ltdemos.informatik.uni-hamburg.de/)
 - host it on your own machine with `docker-compose`
