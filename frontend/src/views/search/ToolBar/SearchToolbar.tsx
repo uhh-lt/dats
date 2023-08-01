@@ -39,7 +39,7 @@ function SearchToolbar({
   const { projectId } = useParams() as { projectId: string };
 
   // global client state (redux)
-  const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
+  const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
 
   return (
     <AppBar
@@ -69,13 +69,13 @@ function SearchToolbar({
             sx={{ borderRight: (theme) => (isSplitView ? `1px solid ${theme.palette.grey[400]}` : undefined) }}
           >
             <ToggleAllDocumentsButton sdocIds={searchResultDocumentIds} />
-            {numSelectedDocuments > 0 && (
+            {selectedDocumentIds.length > 0 && (
               <>
                 <Typography color="inherit" variant="subtitle1" component="div">
-                  {numSelectedDocuments} selected
+                  {selectedDocumentIds.length} selected
                 </Typography>
                 <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
-                <DeleteButton sdocId={-1} disabled />
+                <DeleteButton sdocIds={selectedDocumentIds} />
               </>
             )}
             <Box sx={{ flexGrow: 1 }} />
@@ -96,7 +96,7 @@ function SearchToolbar({
             <AnnotateButton projectId={projectId} sdocId={sdocId} />
             <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} />
             <TagMenuButton forceSdocId={sdocId} popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
-            <DeleteButton sdocId={sdocId} />
+            <DeleteButton sdocIds={[sdocId]} />
             <ToggleShowEntitiesButton />
             <DownloadButton sdocId={sdocId} />
             <ExporterButton

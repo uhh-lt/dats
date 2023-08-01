@@ -27,6 +27,11 @@ export default function ConfirmationDialog() {
     setConfirmationEventData(undefined);
   }, []);
 
+  const handleReject = useCallback(() => {
+    handleClose();
+    if (confirmationEventData?.onReject) confirmationEventData.onReject();
+  }, [confirmationEventData, handleClose]);
+
   const handleAccept = useCallback(() => {
     handleClose();
     if (confirmationEventData?.onAccept) confirmationEventData.onAccept();
@@ -41,7 +46,7 @@ export default function ConfirmationDialog() {
             <DialogContentText id="alert-dialog-description">{confirmationEventData.text}</DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
+            <Button onClick={handleReject}>Cancel</Button>
             <Button onClick={handleAccept} autoFocus>
               Confirm
             </Button>

@@ -12,15 +12,15 @@ import { useAppDispatch } from "../../../../plugins/ReduxHooks";
 import { SearchActions } from "../../searchSlice";
 
 interface DeleteButtonProps {
-  sdocId: number;
+  sdocIds: number[];
 }
 
-function DeleteButton({ sdocId, ...props }: DeleteButtonProps & IconButtonProps) {
+function DeleteButton({ sdocIds, ...props }: DeleteButtonProps & IconButtonProps) {
   // react router
   const navigate = useNavigate();
 
   // mutations
-  const deleteMutation = SdocHooks.useDeleteDocument();
+  const deleteMutation = SdocHooks.useDeleteDocuments();
 
   // redux
   const dispatch = useAppDispatch();
@@ -28,26 +28,29 @@ function DeleteButton({ sdocId, ...props }: DeleteButtonProps & IconButtonProps)
   // ui events
   const onClick = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to delete document ${sdocId}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
+      text: `Do you really want to delete document(s) ${sdocIds.join(
+        ", "
+      )}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
         deleteMutation.mutate(
           {
-            sdocId: sdocId,
+            sdocIds: sdocIds,
           },
           {
-            onSuccess: (sdoc) => {
+            onSuccess: (sdocs) => {
+              const filenames = sdocs.map((sdoc) => sdoc.filename).join(", ");
               SnackbarAPI.openSnackbar({
-                text: `Successfully deleted document ${sdoc.filename}`,
+                text: `Successfully deleted ${sdocs.length} document(s): ${filenames}`,
                 severity: "success",
               });
+              dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
               navigate("../search");
-              dispatch(SearchActions.updateSelectedDocumentsOnDelete(sdoc.id));
             },
           }
         );
       },
     });
-  }, [deleteMutation, dispatch, navigate, sdocId]);
+  }, [deleteMutation, dispatch, navigate, sdocIds]);
 
   return (
     <Tooltip title="Delete">

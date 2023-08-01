@@ -3,6 +3,7 @@ import eventBus from "../../EventBus";
 export interface ConfirmationEvent {
   text: string;
   onAccept: () => void;
+  onReject?: () => void;
 }
 
 function openConfirmationDialog(data: ConfirmationEvent) {

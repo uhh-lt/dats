@@ -63,6 +63,9 @@ export const searchSlice = createSlice({
     updateSelectedDocumentsOnDelete: (state, action: PayloadAction<number>) => {
       state.selectedDocumentIds = state.selectedDocumentIds.filter((sdocId) => sdocId !== action.payload);
     },
+    updateSelectedDocumentsOnMultiDelete: (state, action: PayloadAction<number[]>) => {
+      state.selectedDocumentIds = state.selectedDocumentIds.filter((sdocId) => action.payload.indexOf(sdocId) === -1);
+    },
 
     // filtering
     addFilter: (state, action: PayloadAction<SearchFilter>) => {

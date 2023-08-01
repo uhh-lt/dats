@@ -19,7 +19,7 @@ function DeleteMenuItem({ sdocId, onClick, ...props }: DeleteMenuItemProps & Men
   const navigate = useNavigate();
 
   // mutations
-  const deleteMutation = SdocHooks.useDeleteDocument();
+  const deleteMutation = SdocHooks.useDeleteDocuments();
 
   // redux
   const dispatch = useAppDispatch();
@@ -28,26 +28,32 @@ function DeleteMenuItem({ sdocId, onClick, ...props }: DeleteMenuItemProps & Men
   const handleClick = useCallback(() => {
     if (!sdocId) return;
 
-    if (onClick) onClick();
-
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to delete document ${sdocId}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
+      text: `Do you really want to delete document(s) ${sdocId}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
         deleteMutation.mutate(
           {
-            sdocId: sdocId,
+            sdocIds: [sdocId],
           },
           {
-            onSuccess: (sdoc) => {
+            onSuccess: (sdocs) => {
+              console.log("HOHOH");
+              const filenames = sdocs.map((sdoc) => sdoc.filename).join(", ");
               SnackbarAPI.openSnackbar({
-                text: `Successfully deleted document ${sdoc.filename}`,
+                text: `Successfully deleted ${sdocs.length} document(s): ${filenames}`,
                 severity: "success",
               });
+              dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
               navigate("../search");
-              dispatch(SearchActions.updateSelectedDocumentsOnDelete(sdoc.id));
+            },
+            onSettled: () => {
+              if (onClick) onClick();
             },
           }
         );
+      },
+      onReject: () => {
+        if (onClick) onClick();
       },
     });
   }, [deleteMutation, dispatch, navigate, onClick, sdocId]);

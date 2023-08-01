@@ -177,6 +177,24 @@ const useDeleteDocument = () =>
     },
   });
 
+const useDeleteDocuments = () =>
+  useMutation(
+    ({ sdocIds }: { sdocIds: number[] }) => {
+      const promises = sdocIds.map((sdocId) => SourceDocumentService.deleteById({ sdocId: sdocId }));
+      return Promise.all(promises);
+    },
+    {
+      onSuccess: (sdocs) => {
+        sdocs.forEach((sdoc) => {
+          queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, sdoc.project_id]);
+          queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS_INFINITE, sdoc.project_id]);
+          queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, sdoc.project_id]);
+          queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, sdoc.project_id]);
+        });
+      },
+    }
+  );
+
 // tags
 const useGetAllDocumentTags = (sdocId: number | undefined) =>
   useQuery<DocumentTagRead[], Error>(
@@ -375,6 +393,7 @@ const SdocHooks = {
   useGetDocumentContent,
   useGetLinkedSdocIds,
   useDeleteDocument,
+  useDeleteDocuments,
   useGetDocumentIdByFilename,
   // tags
   useGetAllDocumentTags,
