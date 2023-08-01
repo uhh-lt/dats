@@ -9,6 +9,7 @@ import {
   List,
   ListItem,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
   Toolbar,
   Tooltip,
@@ -30,6 +31,7 @@ import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
+import { docTypeToIcon } from "../../../features/DocumentExplorer/DocumentExplorer";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
@@ -253,6 +255,7 @@ function ProjectDocumentItem({ document, onContextMenu }: ProjetDocumentItemProp
       }
     >
       <ListItemButton>
+        <ListItemIcon>{docTypeToIcon[document.doctype]}</ListItemIcon>
         <EditableDocumentName
           sdocId={document.id}
           variant="body1"
