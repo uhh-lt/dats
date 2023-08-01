@@ -60,9 +60,9 @@ function DocumentViewer({
           <div style={{ display: "flex", alignItems: "center" }}>
             <EditableDocumentName
               sdocId={sdocId}
-              variant={"h3"}
+              variant={"h4"}
               style={{ margin: 0 }}
-              inputProps={{ style: { fontSize: 48, padding: 0, width: "auto" } }}
+              inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
               ref={editableDocumentNameHandle}
             />
             <EditableDocumentNameButton

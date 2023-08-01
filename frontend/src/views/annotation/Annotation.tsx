@@ -1,13 +1,15 @@
 import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Grid, Portal, Stack, Tab, Tabs, Typography } from "@mui/material";
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
 import { DocType, DocumentTagRead } from "../../api/openapi";
 import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata";
-import EditableDocumentName from "../../components/EditableDocumentName/EditableDocumentName";
+import EditableDocumentName, {
+  EditableDocumentNameHandle,
+} from "../../components/EditableDocumentName/EditableDocumentName";
 import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip";
 import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
@@ -16,11 +18,15 @@ import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
 import MemoExplorer from "./MemoExplorer/MemoExplorer";
 import TextAnnotator from "./TextAnnotator/TextAnnotator";
 import { useSelectOrCreateCurrentUsersAnnotationDocument } from "./useSelectOrCreateCurrentUsersAnnotationDocument";
+import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton";
 
 function Annotation() {
   // global client state (URL)
   const { sdocId } = useParams();
   const sourceDocumentId = sdocId ? parseInt(sdocId) : undefined;
+
+  // local state
+  const editableDocumentNameHandle = useRef<EditableDocumentNameHandle>(null);
 
   // global client state (context)
   const appBarContainerRef = useContext(AppBarContext);
@@ -73,7 +79,19 @@ function Annotation() {
                     {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
                       <>
                         <Stack spacing={2}>
-                          <EditableDocumentName sdocId={sourceDocument.data.id} variant={"h3"} style={{ margin: 0 }} />
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <EditableDocumentName
+                              sdocId={sourceDocument.data.id}
+                              variant={"h4"}
+                              style={{ margin: 0 }}
+                              inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
+                              ref={editableDocumentNameHandle}
+                            />
+                            <EditableDocumentNameButton
+                              editableDocumentNameHandle={editableDocumentNameHandle.current}
+                              sx={{ ml: 1 }}
+                            />
+                          </div>
                           <div>
                             {documentTags.isLoading && <span>Loading tags...</span>}
                             {documentTags.isError && <span>{documentTags.error.message}</span>}
