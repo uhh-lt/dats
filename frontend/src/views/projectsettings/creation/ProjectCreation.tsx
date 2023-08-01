@@ -91,6 +91,7 @@ function ProjectCreation() {
             />
             <TextField
               label="Project description"
+              placeholder="Describe your project aim, method, and material used in a short abstract."
               variant="outlined"
               fullWidth
               multiline
@@ -100,6 +101,26 @@ function ProjectCreation() {
               })}
               error={Boolean(errors.description)}
               helperText={<ErrorMessage errors={errors} name="description" />}
+            />
+            <TextField
+              label="Method"
+              placeholder="Which method(s) are you using in your project?"
+              variant="outlined"
+              fullWidth
+              {...register("method")}
+              error={Boolean(errors.method)}
+              helperText={<ErrorMessage errors={errors} name="method" />}
+              disabled
+            />
+            <TextField
+              label="Materials"
+              placeholder="What kind of materials are you using in your project?"
+              variant="outlined"
+              fullWidth
+              {...register("materials")}
+              error={Boolean(errors.materials)}
+              helperText={<ErrorMessage errors={errors} name="materials" />}
+              disabled
             />
           </Stack>
         </CardContent>
