@@ -199,7 +199,7 @@ function CodeOccurrenceView({ projectId, codeId, userIds }: CodeOccurrenceViewPr
                 <MoreVertIcon />
               </IconButton>
             }
-            title={`Occurrences of code ${code.data.name}`}
+            title={`Occurrences of code '${code.data.name}'`}
             subheader={
               <>
                 annotated by{" "}
