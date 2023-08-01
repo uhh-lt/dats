@@ -16,7 +16,6 @@ import {
   UserRead,
 } from "./openapi";
 import { useSelectEnabledCodes } from "./utils";
-import ProjectGuidelines from "../views/projectsettings/update/ProjectGuidelines";
 
 //tags
 const useGetAllTags = (projectId: number) =>
