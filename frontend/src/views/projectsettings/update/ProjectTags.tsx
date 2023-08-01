@@ -1,3 +1,6 @@
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import LabelIcon from "@mui/icons-material/Label";
 import {
   Box,
   CardContent,
@@ -15,15 +18,15 @@ import {
 } from "@mui/material";
 import React, { useMemo, useState } from "react";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { ProjectProps } from "./ProjectProps";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import ProjectTagsContextMenu from "./ProjectTagsContextMenu";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import TagHooks from "../../../api/TagHooks";
-import LabelIcon from "@mui/icons-material/Label";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import TagEditButton from "../../search/Tags/TagEdit/TagEditButton";
 import TagEditDialog from "../../search/Tags/TagEdit/TagEditDialog";
+import { ProjectProps } from "./ProjectProps";
+import ProjectTagsContextMenu from "./ProjectTagsContextMenu";
+import TagCreationButton from "../../search/Tags/TagCreate/TagCreationButton";
+import TagCreationDialog from "../../search/Tags/TagCreate/TagCreationDialog";
 
 function ProjectTags({ project }: ProjectProps) {
   // global server state (react query)
@@ -92,8 +95,11 @@ function ProjectTags({ project }: ProjectProps) {
       {projectTags.isError && (
         <CardContent>An error occurred while loading project tags for project {project.id}...</CardContent>
       )}
+      <List disablePadding>
+        <TagCreationButton tagName={""} />
+      </List>
       {projectTags.isSuccess && (
-        <List className="myFlexFillAllContainer">
+        <List disablePadding className="myFlexFillAllContainer">
           {projectTagsFiltered.map((tag) => (
             <ListItem
               disablePadding
@@ -122,6 +128,7 @@ function ProjectTags({ project }: ProjectProps) {
           ))}
         </List>
       )}
+      <TagCreationDialog />
       <TagEditDialog />
       <ProjectTagsContextMenu
         position={contextMenuPosition}

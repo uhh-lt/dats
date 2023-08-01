@@ -21,6 +21,7 @@ const useUpdateTag = () =>
   useMutation(DocumentTagService.updateById, {
     onSuccess: (tag) => {
       queryClient.invalidateQueries([QueryKey.TAG, tag.id]);
+      queryClient.invalidateQueries([QueryKey.PROJECT_TAGS, tag.project_id]);
     },
   });
 
