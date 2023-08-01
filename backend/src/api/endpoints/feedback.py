@@ -46,6 +46,17 @@ async def get_all() -> Optional[List[FeedbackRead]]:
     return RedisService().get_all_feedbacks()
 
 
+@router.get(
+    "/user/{user_id}",
+    tags=tags,
+    response_model=Optional[List[FeedbackRead]],
+    summary="Returns all Feedback of a User",
+    description="Returns the Metadata of the User with the given ID.",
+)
+async def get_all_by_user(*, user_id: int) -> Optional[List[FeedbackRead]]:
+    return RedisService().get_all_feedbacks_of_user(user_id)
+
+
 @router.post(
     "/reply_to/{feedback_id}",
     tags=tags,

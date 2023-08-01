@@ -222,3 +222,8 @@ class RedisService(metaclass=SingletonMeta):
     def get_all_feedbacks(self) -> List[FeedbackRead]:
         client = self._get_client("feedback")
         return [self.load_feedback(str(key, "utf-8")) for key in client.keys()]
+
+    @logger.catch(reraise=True)
+    def get_all_feedbacks_of_user(self, user_id: int) -> List[FeedbackRead]:
+        fbs = self.get_all_feedbacks()
+        return [fb for fb in fbs if fb.user_id == user_id]
