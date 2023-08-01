@@ -21,12 +21,18 @@ const useGetFeedback = (feedbackId: string) =>
 
 const useGetAllFeedback = () => useQuery<FeedbackRead[], Error>([QueryKey.FEEDBACKS], () => FeedbackService.getAll());
 
+const useGetUserFeedback = (userId: number | undefined) =>
+  useQuery<FeedbackRead[], Error>([QueryKey.FEEDBACKS_USER], () => FeedbackService.getAllByUser({ userId: userId! }), {
+    enabled: !!userId,
+  });
+
 const useReplyTo = () => useMutation(FeedbackService.replyTo);
 
 const FeedbackHooks = {
   useCreateFeedback,
   useGetFeedback,
   useGetAllFeedback,
+  useGetUserFeedback,
   useReplyTo,
 };
 

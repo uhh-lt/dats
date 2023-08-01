@@ -1,8 +1,24 @@
-import { Button, Card, CardActions, CardContent, Divider, IconButton, Popover, Stack, Typography } from "@mui/material";
-import React, { useState } from "react";
+import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { Link } from "react-router-dom";
+import FeedbackIcon from "@mui/icons-material/Feedback";
+import LogoutIcon from "@mui/icons-material/Logout";
+import {
+  Card,
+  CardContent,
+  Divider,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Popover,
+  Stack,
+  Typography,
+} from "@mui/material";
 import Avatar from "@mui/material/Avatar";
+import React, { useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import { UserRead } from "../../api/openapi";
 
 interface UserProfileMenuProps {
@@ -44,7 +60,7 @@ function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
       >
         <Card sx={{ minWidth: 275 }}>
           <CardContent>
-            <Stack spacing={1}>
+            <Stack>
               <Typography align="center" variant="h2">
                 <AccountCircleIcon fontSize="inherit" />
               </Typography>
@@ -54,19 +70,35 @@ function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
               <Typography align="center" variant="body1" color="slategrey">
                 {user.email}
               </Typography>
-              <Typography align="center" variant="body1">
-                <Button variant="outlined" color="inherit" component={Link} to={"/user/" + user.id}>
-                  View profile
-                </Button>
-              </Typography>
             </Stack>
           </CardContent>
-          <Divider />
-          <CardActions sx={{ justifyContent: "center" }}>
-            <Button onClick={() => handleLogout()} variant="outlined" color="error">
-              Logout
-            </Button>
-          </CardActions>
+          <List disablePadding>
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to={"/user/" + user.id}>
+                <ListItemIcon>
+                  <AccountBoxIcon />
+                </ListItemIcon>
+                <ListItemText primary="View Profile" />
+              </ListItemButton>
+            </ListItem>
+            <ListItem disablePadding>
+              <ListItemButton component={RouterLink} to={"/feedback/" + user.id}>
+                <ListItemIcon>
+                  <FeedbackIcon />
+                </ListItemIcon>
+                <ListItemText primary="View my Feedback" />
+              </ListItemButton>
+            </ListItem>
+            <Divider />
+            <ListItem disablePadding color="red">
+              <ListItemButton onClick={() => handleLogout()} color="error">
+                <ListItemIcon>
+                  <LogoutIcon />
+                </ListItemIcon>
+                <ListItemText primary="Logout" />
+              </ListItemButton>
+            </ListItem>
+          </List>
         </Card>
       </Popover>
     </div>

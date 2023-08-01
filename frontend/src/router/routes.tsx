@@ -1,28 +1,30 @@
 import { RouteObject } from "react-router-dom";
-import TwoBarLayout from "../layouts/TwoBarLayout";
-import Projects from "../views/projects/Projects";
-import OneBarLayout from "../layouts/OneBarLayout";
-import About from "../views/About";
-import Annotation from "../views/annotation/Annotation";
-import Analysis from "../views/analysis/Analysis";
-import Logbook from "../views/logbook/Logbook";
-import Login from "../views/Login";
-import ProjectUpdate from "../views/projectsettings/update/ProjectUpdate";
-import NotFound from "../views/NotFound";
-import Imprint from "../views/Imprint";
-import NoBarLayout from "../layouts/NoBarLayout";
-import Register from "../views/registration/Register";
-import ProjectCreation from "../views/projectsettings/creation/ProjectCreation";
-import ProjectSettings from "../views/projectsettings/ProjectSettings";
-import Search from "../views/search/Search";
 import RequireAuth from "../auth/RequireAuth";
+import NoBarLayout from "../layouts/NoBarLayout";
+import OneBarLayout from "../layouts/OneBarLayout";
+import TwoBarLayout from "../layouts/TwoBarLayout";
+import About from "../views/About";
+import Imprint from "../views/Imprint";
+import Login from "../views/Login";
+import NotFound from "../views/NotFound";
 import User from "../views/User";
-import Feedback from "../views/feedback/Feedback";
-import Settings from "../views/settings/Settings";
-import Autologbook from "../views/autologbook/Autologbook";
-import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
+import Analysis from "../views/analysis/Analysis";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis";
+import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
 import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis";
+import Annotation from "../views/annotation/Annotation";
+import Autologbook from "../views/autologbook/Autologbook";
+import FeedbackAll from "../views/feedback/FeedbackAll";
+import FeedbackUser from "../views/feedback/FeedbackUser";
+import Logbook from "../views/logbook/Logbook";
+import Projects from "../views/projects/Projects";
+import ProjectSettings from "../views/projectsettings/ProjectSettings";
+import ProjectCreation from "../views/projectsettings/creation/ProjectCreation";
+import ProjectUpdate from "../views/projectsettings/update/ProjectUpdate";
+import Register from "../views/registration/Register";
+import Search from "../views/search/Search";
+import Settings from "../views/settings/Settings";
+import Feedback from "../views/feedback/Feedback";
 
 const routes: RouteObject[] = [
   {
@@ -94,6 +96,16 @@ const routes: RouteObject[] = [
       {
         path: "/feedback",
         element: <Feedback />,
+        children: [
+          {
+            path: "/feedback",
+            element: <FeedbackAll />,
+          },
+          {
+            path: "/feedback/:userId",
+            element: <FeedbackUser />,
+          },
+        ],
       },
       { path: "*", element: <NotFound /> },
     ],

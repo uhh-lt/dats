@@ -121,6 +121,8 @@ export const QueryKey = {
   FEEDBACK: "feedback",
   // all feedbacks
   FEEDBACKS: "feedbacks",
+  // all user feedbacks (by user id)
+  FEEDBACKS_USER: "feedbacksUser",
 
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",

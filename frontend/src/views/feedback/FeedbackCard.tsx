@@ -16,9 +16,10 @@ type FeedbackReplyValues = {
 
 interface FeedbackCardProps {
   feedback: FeedbackRead;
+  showReplyTo: boolean;
 }
 
-function FeedbackCard({ feedback }: FeedbackCardProps) {
+function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
   // local client state
   const [expanded, setExpanded] = React.useState(false);
 
@@ -68,42 +69,51 @@ function FeedbackCard({ feedback }: FeedbackCardProps) {
         <CardContent>
           <Typography style={{ whiteSpace: "pre-wrap" }}>{feedback.user_content}</Typography>
         </CardContent>
-        {!expanded ? (
-          <CardActions>
-            <Button sx={{ ml: "auto" }} variant="outlined" startIcon={<ReplyIcon />} onClick={() => setExpanded(true)}>
-              Reply
-            </Button>
-          </CardActions>
-        ) : (
-          <CardActions>
-            <Button sx={{ ml: "auto" }} onClick={() => setExpanded(false)}>
-              Cancel
-            </Button>
-            <LoadingButton
-              variant="outlined"
-              startIcon={<SendIcon />}
-              type="submit"
-              loading={replyToFeedbackMutation.isLoading}
-              loadingPosition="start"
-            >
-              Send message
-            </LoadingButton>
-          </CardActions>
+        {showReplyTo && (
+          <>
+            {!expanded ? (
+              <CardActions>
+                <Button
+                  sx={{ ml: "auto" }}
+                  variant="outlined"
+                  startIcon={<ReplyIcon />}
+                  onClick={() => setExpanded(true)}
+                >
+                  Reply
+                </Button>
+              </CardActions>
+            ) : (
+              <CardActions>
+                <Button sx={{ ml: "auto" }} onClick={() => setExpanded(false)}>
+                  Cancel
+                </Button>
+                <LoadingButton
+                  variant="outlined"
+                  startIcon={<SendIcon />}
+                  type="submit"
+                  loading={replyToFeedbackMutation.isLoading}
+                  loadingPosition="start"
+                >
+                  Send message
+                </LoadingButton>
+              </CardActions>
+            )}
+            <Collapse in={expanded} timeout="auto" unmountOnExit>
+              <CardContent>
+                <TextField
+                  multiline
+                  minRows={5}
+                  label="Message"
+                  fullWidth
+                  variant="outlined"
+                  {...register("message", { required: "Message is required", minLength: 1 })}
+                  error={Boolean(errors.message)}
+                  helperText={<ErrorMessage errors={errors} name="message" />}
+                />
+              </CardContent>
+            </Collapse>
+          </>
         )}
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
-          <CardContent>
-            <TextField
-              multiline
-              minRows={5}
-              label="Message"
-              fullWidth
-              variant="outlined"
-              {...register("message", { required: "Message is required", minLength: 1 })}
-              error={Boolean(errors.message)}
-              helperText={<ErrorMessage errors={errors} name="message" />}
-            />
-          </CardContent>
-        </Collapse>
       </form>
     </Card>
   );
