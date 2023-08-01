@@ -11,10 +11,11 @@ import { useAppDispatch } from "../../../../plugins/ReduxHooks";
 
 interface DeleteMenuItemProps {
   sdocId: number | undefined;
+  navigateTo?: string;
   onClick?: () => void;
 }
 
-function DeleteMenuItem({ sdocId, onClick, ...props }: DeleteMenuItemProps & MenuItemProps) {
+function DeleteMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteMenuItemProps & MenuItemProps) {
   // react router
   const navigate = useNavigate();
 
@@ -44,7 +45,7 @@ function DeleteMenuItem({ sdocId, onClick, ...props }: DeleteMenuItemProps & Men
                 severity: "success",
               });
               dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
-              navigate("../search");
+              if (navigateTo) navigate(navigateTo);
             },
             onSettled: () => {
               if (onClick) onClick();

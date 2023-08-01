@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import SnackbarDialog from "../features/Snackbar/SnackbarDialog";
 import TopBar from "../components/NavBarTop/TopBar";
 import FloatingFeedbackButton from "../features/FeedbackButton/FloatingFeedbackButton";
+import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog";
 
 function OneBarLayout() {
   return (
@@ -17,6 +18,7 @@ function OneBarLayout() {
       </Box>
       <FloatingFeedbackButton />
       <SnackbarDialog />
+      <ConfirmationDialog />
     </React.Fragment>
   );
 }

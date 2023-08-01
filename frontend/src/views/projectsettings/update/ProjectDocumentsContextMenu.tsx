@@ -1,36 +1,22 @@
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import DeleteIcon from "@mui/icons-material/Delete";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import DeleteMenuItem from "../../search/ToolBar/ToolBarElements/DeleteMenuItem";
 
 interface ProjectDocumentsContextMenuProps {
   position: ContextMenuPosition | null;
   projectId: number;
   sdocId: number | undefined;
   handleClose: () => void;
-  onDeleteDocument: (sdocId: number) => void;
 }
 
-function ProjectDocumentsContextMenu({
-  position,
-  projectId,
-  sdocId,
-  handleClose,
-  onDeleteDocument,
-}: ProjectDocumentsContextMenuProps) {
+function ProjectDocumentsContextMenu({ position, projectId, sdocId, handleClose }: ProjectDocumentsContextMenuProps) {
   const navigate = useNavigate();
 
   const openDocument = () => {
     handleClose();
     navigate(`/project/${projectId}/search/doc/${sdocId}`);
-  };
-
-  const deleteDocument = () => {
-    if (!sdocId) return;
-    handleClose();
-    onDeleteDocument(sdocId);
   };
 
   return (
@@ -51,12 +37,7 @@ function ProjectDocumentsContextMenu({
         </ListItemIcon>
         <ListItemText>Open document</ListItemText>
       </MenuItem>
-      <MenuItem onClick={deleteDocument}>
-        <ListItemIcon>
-          <DeleteIcon fontSize="medium" />
-        </ListItemIcon>
-        <ListItemText>Delete document</ListItemText>
-      </MenuItem>
+      <DeleteMenuItem onClick={handleClose} sdocId={sdocId} />
     </Menu>
   );
 }

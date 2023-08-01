@@ -13,9 +13,10 @@ import { SearchActions } from "../../searchSlice";
 
 interface DeleteButtonProps {
   sdocIds: number[];
+  navigateTo?: string;
 }
 
-function DeleteButton({ sdocIds, ...props }: DeleteButtonProps & IconButtonProps) {
+function DeleteButton({ sdocIds, navigateTo, ...props }: DeleteButtonProps & IconButtonProps) {
   // react router
   const navigate = useNavigate();
 
@@ -44,13 +45,13 @@ function DeleteButton({ sdocIds, ...props }: DeleteButtonProps & IconButtonProps
                 severity: "success",
               });
               dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
-              navigate("../search");
+              if (navigateTo) navigate(navigateTo);
             },
           }
         );
       },
     });
-  }, [deleteMutation, dispatch, navigate, sdocIds]);
+  }, [deleteMutation, dispatch, navigate, navigateTo, sdocIds]);
 
   return (
     <Tooltip title="Delete">

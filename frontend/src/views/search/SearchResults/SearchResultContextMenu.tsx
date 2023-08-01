@@ -47,7 +47,7 @@ function SearchResultContextMenu({ position, projectId, sdocId, handleClose }: S
         attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
       />
       <TagMenuMenuItem popoverOrigin={{ vertical: "top", horizontal: "right" }} />
-      <DeleteMenuItem onClick={handleClose} sdocId={sdocId} />
+      <DeleteMenuItem onClick={handleClose} sdocId={sdocId} navigateTo="../search" />
     </Menu>
   );
 }

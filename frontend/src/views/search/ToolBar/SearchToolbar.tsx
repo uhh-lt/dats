@@ -75,7 +75,7 @@ function SearchToolbar({
                   {selectedDocumentIds.length} selected
                 </Typography>
                 <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
-                <DeleteButton sdocIds={selectedDocumentIds} />
+                <DeleteButton sdocIds={selectedDocumentIds} navigateTo="../search" />
               </>
             )}
             <Box sx={{ flexGrow: 1 }} />
@@ -96,7 +96,7 @@ function SearchToolbar({
             <AnnotateButton projectId={projectId} sdocId={sdocId} />
             <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} />
             <TagMenuButton forceSdocId={sdocId} popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
-            <DeleteButton sdocIds={[sdocId]} />
+            <DeleteButton sdocIds={[sdocId]} navigateTo="../search" />
             <ToggleShowEntitiesButton />
             <DownloadButton sdocId={sdocId} />
             <ExporterButton
