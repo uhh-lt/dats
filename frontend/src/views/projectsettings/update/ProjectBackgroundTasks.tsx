@@ -1,4 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -6,7 +5,6 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import {
   Box,
-  Button,
   CircularProgress,
   Collapse,
   Divider,
@@ -18,49 +16,88 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import React, { useRef } from "react";
+import React, { useMemo } from "react";
 import CrawlerHooks from "../../../api/CrawlerHooks";
 import { CrawlerJobRead, CrawlerJobStatus, ProjectRead } from "../../../api/openapi";
-import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 
-interface ProjectCrawlersProps {
+interface ProjectBackgroundTasksProps {
   project: ProjectRead;
 }
 
-function ProjectCrawlers({ project }: ProjectCrawlersProps) {
+function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
   // global server state (react-query)
   const crawlerJobs = CrawlerHooks.useGetAllCrawlerJobs(project.id);
 
-  // local state
-  const crawlDialogRef = useRef<CrawlerRunDialogHandle>(null);
+  const crawlerJobsByStatus = useMemo(() => {
+    const result: Record<CrawlerJobStatus, CrawlerJobRead[]> = {
+      [CrawlerJobStatus.INIT]: [],
+      [CrawlerJobStatus.IN_PROGRESS]: [],
+      [CrawlerJobStatus.DONE]: [],
+      [CrawlerJobStatus.FAILED]: [],
+    };
+
+    if (!crawlerJobs.data) {
+      return result;
+    }
+
+    for (const job of crawlerJobs.data) {
+      if (!job.status) continue;
+      result[job.status].push(job);
+    }
+    return result;
+  }, [crawlerJobs.data]);
 
   return (
     <>
-      <Toolbar variant="dense">
-        <Typography variant="h6" color="inherit" component="div">
-          Monitor crawler jobs
-        </Typography>
-        <Box sx={{ flexGrow: 1 }} />
-        <Button
-          variant="contained"
-          component="label"
-          startIcon={<AddIcon />}
-          onClick={() => crawlDialogRef.current!.open()}
-        >
-          New Job
-        </Button>
-      </Toolbar>
-      <Divider />
       {crawlerJobs.isLoading && <>Loading crawler jobs...</>}
       {crawlerJobs.isError && <>An error occurred while loading crawler jobs for project {project.id}...</>}
       {crawlerJobs.isSuccess && (
-        <List>
-          {crawlerJobs.data.map((job) => (
-            <CrawlerJobListItem key={job.id} crawlerJob={job} />
-          ))}
-        </List>
+        <>
+          <Toolbar variant="dense">
+            <Typography variant="h6" color="inherit" component="div">
+              Active background tasks
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+          </Toolbar>
+          <Divider />
+          <List>
+            {crawlerJobsByStatus[CrawlerJobStatus.INIT].map((job) => (
+              <CrawlerJobListItem key={job.id} crawlerJob={job} />
+            ))}
+            {crawlerJobsByStatus[CrawlerJobStatus.IN_PROGRESS].map((job) => (
+              <CrawlerJobListItem key={job.id} crawlerJob={job} />
+            ))}
+            {crawlerJobsByStatus[CrawlerJobStatus.INIT].length === 0 &&
+              crawlerJobsByStatus[CrawlerJobStatus.IN_PROGRESS].length === 0 && <Typography pl={3}>empty</Typography>}
+          </List>
+          <Toolbar variant="dense">
+            <Typography variant="h6" color="inherit" component="div">
+              Finished background tasks
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+          </Toolbar>
+          <Divider />
+          <List>
+            {crawlerJobsByStatus[CrawlerJobStatus.DONE].map((job) => (
+              <CrawlerJobListItem key={job.id} crawlerJob={job} />
+            ))}
+            {crawlerJobsByStatus[CrawlerJobStatus.DONE].length === 0 && <Typography pl={3}>empty</Typography>}
+          </List>
+          <Toolbar variant="dense">
+            <Typography variant="h6" color="inherit" component="div">
+              Failed background tasks
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+          </Toolbar>
+          <Divider />
+          <List>
+            {crawlerJobsByStatus[CrawlerJobStatus.FAILED].map((job) => (
+              <CrawlerJobListItem key={job.id} crawlerJob={job} />
+            ))}
+            {crawlerJobsByStatus[CrawlerJobStatus.FAILED].length === 0 && <Typography pl={3}>empty</Typography>}
+          </List>
+        </>
       )}
-      <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
     </>
   );
 }
@@ -113,4 +150,4 @@ function CrawlerJobListItem({ crawlerJob }: { crawlerJob: CrawlerJobRead }) {
   );
 }
 
-export default ProjectCrawlers;
+export default ProjectBackgroundTasks;

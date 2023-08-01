@@ -68,7 +68,7 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
       {
         onSuccess: (data) => {
           SnackbarAPI.openSnackbar({
-            text: `Added new Crawler! (ID: ${data.id})`,
+            text: `Started URL Import as a new background task (ID: ${data.id})`,
             severity: "success",
           });
           closeDialog();
@@ -82,7 +82,7 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
   return (
     <Dialog open={isDialogOpen} onClose={closeDialog} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleSubmitRun, handleErrorCodeCreateDialog)}>
-        <DialogTitle>Start new Crawler</DialogTitle>
+        <DialogTitle>URL Import</DialogTitle>
         <DialogContent>
           <TextField
             label="URLs (one per line)"
@@ -124,7 +124,7 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
             loadingPosition="start"
             startIcon={<PlayCircle />}
           >
-            Start Crawler Job!
+            Start URL Import
           </LoadingButton>
         </DialogActions>
       </form>
