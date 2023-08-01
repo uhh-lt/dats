@@ -60,6 +60,25 @@ export class FeedbackService {
   }
 
   /**
+   * Returns all Feedback of a User
+   * Returns the Metadata of the User with the given ID.
+   * @returns FeedbackRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllByUser({ userId }: { userId: number }): CancelablePromise<Array<FeedbackRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/feedback/user/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Reply to the Feedback
    * Sends an e-mail to the User that created the Feedback with the given message.
    * @returns string Successful Response

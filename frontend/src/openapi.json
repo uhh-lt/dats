@@ -4011,6 +4011,35 @@
         }
       }
     },
+    "/feedback/user/{user_id}": {
+      "get": {
+        "tags": ["feedback"],
+        "summary": "Returns all Feedback of a User",
+        "description": "Returns the Metadata of the User with the given ID.",
+        "operationId": "get_all_by_user",
+        "parameters": [
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Feedback-Get All By User",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FeedbackRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/feedback/reply_to/{feedback_id}": {
       "post": {
         "tags": ["feedback"],
