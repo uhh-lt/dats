@@ -1,4 +1,5 @@
 import DeleteIcon from "@mui/icons-material/Delete";
+import InfoIcon from "@mui/icons-material/Info";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { LoadingButton } from "@mui/lab";
 import {
@@ -146,8 +147,15 @@ function ProjectDocuments({ project }: ProjectProps) {
     <Box display="flex" className="myFlexContainer h100">
       <Toolbar variant="dense" className="myFlexFitContentContainer">
         <Typography variant="h6" color="inherit" component="div">
-          Import documents
+          Import data{" "}
         </Typography>
+        <Tooltip
+          title={
+            "You can upload (multiple) text, image, video and audio documents. The maximum allowed file size is 100MB."
+          }
+        >
+          <InfoIcon sx={{ ml: 0.5 }} fontSize="small" />
+        </Tooltip>
         {process.env.REACT_APP_STABILITY === "UNSTABLE" && (
           <Typography
             variant="body1"
