@@ -1,4 +1,3 @@
-import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { LoadingButton } from "@mui/lab";
@@ -7,7 +6,6 @@ import {
   Button,
   CardContent,
   Divider,
-  IconButton,
   List,
   ListItem,
   ListItemButton,
@@ -20,10 +18,15 @@ import React, { ChangeEvent, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import PreProHooks from "../../../api/PreProHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
-import SdocHooks from "../../../api/SdocHooks";
+import { SourceDocumentRead } from "../../../api/openapi";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import EditableDocumentName, {
+  EditableDocumentNameHandle,
+} from "../../../components/EditableDocumentName/EditableDocumentName";
+import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
 import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
@@ -118,22 +121,6 @@ function ProjectDocuments({ project }: ProjectProps) {
     }
   };
 
-  // file deletion
-  const deleteDocumentMutation = SdocHooks.useDeleteDocument();
-  const handleClickDeleteFile = (sdocId: number) => {
-    deleteDocumentMutation.mutate(
-      { sdocId },
-      {
-        onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
-            text: "Successfully deleted file " + data.filename + "!",
-            severity: "success",
-          });
-        },
-      }
-    );
-  };
-
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
   const [contextMenuData, setContextMenuData] = useState<number>();
@@ -211,24 +198,7 @@ function ProjectDocuments({ project }: ProjectProps) {
             {projectDocuments.data.pages.map((paginatedDocuments, i) => (
               <React.Fragment key={i}>
                 {paginatedDocuments.sdocs.map((document) => (
-                  <ListItem
-                    disablePadding
-                    key={document.id}
-                    onContextMenu={onContextMenu(document.id)}
-                    secondaryAction={
-                      <Tooltip title={"Delete document"}>
-                        <span>
-                          <IconButton onClick={() => handleClickDeleteFile(document.id)}>
-                            <DeleteIcon />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    }
-                  >
-                    <ListItemButton>
-                      <ListItemText primary={document.filename} />
-                    </ListItemButton>
-                  </ListItem>
+                  <ProjectDocumentItem key={document.id} document={document} onContextMenu={onContextMenu} />
                 ))}
               </React.Fragment>
             ))}
@@ -256,10 +226,42 @@ function ProjectDocuments({ project }: ProjectProps) {
         projectId={project.id}
         sdocId={contextMenuData}
         handleClose={() => setContextMenuPosition(null)}
-        onDeleteDocument={handleClickDeleteFile}
       />
       <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
     </Box>
+  );
+}
+
+interface ProjetDocumentItemProps {
+  document: SourceDocumentRead;
+  onContextMenu: (sdocId: number) => (event: React.MouseEvent) => void;
+}
+
+function ProjectDocumentItem({ document, onContextMenu }: ProjetDocumentItemProps) {
+  const ref = useRef<EditableDocumentNameHandle>(null);
+
+  return (
+    <ListItem
+      disablePadding
+      key={document.id}
+      onContextMenu={onContextMenu(document.id)}
+      secondaryAction={
+        <>
+          <DeleteButton sdocIds={[document.id]} />
+          <EditableDocumentNameButton editableDocumentNameHandle={ref.current} />
+        </>
+      }
+    >
+      <ListItemButton>
+        <EditableDocumentName
+          sdocId={document.id}
+          variant="body1"
+          style={{ margin: 0 }}
+          inputProps={{ style: { fontSize: 22, padding: 0, width: "auto" } }}
+          ref={ref}
+        />
+      </ListItemButton>
+    </ListItem>
   );
 }
 

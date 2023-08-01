@@ -1,5 +1,5 @@
 import { Box, Card, CardContent, CardProps, Stack } from "@mui/material";
-import React from "react";
+import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../../api/SdocHooks";
 import { DocType, DocumentTagRead } from "../../../api/openapi";
@@ -9,13 +9,16 @@ import { SearchActions } from "../searchSlice";
 import AudioViewer from "./AudioViewer";
 import { DocumentAdocSelector } from "./DocumentAdocSelector";
 import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
-import DocumentNameEditable from "./DocumentNameEditable";
+import EditableDocumentName, {
+  EditableDocumentNameHandle,
+} from "../../../components/EditableDocumentName/EditableDocumentName";
 import DocumentTagChip from "./DocumentTagChip";
 import ImageViewer from "./ImageViewer";
 import TextViewer from "./TextViewer";
 import VideoViewer from "./VideoViewer";
 import { useDeletableDocumentTags } from "./useDeletableDocumentTags";
 import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments";
+import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;
@@ -32,6 +35,8 @@ function DocumentViewer({
   ...props
 }: DocumentViewerProps & Omit<CardProps, "raised">) {
   const navigate = useNavigate();
+
+  const editableDocumentNameHandle = useRef<EditableDocumentNameHandle>(null);
 
   // queries
   const sdoc = SdocHooks.useGetDocument(sdocId);
@@ -52,7 +57,19 @@ function DocumentViewer({
     <Card raised {...props}>
       <CardContent>
         <Stack spacing={2}>
-          <DocumentNameEditable sdocId={sdocId} variant={"h3"} style={{ margin: 0 }} />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <EditableDocumentName
+              sdocId={sdocId}
+              variant={"h3"}
+              style={{ margin: 0 }}
+              inputProps={{ style: { fontSize: 48, padding: 0, width: "auto" } }}
+              ref={editableDocumentNameHandle}
+            />
+            <EditableDocumentNameButton
+              editableDocumentNameHandle={editableDocumentNameHandle.current}
+              sx={{ ml: 1 }}
+            />
+          </div>
           <Stack direction="row" spacing={0.5}>
             {documentTags.isLoading && <span>Loading tags...</span>}
             {documentTags.isError && <span>{documentTags.error.message}</span>}

@@ -7,7 +7,7 @@ import { DocType, DocumentTagRead } from "../../api/openapi";
 import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata";
-import DocumentNameEditable from "../search/DocumentViewer/DocumentNameEditable";
+import EditableDocumentName from "../../components/EditableDocumentName/EditableDocumentName";
 import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip";
 import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
@@ -73,7 +73,7 @@ function Annotation() {
                     {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
                       <>
                         <Stack spacing={2}>
-                          <DocumentNameEditable sdocId={sourceDocument.data.id} variant={"h3"} style={{ margin: 0 }} />
+                          <EditableDocumentName sdocId={sourceDocument.data.id} variant={"h3"} style={{ margin: 0 }} />
                           <div>
                             {documentTags.isLoading && <span>Loading tags...</span>}
                             {documentTags.isError && <span>{documentTags.error.message}</span>}
