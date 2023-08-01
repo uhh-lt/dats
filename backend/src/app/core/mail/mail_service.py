@@ -21,6 +21,7 @@ class MailService(metaclass=SingletonMeta):
                 VALIDATE_CERTS=conf.mail.validate_certs == "True",
             )
         )
+        cls.mail = EmailStr(conf.mail.mail)
         return super(MailService, cls).__new__(cls)
 
     async def send_mail(self, email: EmailStr, subject: str, body: str):
@@ -46,6 +47,21 @@ class MailService(metaclass=SingletonMeta):
             <p>Best regards,<br>The D-WISE Team</p>
             """
         await self.send_mail(email=user.email, subject=subject, body=body)
+
+    async def send_feedback_received_mail(self, user: UserRead, feedback: FeedbackRead):
+        feedback_html = "> " + "<br>> ".join(feedback.user_content.splitlines())
+        subject = (
+            f"[DWTS Feedback] New feedback from {user.first_name} {user.last_name}"
+        )
+        body = f"""
+            <p>Hi D-WISE Team,</p>
+            <p>We recieved new feedback!</p>
+            <p>
+            {feedback_html}
+            </p>
+            <p>Best regards,<br>DWTS Notification Service</p>
+            """
+        await self.send_mail(email=self.mail, subject=subject, body=body)
 
     async def send_feedback_response_mail(
         self, user: UserRead, feedback: FeedbackRead, message: str

@@ -20,8 +20,17 @@ tags = ["feedback"]
     summary="Creates new Feedback",
     description="Creates a new Feedback and returns it with the generated ID.",
 )
-async def create_feedback(*, feedback: FeedbackCreate) -> Optional[FeedbackRead]:
-    return RedisService().store_feedback(feedback=feedback)
+async def create_feedback(
+    *, db: Session = Depends(get_db_session), feedback: FeedbackCreate
+) -> Optional[FeedbackRead]:
+    fb = RedisService().store_feedback(feedback=feedback)
+
+    user = crud_user.read(db=db, id=feedback.user_id)
+    await MailService().send_feedback_received_mail(
+        user=UserRead.from_orm(user),
+        feedback=feedback,
+    )
+    return fb
 
 
 @router.get(
