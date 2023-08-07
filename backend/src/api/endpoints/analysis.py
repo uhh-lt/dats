@@ -1,5 +1,8 @@
 from typing import Dict, List
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
 from api.dependencies import get_db_session
 from app.core.analysis.analysis_service import AnalysisService
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -9,11 +12,8 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     TimelineAnalysisResult,
 )
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from app.core.data.dto.search import SimSearchSentenceHit
 from app.core.search.elasticsearch_service import ElasticSearchService
-
 from app.core.search.search_service import SearchService
 
 router = APIRouter(prefix="/analysis")

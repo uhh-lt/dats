@@ -1,24 +1,28 @@
-from app.util.singleton_meta import SingletonMeta
-from app.core.db.redis_service import RedisService
 from typing import List, Optional
 
-from app.core.data.doc_type import DocType, get_doc_type, is_archive_file
+from fastapi import HTTPException, UploadFile
+from loguru import logger
+
+from app.core.data.doc_type import (
+    DocType,
+    get_doc_type,
+    is_archive_file,
+    mime_type_supported,
+)
+from app.core.data.dto.preprocessing_job import (
+    PreprocessingJobCreate,
+    PreprocessingJobPayload,
+    PreprocessingJobRead,
+)
 from app.core.data.repo.repo_service import RepoService
+from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.docprepro.audio import audio_document_preprocessing_apply_async
 from app.docprepro.heavy_jobs import import_uploaded_archive_apply_async
 from app.docprepro.image import image_document_preprocessing_apply_async
 from app.docprepro.text import text_document_preprocessing_apply_async
 from app.docprepro.video import video_document_preprocessing_apply_async
-from fastapi import UploadFile, HTTPException
-from app.core.data.doc_type import mime_type_supported
-
-from loguru import logger
-from app.core.data.dto.preprocessing_job import (
-    PreprocessingJobRead,
-    PreprocessingJobPayload,
-    PreprocessingJobCreate,
-)
+from app.util.singleton_meta import SingletonMeta
 
 
 class PreprocessingService(metaclass=SingletonMeta):

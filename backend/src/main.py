@@ -20,8 +20,8 @@ if not STARTUP_DONE:
     startup(reset_data=False, sql_echo=True)
     os.environ["STARTUP_DONE"] = "1"
 
-from api.endpoints import (  # noqa E402
-    annotation_document,
+from api.endpoints import annotation_document  # noqa E402
+from api.endpoints import (
     analysis,
     bbox_annotation,
     code,
@@ -48,13 +48,11 @@ from app.core.data.crawler.crawler_service import (  # noqa E402
     NoSuchCrawlerJobError,
 )
 from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
-from app.core.data.dto.project import ProjectReadAction  # noqa E402
-from app.core.data.dto.source_document import (  # noqa E402
-    SourceDocumentReadAction,
-)
-from app.core.data.crud.source_document import (  # noqa E402
+from app.core.data.crud.source_document import (
     SourceDocumentPreprocessingUnfinishedError,
-)
+)  # noqa E402
+from app.core.data.dto.project import ProjectReadAction  # noqa E402
+from app.core.data.dto.source_document import SourceDocumentReadAction  # noqa E402
 from app.core.data.export.export_service import (  # noqa E402
     ExportJobPreparationError,
     NoDataToExportError,
@@ -62,10 +60,10 @@ from app.core.data.export.export_service import (  # noqa E402
     NoSuchExportJobError,
 )
 from app.core.data.repo.repo_service import (  # noqa E402
+    FileAlreadyExistsInRepositoryError,
     FileNotFoundInRepositoryError,
     RepoService,
     SourceDocumentNotFoundInRepositoryError,
-    FileAlreadyExistsInRepositoryError,
 )
 from app.core.search.elasticsearch_service import (  # noqa E402
     NoSuchMemoInElasticSearchError,

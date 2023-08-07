@@ -1,7 +1,9 @@
 from typing import List
+
+from pydantic import BaseModel, Field
+
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from pydantic import BaseModel, Field
 
 
 class CodeOccurrence(BaseModel):
