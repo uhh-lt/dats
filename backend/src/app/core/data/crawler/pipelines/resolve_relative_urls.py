@@ -6,8 +6,9 @@
 
 from urllib.parse import urljoin
 
-from app.core.data.crawler.crawled_item import CrawledItem
 from scrapy import Selector
+
+from app.core.data.crawler.crawled_item import CrawledItem
 
 
 class ResolveRelativeURLsPipeline:

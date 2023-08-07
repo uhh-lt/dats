@@ -1,5 +1,8 @@
 from typing import List
 
+from loguru import logger
+from tqdm import tqdm
+
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.text.html_cleaning_utils import (
     add_readability_watermark,
@@ -16,8 +19,6 @@ from app.docprepro.text.html_cleaning_utils import (
 )
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
-from loguru import logger
-from tqdm import tqdm
 
 cleaning_pipeline = build_html_cleaning_pipeline(
     [

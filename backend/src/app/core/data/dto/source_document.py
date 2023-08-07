@@ -4,9 +4,7 @@ from typing import List, Optional, Tuple
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataRead,
-)
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.util import PaginatedResults
 from pydantic import BaseModel, Field
 

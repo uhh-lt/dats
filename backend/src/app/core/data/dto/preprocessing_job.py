@@ -1,13 +1,14 @@
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, PrivateAttr, validator
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.source_document import SDocStatus
+from app.preprocessing.pipeline.model.pipeline_step import PipelineStep
 
 
 class PreprocessingJobStatus(str, Enum):
