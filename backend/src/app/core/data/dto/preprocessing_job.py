@@ -6,9 +6,6 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, Field, PrivateAttr, validator
 
 from app.core.data.doc_type import DocType
-from app.core.data.dto.dto_base import UpdateDTOBase
-from app.core.data.dto.source_document import SDocStatus
-from app.preprocessing.pipeline.model.pipeline_step import PipelineStep
 
 
 class PreprocessingJobStatus(str, Enum):
@@ -20,8 +17,8 @@ class PreprocessingJobStatus(str, Enum):
 
 class PreprocessingJobPayload(BaseModel):
     project_id: int = Field(description="The ID of the Project.")
-    file_path: Path = Field(
-        description="The filepath of the document to be preprocessed."
+    filename: Path = Field(
+        description="The filename of the document to be preprocessed."
     )
     mime_type: str = Field(description="The MIME type of the file.")
     doc_type: DocType = Field(description="The DocType of the file.")
@@ -84,16 +81,16 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
         super().__init__(**data)
 
         self._fn_to_payload_idx = {
-            v.file_path.name: k for k, v in dict(enumerate(self.payloads)).items()
+            v.filename.name: k for k, v in dict(enumerate(self.payloads)).items()
         }
 
     def update_payload(
         self, payload: PreprocessingJobPayload
     ) -> PreprocessingJobUpdate:
-        pl_idx = self._fn_to_payload_idx.get(payload.file_path.name, None)
+        pl_idx = self._fn_to_payload_idx.get(payload.filename.name, None)
         if pl_idx is None:
             KeyError(
-                f"There exists no PreprocessingJobPayload for the file {payload.file_path.name}"
+                f"There exists no PreprocessingJobPayload for the file {payload.filename.name}"
             )
         self.payloads[pl_idx] = payload
 
