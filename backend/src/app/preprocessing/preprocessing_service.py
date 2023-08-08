@@ -54,7 +54,7 @@ class PreprocessingService(metaclass=SingletonMeta):
             payloads.append(
                 PreprocessingJobPayload(
                     project_id=proj_id,
-                    file_path=file_path,
+                    filename=file_path.name,
                     mime_type=mime_type,
                     doc_type=doc_type,
                 )
@@ -65,31 +65,31 @@ class PreprocessingService(metaclass=SingletonMeta):
         for payload in payloads:
             if payload.doc_type == DocType.text:
                 text_document_preprocessing_apply_async(
-                    doc_file_path=payload.file_path,
+                    doc_file_path=payload.filename,
                     project_id=proj_id,
                     mime_type=payload.mime_type,
                 )
             elif payload.doc_type == DocType.image:
                 image_document_preprocessing_apply_async(
-                    doc_file_path=payload.file_path,
+                    doc_file_path=payload.filename,
                     project_id=proj_id,
                     mime_type=payload.mime_type,
                 )
             elif payload.doc_type == DocType.audio:
                 audio_document_preprocessing_apply_async(
-                    doc_file_path=payload.file_path,
+                    doc_file_path=payload.filename,
                     project_id=proj_id,
                     mime_type=payload.mime_type,
                 )
             elif payload.doc_type == DocType.video:
                 video_document_preprocessing_apply_async(
-                    doc_file_path=payload.file_path,
+                    doc_file_path=payload.filename,
                     project_id=proj_id,
                     mime_type=payload.mime_type,
                 )
             elif is_archive_file(payload.mime_type):
                 import_uploaded_archive_apply_async(
-                    archive_file_path=payload.file_path, project_id=proj_id
+                    archive_file_path=payload.filename, project_id=proj_id
                 )
 
         create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
