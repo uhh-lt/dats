@@ -9,7 +9,6 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
     progress_indicator_file = "/tmp/DWTS_START_UP_IN_PROGRESS"
 
     def is_startup_in_progress() -> bool:
-
         # Flo: sleep for some random time so that an eventual other process can create the file
         time.sleep(random.uniform(1, 2))
         if not os.path.exists(progress_indicator_file):
@@ -107,6 +106,10 @@ def __init_services__(
     from app.core.analysis.analysis_service import AnalysisService
 
     AnalysisService()
+    # import and init MailService
+    from app.core.mail.mail_service import MailService
+
+    MailService()
 
 
 def __create_system_user__() -> None:
