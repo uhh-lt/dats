@@ -23,12 +23,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      # - name: Build and push backend container
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #     context: ./backend
-      #     push: true
-      #     tags: uhhlt/dwts_backend:$GITHUB_REF_NAME
+      - name: Build and push backend container
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: true
+          tags: uhhlt/dwts_backend:$GITHUB_REF_NAME
       - name: Build and push frontend container
         uses: docker/build-push-action@v4
         with:
@@ -40,8 +40,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           generateReleaseNotes: true
-
-      # - name: release
+      # - name: Create Release
       #   uses: actions/create-release@v1
       #   id: create_release
       #   with:
