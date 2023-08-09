@@ -34,7 +34,7 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: uhhlt/dwts_frontend:$GITHUB_REF_NAME
+          tags: "uhhlt/dwts_frontend:${{ github.ref_name }}"
 
       - name: release
         uses: actions/create-release@v1
