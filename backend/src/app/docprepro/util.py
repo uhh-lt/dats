@@ -43,19 +43,19 @@ def preprocess_uploaded_file(
 
     if doc_type == DocType.text:
         text_document_preprocessing_apply_async(
-            doc_file_path=file_path, project_id=proj_id, mime_type=mime_type
+            doc_filename=file_path.name, project_id=proj_id, mime_type=mime_type
         )
     elif doc_type == DocType.image:
         image_document_preprocessing_apply_async(
-            doc_file_path=file_path, project_id=proj_id, mime_type=mime_type
+            doc_filename=file_path.name, project_id=proj_id, mime_type=mime_type
         )
     elif doc_type == DocType.audio:
         audio_document_preprocessing_apply_async(
-            doc_file_path=file_path, project_id=proj_id, mime_type=mime_type
+            doc_filename=file_path.name, project_id=proj_id, mime_type=mime_type
         )
     elif doc_type == DocType.video:
         video_document_preprocessing_apply_async(
-            doc_file_path=file_path, project_id=proj_id, mime_type=mime_type
+            doc_filename=file_path.name, project_id=proj_id, mime_type=mime_type
         )
     elif is_archive_file(uploaded_file.content_type):
         import_uploaded_archive_apply_async(
@@ -64,18 +64,18 @@ def preprocess_uploaded_file(
 
     return PreprocessingJobPayload(
         project_id=proj_id,
-        file_path=file_path,
+        filename=file_path.name,
         mime_type=mime_type,
         doc_type=doc_type,
     )
 
 
 def persist_as_sdoc(
-    doc_file_path: Path, project_id: int
+    doc_filename: str, project_id: int
 ) -> Tuple[Path, SourceDocumentORM]:
     # generate the create_dto
     dst, create_dto = repo.build_source_document_create_dto_from_file(
-        proj_id=project_id, filename=doc_file_path.name
+        proj_id=project_id, filename=doc_filename
     )
     # persist SourceDocument
     with sql.db_session() as db:

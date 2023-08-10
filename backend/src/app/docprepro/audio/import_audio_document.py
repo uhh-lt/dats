@@ -8,7 +8,9 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataCreate,
+)
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
@@ -19,10 +21,10 @@ repo = RepoService()
 
 
 def import_audio_document_(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> List[PreProAudioDoc]:
     # persist in db
-    dst, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
+    dst, sdoc_db_obj = persist_as_sdoc(doc_filename, project_id)
 
     # create ppad
     ppad = PreProAudioDoc(

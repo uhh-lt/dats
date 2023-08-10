@@ -46,7 +46,9 @@ def generate_and_import_transcript_file_(
 
         # Import transcript textfile to database and create pptd
         pptd = import_text_document_(
-            doc_file_path=path_transcription, project_id=project_id, mime_type=mime_type
+            doc_filename=path_transcription.name,
+            project_id=project_id,
+            mime_type=mime_type,
         )
 
         update_sdoc_status(
@@ -80,17 +82,18 @@ def create_sdoc_link_pptd_(
 
         # Flo: update sdoc status
         update_sdoc_status(
-            sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.create_sdoc_links_from_text
+            sdoc_id=pptd.sdoc_id,
+            sdoc_status=SDocStatus.create_sdoc_links_from_text,
         )
     return pptd
 
 
 # This is a copy from text.import_text_document. Only difference is that Tika is removed and a single object is returned
 def import_text_document_(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> PreProTextDoc:
     # persist in db
-    filepath, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
+    filepath, sdoc_db_obj = persist_as_sdoc(doc_filename, project_id)
 
     # if it's not a raw text file, try to extract the content with Apache Tika and store it in a new raw text file
 
