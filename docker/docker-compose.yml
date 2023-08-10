@@ -188,6 +188,26 @@ services:
           devices:
             - capabilities: [gpu]
 
+  ray-model-worker:
+    image: ray:WContainer
+    command: /dwts_code/src/ray/entrypoint.sh
+    user: ${UID:-1000}:${GID:-1000}
+    volumes:
+      - ../backend/src:/dwts_code/src
+      - ./backend_repo:/tmp/dwts
+      - ./models_cache:/models_cache
+    ports:
+      - "${RAY_API_EXPOSED:-8000}:8000"
+      - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
+    networks:
+      - dwts_demo_network
+    shm_size: 10.24gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
   dwts-backend-api:
     image: uhhlt/dwts_backend:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
     command: /dwts_code/src/backend_api_entrypoint.sh

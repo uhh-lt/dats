@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /entry
+cd /dwts_code/src/ray/
 
 serve run jobs:deploy -h 0.0.0.0 
 # ray start --head
