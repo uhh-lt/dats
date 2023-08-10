@@ -8,7 +8,11 @@ from app.core.data.dto.crawler_job import (
     CrawlerJobRead,
     CrawlerJobUpdate,
 )
-from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
+from app.core.data.dto.export_job import (
+    ExportJobCreate,
+    ExportJobRead,
+    ExportJobUpdate,
+)
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.data.dto.preprocessing_job import (
     PreprocessingJobCreate,
@@ -46,6 +50,12 @@ class RedisService(metaclass=SingletonMeta):
             logger.error(msg)
             raise SystemExit(msg)
 
+        if kwargs["flush_all_clients"] if "flush_all_clients" in kwargs else False:
+            logger.warning("Flushing all DWTS Redis Clients!")
+            for typ, client in clients.items():
+                client.flushdb()
+                client.save()
+
         return super(RedisService, cls).__new__(cls)
 
     def shutdown(self) -> None:
@@ -61,6 +71,10 @@ class RedisService(metaclass=SingletonMeta):
         if not typ.lower() in self.__clients:
             raise KeyError(f"Redis Client '{typ.lower()}' does not exist!")
         return self.__clients[typ.lower()]
+
+    def _flush_all_clients(self):
+        for typ in self.__clients.keys():
+            self._flush_client(typ=typ)
 
     def _flush_client(self, typ: str):
         client = self._get_client(typ)
