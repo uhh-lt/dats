@@ -101,7 +101,8 @@ def __init_services__(
     # import and init RedisService
     from app.core.db.redis_service import RedisService
 
-    RedisService()
+    RedisService(flush_all_clients=reset_database)
+
     # import and init AnalysisService
     from app.core.analysis.analysis_service import AnalysisService
 
