@@ -15,6 +15,7 @@ from app.docprepro.text import (
     store_metadata_in_db,
     store_span_annotations_in_db,
 )
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
@@ -33,16 +34,12 @@ generate_and_import_transcript_file = (
 )
 
 
-def video_document_preprocessing_apply_async(
-    doc_filename: str, project_id: int, mime_type: str
-) -> Any:
+def video_document_preprocessing_apply_async(payload: PreprocessingJobPayload) -> Any:
     video_document_preprocessing = (
         Signature(
             import_video_document,
             kwargs={
-                "doc_filename": doc_filename,
-                "project_id": project_id,
-                "mime_type": mime_type,
+                "payload": payload,
             },
         )
         | Signature(generate_webp_thumbnails)

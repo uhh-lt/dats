@@ -1,6 +1,6 @@
-from pathlib import Path
 from typing import Any, List
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.text import (
     add_custom_html_tags,
@@ -30,16 +30,12 @@ generate_and_import_transcript_file = (
 )
 
 
-def audio_document_preprocessing_apply_async(
-    doc_filename: str, project_id: int, mime_type: str
-) -> Any:
+def audio_document_preprocessing_apply_async(payload: PreprocessingJobPayload) -> Any:
     audio_document_preprocessing = (
         Signature(
             import_audio_document,
             kwargs={
-                "doc_filename": doc_filename,
-                "project_id": project_id,
-                "mime_type": mime_type,
+                "payload": payload,
             },
         )
         | Signature(convert_to_pcm)

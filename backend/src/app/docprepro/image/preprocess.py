@@ -1,7 +1,7 @@
-from pathlib import Path
 from typing import List
 
 import torch
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.convert_to_webp_and_generate_thumbnails import (
     convert_to_webp_and_generate_thumbnails_,
@@ -76,10 +76,8 @@ image_captioning_tokenizer = AutoTokenizer.from_pretrained(
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def import_image_document(
-    doc_filename: str, project_id: int, mime_type: str
-) -> List[PreProImageDoc]:
-    return import_image_document_(doc_filename, project_id, mime_type)
+def import_image_document(payload: PreprocessingJobPayload) -> List[PreProImageDoc]:
+    return import_image_document_(payload)
 
 
 @celery_worker.task(

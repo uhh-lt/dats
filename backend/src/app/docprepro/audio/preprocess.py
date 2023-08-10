@@ -16,6 +16,7 @@ from app.docprepro.audio.import_audio_document import import_audio_document_
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 
 @celery_worker.task(
@@ -23,10 +24,8 @@ from app.docprepro.text.models.preprotextdoc import PreProTextDoc
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def import_audio_document(
-    doc_filename: str, project_id: int, mime_type: str
-) -> List[PreProAudioDoc]:
-    return import_audio_document_(doc_filename, project_id, mime_type)
+def import_audio_document(payload: PreprocessingJobPayload) -> List[PreProAudioDoc]:
+    return import_audio_document_(payload)
 
 
 @celery_worker.task(

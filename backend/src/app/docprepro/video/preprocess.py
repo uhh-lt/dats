@@ -10,16 +10,16 @@ from app.docprepro.video.generate_webp_thumbnails import (
 from app.docprepro.video.import_video_document import import_video_document_
 from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
+
 
 @celery_worker.task(
     acks_late=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def import_video_document(
-    doc_filename: str, project_id: int, mime_type: str
-) -> List[PreProVideoDoc]:
-    return import_video_document_(doc_filename, project_id, mime_type)
+def import_video_document(payload: PreprocessingJobPayload) -> List[PreProVideoDoc]:
+    return import_video_document_(payload)
 
 
 @celery_worker.task(
