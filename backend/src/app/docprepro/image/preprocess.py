@@ -6,8 +6,12 @@ from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.convert_to_webp_and_generate_thumbnails import (
     convert_to_webp_and_generate_thumbnails_,
 )
-from app.docprepro.image.create_pptd_from_caption import create_pptd_from_caption_
-from app.docprepro.image.generate_bbox_annotations import generate_bbox_annotations_
+from app.docprepro.image.create_pptd_from_caption import (
+    create_pptd_from_caption_,
+)
+from app.docprepro.image.generate_bbox_annotations import (
+    generate_bbox_annotations_,
+)
 from app.docprepro.image.generate_image_captions import generate_image_captions_
 from app.docprepro.image.import_image_document import import_image_document_
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
@@ -73,9 +77,9 @@ image_captioning_tokenizer = AutoTokenizer.from_pretrained(
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
 def import_image_document(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> List[PreProImageDoc]:
-    return import_image_document_(doc_file_path, project_id, mime_type)
+    return import_image_document_(doc_filename, project_id, mime_type)
 
 
 @celery_worker.task(
@@ -94,7 +98,9 @@ def convert_to_webp_and_generate_thumbnails(
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def generate_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
+def generate_bbox_annotations(
+    ppids: List[PreProImageDoc],
+) -> List[PreProImageDoc]:
     global object_detection_feature_extractor
     global object_detection_model
     # todo: can i define the models in the other file?
@@ -108,7 +114,9 @@ def generate_bbox_annotations(ppids: List[PreProImageDoc]) -> List[PreProImageDo
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def generate_image_captions(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
+def generate_image_captions(
+    ppids: List[PreProImageDoc],
+) -> List[PreProImageDoc]:
     global image_captioning_feature_extractor
     global image_captioning_model
     global image_captioning_tokenizer
@@ -126,7 +134,9 @@ def generate_image_captions(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def store_bbox_annotations_in_db(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
+def store_bbox_annotations_in_db(
+    ppids: List[PreProImageDoc],
+) -> List[PreProImageDoc]:
     return store_bbox_annotations_in_db_(ppids)
 
 
@@ -135,5 +145,7 @@ def store_bbox_annotations_in_db(ppids: List[PreProImageDoc]) -> List[PreProImag
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def create_pptd_from_caption(ppids: List[PreProImageDoc]) -> List[PreProTextDoc]:
+def create_pptd_from_caption(
+    ppids: List[PreProImageDoc],
+) -> List[PreProTextDoc]:
     return create_pptd_from_caption_(ppids)

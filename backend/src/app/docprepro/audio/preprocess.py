@@ -6,7 +6,9 @@ from app.docprepro.audio.convert_to_pcm import convert_to_pcm_
 from app.docprepro.audio.generate_and_import_transcript_file import (
     generate_and_import_transcript_file_,
 )
-from app.docprepro.audio.generate_webp_thumbnails import generate_webp_thumbnails_
+from app.docprepro.audio.generate_webp_thumbnails import (
+    generate_webp_thumbnails_,
+)
 from app.docprepro.audio.generate_word_level_transcriptions import (
     generate_word_level_transcriptions_,
 )
@@ -22,9 +24,9 @@ from app.docprepro.text.models.preprotextdoc import PreProTextDoc
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
 def import_audio_document(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> List[PreProAudioDoc]:
-    return import_audio_document_(doc_file_path, project_id, mime_type)
+    return import_audio_document_(doc_filename, project_id, mime_type)
 
 
 @celery_worker.task(

@@ -65,10 +65,10 @@ def create_document_content_html_file_via_tika(
 
 
 def import_text_document_(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> List[PreProTextDoc]:
     # persist in db
-    filepath, sdoc_db_obj = persist_as_sdoc(doc_file_path, project_id)
+    filepath, sdoc_db_obj = persist_as_sdoc(doc_filename, project_id)
 
     # if it's not a raw text file, try to extract the content with Apache Tika and store it in a new raw text file
     if filepath.suffix in TIKA_SUPPORTED_FILE_EXTENSIONS:

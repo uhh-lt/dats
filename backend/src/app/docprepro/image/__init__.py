@@ -28,13 +28,13 @@ create_pptd_from_caption = "app.docprepro.image.preprocess.create_pptd_from_capt
 
 
 def image_document_preprocessing_apply_async(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> Any:
     image_document_preprocessing = (
         Signature(
             import_image_document,
             kwargs={
-                "doc_file_path": doc_file_path,
+                "doc_filename": doc_filename,
                 "project_id": project_id,
                 "mime_type": mime_type,
             },

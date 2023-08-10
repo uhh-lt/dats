@@ -8,13 +8,21 @@ from app.core.data.repo.repo_service import (
     UnsupportedDocTypeForSourceDocument,
 )
 from app.core.db.sql_service import SQLService
-from app.docprepro.audio import audio_document_preprocessing_without_import_apply_async
+from app.docprepro.audio import (
+    audio_document_preprocessing_without_import_apply_async,
+)
 from app.docprepro.audio.import_audio_document import import_audio_document_
-from app.docprepro.image import image_document_preprocessing_without_import_apply_async
+from app.docprepro.image import (
+    image_document_preprocessing_without_import_apply_async,
+)
 from app.docprepro.image.import_image_document import import_image_document_
-from app.docprepro.text import text_document_preprocessing_without_import_apply_async
+from app.docprepro.text import (
+    text_document_preprocessing_without_import_apply_async,
+)
 from app.docprepro.text.import_text_document import import_text_document_
-from app.docprepro.video import video_document_preprocessing_without_import_apply_async
+from app.docprepro.video import (
+    video_document_preprocessing_without_import_apply_async,
+)
 from app.docprepro.video.import_video_document import import_video_document_
 from config import conf
 from loguru import logger
@@ -44,22 +52,30 @@ def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
             # generate the preprodocs
             if doctype == DocType.text:
                 pptd = import_text_document_(
-                    doc_file_path=filepath, project_id=project_id, mime_type=mime_type
+                    doc_filename=filepath.name,
+                    project_id=project_id,
+                    mime_type=mime_type,
                 )[0]
                 pptds.append(pptd)
             elif doctype == DocType.image:
                 ppid = import_image_document_(
-                    doc_file_path=filepath, project_id=project_id, mime_type=mime_type
+                    doc_filename=filepath.name,
+                    project_id=project_id,
+                    mime_type=mime_type,
                 )[0]
                 ppids.append(ppid)
             elif doctype == DocType.audio:
                 ppad = import_audio_document_(
-                    doc_file_path=filepath, project_id=project_id, mime_type=mime_type
+                    doc_filename=filepath.name,
+                    project_id=project_id,
+                    mime_type=mime_type,
                 )[0]
                 ppads.append(ppad)
             elif doctype == DocType.video:
                 ppvd = import_video_document_(
-                    doc_file_path=filepath, project_id=project_id, mime_type=mime_type
+                    doc_filename=filepath.name,
+                    project_id=project_id,
+                    mime_type=mime_type,
                 )[0]
                 ppvds.append(ppvd)
             else:

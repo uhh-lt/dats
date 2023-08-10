@@ -50,7 +50,9 @@ def clean_html(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def create_sdoc_links_from_html(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
+def create_sdoc_links_from_html(
+    pptds: List[PreProTextDoc],
+) -> List[PreProTextDoc]:
     return create_sdoc_links_from_html_(pptds)
 
 
@@ -88,7 +90,9 @@ def finish_preprocessing(pptds: List[PreProTextDoc]) -> None:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def generate_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
+def generate_span_annotations(
+    pptds: List[PreProTextDoc],
+) -> List[PreProTextDoc]:
     return generate_span_annotations_(pptds)
 
 
@@ -98,9 +102,9 @@ def generate_span_annotations(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
 def import_text_document(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> List[PreProTextDoc]:
-    return import_text_document_(doc_file_path, project_id, mime_type)
+    return import_text_document_(doc_filename, project_id, mime_type)
 
 
 @celery_worker.task(
@@ -117,7 +121,9 @@ def resolve_sdoc_links(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def store_span_annotations_in_db(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
+def store_span_annotations_in_db(
+    pptds: List[PreProTextDoc],
+) -> List[PreProTextDoc]:
     return store_span_annotations_in_db_(pptds)
 
 
@@ -126,7 +132,9 @@ def store_span_annotations_in_db(pptds: List[PreProTextDoc]) -> List[PreProTextD
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def store_document_in_elasticsearch(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
+def store_document_in_elasticsearch(
+    pptds: List[PreProTextDoc],
+) -> List[PreProTextDoc]:
     return store_document_in_elasticsearch_(pptds)
 
 

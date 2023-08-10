@@ -31,13 +31,13 @@ generate_and_import_transcript_file = (
 
 
 def audio_document_preprocessing_apply_async(
-    doc_file_path: Path, project_id: int, mime_type: str
+    doc_filename: str, project_id: int, mime_type: str
 ) -> Any:
     audio_document_preprocessing = (
         Signature(
             import_audio_document,
             kwargs={
-                "doc_file_path": doc_file_path,
+                "doc_filename": doc_filename,
                 "project_id": project_id,
                 "mime_type": mime_type,
             },
