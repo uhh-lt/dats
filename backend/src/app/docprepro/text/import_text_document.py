@@ -8,6 +8,7 @@ from tika import parser
 from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
+from app.docprepro.text.html_cleaning_utils import replace_div_class_page_with_page
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
 
@@ -49,6 +50,9 @@ def create_document_content_html_file_via_tika(
         content = ""
     else:
         content = parsed["content"].strip()
+
+    # the parsed content can contain <div class="page"> elements, which we want to replace with custom <page> elements
+    content = replace_div_class_page_with_page(content)
 
     # create a html file with the textual content
     html_filename = filepath.parent.joinpath(f"{filepath.stem}.html")

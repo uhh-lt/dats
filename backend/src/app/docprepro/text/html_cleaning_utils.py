@@ -19,6 +19,7 @@ def clean_html_tags_and_attrs(
             safe_attrs=attrs_to_keep,
             kill_tags=tags_to_kill,
             remove_tags=tags_to_remove,
+            remove_unknown_tags=False,
         )
         return str(cleaner.clean_html(html))
 
@@ -95,3 +96,13 @@ def build_html_cleaning_pipeline(
         return html_content
 
     return x
+
+
+def replace_div_class_page_with_page(html_content: str) -> str:
+    soup = BeautifulSoup(html_content, "html.parser")
+    for div in soup.find_all("div"):
+        if div.get("class") == ["page"]:
+            div.name = "page"
+            div.attrs = {}
+
+    return str(soup)

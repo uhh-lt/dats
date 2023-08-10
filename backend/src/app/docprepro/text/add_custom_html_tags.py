@@ -1,4 +1,5 @@
 from typing import List
+from bs4 import BeautifulSoup
 
 from loguru import logger
 from tqdm import tqdm
@@ -31,7 +32,7 @@ def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
             new_html += pptd.html[current_position:html_start]
 
             if sentences[current_sentence_idx].end_token == token_id:
-                new_html += f"</sent>"
+                new_html += "</sent>"
                 current_sentence_idx += 1
 
             if sentences[current_sentence_idx].start_token == token_id:
@@ -46,6 +47,19 @@ def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:
         new_html += pptd.html[current_position:]
 
         pptd.html = new_html.build()
+
+        # add page if not exists
+        if "<page>" not in pptd.html:
+            pptd.html = f"<page>{pptd.html}</page>"
+
+        # numerate the pages
+        soup = BeautifulSoup(pptd.html, "html.parser")
+        page_id = 0
+        for div in soup.find_all("page"):
+            div.attrs = {"num": page_id}
+            page_id += 1
+        pptd.html = str(soup)
+
         # Flo: update sdoc status
         update_sdoc_status(
             sdoc_id=pptd.sdoc_id, sdoc_status=SDocStatus.add_custom_html_tags
