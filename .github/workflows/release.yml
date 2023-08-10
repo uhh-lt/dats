@@ -28,13 +28,17 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: uhhlt/dwts_backend:$GITHUB_REF_NAME
+          tags: |
+            "uhhlt/dwts_backend:${{ github.ref_name }}"
+            "uhhlt/dwts_backend:latest"
       - name: Build and push frontend container
         uses: docker/build-push-action@v4
         with:
           context: ./frontend
           push: true
-          tags: "uhhlt/dwts_frontend:${{ github.ref_name }}"
+          tags: |
+            "uhhlt/dwts_frontend:${{ github.ref_name }}"
+            "uhhlt/dwts_frontend:latest"
 
       - name: Create Release
         uses: ncipollo/release-action@v1
