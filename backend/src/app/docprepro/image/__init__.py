@@ -13,6 +13,7 @@ from app.docprepro.text import (
     store_document_in_elasticsearch,
     store_span_annotations_in_db,
 )
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 # Flo: Task names (as they could be imported)
 import_image_document = "app.docprepro.image.preprocess.import_image_document"
@@ -27,17 +28,11 @@ store_bbox_annotations_in_db = (
 create_pptd_from_caption = "app.docprepro.image.preprocess.create_pptd_from_caption"
 
 
-def image_document_preprocessing_apply_async(
-    doc_filename: str, project_id: int, mime_type: str
-) -> Any:
+def image_document_preprocessing_apply_async(payload: PreprocessingJobPayload) -> Any:
     image_document_preprocessing = (
         Signature(
             import_image_document,
-            kwargs={
-                "doc_filename": doc_filename,
-                "project_id": project_id,
-                "mime_type": mime_type,
-            },
+            kwargs={"payload": payload},
         )
         | Signature(generate_bbox_annotations)
         | Signature(generate_image_captions)

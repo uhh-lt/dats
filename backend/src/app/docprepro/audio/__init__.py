@@ -18,6 +18,7 @@ from app.docprepro.text import (
     store_metadata_in_db,
     store_span_annotations_in_db,
 )
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 # Flo: Task names (as they could be imported)
 import_audio_document = "app.docprepro.audio.preprocess.import_audio_document"
@@ -31,16 +32,12 @@ generate_and_import_transcript_file = (
 )
 
 
-def audio_document_preprocessing_apply_async(
-    doc_filename: str, project_id: int, mime_type: str
-) -> Any:
+def audio_document_preprocessing_apply_async(payload: PreprocessingJobPayload) -> Any:
     audio_document_preprocessing = (
         Signature(
             import_audio_document,
             kwargs={
-                "doc_filename": doc_filename,
-                "project_id": project_id,
-                "mime_type": mime_type,
+                "payload": payload,
             },
         )
         | Signature(convert_to_pcm)

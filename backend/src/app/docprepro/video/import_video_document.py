@@ -11,6 +11,7 @@ from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataCreate,
 )
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
@@ -20,18 +21,16 @@ sql = SQLService(echo=False)
 repo = RepoService()
 
 
-def import_video_document_(
-    doc_filename: str, project_id: int, mime_type: str
-) -> List[PreProVideoDoc]:
+def import_video_document_(payload: PreprocessingJobPayload) -> List[PreProVideoDoc]:
     # persist in db
-    dst, sdoc_db_obj = persist_as_sdoc(doc_filename, project_id)
+    dst, sdoc_db_obj = persist_as_sdoc(payload.filename, payload.project_id)
 
     # create ppvd
     ppvd = PreProVideoDoc(
         project_id=sdoc_db_obj.project_id,
         sdoc_id=sdoc_db_obj.id,
         video_dst=dst,
-        mime_type=mime_type,
+        mime_type=payload.mime_type,
     )
     ffmpeg_probe = ffmpeg.probe(dst)["format"]
     # store image metadata as SourceDocumentMetadata

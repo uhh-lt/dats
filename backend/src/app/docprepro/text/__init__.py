@@ -6,6 +6,7 @@ from celery import Signature
 
 from app.docprepro.simsearch import index_text_document_in_faiss
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 import_text_document = "app.docprepro.text.preprocess.import_text_document"
 
@@ -34,17 +35,13 @@ store_document_in_elasticsearch = (
 finish_preprocessing = "app.docprepro.text.preprocess.finish_preprocessing"
 
 
-def text_document_preprocessing_apply_async(
-    doc_filename: str, project_id: int, mime_type: str
-) -> Any:
+def text_document_preprocessing_apply_async(payload: PreprocessingJobPayload) -> Any:
     text_document_preprocessing = (
         # import document
         Signature(
             import_text_document,
             kwargs={
-                "doc_filename": doc_filename,
-                "project_id": project_id,
-                "mime_type": mime_type,
+                "payload": payload,
             },
         )
         |

@@ -23,6 +23,7 @@ from app.docprepro.text.store_metadata_in_db import store_metadata_in_db_
 from app.docprepro.text.store_span_annotations_in_db import (
     store_span_annotations_in_db_,
 )
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 # https://github.com/explosion/spaCy/issues/8678
 torch.set_num_threads(1)
@@ -102,10 +103,8 @@ def generate_span_annotations(
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def import_text_document(
-    doc_filename: str, project_id: int, mime_type: str
-) -> List[PreProTextDoc]:
-    return import_text_document_(doc_filename, project_id, mime_type)
+def import_text_document(payload: PreprocessingJobPayload) -> List[PreProTextDoc]:
+    return import_text_document_(payload)
 
 
 @celery_worker.task(

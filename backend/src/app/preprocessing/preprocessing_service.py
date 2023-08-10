@@ -64,29 +64,13 @@ class PreprocessingService(metaclass=SingletonMeta):
 
         for payload in payloads:
             if payload.doc_type == DocType.text:
-                text_document_preprocessing_apply_async(
-                    doc_filename=payload.filename,
-                    project_id=proj_id,
-                    mime_type=payload.mime_type,
-                )
+                text_document_preprocessing_apply_async(payload=payload)
             elif payload.doc_type == DocType.image:
-                image_document_preprocessing_apply_async(
-                    doc_filename=payload.filename,
-                    project_id=proj_id,
-                    mime_type=payload.mime_type,
-                )
+                image_document_preprocessing_apply_async(payload=payload)
             elif payload.doc_type == DocType.audio:
-                audio_document_preprocessing_apply_async(
-                    doc_filename=payload.filename,
-                    project_id=proj_id,
-                    mime_type=payload.mime_type,
-                )
+                audio_document_preprocessing_apply_async(payload=payload)
             elif payload.doc_type == DocType.video:
-                video_document_preprocessing_apply_async(
-                    doc_filename=payload.filename,
-                    project_id=proj_id,
-                    mime_type=payload.mime_type,
-                )
+                video_document_preprocessing_apply_async(payload=payload)
             elif is_archive_file(payload.mime_type):
                 import_uploaded_archive_apply_async(
                     archive_file_path=payload.filename, project_id=proj_id

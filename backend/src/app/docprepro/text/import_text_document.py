@@ -5,6 +5,7 @@ from typing import List, Tuple
 from loguru import logger
 from tika import parser
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
@@ -65,11 +66,9 @@ def create_document_content_html_file_via_tika(
     return html_filename, sdoc_db_obj
 
 
-def import_text_document_(
-    doc_filename: str, project_id: int, mime_type: str
-) -> List[PreProTextDoc]:
+def import_text_document_(payload: PreprocessingJobPayload) -> List[PreProTextDoc]:
     # persist in db
-    filepath, sdoc_db_obj = persist_as_sdoc(doc_filename, project_id)
+    filepath, sdoc_db_obj = persist_as_sdoc(payload.filename, payload.project_id)
 
     # if it's not a raw text file, try to extract the content with Apache Tika and store it in a new raw text file
     if filepath.suffix in TIKA_SUPPORTED_FILE_EXTENSIONS:
@@ -92,7 +91,7 @@ def import_text_document_(
         sdoc_id=sdoc_db_obj.id,
         text=content,
         html=content,
-        mime_type=mime_type,
+        mime_type=payload.mime_type,
     )
 
     # extract general info

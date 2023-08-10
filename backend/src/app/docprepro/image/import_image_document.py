@@ -12,23 +12,22 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 sql = SQLService(echo=False)
 repo = RepoService()
 
 
-def import_image_document_(
-    doc_filename: str, project_id: int, mime_type: str
-) -> List[PreProImageDoc]:
+def import_image_document_(payload: PreprocessingJobPayload) -> List[PreProImageDoc]:
     # persist in db
-    dst, sdoc_db_obj = persist_as_sdoc(doc_filename, project_id)
+    dst, sdoc_db_obj = persist_as_sdoc(payload.filename, payload.project_id)
 
     # create ppid
     ppid = PreProImageDoc(
         project_id=sdoc_db_obj.project_id,
         sdoc_id=sdoc_db_obj.id,
         image_dst=dst,
-        mime_type=mime_type,
+        mime_type=payload.mime_type,
     )
 
     with Image.open(dst) as img:
