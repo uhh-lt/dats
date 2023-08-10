@@ -143,7 +143,7 @@ class RepoService(metaclass=SingletonMeta):
                 logger.info(f"Created DWTS project root at {str(self.proj_root)}")
 
         except Exception as e:
-            msg = f"Cannot create repository directory structure at {conf.repo.root_directory}"
+            msg = f"Cannot create repository directory structure at {conf.repo.root_directory}: {e}"
             logger.error(msg)
             raise SystemExit(msg)
 
@@ -413,7 +413,7 @@ class RepoService(metaclass=SingletonMeta):
                 proj_id=proj_id, filename=fn
             )
             logger.info(
-                f"Storing Uploaded File {fn} in Project {proj_id} Repo at {in_project_dst}"
+                f"Storing Uploaded File {fn} in Project {proj_id} Repo at {in_project_dst.relative_to(self.repo_root)} ..."
             )
             real_file_size = 0
             with open(in_project_dst, "wb") as f:
