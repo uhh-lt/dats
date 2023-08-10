@@ -17,7 +17,7 @@ class PreprocessingJobStatus(str, Enum):
 
 class PreprocessingJobPayload(BaseModel):
     project_id: int = Field(description="The ID of the Project.")
-    filename: Path = Field(
+    filename: str = Field(
         description="The filename of the document to be preprocessed."
     )
     mime_type: str = Field(description="The MIME type of the file.")
@@ -81,16 +81,16 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
         super().__init__(**data)
 
         self._fn_to_payload_idx = {
-            v.filename.name: k for k, v in dict(enumerate(self.payloads)).items()
+            v.filename: k for k, v in dict(enumerate(self.payloads)).items()
         }
 
     def update_payload(
         self, payload: PreprocessingJobPayload
     ) -> PreprocessingJobUpdate:
-        pl_idx = self._fn_to_payload_idx.get(payload.filename.name, None)
+        pl_idx = self._fn_to_payload_idx.get(payload.filename, None)
         if pl_idx is None:
             KeyError(
-                f"There exists no PreprocessingJobPayload for the file {payload.filename.name}"
+                f"There exists no PreprocessingJobPayload for the file {payload.filename}"
             )
         self.payloads[pl_idx] = payload
 
