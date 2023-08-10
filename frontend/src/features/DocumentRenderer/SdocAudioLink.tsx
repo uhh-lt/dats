@@ -1,15 +1,15 @@
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
 import { Box, Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import SdocHooks from "../../../api/SdocHooks";
+import SdocHooks from "../../api/SdocHooks";
 
-interface SdocVideoLinkProps {
+interface SdocAudioLinkProps {
   projectId: number;
   filename: string;
   toPrefix: string;
 }
 
-function SdocVideoLink({ projectId, filename, toPrefix }: SdocVideoLinkProps) {
+function SdocAudioLink({ projectId, filename, toPrefix }: SdocAudioLinkProps) {
   const sdocId = SdocHooks.useGetDocumentIdByFilename(filename, projectId);
   const url = SdocHooks.useGetURL(sdocId.data, false);
   const thumbnailUrl = SdocHooks.useGetThumbnailURL(sdocId.data);
@@ -40,10 +40,10 @@ function SdocVideoLink({ projectId, filename, toPrefix }: SdocVideoLinkProps) {
       ) : url.isError ? (
         <div>Error: {url.error.message}</div>
       ) : (
-        <div>Loading video...</div>
+        <div>Loading audio...</div>
       )}
     </>
   );
 }
 
-export default SdocVideoLink;
+export default SdocAudioLink;

@@ -15,9 +15,9 @@ import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { QueryKey } from "../../../api/QueryKey";
 import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
 import { ICode } from "./ICode";
-import useComputeTokenData from "./useComputeTokenData";
+import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
 import { AnnoActions } from "../annoSlice";
-import TextAnnotatorRendererNew from "./TextAnnotatorRendererNew";
+import TextAnnotatorRendererNew from "../../../features/DocumentRenderer/DocumentRenderer";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentRead;
@@ -302,7 +302,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         projectId={sdoc.project_id}
         sentences={undefined}
         doHighlighting={false}
-        style={{ zIndex: 1 }}
+        style={{ zIndex: 1, overflowY: "auto" }}
       />
     </>
   );

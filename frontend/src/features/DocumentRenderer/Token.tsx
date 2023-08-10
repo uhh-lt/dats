@@ -1,8 +1,8 @@
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { useAppSelector } from "../../plugins/ReduxHooks";
 import React, { useMemo } from "react";
 import { range } from "lodash";
-import { IToken } from "./IToken";
-import { SpanAnnotationReadResolved } from "../../../api/openapi";
+import { IToken } from "../../views/annotation/TextAnnotator/IToken";
+import { SpanAnnotationReadResolved } from "../../api/openapi";
 import Mark from "./Mark";
 import Tag from "./Tag";
 
@@ -39,18 +39,16 @@ function Token({ token, spanAnnotations, cssClassnames }: TokenProps) {
     ));
   }, [token, spans]);
 
-  const startingSpans = useMemo(
-    () => spans.filter((spanAnnotation) => spanAnnotation.begin_token === token.index),
-    [token, spans]
-  );
-
-  const spanGroups = startingSpans.length > 0 && (
-    <span className={`spangroup ${tagStyle}`}>
-      {startingSpans.map((spanAnnotation) => (
-        <Tag key={spanAnnotation.id} codeId={spanAnnotation.code.id} />
-      ))}{" "}
-    </span>
-  );
+  const spanGroups = useMemo(() => {
+    const startingSpans = spans.filter((spanAnnotation) => spanAnnotation.begin_token === token.index);
+    return startingSpans.length > 0 ? (
+      <span className={`spangroup ${tagStyle}`}>
+        {startingSpans.map((spanAnnotation) => (
+          <Tag key={spanAnnotation.id} codeId={spanAnnotation.code.id} />
+        ))}{" "}
+      </span>
+    ) : null;
+  }, [tagStyle, token, spans]);
 
   return (
     <>

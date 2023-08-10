@@ -1,5 +1,5 @@
 import React from "react";
-import CodeHooks from "../../../api/CodeHooks";
+import CodeHooks from "../../api/CodeHooks";
 
 interface MarkProps {
   codeId: number;
@@ -20,7 +20,12 @@ function Mark({ codeId, isStart, isEnd, height, top }: MarkProps) {
       />
     );
   }
-  return null;
+  return (
+    <div
+      className={"mark" + (isStart ? " start" : "") + (isEnd ? " end" : "")}
+      style={{ backgroundColor: "lightgrey", height: height, top: top }}
+    />
+  );
 }
 
 export default Mark;

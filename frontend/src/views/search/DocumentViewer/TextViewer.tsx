@@ -1,9 +1,9 @@
 import React, { useRef } from "react";
 import { AnnotationDocumentRead, SourceDocumentRead } from "../../../api/openapi";
-import useComputeTokenData from "../../annotation/TextAnnotator/useComputeTokenData";
+import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
 import SentenceContextMenu, { SentenceContextMenuHandle } from "../../../components/ContextMenu/SentenceContextMenu";
 import SdocHooks from "../../../api/SdocHooks";
-import TextAnnotatorRendererNew from "../../annotation/TextAnnotator/TextAnnotatorRendererNew";
+import TextAnnotatorRendererNew from "../../../features/DocumentRenderer/DocumentRenderer";
 import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
 
 interface AnnotationVisualizerProps {
@@ -115,7 +115,8 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         projectId={sdoc.project_id}
         sentences={sentences}
         doHighlighting={true}
-        style={{ zIndex: 1 }}
+        style={{ zIndex: 1, overflowY: "auto" }}
+        className="h100"
       />
       <SentenceContextMenu ref={sentenceContextMenuRef} />
       <ImageContextMenu ref={imageContextMenuRef} />

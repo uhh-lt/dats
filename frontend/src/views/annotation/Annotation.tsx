@@ -72,13 +72,13 @@ function Annotation() {
         >
           {/* <AnnotationDocumentSelector className="myFlexFitContentContainer" sdocId={sourceDocumentId} /> */}
           <Container className="myFlexFillAllContainer" sx={{ py: 2, overflowY: "auto" }}>
-            <Card raised>
-              <CardContent>
+            <Card raised className="h100">
+              <CardContent className="h100">
                 {sdocId ? (
                   <>
                     {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
                       <>
-                        <Stack spacing={2}>
+                        <Stack spacing={2} className="h100">
                           <div style={{ display: "flex", alignItems: "center" }}>
                             <EditableDocumentName
                               sdocId={sourceDocument.data.id}

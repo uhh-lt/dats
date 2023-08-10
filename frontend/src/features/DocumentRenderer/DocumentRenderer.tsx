@@ -1,30 +1,24 @@
 import { Box, BoxProps } from "@mui/material";
-import React, { useEffect, useMemo } from "react";
-import "./TextAnnotatorRenderer.css";
-import Token from "./Token";
+import React, { useEffect, useMemo, useRef } from "react";
+import "./DocumentRenderer.css";
+import { useVirtualizer } from "@tanstack/react-virtual";
 // @ts-ignore
 import * as HtmlToReact from "html-to-react";
-// @ts-ignore
-import { Parser } from "html-to-react";
 import { useLocation } from "react-router-dom";
-import { SpanAnnotationReadResolved, SpanEntity } from "../../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { FilterType, SearchFilter } from "../../search/SearchFilter";
-import { SearchActions } from "../../search/searchSlice";
+import { SpanAnnotationReadResolved, SpanEntity } from "../../api/openapi";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { FilterType, SearchFilter } from "../../views/search/SearchFilter";
+import { SearchActions } from "../../views/search/searchSlice";
+import DocumentPage from "./DocumentPage";
 import { IToken } from "./IToken";
+import SdocAudioLink from "./SdocAudioLink";
 import SdocImageLink from "./SdocImageLink";
 import SdocVideoLink from "./SdocVideoLink";
-import SdocAudioLink from "./SdocAudioLink";
-
-const htmlToReactParser = new Parser();
-
-const isValidNode = function () {
-  return true;
-};
+import Token from "./Token";
 
 const processNodeDefinitions = new HtmlToReact.ProcessNodeDefinitions(React);
 
-interface TextAnnotationRendererNewProps {
+interface DocumentRendererProps {
   html: string;
   tokenData: IToken[] | undefined;
   sentences: string[] | undefined;
@@ -128,7 +122,7 @@ const removePrevJumphighlights = () => {
 };
 
 // needs data from useComputeTokenData
-function TextAnnotationRendererNew({
+function DocumentRenderer({
   html,
   tokenData,
   sentences,
@@ -138,14 +132,41 @@ function TextAnnotationRendererNew({
   projectId,
   doHighlighting,
   ...props
-}: TextAnnotationRendererNewProps & BoxProps) {
+}: DocumentRendererProps & BoxProps) {
+  // computed
+  const htmlPages = useMemo(() => {
+    let content = html;
+    console.log("content", content);
+    if (content.startsWith("<div>")) {
+      content = content.substring(5);
+    }
+    if (content.endsWith("</div>")) {
+      content = content.substring(0, content.length - 6);
+    }
+    content = content.trim();
+    const regex = /<page num="\d+">|<\/page><page num="\d+">|<\/page>/gm;
+    let splitted = content.split(regex);
+    splitted = splitted.filter((s) => s.length > 0);
+    return splitted;
+  }, [html]);
+  const numPages = htmlPages.length;
+
+  // virtualization
+  const listRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
+  const virtualizer = useVirtualizer({
+    count: numPages,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 155,
+    overscan: 1,
+  });
+
+  // highlighting
   // FIXME: almost identical filters with trailing whitespaces are saved as individual filters
   const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
   const { hash } = useLocation();
   const anchoredSpan: string = decodeURI(hash.substring(1));
 
-  // computed
   const sentIdsHighlighted: number[] = useMemo(() => {
     return getHighlightedSentIds(sentences, filters);
   }, [sentences, filters]);
@@ -382,14 +403,35 @@ function TextAnnotationRendererNew({
     tokenData,
   ]);
 
-  const renderedTokens = useMemo(() => {
-    if (!annotationsPerToken || !tokenData || !annotationMap) {
-      return <div>Loading...</div>;
-    }
-    return htmlToReactParser.parseWithInstructions(html, isValidNode, processingInstructions);
-  }, [html, annotationMap, annotationsPerToken, tokenData, processingInstructions]);
-
-  return <Box {...props}>{renderedTokens}</Box>;
+  return (
+    <Box ref={listRef} {...props}>
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <div
+            key={virtualItem.key}
+            ref={virtualizer.measureElement}
+            data-index={virtualItem.index}
+            style={{
+              width: "100%",
+              padding: 5,
+              position: "absolute",
+              top: 0,
+              left: 0,
+              transform: `translateY(${virtualItem.start}px)`,
+            }}
+          >
+            <DocumentPage html={htmlPages[virtualItem.index]} processingInstructions={processingInstructions} />
+          </div>
+        ))}
+      </div>
+    </Box>
+  );
 }
 
-export default TextAnnotationRendererNew;
+export default DocumentRenderer;

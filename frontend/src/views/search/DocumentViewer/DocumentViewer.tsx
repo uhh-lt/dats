@@ -55,8 +55,8 @@ function DocumentViewer({
 
   return (
     <Card raised {...props}>
-      <CardContent>
-        <Stack spacing={2}>
+      <CardContent className="h100">
+        <Stack spacing={2} className="h100">
           <div style={{ display: "flex", alignItems: "center" }}>
             <EditableDocumentName
               sdocId={sdocId}
