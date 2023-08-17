@@ -1,6 +1,7 @@
 faiss-gpu==1.7.2
 fastapi-mail==1.2.5
 git+https://github.com/linto-ai/whisper-timestamped.git@d767f4fc3b401c78c20d55515b382838ca3c86aa
+multiprocess==0.70.15
 Scrapy==2.10.0
 scrapy-playwright==0.0.31
 cssselect==1.2.0

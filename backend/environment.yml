@@ -10,7 +10,7 @@ dependencies:
   - pytorch::pytorch=1.12
   - conda-forge::cudatoolkit=11.6
   - sentence-transformers=2.2
-  - huggingface::transformers=4.21
+  - huggingface::transformers=4.31.0
   - pydantic=1.8
   - spacy=3.4
   - cupy=11.2
