@@ -4,6 +4,7 @@ from typing import Any, List
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.text import (
     add_custom_html_tags,
     clean_html,
@@ -18,7 +19,6 @@ from app.docprepro.text import (
     store_metadata_in_db,
     store_span_annotations_in_db,
 )
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
 
 # Flo: Task names (as they could be imported)

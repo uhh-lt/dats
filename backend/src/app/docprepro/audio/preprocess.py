@@ -2,13 +2,12 @@ import os
 from pathlib import Path
 from typing import List
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.audio.convert_to_pcm import convert_to_pcm_
 from app.docprepro.audio.generate_and_import_transcript_file import (
     generate_and_import_transcript_file_,
 )
-from app.docprepro.audio.generate_webp_thumbnails import (
-    generate_webp_thumbnails_,
-)
+from app.docprepro.audio.generate_webp_thumbnails import generate_webp_thumbnails_
 from app.docprepro.audio.generate_word_level_transcriptions import (
     generate_word_level_transcriptions_,
 )
@@ -16,7 +15,6 @@ from app.docprepro.audio.import_audio_document import import_audio_document_
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 
 @celery_worker.task(

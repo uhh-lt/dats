@@ -1,8 +1,7 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, List
 
-# noinspection PyUnresolvedReferences,PyProtectedMember
-from celery import Signature
+from celery.canvas import Signature
 
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead

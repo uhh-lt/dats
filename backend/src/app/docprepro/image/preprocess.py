@@ -10,18 +10,14 @@ from transformers import (
     VisionEncoderDecoderModel,
     ViTFeatureExtractor,
 )
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.convert_to_webp_and_generate_thumbnails import (
     convert_to_webp_and_generate_thumbnails_,
 )
-from app.docprepro.image.create_pptd_from_caption import (
-    create_pptd_from_caption_,
-)
-from app.docprepro.image.generate_bbox_annotations import (
-    generate_bbox_annotations_,
-)
+from app.docprepro.image.create_pptd_from_caption import create_pptd_from_caption_
+from app.docprepro.image.generate_bbox_annotations import generate_bbox_annotations_
 from app.docprepro.image.generate_image_captions import generate_image_captions_
 from app.docprepro.image.import_image_document import import_image_document_
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc

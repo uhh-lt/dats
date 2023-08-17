@@ -4,9 +4,9 @@ from typing import Any, List
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.simsearch import index_text_document_in_faiss
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 import_text_document = "app.docprepro.text.preprocess.import_text_document"
 

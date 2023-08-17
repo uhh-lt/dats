@@ -4,9 +4,7 @@ from typing import Tuple
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document import SDocStatus
-from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataCreate,
-)
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService

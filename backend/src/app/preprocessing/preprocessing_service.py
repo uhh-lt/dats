@@ -17,11 +17,14 @@ from app.core.data.dto.preprocessing_job import (
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
-from app.docprepro.audio import audio_document_preprocessing_apply_async
-from app.docprepro.heavy_jobs import import_uploaded_archive_apply_async
-from app.docprepro.image import image_document_preprocessing_apply_async
-from app.docprepro.text import text_document_preprocessing_apply_async
-from app.docprepro.video import video_document_preprocessing_apply_async
+from app.docprepro.heavy_jobs import (
+    execute_audio_preprocessing_pipeline_apply_async,
+    execute_image_preprocessing_pipeline_apply_async,
+    execute_text_preprocessing_pipeline_apply_async,
+    execute_video_preprocessing_pipeline_apply_async,
+)
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.pipeline.pipeline import PreprocessingPipeline
 from app.util.singleton_meta import SingletonMeta
 
 

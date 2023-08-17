@@ -7,15 +7,13 @@ from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
-from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataCreate,
-)
+from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 sql = SQLService(echo=False)
 repo = RepoService()
