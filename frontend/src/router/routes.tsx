@@ -25,6 +25,8 @@ import Register from "../views/registration/Register";
 import Search from "../views/search/Search";
 import Settings from "../views/settings/Settings";
 import Feedback from "../views/feedback/Feedback";
+import TableDashboard from "../views/analysis/Table/TableDashboard";
+import TableView from "../views/analysis/Table/TableView";
 
 const router = createBrowserRouter([
   {
@@ -149,6 +151,14 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/timeline",
         element: <TimelineAnalysis />,
+      },
+      {
+        path: "/project/:projectId/analysis/table",
+        element: <TableDashboard />,
+      },
+      {
+        path: "/project/:projectId/analysis/table/:tableId",
+        element: <TableView />,
       },
       {
         path: "/project/:projectId/logbook",

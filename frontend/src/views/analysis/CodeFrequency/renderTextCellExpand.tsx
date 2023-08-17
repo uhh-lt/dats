@@ -78,7 +78,12 @@ const GridCellExpand = React.memo(function GridCellExpand(props: GridCellExpandP
         {value}
       </Box>
       {showPopper && (
-        <Popper open={showFullCell && anchorEl !== null} anchorEl={anchorEl} style={{ width, marginLeft: -17 }}>
+        <Popper
+          open={showFullCell && anchorEl !== null}
+          anchorEl={anchorEl}
+          style={{ width, marginLeft: -17 }}
+          sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
+        >
           <Paper elevation={1} style={{ minHeight: wrapper.current!.offsetHeight - 3 }}>
             <Typography variant="body2" style={{ padding: 8 }}>
               {value}
@@ -90,6 +95,6 @@ const GridCellExpand = React.memo(function GridCellExpand(props: GridCellExpandP
   );
 });
 
-export function renderTextCellExpand(params: GridRenderCellParams<string>) {
+export function renderTextCellExpand(params: GridRenderCellParams) {
   return <GridCellExpand value={params.value || ""} width={params.colDef.computedWidth} />;
 }
