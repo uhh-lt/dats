@@ -7,11 +7,11 @@ from pydantic import BaseModel, Field, PrivateAttr, validator
 from app.core.data.doc_type import DocType
 
 
-class PreprocessingJobStatus(str, Enum):
-    INIT = "INIT"
-    IN_PROGRESS = "IN PROGRESS"
-    DONE = "DONE"
-    FAILED = "FAILED"
+class Status(str, Enum):
+    WAITING = "Waiting / Initializing (not started yet)"
+    RUNNING = "Running (currently in progress)"
+    FINISHED = "Finished (successfully finished)"
+    ERROR = "Error (failed to finish)"
 
 
 class PreprocessingJobPayload(BaseModel):
@@ -30,8 +30,8 @@ class PreprocessingJobPayload(BaseModel):
 
 # Properties shared across all DTOs
 class PreprocessingJobBaseDTO(BaseModel):
-    status: PreprocessingJobStatus = Field(
-        default=PreprocessingJobStatus.INIT,
+    status: Status = Field(
+        default=Status.WAITING,
         description="Status of the PreprocessingJob",
     )
 
@@ -49,14 +49,14 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
     )
 
     @validator("payloads", pre=True)
-    def payload_must_contain_at_least_one_doc(cls, v):
+    def payload_must_contain_at_least_one_doc(cls, v: List[PreprocessingJobPayload]):
         assert len(v) >= 1, "Payloads must contain at least one document!"
         return v
 
 
 # Properties to update
-class PreprocessingJobUpdate(PreprocessingJobBaseDTO, UpdateDTOBase):
-    status: Optional[PreprocessingJobStatus] = Field(
+class PreprocessingJobUpdate(PreprocessingJobBaseDTO):  # , UpdateDTOBase):
+    status: Optional[Status] = Field(
         default=None, description="Status of the PreprocessingJob"
     )
     payloads: Optional[List[PreprocessingJobPayload]] = Field(
