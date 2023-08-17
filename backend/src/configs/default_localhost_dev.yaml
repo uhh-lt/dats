@@ -21,9 +21,9 @@ docprepro:
     spacy:
       # note that the spacy models have to be installed in the env to use it! (docker!)
       models:
-        en: "/spacy_models/en_core_web_trf-3.4.1"
-        de: "/spacy_models/de_core_news_lg-3.4.0"
-        it: "/spacy_models/it_core_news_lg-3.4.0"
+        en: "/spacy_models/en_core_web_trf-3.6.1"
+        de: "/spacy_models/de_core_news_lg-3.6.0"
+        it: "/spacy_models/it_core_news_lg-3.6.0"
         default: "en"
 
       device: cpu # cpu is faster if concurrency is high!
