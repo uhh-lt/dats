@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, PrivateAttr, validator
@@ -43,7 +42,10 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
         description="The ID of the Project for which the PreprocessingJob is executed."
     )
     payloads: List[PreprocessingJobPayload] = Field(
-        description="Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
+        description=(
+            "Payloads of the PreprocessingJobs, i.e., documents to be "
+            "preprocessed and imported to the project within this PreprocessingJob"
+        )
     )
 
     @validator("payloads", pre=True)
@@ -59,7 +61,10 @@ class PreprocessingJobUpdate(PreprocessingJobBaseDTO, UpdateDTOBase):
     )
     payloads: Optional[List[PreprocessingJobPayload]] = Field(
         default=None,
-        description="Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob",
+        description=(
+            "Payloads of the PreprocessingJobs, i.e., documents to be "
+            "preprocessed and imported to the project within this PreprocessingJob"
+        ),
     )
 
 
@@ -70,7 +75,10 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
         description="The ID of the Project for which the PreprocessingJob is executed."
     )
     payloads: List[PreprocessingJobPayload] = Field(
-        description="Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
+        description=(
+            "Payloads of the PreprocessingJobs, i.e., documents to be "
+            "preprocessed and imported to the project within this PreprocessingJob"
+        )
     )
     created: datetime = Field(description="Created timestamp of the PreprocessingJob")
     updated: datetime = Field(description="Updated timestamp of the PreprocessingJob")
@@ -90,7 +98,7 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
         pl_idx = self._fn_to_payload_idx.get(payload.filename, None)
         if pl_idx is None:
             KeyError(
-                f"There exists no PreprocessingJobPayload for the file {payload.filename}"
+                f"There exists no PreprocessingJobPayload for '{payload.filename}'!"
             )
         self.payloads[pl_idx] = payload
 

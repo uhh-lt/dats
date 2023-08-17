@@ -1,17 +1,22 @@
 from typing import List
 
 import torch
+from transformers import (
+    AutoTokenizer,
+    DetrFeatureExtractor,
+    DetrForObjectDetection,
+    VisionEncoderDecoderModel,
+    ViTFeatureExtractor,
+)
+from loguru import logger
+
 from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.convert_to_webp_and_generate_thumbnails import (
     convert_to_webp_and_generate_thumbnails_,
 )
-from app.docprepro.image.create_pptd_from_caption import (
-    create_pptd_from_caption_,
-)
-from app.docprepro.image.generate_bbox_annotations import (
-    generate_bbox_annotations_,
-)
+from app.docprepro.image.create_pptd_from_caption import create_pptd_from_caption_
+from app.docprepro.image.generate_bbox_annotations import generate_bbox_annotations_
 from app.docprepro.image.generate_image_captions import generate_image_captions_
 from app.docprepro.image.import_image_document import import_image_document_
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
@@ -20,14 +25,6 @@ from app.docprepro.image.store_bbox_annotations_in_db import (
 )
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from config import conf
-from loguru import logger
-from transformers import (
-    AutoTokenizer,
-    DetrFeatureExtractor,
-    DetrForObjectDetection,
-    VisionEncoderDecoderModel,
-    ViTFeatureExtractor,
-)
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)

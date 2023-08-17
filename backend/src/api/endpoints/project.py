@@ -187,7 +187,9 @@ async def upload_project_sdoc(
     ),
 ) -> Optional[PreprocessingJobRead]:
     pps: PreprocessingService = PreprocessingService()
-    return pps.import_uploaded_documents(proj_id=proj_id, uploaded_files=uploaded_files)
+    return pps.prepare_and_start_preprocessing_job(
+        proj_id=proj_id, uploaded_files=uploaded_files
+    )
 
 
 @router.delete(

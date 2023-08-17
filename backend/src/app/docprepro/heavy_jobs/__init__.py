@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any
+from typing import Any, List
 
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead

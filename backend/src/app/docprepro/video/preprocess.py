@@ -1,16 +1,13 @@
 from pathlib import Path
 from typing import List
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.video.create_ppad_from_ppvd import create_ppad_from_ppvd_
-from app.docprepro.video.generate_webp_thumbnails import (
-    generate_webp_thumbnails_,
-)
+from app.docprepro.video.generate_webp_thumbnails import generate_webp_thumbnails_
 from app.docprepro.video.import_video_document import import_video_document_
 from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
-
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 
 @celery_worker.task(

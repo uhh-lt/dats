@@ -8,11 +8,7 @@ from app.core.data.dto.crawler_job import (
     CrawlerJobRead,
     CrawlerJobUpdate,
 )
-from app.core.data.dto.export_job import (
-    ExportJobCreate,
-    ExportJobRead,
-    ExportJobUpdate,
-)
+from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.data.dto.preprocessing_job import (
     PreprocessingJobCreate,

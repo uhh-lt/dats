@@ -1,7 +1,8 @@
-from pathlib import Path
 from typing import List
 
 import torch
+
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.text import PreProTextDoc
 from app.docprepro.text.add_custom_html_tags import add_custom_html_tags_
@@ -22,7 +23,6 @@ from app.docprepro.text.store_metadata_in_db import store_metadata_in_db_
 from app.docprepro.text.store_span_annotations_in_db import (
     store_span_annotations_in_db_,
 )
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 # https://github.com/explosion/spaCy/issues/8678
 torch.set_num_threads(1)
