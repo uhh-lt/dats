@@ -102,6 +102,10 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
             v.filename: k for k, v in dict(enumerate(self.payloads)).items()
         }
 
+    def update_status(self, status: Status) -> PreprocessingJobUpdate:
+        self.status = status
+        return PreprocessingJobUpdate(status=self.status, payloads=self.payloads)
+
     def update_payload(
         self, payload: PreprocessingJobPayload
     ) -> PreprocessingJobUpdate:
