@@ -13,13 +13,18 @@ const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: numbe
     })
   );
 
-const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number) =>
-  useQuery<CodeOccurrence[], Error>([QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId], () =>
-    AnalysisService.codeOccurrences({
-      projectId,
-      codeId,
-      requestBody: userIds,
-    })
+const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
+  useQuery<CodeOccurrence[], Error>(
+    [QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId],
+    () =>
+      AnalysisService.codeOccurrences({
+        projectId,
+        codeId: codeId!,
+        requestBody: userIds,
+      }),
+    {
+      enabled: userIds.length > 0 && !!codeId,
+    }
   );
 
 const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: number, concepts: AnalysisConcept[]) =>
