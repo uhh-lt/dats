@@ -1,4 +1,4 @@
-import { RouteObject } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import RequireAuth from "../auth/RequireAuth";
 import NoBarLayout from "../layouts/NoBarLayout";
 import OneBarLayout from "../layouts/OneBarLayout";
@@ -26,7 +26,7 @@ import Search from "../views/search/Search";
 import Settings from "../views/settings/Settings";
 import Feedback from "../views/feedback/Feedback";
 
-const routes: RouteObject[] = [
+const router = createBrowserRouter([
   {
     path: "/",
     element: <NoBarLayout />,
@@ -164,6 +164,6 @@ const routes: RouteObject[] = [
       },
     ],
   },
-];
+]);
 
-export default routes;
+export default router;

@@ -1,21 +1,30 @@
-import React from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App";
-import { store } from "./store/store";
-import { Provider } from "react-redux";
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import "./plugins/i18n";
-import { BrowserRouter } from "react-router-dom";
+import { ThemeProvider, createTheme } from "@mui/material";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import queryClient from "./plugins/ReactQueryClient";
-import { AuthProvider } from "./auth/AuthProvider";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
+import { RouterProvider } from "react-router-dom";
 import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
+import { AuthProvider } from "./auth/AuthProvider";
+import "./index.css";
+import queryClient from "./plugins/ReactQueryClient";
+import "./plugins/i18n";
+import router from "./router/routes";
+import { store } from "./store/store";
+
+const theme = createTheme({
+  palette: {
+    secondary: {
+      main: "#185cc9",
+    },
+  },
+});
 
 const persistor = persistStore(store);
 const container = document.getElementById("root");
@@ -26,9 +35,9 @@ root.render(
       <Provider store={store}>
         <PersistGate persistor={persistor}>
           <AuthProvider>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
+            <ThemeProvider theme={theme}>
+              <RouterProvider router={router} />
+            </ThemeProvider>
           </AuthProvider>
         </PersistGate>
       </Provider>
