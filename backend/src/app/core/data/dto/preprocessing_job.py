@@ -21,10 +21,20 @@ class PreprocessingJobPayload(BaseModel):
     )
     mime_type: str = Field(description="The MIME type of the file.")
     doc_type: DocType = Field(description="The DocType of the file.")
-    # TODO rename SDocStatus and move to this file!
-    status: SDocStatus = Field(
-        description="The status of the payload in the preprocessing pipeline.",
-        default=SDocStatus.init,
+
+    current_pipeline_step: str = Field(
+        description="The current step in the preprocessing pipeline.",
+        default="",
+    )
+
+    status: Status = Field(
+        description="The current status of the payload.",
+        default=Status.WAITING,
+    )
+
+    error_message: Optional[str] = Field(
+        description="The error message if the payload failed.",
+        default=None,
     )
 
 
