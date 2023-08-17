@@ -41,6 +41,7 @@ from api.endpoints import (
     span_annotation,
     span_group,
     user,
+    analysis_table,
 )
 from app.core.data.crawler.crawler_service import (
     CrawlerJobAlreadyStartedOrDoneError,
@@ -241,6 +242,7 @@ app.include_router(analysis.router)
 app.include_router(prepro.router)
 app.include_router(export.router)
 app.include_router(crawler.router)
+app.include_router(analysis_table.router)
 
 
 def main() -> None:
