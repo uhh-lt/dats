@@ -230,7 +230,69 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.video.create_and_store_audio_stream_file import (
+        create_and_store_audio_stream_file,
+    )
+    from app.preprocessing.pipeline.steps.video.create_ffmpeg_probe_video_metadata import (
+        create_ffmpeg_probe_video_metadata,
+    )
+    from app.preprocessing.pipeline.steps.video.create_ppad_from_video import (
+        create_ppad_from_video,
+    )
+    from app.preprocessing.pipeline.steps.video.create_ppvd import create_ppvd
+    from app.preprocessing.pipeline.steps.video.generate_webp_thumbnail_for_video import (
+        generate_webp_thumbnail_for_video,
+    )
+    from app.preprocessing.pipeline.steps.video.update_ppvd_sdoc_status_to_finish import (
+        update_ppvd_sdoc_status_to_finish,
+    )
+    from app.preprocessing.pipeline.steps.video.write_ppvd_to_database import (
+        write_ppvd_to_database,
+    )
+
+    audio_pipeline = build_audio_pipeline()
     pipeline = PreprocessingPipeline(num_workers=1, force_sequential=True)
+
+    pipeline.register_step(
+        func=create_ppvd,
+        required_data=[],
+    )
+
+    pipeline.register_step(
+        func=create_ffmpeg_probe_video_metadata,
+        required_data=["ppvd"],
+    )
+
+    pipeline.register_step(
+        func=generate_webp_thumbnail_for_video,
+        required_data=["ppvd"],
+    )
+
+    pipeline.register_step(
+        func=create_and_store_audio_stream_file,
+        required_data=["ppvd"],
+    )
+
+    pipeline.register_step(
+        func=create_ppad_from_video,
+        required_data=["ppvd"],
+    )
+
+    pipeline.join_pipeline(
+        pipeline=audio_pipeline,
+        skip_steps_with_name=["create_ppad"],
+    )
+
+    pipeline.register_step(
+        func=write_ppvd_to_database,
+        required_data=["ppvd"],
+    )
+
+    pipeline.register_step(
+        func=update_ppvd_sdoc_status_to_finish,
+        required_data=["ppvd"],
+    )
+
     pipeline.freeze()
 
     return pipeline
