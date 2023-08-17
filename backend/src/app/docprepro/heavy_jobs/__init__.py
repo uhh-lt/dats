@@ -7,10 +7,24 @@ from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 import_uploaded_archive_task = "app.docprepro.heavy_jobs.tasks.import_uploaded_archive"
 start_export_job_task = "app.docprepro.heavy_jobs.tasks.start_export_job"
 start_crawler_job_task = "app.docprepro.heavy_jobs.tasks.start_crawler_job"
+
+execute_text_preprocessing_pipeline_task = (
+    "app.docprepro.heavy_jobs.tasks.execute_text_preprocessing_pipeline_task"
+)
+execute_image_preprocessing_pipeline_task = (
+    "app.docprepro.heavy_jobs.tasks.execute_image_preprocessing_pipeline_task"
+)
+execute_audio_preprocessing_pipeline_task = (
+    "app.docprepro.heavy_jobs.tasks.execute_audio_preprocessing_pipeline_task"
+)
+execute_video_preprocessing_pipeline_task = (
+    "app.docprepro.heavy_jobs.tasks.execute_video_preprocessing_pipeline_task"
+)
 
 
 def import_uploaded_archive_apply_async(
@@ -44,8 +58,41 @@ def prepare_and_start_crawling_job_async(
         Signature(start_crawler_job_task, kwargs={"crawler_job": cj})
         |
         # import the zip
+        # TODO create a PPJ for the import
         Signature(import_uploaded_archive_task)
     )
     start_export_job.apply_async()
 
     return cj
+
+
+def execute_text_preprocessing_pipeline_apply_async(
+    cargos: List[PipelineCargo],
+) -> None:
+    Signature(
+        execute_text_preprocessing_pipeline_task, kwargs={"cargos": cargos}
+    ).apply_async()
+
+
+def execute_image_preprocessing_pipeline_apply_async(
+    cargos: List[PipelineCargo],
+) -> None:
+    Signature(
+        execute_image_preprocessing_pipeline_task, kwargs={"cargos": cargos}
+    ).apply_async()
+
+
+def execute_audio_preprocessing_pipeline_apply_async(
+    cargos: List[PipelineCargo],
+) -> None:
+    Signature(
+        execute_audio_preprocessing_pipeline_task, kwargs={"cargos": cargos}
+    ).apply_async()
+
+
+def execute_video_preprocessing_pipeline_apply_async(
+    cargos: List[PipelineCargo],
+) -> None:
+    Signature(
+        execute_video_preprocessing_pipeline_task, kwargs={"cargos": cargos}
+    ).apply_async()

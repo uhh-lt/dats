@@ -4,6 +4,7 @@ from typing import Any, List
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch import index_image_document_in_faiss
 from app.docprepro.text import (
@@ -13,7 +14,6 @@ from app.docprepro.text import (
     store_document_in_elasticsearch,
     store_span_annotations_in_db,
 )
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
 
 # Flo: Task names (as they could be imported)
 import_image_document = "app.docprepro.image.preprocess.import_image_document"
