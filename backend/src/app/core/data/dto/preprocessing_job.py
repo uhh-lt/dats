@@ -114,6 +114,7 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
             KeyError(
                 f"There exists no PreprocessingJobPayload for '{payload.filename}'!"
             )
-        self.payloads[pl_idx] = payload
+        else:
+            self.payloads[pl_idx] = payload
 
         return PreprocessingJobUpdate(status=self.status, payloads=self.payloads)
