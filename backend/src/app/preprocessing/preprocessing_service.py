@@ -1,18 +1,14 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from fastapi import HTTPException, UploadFile
 from loguru import logger
 
-from app.core.data.doc_type import (
-    DocType,
-    get_doc_type,
-    is_archive_file,
-    mime_type_supported,
-)
+from app.core.data.doc_type import DocType, get_doc_type, mime_type_supported
 from app.core.data.dto.preprocessing_job import (
     PreprocessingJobCreate,
     PreprocessingJobPayload,
     PreprocessingJobRead,
+    Status,
 )
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
