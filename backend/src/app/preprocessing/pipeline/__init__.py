@@ -147,7 +147,82 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    # we need to import the steps here to avoid loading models at startup
+    # in the api worker!
+    from app.preprocessing.pipeline.steps.audio.convert_to_pcm import convert_to_pcm
+    from app.preprocessing.pipeline.steps.audio.create_and_store_transcript_file import (
+        create_and_store_transcript_file,
+    )
+    from app.preprocessing.pipeline.steps.audio.create_ffmpeg_probe_audio_metadata import (
+        create_ffmpeg_probe_audio_metadata,
+    )
+    from app.preprocessing.pipeline.steps.audio.create_ppad import create_ppad
+    from app.preprocessing.pipeline.steps.audio.create_pptd_from_transcription import (
+        create_pptd_from_transcription,
+    )
+    from app.preprocessing.pipeline.steps.audio.generate_automatic_transcription import (
+        generate_automatic_transcription,
+    )
+    from app.preprocessing.pipeline.steps.audio.generate_webp_thumbnail_for_audio import (
+        generate_webp_thumbnail_for_audio,
+    )
+    from app.preprocessing.pipeline.steps.audio.update_ppad_sdoc_status_to_finish import (
+        update_ppad_sdoc_status_to_finish,
+    )
+    from app.preprocessing.pipeline.steps.audio.write_ppad_to_database import (
+        write_ppad_to_database,
+    )
+
+    text_pipeline = build_text_pipeline()
     pipeline = PreprocessingPipeline(num_workers=1, force_sequential=True)
+
+    pipeline.register_step(
+        func=create_ppad,
+        required_data=[],
+    )
+
+    pipeline.register_step(
+        func=create_ffmpeg_probe_audio_metadata,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=convert_to_pcm,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=generate_webp_thumbnail_for_audio,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=generate_automatic_transcription,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=create_and_store_transcript_file,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=create_pptd_from_transcription,
+        required_data=["ppad"],
+    )
+
+    pipeline.join_pipeline(pipeline=text_pipeline, skip_steps_with_name=["create_pptd"])
+
+    pipeline.register_step(
+        func=write_ppad_to_database,
+        required_data=["ppad"],
+    )
+
+    pipeline.register_step(
+        func=update_ppad_sdoc_status_to_finish,
+        required_data=["ppad"],
+    )
+
     pipeline.freeze()
 
     return pipeline
