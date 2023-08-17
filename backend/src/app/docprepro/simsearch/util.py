@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Union
 
@@ -14,6 +15,7 @@ from app.core.db.sql_service import SQLService
 from config import conf
 
 
+@lru_cache(maxsize=1)
 def _load_text_encoder() -> SentenceTransformer:
     text_encoder_model = conf.docprepro.simsearch.text_encoder.model
     logger.debug(f"Loading text encoder model {text_encoder_model} ...")
@@ -23,6 +25,7 @@ def _load_text_encoder() -> SentenceTransformer:
     )
 
 
+@lru_cache(maxsize=1)
 def _load_image_encoder() -> SentenceTransformer:
     image_encoder_model = conf.docprepro.simsearch.image_encoder.model
     logger.debug(f"Loading image encoder model {image_encoder_model} ...")
