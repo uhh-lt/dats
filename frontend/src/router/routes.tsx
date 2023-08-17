@@ -25,6 +25,7 @@ import Register from "../views/registration/Register";
 import Search from "../views/search/Search";
 import Settings from "../views/settings/Settings";
 import Feedback from "../views/feedback/Feedback";
+import Editor from "../views/analysis/Editor/Editor";
 import TableDashboard from "../views/analysis/Table/TableDashboard";
 import TableView from "../views/analysis/Table/TableView";
 
@@ -159,6 +160,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/table/:tableId",
         element: <TableView />,
+      },
+      {
+        path: "/project/:projectId/analysis/editor",
+        element: <Editor />,
       },
       {
         path: "/project/:projectId/logbook",
