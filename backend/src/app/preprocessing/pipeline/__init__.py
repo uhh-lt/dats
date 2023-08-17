@@ -139,7 +139,104 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.image.convert_to_webp_and_generate_thumbnail import (
+        convert_to_webp_and_generate_thumbnails,
+    )
+    from app.preprocessing.pipeline.steps.image.create_image_metadata import (
+        create_image_metadata,
+    )
+    from app.preprocessing.pipeline.steps.image.create_ppid import create_ppid
+    from app.preprocessing.pipeline.steps.image.create_pptd_from_caption import (
+        create_pptd_from_caption,
+    )
+    from app.preprocessing.pipeline.steps.image.generate_image_caption import (
+        generate_image_caption,
+    )
+    from app.preprocessing.pipeline.steps.image.run_object_detection import (
+        run_object_detection,
+    )
+    from app.preprocessing.pipeline.steps.image.update_ppid_sdoc_status_to_finish import (
+        update_ppid_sdoc_status_to_finish,
+    )
+    from app.preprocessing.pipeline.steps.image.write_ppid_to_database import (
+        write_ppid_to_database,
+    )
+    from app.preprocessing.pipeline.steps.text.generate_sentence_annotations import (
+        generate_sentence_annotations,
+    )
+    from app.preprocessing.pipeline.steps.text.generate_word_frequencies import (
+        generate_word_frequncies,
+    )
+    from app.preprocessing.pipeline.steps.text.run_spacy_pipeline import (
+        run_spacy_pipeline,
+    )
+    from app.preprocessing.pipeline.steps.text.store_document_in_elasticsearch import (
+        store_document_in_elasticsearch,
+    )
+
     pipeline = PreprocessingPipeline(num_workers=1, force_sequential=True)
+
+    pipeline.register_step(
+        func=create_ppid,
+        required_data=[],
+    )
+
+    pipeline.register_step(
+        func=create_image_metadata,
+        required_data=["ppid"],
+    )
+
+    pipeline.register_step(
+        func=convert_to_webp_and_generate_thumbnails,
+        required_data=["ppid"],
+    )
+
+    pipeline.register_step(
+        func=run_object_detection,
+        required_data=["ppid"],
+    )
+
+    pipeline.register_step(
+        func=generate_image_caption,
+        required_data=["ppid"],
+    )
+
+    pipeline.register_step(
+        func=write_ppid_to_database,
+        required_data=["ppid"],
+    )
+
+    pipeline.register_step(
+        func=create_pptd_from_caption,
+        required_data=["ppid"],
+    )
+
+    # run caption through spacy and add to elasticsearch to make it searchable
+    pipeline.register_step(
+        func=run_spacy_pipeline,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_word_frequncies,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=generate_sentence_annotations,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=store_document_in_elasticsearch,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=update_ppid_sdoc_status_to_finish,
+        required_data=["ppid"],
+    )
+
     pipeline.freeze()
 
     return pipeline
