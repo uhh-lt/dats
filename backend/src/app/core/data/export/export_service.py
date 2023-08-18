@@ -23,10 +23,10 @@ from app.core.data.dto.export_job import (
     ExportJobCreate,
     ExportJobParameters,
     ExportJobRead,
-    ExportJobStatus,
     ExportJobType,
     ExportJobUpdate,
 )
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
@@ -989,7 +989,7 @@ class ExportService(metaclass=SingletonMeta):
     def _update_export_job(
         self,
         export_job_id: str,
-        status: Optional[ExportJobStatus] = None,
+        status: Optional[BackgroundJobStatus] = None,
         url: Optional[str] = None,
     ) -> ExportJobRead:
         update = ExportJobUpdate(status=status, results_url=url)
@@ -1000,11 +1000,11 @@ class ExportService(metaclass=SingletonMeta):
 
     def start_export_job_sync(self, export_job_id: str) -> ExportJobRead:
         exj = self.get_export_job(export_job_id=export_job_id)
-        if exj.status != ExportJobStatus.INIT:
+        if exj.status != BackgroundJobStatus.WAITING:
             raise ExportJobAlreadyStartedOrDoneError(export_job_id=export_job_id)
 
         exj = self._update_export_job(
-            status=ExportJobStatus.IN_PROGRESS, export_job_id=export_job_id
+            status=BackgroundJobStatus.RUNNING, export_job_id=export_job_id
         )
 
         # TODO: parse the parameters and run the respective method
@@ -1028,14 +1028,14 @@ class ExportService(metaclass=SingletonMeta):
 
             exj = self._update_export_job(
                 url=results_url,
-                status=ExportJobStatus.DONE,
+                status=BackgroundJobStatus.RUNNING,
                 export_job_id=export_job_id,
             )
 
         except Exception as e:
             logger.error(f"Cannot finish export job: {e}")
             self._update_export_job(
-                status=ExportJobStatus.FAILED,
+                status=BackgroundJobStatus.ERROR,
                 url=None,
                 export_job_id=export_job_id,
             )

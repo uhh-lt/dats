@@ -7,7 +7,7 @@ from loguru import logger
 from multiprocess.pool import Pool
 from tqdm import tqdm
 
-from app.core.data.dto.preprocessing_job import Status
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.db.redis_service import RedisService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.pipeline_step import PipelineStep
@@ -90,7 +90,7 @@ class PreprocessingPipeline:
         logger.info(f"Executing Pipeline sequentially for {len(cargos)} input(s)!")
         for cargo in tqdm(cargos, desc="Processing Pipeline Cargos ..."):
             cargo = self._update_status_of_ppj_payload(
-                cargo=cargo, status=Status.RUNNING
+                cargo=cargo, status=BackgroundJobStatus.RUNNING
             )
             try:
                 for ordering in sorted(self._steps_by_ordering.keys()):
@@ -106,7 +106,7 @@ class PreprocessingPipeline:
                 logger.error(msg)
                 cargo = self._update_status_of_ppj_payload(
                     cargo=cargo,
-                    status=Status.ERROR,
+                    status=BackgroundJobStatus.ERROR,
                     error_msg=msg,
                 )
                 continue
@@ -114,7 +114,7 @@ class PreprocessingPipeline:
                 cargo=cargo, current_step_name=""
             )
             cargo = self._update_status_of_ppj_payload(
-                cargo=cargo, status=Status.FINISHED
+                cargo=cargo, status=BackgroundJobStatus.FINISHED
             )
         return cargos
 
@@ -130,7 +130,9 @@ class PreprocessingPipeline:
         cargos = self._set_next_steps_of_all_cargos(cargos=cargos)
 
         # update the status of the preprocessing jobs to inprogress
-        cargos = self._update_status_for_all_ppjs(cargos=cargos, status=Status.RUNNING)
+        cargos = self._update_status_for_all_ppjs(
+            cargos=cargos, status=BackgroundJobStatus.RUNNING
+        )
 
         if force_sequential is None:
             force_sequential = self.force_sequential
@@ -146,7 +148,9 @@ class PreprocessingPipeline:
         stop_t = time.perf_counter()
 
         # update the status of the preprocessing jobs to done
-        cargos = self._update_status_for_all_ppjs(cargos=cargos, status=Status.FINISHED)
+        cargos = self._update_status_for_all_ppjs(
+            cargos=cargos, status=BackgroundJobStatus.FINISHED
+        )
 
         logger.info(
             f"Executing the PreprocessingPipeline took {stop_t - start_t:0.4f} seconds"
@@ -154,7 +158,7 @@ class PreprocessingPipeline:
         return cargos
 
     def _update_status_for_all_ppjs(
-        self, cargos: List[PipelineCargo], status: Status
+        self, cargos: List[PipelineCargo], status: BackgroundJobStatus
     ) -> List[PipelineCargo]:
         # set the status of all ppjs to DONE
         for c in cargos:
@@ -251,12 +255,12 @@ class PreprocessingPipeline:
     def _update_status_of_ppj_payload(
         self,
         cargo: PipelineCargo,
-        status: Status,
+        status: BackgroundJobStatus,
         error_msg: Optional[str] = None,
     ) -> PipelineCargo:
         ppj = self._load_ppj_of_cargo(cargo=cargo).data["ppj"]
         cargo.ppj_payload.status = status
-        if status == Status.ERROR:
+        if status == BackgroundJobStatus.ERROR:
             cargo.ppj_payload.error_message = error_msg
         ppj = self.redis.update_preprocessing_job(
             ppj.id, ppj.update_payload(cargo.ppj_payload)

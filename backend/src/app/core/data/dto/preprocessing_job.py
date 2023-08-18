@@ -1,17 +1,10 @@
 from datetime import datetime
-from enum import Enum
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, PrivateAttr, validator
 
 from app.core.data.doc_type import DocType
-
-
-class Status(str, Enum):
-    WAITING = "Waiting / Initializing (not started yet)"
-    RUNNING = "Running (currently in progress)"
-    FINISHED = "Finished (successfully finished)"
-    ERROR = "Error (failed to finish)"
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 
 
 class PreprocessingJobPayload(BaseModel):
@@ -27,9 +20,9 @@ class PreprocessingJobPayload(BaseModel):
         default="",
     )
 
-    status: Status = Field(
+    status: BackgroundJobStatus = Field(
         description="The current status of the payload.",
-        default=Status.WAITING,
+        default=BackgroundJobStatus.WAITING,
     )
 
     error_message: Optional[str] = Field(
@@ -40,8 +33,8 @@ class PreprocessingJobPayload(BaseModel):
 
 # Properties shared across all DTOs
 class PreprocessingJobBaseDTO(BaseModel):
-    status: Status = Field(
-        default=Status.WAITING,
+    status: BackgroundJobStatus = Field(
+        default=BackgroundJobStatus.WAITING,
         description="Status of the PreprocessingJob",
     )
 
@@ -66,7 +59,7 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
 
 # Properties to update
 class PreprocessingJobUpdate(PreprocessingJobBaseDTO):  # , UpdateDTOBase):
-    status: Optional[Status] = Field(
+    status: Optional[BackgroundJobStatus] = Field(
         default=None, description="Status of the PreprocessingJob"
     )
     payloads: Optional[List[PreprocessingJobPayload]] = Field(
@@ -102,7 +95,7 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
             v.filename: k for k, v in dict(enumerate(self.payloads)).items()
         }
 
-    def update_status(self, status: Status) -> PreprocessingJobUpdate:
+    def update_status(self, status: BackgroundJobStatus) -> PreprocessingJobUpdate:
         self.status = status
         return PreprocessingJobUpdate(status=self.status, payloads=self.payloads)
 
