@@ -1,6 +1,6 @@
 from typing import List
-from bs4 import BeautifulSoup
 
+from bs4 import BeautifulSoup
 from loguru import logger
 from tqdm import tqdm
 

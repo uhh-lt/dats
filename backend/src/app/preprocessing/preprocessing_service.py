@@ -4,11 +4,11 @@ from fastapi import HTTPException, UploadFile
 from loguru import logger
 
 from app.core.data.doc_type import DocType, get_doc_type, mime_type_supported
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.preprocessing_job import (
     PreprocessingJobCreate,
     PreprocessingJobPayload,
     PreprocessingJobRead,
-    Status,
 )
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
@@ -131,7 +131,9 @@ class PreprocessingService(metaclass=SingletonMeta):
             # )
 
         # update the PreprocessingJob status to IN_PROGRESS
-        self.redis.update_preprocessing_job(ppj.id, ppj.update_status(Status.RUNNING))
+        self.redis.update_preprocessing_job(
+            ppj.id, ppj.update_status(BackgroundJobStatus.RUNNING)
+        )
 
         return ppj
 

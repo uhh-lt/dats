@@ -6,14 +6,12 @@ from typing import List, Optional
 
 from loguru import logger
 
-from app.core.data.crawler.crawler_settings import get_settings
-from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
 from app.core.data.crud.project import crud_project
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.crawler_job import (
     CrawlerJobCreate,
     CrawlerJobParameters,
     CrawlerJobRead,
-    CrawlerJobStatus,
     CrawlerJobUpdate,
 )
 from app.core.data.repo.repo_service import RepoService
@@ -190,7 +188,7 @@ class CrawlerService(metaclass=SingletonMeta):
     def _update_crawler_job(
         self,
         crawler_job_id: str,
-        status: Optional[CrawlerJobStatus] = None,
+        status: Optional[BackgroundJobStatus] = None,
         crawled_data_zip_path: Optional[str] = None,
     ) -> CrawlerJobRead:
         update = CrawlerJobUpdate(
@@ -226,16 +224,19 @@ class CrawlerService(metaclass=SingletonMeta):
                 f"Cannot finish Scrapy Crawler Script for CrawlerJob {cj.id}: {e}"
             )
             self._update_crawler_job(
-                status=CrawlerJobStatus.FAILED,
+                status=BackgroundJobStatus.ERROR,
                 crawler_job_id=crawler_job_id,
             )
             raise e
 
         cj = self.get_crawler_job(crawler_job_id=crawler_job_id)
-        if not cj.status == CrawlerJobStatus.DONE or cj.crawled_data_zip_path is None:
+        if (
+            not cj.status == BackgroundJobStatus.FINISHED
+            or cj.crawled_data_zip_path is None
+        ):
             logger.error(f"Cannot finish CrawlerJob {cj.id} for unkown reasons!")
             self._update_crawler_job(
-                status=CrawlerJobStatus.FAILED,
+                status=BackgroundJobStatus.ERROR,
                 crawler_job_id=crawler_job_id,
             )
             raise UnknownCrawlerJobError(crawler_job_id=crawler_job_id)

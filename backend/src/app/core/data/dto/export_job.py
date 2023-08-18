@@ -4,19 +4,13 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, Field
 
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.dto_base import UpdateDTOBase
 
 
 class ExportFormat(str, Enum):
     CSV = "CSV"
     JSON = "JSON"
-
-
-class ExportJobStatus(str, Enum):
-    INIT = "init"
-    IN_PROGRESS = "in_progress"
-    DONE = "done"
-    FAILED = "failed"
 
 
 class ExportJobType(str, Enum):
@@ -132,8 +126,8 @@ class ExportJobParameters(BaseModel):
 
 # Properties shared across all DTOs
 class ExportJobBaseDTO(BaseModel):
-    status: ExportJobStatus = Field(
-        default=ExportJobStatus.INIT, description="Status of the ExportJob"
+    status: BackgroundJobStatus = Field(
+        default=BackgroundJobStatus.WAITING, description="Status of the ExportJob"
     )
     results_url: Optional[str] = Field(
         default=None, description="URL to download the results when done."
@@ -149,7 +143,7 @@ class ExportJobCreate(ExportJobBaseDTO):
 
 # Properties to update
 class ExportJobUpdate(ExportJobBaseDTO, UpdateDTOBase):
-    status: Optional[ExportJobStatus] = Field(
+    status: Optional[BackgroundJobStatus] = Field(
         default=None, description="Status of the ExportJob"
     )
     results_url: Optional[str] = Field(

@@ -19,7 +19,7 @@ from app.core.data.crawler.crawler_service import (
 )
 from app.core.data.crawler.crawler_settings import get_settings
 from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
-from app.core.data.dto.crawler_job import CrawlerJobStatus
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -31,14 +31,14 @@ if __name__ == "__main__":
     cs: CrawlerService = CrawlerService()
     repo: RepoService = RepoService()
 
-    cj = cs.get_crawler_job(crawler_job_id=crawler_job_id)
+    cj: CrawlerJobRead = cs.get_crawler_job(crawler_job_id=crawler_job_id)
 
     try:
-        if cj.status != CrawlerJobStatus.INIT:
+        if cj.status != BackgroundJobStatus.WAITING:
             raise CrawlerJobAlreadyStartedOrDoneError(crawler_job_id=crawler_job_id)
 
         cj = cs._update_crawler_job(
-            status=CrawlerJobStatus.IN_PROGRESS, crawler_job_id=crawler_job_id
+            status=BackgroundJobStatus.RUNNING, crawler_job_id=crawler_job_id
         )
         logger.info(f"Successfully loaded CrawlerJob {cj.id}!")
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
             proj_id=cj.parameters.project_id, src_file=crawled_data_zip
         )
         cs._update_crawler_job(
-            status=CrawlerJobStatus.DONE,
+            status=BackgroundJobStatus.FINISHED,
             crawled_data_zip_path=str(crawled_data_zip),
             crawler_job_id=crawler_job_id,
         )
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error(f"Cannot finish CrawlerJob {cj.id}: {e}")
         cs._update_crawler_job(
-            status=CrawlerJobStatus.FAILED,
+            status=BackgroundJobStatus.ERROR,
             crawler_job_id=crawler_job_id,
         )
         raise e
