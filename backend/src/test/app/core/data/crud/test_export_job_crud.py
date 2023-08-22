@@ -40,7 +40,9 @@ def test_crud_cycle() -> None:
     assert updated.status == BackgroundJobStatus.RUNNING
     assert updated.results_url is None
 
-    update = ExportJobUpdate(status=BackgroundJobStatus.FINISHED, results_url="www.dwts.io")
+    update = ExportJobUpdate(
+        status=BackgroundJobStatus.FINISHED, results_url="www.dwts.io"
+    )
     updated = redis.update_export_job(key=read.id, update=update)
     assert updated is not None
     assert isinstance(updated, ExportJobRead)

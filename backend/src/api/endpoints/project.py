@@ -1,8 +1,5 @@
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from sqlalchemy.orm import Session
-
 from api.dependencies import get_db_session, skip_limit_params
 from api.util import get_object_memos
 from app.core.data.crud.action import crud_action
@@ -26,6 +23,8 @@ from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRea
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.preprocessing.preprocessing_service import PreprocessingService
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
@@ -46,7 +45,7 @@ async def create_new_project(
     try:
         # create the ES Indices
         ElasticSearchService().create_project_indices(proj_id=db_obj.id)
-    except Exception as e:
+    except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,
@@ -118,7 +117,7 @@ async def delete_project(
     try:
         # remove the ES Indices # Flo Do we want this?!
         ElasticSearchService().remove_project_indices(proj_id=db_obj.id)
-    except Exception as e:
+    except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,
