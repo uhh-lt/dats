@@ -1,3 +1,5 @@
+import json
+
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -55,6 +57,17 @@ def _persist_sdoc_metadata(
             read_only=False,
         ),
     ]
+
+    # store word level transcriptions as metadata
+    wlt = list(map(lambda wlt: wlt.dict(), ppad.word_level_transcriptions))
+    metadata_create_dtos.append(
+        SourceDocumentMetadataCreate(
+            key="word_level_transcriptions",
+            value=json.dumps(wlt),
+            source_document_id=ppad.sdoc_id,
+            read_only=True,
+        )
+    )
 
     for key, value in ppad.metadata.items():
         metadata_create_dtos.append(
