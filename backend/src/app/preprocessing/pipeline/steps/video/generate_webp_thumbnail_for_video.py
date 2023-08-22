@@ -36,7 +36,7 @@ def generate_webp_thumbnail_for_video(cargo: PipelineCargo) -> PipelineCargo:
     with Image.open(BytesIO(half_time_frame)) as im:
         im.thumbnail((256, 256))
         im.save(
-            repo.generate_sdoc_filename(thumbnail_filename, webp=True, thumbnail=True),
+            thumbnail_filename,
             "WEBP",
             quality=50,
             lossless=True,
