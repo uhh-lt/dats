@@ -62,7 +62,7 @@ class FaissIndexService(metaclass=SingletonMeta):
         elif index_type == IndexType.IMAGE:
             index_name = self._image_index_prefix + self._index_suffix
         else:
-            raise NotImplementedError(f"Only text or image are allowed as index types!")
+            raise NotImplementedError("Only text or image are allowed as index types!")
 
         return self._get_indices_director_for_project(proj_id=proj_id).joinpath(
             index_name

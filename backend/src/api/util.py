@@ -2,7 +2,6 @@ from typing import List, Optional, Union
 
 from fastapi import HTTPException
 from loguru import logger
-from pydantic import BaseModel, Field
 from starlette import status
 
 from app.core.data.dto.memo import AttachedObjectType, MemoInDB, MemoRead
@@ -46,7 +45,7 @@ def get_object_memos(
         if len(memo_as_in_db_dtos) == 0:
             return None
         elif len(memo_as_in_db_dtos) > 1:
-            logger.error(f"More than one Memo for the specified User!")
+            logger.error("More than one Memo for the specified User!")
 
     object_types = {
         SourceDocumentORM: AttachedObjectType.source_document,

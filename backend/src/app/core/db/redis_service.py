@@ -65,7 +65,7 @@ class RedisService(metaclass=SingletonMeta):
         return str(uuid.uuid4())
 
     def _get_client(self, typ: str):
-        if not typ.lower() in self.__clients:
+        if typ.lower() not in self.__clients:
             raise KeyError(f"Redis Client '{typ.lower()}' does not exist!")
         return self.__clients[typ.lower()]
 

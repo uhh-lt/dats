@@ -26,7 +26,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
         # second create a CurrentCode that links to the code
         ccc = CurrentCodeCreate(code_id=db_obj.id)
-        cc_db_obj = crud_current_code.create(db=db, create_dto=ccc)
+        crud_current_code.create(db=db, create_dto=ccc)
 
         db.refresh(db_obj)
 

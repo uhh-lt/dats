@@ -9,7 +9,7 @@ from api.util import credentials_exception
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
-from app.core.data.dto import ProjectRead
+from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoRead

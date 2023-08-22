@@ -46,7 +46,7 @@ async def create_new_project(
     try:
         # create the ES Indices
         ElasticSearchService().create_project_indices(proj_id=db_obj.id)
-    except Exception as e:
+    except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,
@@ -118,7 +118,7 @@ async def delete_project(
     try:
         # remove the ES Indices # Flo Do we want this?!
         ElasticSearchService().remove_project_indices(proj_id=db_obj.id)
-    except Exception as e:
+    except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,

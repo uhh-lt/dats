@@ -64,7 +64,7 @@ async def get_current_user(
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except (JWTError, ValidationError) as e:
+    except (JWTError, ValidationError):
         raise credentials_exception
 
     user = crud_user.read_by_email(db=db, email=email)
