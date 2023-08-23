@@ -15,7 +15,7 @@ def generate_webp_thumbnail_for_video(cargo: PipelineCargo) -> PipelineCargo:
     ppvd: PreProVideoDoc = cargo.data["ppvd"]
 
     half_time = float(ppvd.metadata["duration"]) // 2
-    frame_width = int(ppvd.metadata["frame_width"])
+    frame_width = int(ppvd.metadata["width"])
     try:
         # get the frame at half time of the video
         half_time_frame, err = (

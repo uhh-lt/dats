@@ -380,9 +380,6 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.video.generate_webp_thumbnail_for_video import (
         generate_webp_thumbnail_for_video,
     )
-    from app.preprocessing.pipeline.steps.video.update_ppvd_sdoc_status_to_finish import (
-        update_ppvd_sdoc_status_to_finish,
-    )
     from app.preprocessing.pipeline.steps.video.write_ppvd_to_database import (
         write_ppvd_to_database,
     )
@@ -423,13 +420,22 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
+        func=add_word_level_transcriptions_to_ppvd_metadata,
+        required_data=["ppvd", "ppad"],
+    )
+
+    pipeline.register_step(
         func=write_ppvd_to_database,
         required_data=["ppvd"],
     )
 
     pipeline.register_step(
-        func=update_ppvd_sdoc_status_to_finish,
-        required_data=["ppvd"],
+        func=resolve_sdoc_links,
+    )
+
+    pipeline.register_step(
+        func=update_sdoc_status_to_finish,
+        required_data=["sdoc_id"],
     )
 
     pipeline.freeze()
