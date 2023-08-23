@@ -77,6 +77,14 @@ const useGetProjectDocumentsInfinite = (projectId: number, refetch: boolean) =>
     }
   );
 
+const useResolveSdocIdByFilename = (projectId: number, filename: string) =>
+    useQuery<number, Error>([QueryKey.SDOC_NAME_BY_PROJECT_AND_FILENAME, projectId, filename], () =>
+        ProjectService.resolveFilename({
+            projId: projectId,
+            filename: filename,
+        })
+    );
+
 const useCreateProject = () =>
   useMutation(
     async ({ userId, requestBody }: { userId: number; requestBody: ProjectCreate }) => {
@@ -237,17 +245,19 @@ const ProjectHooks = {
   // project
   useGetAllProjects,
   useGetProject,
+  useCreateProject,
+  useUpdateProject,
+  useDeleteProject,
   // sdoc
   useUploadDocument,
   useGetProjectDocuments,
   useGetProjectDocumentsInfinite,
-  useCreateProject,
-  useUpdateProject,
-  useDeleteProject,
+  useResolveSdocIdByFilename,
   // users
   useGetAllUsers,
   useAddUser,
   useRemoveUser,
+  // codes
   useGetAllCodes,
   // memo
   useGetMemo,

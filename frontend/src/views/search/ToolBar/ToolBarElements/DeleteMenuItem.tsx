@@ -57,7 +57,7 @@ function DeleteMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteMenuIte
         if (onClick) onClick();
       },
     });
-  }, [deleteMutation, dispatch, navigate, onClick, sdocId]);
+  }, [deleteMutation, dispatch, navigate, onClick, sdocId, navigateTo]);
 
   return (
     <MenuItem onClick={handleClick} {...props} disabled={!sdocId}>

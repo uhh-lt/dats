@@ -15,6 +15,8 @@ export const QueryKey = {
   PROJECT_TAGS: "projectTags",
   // all crawler jobs of a project (by project id)
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
+  // all crawler jobs of a project (by project id)
+  PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
   // all metadata of a project (by project id and metadata key)
   PROJECT_METADATA_BY_METADATA_KEY: "projectMetadataByMetadataKey",
 
@@ -97,6 +99,8 @@ export const QueryKey = {
   SDOCS_BY_PROJECT_AND_TAG_SEARCH: "sdocsByProjectAndTagSearch",
   // all sdocs which are in the project (by project id) and suffice the given filters (by filter list)
   SDOCS_BY_PROJECT_AND_FILTERS_SEARCH: "searchResults",
+  // the name of a single SourceDocument (by project id and filename)
+  SDOC_NAME_BY_PROJECT_AND_FILENAME: "sdocNameByProjectAndFilename",
 
   // all spans annotations of a adoc (by adoc id)
   ADOC_SPAN_ANNOTATIONS: "adocSpanAnnotations",
@@ -140,10 +144,13 @@ export const QueryKey = {
 
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",
+  
+  // preprojob (by prepro job id)
+  PREPRO_JOB: "preProJob",
 
-  // export
+  // export (by export job id)
   EXPORT_JOB: "exportJob",
 
-  // crawler
+  // crawler (by crawler job id)
   CRAWLER_JOB: "crawlerJob",
 };
