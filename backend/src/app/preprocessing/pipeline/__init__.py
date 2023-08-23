@@ -171,17 +171,14 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.image.run_object_detection import (
         run_object_detection,
     )
-    from app.preprocessing.pipeline.steps.image.update_ppid_sdoc_status_to_finish import (
-        update_ppid_sdoc_status_to_finish,
-    )
     from app.preprocessing.pipeline.steps.image.write_ppid_to_database import (
         write_ppid_to_database,
     )
     from app.preprocessing.pipeline.steps.text.generate_sentence_annotations import (
         generate_sentence_annotations,
     )
-    from app.preprocessing.pipeline.steps.text.generate_word_frequencies import (
-        generate_word_frequncies,
+    from app.preprocessing.pipeline.steps.text.generate_word_frequencies_and_keywords import (
+        generate_word_frequncies_and_keywords,
     )
     from app.preprocessing.pipeline.steps.text.run_spacy_pipeline import (
         run_spacy_pipeline,
@@ -236,7 +233,7 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=generate_word_frequncies,
+        func=generate_word_frequncies_and_keywords,
         required_data=["pptd"],
     )
 
