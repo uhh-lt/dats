@@ -7,6 +7,7 @@ from loguru import logger
 from multiprocess.pool import Pool
 from tqdm import tqdm
 
+from app.core.data.doc_type import DocType
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.db.redis_service import RedisService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -16,9 +17,11 @@ from app.preprocessing.pipeline.model.pipeline_step import PipelineStep
 class PreprocessingPipeline:
     def __init__(
         self,
+        doc_type: DocType,
         num_workers: int = 1,
         force_sequential: bool = True,
     ):
+        self._dt = doc_type
         self._steps_by_ordering: Dict[int, PipelineStep] = dict()
         self._steps_by_name: Dict[str, PipelineStep] = dict()
         self.redis: RedisService = RedisService()
@@ -37,17 +40,22 @@ class PreprocessingPipeline:
             )
         elif step.ordering in self._steps_by_ordering:
             raise KeyError(
-                f"Cannot add step {step.name}!"
+                f"Cannot add step {step.name} to PreprocessingPipeline({self._dt})!"
                 f"There is already a step {self.get_step_by_ordering(step.ordering)}"
                 f" with the same ordering: {step.ordering}!"
             )
         elif step.name in self._steps_by_name:
-            raise KeyError(f"There is already a step with the same name: {step.name}!")
+            raise KeyError(
+                f"There is already a step with the same name: {step.name}"
+                f" in PreprocessingPipeline({self._dt})!"
+            )
 
         self._steps_by_ordering[step.ordering] = step
         self._steps_by_name[step.name] = step
 
-        logger.info(f"Registered PipelineStep: {step}")
+        logger.info(
+            f"Registered PipelineStep {step} in PreprocessingPipeline({self._dt})"
+        )
 
     def get_step_by_name(self, name: str) -> PipelineStep:
         return self._steps_by_name[name]
@@ -56,7 +64,9 @@ class PreprocessingPipeline:
         return self._steps_by_ordering[ordering]
 
     def __execute_in_parallel(self, cargos: List[PipelineCargo]) -> List[PipelineCargo]:
-        logger.info(f"Executing Pipeline parallely for {len(cargos)} input(s)!")
+        logger.info(
+            f"Executing PreprocessingPipeline({self._dt}) parallely for {len(cargos)} input(s)!"
+        )
 
         def chain(*funcs):
             def chained_call(arg):
@@ -87,8 +97,10 @@ class PreprocessingPipeline:
     def __execute_sequentially(
         self, cargos: List[PipelineCargo]
     ) -> List[PipelineCargo]:
-        logger.info(f"Executing Pipeline sequentially for {len(cargos)} input(s)!")
-        for cargo in tqdm(cargos, desc="Processing Pipeline Cargos ..."):
+        logger.info(
+            f"Executing PreprocessingPipeline({self._dt}) sequentially for {len(cargos)} input(s)!"
+        )
+        for cargo in tqdm(cargos, desc="Processing PipelineCargos ..."):
             cargo = self._update_status_of_ppj_payload(
                 cargo=cargo, status=BackgroundJobStatus.RUNNING
             )
@@ -99,7 +111,7 @@ class PreprocessingPipeline:
                     )
             except Exception as e:
                 msg = (
-                    f"An error occurred while executing the PreprocessingPipeline "
+                    f"An error occurred while executing the PreprocessingPipeline({self._dt}) "
                     f"for PreprocessingJobPayload {cargo.ppj_payload.filename}!\n"
                     f"Error: {e}"
                 )
@@ -123,7 +135,8 @@ class PreprocessingPipeline:
     ) -> List[PipelineCargo]:
         if not self.__is_frozen:
             raise ValueError(
-                "Cannot execute PreprocessingPipeline since it has not been frozen yet!"
+                f"Cannot execute PreprocessingPipeline({self._dt})"
+                " since it has not been frozen yet!"
             )
         # initialize the cargos
         cargos = self._load_ppjs_of_all_cargos(cargos=cargos)
@@ -153,7 +166,8 @@ class PreprocessingPipeline:
         )
 
         logger.info(
-            f"Executing the PreprocessingPipeline took {stop_t - start_t:0.4f} seconds"
+            f"Executing the PreprocessingPipeline({self._dt}) took"
+            f" {stop_t - start_t:0.4f} seconds"
         )
         return cargos
 
@@ -269,7 +283,7 @@ class PreprocessingPipeline:
         return cargo
 
     def freeze(self) -> None:
-        logger.info("Freezing the PreprocessingPipeline!")
+        logger.info(f"Freezing the PreprocessingPipeline({self._dt})!")
         self.__is_frozen = True
 
     def register_step(
@@ -280,7 +294,7 @@ class PreprocessingPipeline:
         if self.__is_frozen:
             msg = (
                 f"Cannot register new PipelineStep {func.__name__} "
-                f"since the PreprocessingPipeline is already frozen!"
+                f"since the PreprocessingPipeline({self._dt}) is already frozen!"
             )
             logger.error(msg)
             raise ValueError(msg)
@@ -299,8 +313,8 @@ class PreprocessingPipeline:
     ) -> None:
         if self.__is_frozen:
             msg = (
-                "Cannot join another PreprocessingPipeline "
-                "since this PreprocessingPipeline is already frozen!"
+                f"Cannot join another PreprocessingPipeline({pipeline._dt}) "
+                f"since this PreprocessingPipeline({self._dt}) is already frozen!"
             )
             logger.error(msg)
             raise ValueError(msg)
@@ -310,7 +324,7 @@ class PreprocessingPipeline:
                 continue
 
             step_with_new_ordering = PipelineStep(
-                name=step.name,
+                name=f"{pipeline._dt}::{step.name}",
                 ordering=len(self) + 1,
                 required_data=step.required_data,
                 run=step.run,
@@ -324,7 +338,7 @@ class PreprocessingPipeline:
                 sorted(self._steps_by_ordering.items(), key=lambda i: i[0]),
             )
         )
-        return f"PreprocessingPipeline(\n\t{steps_str}\n)"
+        return f"PreprocessingPipeline({self._dt}){{\n\t{steps_str}\n}}"
 
     def __repr__(self) -> str:
         return str(self)

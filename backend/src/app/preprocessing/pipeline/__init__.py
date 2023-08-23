@@ -1,5 +1,6 @@
 from functools import lru_cache
 
+from app.core.data.doc_type import DocType
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 
 
@@ -50,7 +51,9 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         write_pptd_to_database,
     )
 
-    pipeline = PreprocessingPipeline(num_workers=1, force_sequential=True)
+    pipeline = PreprocessingPipeline(
+        doc_type=DocType.text, num_workers=1, force_sequential=True
+    )
 
     pipeline.register_step(
         func=create_pptd,
@@ -174,7 +177,9 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         store_document_in_elasticsearch,
     )
 
-    pipeline = PreprocessingPipeline(num_workers=1, force_sequential=True)
+    pipeline = PreprocessingPipeline(
+        doc_type=DocType.image, num_workers=1, force_sequential=True
+    )
 
     pipeline.register_step(
         func=create_ppid,
@@ -271,7 +276,9 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     text_pipeline = build_text_pipeline()
-    pipeline = PreprocessingPipeline(num_workers=1, force_sequential=True)
+    pipeline = PreprocessingPipeline(
+        doc_type=DocType.audio, num_workers=1, force_sequential=True
+    )
 
     pipeline.register_step(
         func=create_ppad,
@@ -348,7 +355,9 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     audio_pipeline = build_audio_pipeline()
-    pipeline = PreprocessingPipeline(num_workers=1, force_sequential=True)
+    pipeline = PreprocessingPipeline(
+        doc_type=DocType.video, num_workers=1, force_sequential=True
+    )
 
     pipeline.register_step(
         func=create_ppvd,
