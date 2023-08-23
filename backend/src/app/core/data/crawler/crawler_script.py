@@ -1,6 +1,7 @@
 import shutil
 from pathlib import Path
 
+from app.core.data.dto.crawler_job import CrawlerJobRead
 from app.core.data.repo.repo_service import RepoService
 from loguru import logger
 from scrapy.crawler import CrawlerProcess
