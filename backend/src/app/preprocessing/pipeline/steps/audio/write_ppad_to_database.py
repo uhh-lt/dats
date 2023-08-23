@@ -5,12 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
@@ -94,8 +95,19 @@ def _create_adoc_for_system_user(db: Session, sdoc_db_obj: SourceDocumentORM) ->
         adoc_create = AnnotationDocumentCreate(
             source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
         )
-        adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
-    return adoc_db
+        crud_adoc.create(db=db, create_dto=adoc_create)
+
+
+def _create_sdoc_link_for_transcript(
+    db: Session, ppad: PreProAudioDoc, sdoc_db_obj: SourceDocumentORM
+) -> None:
+    logger.info(f"Creating SourceDocumentLink for transcript of {ppad.filename}...")
+    create_dto = SourceDocumentLinkCreate(
+        parent_source_document_id=sdoc_db_obj.id,
+        linked_source_document_filename=ppad.transcript_filepath.name,
+        linked_source_document_id=None,
+    )
+    crud_sdoc_link.create(db=db, create_dto=create_dto)
 
 
 def write_ppad_to_database(cargo: PipelineCargo) -> PipelineCargo:
@@ -108,6 +120,9 @@ def write_ppad_to_database(cargo: PipelineCargo) -> PipelineCargo:
 
             # persist SourceDocument Metadata
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, ppad=ppad)
+
+            # create and persist SourceDocumentLink for transcript
+            _create_sdoc_link_for_transcript(db=db, ppad=ppad, sdoc_db_obj=sdoc_db_obj)
 
             # create AnnotationDocument for system user
             _create_adoc_for_system_user(db=db, sdoc_db_obj=sdoc_db_obj)
