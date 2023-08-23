@@ -20,6 +20,9 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.text.detect_content_language import (
         detect_content_language,
     )
+    from app.preprocessing.pipeline.steps.text.extract_content_in_html_from_raw_text_docs import (
+        extract_content_in_html_from_raw_text_docs,
+    )
     from app.preprocessing.pipeline.steps.text.extract_content_in_html_from_word_or_pdf_docs import (
         extract_content_in_html_from_word_or_pdf_docs,
     )
@@ -28,9 +31,6 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
     from app.preprocessing.pipeline.steps.text.extract_text_from_html_and_create_source_mapping import (
         extract_text_from_html_and_create_source_mapping,
-    )
-    from app.preprocessing.pipeline.steps.text.generate_content_in_html_from_raw_text_docs import (
-        extract_content_in_html_from_raw_text_docs,
     )
     from app.preprocessing.pipeline.steps.text.generate_named_entity_annotations import (
         generate_named_entity_annotations,
