@@ -11,7 +11,7 @@ const useStartCrawlerJob = () =>
     },
   });
 
-const useGetCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
+const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
   return useQuery<CrawlerJobRead, Error>(
     [QueryKey.CRAWLER_JOB, crawlerJobId],
     () =>
@@ -55,7 +55,7 @@ const useGetAllCrawlerJobs = (projectId: number | undefined) => {
 };
 
 const CrawlerHooks = {
-  useGetCrawlerJob,
+  usePollCrawlerJob,
   useStartCrawlerJob,
   useGetAllCrawlerJobs,
 };
