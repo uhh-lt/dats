@@ -12,6 +12,8 @@ import lxml.html.clean as clean
 import magic
 from crawler.items import GenericWebsiteItem
 
+from crawler.items import IncelItem
+
 
 class HTMLCleanPipeline:
     def process_item(self, item: GenericWebsiteItem, spider):
