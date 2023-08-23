@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 from .dto_base import UpdateDTOBase
 
 """
- Flo: 
- We have to create different Create and Read DTOs for every Object Type it can be attached to so that the 
+ Flo:
+ We have to create different Create and Read DTOs for every Object Type it can be attached to so that the
  frontend never sees the ObjectHandle.
 
  Further, because we're not storing the content in the SQL DB but only in the ES instance we handle this differently

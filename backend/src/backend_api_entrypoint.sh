@@ -16,4 +16,3 @@ else
   # start api in dev mode with hot reload and only 1 worker
   uvicorn --reload --log-level "${LOG_LEVEL}" --port "${API_PORT}" --host "0.0.0.0" main:app
 fi
-
