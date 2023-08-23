@@ -34,7 +34,6 @@ def _create_and_persist_sdoc(db: Session, ppid: PreProImageDoc) -> SourceDocumen
     )
     # persist SourceDocument
     sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
-    ppid.sdoc_id = sdoc_db_obj.id
 
     return sdoc_db_obj
 
@@ -78,14 +77,15 @@ def _persist_sdoc_metadata(
 
 
 def _create_adoc_for_system_user(
-    db: Session, ppid: PreProImageDoc
+    db: Session, ppid: PreProImageDoc, sdoc_db_obj: SourceDocumentORM
 ) -> AnnotationDocumentORM:
+    sdoc_id = sdoc_db_obj.id
     adoc_db = crud_adoc.read_by_sdoc_and_user(
-        db=db, sdoc_id=ppid.sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
+        db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
     )
     if not adoc_db:
         adoc_create = AnnotationDocumentCreate(
-            source_document_id=ppid.sdoc_id, user_id=SYSTEM_USER_ID
+            source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
         )
         adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
     return adoc_db
@@ -151,10 +151,16 @@ def write_ppid_to_database(cargo: PipelineCargo) -> PipelineCargo:
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, ppid=ppid)
 
             # create AnnotationDocument for system user
-            adoc_db_obj = _create_adoc_for_system_user(db=db, ppid=ppid)
+            adoc_db_obj = _create_adoc_for_system_user(
+                db=db, ppid=ppid, sdoc_db_obj=sdoc_db_obj
+            )
 
             # persist BBoxAnnotations
-            _persist_bbox__annotations(db=db, adoc_db_obj=adoc_db_obj, ppid=ppid)
+            _persist_bbox__annotations(
+                db=db,
+                adoc_db_obj=adoc_db_obj,
+                ppid=ppid,
+            )
 
         except Exception as e:
             logger.error(
@@ -172,5 +178,5 @@ def write_ppid_to_database(cargo: PipelineCargo) -> PipelineCargo:
                 f"Persisted PreprocessingPipeline Results " f"for {ppid.filename}!"
             )
 
-            ppid.sdoc_id = sdoc_db_obj.id
+            cargo.data["sdoc_id"] = sdoc_db_obj.id
     return cargo

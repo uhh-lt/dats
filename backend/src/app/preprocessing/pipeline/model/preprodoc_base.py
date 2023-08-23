@@ -27,14 +27,6 @@ class PreProDocBase(BaseModel):
         )
     )
 
-    sdoc_id: int = Field(
-        default=-1,
-        description=(
-            "The ID of the SourceDocument object in the database."
-            "This is set after the file has been imported to the database."
-        ),
-    )
-
     metadata: Dict[str, str] = Field(
         description=(
             "A container to store all metadata generated during the preprocessing "

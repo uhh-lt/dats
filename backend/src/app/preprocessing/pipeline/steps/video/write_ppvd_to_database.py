@@ -26,7 +26,6 @@ def _create_and_persist_sdoc(db: Session, ppvd: PreProVideoDoc) -> SourceDocumen
     )
     # persist SourceDocument
     sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
-    ppvd.sdoc_id = sdoc_db_obj.id
 
     return sdoc_db_obj
 
@@ -95,7 +94,7 @@ def write_ppvd_to_database(cargo: PipelineCargo) -> PipelineCargo:
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, ppvd=ppvd)
 
             # create AnnotationDocument for system user
-            _create_adoc_for_system_user(db=db, ppvd=ppvd)
+            _create_adoc_for_system_user(db=db, sdoc_db_obj=sdoc_db_obj)
 
         except Exception as e:
             logger.error(
@@ -113,5 +112,5 @@ def write_ppvd_to_database(cargo: PipelineCargo) -> PipelineCargo:
                 f"Persisted PreprocessingPipeline Results " f"for {ppvd.filename}!"
             )
 
-            ppvd.sdoc_id = sdoc_db_obj.id
+            cargo.data["sdoc_id"] = sdoc_db_obj.id
     return cargo

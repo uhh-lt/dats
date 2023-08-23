@@ -28,13 +28,13 @@ sql: SQLService = SQLService()
 
 
 def _create_and_persist_sdoc(db: Session, pptd: PreProTextDoc) -> SourceDocumentORM:
+    logger.info(f"Persisting SourceDocument for {pptd.filename}...")
     # generate the create_dto
     _, create_dto = repo.build_source_document_create_dto_from_file(
         proj_id=pptd.project_id, filename=pptd.filename
     )
     # persist SourceDocument
     sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
-    pptd.sdoc_id = sdoc_db_obj.id
 
     return sdoc_db_obj
 
@@ -42,6 +42,7 @@ def _create_and_persist_sdoc(db: Session, pptd: PreProTextDoc) -> SourceDocument
 def _persist_sdoc_metadata(
     db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
 ) -> None:
+    logger.info(f"Persisting SourceDocument Metadata for {pptd.filename}...")
     sdoc_id = sdoc_db_obj.id
     filename = sdoc_db_obj.filename
     sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
@@ -85,14 +86,16 @@ def _persist_sdoc_metadata(
 
 
 def _create_adoc_for_system_user(
-    db: Session, pptd: PreProTextDoc
+    db: Session, pptd: PreProTextDoc, sdoc_db_obj: SourceDocumentORM
 ) -> AnnotationDocumentORM:
+    logger.info(f"Creating AnnotationDocument for {pptd.filename}...")
+    sdoc_id = sdoc_db_obj.id
     adoc_db = crud_adoc.read_by_sdoc_and_user(
-        db=db, sdoc_id=pptd.sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
+        db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
     )
     if not adoc_db:
         adoc_create = AnnotationDocumentCreate(
-            source_document_id=pptd.sdoc_id, user_id=SYSTEM_USER_ID
+            source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
         )
         adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
     return adoc_db
@@ -101,6 +104,7 @@ def _create_adoc_for_system_user(
 def _persist_span_annotations(
     db: Session, adoc_db_obj: AnnotationDocumentORM, pptd: PreProTextDoc
 ) -> None:
+    logger.info(f"Persisting SpanAnnotations for {pptd.filename}...")
     # convert AutoSpans to SpanAnnotations
     for code in pptd.spans.keys():
         code_name = code
@@ -161,7 +165,9 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
             # create AnnotationDocument for system user
-            adoc_db_obj = _create_adoc_for_system_user(db=db, pptd=pptd)
+            adoc_db_obj = _create_adoc_for_system_user(
+                db=db, pptd=pptd, sdoc_db_obj=sdoc_db_obj
+            )
 
             # persist SpanAnnotations
             _persist_span_annotations(db=db, adoc_db_obj=adoc_db_obj, pptd=pptd)
@@ -182,5 +188,6 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
                 f"Persisted PreprocessingPipeline Results " f"for {pptd.filename}!"
             )
 
-            pptd.sdoc_id = sdoc_db_obj.id
+            cargo.data["sdoc_id"] = sdoc_db_obj.id
+
     return cargo
