@@ -58,11 +58,11 @@ export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
 LOG_LEVEL=${LOG_LEVEL:-debug}
-CELERY_HEAVY_JOBS_WORKER_CONCURRENCY=${CELERY_HEAVY_JOBS_WORKER_CONCURRENCY:-1}
+CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY=${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
 
-if [ "$CELERY_HEAVY_JOBS_WORKER_CONCURRENCY" -le 1 ]; then
+if [ "$CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY" -le 1 ]; then
   echo "NEVER USE THIS WORKER FOR GPU JOBS!"
-  celery -A app.docprepro.heavy_jobs.tasks worker -Q heavyjobsQ,celery -l "$LOG_LEVEL" -P solo
+  celery -A app.celery.background_jobs.tasks worker -Q bgJobsQ,celery -l "$LOG_LEVEL" -P solo
 else
-  celery -A app.docprepro.heavy_jobs.tasks worker -Q heavyjobsQ,celery -l "$LOG_LEVEL" -c "$CELERY_HEAVY_JOBS_WORKER_CONCURRENCY"
+  celery -A app.celery.background_jobs.tasks worker -Q bgJobsQ,celery -l "$LOG_LEVEL" -c "$CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY"
 fi

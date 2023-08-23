@@ -1,6 +1,6 @@
 from typing import Dict, List, Union
 
-from app.docprepro.celery.celery_worker import celery_worker
+from app.celery.celery_worker import celery_worker
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch.find_similar_images import find_similar_images_
 from app.docprepro.simsearch.find_similar_sentences import (

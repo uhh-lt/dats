@@ -13,7 +13,7 @@ from app.core.data.dto.preprocessing_job import (
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
-from app.docprepro.heavy_jobs import (
+from app.celery.background_jobs import (
     execute_audio_preprocessing_pipeline_apply_async,
     execute_image_preprocessing_pipeline_apply_async,
     execute_text_preprocessing_pipeline_apply_async,

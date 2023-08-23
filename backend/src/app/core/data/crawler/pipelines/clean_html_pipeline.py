@@ -5,7 +5,9 @@
 
 
 from app.core.data.crawler.crawled_item import CrawledItem
-from app.docprepro.text.clean_html import cleaning_with_readability_pipeline
+from app.preprocessing.pipeline.steps.text.clean_html import (
+     cleaning_with_readability_pipeline
+)
 
 
 class CleanHtmlPipeline:

@@ -83,7 +83,7 @@ def __init_services__(
     # import celery workers to configure
     # import and init RepoService
     from app.core.data.repo.repo_service import RepoService
-    from app.docprepro.celery.celery_worker import celery_worker
+    from app.celery.celery_worker import celery_worker
 
     repos = RepoService()
     if create_root_repo_directory_structure:

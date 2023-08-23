@@ -93,7 +93,7 @@ def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProText
             index_type=IndexType.TEXT,
         )
     else:
-        logger.debug(f"No sentences to encode and add to the faiss index!")
+        logger.debug("No sentences to encode and add to the faiss index!")
 
     with sqls.db_session() as db:
         for sdoc_id in sdoc_ids:
