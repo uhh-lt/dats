@@ -96,7 +96,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
         return cargos
 
-    def prepare_and_start_preprocessing_job(
+    def prepare_and_start_preprocessing_job_async(
         self, proj_id: int, uploaded_files: List[UploadFile]
     ) -> Optional[PreprocessingJobRead]:
         payloads = self._store_uploaded_files_and_create_payloads(
