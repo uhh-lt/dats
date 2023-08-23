@@ -10,7 +10,10 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
-import_uploaded_archive_task = "app.celery.background_jobs.tasks.import_uploaded_archive"
+
+import_uploaded_archive_task = (
+    "app.celery.background_jobs.tasks.import_uploaded_archive"
+)
 start_export_job_task = "app.celery.background_jobs.tasks.start_export_job"
 start_crawler_job_task = "app.celery.background_jobs.tasks.start_crawler_job"
 

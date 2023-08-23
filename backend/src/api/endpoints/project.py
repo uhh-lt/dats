@@ -9,12 +9,12 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
+from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
     SourceDocumentRead,
