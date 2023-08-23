@@ -1,4 +1,4 @@
-import { List } from "@mui/material";
+import { List, ListSubheader } from "@mui/material";
 import React from "react";
 import { PreprocessingJobRead } from "../../../../api/openapi";
 import PreProHooks from "../../../../api/PreProHooks";
@@ -22,7 +22,14 @@ function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJo
   if (preProJob.isSuccess) {
     return (
       <BackgroundJobListItem jobStatus={preProJob.data.status} title={`Preprocessing Job: ${preProJob.data.id}`} subTitle={`${date.toLocaleTimeString()}, ${date.toDateString()}`}>
-        <List component="div" disablePadding dense>
+        <List component="div"
+        subheader={
+          <ListSubheader sx={{ pl: 8 }}>
+            Processed Documents
+          </ListSubheader>
+        }
+        disablePadding
+        dense>
           {preProJob.data.payloads.map((ppj, index) => (
             <PreProJobPayloadListItem key={index} ppj={ppj} contextMenuRef={contextMenuRef} />
           ))}
