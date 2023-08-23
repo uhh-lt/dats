@@ -1,10 +1,15 @@
-from datetime import datetime
 from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, PrivateAttr, validator
 
 from app.core.data.doc_type import DocType
-from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.dto.background_job_base import (
+    BackgroundJobBase,
+    BackgroundJobBaseCreate,
+    BackgroundJobBaseRead,
+    BackgroundJobBaseUpdate,
+    BackgroundJobStatus,
+)
 
 
 class PreprocessingJobPayload(BaseModel):
@@ -32,18 +37,12 @@ class PreprocessingJobPayload(BaseModel):
 
 
 # Properties shared across all DTOs
-class PreprocessingJobBaseDTO(BaseModel):
-    status: BackgroundJobStatus = Field(
-        default=BackgroundJobStatus.WAITING,
-        description="Status of the PreprocessingJob",
-    )
+class PreprocessingJobBaseDTO(BackgroundJobBase):
+    pass
 
 
 # Properties to create
-class PreprocessingJobCreate(PreprocessingJobBaseDTO):
-    project_id: int = Field(
-        description="The ID of the Project for which the PreprocessingJob is executed."
-    )
+class PreprocessingJobCreate(PreprocessingJobBaseDTO, BackgroundJobBaseCreate):
     payloads: List[PreprocessingJobPayload] = Field(
         description=(
             "Payloads of the PreprocessingJobs, i.e., documents to be "
@@ -58,10 +57,7 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
 
 
 # Properties to update
-class PreprocessingJobUpdate(PreprocessingJobBaseDTO):  # , UpdateDTOBase):
-    status: Optional[BackgroundJobStatus] = Field(
-        default=None, description="Status of the PreprocessingJob"
-    )
+class PreprocessingJobUpdate(PreprocessingJobBaseDTO, BackgroundJobBaseUpdate):
     payloads: Optional[List[PreprocessingJobPayload]] = Field(
         default=None,
         description=(
@@ -72,19 +68,13 @@ class PreprocessingJobUpdate(PreprocessingJobBaseDTO):  # , UpdateDTOBase):
 
 
 # Properties to read
-class PreprocessingJobRead(PreprocessingJobBaseDTO):
-    id: str = Field(description="ID of the PreprocessingJob")
-    project_id: int = Field(
-        description="The ID of the Project for which the PreprocessingJob is executed."
-    )
+class PreprocessingJobRead(PreprocessingJobBaseDTO, BackgroundJobBaseRead):
     payloads: List[PreprocessingJobPayload] = Field(
         description=(
             "Payloads of the PreprocessingJobs, i.e., documents to be "
             "preprocessed and imported to the project within this PreprocessingJob"
         )
     )
-    created: datetime = Field(description="Created timestamp of the PreprocessingJob")
-    updated: datetime = Field(description="Updated timestamp of the PreprocessingJob")
 
     _fn_to_payload_idx: Dict[str, int] = PrivateAttr(default_factory=dict)
 
@@ -94,10 +84,6 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
         self._fn_to_payload_idx = {
             v.filename: k for k, v in dict(enumerate(self.payloads)).items()
         }
-
-    def update_status(self, status: BackgroundJobStatus) -> PreprocessingJobUpdate:
-        self.status = status
-        return PreprocessingJobUpdate(status=self.status, payloads=self.payloads)
 
     def update_payload(
         self, payload: PreprocessingJobPayload

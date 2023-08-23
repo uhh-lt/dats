@@ -15,6 +15,7 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
     BBoxAnnotationReadResolvedCode,
@@ -29,7 +30,6 @@ from app.core.data.dto.export_job import (
     ExportJobType,
     ExportJobUpdate,
 )
-from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
