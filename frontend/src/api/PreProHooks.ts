@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { PreProProjectStatus, PreproService } from "./openapi";
+import { PreProProjectStatus, PreproService, PreprocessingJobRead, BackgroundJobStatus } from "./openapi";
 import { QueryKey } from "./QueryKey";
 
 const useGetPreProProjectStatus = (projectId: number) =>

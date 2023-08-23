@@ -97,13 +97,13 @@ function ProjectDocuments({ project }: ProjectProps) {
         {
           projId: project.id,
           formData: {
-            doc_files: Array.from(files),
+            uploaded_files: Array.from(files),
           },
         },
         {
           onSuccess: (data) => {
             SnackbarAPI.openSnackbar({
-              text: data,
+              text: `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,
               severity: "success",
             });
             // FIXME: selbst mit initialen Timeout vor neuem rerender gibt das Backend für in_progress false zurück

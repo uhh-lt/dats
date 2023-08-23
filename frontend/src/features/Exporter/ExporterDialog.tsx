@@ -23,7 +23,7 @@ import ExporterHooks from "../../api/ExporterHooks";
 import {
   ExportFormat,
   ExportJobParameters,
-  ExportJobStatus,
+  BackgroundJobStatus,
   SingleDocAllUserAnnotationsExportJobParams,
   SingleDocSingleUserAnnotationsExportJobParams,
   SingleProjectAllDataExportJobParams,
@@ -212,10 +212,10 @@ function ExporterDialog() {
   useEffect(() => {
     if (!exportJob.data) return;
     if (exportJob.data.status) {
-      if (exportJob.data.status === ExportJobStatus.DONE) {
+      if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
         window.open(process.env.REACT_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
         setExportJobId(undefined);
-      } else if (exportJob.data.status === ExportJobStatus.FAILED) {
+      } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
         SnackbarAPI.openSnackbar({
           text: `Export job ${exportJob.data.id} failed`,
           severity: "error",
