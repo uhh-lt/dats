@@ -24,6 +24,7 @@ prepro: PreprocessingService = PreprocessingService()
 
 
 def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
+    prepro.prepare_and_start_preprocessing_job_from_archive(proj_id=project_id)
     raise NotImplementedError
     # store and extract the archive
     file_dsts = repo.extract_archive_in_project(
