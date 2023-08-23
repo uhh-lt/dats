@@ -33,6 +33,8 @@ def extract_content_in_html_from_word_or_pdf_docs(
     cargo: PipelineCargo,
 ) -> PipelineCargo:
     __start_apache_tika_server(foo="bar")
+    from tika import parser
+
     pptd: PreProTextDoc = cargo.data["pptd"]
     filepath = pptd.filepath
 

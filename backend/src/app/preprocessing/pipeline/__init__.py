@@ -6,6 +6,12 @@ from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipel
 
 @lru_cache(maxsize=1)
 def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
+        resolve_sdoc_links,
+    )
+    from app.preprocessing.pipeline.steps.common.update_sdoc_status_to_finish import (
+        update_sdoc_status_to_finish,
+    )
     from app.preprocessing.pipeline.steps.text.apply_html_source_mapping_with_custom_html_tags import (
         apply_html_source_mapping_with_custom_html_tags,
     )
@@ -16,6 +22,9 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
     from app.preprocessing.pipeline.steps.text.extract_content_in_html_from_word_or_pdf_docs import (
         extract_content_in_html_from_word_or_pdf_docs,
+    )
+    from app.preprocessing.pipeline.steps.text.extract_sdoc_links_from_html_of_mixed_documents import (
+        extract_sdoc_links_from_html_of_mixed_documents,
     )
     from app.preprocessing.pipeline.steps.text.extract_text_from_html_and_create_source_mapping import (
         extract_text_from_html_and_create_source_mapping,
@@ -29,23 +38,17 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.text.generate_sentence_annotations import (
         generate_sentence_annotations,
     )
-    from app.preprocessing.pipeline.steps.text.generate_word_frequencies import (
-        generate_word_frequncies,
+    from app.preprocessing.pipeline.steps.text.generate_word_frequencies_and_keywords import (
+        generate_word_frequncies_and_keywords,
     )
     from app.preprocessing.pipeline.steps.text.index_text_document_in_faiss import (
         index_text_document_in_faiss,
-    )
-    from app.preprocessing.pipeline.steps.text.resolve_sdoc_links import (
-        resolve_sdoc_links,
     )
     from app.preprocessing.pipeline.steps.text.run_spacy_pipeline import (
         run_spacy_pipeline,
     )
     from app.preprocessing.pipeline.steps.text.store_document_in_elasticsearch import (
         store_document_in_elasticsearch,
-    )
-    from app.preprocessing.pipeline.steps.text.update_pptd_sdoc_status_to_finish import (
-        update_pptd_sdoc_status_to_finish,
     )
     from app.preprocessing.pipeline.steps.text.write_pptd_to_database import (
         write_pptd_to_database,
@@ -91,7 +94,7 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=generate_word_frequncies,
+        func=generate_word_frequncies_and_keywords,
         required_data=["pptd"],
     )
 
@@ -107,6 +110,11 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     pipeline.register_step(
         func=apply_html_source_mapping_with_custom_html_tags,
+        required_data=["pptd"],
+    )
+
+    pipeline.register_step(
+        func=extract_sdoc_links_from_html_of_mixed_documents,
         required_data=["pptd"],
     )
 
@@ -141,6 +149,12 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
+        resolve_sdoc_links,
+    )
+    from app.preprocessing.pipeline.steps.common.update_sdoc_status_to_finish import (
+        update_sdoc_status_to_finish,
+    )
     from app.preprocessing.pipeline.steps.image.convert_to_webp_and_generate_thumbnail import (
         convert_to_webp_and_generate_thumbnails,
     )
