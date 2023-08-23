@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class SourceDocumentLinkBase(BaseModel):
-    parent_source_document_id: int = Field(
+    parent_source_document_id: Optional[int] = Field(
         description="ID of the parent SourceDocument."
     )
     linked_source_document_filename: str = Field(
@@ -21,6 +21,9 @@ class SourceDocumentLinkCreate(SourceDocumentLinkBase):
 
 class SourceDocumentLinkRead(SourceDocumentLinkBase):
     id: int = Field(description="ID of the SourceDocumentLink")
+    parent_source_document_id: int = Field(
+        description="ID of the parent SourceDocument."
+    )
     linked_source_document_id: int = Field(
         description="ID of the linked SourceDocument."
     )
