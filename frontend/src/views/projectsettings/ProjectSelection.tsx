@@ -40,13 +40,13 @@ function ProjectSelection() {
   return (
     <>
       <Card className="myFlexContainer mh100">
-        <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+        <AppBar position="relative" className="myFlexFitContentContainer">
           <Toolbar variant="dense">
             <Typography variant="h6" color="inherit" component="div">
               Projects
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
-            <Button variant="contained" startIcon={<AddIcon />} component={Link} to="/projectsettings">
+            <Button variant="contained" color="secondary" startIcon={<AddIcon />} component={Link} to="/projectsettings">
               Create
             </Button>
           </Toolbar>
