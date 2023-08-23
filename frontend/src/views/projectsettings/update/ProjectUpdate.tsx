@@ -14,7 +14,7 @@ import ProjectDetails from "./ProjectDetails";
 import ProjectDocuments from "./ProjectDocuments";
 import ProjectTags from "./ProjectTags";
 import ProjectUsers from "./ProjectUsers";
-import ProjectBackgroundTasks from "./ProjectBackgroundTasks";
+import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
 
 function ProjectUpdate() {
   const { user } = useAuth();

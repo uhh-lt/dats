@@ -29,7 +29,7 @@ import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
-import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
+import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
 import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
 
@@ -78,6 +78,7 @@ function ProjectDocuments({ project }: ProjectProps) {
 
   // crawler / url import
   const crawlDialogRef = useRef<CrawlerRunDialogHandle>(null);
+  const contextMenuRef = useRef<ProjectDocumentsContextMenuHandle>(null);
 
   // file upload
   const [waiting, setWaiting] = useState<boolean>(false);
@@ -124,12 +125,10 @@ function ProjectDocuments({ project }: ProjectProps) {
   };
 
   // context menu
-  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = useState<number>();
   const onContextMenu = (sdocId: number) => (event: React.MouseEvent) => {
     event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setContextMenuData(sdocId);
+    if (!contextMenuRef.current) return;
+    contextMenuRef.current.open({ top: event.clientY, left: event.clientX }, project.id, sdocId);
   };
 
   return (
@@ -223,12 +222,7 @@ function ProjectDocuments({ project }: ProjectProps) {
           </List>
         </div>
       )}
-      <ProjectDocumentsContextMenu
-        position={contextMenuPosition}
-        projectId={project.id}
-        sdocId={contextMenuData}
-        handleClose={() => setContextMenuPosition(null)}
-      />
+      <ProjectDocumentsContextMenu ref={contextMenuRef} />
       <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
     </Box>
   );

@@ -1,45 +1,85 @@
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { List, ListItemIcon, ListItemText, MenuItem, Popover, PopoverPosition } from "@mui/material";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import DeleteMenuItem from "../../search/ToolBar/ToolBarElements/DeleteMenuItem";
 
 interface ProjectDocumentsContextMenuProps {
-  position: ContextMenuPosition | null;
-  projectId: number;
-  sdocId: number | undefined;
-  handleClose: () => void;
 }
 
-function ProjectDocumentsContextMenu({ position, projectId, sdocId, handleClose }: ProjectDocumentsContextMenuProps) {
+export interface ProjectDocumentsContextMenuHandle {
+  open: (position: PopoverPosition, projectId: number, sdocId: number | undefined) => void;
+  close: () => void;
+}
+
+
+const ProjectDocumentsContextMenu = forwardRef<ProjectDocumentsContextMenuHandle, ProjectDocumentsContextMenuProps>(({ }, ref) => {
   const navigate = useNavigate();
 
+  // local state
+  const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [projectId, setProjectId] = useState<number>();
+  const [sdocId, setSdocId] = useState<number>();
+
+  // exposed methods (via ref)
+  useImperativeHandle(ref, () => ({
+    open: openContextMenu,
+    close: closeContextMenu,
+  }));
+
+  // methods
+  const openContextMenu = (position: PopoverPosition, projectId: number, sdocId: number | undefined) => {
+    setIsPopoverOpen(true);
+    setPosition(position);
+    setProjectId(projectId);
+    setSdocId(sdocId);
+  };
+
+  const closeContextMenu = () => {
+    setIsPopoverOpen(false);
+  };
+
+  // ui events
+  const onContextMenu = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    event.preventDefault();
+    closeContextMenu();
+  };
+
   const openDocument = () => {
-    handleClose();
+    closeContextMenu();
     navigate(`/project/${projectId}/search/doc/${sdocId}`);
   };
 
   return (
-    <Menu
-      open={position !== null}
-      onClose={handleClose}
-      anchorPosition={position !== null ? { top: position.y, left: position.x } : undefined}
+    <Popover
+      open={isPopoverOpen}
+      onClose={closeContextMenu}
+      anchorPosition={position}
       anchorReference="anchorPosition"
-      onContextMenu={(e) => {
-        e.preventDefault();
-        handleClose();
+      anchorOrigin={{
+        vertical: "top",
+        horizontal: "left",
       }}
-      // PaperProps={{ sx: { width: 240, height: 300 } }}
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "left",
+      }}
+      onContextMenu={onContextMenu}
     >
-      <MenuItem onClick={openDocument}>
-        <ListItemIcon>
-          <PlayCircleIcon fontSize="medium" />
-        </ListItemIcon>
-        <ListItemText>Open document</ListItemText>
-      </MenuItem>
-      <DeleteMenuItem onClick={handleClose} sdocId={sdocId} />
-    </Menu>
+
+      <List>
+        <MenuItem onClick={openDocument}>
+          <ListItemIcon>
+            <PlayCircleIcon fontSize="medium" />
+          </ListItemIcon>
+          <ListItemText>Open document</ListItemText>
+        </MenuItem>
+        <DeleteMenuItem onClick={closeContextMenu} sdocId={sdocId} />
+      </List>
+
+    </Popover>
   );
-}
+});
 
 export default ProjectDocumentsContextMenu;
