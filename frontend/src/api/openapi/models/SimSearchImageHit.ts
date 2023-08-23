@@ -3,12 +3,13 @@
 /* eslint-disable */
 
 export type SimSearchImageHit = {
-  /**
-   * The ID of the SourceDocument similar to the query.
-   */
-  sdoc_id: number;
-  /**
-   * The similarity score.
-   */
-  score: number;
+    /**
+     * The ID of the SourceDocument similar to the query.
+     */
+    sdoc_id: number;
+    /**
+     * The similarity score.
+     */
+    score: number;
 };
+

@@ -3,16 +3,17 @@
 /* eslint-disable */
 
 export type KeywordStat = {
-  /**
-   * The counted keyword.
-   */
-  keyword: string;
-  /**
-   * Number of occurrences of the keyword in the filtered collection
-   */
-  filtered_count: number;
-  /**
-   * Number of occurrences of the keyword in the entire collection
-   */
-  global_count: number;
+    /**
+     * The counted keyword.
+     */
+    keyword: string;
+    /**
+     * Number of occurrences of the keyword in the filtered collection
+     */
+    filtered_count: number;
+    /**
+     * Number of occurrences of the keyword in the entire collection
+     */
+    global_count: number;
 };
+

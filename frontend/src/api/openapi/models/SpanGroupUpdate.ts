@@ -3,8 +3,9 @@
 /* eslint-disable */
 
 export type SpanGroupUpdate = {
-  /**
-   * Name of the SpanGroup
-   */
-  name?: string;
+    /**
+     * Name of the SpanGroup
+     */
+    name?: string;
 };
+
