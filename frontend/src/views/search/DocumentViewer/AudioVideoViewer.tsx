@@ -1,11 +1,11 @@
-import { Box } from "@mui/material";
+import { Box, Tooltip } from "@mui/material";
 import ReactPlayer from "react-player";
 import React, { useMemo, useRef, useState } from "react";
 import { SourceDocumentRead, AnnotationDocumentRead } from "../../../api/openapi";
 import { OnProgressProps } from "react-player/base";
 import SdocHooks from "../../../api/SdocHooks";
 
-interface AudioViewerProps {
+interface AudioVideoViewerProps {
   sdoc: SourceDocumentRead;
   adoc: AnnotationDocumentRead | null;
   showEntities: boolean;
@@ -13,10 +13,11 @@ interface AudioViewerProps {
   height?: number;
 }
 
-function AudioViewer({ sdoc, width, height }: AudioViewerProps) {
+function AudioVideoViewer({ sdoc, width, height }: AudioVideoViewerProps) {
   // local client state
   const [highlightedWordId, setHighlightedWordId] = useState(-1);
-  const audioPlayerRef = useRef<ReactPlayer>(null);
+  const playerRef = useRef<ReactPlayer>(null);
+  const currentHighlightedWordSpanRef = useRef<HTMLSpanElement>(null);
 
   // global server state (react-query)
   const transcriptWords = SdocHooks.useGetWordLevelTranscriptions(sdoc.id);
@@ -29,11 +30,17 @@ function AudioViewer({ sdoc, width, height }: AudioViewerProps) {
     let time = state.playedSeconds * 1000;
     let wordId = transcriptWords.data.findIndex((word) => word.start_ms >= time && time <= word.end_ms);
     setHighlightedWordId(wordId);
+    if (currentHighlightedWordSpanRef.current) {
+      currentHighlightedWordSpanRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
   };
 
   const handleJumpToTimestamp = (timestamp: number, wordId: number) => {
-    if (!audioPlayerRef.current) return;
-    audioPlayerRef.current.seekTo(timestamp / 1000);
+    if (!playerRef.current) return;
+    playerRef.current.seekTo(timestamp / 1000);
     setHighlightedWordId(wordId);
   };
 
@@ -42,13 +49,21 @@ function AudioViewer({ sdoc, width, height }: AudioViewerProps) {
 
     return transcriptWords.data.map((word, index) => {
       return (
-        <span
-          key={index}
-          style={{ color: index === highlightedWordId ? "red" : undefined, cursor: "pointer" }}
-          onClick={() => handleJumpToTimestamp(word.start_ms, index)}
-        >
-          {word.text}{" "}
-        </span>
+        <Tooltip title={`Click to jump to ${(word.start_ms / 1000).toFixed(2)} sec`} key={index}>
+          <span
+            key={index}
+            style={{
+              color: index === highlightedWordId ? "red" : undefined,
+              fontSize: index === highlightedWordId ? "1.5em" : undefined,
+              fontWeight: index === highlightedWordId ? "bold" : undefined,
+              cursor: "pointer"
+            }}
+            onClick={() => handleJumpToTimestamp(word.start_ms, index)}
+            ref={index === highlightedWordId ? currentHighlightedWordSpanRef : undefined}
+          >
+            {word.text}{" "}
+          </span>
+        </Tooltip>
       );
     });
   }, [transcriptWords.data, highlightedWordId]);
@@ -62,13 +77,15 @@ function AudioViewer({ sdoc, width, height }: AudioViewerProps) {
           width={width ?? 640}
           height={height ?? 360}
           onProgress={handleProgress}
-          ref={audioPlayerRef}
+          ref={playerRef}
         />
       </Box>
-      <h3>Transcript:</h3>
-      <div>{transcript}</div>
+      <h3>Automatic Transcription:</h3>
+      <Box sx={{ maxHeight: 200, height: 200, overflowY: "scroll", border: "1px solid grey", borderRadius: 1}} >
+          {transcript}
+      </Box>
     </>
   );
 }
 
-export default AudioViewer;
+export default AudioVideoViewer;
