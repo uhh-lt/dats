@@ -52,10 +52,11 @@ function PreProJobPayloadListItem({ ppj, contextMenuRef }: PreProJobPayloadListI
               )
             }
           </ListItemIcon>
-          <ListItemText
-            primary={<Typography fontStyle="italic">
+          <ListItemText>
+            <Typography variant="body2" color="text.secondary">
               {ppj.filename}
-            </Typography>} />
+            </Typography>
+          </ListItemText>
           {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
         </ListItemButton>
       </Tooltip>

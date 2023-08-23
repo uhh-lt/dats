@@ -70,7 +70,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.WAITING].map((job) => {
-              if ("urls" in job) {
+              if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
               } else if ("payloads" in job) {
                 return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef} />
@@ -89,7 +89,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.RUNNING].map((job) => {
-              if ("urls" in job) {
+              if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
               } else if ("payloads" in job) {
                 return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef}/>
@@ -108,7 +108,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.FINISHED].map((job) => {
-              if ("urls" in job) {
+              if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
               } else if ("payloads" in job) {
                 return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef} />
@@ -127,7 +127,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <Divider />
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.ERRORNEOUS].map((job) => {
-              if ("urls" in job) {
+              if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
               } else if ("payloads" in job) {
                 return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef} />
