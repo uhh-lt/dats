@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ExportJobRead, ExportJobStatus, ExportService } from "./openapi";
+import { ExportJobRead, BackgroundJobStatus, ExportService } from "./openapi";
 import { QueryKey } from "./QueryKey";
 
 const useStartExportJob = () => useMutation(ExportService.startExportJob);
@@ -20,11 +20,11 @@ const useGetExportJob = (exportJobId: string | undefined) => {
         }
         if (data.status) {
           switch (data.status) {
-            case ExportJobStatus.FAILED:
-            case ExportJobStatus.DONE:
+            case BackgroundJobStatus.ERRORNEOUS:
+            case BackgroundJobStatus.FINISHED:
               return false;
-            case ExportJobStatus.INIT:
-            case ExportJobStatus.IN_PROGRESS:
+            case BackgroundJobStatus.WAITING:
+            case BackgroundJobStatus.RUNNING:
               return 1000;
           }
         }

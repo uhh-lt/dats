@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CrawlerJobRead, CrawlerJobStatus, CrawlerService } from "./openapi";
+import { CrawlerJobRead, BackgroundJobStatus, CrawlerService } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
 
@@ -26,11 +26,11 @@ const useGetCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawler
         }
         if (data.status) {
           switch (data.status) {
-            case CrawlerJobStatus.FAILED:
-            case CrawlerJobStatus.DONE:
+            case BackgroundJobStatus.ERRORNEOUS:
+            case BackgroundJobStatus.FINISHED:
               return false;
-            case CrawlerJobStatus.INIT:
-            case CrawlerJobStatus.IN_PROGRESS:
+            case BackgroundJobStatus.WAITING:
+            case BackgroundJobStatus.RUNNING:
               return 1000;
           }
         }
