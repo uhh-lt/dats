@@ -61,7 +61,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         return payloads
 
     def _create_and_store_preprocessing_job(
-        self, proj_id, payloads
+        self, proj_id: int, payloads: List[PreprocessingJobPayload]
     ) -> PreprocessingJobRead:
         create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
         read_dto = self.redis.store_preprocessing_job(preprocessing_job=create_dto)
@@ -140,7 +140,7 @@ class PreprocessingService(metaclass=SingletonMeta):
     def _get_pipeline(self, doc_type: DocType) -> PreprocessingPipeline:
         if doc_type not in self._pipelines:
             self._pipelines[doc_type] = PreprocessingPipeline(
-                doc_type=doc_type, num_workers=1
+                doc_type=doc_type, num_workers=1, force_sequential=True
             )
         return self._pipelines[doc_type]
 

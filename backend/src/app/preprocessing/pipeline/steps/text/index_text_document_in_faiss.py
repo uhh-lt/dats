@@ -34,6 +34,7 @@ def index_text_document_in_faiss(cargo: PipelineCargo) -> PipelineCargo:
 
     # assume that all PPTDs come from the same project!
     pptd: PreProTextDoc = cargo.data["pptd"]
+    sdoc_id = cargo.data["sdoc_id"]
     proj_id = pptd.project_id
 
     # create the links between sdoc sentences (that are stored in ES)
@@ -45,7 +46,7 @@ def index_text_document_in_faiss(cargo: PipelineCargo) -> PipelineCargo:
             sentences.append(sentence.text)
             links.append(
                 FaissSentenceSourceDocumentLinkCreate(
-                    source_document_id=pptd.sdoc_id, sentence_id=sentence_id
+                    source_document_id=sdoc_id, sentence_id=sentence_id
                 )
             )
 
@@ -87,6 +88,6 @@ def index_text_document_in_faiss(cargo: PipelineCargo) -> PipelineCargo:
             index_type=IndexType.TEXT,
         )
     else:
-        logger.debug(f"No sentences to encode and add to the faiss index!")
+        logger.debug("No sentences to encode and add to the faiss index!")
 
     return cargo

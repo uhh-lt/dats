@@ -28,7 +28,6 @@ def _create_and_persist_sdoc(db: Session, ppad: PreProAudioDoc) -> SourceDocumen
     )
     # persist SourceDocument
     sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
-    ppad.sdoc_id = sdoc_db_obj.id
 
     return sdoc_db_obj
 
@@ -36,6 +35,7 @@ def _create_and_persist_sdoc(db: Session, ppad: PreProAudioDoc) -> SourceDocumen
 def _persist_sdoc_metadata(
     db: Session, sdoc_db_obj: SourceDocumentORM, ppad: PreProAudioDoc
 ) -> None:
+    logger.info(f"Persisting SourceDocumentMetadata for {ppad.filename}...")
     sdoc_id = sdoc_db_obj.id
     filename = sdoc_db_obj.filename
     sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
@@ -64,7 +64,7 @@ def _persist_sdoc_metadata(
         SourceDocumentMetadataCreate(
             key="word_level_transcriptions",
             value=json.dumps(wlt),
-            source_document_id=ppad.sdoc_id,
+            source_document_id=sdoc_id,
             read_only=True,
         )
     )
@@ -82,15 +82,17 @@ def _persist_sdoc_metadata(
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
 
-def _create_adoc_for_system_user(
-    db: Session, ppad: PreProAudioDoc
-) -> AnnotationDocumentORM:
+def _create_adoc_for_system_user(db: Session, sdoc_db_obj: SourceDocumentORM) -> None:
+    logger.info(
+        f"Creating AnnotationDocument for system user for {sdoc_db_obj.filename}..."
+    )
+    sdoc_id = sdoc_db_obj.id
     adoc_db = crud_adoc.read_by_sdoc_and_user(
-        db=db, sdoc_id=ppad.sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
+        db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
     )
     if not adoc_db:
         adoc_create = AnnotationDocumentCreate(
-            source_document_id=ppad.sdoc_id, user_id=SYSTEM_USER_ID
+            source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
         )
         adoc_db = crud_adoc.create(db=db, create_dto=adoc_create)
     return adoc_db
@@ -108,7 +110,7 @@ def write_ppad_to_database(cargo: PipelineCargo) -> PipelineCargo:
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, ppad=ppad)
 
             # create AnnotationDocument for system user
-            _create_adoc_for_system_user(db=db, ppad=ppad)
+            _create_adoc_for_system_user(db=db, sdoc_db_obj=sdoc_db_obj)
 
         except Exception as e:
             logger.error(
@@ -126,5 +128,5 @@ def write_ppad_to_database(cargo: PipelineCargo) -> PipelineCargo:
                 f"Persisted PreprocessingPipeline Results " f"for {ppad.filename}!"
             )
 
-            ppad.sdoc_id = sdoc_db_obj.id
+            cargo.data["sdoc_id"] = sdoc_db_obj.id
     return cargo

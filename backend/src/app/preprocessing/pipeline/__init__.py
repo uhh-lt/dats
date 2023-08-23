@@ -117,22 +117,21 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     pipeline.register_step(
         func=resolve_sdoc_links,
-        required_data=["pptd"],
     )
 
     pipeline.register_step(
         func=store_document_in_elasticsearch,
-        required_data=["pptd"],
+        required_data=["pptd", "sdoc_id"],
     )
 
     pipeline.register_step(
         func=index_text_document_in_faiss,
-        required_data=["pptd"],
+        required_data=["pptd", "sdoc_id"],
     )
 
     pipeline.register_step(
-        func=update_pptd_sdoc_status_to_finish,
-        required_data=["pptd"],
+        func=update_sdoc_status_to_finish,
+        required_data=["pptd", "sdoc_id"],
     )
 
     pipeline.freeze()
@@ -213,7 +212,7 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     pipeline.register_step(
         func=create_pptd_from_caption,
-        required_data=["ppid"],
+        required_data=["ppid", "sdoc_id"],
     )
 
     # run caption through spacy and add to elasticsearch to make it searchable
@@ -234,12 +233,16 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     pipeline.register_step(
         func=store_document_in_elasticsearch,
-        required_data=["pptd"],
+        required_data=["pptd", "sdoc_id"],
     )
 
     pipeline.register_step(
-        func=update_ppid_sdoc_status_to_finish,
-        required_data=["ppid"],
+        func=resolve_sdoc_links,
+    )
+
+    pipeline.register_step(
+        func=update_sdoc_status_to_finish,
+        required_data=["sdoc_id"],
     )
 
     pipeline.freeze()

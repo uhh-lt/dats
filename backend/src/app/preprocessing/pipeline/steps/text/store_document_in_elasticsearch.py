@@ -13,6 +13,7 @@ es = ElasticSearchService()
 
 def store_document_in_elasticsearch(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
+    sdoc_id = cargo.data["sdoc_id"]
     # Flo: we assume that every pptd originates from the same project!
     proj_id = pptd.project_id
 
@@ -30,7 +31,7 @@ def store_document_in_elasticsearch(cargo: PipelineCargo) -> PipelineCargo:
             ElasticSearchIntegerRange(gte=s.start, lt=s.end) for s in pptd.sentences
         ],
         keywords=pptd.keywords,
-        sdoc_id=pptd.sdoc_id,
+        sdoc_id=sdoc_id,
         project_id=pptd.project_id,
     )
 
