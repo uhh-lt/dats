@@ -6,7 +6,7 @@
 
 from app.core.data.crawler.crawled_item import CrawledItem
 from app.preprocessing.pipeline.steps.text.clean_html import (
-     cleaning_with_readability_pipeline
+    cleaning_with_readability_pipeline,
 )
 
 

@@ -9,7 +9,9 @@ from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
-import_uploaded_archive_task = "app.celery.background_jobs.tasks.import_uploaded_archive"
+import_uploaded_archive_task = (
+    "app.celery.background_jobs.tasks.import_uploaded_archive"
+)
 start_export_job_task = "app.celery.background_jobs.tasks.start_export_job"
 start_crawler_job_task = "app.celery.background_jobs.tasks.start_crawler_job"
 
