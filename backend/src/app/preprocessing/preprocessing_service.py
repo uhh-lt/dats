@@ -1,7 +1,10 @@
+from pathlib import Path
 from typing import Dict, List, Optional
 
+import magic
 from fastapi import HTTPException, UploadFile
 from loguru import logger
+from tqdm import tqdm
 
 from app.celery.background_jobs import (
     execute_audio_preprocessing_pipeline_apply_async,
@@ -16,7 +19,11 @@ from app.core.data.dto.preprocessing_job import (
     PreprocessingJobPayload,
     PreprocessingJobRead,
 )
-from app.core.data.repo.repo_service import RepoService
+from app.core.data.repo.repo_service import (
+    FileNotFoundInRepositoryError,
+    RepoService,
+    UnsupportedDocTypeForSourceDocument,
+)
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -60,6 +67,45 @@ class PreprocessingService(metaclass=SingletonMeta):
             )
         return payloads
 
+    def _extract_archive_and_create_payloads(
+        self, project_id: int, archive_file_path: Path
+    ) -> List[PreprocessingJobPayload]:
+        # store and extract the archive
+        file_dsts: List[Path] = self.repo.extract_archive_in_project(
+            proj_id=project_id, archive_path=archive_file_path
+        )
+        payloads: List[PreprocessingJobPayload] = []
+
+        for file_path in tqdm(
+            file_dsts,
+            total=len(file_dsts),
+            desc=f"Processing files in archive {archive_file_path}... ",
+        ):
+            try:
+                mime_type = magic.from_file(file_path, mime=True)
+                doc_type = get_doc_type(mime_type=mime_type)
+
+                payloads.append(
+                    PreprocessingJobPayload(
+                        project_id=project_id,
+                        filename=file_path.name,
+                        mime_type=mime_type,
+                        doc_type=doc_type,
+                    )
+                )
+
+            except (
+                FileNotFoundInRepositoryError,
+                UnsupportedDocTypeForSourceDocument,
+                Exception,
+            ) as e:
+                logger.warning(
+                    f"Skipping import of file {file_path.name} because:\n {e}!"
+                )
+                continue
+
+        return payloads
+
     def _create_and_store_preprocessing_job(
         self, proj_id: int, payloads: List[PreprocessingJobPayload]
     ) -> PreprocessingJobRead:
@@ -96,12 +142,16 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
         return cargos
 
-    def prepare_and_start_preprocessing_job_async(
-        self, proj_id: int, uploaded_files: List[UploadFile]
+    def create_and_start_preprocessing_job_from_payloads_async(
+        self, payloads: List[PreprocessingJobPayload]
     ) -> Optional[PreprocessingJobRead]:
-        payloads = self._store_uploaded_files_and_create_payloads(
-            proj_id=proj_id, uploaded_files=uploaded_files
-        )
+        if len(payloads) == 0:
+            return None
+
+        proj_id = payloads[0].project_id
+        if not all([proj_id == p.project_id for p in payloads]):
+            raise ValueError("All payloads must have the same project_id!")
+
         ppj = self._create_and_store_preprocessing_job(proj_id, payloads)
 
         cargos = self._create_pipeline_cargos_from_preprocessing_job(ppj=ppj)
@@ -136,6 +186,34 @@ class PreprocessingService(metaclass=SingletonMeta):
         )
 
         return ppj
+
+    def prepare_and_start_preprocessing_job_async(
+        self,
+        *,
+        proj_id: int,
+        uploaded_files: Optional[List[UploadFile]] = None,
+        archive_file_path: Optional[Path] = None,
+    ) -> Optional[PreprocessingJobRead]:
+        if uploaded_files is not None and archive_file_path is not None:
+            raise ValueError(
+                "Either uploaded_files or archive_file_path must be specified, but not both!"
+            )
+        elif uploaded_files is not None:
+            payloads = self._store_uploaded_files_and_create_payloads(
+                proj_id=proj_id, uploaded_files=uploaded_files
+            )
+        elif archive_file_path is not None:
+            payloads = self._extract_archive_and_create_payloads(
+                project_id=proj_id, archive_file_path=archive_file_path
+            )
+        else:
+            raise ValueError(
+                "Either uploaded_files or archive_file_path must be specified!"
+            )
+
+        return self.create_and_start_preprocessing_job_from_payloads_async(
+            payloads=payloads
+        )
 
     def _get_pipeline(self, doc_type: DocType) -> PreprocessingPipeline:
         if doc_type not in self._pipelines:
