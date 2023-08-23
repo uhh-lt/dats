@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple
 from pydantic import Field
 from spacy.tokens import Doc
 
+from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 
@@ -23,6 +24,7 @@ class PreProTextDoc(PreProDocBase):
     word_freqs: Dict[str, int] = Field(default_factory=dict)
     spans: Dict[str, List[AutoSpan]] = Field(default_factory=dict)
     sentences: List[AutoSpan] = Field(default_factory=list)
+    sdoc_link_create_dtos: List[SourceDocumentLinkCreate] = Field(default_factory=list)
 
     class Config:
         arbitrary_types_allowed = True

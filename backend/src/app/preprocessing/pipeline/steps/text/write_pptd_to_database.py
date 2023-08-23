@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
@@ -83,6 +84,18 @@ def _persist_sdoc_metadata(
         )
 
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
+
+
+def _persist_sdoc_links(
+    db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
+) -> None:
+    logger.info(f"Persisting SourceDocument Links for {pptd.filename}...")
+    # we have to set the parent source document id for the links
+    sdoc_id = sdoc_db_obj.id
+    for link_create_dto in pptd.sdoc_link_create_dtos:
+        link_create_dto.parent_source_document_id = sdoc_id
+
+    crud_sdoc_link.create_multi(db=db, create_dtos=pptd.sdoc_link_create_dtos)
 
 
 def _create_adoc_for_system_user(
@@ -163,6 +176,9 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
 
             # persist SourceDocument Metadata
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
+
+            # persist SourceDocument Links
+            _persist_sdoc_links(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
             # create AnnotationDocument for system user
             adoc_db_obj = _create_adoc_for_system_user(

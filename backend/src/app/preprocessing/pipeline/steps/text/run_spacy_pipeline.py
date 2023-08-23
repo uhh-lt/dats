@@ -10,12 +10,23 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from config import conf
 
+DEVICE = conf.docprepro.text.spacy.device
+
 
 @lru_cache(maxsize=1)
 def __load_spacy_models() -> Dict[str, Language]:
     logger.debug("Loading spaCy Models...")
 
-    if str(conf.docprepro.text.spacy.device).startswith("cuda"):
+    if str(DEVICE).startswith("cuda"):
+        import torch
+
+        if torch.cuda.is_available():
+            device_id = (
+                int(str(DEVICE).split(":")[1])
+                if len(DEVICE) > 4 and ":" in DEVICE
+                else 0
+            )
+            spacy.require_gpu(gpu_id=device_id)
         spacy.prefer_gpu()
 
     nlp: Dict[str, Language] = dict()
