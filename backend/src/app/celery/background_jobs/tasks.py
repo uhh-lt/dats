@@ -3,10 +3,10 @@ from typing import List, Tuple
 
 from app.core.data.dto.crawler_job import CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobRead
-from app.docprepro.celery.celery_worker import celery_worker
-from app.docprepro.heavy_jobs.crawl import start_crawler_job_
-from app.docprepro.heavy_jobs.export import start_export_job_
-from app.docprepro.heavy_jobs.preprocess import (
+from app.celery.celery_worker import celery_worker
+from app.celery.background_jobs.crawl import start_crawler_job_
+from app.celery.background_jobs.export import start_export_job_
+from app.celery.background_jobs.preprocess import (
     execute_audio_preprocessing_pipeline_,
     execute_image_preprocessing_pipeline_,
     execute_text_preprocessing_pipeline_,
@@ -14,7 +14,6 @@ from app.docprepro.heavy_jobs.preprocess import (
     import_uploaded_archive_,
 )
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-
 
 @celery_worker.task(acks_late=True)
 def start_export_job(export_job: ExportJobRead) -> None:

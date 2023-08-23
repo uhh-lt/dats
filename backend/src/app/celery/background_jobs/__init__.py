@@ -10,21 +10,21 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
 
-import_uploaded_archive_task = "app.docprepro.heavy_jobs.tasks.import_uploaded_archive"
-start_export_job_task = "app.docprepro.heavy_jobs.tasks.start_export_job"
-start_crawler_job_task = "app.docprepro.heavy_jobs.tasks.start_crawler_job"
+import_uploaded_archive_task = "app.celery.background_jobs.tasks.import_uploaded_archive"
+start_export_job_task = "app.celery.background_jobs.tasks.start_export_job"
+start_crawler_job_task = "app.celery.background_jobs.tasks.start_crawler_job"
 
 execute_text_preprocessing_pipeline_task = (
-    "app.docprepro.heavy_jobs.tasks.execute_text_preprocessing_pipeline_task"
+    "app.celery.background_jobs.tasks.execute_text_preprocessing_pipeline_task"
 )
 execute_image_preprocessing_pipeline_task = (
-    "app.docprepro.heavy_jobs.tasks.execute_image_preprocessing_pipeline_task"
+    "app.celery.background_jobs.tasks.execute_image_preprocessing_pipeline_task"
 )
 execute_audio_preprocessing_pipeline_task = (
-    "app.docprepro.heavy_jobs.tasks.execute_audio_preprocessing_pipeline_task"
+    "app.celery.background_jobs.tasks.execute_audio_preprocessing_pipeline_task"
 )
 execute_video_preprocessing_pipeline_task = (
-    "app.docprepro.heavy_jobs.tasks.execute_video_preprocessing_pipeline_task"
+    "app.celery.background_jobs.tasks.execute_video_preprocessing_pipeline_task"
 )
 
 

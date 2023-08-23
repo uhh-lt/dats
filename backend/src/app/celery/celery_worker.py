@@ -18,16 +18,12 @@ class CeleryConfig:
 
     # https://docs.celeryq.dev/en/stable/userguide/routing.html
     task_routes = {
-        "app.docprepro.audio.preprocess.*": {"queue": "audioQ"},
-        "app.docprepro.text.preprocess.*": {"queue": "textQ"},
-        "app.docprepro.video.preprocess.*": {"queue": "videoQ"},
-        "app.docprepro.image.preprocess.*": {"queue": "imageQ"},
-        "app.docprepro.heavy_jobs.tasks.*": {"queue": "heavyjobsQ"},
+        "app.celery.background_jobs.tasks.*": {"queue": "bgJobsQ"},
         "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"},
     }
 
-    def to_dict(self) -> Dict:
-        d = {}
+    def to_dict(self) -> Dict[str, str]:
+        d: Dict[str, str] = {}
         for attr in dir(self):
             value = getattr(self, attr)
             if not attr.startswith("__") and not inspect.ismethod(value):
@@ -36,7 +32,7 @@ class CeleryConfig:
 
 
 # Flo: Setup the celery worker with Redis backend (for results) and RabbitMQ broker (for message passing)
-celery_worker = Celery(
+celery_worker: Celery = Celery(
     "celery_worker",
     backend=f"redis://:{cc.backend.password}@{cc.backend.host}:{cc.backend.port}/{cc.backend.db}",
     broker=f"amqp://{cc.broker.user}:{cc.broker.password}@{cc.broker.host}:{cc.broker.port}//",

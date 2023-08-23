@@ -10,14 +10,6 @@ from app.core.data.repo.repo_service import (
 )
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
-from app.docprepro.audio import audio_document_preprocessing_without_import_apply_async
-from app.docprepro.audio.import_audio_document import import_audio_document_
-from app.docprepro.image import image_document_preprocessing_without_import_apply_async
-from app.docprepro.image.import_image_document import import_image_document_
-from app.docprepro.text import text_document_preprocessing_without_import_apply_async
-from app.docprepro.text.import_text_document import import_text_document_
-from app.docprepro.video import video_document_preprocessing_without_import_apply_async
-from app.docprepro.video.import_video_document import import_video_document_
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.preprocessing_service import PreprocessingService
 from config import conf
@@ -31,6 +23,7 @@ prepro: PreprocessingService = PreprocessingService()
 
 
 def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
+    raise NotImplementedError
     # store and extract the archive
     file_dsts = repo.extract_archive_in_project(
         proj_id=project_id, archive_path=archive_file_path
