@@ -282,11 +282,14 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.audio.generate_webp_thumbnail_for_audio import (
         generate_webp_thumbnail_for_audio,
     )
-    from app.preprocessing.pipeline.steps.audio.update_ppad_sdoc_status_to_finish import (
-        update_ppad_sdoc_status_to_finish,
-    )
     from app.preprocessing.pipeline.steps.audio.write_ppad_to_database import (
         write_ppad_to_database,
+    )
+    from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
+        resolve_sdoc_links,
+    )
+    from app.preprocessing.pipeline.steps.common.update_sdoc_status_to_finish import (
+        update_sdoc_status_to_finish,
     )
 
     text_pipeline = build_text_pipeline()
@@ -329,7 +332,10 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         required_data=["ppad"],
     )
 
-    pipeline.join_pipeline(pipeline=text_pipeline, skip_steps_with_name=["create_pptd"])
+    pipeline.join_pipeline(
+        pipeline=text_pipeline,
+        skip_steps_with_name=["create_pptd"],
+    )
 
     pipeline.register_step(
         func=write_ppad_to_database,
@@ -337,8 +343,12 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=update_ppad_sdoc_status_to_finish,
-        required_data=["ppad"],
+        func=resolve_sdoc_links,
+    )
+
+    pipeline.register_step(
+        func=update_sdoc_status_to_finish,
+        required_data=["sdoc_id"],
     )
 
     pipeline.freeze()
@@ -348,6 +358,15 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
+        resolve_sdoc_links,
+    )
+    from app.preprocessing.pipeline.steps.common.update_sdoc_status_to_finish import (
+        update_sdoc_status_to_finish,
+    )
+    from app.preprocessing.pipeline.steps.video.add_word_level_transcriptions_to_ppvd_metadata import (
+        add_word_level_transcriptions_to_ppvd_metadata,
+    )
     from app.preprocessing.pipeline.steps.video.create_and_store_audio_stream_file import (
         create_and_store_audio_stream_file,
     )
