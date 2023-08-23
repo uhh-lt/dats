@@ -15,7 +15,7 @@ find_similar_images = "app.docprepro.simsearch.preprocess.find_similar_images"
 find_similar_sentences = "app.docprepro.simsearch.preprocess.find_similar_sentences"
 find_similar_sentences_with_embedding_with_threshold = "app.docprepro.simsearch.preprocess.find_similar_sentences_with_embedding_with_threshold"
 
-from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
 def index_text_documents_apply_async(pptds: List[PreProTextDoc]) -> Any:

@@ -5,6 +5,7 @@ from loguru import logger
 from scrapy.crawler import CrawlerProcess
 from twisted.internet import asyncioreactor
 
+from app.core.data.dto.crawler_job import CrawlerJobRead
 from app.core.data.repo.repo_service import RepoService
 
 asyncioreactor.install()
