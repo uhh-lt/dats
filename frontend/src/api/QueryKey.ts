@@ -154,7 +154,7 @@ export const QueryKey = {
 
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",
-  
+
   // preprojob (by prepro job id)
   PREPRO_JOB: "preProJob",
 
