@@ -1,5 +1,4 @@
 import scrapy
-
 from crawler.spiders.spider_base import SpiderBase
 from crawler.spiders.utils import slugify
 
@@ -16,7 +15,6 @@ class IncelsisSpider(SpiderBase):
         ]
 
     def parse(self, response, **kwargs):
-
         # if on the discussions page
         if response.url.startswith(
             "https://incels.is/forums/inceldom-discussion.2/page-"
@@ -61,7 +59,7 @@ class IncelsisSpider(SpiderBase):
             self.write_raw_response(response=response, filename=filename)
 
             # apply pipeline, but use the extracted html instead of raw_html and use custom filename
-            item = self.init_incel_item(response=response, html=html, filename=filename)
+            item = self.init_item(response=response, html=html, filename=filename)
             if title:
                 item["title"] = title
             yield item

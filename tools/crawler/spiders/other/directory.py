@@ -36,5 +36,5 @@ class DirectorySpider(SpiderBase):
 
     def parse(self, response, **kwargs):
         # apply pipeline
-        item = self.init_incel_item(response=response)
+        item = self.init_item(response=response)
         yield item

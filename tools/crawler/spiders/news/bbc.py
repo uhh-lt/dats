@@ -1,5 +1,4 @@
 import scrapy
-
 from crawler.spiders.spider_base import SpiderBase
 
 
@@ -52,5 +51,5 @@ class BBCSpider(SpiderBase):
         # if in a news article
         else:
             # apply pipeline
-            item = self.init_incel_item(response=response)
+            item = self.init_item(response=response)
             yield item

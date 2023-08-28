@@ -1,10 +1,11 @@
 import json
 from pathlib import Path
-from crawler.items import IncelItem
+
+from crawler.items import GenericWebsiteItem
 
 
 class WritePipeline:
-    def process_item(self, item: IncelItem, spider):
+    def process_item(self, item: GenericWebsiteItem, spider):
         # define relevant directories
         output_dir = Path(item["output_dir"])
         html_output_dir = output_dir / "html"

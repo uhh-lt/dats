@@ -5,7 +5,7 @@
 
 
 # useful for handling different item types with a single interface
-from crawler.items import IncelItem
+from crawler.items import GenericWebsiteItem
 from readability.readability import Readability
 
 
@@ -13,7 +13,7 @@ class ReadabilityPipeline:
     def __init__(self):
         self.readability = Readability(port=6667)
 
-    def process_item(self, item: IncelItem, spider):
+    def process_item(self, item: GenericWebsiteItem, spider):
         info = self.readability.parse(item["html"], item["url"])
         item["title"] = item["title"] if "title" in item else info["title"]
         item["html"] = info["content"]  # cleaned html

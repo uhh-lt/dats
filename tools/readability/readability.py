@@ -1,8 +1,9 @@
+import shlex
+import subprocess
 from time import sleep
 from typing import TypedDict
+
 import requests
-import subprocess
-import shlex
 
 
 class ReadabilityOutput(TypedDict):

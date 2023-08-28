@@ -1,7 +1,6 @@
 import re
 
 import scrapy
-
 from crawler.spiders.spider_base import SpiderBase
 from crawler.spiders.utils import slugify
 
@@ -62,7 +61,7 @@ class UnbruttoforumSpider(SpiderBase):
         self.write_raw_response(response=response, filename=filename)
 
         # apply pipeline, but use the extracted html instead of raw_html and use custom filename
-        item = self.init_incel_item(response=response, html=html, filename=filename)
+        item = self.init_item(response=response, html=html, filename=filename)
         if title:
             item["title"] = title
         yield item

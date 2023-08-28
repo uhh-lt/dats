@@ -4,16 +4,17 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 
+import html
+import re
+
 # useful for handling different item types with a single interface
 import lxml.html.clean as clean
-from crawler.items import IncelItem
-import re
-import html
 import magic
+from crawler.items import GenericWebsiteItem
 
 
 class HTMLCleanPipeline:
-    def process_item(self, item: IncelItem, spider):
+    def process_item(self, item: GenericWebsiteItem, spider):
         html_content = item["html"]
 
         # use cleaner to only include relevant attributes and to remove unwanted tags

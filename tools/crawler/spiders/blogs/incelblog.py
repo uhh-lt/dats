@@ -1,5 +1,4 @@
 import scrapy
-
 from crawler.spiders.spider_base import SpiderBase
 
 
@@ -35,5 +34,5 @@ class IncelblogSpider(SpiderBase):
             self.write_raw_response(response=response)
 
             # apply pipeline
-            item = self.init_incel_item(response=response)
+            item = self.init_item(response=response)
             yield item

@@ -1,5 +1,4 @@
 import scrapy
-
 from crawler.spiders.spider_base import SpiderBase
 
 
@@ -22,7 +21,6 @@ class TagesschauSpider(SpiderBase):
         super().__init__(*args, **kwargs)
 
     def parse(self, response, **kwargs):
-
         # if on the overview page
         if response.url in self.start_urls:
             # get a list of all links
@@ -36,5 +34,5 @@ class TagesschauSpider(SpiderBase):
         # if in a news article
         else:
             # apply pipeline
-            item = self.init_incel_item(response=response)
+            item = self.init_item(response=response)
             yield item

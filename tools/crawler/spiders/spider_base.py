@@ -2,13 +2,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import scrapy
-
-from crawler.items import IncelItem
+from crawler.items import GenericWebsiteItem
 from crawler.spiders.utils import slugify, validate_output_dir
 
 
 class SpiderBase(scrapy.Spider):
-
     # provide arguments using the -a option
     def __init__(self, output_dir=None, prefix="", *args, **kwargs):
         super(SpiderBase, self).__init__(*args, **kwargs)
@@ -36,8 +34,10 @@ class SpiderBase(scrapy.Spider):
                 f2.write(response.body)
         self.log(f"Saved raw html {filename_with_extension}")
 
-    def init_incel_item(self, response, html=None, filename=None) -> IncelItem:
-        item = IncelItem()
+    def init_item(
+        self, response, html=None, filename=None, **kwargs
+    ) -> GenericWebsiteItem:
+        item = GenericWebsiteItem()
         item["url"] = response.url
         item["file_name"] = (
             filename if filename else self.generate_filename(response=response)
@@ -51,6 +51,11 @@ class SpiderBase(scrapy.Spider):
         item["extracted_html"] = html if html else ""
         item["html"] = html if html else item["raw_html"]
         item["output_dir"] = str(self.output_dir)
+
+        for key, value in kwargs.items():
+            if key in item:
+                item[key] = value
+
         return item
 
     def parse(self, response, **kwargs):

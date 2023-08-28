@@ -1,9 +1,9 @@
+from crawler.items import GenericWebsiteItem
 from scrapy import Selector
-from crawler.items import IncelItem
 
 
 class ReplaceImagePipeline:
-    def process_item(self, item: IncelItem, spider):
+    def process_item(self, item: GenericWebsiteItem, spider):
         html = item["html"]
         image_names = item["image_names"]  # either str or False if the download failed
         image_urls = item["image_urls"]  # download links of images

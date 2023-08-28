@@ -1,10 +1,11 @@
-from scrapy import Selector
-from crawler.items import IncelItem
 from urllib.parse import urlparse
+
+from crawler.items import GenericWebsiteItem
+from scrapy import Selector
 
 
 class ExtractImagePipeline:
-    def process_item(self, item: IncelItem, spider):
+    def process_item(self, item: GenericWebsiteItem, spider):
         html = item["html"]
 
         # select all image sources
@@ -21,11 +22,15 @@ class ExtractImagePipeline:
             # relative url starting with / -> prepend base url
             elif parsed_image_url.scheme == "" and parsed_image_url.netloc == "":
                 parsed_base_url = urlparse(item["url"])
-                image_urls.append(f"{parsed_base_url.scheme}://{parsed_base_url.netloc}{parsed_image_url.path}")
+                image_urls.append(
+                    f"{parsed_base_url.scheme}://{parsed_base_url.netloc}{parsed_image_url.path}"
+                )
             # relative url starting with // -> prepend base scheme
             elif parsed_image_url.scheme == "":
                 parsed_base_url = urlparse(item["url"])
-                image_urls.append(f"{parsed_base_url.scheme}://{parsed_image_url.netloc}{parsed_image_url.path}")
+                image_urls.append(
+                    f"{parsed_base_url.scheme}://{parsed_image_url.netloc}{parsed_image_url.path}"
+                )
 
         item["image_urls"] = image_urls
         return item

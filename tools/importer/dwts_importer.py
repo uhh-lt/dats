@@ -5,7 +5,6 @@ from time import sleep
 from typing import List, Tuple
 
 import magic
-
 from dwts_api import DWTSAPI
 
 parser = argparse.ArgumentParser(description="DWTS file importer")
