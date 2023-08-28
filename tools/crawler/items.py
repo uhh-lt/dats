@@ -6,7 +6,7 @@
 import scrapy
 
 
-class IncelItem(scrapy.Item):
+class GenericWebsiteItem(scrapy.Item):
     raw_html = scrapy.Field()
     extracted_html = scrapy.Field()
 
@@ -24,6 +24,11 @@ class IncelItem(scrapy.Item):
     html = scrapy.Field()
     text = scrapy.Field()
     title = scrapy.Field()
+
+    # meta data
+    visited_date = scrapy.Field()
+    published_date = scrapy.Field()
+    author = scrapy.Field()
 
     def __repr__(self):
         """only print out interesting data after exiting the Pipeline"""
