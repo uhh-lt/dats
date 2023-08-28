@@ -33,7 +33,7 @@ docprepro:
   image:
     object_detection:
       model: "facebook/detr-resnet-101"
-      confidence_threshold: 0.3
+      confidence_threshold: 0.75
       device: cpu
     image_captioning:
       model: "nlpconnect/vit-gpt2-image-captioning"
