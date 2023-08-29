@@ -2,6 +2,7 @@ import datetime
 from typing import List
 
 import scrapy
+from crawler.items import GenericWebsiteItem
 from crawler.spiders.spider_base import SpiderBase
 from crawler.spiders.utils import slugify
 
@@ -75,7 +76,7 @@ class NewsSearchResultsSpiderBase(SpiderBase):
     def _get_published_date(self, response) -> str:
         raise NotImplementedError
 
-    def _parse_article(self, response):
+    def _parse_article(self, response) -> GenericWebsiteItem:
         article_title = self._get_article_title(response)
         author = self._get_article_author(response)
         published_date = self._get_published_date(response)
