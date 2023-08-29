@@ -11,13 +11,13 @@ class ZeitSearchResultsSpider(NewsSearchResultsSpiderBase):
 
     def _build_current_search_results_url(self, results_page: int) -> str:
         search_terms_parameter = "+".join(self.search_terms)
-        url_no_page = f"https://www.zeit.de/suche/index?q={search_terms_parameter}"
+        url = f"https://www.zeit.de/suche/index?q={search_terms_parameter}"
 
         if results_page > 1:
             # Zeit removes the page parameter if it is 1
-            return url_no_page + f"&p={results_page}"
+            url += f"&p={results_page}"
 
-        return url_no_page
+        return url
 
     def _get_num_result_pages(self, response) -> int:
         return int(response.css("ul.pager__pages > li:last-child ::text").get())
