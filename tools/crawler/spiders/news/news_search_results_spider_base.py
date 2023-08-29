@@ -123,6 +123,7 @@ class NewsSearchResultsSpiderBase(SpiderBase):
                     next_page_url,
                     callback=self.parse,
                     cookies=self.cookies,
+                    meta={"playwright": True} if self.use_playwright else None,
                 )
 
         # if on a search results page
@@ -136,6 +137,7 @@ class NewsSearchResultsSpiderBase(SpiderBase):
                     url,
                     callback=self.parse,
                     cookies=self.cookies,
+                    meta={"playwright": True} if self.use_playwright else None,
                 )
 
         # if on an article page
