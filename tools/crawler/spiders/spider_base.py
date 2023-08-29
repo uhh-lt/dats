@@ -1,25 +1,31 @@
 from pathlib import Path
+from typing import Dict, Optional
 from urllib.parse import urlparse
 
 import scrapy
 from crawler.items import GenericWebsiteItem
 from crawler.spiders.utils import slugify, validate_output_dir
+from scrapy.http import Response
 
 
 class SpiderBase(scrapy.Spider):
     # provide arguments using the -a option
-    def __init__(self, output_dir=None, prefix="", *args, **kwargs):
+    def __init__(
+        self, output_dir: Optional[str] = None, prefix: str = "", *args, **kwargs
+    ):
         super(SpiderBase, self).__init__(*args, **kwargs)
         self.prefix = prefix
         self.output_dir = validate_output_dir(output_dir)
 
-    def generate_filename(self, response) -> str:
+    def generate_filename(self, response: Response) -> str:
         parsed_url = urlparse(response.url)
         article_slug = Path(parsed_url.path).stem
         filename = slugify(f"{self.prefix}-{article_slug}")
         return filename
 
-    def write_raw_response(self, response, filename=None):
+    def write_raw_response(
+        self, response: Response, filename: Optional[str] = None
+    ) -> None:
         if not filename:
             filename = self.generate_filename(response=response)
 
@@ -34,10 +40,21 @@ class SpiderBase(scrapy.Spider):
                 f2.write(response.body)
         self.log(f"Saved raw html {filename_with_extension}")
 
+    def create_cookies_dict(cookie: str) -> Dict[str, str]:
+        if cookie.startswith("Cookie: "):
+            cookie = cookie[8:]
+        cookies = cookie.replace(" ", "").split(";")
+        return dict([c.split("=") for c in cookies])
+
     def init_item(
-        self, response, html=None, filename=None, **kwargs
+        self,
+        response: Response,
+        html: str,
+        filename: Optional[str] = None,
+        **kwargs,
     ) -> GenericWebsiteItem:
         item = GenericWebsiteItem()
+
         item["url"] = response.url
         item["file_name"] = (
             filename if filename else self.generate_filename(response=response)

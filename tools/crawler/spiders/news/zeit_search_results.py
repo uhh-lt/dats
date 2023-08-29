@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Optional
 
 import scrapy
 from crawler.spiders.spider_base import SpiderBase
@@ -11,7 +11,14 @@ class ZeitSearchResultsSpider(SpiderBase):
     name = "ZeitSearchResults"
 
     # provide arguments using the -a option
-    def __init__(self, search_terms_csv: str, max_pages: int = 3, *args, **kwargs):
+    def __init__(
+        self,
+        search_terms_csv: str,
+        max_pages: int = 3,
+        cookies: Optional[str] = None,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         if search_terms_csv == "":
             print("search_terms_csv not provided!")
