@@ -16,6 +16,8 @@ from crawler.items import GenericWebsiteItem
 class HTMLCleanPipeline:
     def process_item(self, item: GenericWebsiteItem, spider):
         html_content = item["html"]
+        if html_content is None or len(html_content) == 0:
+            return item
 
         # use cleaner to only include relevant attributes and to remove unwanted tags
         safe_attrs = {"src", "alt", "href", "title", "width", "height"}
