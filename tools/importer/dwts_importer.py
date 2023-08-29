@@ -30,6 +30,13 @@ parser.add_argument(
     dest="project_name",
 )
 parser.add_argument(
+    "--project_id",
+    type=int,
+    help="ID of the project to import to",
+    default="-1",
+    dest="project_id",
+)
+parser.add_argument(
     "--project_description",
     type=str,
     help="Description of the project to create (only if new project is created)",
@@ -69,10 +76,17 @@ args = parser.parse_args()
 api = DWTSAPI(base_path=args.backend_url)
 
 # create new project if it does not exist
-title = args.project_name
-project = api.get_proj_by_title(title)
-if project is None:
-    project = api.create_project(title=title, description=args.project_description)
+# if project_id is set, use that
+if args.project_id != -1:
+    project = api.get_proj_by_id(args.project_id)
+    if project is None:
+        print(f"Project with ID {args.project_id} does not exist!")
+        exit()
+else:
+    title = args.project_name
+    project = api.get_proj_by_title(title)
+    if project is None:
+        project = api.create_project(title=title, description=args.project_description)
 
 # upload files
 directory = Path(args.input_dir)
