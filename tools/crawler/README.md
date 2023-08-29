@@ -43,6 +43,15 @@ Check the following example commands to see how to use this tool:
 ## Examples
 
 ```
+# zeit.de search results !! you need to provide the Cookie Header string to consent to cookies (and also for paid articles etc.). Without the cookie header it will not work!!
+
+scrapy crawl ZeitSearchResults -a search_terms_csv="covid-19,Impfung" -a prefix=zeit -a output_dir=/home/7schneid/zeit_crawl -a max_pages=500 -a cookies="!!!THIS NEEDS TO BE SET!!!" -a use_playwright=True -s IMAGES_STORE=/home/7schneid/zeit_crawl/images
+
+# spiegel.de search results !! you need to provide the Cookie Header string to consent to cookies (and also for paid articles etc.). Without the cookie header it will not work!!
+
+scrapy crawl SpiegelSearchResults -a search_terms_csv="covid-19,Impfung" -a prefix=spiegel -a output_dir=/home/7schneid/spiegel_crawl -a max_pages=500 -a cookies="!!!THIS NEEDS TO BE SET!!!" -a use_playwright=True -s IMAGES_STORE=/home/7schneid/spiegel_crawl/images
+
+
 # global voices
 scrapy crawl globalvoices -a prefix=gv -a output_dir=/home/tfischer/Development/dwts/data/globalvoices -s IMAGES_STORE=/home/tfischer/Development/dwts/data/globalvoices/images
 
