@@ -11,11 +11,30 @@ from scrapy.http import Response
 class SpiderBase(scrapy.Spider):
     # provide arguments using the -a option
     def __init__(
-        self, output_dir: Optional[str] = None, prefix: str = "", *args, **kwargs
+        self,
+        output_dir: Optional[str] = None,
+        prefix: Optional[str] = None,
+        cookies: Optional[str] = None,
+        use_playwright: bool = False,
+        *args,
+        **kwargs,
     ):
         super(SpiderBase, self).__init__(*args, **kwargs)
-        self.prefix = prefix
+        self.prefix = prefix if prefix else ""
         self.output_dir = validate_output_dir(output_dir)
+        self.cookies = self._create_cookies_dict(cookies) if cookies else None
+
+        if use_playwright:
+            # overwrite settings to use playwright
+            # see https://docs.scrapy.org/en/latest/topics/settings.html#settings-per-spider
+            # and https://github.com/scrapy-plugins/scrapy-playwright#basic-usage
+            custom_settings = {}
+
+    # add cookies to each request if set
+    # see https://docs.scrapy.org/en/latest/topics/spiders.html#scrapy.Spider.start_requests
+    def start_requests(self):
+        for url in self.start_urls:
+            yield scrapy.Request(url, cookies=self.cookies)
 
     def generate_filename(self, response: Response) -> str:
         parsed_url = urlparse(response.url)
@@ -40,7 +59,7 @@ class SpiderBase(scrapy.Spider):
                 f2.write(response.body)
         self.log(f"Saved raw html {filename_with_extension}")
 
-    def create_cookies_dict(cookie: str) -> Dict[str, str]:
+    def _create_cookies_dict(self, cookie: str) -> Dict[str, str]:
         if cookie.startswith("Cookie: "):
             cookie = cookie[8:]
         cookies = cookie.replace(" ", "").split(";")
@@ -49,7 +68,7 @@ class SpiderBase(scrapy.Spider):
     def init_item(
         self,
         response: Response,
-        html: str,
+        html: Optional[str] = None,
         filename: Optional[str] = None,
         **kwargs,
     ) -> GenericWebsiteItem:
