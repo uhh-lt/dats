@@ -42,5 +42,12 @@ class GenericWebsiteItem(scrapy.Item):
                 if "image_names" in self.keys()
                 else [],
                 "title": self["title"] if "title" in self.keys() else [],
+                "author": self["author"] if "author" in self.keys() else "",
+                "published_date": self["published_date"]
+                if "published_date" in self.keys()
+                else "",
+                "visited_date": self["visited_date"]
+                if "visited_date" in self.keys()
+                else "",
             }
         )
