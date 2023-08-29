@@ -10,6 +10,7 @@ from scrapy.http import Response
 
 class SpiderBase(scrapy.Spider):
     # provide arguments using the -a option
+
     def __init__(
         self,
         output_dir: Optional[str] = None,
@@ -24,18 +25,17 @@ class SpiderBase(scrapy.Spider):
         self.output_dir = validate_output_dir(output_dir)
         # this is the raw cookie string from an http request (e.g. "Cookie: a=b; c=d;")
         self.cookies = self._create_cookies_dict(cookies) if cookies else None
-
-        if use_playwright:
-            # overwrite settings to use playwright
-            # see https://docs.scrapy.org/en/latest/topics/settings.html#settings-per-spider
-            # and https://github.com/scrapy-plugins/scrapy-playwright#basic-usage
-            custom_settings = {}
+        self.use_playwright = use_playwright
 
     # add cookies to each request if set
     # see https://docs.scrapy.org/en/latest/topics/spiders.html#scrapy.Spider.start_requests
     def start_requests(self):
         for url in self.start_urls:
-            yield scrapy.Request(url, cookies=self.cookies)
+            yield scrapy.Request(
+                url,
+                cookies=self.cookies,
+                meta={"playwright": True} if self.use_playwright else None,
+            )
 
     def generate_filename(self, response: Response) -> str:
         parsed_url = urlparse(response.url)

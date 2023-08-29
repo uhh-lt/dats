@@ -4,10 +4,35 @@ from typing import List
 import scrapy
 from crawler.spiders.spider_base import SpiderBase
 from crawler.spiders.utils import slugify
-from dateutil import parser
 
 
 class NewsSearchResultsSpiderBase(SpiderBase):
+    @classmethod
+    def update_settings(cls, settings):
+        # see https://docs.scrapy.org/en/latest/topics/settings.html#settings-per-spider
+        super().update_settings(settings)
+        settings.set(
+            "DOWNLOAD_HANDLERS",
+            {
+                "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+                "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+            },
+            priority="spider",
+        )
+        settings.set("PLAYWRIGHT_BROWSER_TYPE", "firefox", priority="spider")
+        settings.set(
+            "PLAYWRIGHT_LAUNCH_OPTIONS",
+            {
+                "headless": True,
+            },
+            priority="spider",
+        )
+        settings.set(
+            "TWISTED_REACTOR",
+            "twisted.internet.asyncioreactor.AsyncioSelectorReactor",
+            priority="spider",
+        )
+
     # provide arguments using the -a option
     def __init__(
         self,
