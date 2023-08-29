@@ -90,8 +90,7 @@ class SpiderBase(scrapy.Spider):
         item["output_dir"] = str(self.output_dir)
 
         for key, value in kwargs.items():
-            if key in item:
-                item[key] = value
+            item[key] = value
 
         return item
 
