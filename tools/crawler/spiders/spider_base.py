@@ -22,6 +22,7 @@ class SpiderBase(scrapy.Spider):
         super(SpiderBase, self).__init__(*args, **kwargs)
         self.prefix = prefix if prefix else ""
         self.output_dir = validate_output_dir(output_dir)
+        # this is the raw cookie string from an http request (e.g. "Cookie: a=b; c=d;")
         self.cookies = self._create_cookies_dict(cookies) if cookies else None
 
         if use_playwright:
