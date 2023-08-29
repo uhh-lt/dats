@@ -32,6 +32,11 @@ class NewsSearchResultsSpiderBase(SpiderBase):
             "twisted.internet.asyncioreactor.AsyncioSelectorReactor",
             priority="spider",
         )
+        settings.set(
+            "USER_AGENT",
+            None,
+            priority="spider",
+        )
 
     # provide arguments using the -a option
     def __init__(
