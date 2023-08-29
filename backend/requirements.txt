@@ -1,0 +1,11 @@
+faiss-gpu==1.7.2
+fastapi-mail==1.2.5
+git+https://github.com/linto-ai/whisper-timestamped.git@d767f4fc3b401c78c20d55515b382838ca3c86aa
+Scrapy==2.10.0
+scrapy-playwright==0.0.31
+cssselect==1.2.0
+Twisted==22.10.0
+pre-commit==3.3.3
+black==23.7.0
+rope==1.9.0
+isort==5.12.0
