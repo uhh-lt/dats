@@ -4206,40 +4206,6 @@
         }
       }
     },
-    "/analysis/email": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Perform timeline analysis.",
-        "description": "Perform timeline analysis.",
-        "operationId": "simple_send",
-        "parameters": [
-          {
-            "required": true,
-            "schema": { "title": "Email", "type": "string", "format": "email" },
-            "name": "email",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Analysis-Simple Send",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/TimelineAnalysisResult" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
     "/prepro/project/{proj_id}/status": {
       "get": {
         "tags": ["prepro"],
@@ -4390,6 +4356,141 @@
           }
         }
       }
+    },
+    "/analysisTable": {
+      "put": {
+        "tags": ["analysisTable"],
+        "summary": "Creates an AnalysisTable",
+        "description": "Creates an AnalysisTable",
+        "operationId": "create",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysisTable/{analysis_table_id}": {
+      "get": {
+        "tags": ["analysisTable"],
+        "summary": "Returns the AnalysisTable",
+        "description": "Returns the AnalysisTable with the given ID if it exists",
+        "operationId": "get_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Analysis Table Id", "type": "integer" },
+            "name": "analysis_table_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["analysisTable"],
+        "summary": "Removes the AnalysisTable",
+        "description": "Removes the AnalysisTable with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Analysis Table Id", "type": "integer" },
+            "name": "analysis_table_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["analysisTable"],
+        "summary": "Updates the Analysis Table",
+        "description": "Updates the Analysis Table with the given ID if it exists",
+        "operationId": "update_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Analysis Table Id", "type": "integer" },
+            "name": "analysis_table_id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableUpdate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysisTable/project/{project_id}/user/{user_id}": {
+      "get": {
+        "tags": ["analysisTable"],
+        "summary": "Returns AnalysisTables of the Project of the User",
+        "description": "Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
+        "operationId": "get_by_project_and_user",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysistable-Get By Project And User",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnalysisTableRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4492,6 +4593,70 @@
             "type": "array",
             "items": { "type": "string" },
             "description": "The sentences describing the concept."
+          }
+        }
+      },
+      "AnalysisTableCreate": {
+        "title": "AnalysisTableCreate",
+        "required": ["title", "content", "table_type", "project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the AnalysisTable" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the AnalysisTable" },
+          "table_type": {
+            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
+            "description": "TABLETYPE of the AnalysisTable"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the AnalysisTable belongs to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the AnalysisTable belongs to" }
+        }
+      },
+      "AnalysisTableRead": {
+        "title": "AnalysisTableRead",
+        "required": ["title", "content", "table_type", "id", "project_id", "user_id", "created", "updated"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the AnalysisTable" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the AnalysisTable" },
+          "table_type": {
+            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
+            "description": "TABLETYPE of the AnalysisTable"
+          },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the AnalysisTable" },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the AnalysisTable belongs to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the AnalysisTable belongs to" },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the AnalysisTable",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the AnalysisTable",
+            "format": "date-time"
+          }
+        }
+      },
+      "AnalysisTableUpdate": {
+        "title": "AnalysisTableUpdate",
+        "required": ["title", "content", "table_type"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the AnalysisTable" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the AnalysisTable" },
+          "table_type": {
+            "allOf": [{ "$ref": "#/components/schemas/TableType" }],
+            "description": "TABLETYPE of the AnalysisTable"
           }
         }
       },
@@ -6235,6 +6400,12 @@
         "title": "SpanGroupUpdate",
         "type": "object",
         "properties": { "name": { "title": "Name", "type": "string", "description": "Name of the SpanGroup" } }
+      },
+      "TableType": {
+        "title": "TableType",
+        "enum": ["custom", "situation", "phenomenon", "interpretation"],
+        "type": "string",
+        "description": "An enumeration."
       },
       "TagStat": {
         "title": "TagStat",

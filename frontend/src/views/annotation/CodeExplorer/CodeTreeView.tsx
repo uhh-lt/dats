@@ -10,6 +10,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import ICodeTree from "./ICodeTree";
 import SquareIcon from "@mui/icons-material/Square";
+import { CodeRead } from "../../../api/openapi";
 
 type StyledTreeItemProps = TreeItemProps & {
   labelIcon: React.ElementType<SvgIconProps>;
@@ -87,12 +88,13 @@ function StyledTreeItem(props: StyledTreeItemProps) {
   );
 }
 
-interface CodeTreeViewProps {
+export interface CodeTreeViewProps {
   openContextMenu?: (node: ICodeTree) => (event: any) => void;
   data: ICodeTree;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
-  renderActions: (node: ICodeTree) => React.ReactNode;
+  onCodeClick?: (code: CodeRead) => void;
+  renderActions?: (node: ICodeTree) => React.ReactNode;
 }
 
 function CodeTreeView({
@@ -101,6 +103,7 @@ function CodeTreeView({
   onExpandClick,
   onCollapseClick,
   openContextMenu,
+  onCodeClick,
   ...props
 }: CodeTreeViewProps & TreeViewProps) {
   const renderTree = (nodes: ICodeTree[]) => {
@@ -128,8 +131,9 @@ function CodeTreeView({
           </Box>
         }
         labelIconColor={node.code.color}
-        actions={renderActions(node)}
+        actions={renderActions ? renderActions(node) : undefined}
         onContextMenu={openContextMenu ? openContextMenu(node) : undefined}
+        onClick={onCodeClick ? () => onCodeClick(node.code) : undefined}
       >
         {Array.isArray(node.children) && node.children.length > 0 && (
           <React.Fragment> {renderTree(node.children)}</React.Fragment>

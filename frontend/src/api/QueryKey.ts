@@ -124,6 +124,11 @@ export const QueryKey = {
   // all user feedbacks (by user id)
   FEEDBACKS_USER: "feedbacksUser",
 
+  // a single TABLE (by TABLE id)
+  TABLE: "table",
+  // all project, user TABLEs (by user id and project id)
+  TABLES_PROJECT_USER: "tablesProjectUser",
+
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
   SEARCH_TAG_STATISTICS: "searchTagStatistics",

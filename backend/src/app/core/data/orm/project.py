@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.user import UserORM
+    from app.core.data.orm.analysis_table import AnalysisTableORM
 
 
 class ProjectORM(ORMBase):
@@ -43,6 +44,10 @@ class ProjectORM(ORMBase):
 
     document_tags: List["DocumentTagORM"] = relationship(
         "DocumentTagORM", back_populates="project", passive_deletes=True
+    )
+
+    analysis_tables: List["AnalysisTableORM"] = relationship(
+        "AnalysisTableORM", back_populates="project", passive_deletes=True
     )
 
     actions: List["ActionORM"] = relationship(

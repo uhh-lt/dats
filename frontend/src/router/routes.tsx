@@ -1,4 +1,4 @@
-import { RouteObject } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import RequireAuth from "../auth/RequireAuth";
 import NoBarLayout from "../layouts/NoBarLayout";
 import OneBarLayout from "../layouts/OneBarLayout";
@@ -25,8 +25,10 @@ import Register from "../views/registration/Register";
 import Search from "../views/search/Search";
 import Settings from "../views/settings/Settings";
 import Feedback from "../views/feedback/Feedback";
+import TableDashboard from "../views/analysis/Table/TableDashboard";
+import TableView from "../views/analysis/Table/TableView";
 
-const routes: RouteObject[] = [
+const router = createBrowserRouter([
   {
     path: "/",
     element: <NoBarLayout />,
@@ -151,6 +153,14 @@ const routes: RouteObject[] = [
         element: <TimelineAnalysis />,
       },
       {
+        path: "/project/:projectId/analysis/table",
+        element: <TableDashboard />,
+      },
+      {
+        path: "/project/:projectId/analysis/table/:tableId",
+        element: <TableView />,
+      },
+      {
         path: "/project/:projectId/logbook",
         element: <Logbook />,
       },
@@ -164,6 +174,6 @@ const routes: RouteObject[] = [
       },
     ],
   },
-];
+]);
 
-export default routes;
+export default router;

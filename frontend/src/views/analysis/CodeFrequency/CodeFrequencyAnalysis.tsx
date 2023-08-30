@@ -44,7 +44,7 @@ import { UserSelector } from "../UserSelector";
 import { renderTextCellExpand } from "./renderTextCellExpand";
 
 const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", hide: true },
+  { field: "id", headerName: "ID" },
   {
     field: "sdoc",
     headerName: "Document",
@@ -175,7 +175,10 @@ interface CodeOccurrenceViewProps {
 }
 
 function CodeOccurrenceView({ projectId, codeId, userIds }: CodeOccurrenceViewProps) {
-  const [page, setPage] = useState<number>(0);
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: 5,
+    page: 0,
+  });
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(codeId);
@@ -185,7 +188,7 @@ function CodeOccurrenceView({ projectId, codeId, userIds }: CodeOccurrenceViewPr
 
   // reset page to 0 when selected statistics change
   useEffect(() => {
-    setPage(0);
+    setPaginationModel((oldPaginationModel) => ({ ...oldPaginationModel, page: 0 }));
   }, [codeId]);
 
   return (
@@ -218,9 +221,9 @@ function CodeOccurrenceView({ projectId, codeId, userIds }: CodeOccurrenceViewPr
               columns={columns}
               autoPageSize
               sx={{ border: "none" }}
-              disableSelectionOnClick
-              page={page}
-              onPageChange={(page) => setPage(page)}
+              disableRowSelectionOnClick
+              paginationModel={paginationModel}
+              onPaginationModelChange={setPaginationModel}
               getRowId={(row) => `sdoc-${row.sdoc.id}-code/${row.code.id}-${row.text}`}
             />
           </CardContent>

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.analysis_table import AnalysisTableORM
 
 
 class UserORM(ORMBase):
@@ -41,6 +42,10 @@ class UserORM(ORMBase):
 
     memos: List["MemoORM"] = relationship(
         "MemoORM", back_populates="user", passive_deletes=True
+    )
+
+    analysis_tables: List["AnalysisTableORM"] = relationship(
+        "AnalysisTableORM", back_populates="user", passive_deletes=True
     )
 
     actions: List["ActionORM"] = relationship(
