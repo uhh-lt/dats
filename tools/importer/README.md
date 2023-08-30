@@ -18,6 +18,14 @@ pip install python-magic
 ## Usage
 
 ```
+# import zeit search results
+python importer/dwts_importer.py --input_dir /home/7schneid/zeit_crawl/images --backend_url http://localhost:10101/ --project_id 143 --tag_name zeit
+python importer/dwts_importer.py --input_dir /home/7schneid/zeit_crawl/json --backend_url http://localhost:10101/ --project_id 143 --tag_name zeit --is_json
+
+# import spiegel search results
+python importer/dwts_importer.py --input_dir /home/7schneid/spiegel_crawl/images --backend_url http://localhost:10101/ --project_id 143 --tag_name spiegel
+python importer/dwts_importer.py --input_dir /home/7schneid/spiegel_crawl/json --backend_url http://localhost:10101/ --project_id 143 --tag_name spiegel --is_json
+
 # import global voices
 python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/globalvoices/images --backend_url http://localhost:13120/ --project_name global_voices --tag_name news
 python importer/dwts_importer.py --input_dir /home/tfischer/Development/dwts/data/globalvoices/json --backend_url http://localhost:13120/ --project_name global_voices --tag_name news --is_json
