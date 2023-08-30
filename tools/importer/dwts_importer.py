@@ -6,6 +6,7 @@ from typing import List, Tuple
 
 import magic
 from dwts_api import DWTSAPI
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description="DWTS file importer")
 parser.add_argument(
@@ -113,8 +114,27 @@ for file in directory.iterdir():
         filename = file.name.replace(".json", ".html")
         try:
             data = json.loads(file.read_bytes())
+            if data["html"] == "":
+                print(f"Skipping file {filename} because html is empty!")
+                continue
             json_data[filename] = data
             mime = magic.from_buffer(data["html"], mime=True)
+            if (
+                mime != "text/html"
+                and mime != "application/xhtml+xml"
+                and mime != "text/plain"
+            ):
+                print(f"Skipping file {filename} because mime is not supported!")
+                continue
+            sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+                proj_id=project["id"], filename=filename
+            )
+            if sdoc_id is not None:
+                print(
+                    f"Skipping file {filename} because it already exists in the project!"
+                )
+                continue
+
             content = str(data["html"])
             files.append(("doc_files", (filename, content.encode("utf-8"), mime)))
         except Exception as e:
@@ -124,35 +144,36 @@ for file in directory.iterdir():
         mime = magic.from_buffer(file_bytes, mime=True)
         files.append(("doc_files", (filename, file_bytes, mime)))
 
-num_files = api.upload_files(
-    proj_id=project["id"],
-    files=files,
-    filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
-)
+if len(files) != 0:
+    num_files = api.upload_files(
+        proj_id=project["id"],
+        files=files,
+        filter_duplicate_files_before_upload=args.filter_duplicate_files_before_upload,
+    )
 
-# wait until procesing has started for files to upload
-status = api.read_project_status(project_id=project["id"])
-while not status["in_progress"]:
-    print("Waiting for processing to start...")
-    sleep(1)
+    # wait until procesing has started for files to upload
     status = api.read_project_status(project_id=project["id"])
+    while not status["in_progress"]:
+        print("Waiting for processing to start...")
+        sleep(1)
+        status = api.read_project_status(project_id=project["id"])
 
-num_sdocs_in_progress = status["num_sdocs_in_progress"]
-no_change = 0
+    num_sdocs_in_progress = status["num_sdocs_in_progress"]
+    no_change = 0
 
-while status["in_progress"]:
-    print("Uploading documents...")
-    sleep(5)
-    status = api.read_project_status(project_id=project["id"])
-    print(f"Current status: {status}")
-    # if num_sdocs_in_progress == status["num_sdocs_in_progress"]:
-    #    no_change += 1
-    #    if no_change == 12 * 5:
-    #        break
-    # else:
-    #    num_sdocs_in_progress = status["num_sdocs_in_progress"]
+    while status["in_progress"]:
+        print("Uploading documents...")
+        sleep(5)
+        status = api.read_project_status(project_id=project["id"])
+        print(f"Current status: {status}")
+        # if num_sdocs_in_progress == status["num_sdocs_in_progress"]:
+        #    no_change += 1
+        #    if no_change == 12 * 5:
+        #        break
+        # else:
+        #    num_sdocs_in_progress = status["num_sdocs_in_progress"]
 
-print("Upload success!!!")
+    print("Upload success!!!")
 
 # create new tag if it does not exist
 tag = api.get_tag_by_title(proj_id=project["id"], title=args.tag_name)
@@ -175,19 +196,46 @@ api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
 
 # apply metadata
 applied = set()
-for filename, data in json_data.items():
-    sdoc_id = api.get_sdoc_id_by_filename(filename=filename, proj_id=project["id"])
-    if sdoc_id not in applied:
-        api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
+print("Applying metadata to docs!")
+for filename, data in tqdm(json_data.items(), total=len(json_data)):
+    sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+        proj_id=project["id"], filename=filename
+    )
+    if sdoc_id not in applied and sdoc_id is not None:
+        api.create_metadata(sdoc_id=sdoc_id, key="origin", value=data["url"])
+        if "published_date" in data and data["published_date"] != "":
+            api.create_metadata(
+                sdoc_id=sdoc_id, key="published_date", value=data["published_date"]
+            )
+        if "visited_date" in data and data["visited_date"] != "":
+            api.create_metadata(
+                sdoc_id=sdoc_id, key="visited_date", value=data["visited_date"]
+            )
+        if "author" in data and data["author"] != "":
+            api.create_metadata(sdoc_id=sdoc_id, key="author", value=data["author"])
         applied.add(sdoc_id)
 
     for image_name in data["image_names"]:
         if image_name:
-            sdoc_id = api.get_sdoc_id_by_filename(
-                filename=image_name, proj_id=project["id"]
+            sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+                proj_id=project["id"], filename=filename
             )
-            if sdoc_id not in applied:
-                api.create_origin_metadata(sdoc_id=sdoc_id, url=data["url"])
+            if sdoc_id not in applied and sdoc_id is not None:
+                api.create_metadata(sdoc_id=sdoc_id, key="origin", value=data["url"])
+                if "published_date" in data and data["published_date"] != "":
+                    api.create_metadata(
+                        sdoc_id=sdoc_id,
+                        key="published_date",
+                        value=data["published_date"],
+                    )
+                if "visited_date" in data and data["visited_date"] != "":
+                    api.create_metadata(
+                        sdoc_id=sdoc_id, key="visited_date", value=data["visited_date"]
+                    )
+                if "author" in data and data["author"] != "":
+                    api.create_metadata(
+                        sdoc_id=sdoc_id, key="author", value=data["author"]
+                    )
                 applied.add(sdoc_id)
 
 print("(: FINISHED :)")

@@ -34,6 +34,20 @@ class DWTSAPI:
             return None
         return r["hits"][0]["sdoc_id"]
 
+    def resolve_sdoc_id_from_proj_and_filename(
+        self, proj_id: int, filename: str
+    ) -> Optional[int]:
+        r = requests.get(
+            self.BASE_PATH
+            + f"project/{proj_id}/resolve_filename/{filename}?only_finished=false"
+        )
+        r.raise_for_status()
+        try:
+            sdoc_id = r.json()
+            return sdoc_id
+        except:
+            return None
+
     def get_proj_by_title(self, title: str):
         projects = self.read_all_projects()
         try:
@@ -41,6 +55,11 @@ class DWTSAPI:
             return projects[idx]
         except ValueError:
             return None
+
+    def get_proj_by_id(self, proj_id: int):
+        r = requests.get(self.BASE_PATH + f"project/{proj_id}")
+        r.raise_for_status()
+        return r.json()
 
     def read_all_sdocs(self, project_id: int):
         # get all sdoc ids
@@ -151,17 +170,19 @@ class DWTSAPI:
         r.raise_for_status()
         print(f"Applied tags {tag_ids} to all documents!")
 
-    def create_origin_metadata(self, sdoc_id: int, url: str):
+    def create_metadata(self, sdoc_id: int, key: str, value: str):
         r = requests.put(
             self.BASE_PATH + "metadata",
             data=json.dumps(
                 {
-                    "key": "origin",
-                    "value": url,
+                    "key": key,
+                    "value": value,
                     "source_document_id": sdoc_id,
                     "read_only": True,
                 }
             ),
         )
-        r.raise_for_status()
-        print(f"Added metadata 'origin': '{url}' to sdoc {sdoc_id}!")
+        if r.status_code == 409 or r.status_code == 200:
+            print(f"Added metadata '{key}': '{value}' to sdoc {sdoc_id}!")
+        else:
+            r.raise_for_status()
