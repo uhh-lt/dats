@@ -1,10 +1,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export { ApiError } from './core/ApiError';
-export { CancelablePromise, CancelError } from './core/CancelablePromise';
-export { OpenAPI } from './core/OpenAPI';
-export type { OpenAPIConfig } from './core/OpenAPI';
+export { ApiError } from "./core/ApiError";
+export { CancelablePromise, CancelError } from "./core/CancelablePromise";
+export { OpenAPI } from "./core/OpenAPI";
+export type { OpenAPIConfig } from "./core/OpenAPI";
 
 export type { ActionQueryParameters } from "./models/ActionQueryParameters";
 export type { ActionRead } from "./models/ActionRead";
@@ -18,6 +18,7 @@ export type { AnnotationDocumentCreate } from "./models/AnnotationDocumentCreate
 export type { AnnotationDocumentRead } from "./models/AnnotationDocumentRead";
 export type { AnnotationOccurrence } from "./models/AnnotationOccurrence";
 export { AttachedObjectType } from "./models/AttachedObjectType";
+export { BackgroundJobStatus } from "./models/BackgroundJobStatus";
 export type { BBoxAnnotationCreateWithCodeId } from "./models/BBoxAnnotationCreateWithCodeId";
 export type { BBoxAnnotationRead } from "./models/BBoxAnnotationRead";
 export type { BBoxAnnotationReadResolvedCode } from "./models/BBoxAnnotationReadResolvedCode";
@@ -32,7 +33,6 @@ export type { CodeRead } from "./models/CodeRead";
 export type { CodeUpdate } from "./models/CodeUpdate";
 export type { CrawlerJobParameters } from "./models/CrawlerJobParameters";
 export type { CrawlerJobRead } from "./models/CrawlerJobRead";
-export { CrawlerJobStatus } from "./models/CrawlerJobStatus";
 export { DocType } from "./models/DocType";
 export type { DocumentTagCreate } from "./models/DocumentTagCreate";
 export type { DocumentTagRead } from "./models/DocumentTagRead";
@@ -41,7 +41,6 @@ export type { ElasticSearchDocumentHit } from "./models/ElasticSearchDocumentHit
 export { ExportFormat } from "./models/ExportFormat";
 export type { ExportJobParameters } from "./models/ExportJobParameters";
 export type { ExportJobRead } from "./models/ExportJobRead";
-export { ExportJobStatus } from "./models/ExportJobStatus";
 export { ExportJobType } from "./models/ExportJobType";
 export type { FeedbackCreate } from "./models/FeedbackCreate";
 export type { FeedbackRead } from "./models/FeedbackRead";
@@ -56,6 +55,8 @@ export type { MemoUpdate } from "./models/MemoUpdate";
 export type { PaginatedElasticSearchDocumentHits } from "./models/PaginatedElasticSearchDocumentHits";
 export type { PaginatedMemoSearchResults } from "./models/PaginatedMemoSearchResults";
 export type { PaginatedSourceDocumentReads } from "./models/PaginatedSourceDocumentReads";
+export type { PreprocessingJobPayload } from "./models/PreprocessingJobPayload";
+export type { PreprocessingJobRead } from "./models/PreprocessingJobRead";
 export type { PreProProjectStatus } from "./models/PreProProjectStatus";
 export type { ProjectCreate } from "./models/ProjectCreate";
 export type { ProjectRead } from "./models/ProjectRead";
@@ -128,10 +129,7 @@ export { SourceDocumentService } from "./services/SourceDocumentService";
 export { SpanAnnotationService } from "./services/SpanAnnotationService";
 export { SpanGroupService } from "./services/SpanGroupService";
 export { UserService } from "./services/UserService";
-<<<<<<< HEAD
 export { WhiteboardService } from "./services/WhiteboardService";
-=======
-=======
 export type { ActionQueryParameters } from './models/ActionQueryParameters';
 export type { ActionRead } from './models/ActionRead';
 export { ActionTargetObjectType } from './models/ActionTargetObjectType';
@@ -247,3 +245,5 @@ export { SpanAnnotationService } from './services/SpanAnnotationService';
 export { SpanGroupService } from './services/SpanGroupService';
 export { UserService } from './services/UserService';
 >>>>>>> 2a34cb89 (updated generated backend api code in frontend)
+=======
+>>>>>>> efcf67ee (updated frontend code to comply to new backend api)

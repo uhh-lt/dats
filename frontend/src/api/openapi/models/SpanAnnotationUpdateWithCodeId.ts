@@ -3,9 +3,8 @@
 /* eslint-disable */
 
 export type SpanAnnotationUpdateWithCodeId = {
-    /**
-     * Code the SpanAnnotation refers to
-     */
-    code_id: number;
+  /**
+   * Code the SpanAnnotation refers to
+   */
+  code_id: number;
 };
-

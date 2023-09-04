@@ -6,8 +6,8 @@
  * An enumeration.
  */
 export enum BackgroundJobStatus {
-    WAITING = 'Waiting',
-    RUNNING = 'Running',
-    FINISHED = 'Finished',
-    ERRORNEOUS = 'Errorneous',
+  WAITING = "Waiting",
+  RUNNING = "Running",
+  FINISHED = "Finished",
+  ERRORNEOUS = "Errorneous",
 }

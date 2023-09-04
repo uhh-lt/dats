@@ -6,8 +6,8 @@
  * An enumeration.
  */
 export enum DocType {
-    TEXT = 'text',
-    IMAGE = 'image',
-    VIDEO = 'video',
-    AUDIO = 'audio',
+  TEXT = "text",
+  IMAGE = "image",
+  VIDEO = "video",
+  AUDIO = "audio",
 }
