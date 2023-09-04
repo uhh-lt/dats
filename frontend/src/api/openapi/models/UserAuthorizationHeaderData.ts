@@ -3,13 +3,12 @@
 /* eslint-disable */
 
 export type UserAuthorizationHeaderData = {
-    /**
-     * Value of the JWT
-     */
-    access_token: string;
-    /**
-     * Type of the Token
-     */
-    token_type: string;
+  /**
+   * Value of the JWT
+   */
+  access_token: string;
+  /**
+   * Type of the Token
+   */
+  token_type: string;
 };
-

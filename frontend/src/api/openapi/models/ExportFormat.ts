@@ -6,6 +6,6 @@
  * An enumeration.
  */
 export enum ExportFormat {
-    CSV = 'CSV',
-    JSON = 'JSON',
+  CSV = "CSV",
+  JSON = "JSON",
 }

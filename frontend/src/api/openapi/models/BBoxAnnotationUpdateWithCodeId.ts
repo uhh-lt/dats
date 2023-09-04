@@ -3,9 +3,8 @@
 /* eslint-disable */
 
 export type BBoxAnnotationUpdateWithCodeId = {
-    /**
-     * Code the BBoxAnnotation refers to
-     */
-    code_id: number;
+  /**
+   * Code the BBoxAnnotation refers to
+   */
+  code_id: number;
 };
-
