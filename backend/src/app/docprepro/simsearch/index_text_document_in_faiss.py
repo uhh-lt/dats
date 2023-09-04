@@ -14,7 +14,7 @@ from app.core.db.sql_service import SQLService
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
 from app.docprepro.simsearch.util import text_encoder
-from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from config import conf
 from loguru import logger
 

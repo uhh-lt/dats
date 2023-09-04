@@ -1,7 +1,6 @@
 from typing import Dict, List, Union
 
 from app.celery.celery_worker import celery_worker
-from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch.find_similar_images import find_similar_images_
 from app.docprepro.simsearch.find_similar_sentences import (
     find_similar_sentences_,
@@ -13,7 +12,8 @@ from app.docprepro.simsearch.index_image_document_in_faiss import (
 from app.docprepro.simsearch.index_text_document_in_faiss import (
     index_text_document_in_faiss_,
 )
-from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
+from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
 @celery_worker.task(

@@ -7,8 +7,8 @@ from app.core.data.dto.source_document import SDocStatus
 from app.core.db.sql_service import SQLService
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
-from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch.util import image_encoder, load_image
+from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from config import conf
 from loguru import logger
 from PIL import Image
