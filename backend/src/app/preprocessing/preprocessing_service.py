@@ -2,17 +2,18 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import magic
-from fastapi import HTTPException, UploadFile
-from loguru import logger
-from tqdm import tqdm
-
 from app.celery.background_jobs import (
     execute_audio_preprocessing_pipeline_apply_async,
     execute_image_preprocessing_pipeline_apply_async,
     execute_text_preprocessing_pipeline_apply_async,
     execute_video_preprocessing_pipeline_apply_async,
 )
-from app.core.data.doc_type import DocType, get_doc_type, mime_type_supported
+from app.core.data.doc_type import (
+    DocType,
+    get_doc_type,
+    is_archive_file,
+    mime_type_supported,
+)
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.preprocessing_job import (
     PreprocessingJobCreate,
@@ -29,6 +30,9 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from app.util.singleton_meta import SingletonMeta
+from fastapi import HTTPException, UploadFile
+from loguru import logger
+from tqdm import tqdm
 
 
 class PreprocessingService(metaclass=SingletonMeta):
@@ -55,6 +59,17 @@ class PreprocessingService(metaclass=SingletonMeta):
             file_path = self.repo.store_uploaded_file_in_project_repo(
                 proj_id=proj_id, uploaded_file=uploaded_file
             )
+
+            if is_archive_file(mime_type):
+                # if the uploaded file is an archive, we extract it and create
+                # PreprocessingJobPayloads for each file in the archive
+                payloads.extend(
+                    self._extract_archive_and_create_payloads(
+                        project_id=proj_id, archive_file_path=file_path
+                    )
+                )
+                continue
+
             doc_type = get_doc_type(mime_type=mime_type)
 
             payloads.append(
