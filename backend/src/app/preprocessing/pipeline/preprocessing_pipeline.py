@@ -3,15 +3,15 @@ import time
 from functools import partial, reduce
 from typing import Callable, Dict, List, Optional
 
-from loguru import logger
-from multiprocess.pool import Pool
-from tqdm import tqdm
-
 from app.core.data.doc_type import DocType
 from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.db.redis_service import RedisService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.pipeline_step import PipelineStep
+from loguru import logger
+from multiprocess.pool import Pool
+from tqdm import tqdm
 
 
 class PreprocessingPipeline:
@@ -30,6 +30,9 @@ class PreprocessingPipeline:
         self.force_sequential = force_sequential
 
         self.__is_frozen = False
+
+        # this is a helper cache to avoid loading the same ppj multiple times
+        self.__ppj_cache: Dict[str, PreprocessingJobRead] = dict()
 
     def _register_pipeline_step(self, step: PipelineStep) -> None:
         if step.ordering < 1:
@@ -65,7 +68,7 @@ class PreprocessingPipeline:
 
     def __execute_in_parallel(self, cargos: List[PipelineCargo]) -> List[PipelineCargo]:
         logger.info(
-            f"Executing PreprocessingPipeline({self._dt}) parallely for {len(cargos)} input(s)!"
+            f"Executing PreprocessingPipeline({self._dt}) parallely for {len(cargos)} cargo(s)!"
         )
 
         def chain(*funcs):
@@ -98,7 +101,8 @@ class PreprocessingPipeline:
         self, cargos: List[PipelineCargo]
     ) -> List[PipelineCargo]:
         logger.info(
-            f"Executing PreprocessingPipeline({self._dt}) sequentially for {len(cargos)} input(s)!"
+            f"Executing PreprocessingPipeline({self._dt}) sequentially"
+            f" for {len(cargos)} cargo(s)!"
         )
         for cargo in tqdm(cargos, desc="Processing PipelineCargos ..."):
             cargo = self._update_status_of_ppj_payload(
@@ -111,8 +115,9 @@ class PreprocessingPipeline:
                     )
             except Exception as e:
                 msg = (
-                    f"An error occurred while executing the PreprocessingPipeline({self._dt}) "
-                    f"for PreprocessingJobPayload {cargo.ppj_payload.filename}!\n"
+                    "An error occurred while executing the PreprocessingPipeline("
+                    f"{self._dt}) for PreprocessingJobPayload "
+                    f"{cargo.ppj_payload.filename}!\n"
                     f"Error: {e}"
                 )
                 logger.error(msg)
@@ -138,6 +143,7 @@ class PreprocessingPipeline:
                 f"Cannot execute PreprocessingPipeline({self._dt})"
                 " since it has not been frozen yet!"
             )
+        self.__ppj_cache = dict()
         # initialize the cargos
         cargos = self._load_ppjs_of_all_cargos(cargos=cargos)
         cargos = self._set_next_steps_of_all_cargos(cargos=cargos)
@@ -174,19 +180,21 @@ class PreprocessingPipeline:
     def _update_status_for_all_ppjs(
         self, cargos: List[PipelineCargo], status: BackgroundJobStatus
     ) -> List[PipelineCargo]:
-        # set the status of all ppjs to DONE
-        for c in cargos:
-            ppj = c.data["ppj"]
-            self.redis.update_preprocessing_job(
-                ppj.id, ppj.update_status(status=status)
-            )
-            c.data["ppj"] = ppj
+        # update the status of all ppjs
+        ppj_ids = set(map(lambda c: c.ppj_id, cargos))
+        ppjs = [self.redis.load_preprocessing_job(key=ppj_id) for ppj_id in ppj_ids]
+        for ppj in tqdm(ppjs, desc="Updating PreprocessingJob Status..."):
+            if ppj is not None:
+                self.redis.update_preprocessing_job(
+                    ppj.id, ppj.update_status(status=status)
+                )
+                self.__ppj_cache[ppj.id] = ppj
         return cargos
 
     def _set_next_steps_of_all_cargos(
         self, cargos: List[PipelineCargo]
     ) -> List[PipelineCargo]:
-        for cargo in cargos:
+        for cargo in tqdm(cargos, desc="Setting next PipelineSteps..."):
             # set the next steps
             cargo.next_steps = list(
                 map(
@@ -196,24 +204,37 @@ class PreprocessingPipeline:
             )
         return cargos
 
-    def _load_ppj_of_cargo(self, cargo: PipelineCargo) -> PipelineCargo:
+    def _load_ppj_of_cargo(
+        self,
+        cargo: PipelineCargo,
+        force_cache_update: bool = False,
+    ) -> PipelineCargo:
         if cargo.ppj_id is None:
             raise KeyError(
                 f"The PipelineCargo {cargo} is not connected to a PreprocessingJob!"
             )
+
+        if not force_cache_update and cargo.ppj_id in self.__ppj_cache:
+            cargo.data["ppj"] = self.__ppj_cache[cargo.ppj_id]
+            return cargo
+
         ppj = self.redis.load_preprocessing_job(key=cargo.ppj_id)
         if ppj is None:
             raise KeyError(
                 f"The PreprocessingJob with ID {cargo.ppj_id} of "
                 f"PipelineCargo {cargo} does not exist!"
             )
+        self.__ppj_cache[cargo.ppj_id] = ppj
         cargo.data["ppj"] = ppj
         return cargo
 
     def _load_ppjs_of_all_cargos(
         self, cargos: List[PipelineCargo]
     ) -> List[PipelineCargo]:
-        return [self._load_ppj_of_cargo(cargo=c) for c in cargos]
+        return [
+            self._load_ppj_of_cargo(cargo=c)
+            for c in tqdm(cargos, desc="Loading PreprocessingJobs...")
+        ]
 
     def _run_step(self, cargo: PipelineCargo, step: PipelineStep) -> PipelineCargo:
         if step in cargo.finished_steps:
@@ -258,7 +279,7 @@ class PreprocessingPipeline:
     def _update_current_step_of_ppj_payload(
         self, cargo: PipelineCargo, current_step_name: str
     ) -> PipelineCargo:
-        ppj = self._load_ppj_of_cargo(cargo=cargo).data["ppj"]
+        ppj = self._load_ppj_of_cargo(cargo=cargo, force_cache_update=True).data["ppj"]
         cargo.ppj_payload.current_pipeline_step = current_step_name
         ppj = self.redis.update_preprocessing_job(
             ppj.id, ppj.update_payload(cargo.ppj_payload)
@@ -272,7 +293,7 @@ class PreprocessingPipeline:
         status: BackgroundJobStatus,
         error_msg: Optional[str] = None,
     ) -> PipelineCargo:
-        ppj = self._load_ppj_of_cargo(cargo=cargo).data["ppj"]
+        ppj = self._load_ppj_of_cargo(cargo=cargo, force_cache_update=True).data["ppj"]
         cargo.ppj_payload.status = status
         if status == BackgroundJobStatus.ERROR:
             cargo.ppj_payload.error_message = error_msg
