@@ -5,12 +5,11 @@ from typing import Dict, List
 
 import lxml.html.clean as clean
 import magic
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from bs4 import BeautifulSoup
 from loguru import logger
 from readability import Document
-
-from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
 def clean_html_tags_and_attrs(
@@ -153,6 +152,8 @@ cleaning_with_readability_pipeline = build_html_cleaning_pipeline(
 def clean_content_in_html(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
     content_in_html = pptd.html
+    if len(content_in_html) == 0:
+        return cargo
 
     if not has_readability_watermark(content_in_html):
         # here, we apply the same cleaning pipeline as in the crawler
