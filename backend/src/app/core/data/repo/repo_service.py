@@ -466,6 +466,6 @@ class RepoService(metaclass=SingletonMeta):
             filename=filename,
             doctype=doctype,
             project_id=proj_id,
-            status=SDocStatus.undefined_or_erroneous,
+            status=SDocStatus.unfinished_or_erroneous,
         )
         return dst_path, create_dto

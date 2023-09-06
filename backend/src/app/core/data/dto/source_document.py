@@ -13,85 +13,20 @@ SDOC_SUFFIX_MAX_LENGTH = 30
 
 
 class SDocStatus(str, Enum):
-    init = "initializing"  # "initializing"
-    undefined_or_erroneous = "undefined_or_erroneous"  # "undefined_or_erroneous"
-
-    import_text_document = "import_text_document"  # "imported uploaded text document"
-    import_image_document = (
-        "import_image_document"  # "imported uploaded image document"
-    )
-    import_audio_document = (
-        "import_audio_document"  # "imported uploaded audio document"
-    )
-    import_video_document = (
-        "import_video_document"  # "imported uploaded video document"
-    )
-
-    convert_to_webp_and_generate_thumbnails = "convert_to_webp_and_generate_thumbnails"  # "converted imported image to .webp and created a thumbnail"
-
-    convert_mediafile_to_uncompressed_audio = "convert_mediafile_to_uncompressed_audio"  # "converts mediafile to uncompressed audio"
-    create_sdoc_links_from_audio = "create_sdoc_links_from_audio"  # "extracted sdoc links from audio and stored in the db"
-    generate_word_level_transcriptions = (
-        "generate_word_level_transcriptions"  # "generate word level transcriptions"
-    )
-    generate_webp_thumbnails_from_audio = (
-        "generate_webp_thumbnails_from_audio"  # "generate webp thumbnail from audio"
-    )
-    create_transcript_file = "create_transcript_file"  # "create transcript file"
-    create_pptd_from_ppad = "create_pptd_from_ppad"  # "created pptds from ppads
-    create_sdoc_links_from_text = "create_sdoc_links_from_text"  # "extracted sdoc links from text and stored in the db"
-
-    generate_webp_thumbnails_from_video = (
-        "generate_webp_thumbnails_from_video"  # "generate webp thumbnail from video"
-    )
-    create_ppad_from_ppvd = "create_ppad_from_ppvd"  # "created ppads from ppvds
-
-    clean_html = "clean_html"  # "cleaned html of text document"
-    extract_text_from_html_and_create_source_mapping = "extract_text_from_html_and_create_source_mapping"  # "created html2text source mapping "
-
-    detect_language = "detect_language"  # "detect language of text document "
-    generate_image_captions = (
-        "generate_image_captions"  # "generated automatic image captions"
-    )
-    create_pptd_from_caption = (
-        "create_pptd_from_caption"  # "created pptds from automatic caption"
-    )
-    generate_span_annotations = (
-        "generate_span_annotations"  # "generated span annotations"
-    )
-    generate_bbox_annotations = (
-        "generate_bbox_annotations"  # "generated automatic bbox annotations"
-    )
-
-    add_custom_html_tags = (
-        "add_custom_html_tags"  # "added custom html tags for sentences and tokens"
-    )
-    create_sdoc_links_from_html = "create_sdoc_links_from_html"  # "extracted sdoc links from html and stored in the db"
-
-    store_metadata_in_db = "store_metadata_in_db"  # "persisted metadata in db"
-    store_span_annotations_in_db = (
-        "store_span_annotations_in_db"  # "persisted automatic span annotations"
-    )
-    store_bbox_annotations_in_db = (
-        "store_bbox_annotations_in_db"  # "persisted automatic bbox annotations"
-    )
-    store_document_in_elasticsearch = (
-        "store_document_in_elasticsearch"  # "added document to elasticsearch index"
-    )
+    unfinished_or_erroneous = "unfinished_or_erroneous"
     index_image_document_in_faiss = (
         "index_image_document_in_faiss"  # "added document to faiss index"
     )
     index_text_document_in_faiss = (
         "index_text_document_in_faiss"  # "added document to faiss index"
     )
-
     finished = "finished"  # "added document to faiss index"
 
 
 """
  TODO Flo:
- Because we"re not storing the content in the SQL DB but only in the ES instance we handle this differently
-  than in other DTOs.
+ Because we"re not storing the content in the SQL DB but only in the ES instance
+  we handle this differently than in other DTOs.
 """
 
 
