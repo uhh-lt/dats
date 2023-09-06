@@ -143,7 +143,9 @@ class PreprocessingPipeline:
                 f"Cannot execute PreprocessingPipeline({self._dt})"
                 " since it has not been frozen yet!"
             )
+        # reset ppj cache
         self.__ppj_cache = dict()
+
         # initialize the cargos
         cargos = self._load_ppjs_of_all_cargos(cargos=cargos)
         cargos = self._set_next_steps_of_all_cargos(cargos=cargos)
@@ -182,13 +184,23 @@ class PreprocessingPipeline:
     ) -> List[PipelineCargo]:
         # update the status of all ppjs
         ppj_ids = set(map(lambda c: c.ppj_id, cargos))
-        ppjs = [self.redis.load_preprocessing_job(key=ppj_id) for ppj_id in ppj_ids]
-        for ppj in tqdm(ppjs, desc="Updating PreprocessingJob Status..."):
-            if ppj is not None:
-                self.redis.update_preprocessing_job(
-                    ppj.id, ppj.update_status(status=status)
+        ppjs = set()
+        for ppj_id in ppj_ids:
+            try:
+                self.redis.load_preprocessing_job(key=ppj_id)
+            except Exception as e:
+                logger.error(
+                    (
+                        f"Could not load PreprocessingJob with ID {ppj_id} "
+                        f"from Redis! Error: {e}"
+                    )
                 )
-                self.__ppj_cache[ppj.id] = ppj
+                continue
+        for ppj in tqdm(ppjs, desc="Updating PreprocessingJob Status..."):
+            self.redis.update_preprocessing_job(
+                ppj.id, ppj.update_status(status=status)
+            )
+            self.__ppj_cache[ppj.id] = ppj
         return cargos
 
     def _set_next_steps_of_all_cargos(
@@ -285,6 +297,7 @@ class PreprocessingPipeline:
             ppj.id, ppj.update_payload(cargo.ppj_payload)
         )
         cargo.data["ppj"] = ppj
+        self.__ppj_cache[ppj.id] = ppj
         return cargo
 
     def _update_status_of_ppj_payload(
