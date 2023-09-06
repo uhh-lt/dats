@@ -4,8 +4,6 @@ import zipfile
 from pathlib import Path
 from typing import List, Optional
 
-from loguru import logger
-
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.crawler_job import (
@@ -18,6 +16,7 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
 
 
 class NoDataToCrawlError(Exception):
@@ -26,8 +25,8 @@ class NoDataToCrawlError(Exception):
 
 
 class CrawlerJobPreparationError(Exception):
-    def __init__(self) -> None:
-        super().__init__("Cannot prepare and create the CrawlerJob!")
+    def __init__(self, cause: Exception) -> None:
+        super().__init__(f"Cannot prepare and create the CrawlerJob! {e}")
 
 
 class CrawlerJobAlreadyStartedOrDoneError(Exception):
@@ -38,8 +37,8 @@ class CrawlerJobAlreadyStartedOrDoneError(Exception):
 
 
 class NoSuchCrawlerJobError(Exception):
-    def __init__(self, crawler_job_id: str) -> None:
-        super().__init__(f"There exists not CrawlerJob with ID {crawler_job_id}")
+    def __init__(self, crawler_job_id: str, cause: Exception) -> None:
+        super().__init__(f"There exists not CrawlerJob with ID {crawler_job_id}! {e}")
 
 
 class UnknownCrawlerJobError(Exception):
@@ -169,16 +168,18 @@ class CrawlerService(metaclass=SingletonMeta):
             videos_store_path=str(temp_videos_store_path),
             audios_store_path=str(temp_audios_store_path),
         )
-        cj_read = self.redis.store_crawler_job(crawler_job=cj_create)
-        if cj_read is None:
-            raise CrawlerJobPreparationError()
+        try:
+            cj_read = self.redis.store_crawler_job(crawler_job=cj_create)
+        except Exception as e:
+            raise CrawlerJobPreparationError(cause=e)
 
         return cj_read
 
     def get_crawler_job(self, crawler_job_id: str) -> CrawlerJobRead:
-        cj = self.redis.load_crawler_job(key=crawler_job_id)
-        if cj is None:
-            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id)
+        try:
+            cj = self.redis.load_crawler_job(key=crawler_job_id)
+        except Exception as e:
+            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id, cause=e)
 
         return cj
 
@@ -194,9 +195,10 @@ class CrawlerService(metaclass=SingletonMeta):
         update = CrawlerJobUpdate(
             status=status, crawled_data_zip_path=crawled_data_zip_path
         )
-        cj = self.redis.update_crawler_job(key=crawler_job_id, update=update)
-        if cj is None:
-            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id)
+        try:
+            cj = self.redis.update_crawler_job(key=crawler_job_id, update=update)
+        except Exception as e:
+            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id, cause=e)
         return cj
 
     def start_crawler_job_sync(self, crawler_job_id: str) -> Path:

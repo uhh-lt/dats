@@ -1,14 +1,13 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
 from api.dependencies import get_db_session
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.data.dto.user import UserRead
 from app.core.db.redis_service import RedisService
 from app.core.mail.mail_service import MailService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/feedback")
 tags = ["feedback"]
@@ -79,8 +78,6 @@ async def reply_to(
 ) -> str:
     # todo: load_feedback should raise exception, if it does not exist!
     feedback: Optional[FeedbackRead] = RedisService().load_feedback(key=feedback_id)
-    if feedback is None:
-        return f"Feedback with id {feedback_id} not found."
 
     user = crud_user.read(db=db, id=feedback.user_id)
 
