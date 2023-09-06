@@ -6,6 +6,9 @@ from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipel
 
 @lru_cache(maxsize=1)
 def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
+        remove_erroneous_or_unfinished_sdocs,
+    )
     from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
         resolve_sdoc_links,
     )
@@ -119,6 +122,13 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
+        # this method should be called before writing a document to the database.
+        # So in case the document is already in the database but not finished
+        # or erroneous, we remove it to make the preprocessing idempotent.
+        func=remove_erroneous_or_unfinished_sdocs,
+    )
+
+    pipeline.register_step(
         func=write_pptd_to_database,
         required_data=["pptd"],
     )
@@ -149,6 +159,9 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
+        remove_erroneous_or_unfinished_sdocs,
+    )
     from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
         resolve_sdoc_links,
     )
@@ -214,6 +227,13 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     pipeline.register_step(
         func=generate_image_caption,
         required_data=["ppid"],
+    )
+
+    pipeline.register_step(
+        # this method should be called before writing a document to the database.
+        # So in case the document is already in the database but not finished
+        # or erroneous, we remove it to make the preprocessing idempotent.
+        func=remove_erroneous_or_unfinished_sdocs,
     )
 
     pipeline.register_step(
@@ -285,6 +305,9 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.audio.write_ppad_to_database import (
         write_ppad_to_database,
     )
+    from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
+        remove_erroneous_or_unfinished_sdocs,
+    )
     from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
         resolve_sdoc_links,
     )
@@ -331,10 +354,16 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         func=create_pptd_from_transcription,
         required_data=["ppad"],
     )
-
     pipeline.join_pipeline(
         pipeline=text_pipeline,
         skip_steps_with_name=["create_pptd"],
+    )
+
+    pipeline.register_step(
+        # this method should be called before writing a document to the database.
+        # So in case the document is already in the database but not finished
+        # or erroneous, we remove it to make the preprocessing idempotent.
+        func=remove_erroneous_or_unfinished_sdocs,
     )
 
     pipeline.register_step(
@@ -358,6 +387,9 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
 @lru_cache(maxsize=1)
 def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
+    from app.preprocessing.pipeline.steps.common.remove_erroneous_sdoc import (
+        remove_erroneous_or_unfinished_sdocs,
+    )
     from app.preprocessing.pipeline.steps.common.resolve_sdoc_links import (
         resolve_sdoc_links,
     )
@@ -422,6 +454,13 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     pipeline.register_step(
         func=add_word_level_transcriptions_to_ppvd_metadata,
         required_data=["ppvd", "ppad"],
+    )
+
+    pipeline.register_step(
+        # this method should be called before writing a document to the database.
+        # So in case the document is already in the database but not finished
+        # or erroneous, we remove it to make the preprocessing idempotent.
+        func=remove_erroneous_or_unfinished_sdocs,
     )
 
     pipeline.register_step(
