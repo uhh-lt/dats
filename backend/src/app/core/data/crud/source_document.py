@@ -157,8 +157,16 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
     def remove(self, db: Session, *, id: int) -> Optional[SourceDocumentORM]:
         sdoc_db_obj = super().remove(db=db, id=id)
 
-        # remove file from repo
-        RepoService().remove_sdoc_file(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+        if sdoc_db_obj is not None:
+            # remove file from repo
+            RepoService().remove_sdoc_file(
+                sdoc=SourceDocumentRead.from_orm(sdoc_db_obj)
+            )
+
+            # remove from elasticsearch
+            ElasticSearchService().delete_document_from_index(
+                sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
 
         return sdoc_db_obj
 
@@ -183,6 +191,12 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         # remove files from repo
         RepoService().remove_all_project_sdoc_files(proj_id=proj_id)
+
+        # remove from elasticsearch
+        for sdoc_id in ids:
+            ElasticSearchService().delete_document_from_index(
+                proj_id=proj_id, sdoc_id=sdoc_id
+            )
 
         return ids
 
