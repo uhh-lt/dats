@@ -36,10 +36,9 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
+from app.core.search.elasticsearch_service import ElasticSearchService
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
-
-from backend.src.app.core.search.elasticsearch_service import ElasticSearchService
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):
