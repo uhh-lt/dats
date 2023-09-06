@@ -8,9 +8,6 @@ from typing import List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import magic
-from fastapi import HTTPException, UploadFile
-from loguru import logger
-
 from app.core.data.doc_type import DocType, get_doc_type
 from app.core.data.dto.source_document import (
     SDOC_FILENAME_MAX_LENGTH,
@@ -21,6 +18,8 @@ from app.core.data.dto.source_document import (
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from fastapi import HTTPException, UploadFile
+from loguru import logger
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...
@@ -467,6 +466,6 @@ class RepoService(metaclass=SingletonMeta):
             filename=filename,
             doctype=doctype,
             project_id=proj_id,
-            status=SDocStatus.undefined_or_erroneous,
+            status=SDocStatus.unfinished_or_erroneous,
         )
         return dst_path, create_dto
