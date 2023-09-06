@@ -184,10 +184,10 @@ class PreprocessingPipeline:
     ) -> List[PipelineCargo]:
         # update the status of all ppjs
         ppj_ids = set(map(lambda c: c.ppj_id, cargos))
-        ppjs = set()
+        ppjs = []
         for ppj_id in ppj_ids:
             try:
-                self.redis.load_preprocessing_job(key=ppj_id)
+                ppjs.append(self.redis.load_preprocessing_job(key=ppj_id))
             except Exception as e:
                 logger.error(
                     (
