@@ -2,7 +2,6 @@ from typing import List
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.analysis_table import AnalysisTableCreate, AnalysisTableUpdate
-
 from app.core.data.orm.analysis_table import AnalysisTableORM
 from sqlalchemy.orm import Session
 

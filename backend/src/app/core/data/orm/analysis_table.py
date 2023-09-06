@@ -5,8 +5,8 @@ from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
 if TYPE_CHECKING:
-    from app.core.data.orm.user import UserORM
     from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.user import UserORM
 
 
 class AnalysisTableORM(ORMBase):

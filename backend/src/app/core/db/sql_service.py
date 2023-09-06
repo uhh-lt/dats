@@ -8,10 +8,11 @@ from sqlalchemy.engine import Engine
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
 """we import all ORM here so that SQLAlchemy knows about them to generate the SQL tables"""
-from sqlalchemy.orm import Session, sessionmaker
-
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.action import ActionORM
+
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.analysis_table import AnalysisTableORM
 
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -60,12 +61,10 @@ from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.span_text import SpanTextORM
 
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.analysis_table import AnalysisTableORM
-
-# noinspection PyUnresolvedReferences
 from app.core.data.orm.user import UserORM
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from sqlalchemy.orm import Session, sessionmaker
 
 
 class SQLService(metaclass=SingletonMeta):
