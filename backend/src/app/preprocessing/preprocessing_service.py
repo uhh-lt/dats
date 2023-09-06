@@ -191,10 +191,6 @@ class PreprocessingService(metaclass=SingletonMeta):
                 raise HTTPException(
                     detail=f"Unsupported DocType {doc_type}!", status_code=500
                 )
-            # elif is_archive_file(payload.mime_type):
-            # import_uploaded_archive_apply_async(
-            #     archive_file_path=payload.filename, project_id=proj_id
-            # )
 
         # update the PreprocessingJob status to IN_PROGRESS
         self.redis.update_preprocessing_job(
