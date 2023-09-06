@@ -26,6 +26,7 @@ if not STARTUP_DONE:
 from api.endpoints import (
     analysis,
     analysis_table,
+    annotation_document,
     bbox_annotation,
     code,
     crawler,

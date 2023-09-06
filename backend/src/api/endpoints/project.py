@@ -137,7 +137,7 @@ async def delete_project(
 async def get_project_sdocs(
     *,
     proj_id: int,
-    only_finished: Optional[bool] = True,
+    only_finished: bool = True,
     db: Session = Depends(get_db_session),
     skip_limit: Dict[str, str] = Depends(skip_limit_params),
 ) -> PaginatedSourceDocumentReads:
@@ -489,11 +489,14 @@ async def resolve_filename(
     db: Session = Depends(get_db_session),
     proj_id: int,
     filename: str,
-    only_finished: Optional[bool] = True,
+    only_finished: bool = True,
 ) -> Optional[int]:
-    return crud_sdoc.filename2id(
+    sdoc = crud_sdoc.read_by_filename(
         db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
     )
+    if sdoc is not None:
+        return sdoc.id
+    return None
 
 
 @router.get(

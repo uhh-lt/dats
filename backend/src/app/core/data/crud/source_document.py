@@ -1,7 +1,7 @@
 from typing import List, Optional, Set, Tuple
 
 import srsly
-from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
+from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
@@ -48,13 +48,13 @@ class SourceDocumentPreprocessingUnfinishedError(Exception):
 class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]):
     def update(
         self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> ORMModelType:
+    ) -> SourceDocumentORM:
         # Flo: We no not want to update SourceDocument
         raise NotImplementedError()
 
     def update_status(
         self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus
-    ) -> ORMModelType:
+    ) -> SourceDocumentORM:
         sdoc_db_obj = self.read(db=db, id=sdoc_id)
         sdoc_db_obj.status = sdoc_status.value
         db.add(sdoc_db_obj)
@@ -66,7 +66,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
         if not self.exists(db=db, id=sdoc_id, raise_error=raise_error_on_unfinished):
-            return SDocStatus.undefined_or_erroneous
+            return SDocStatus.unfinished_or_erroneous
         status = SDocStatus(
             db.query(self.model.status).filter(self.model.id == sdoc_id).scalar()
         )
@@ -269,27 +269,6 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                 self.model.project_id == proj_id, self.model.filename == filename
             )
         return query.first()
-
-    def filename2id(
-        self, db: Session, *, proj_id: int, only_finished: bool = True, filename: str
-    ) -> Optional[int]:
-        query = db.query(self.model.id)
-
-        if only_finished:
-            query = query.filter(
-                self.model.project_id == proj_id,
-                self.model.filename == filename,
-                self.model.status == SDocStatus.finished,
-            )
-        else:
-            query = query.filter(
-                self.model.project_id == proj_id, self.model.filename == filename
-            )
-        result = query.first()
-
-        if result:
-            return result[0]
-        return None
 
     def count_by_project(
         self, db: Session, *, proj_id: int, only_finished: bool = True

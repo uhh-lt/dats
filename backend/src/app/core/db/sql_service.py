@@ -65,6 +65,7 @@ from app.core.data.orm.user import UserORM
 
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.whiteboard import WhiteboardORM
+
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from sqlalchemy.orm import Session, sessionmaker
