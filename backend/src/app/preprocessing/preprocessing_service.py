@@ -125,10 +125,11 @@ class PreprocessingService(metaclass=SingletonMeta):
         self, proj_id: int, payloads: List[PreprocessingJobPayload]
     ) -> PreprocessingJobRead:
         create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
-        read_dto = self.redis.store_preprocessing_job(preprocessing_job=create_dto)
-        if read_dto is None:
+        try:
+            read_dto = self.redis.store_preprocessing_job(preprocessing_job=create_dto)
+        except Exception as e:
             raise HTTPException(
-                detail="Could not store PreprocessingJob!", status_code=500
+                detail=f"Could not store PreprocessingJob! {e}", status_code=500
             )
 
         logger.info(

@@ -59,8 +59,8 @@ class NoDataToExportError(Exception):
 
 
 class ExportJobPreparationError(Exception):
-    def __init__(self) -> None:
-        super().__init__("Cannot prepare and create the ExportJob!")
+    def __init__(self, cause: Exception) -> None:
+        super().__init__(f"Cannot prepare and create the ExportJob! {cause}")
 
 
 class ExportJobAlreadyStartedOrDoneError(Exception):
@@ -71,8 +71,8 @@ class ExportJobAlreadyStartedOrDoneError(Exception):
 
 
 class NoSuchExportJobError(Exception):
-    def __init__(self, export_job_id: str) -> None:
-        super().__init__(f"There exists not ExportJob with ID {export_job_id}")
+    def __init__(self, export_job_id: str, cause: Exception) -> None:
+        super().__init__(f"There exists not ExportJob with ID {export_job_id}! {cause}")
 
 
 class NoSuchExportFormatError(Exception):
@@ -973,16 +973,18 @@ class ExportService(metaclass=SingletonMeta):
         self._assert_all_requested_data_exists(export_params=export_params)
 
         exj_create = ExportJobCreate(parameters=export_params)
-        exj_read = self.redis.store_export_job(export_job=exj_create)
-        if exj_read is None:
-            raise ExportJobPreparationError()
+        try:
+            exj_read = self.redis.store_export_job(export_job=exj_create)
+        except Exception as e:
+            raise ExportJobPreparationError(cause=e)
 
         return exj_read
 
     def get_export_job(self, export_job_id: str) -> ExportJobRead:
-        exj = self.redis.load_export_job(key=export_job_id)
-        if exj is None:
-            raise NoSuchExportJobError(export_job_id=export_job_id)
+        try:
+            exj = self.redis.load_export_job(key=export_job_id)
+        except Exception as e:
+            raise NoSuchExportJobError(export_job_id=export_job_id, cause=e)
 
         return exj
 
@@ -993,9 +995,10 @@ class ExportService(metaclass=SingletonMeta):
         url: Optional[str] = None,
     ) -> ExportJobRead:
         update = ExportJobUpdate(status=status, results_url=url)
-        exj = self.redis.update_export_job(key=export_job_id, update=update)
-        if exj is None:
-            raise NoSuchExportJobError(export_job_id=export_job_id)
+        try:
+            exj = self.redis.update_export_job(key=export_job_id, update=update)
+        except Exception as e:
+            raise NoSuchExportJobError(export_job_id=export_job_id, cause=e)
         return exj
 
     def start_export_job_sync(self, export_job_id: str) -> ExportJobRead:
