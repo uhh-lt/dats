@@ -97,7 +97,11 @@ export const QueryKey = {
   SDOCS_BY_PROJECT_AND_TAG_SEARCH: "sdocsByProjectAndTagSearch",
   // all sdocs which are in the project (by project id) and suffice the given filters (by filter list)
   SDOCS_BY_PROJECT_AND_FILTERS_SEARCH: "searchResults",
+  // all sdocs that are tagged with the given tag (by tag id)
+  SDOCS_BY_TAG_ID: "searchResults",
 
+  // adoc (by adoc id)
+  ADOC: "adoc",
   // all spans annotations of a adoc (by adoc id)
   ADOC_SPAN_ANNOTATIONS: "adocSpanAnnotations",
   // all bbox annotations of a adoc (by adoc id)
@@ -129,6 +133,11 @@ export const QueryKey = {
   // all project, user TABLEs (by user id and project id)
   TABLES_PROJECT_USER: "tablesProjectUser",
 
+  // a single WHITEBOARD (by WHITEBOARD id)
+  WHITEBOARD: "whiteboard",
+  // all project, user WHITEBOARDs (by user id and project id)
+  WHITEBOARDS_PROJECT_USER: "whiteboardsProjectUser",
+
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
   SEARCH_TAG_STATISTICS: "searchTagStatistics",
@@ -136,6 +145,7 @@ export const QueryKey = {
 
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
+  ANALYSIS_ANNOTATION_OCCURRENCES: "analysisAnnotationOccurrences",
   ANALYSIS_TIMELINE: "anaylsisTimeline",
 
   // preprocessing status of the project (by project id)

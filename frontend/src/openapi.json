@@ -1988,6 +1988,35 @@
         }
       }
     },
+    "/doctag/{tag_id}/sdocs": {
+      "get": {
+        "tags": ["documentTag"],
+        "summary": "Returns all SourceDocuments attached to the Tag with the given ID",
+        "description": "Returns all SourceDocuments attached to the Tag with the given ID if it exists.",
+        "operationId": "get_sdocs_by_tag_id",
+        "parameters": [
+          { "required": true, "schema": { "title": "Tag Id", "type": "integer" }, "name": "tag_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Documenttag-Get Sdocs By Tag Id",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/adoc": {
       "put": {
         "tags": ["annotationDocument"],
@@ -4148,6 +4177,47 @@
         }
       }
     },
+    "/analysis/annotation_occurrences": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns all SourceDocument IDs that match the query parameters.",
+        "description": "Returns all SourceDocument Ids that match the query parameters.",
+        "operationId": "annotation_occurrences",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          { "required": true, "schema": { "title": "Code Id", "type": "integer" }, "name": "code_id", "in": "query" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "title": "User Ids", "type": "array", "items": { "type": "integer" } } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Annotation Occurrences",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnotationOccurrence" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/analysis/timeline_analysis": {
       "post": {
         "tags": ["analysis"],
@@ -4491,6 +4561,141 @@
           }
         }
       }
+    },
+    "/whiteboard": {
+      "put": {
+        "tags": ["whiteboard"],
+        "summary": "Creates an Whiteboard",
+        "description": "Creates an Whiteboard",
+        "operationId": "create",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/whiteboard/{whiteboard_id}": {
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns the Whiteboard",
+        "description": "Returns the Whiteboard with the given ID if it exists",
+        "operationId": "get_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Whiteboard Id", "type": "integer" },
+            "name": "whiteboard_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["whiteboard"],
+        "summary": "Removes the Whiteboard",
+        "description": "Removes the Whiteboard with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Whiteboard Id", "type": "integer" },
+            "name": "whiteboard_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["whiteboard"],
+        "summary": "Updates the Whiteboard",
+        "description": "Updates the Whiteboard with the given ID if it exists",
+        "operationId": "update_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Whiteboard Id", "type": "integer" },
+            "name": "whiteboard_id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardUpdate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/whiteboard/project/{project_id}/user/{user_id}": {
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns Whiteboards of the Project of the User",
+        "description": "Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
+        "operationId": "get_by_project_and_user",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Whiteboard-Get By Project And User",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WhiteboardRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4697,6 +4902,32 @@
             "description": "Updated timestamp of the AnnotationDocument",
             "format": "date-time"
           }
+        }
+      },
+      "AnnotationOccurrence": {
+        "title": "AnnotationOccurrence",
+        "required": ["annotation", "code", "sdoc", "text"],
+        "type": "object",
+        "properties": {
+          "annotation": {
+            "title": "Annotation",
+            "anyOf": [
+              { "$ref": "#/components/schemas/SpanAnnotationRead" },
+              { "$ref": "#/components/schemas/BBoxAnnotationRead" }
+            ],
+            "description": "The Annotation"
+          },
+          "code": {
+            "title": "Code",
+            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
+            "description": "The occuring Code."
+          },
+          "sdoc": {
+            "title": "Sdoc",
+            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "description": "The SourceDocument where the Code occurs."
+          },
+          "text": { "title": "Text", "type": "string", "description": "The Tet of the Annotation" }
         }
       },
       "AttachedObjectType": {
@@ -6517,6 +6748,58 @@
           },
           "msg": { "title": "Message", "type": "string" },
           "type": { "title": "Error Type", "type": "string" }
+        }
+      },
+      "WhiteboardCreate": {
+        "title": "WhiteboardCreate",
+        "required": ["title", "content", "project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the Whiteboard" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the Whiteboard" },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the Whiteboard belongs to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the Whiteboard belongs to" }
+        }
+      },
+      "WhiteboardRead": {
+        "title": "WhiteboardRead",
+        "required": ["title", "content", "id", "project_id", "user_id", "created", "updated"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the Whiteboard" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the Whiteboard" },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the Whiteboard" },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the Whiteboard belongs to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the Whiteboard belongs to" },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the Whiteboard",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the Whiteboard",
+            "format": "date-time"
+          }
+        }
+      },
+      "WhiteboardUpdate": {
+        "title": "WhiteboardUpdate",
+        "required": ["title", "content"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the Whiteboard" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the Whiteboard" }
         }
       },
       "SourceDocumentReadAction": {

@@ -1,5 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { AnalysisConcept, AnalysisService, CodeFrequency, CodeOccurrence, TimelineAnalysisResult } from "./openapi";
+import {
+  AnalysisConcept,
+  AnalysisService,
+  AnnotationOccurrence,
+  CodeFrequency,
+  CodeOccurrence,
+  TimelineAnalysisResult,
+} from "./openapi";
 import { QueryKey } from "./QueryKey";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
@@ -18,6 +25,20 @@ const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number
     [QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId],
     () =>
       AnalysisService.codeOccurrences({
+        projectId,
+        codeId: codeId!,
+        requestBody: userIds,
+      }),
+    {
+      enabled: userIds.length > 0 && !!codeId,
+    }
+  );
+
+const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
+  useQuery<AnnotationOccurrence[], Error>(
+    [QueryKey.ANALYSIS_ANNOTATION_OCCURRENCES, projectId, userIds, codeId],
+    () =>
+      AnalysisService.annotationOccurrences({
         projectId,
         codeId: codeId!,
         requestBody: userIds,
@@ -46,6 +67,7 @@ const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
   useTimelineAnalysis,
+  useAnnotationOccurrences,
 };
 
 export default AnalysisHooks;
