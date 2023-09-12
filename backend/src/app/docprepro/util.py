@@ -10,7 +10,6 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from config import conf
 
-cc = conf.docprepro.celery
 sql: SQLService = SQLService()
 repo: RepoService = RepoService()
 

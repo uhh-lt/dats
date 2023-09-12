@@ -19,7 +19,7 @@ torch.set_num_threads(1)
 sqls = SQLService(echo=False)
 faisss = FaissIndexService()
 
-image_encoder_batch_size = conf.docprepro.simsearch.image_encoder.batch_size
+image_encoder_batch_size = conf.preprocessing.simsearch.image_encoder.batch_size
 
 
 def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProImageDoc]:
@@ -46,7 +46,7 @@ def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProIm
             show_progress_bar=True,
             normalize_embeddings=True,
             convert_to_numpy=True,
-            device=conf.docprepro.simsearch.text_encoder.device,
+            device=conf.preprocessing.simsearch.text_encoder.device,
         )
     except RuntimeError as e:
         logger.error(f"Thread Pool crashed: {e} ... Retrying!")
@@ -56,7 +56,7 @@ def index_image_document_in_faiss_(ppids: List[PreProImageDoc]) -> List[PreProIm
             show_progress_bar=True,
             normalize_embeddings=True,
             convert_to_numpy=True,
-            device=conf.docprepro.simsearch.text_encoder.device,
+            device=conf.preprocessing.simsearch.text_encoder.device,
         )
 
     # close the image files again

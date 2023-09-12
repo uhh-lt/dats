@@ -2,15 +2,14 @@ from functools import lru_cache
 from typing import Dict
 
 import spacy
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from config import conf
 from loguru import logger
 from spacy import Language
 from spacy.tokens import Doc
 
-from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from config import conf
-
-DEVICE = conf.docprepro.text.spacy.device
+DEVICE = conf.preprocessing.text.spacy.device
 
 
 @lru_cache(maxsize=1)
@@ -31,7 +30,7 @@ def __load_spacy_models() -> Dict[str, Language]:
 
     nlp: Dict[str, Language] = dict()
 
-    for lang, model in conf.docprepro.text.spacy.models.items():
+    for lang, model in conf.preprocessing.text.spacy.models.items():
         if lang == "default":
             continue
         logger.info(f"Loading spaCy Model '{model}' ...")
@@ -39,10 +38,10 @@ def __load_spacy_models() -> Dict[str, Language]:
 
     logger.debug("Loading spaCy Models... Done!")
 
-    nlp["default"] = nlp[conf.docprepro.text.spacy.models.default]
+    nlp["default"] = nlp[conf.preprocessing.text.spacy.models.default]
 
     for lang in nlp.values():
-        lang.max_length = conf.docprepro.text.spacy.max_text_length
+        lang.max_length = conf.preprocessing.text.spacy.max_text_length
 
     return nlp
 

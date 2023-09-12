@@ -24,9 +24,9 @@ torch.set_num_threads(1)
 sqls = SQLService(echo=False)
 faisss = FaissIndexService()
 
-text_encoder_batch_size = conf.docprepro.simsearch.text_encoder.batch_size
+text_encoder_batch_size = conf.preprocessing.simsearch.text_encoder.batch_size
 text_encoder_min_sentence_length = (
-    conf.docprepro.simsearch.text_encoder.min_sentence_length
+    conf.preprocessing.simsearch.text_encoder.min_sentence_length
 )
 
 
@@ -64,7 +64,7 @@ def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProText
                 show_progress_bar=True,
                 normalize_embeddings=True,
                 convert_to_numpy=True,
-                device=conf.docprepro.simsearch.text_encoder.device,
+                device=conf.preprocessing.simsearch.text_encoder.device,
             )
         except RuntimeError as e:
             logger.error(f"Thread Pool crashed: {e} ... Retrying!")
@@ -74,7 +74,7 @@ def index_text_document_in_faiss_(pptds: List[PreProTextDoc]) -> List[PreProText
                 show_progress_bar=True,
                 normalize_embeddings=True,
                 convert_to_numpy=True,
-                device=conf.docprepro.simsearch.text_encoder.device,
+                device=conf.preprocessing.simsearch.text_encoder.device,
             )
 
         # insert links and return created link ids
