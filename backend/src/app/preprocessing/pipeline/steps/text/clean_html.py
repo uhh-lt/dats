@@ -63,7 +63,7 @@ def remove_unresolved_links(html_content: str) -> str:
     for link in soup.find_all("a"):
         href = link.get("href")
         if href and not href.startswith("http"):
-            print("removing unresolved link", href)
+            logger.debug("removing unresolved link", href)
             link.unwrap()
 
     return str(soup)

@@ -148,14 +148,6 @@ def run_object_detection(cargo: PipelineCargo) -> PipelineCargo:
     label_ids: List[int] = output_dict["labels"][keep].tolist()
     labels: List[str] = [coco2017_labels[lid].upper() for lid in label_ids]
 
-    print("bboxes", bboxes)
-    print("bboxes", bboxes)
-    print("bboxes", bboxes)
-    print("bboxes", bboxes)
-    print("bboxes", bboxes)
-    print("bboxes", bboxes)
-    print("bboxes", bboxes)
-
     # Flo: generate the AutoBBoxes
     for (x_min, y_min, x_max, y_max), code, confidence in zip(
         bboxes, labels, confidences

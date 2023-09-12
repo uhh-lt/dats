@@ -117,7 +117,7 @@ class RepoService(metaclass=SingletonMeta):
                         elif file_path.is_dir():
                             shutil.rmtree(file_path)
                     except Exception as e:
-                        print(f"Failed to remove {file_path} because: {e}")
+                        logger.error(f"Failed to remove {file_path} because: {e}")
 
             # make sure repository root dir exists
             if not self.repo_root.exists():
