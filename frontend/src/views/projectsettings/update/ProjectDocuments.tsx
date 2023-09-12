@@ -31,7 +31,7 @@ import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 import ProjectDocumentsContextMenu from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
-import { docTypeToIcon } from "../../../features/DocumentExplorer/DocumentExplorer";
+import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
