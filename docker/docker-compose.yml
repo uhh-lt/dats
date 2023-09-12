@@ -114,6 +114,7 @@ services:
       TORCH_HOME: /models_cache
     volumes:
       - ../backend/src:/dwts_code/src
+      - ./spacy_models:/spacy_models
       - ./backend_repo:/tmp/dwts
       - ./models_cache:/models_cache
       - ./tika:/tika
@@ -238,7 +239,7 @@ services:
       - redis
       - rabbitmq
       - celery-background-jobs-worker
-      - celery-simsearch-jobs-worker
+      - celery-simsearch-worker
       - elasticsearch
     networks:
       - dwts_demo_network
