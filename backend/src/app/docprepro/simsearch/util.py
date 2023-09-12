@@ -16,21 +16,21 @@ from sentence_transformers import SentenceTransformer
 
 @lru_cache(maxsize=1)
 def _load_text_encoder() -> SentenceTransformer:
-    text_encoder_model = conf.docprepro.simsearch.text_encoder.model
+    text_encoder_model = conf.preprocessing.simsearch.text_encoder.model
     logger.debug(f"Loading text encoder model {text_encoder_model} ...")
     return SentenceTransformer(
-        conf.docprepro.simsearch.text_encoder.model,
-        device=conf.docprepro.simsearch.text_encoder.device,
+        conf.preprocessing.simsearch.text_encoder.model,
+        device=conf.preprocessing.simsearch.text_encoder.device,
     )
 
 
 @lru_cache(maxsize=1)
 def _load_image_encoder() -> SentenceTransformer:
-    image_encoder_model = conf.docprepro.simsearch.image_encoder.model
+    image_encoder_model = conf.preprocessing.simsearch.image_encoder.model
     logger.debug(f"Loading image encoder model {image_encoder_model} ...")
     return SentenceTransformer(
-        conf.docprepro.simsearch.image_encoder.model,
-        device=conf.docprepro.simsearch.image_encoder.device,
+        conf.preprocessing.simsearch.image_encoder.model,
+        device=conf.preprocessing.simsearch.image_encoder.device,
     )
 
 

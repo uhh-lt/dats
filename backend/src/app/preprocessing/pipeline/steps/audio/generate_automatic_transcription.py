@@ -5,20 +5,19 @@ from typing import Any, Dict
 import numpy as np
 import torch
 import whisper_timestamped
-from loguru import logger
-from scipy.io import wavfile
-
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.audio.wordleveltranscription import (
     WordLevelTranscription,
 )
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from config import conf
+from loguru import logger
+from scipy.io import wavfile
 
-WHISPER_MODEL = conf.docprepro.audio.whisper.model
-DEVICE = conf.docprepro.audio.whisper.device
+WHISPER_MODEL = conf.preprocessing.audio.whisper.model
+DEVICE = conf.preprocessing.audio.whisper.device
 DOWNLOAD_DIR = os.environ["TRANSFORMERS_CACHE"]
-WHISPER_TRANSCRIBE_OPTIONS = conf.docprepro.audio.whisper.options
+WHISPER_TRANSCRIBE_OPTIONS = conf.preprocessing.audio.whisper.options
 
 torch.set_num_threads(1)
 

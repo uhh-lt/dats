@@ -11,7 +11,6 @@ from app.core.db.sql_service import SQLService
 from config import conf
 from fastapi import UploadFile
 
-cc = conf.docprepro.celery
 sql: SQLService = SQLService()
 repo: RepoService = RepoService()
 

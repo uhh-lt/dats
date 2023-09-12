@@ -2,18 +2,17 @@ from functools import lru_cache
 from typing import Tuple
 
 import torch
+from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from config import conf
 from loguru import logger
 from PIL import Image
 from transformers import AutoTokenizer, VisionEncoderDecoderModel, ViTImageProcessor
 
-from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
-from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from config import conf
-
-DEVICE = conf.docprepro.image.image_captioning.device
-MODEL = conf.docprepro.image.image_captioning.model
-MAX_CAPTION_LENGTH = conf.docprepro.image.image_captioning.max_caption_length
-NUM_BEAMS = conf.docprepro.image.image_captioning.num_beams
+DEVICE = conf.preprocessing.image.image_captioning.device
+MODEL = conf.preprocessing.image.image_captioning.model
+MAX_CAPTION_LENGTH = conf.preprocessing.image.image_captioning.max_caption_length
+NUM_BEAMS = conf.preprocessing.image.image_captioning.num_beams
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)

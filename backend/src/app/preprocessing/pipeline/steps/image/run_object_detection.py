@@ -2,18 +2,17 @@ from functools import lru_cache
 from typing import List, Tuple
 
 import torch
-from loguru import logger
-from PIL import Image
-from transformers import DetrFeatureExtractor, DetrForObjectDetection
-
 from app.preprocessing.pipeline.model.image.autobbox import AutoBBox
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from config import conf
+from loguru import logger
+from PIL import Image
+from transformers import DetrFeatureExtractor, DetrForObjectDetection
 
-DEVICE = conf.docprepro.image.object_detection.device
-MODEL = conf.docprepro.image.object_detection.model
-CONFIDENCE_THRESHOLD = conf.docprepro.image.object_detection.confidence_threshold
+DEVICE = conf.preprocessing.image.object_detection.device
+MODEL = conf.preprocessing.image.object_detection.model
+CONFIDENCE_THRESHOLD = conf.preprocessing.image.object_detection.confidence_threshold
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)

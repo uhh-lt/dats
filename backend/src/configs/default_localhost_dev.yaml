@@ -16,7 +16,24 @@ repo:
     port: ${oc.env:CONTENT_SERVER_EXPOSED, 13134}
     context_path: /
 
-docprepro:
+celery:
+  batch_size:
+    text: 200
+    image: 10
+    audio: 10
+    video: 10
+  backend:
+    host: ${oc.env:REDIS_HOST, localhost}
+    port: ${oc.env:REDIS_PORT, 6379}
+    db: 0
+    password: ${oc.env:REDIS_PASSWORD, dwts123}
+  broker:
+    host: ${oc.env:RABBITMQ_HOST, localhost}
+    port: ${oc.env:RABBITMQ_PORT, 5672}
+    user: ${oc.env:RABBITMQ_USER, dwtsuser}
+    password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
+
+preprocessing:
   text:
     spacy:
       # note that the spacy models have to be installed in the env to use it! (docker!)
@@ -60,23 +77,6 @@ docprepro:
       batch_size: 32
       device: cpu
       min_sentence_length: 5
-
-  celery:
-    batch_size:
-      text: 200
-      image: 10
-      audio: 10
-      video: 10
-    backend:
-      host: ${oc.env:REDIS_HOST, localhost}
-      port: ${oc.env:REDIS_PORT, 6379}
-      db: 0
-      password: ${oc.env:REDIS_PASSWORD, dwts123}
-    broker:
-      host: ${oc.env:RABBITMQ_HOST, localhost}
-      port: ${oc.env:RABBITMQ_PORT, 5672}
-      user: ${oc.env:RABBITMQ_USER, dwtsuser}
-      password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
 
 postgres:
   host: ${oc.env:POSTGRES_HOST, 127.0.0.1}

@@ -4,7 +4,7 @@ from typing import Dict
 from celery import Celery
 from config import conf
 
-cc = conf.docprepro.celery
+cc = conf.celery
 
 
 class CeleryConfig:

@@ -7,7 +7,7 @@ from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from config import conf
 
-BULK_THRESHOLD = conf.docprepro.text.bulk_threshold
+BULK_THRESHOLD = conf.preprocessing.text.bulk_threshold
 es = ElasticSearchService()
 
 
