@@ -63,6 +63,9 @@ from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.analysis_table import AnalysisTableORM
 
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.whiteboard import WhiteboardORM
+
+# noinspection PyUnresolvedReferences
 from app.core.data.orm.user import UserORM
 from app.util.singleton_meta import SingletonMeta
 from config import conf

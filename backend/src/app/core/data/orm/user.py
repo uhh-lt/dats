@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
     from app.core.data.orm.analysis_table import AnalysisTableORM
+    from app.core.data.orm.whiteboard import WhiteboardORM
 
 
 class UserORM(ORMBase):
@@ -46,6 +47,10 @@ class UserORM(ORMBase):
 
     analysis_tables: List["AnalysisTableORM"] = relationship(
         "AnalysisTableORM", back_populates="user", passive_deletes=True
+    )
+
+    whiteboards: List["WhiteboardORM"] = relationship(
+        "WhiteboardORM", back_populates="user", passive_deletes=True
     )
 
     actions: List["ActionORM"] = relationship(
