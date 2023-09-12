@@ -39,9 +39,12 @@ class APIIngress:
 
 @serve.deployment(
     ray_actor_options={"num_gpus": 1},
-    autoscaling_config={"min_replicas": 0, "max_replicas": 1},
+    autoscaling_config={
+        "min_replicas": 0,
+        "max_replicas": 1,
+    },
 )
-class WhisperT:
+class WhisperDeployment:
     def convert(self, file_path: str) -> str:
         file_path_uncompressed = f"{file_path}.uncompressed.wav"
         # Create 16khz Mono PCM File

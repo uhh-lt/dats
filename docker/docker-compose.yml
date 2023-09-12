@@ -189,19 +189,26 @@ services:
             - capabilities: [gpu]
 
   ray-model-worker:
-    image: ray:WContainer
-    command: /dwts_code/src/ray/entrypoint.sh
+    image: uhhlt/dwts_ray:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
+    command: /dwts_code_ray/ray_model_worker_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
+    environment:
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DWISE_BACKEND_CONFIG: ${DWISE_BACKEND_CONFIG:-/dwts_code/src/configs/default.yaml}
+      HUGGINGFACE_HUB_CACHE: /models_cache
+      TRANSFORMERS_CACHE: /models_cache
+      TORCH_HOME: /models_cache
     volumes:
-      - ../backend/src:/dwts_code/src
+      - ../backend/src/app/preprocessing/ray:/dwts_code_ray
+      - ./spacy_models:/spacy_models
       - ./backend_repo:/tmp/dwts
       - ./models_cache:/models_cache
     ports:
       - "${RAY_API_EXPOSED:-8000}:8000"
       - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
+    shm_size: 12gb
     networks:
       - dwts_demo_network
-    shm_size: 10.24gb
     deploy:
       resources:
         reservations:

@@ -1,13 +1,12 @@
 import logging
 
+import spacy
 from fastapi import APIRouter
 from ray import serve
 
 router = APIRouter()
 
 logger = logging.getLogger("ray.serve")
-
-import spacy
 
 
 @serve.deployment(num_replicas=1)
@@ -18,16 +17,19 @@ class APIIngress:
 
     @router.get("/spacy")
     async def classify(self, sentence: str):
-        predict_ref = await self.spacyR.spacer.remote(sentence)
+        predict_ref = await self.spacyRay.spacer.remote(sentence)
         predict_result = await predict_ref
         return predict_result
 
 
 @serve.deployment(
     ray_actor_options={"num_gpus": 1},
-    autoscaling_config={"min_replicas": 0, "max_replicas": 2},
+    autoscaling_config={
+        "min_replicas": 0,
+        "max_replicas": 2,
+    },
 )
-class Space:
+class SpacyDeployment:
     def __init__(self):
         self.model = "en_core_web_sm"
 
