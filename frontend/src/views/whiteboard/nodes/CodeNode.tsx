@@ -1,44 +1,172 @@
-import React, { useCallback } from "react";
-import { Position } from "reactflow";
-import { Card, CardContent, CardHeader, Stack, Typography } from "@mui/material";
-import "./nodes.css";
-import LabelIcon from "@mui/icons-material/Label";
+import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
+import { useEffect, useRef } from "react";
+import { NodeProps, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks";
-import { NodeProps } from "./MemoNode";
-import ExpandHandle from "./ExpandHandle";
+import { useAuth } from "../../../auth/AuthProvider";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
+import {
+  createCodeNodes,
+  createCodeParentCodeEdge,
+  createMemoCodeEdge,
+  createMemoNodes,
+  isCodeParentCodeEdge,
+  isMemoCodeEdge,
+} from "../whiteboardUtils";
+import { useReactFlowService } from "../hooks/ReactFlowService";
+import { CodeNodeData, DWTSNodeData, isCodeNode, isMemoNode } from "../types";
+import BaseNode from "./BaseNode";
+import { openCodeEditDialog } from "../../annotation/CodeExplorer/CodeEditDialog";
 
-function CodeNode({ data, isConnectable }: NodeProps) {
-  const code: any = CodeHooks.useGetCode(data.objId);
-  const name = code.isLoading ? "Loading" : code.isError ? "Error" : code.isSuccess ? code.data.name : "";
+function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeNodeData>) {
+  // global client state
+  const userId = useAuth().user.data!.id;
 
-  // TODO: use <input> with onChange to edit a code (name and description)
-  const onChange = useCallback((evt: any) => {
-    console.log(evt.target.value);
-  }, []);
+  // whiteboard state (react-flow)
+  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowService = useReactFlowService(reactFlowInstance);
+
+  // context menu
+  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+
+  // global server state (react-query)
+  const code = CodeHooks.useGetCode(data.codeId);
+  const parentCode = CodeHooks.useGetCode(data.parentCodeId);
+  const memo = CodeHooks.useGetMemo(data.codeId, userId);
+
+  // effects
+  useEffect(() => {
+    if (!parentCode.data) return;
+    const parentCodeId = parentCode.data.id;
+
+    // checks which edges are already in the graph and removes edges to non-existing codes
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isCodeParentCodeEdge)
+      .filter((edge) => edge.source === `code-${data.codeId}`)
+      .filter((edge) => parseInt(edge.target.split("-")[1]) !== parentCodeId);
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
+    // checks which code nodes are already in the graph and adds edges to the correct node
+    const existingCodeNodeIds = reactFlowInstance
+      .getNodes()
+      .filter(isCodeNode)
+      .map((code) => code.data.codeId);
+
+    if (existingCodeNodeIds.includes(parentCodeId)) {
+      reactFlowInstance.addEdges([createCodeParentCodeEdge({ codeId: data.codeId, parentCodeId })]);
+    }
+  }, [data.codeId, reactFlowInstance, parentCode.data]);
+
+  useEffect(() => {
+    if (!code.data) return;
+    const codeId = code.data.id;
+
+    // checks which child code nodes are already in the graph and adds edges to the correct node
+    const existingChildCodeNodes = reactFlowInstance
+      .getNodes()
+      .filter(isCodeNode)
+      .filter((code) => code.data.parentCodeId === codeId);
+    reactFlowInstance.addEdges(
+      existingChildCodeNodes.map((childCode) =>
+        createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId })
+      )
+    );
+  }, [reactFlowInstance, code.data]);
+
+  useEffect(() => {
+    if (!memo.data) return;
+    const memoId = memo.data.id;
+
+    // checks which edges are already in the graph and removes edges to non-existing memos
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isMemoCodeEdge)
+      .filter((edge) => edge.target === `code-${data.codeId}`) // isEdgeForThisCode
+      .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
+    // checks which memo nodes are already in the graph and adds edge to the correct node
+    const existingMemoNodeIds = reactFlowInstance
+      .getNodes()
+      .filter(isMemoNode)
+      .map((memo) => memo.data.memoId);
+    if (existingMemoNodeIds.includes(memoId)) {
+      reactFlowInstance.addEdges([createMemoCodeEdge({ memoId, codeId: data.codeId })]);
+    }
+  }, [data.codeId, reactFlowInstance, memo.data]);
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (event.detail >= 2 && code.isSuccess) {
+      openCodeEditDialog(code.data);
+    }
+  };
+
+  // context menu actions
+  const handleContextMenuExpandImageAnnotations = () => {
+    alert("Not implemented!");
+  };
+
+  const handleContextMenuExpandTextAnnotations = () => {
+    alert("Not implemented!");
+  };
+
+  const handleContextMenuExpandChildCodes = () => {
+    alert("Not implemented!");
+  };
+
+  const handleContextMenuExpandParentCode = () => {
+    if (!parentCode.data) return;
+
+    reactFlowService.addNodes(createCodeNodes({ codes: [parentCode.data], position: { x: xPos, y: yPos + 200 } }));
+    contextMenuRef.current?.close();
+  };
+
+  const handleContextMenuExpandMemo = () => {
+    if (!memo.data) return;
+
+    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos + 200 } }));
+    contextMenuRef.current?.close();
+  };
 
   return (
-    <Card className="tag-node" style={{ backgroundColor: data.isSelected ? "#FDDA0D" : "#AF7C7B" }}>
-      <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
-      <CardHeader
-        titleTypographyProps={{ fontSize: 12, fontWeight: "bold" }}
-        style={{ padding: "0 0 4px" }}
-        className="node-header"
-        title={
-          <Stack direction="row" paddingRight={1}>
-            <LabelIcon style={{ color: code.data?.color, blockSize: 18 }} />
-            {"Code: " + name}
-          </Stack>
-        }
-      />
-      {code.isSuccess && code.data.description && (
-        <CardContent className="tag-content" style={{ padding: 2, maxHeight: data.isSelected ? 120 : 50 }}>
-          <Typography fontSize={10} textAlign={"center"}>
-            {code.data.description}
-          </Typography>
-        </CardContent>
-      )}
-      <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
-    </Card>
+    <>
+      <BaseNode
+        raised={selected}
+        onClick={handleClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          contextMenuRef.current?.open({
+            top: e.clientY,
+            left: e.clientX,
+          });
+        }}
+      >
+        {code.isSuccess ? (
+          <>
+            <CardHeader title={<CodeRenderer code={code.data} />} />
+            <CardContent>
+              <Typography>{code.data.description}</Typography>
+            </CardContent>
+          </>
+        ) : code.isError ? (
+          <>{code.error.message}</>
+        ) : (
+          <>Loading...</>
+        )}
+      </BaseNode>
+      <GenericPositionMenu ref={contextMenuRef}>
+        <MenuItem onClick={handleContextMenuExpandTextAnnotations}>Expand text annotations</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandImageAnnotations}>Expand image annotations</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandParentCode} disabled={!parentCode.data}>
+          Expand parent code
+        </MenuItem>
+        <MenuItem onClick={handleContextMenuExpandChildCodes}>Expand child codes</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memo.data}>
+          Expand memo
+        </MenuItem>
+      </GenericPositionMenu>
+    </>
   );
 }
 

@@ -1,36 +1,37 @@
-import React, { useContext, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useAuth } from "../../auth/AuthProvider";
-import "@toast-ui/editor/dist/toastui-editor.css";
-import ProjectHooks from "../../api/ProjectHooks";
+import { CircularProgress, Portal, Typography } from "@mui/material";
+import { useContext } from "react";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { Box, Grid, Portal, Toolbar, Typography } from "@mui/material";
-import MemoFlow from "./MemoFlow";
+import WhiteboardFlow from "./WhiteboardFlow";
+import { ReactFlowProvider } from "reactflow";
+import WhiteboardHooks from "../../api/WhiteboardHooks";
+import { useParams } from "react-router-dom";
 
 function Whiteboard() {
+  // global client state
   const appBarContainerRef = useContext(AppBarContext);
+  const urlParams = useParams() as { projectId: string; whiteboardId: string };
+  const projectId = parseInt(urlParams.projectId);
+  const whiteboardId = parseInt(urlParams.whiteboardId);
 
-  // global state
-  const { user } = useAuth();
-
-  // router
-  const { projectId } = useParams() as {
-    projectId: string;
-  };
-
-  const userMemos = ProjectHooks.useGetAllUserMemos(parseInt(projectId), user.data!.id);
-
-  // effects
-  useEffect(() => {}, []);
+  // global server state
+  const whiteboard = WhiteboardHooks.useGetWhiteboard(whiteboardId);
 
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
         <Typography variant="h6" color="inherit" component="div">
-          Project Whiteboard
+          Whiteboard: {whiteboard.data?.title}
         </Typography>
       </Portal>
-      {userMemos.isSuccess && userMemos.data && <MemoFlow memos={userMemos.data} />}
+      {whiteboard.isSuccess ? (
+        <ReactFlowProvider>
+          <WhiteboardFlow key={`${projectId}-${whiteboardId}`} whiteboard={whiteboard.data} />
+        </ReactFlowProvider>
+      ) : whiteboard.isLoading ? (
+        <CircularProgress />
+      ) : whiteboard.isError ? (
+        <div>ERROR: {whiteboard.error.message}</div>
+      ) : null}
     </>
   );
 }

@@ -25,12 +25,10 @@ import Register from "../views/registration/Register";
 import Search from "../views/search/Search";
 import Settings from "../views/settings/Settings";
 import Feedback from "../views/feedback/Feedback";
-<<<<<<< HEAD
+import Whiteboard from "../views/whiteboard/Whiteboard";
 import TableDashboard from "../views/analysis/Table/TableDashboard";
 import TableView from "../views/analysis/Table/TableView";
-=======
-import Whiteboard from "../views/whiteboard/Whiteboard";
->>>>>>> ee4dbe1 (Created the new whiteboard tab and created a custom node for the memos. All memos of a user are placed on the whiteboard initially.)
+import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
 
 const router = createBrowserRouter([
   {
@@ -157,17 +155,20 @@ const router = createBrowserRouter([
         element: <TimelineAnalysis />,
       },
       {
-<<<<<<< HEAD
         path: "/project/:projectId/analysis/table",
         element: <TableDashboard />,
       },
       {
         path: "/project/:projectId/analysis/table/:tableId",
         element: <TableView />,
-=======
+      },
+      {
         path: "/project/:projectId/whiteboard",
+        element: <WhiteboardDashboard />,
+      },
+      {
+        path: "/project/:projectId/whiteboard/:whiteboardId",
         element: <Whiteboard />,
->>>>>>> ee4dbe1 (Created the new whiteboard tab and created a custom node for the memos. All memos of a user are placed on the whiteboard initially.)
       },
       {
         path: "/project/:projectId/logbook",

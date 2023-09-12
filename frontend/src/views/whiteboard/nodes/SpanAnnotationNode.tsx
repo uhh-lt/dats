@@ -1,47 +1,185 @@
-import React from "react";
-import { Position } from "reactflow";
-import { Card, CardHeader } from "@mui/material";
-import "./nodes.css";
+import { Box, CardContent, CardHeader, MenuItem, Stack, Typography } from "@mui/material";
+import { useEffect, useRef } from "react";
+import { NodeProps, useReactFlow } from "reactflow";
+import AdocHooks from "../../../api/AdocHooks";
+import CodeHooks from "../../../api/CodeHooks";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
-import { NodeProps } from "./MemoNode";
-import ExpandHandle from "./ExpandHandle";
+import { useAuth } from "../../../auth/AuthProvider";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
+import { openSpanAnnotationEditDialog } from "../../../features/Annotation/SpanAnnotationEditDialog";
+import {
+  createCodeNodes,
+  createCodeSpanAnnotationEdge,
+  createMemoNodes,
+  createMemoSpanAnnotationEdge,
+  createSdocNodes,
+  createSdocSpanAnnotationEdge,
+  isCodeSpanAnnotationEdge,
+  isMemoSpanAnnotationEdge,
+  isSdocSpanAnnotationEdge,
+} from "../whiteboardUtils";
+import { useReactFlowService } from "../hooks/ReactFlowService";
+import { DWTSNodeData, SpanAnnotationNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
+import BaseNode from "./BaseNode";
 
-function SpanAnnotationNode({ data, isConnectable }: NodeProps) {
-  const annotation: any = SpanAnnotationHooks.useGetAnnotation(data.objId);
-  const content = annotation.isLoading
-    ? "Loading"
-    : annotation.isError
-    ? "Error"
-    : annotation.isSuccess
-    ? annotation.data.span_text
-    : "";
+function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SpanAnnotationNodeData>) {
+  // global client state
+  const userId = useAuth().user.data!.id;
+
+  // whiteboard state (react-flow)
+  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowService = useReactFlowService(reactFlowInstance);
+
+  // context menu
+  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+
+  // global server state (react-query)
+  const annotation = SpanAnnotationHooks.useGetAnnotation(data.spanAnnotationId);
+  const code = CodeHooks.useGetCode(annotation.data?.code.id);
+  const adoc = AdocHooks.useGetAdoc(annotation.data?.annotation_document_id);
+  const memo = SpanAnnotationHooks.useGetMemo(data.spanAnnotationId, userId);
+
+  // effects
+  useEffect(() => {
+    if (!code.data) return;
+    const codeId = code.data.id;
+
+    // checks which edges are already in the graph and removes edges to non-existing codes
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isCodeSpanAnnotationEdge)
+      .filter((edge) => edge.target === `spanAnnotation-${data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => parseInt(edge.source.split("-")[1]) !== codeId); // isEdgeForIncorrectCode
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
+    // checks which code nodes are already in the graph and adds edges to the correct node
+    const existingCodeNodeIds = reactFlowInstance
+      .getNodes()
+      .filter(isCodeNode)
+      .map((code) => code.data.codeId);
+    if (existingCodeNodeIds.includes(codeId)) {
+      reactFlowInstance.addEdges([createCodeSpanAnnotationEdge({ codeId, spanAnnotationId: data.spanAnnotationId })]);
+    }
+  }, [data.spanAnnotationId, reactFlowInstance, code.data]);
+
+  useEffect(() => {
+    if (!adoc.data) return;
+    const sdocId = adoc.data.source_document_id;
+
+    // check which edges are already in the graph and removes edges to non-existing sdocs
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isSdocSpanAnnotationEdge)
+      .filter((edge) => edge.target === `spanAnnotation-${data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => parseInt(edge.source.split("-")[1]) !== sdocId); // isEdgeForIncorrectSdoc
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
+    // checks which sdoc nodes are already in the graph and adds edges to the correct node
+    const existingSdocNodeIds = reactFlowInstance
+      .getNodes()
+      .filter(isSdocNode)
+      .map((sdoc) => sdoc.data.sdocId);
+    if (existingSdocNodeIds.includes(sdocId)) {
+      reactFlowInstance.addEdges([createSdocSpanAnnotationEdge({ sdocId, spanAnnotationId: data.spanAnnotationId })]);
+    }
+  }, [data.spanAnnotationId, reactFlowInstance, adoc.data]);
+
+  useEffect(() => {
+    if (!memo.data) return;
+    const memoId = memo.data.id;
+
+    // checks which edges are already in the graph and removes edges to non-existing memos
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isMemoSpanAnnotationEdge)
+      .filter((edge) => edge.target === `spanAnnotation-${data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
+    // checks which memo nodes are already in the graph and adds edge to the correct node
+    const existingMemoNodeIds = reactFlowInstance
+      .getNodes()
+      .filter(isMemoNode)
+      .map((memo) => memo.data.memoId);
+    if (existingMemoNodeIds.includes(memoId)) {
+      reactFlowInstance.addEdges([createMemoSpanAnnotationEdge({ memoId, spanAnnotationId: data.spanAnnotationId })]);
+    }
+  }, [data.spanAnnotationId, reactFlowInstance, memo.data]);
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (!annotation.data) return;
+
+    if (event.detail >= 2) {
+      openSpanAnnotationEditDialog(annotation.data);
+    }
+  };
+
+  // context menu actions
+  const handleContextMenuExpandDocument = () => {
+    if (!adoc.data) return;
+
+    reactFlowService.addNodes(
+      createSdocNodes({ sdocs: [adoc.data.source_document_id], position: { x: xPos, y: yPos + 200 } })
+    );
+    contextMenuRef.current?.close();
+  };
+
+  const handleContextMenuExpandCode = () => {
+    if (!code.data) return;
+
+    reactFlowService.addNodes(createCodeNodes({ codes: [code.data], position: { x: xPos, y: yPos + 200 } }));
+    contextMenuRef.current?.close();
+  };
+
+  const handleContextMenuExpandMemo = () => {
+    if (!memo.data) return;
+
+    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos + 200 } }));
+    contextMenuRef.current?.close();
+  };
 
   return (
-    <Card className="span-node" style={{ backgroundColor: data.isSelected ? "#FDDA0D" : "#AF7C7B" }}>
-      <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
-      <CardHeader
-        titleTypographyProps={{ fontSize: 12, fontWeight: "bold" }}
-        style={{ padding: 1 }}
-        className="node-header"
-        title={
+    <>
+      <BaseNode
+        raised={selected}
+        onClick={handleClick}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          contextMenuRef.current?.open({
+            top: e.clientY,
+            left: e.clientX,
+          });
+        }}
+      >
+        {annotation.isSuccess ? (
           <>
-            <>{"Span: "}</>
-            <>
-              {annotation.isSuccess ? (
-                <span
-                  style={{ backgroundColor: annotation.data?.code.color || undefined, paddingLeft: 2, paddingRight: 2 }}
-                >
-                  {content}
-                </span>
-              ) : (
-                <>annotation</>
-              )}
-            </>
+            <CardHeader
+              title={
+                <Stack direction="row" alignItems="center">
+                  <CodeRenderer code={annotation.data.code} />
+                  <Box sx={{ ml: 1 }}>Annotation</Box>
+                </Stack>
+              }
+            />
+            <CardContent>
+              <Typography>{annotation.data.span_text}</Typography>
+            </CardContent>
           </>
-        }
-      />
-      <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
-    </Card>
+        ) : annotation.isError ? (
+          <>{annotation.error.message}</>
+        ) : (
+          <>Loading...</>
+        )}
+      </BaseNode>
+      <GenericPositionMenu ref={contextMenuRef}>
+        <MenuItem onClick={handleContextMenuExpandDocument}>Expand document</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandCode}>Expand code</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memo.data}>
+          Expand memo
+        </MenuItem>
+      </GenericPositionMenu>
+    </>
   );
 }
 

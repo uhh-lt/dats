@@ -1,64 +1,147 @@
-import React from "react";
-import { Position } from "reactflow";
-import { Card, CardContent, CardHeader, CardMedia, Link, Typography } from "@mui/material";
-import "./nodes.css";
+import { CardContent, CardHeader, CardMedia, MenuItem, Typography } from "@mui/material";
+import { intersection } from "lodash";
+import { useEffect, useRef } from "react";
+import { NodeProps, useReactFlow } from "reactflow";
 import SdocHooks from "../../../api/SdocHooks";
 import { DocType, SourceDocumentRead } from "../../../api/openapi";
-import { toThumbnailUrl } from "../../search/utils";
-import { NodeProps } from "./MemoNode";
-import ExpandHandle from "./ExpandHandle";
+import { useAuth } from "../../../auth/AuthProvider";
+import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
+import {
+  createMemoNodes,
+  createMemoSdocEdge,
+  createTagNodes,
+  createTagSdocEdge,
+  isMemoSdocEdge,
+  isTagSdocEdge,
+} from "../whiteboardUtils";
+import { useReactFlowService } from "../hooks/ReactFlowService";
+import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
+import BaseNode from "./BaseNode";
 
-function SdocNode({ data, isConnectable }: NodeProps) {
-  const sdoc: any = SdocHooks.useGetDocument(data.objId);
+function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocNodeData>) {
+  // global client state
+  const userId = useAuth().user.data!.id;
+
+  // whiteboard state (react-flow)
+  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowService = useReactFlowService(reactFlowInstance);
+
+  // context menu
+  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+
+  // global server state (react-query)
+  const sdoc = SdocHooks.useGetDocument(data.sdocId);
+  const tags = SdocHooks.useGetAllDocumentTags(data.sdocId);
+  const memo = SdocHooks.useGetMemo(data.sdocId, userId);
+
   const docType = sdoc.data?.doctype;
-  const title = sdoc.isLoading ? "Loading" : sdoc.isError ? "Error" : sdoc.isSuccess ? sdoc.data.filename : "";
+
+  // effects
+  useEffect(() => {
+    if (!tags.data) return;
+    const tagIds = tags.data.map((tag) => tag.id);
+
+    // checks which edges are already in the graph and removes edges to non-existing tags
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isTagSdocEdge) // isTagEdge
+      .filter((edge) => edge.target === `sdoc-${data.sdocId}`) // isEdgeForThisSdoc
+      .filter((edge) => !tagIds.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForNonExistingTag
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
+    // checks which tag nodes are already in the graph and adds edges to them
+    const existingTagNodeIds = reactFlowInstance
+      .getNodes()
+      .filter(isTagNode)
+      .map((tag) => tag.data.tagId);
+    const edgesToAdd = intersection(existingTagNodeIds, tagIds).map((tagId) =>
+      createTagSdocEdge({ tagId, sdocId: data.sdocId })
+    );
+    reactFlowInstance.addEdges(edgesToAdd);
+  }, [data.sdocId, reactFlowInstance, tags.data]);
+
+  useEffect(() => {
+    if (!memo.data) return;
+    const memoId = memo.data.id;
+
+    // checks which edges are already in the graph and removes edges to non-existing memos
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isMemoSdocEdge)
+      .filter((edge) => edge.target === `sdoc-${data.sdocId}`) // isEdgeForThisSdoc
+      .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
+    // checks which memo nodes are already in the graph and adds edge to the correct node
+    const existingMemoNodeIds = reactFlowInstance
+      .getNodes()
+      .filter(isMemoNode)
+      .map((memo) => memo.data.memoId);
+    if (existingMemoNodeIds.includes(memoId)) {
+      reactFlowInstance.addEdges([createMemoSdocEdge({ memoId, sdocId: data.sdocId })]);
+    }
+  }, [data.sdocId, reactFlowInstance, memo.data]);
+
+  const handleContextMenuExpandTags = () => {
+    if (!tags.data) return;
+
+    reactFlowService.addNodes(createTagNodes({ tags: tags.data, position: { x: xPos, y: yPos + 200 } }));
+    contextMenuRef.current?.close();
+  };
+
+  const handleContextMenuExpandMemo = () => {
+    if (!memo.data) return;
+
+    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos + 200 } }));
+    contextMenuRef.current?.close();
+  };
+
+  const handleContextMenuExpandAnnotations = () => {
+    alert("Not implemented!");
+  };
 
   return (
-    <Card className="sdoc-node" style={{ backgroundColor: data.isSelected ? "#FDDA0D" : "#AF7C7B" }}>
-      <ExpandHandle id={data.id} handleType="target" position={Position.Top} isConnectable={isConnectable} />
-      <CardHeader
-        titleTypographyProps={{ fontSize: 8, fontWeight: "bold" }}
-        style={{ padding: "0 0 4px" }}
-        className="node-header"
-        title={
-          <>
-            <>{"Document: "}</>
+    <>
+      <BaseNode
+        raised={selected}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          contextMenuRef.current?.open({
+            top: e.clientY,
+            left: e.clientX,
+          });
+        }}
+      >
+        <CardHeader title={<SdocRenderer sdoc={data.sdocId} link={true} />} />
+        <CardContent>
+          {sdoc.isSuccess ? (
             <>
-              {sdoc.isSuccess ? (
-                <Link href={`search/doc/${sdoc.data.id}`} target="_blank">
-                  {title}
-                </Link>
+              {docType === DocType.IMAGE ? (
+                <CardMedia component="img" image={sdoc.data.content} alt="Thumbnail" />
+              ) : docType === DocType.TEXT ? (
+                <TextPreview sdoc={sdoc.data} />
               ) : (
-                <>title</>
+                <Typography fontSize={8} textAlign={"center"}>
+                  DOC TYPE IS NOT SUPPORTED
+                </Typography>
               )}
             </>
-          </>
-        }
-      />
-      <CardContent
-        className="sdoc-content"
-        style={{ padding: 2, maxHeight: !data.isSelected || docType === DocType.IMAGE ? 68 : 120 }}
-      >
-        {sdoc.isSuccess ? (
-          <>
-            {docType === DocType.IMAGE ? (
-              <CardMedia component="img" height={60} image={toThumbnailUrl(sdoc.data.content)} alt="Thumbnail" />
-            ) : docType === DocType.TEXT ? (
-              <TextPreview sdoc={sdoc.data} />
-            ) : (
-              <Typography fontSize={8} textAlign={"center"}>
-                DOC TYPE IS NOT SUPPORTED
-              </Typography>
-            )}
-          </>
-        ) : sdoc.isError ? (
-          <Typography variant="body2">{sdoc.error.message}</Typography>
-        ) : (
-          <Typography variant="body2">Loading ...</Typography>
-        )}
-      </CardContent>
-      <ExpandHandle id={data.id} handleType="source" position={Position.Bottom} isConnectable={isConnectable} />
-    </Card>
+          ) : sdoc.isError ? (
+            <Typography variant="body2">{sdoc.error.message}</Typography>
+          ) : (
+            <Typography variant="body2">Loading ...</Typography>
+          )}
+        </CardContent>
+      </BaseNode>
+      <GenericPositionMenu ref={contextMenuRef}>
+        <MenuItem onClick={handleContextMenuExpandTags}>Expand document tags ({tags.data?.length || 0})</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandAnnotations}>Expand annotations</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memo.data}>
+          Expand memo
+        </MenuItem>
+      </GenericPositionMenu>
+    </>
   );
 }
 
@@ -68,26 +151,14 @@ function TextPreview({ sdoc }: { sdoc: SourceDocumentRead }) {
 
   // rendering
   if (content.isSuccess) {
-    return (
-      <Typography height={54} fontSize={6} textAlign={"center"}>
-        {content.data.content}
-      </Typography>
-    );
+    return <Typography>{content.data.content.substring(0, 500)}...</Typography>;
   }
 
   if (content.isError) {
-    return (
-      <Typography height={54} fontSize={8} textAlign={"center"}>
-        {content.error.message}
-      </Typography>
-    );
+    return <Typography>{content.error.message}</Typography>;
   }
 
-  return (
-    <Typography height={54} fontSize={8} textAlign={"center"}>
-      Loading ...
-    </Typography>
-  );
+  return <Typography>Loading ...</Typography>;
 }
 
 export default SdocNode;

@@ -1,67 +1,12 @@
-.node-header {
-    display: block;
-    color: white;
-    min-width: 110px;
-    inline-size: min-content;
-}
-
-.memo-node {
-    width: 182px;
-    border: 1px solid darkgray;
-    padding: 8px;
-    border-radius: 5px;
-}
-
-.memo-content {
-    -webkit-column-width: 182px;
-    column-width: 182px;
-    background-color: ghostwhite;
-    border-radius: 5px;
-    overflow: hidden;
-    border: 1px solid lightgray;
-}
-
-.sdoc-node {
-    width: 120px;
-    border: 1px solid darkgray;
-    padding: 4px;
-    border-radius: 5px;
-}
-
-.sdoc-content {
-    -webkit-column-width: 120px;
-    column-width: 120px;
-    background-color: ghostwhite;
-    border-radius: 5px;
-    overflow: hidden;
-    border: 1px solid lightgray;
-}
-
-.tag-node {
-    max-width: 120px;
-    border: 1px solid darkgray;
-    padding: 4px;
-    border-radius: 5px;
-}
-
-.tag-content {
-    -webkit-column-width: 120px;
-    column-width: 120px;
-    background-color: ghostwhite;
-    border-radius: 5px;
-    overflow: hidden;
-    border: 1px solid lightgray;
-}
-
-.span-node {
-    max-width: 160px;
-    border: 1px solid darkgray;
-    padding: 4px;
-    border-radius: 5px;
-}
-
-.bbox-node {
-    border: 1px solid darkgray;
-    padding: 4px;
-    border-radius: 5px;
+.customHandle {
+  width: 100%;
+  height: 100%;
+  background: blue;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 0;
+  transform: none;
+  border: none;
+  opacity: 0;
 }
