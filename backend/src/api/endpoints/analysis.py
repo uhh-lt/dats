@@ -5,6 +5,7 @@ from app.core.analysis.analysis_service import AnalysisService
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.analysis import (
     AnalysisConcept,
+    AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
     TimelineAnalysisResult,
@@ -46,6 +47,21 @@ async def code_occurrences(
     *, project_id: int, user_ids: List[int], code_id: int
 ) -> List[CodeOccurrence]:
     return AnalysisService().find_code_occurrences(
+        project_id=project_id, user_ids=user_ids, code_id=code_id
+    )
+
+
+@router.post(
+    "/annotation_occurrences",
+    tags=tags,
+    response_model=List[AnnotationOccurrence],
+    summary="Returns all SourceDocument IDs that match the query parameters.",
+    description="Returns all SourceDocument Ids that match the query parameters.",
+)
+async def annotation_occurrences(
+    *, project_id: int, user_ids: List[int], code_id: int
+) -> List[AnnotationOccurrence]:
+    return AnalysisService().find_annotation_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
     )
 
