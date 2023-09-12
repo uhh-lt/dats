@@ -1,13 +1,13 @@
-from ray import serve
+import logging
+
+import ffmpeg
+import numpy as np
 import whisper_timestamped as whisper
 from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from ray import serve
 from scipy.io import wavfile
-import ffmpeg
-import numpy as np
-
-import logging
 
 router = APIRouter()
 
@@ -17,6 +17,7 @@ tempPath = "/tmp/"
 WHISPER_MODEL = "tiny"
 DEVICE = "cuda"
 DOWNLOAD_DIR = "/models_cache/"
+
 
 @serve.deployment(num_replicas=1)
 @serve.ingress(router)
@@ -40,9 +41,7 @@ class APIIngress:
     ray_actor_options={"num_gpus": 1},
     autoscaling_config={"min_replicas": 0, "max_replicas": 1},
 )
-
 class WhisperT:
-
     def convert(self, file_path: str) -> str:
         file_path_uncompressed = f"{file_path}.uncompressed.wav"
         # Create 16khz Mono PCM File
