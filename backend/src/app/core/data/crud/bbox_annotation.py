@@ -35,7 +35,6 @@ class CRUDBBoxAnnotation(
     def create_with_code_id(
         self, db: Session, *, create_dto: BBoxAnnotationCreateWithCodeId
     ) -> BBoxAnnotationORM:
-
         from app.core.data.crud.code import crud_code
 
         db_code = crud_code.read(db=db, id=create_dto.code_id)
@@ -75,17 +74,12 @@ class CRUDBBoxAnnotation(
     def update_with_code_id(
         self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdateWithCodeId
     ) -> BBoxAnnotationORM:
-
         from app.core.data.crud.code import crud_code
 
         db_code = crud_code.read(db=db, id=update_dto.code_id)
         ccid = db_code.current_code.id
 
         update_dto_with_ccid = BBoxAnnotationUpdate(
-            x_min=update_dto.x_min,
-            x_max=update_dto.x_max,
-            y_min=update_dto.y_min,
-            y_max=update_dto.y_max,
             current_code_id=ccid,
         )
 
