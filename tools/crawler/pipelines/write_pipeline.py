@@ -14,25 +14,15 @@ class WritePipeline:
         extracted_html_output_dir = output_dir / "extracted_html"
         raw_html_output_dir = output_dir / "raw_html"
 
-        # exit if output dir does not exist
-        if not output_dir.exists():
-            print(f"Output dir {output_dir.absolute()} does not exist!")
-            exit()
-
-        # Create output dirs
-        html_output_dir.mkdir(parents=True, exist_ok=True)
-        json_output_dir.mkdir(parents=True, exist_ok=True)
-        txt_output_dir.mkdir(parents=True, exist_ok=True)
-        extracted_html_output_dir.mkdir(parents=True, exist_ok=True)
-        raw_html_output_dir.mkdir(parents=True, exist_ok=True)
-
         # write html
         if "html" in item:
+            html_output_dir.mkdir(parents=True, exist_ok=True)
             with open(html_output_dir / f"{item['file_name']}.html", "w") as f:
                 f.write(item["html"])
 
         # write html
         if "extracted_html" in item:
+            extracted_html_output_dir.mkdir(parents=True, exist_ok=True)
             with open(
                 extracted_html_output_dir / f"{item['file_name']}.html", "w"
             ) as f:
@@ -40,16 +30,19 @@ class WritePipeline:
 
         # write html
         if "raw_html" in item:
+            raw_html_output_dir.mkdir(parents=True, exist_ok=True)
             with open(raw_html_output_dir / f"{item['file_name']}.html", "w") as f:
                 f.write(item["raw_html"])
 
         # write json
+        json_output_dir.mkdir(parents=True, exist_ok=True)
         with open(json_output_dir / f"{item['file_name']}.json", "w") as f:
-            data = {key: value for key, value in item.items()}
+            data = {key: value for key, value in item.items() if key != "output_dir" and key != "file_name"}
             json.dump(data, f)
 
         # write txt
         if "text" in item:
+            txt_output_dir.mkdir(parents=True, exist_ok=True)
             with open(txt_output_dir / f"{item['file_name']}.txt", "w") as f:
                 f.write(item["text"])
 
