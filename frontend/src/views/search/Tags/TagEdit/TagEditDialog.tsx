@@ -11,6 +11,10 @@ import ColorUtils from "../../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
 
+export const openTagEditDialog = (tagId: number) => {
+  eventBus.dispatch("open-edit-tag", tagId);
+};
+
 /**
  * A dialog that allows to update a DocumentTag.
  * This component listens to the 'open-edit-tag' event.
