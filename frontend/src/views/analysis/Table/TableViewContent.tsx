@@ -27,8 +27,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { unstable_useBlocker } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import TableHooks, { TableRead } from "../../../api/TableHooks";
-import { CodeOccurrence, CodeRead, SourceDocumentRead } from "../../../api/openapi";
-import GenericAnchorContextMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorContextMenu";
+import { AnnotationOccurrence, CodeRead, SourceDocumentRead } from "../../../api/openapi";
+import GenericAnchorMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorMenu";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import CustomHTMLCellRenderer from "./Renderer/CustomHTMLCellRenderer";
 import AddAnnotationDialog from "./Toolbar/AddAnnotationDialog";
@@ -238,7 +238,7 @@ function TableViewContent({ table }: TableViewContentProps) {
   };
 
   // table actions: add annotations
-  const onAddAnnotations = (annotations: CodeOccurrence[], addRows: boolean) => {
+  const onAddAnnotations = (annotations: AnnotationOccurrence[], addRows: boolean) => {
     const hot = hotRef.current?.hotInstance;
     if (!hot) return;
 
@@ -317,7 +317,7 @@ function TableViewContent({ table }: TableViewContentProps) {
             }
           })}
         </Tabs>
-        <GenericAnchorContextMenu ref={tabContextMenuRef}>
+        <GenericAnchorMenu ref={tabContextMenuRef}>
           <MenuItem onClick={() => handleClickDelete()} disabled={tablePages.length === 1}>
             <ListItemIcon>
               <DeleteIcon />
@@ -336,7 +336,7 @@ function TableViewContent({ table }: TableViewContentProps) {
             </ListItemIcon>
             <ListItemText>Duplicate</ListItemText>
           </MenuItem>
-        </GenericAnchorContextMenu>
+        </GenericAnchorMenu>
         <Box sx={{ flexGrow: 1 }} />
         <Stack direction="row" spacing={1} mr={2} flexShrink={0}>
           <AddCodeDialog
