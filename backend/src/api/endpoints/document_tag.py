@@ -14,6 +14,7 @@ from app.core.data.dto.document_tag import (
     SourceDocumentDocumentTagMultiLink,
 )
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.source_document import SourceDocumentRead
 
 router = APIRouter(prefix="/doctag")
 tags = ["documentTag"]
@@ -170,3 +171,19 @@ async def get_user_memo(
 ) -> Optional[MemoRead]:
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
+
+
+@router.get(
+    "/{tag_id}/sdocs",
+    tags=tags,
+    response_model=List[SourceDocumentRead],
+    summary="Returns all SourceDocuments attached to the Tag with the given ID",
+    description=(
+        "Returns all SourceDocuments attached to the Tag with the given ID if it exists."
+    ),
+)
+async def get_sdocs_by_tag_id(
+    *, db: Session = Depends(get_db_session), tag_id: int
+) -> List[SourceDocumentRead]:
+    db_obj = crud_document_tag.read(db=db, id=tag_id)
+    return [SourceDocumentRead.from_orm(sdoc) for sdoc in db_obj.source_documents]
