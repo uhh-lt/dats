@@ -9,3 +9,4 @@ git+https://github.com/linto-ai/whisper-timestamped.git@d767f4fc3b401c78c20d5551
 
 python-multipart==0.0.5
 ffmpeg-python==0.2.0
+omegaconf==2.3.0
