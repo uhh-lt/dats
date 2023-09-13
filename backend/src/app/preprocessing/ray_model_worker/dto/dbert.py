@@ -7,4 +7,4 @@ class DbertInput(BaseModel):
 
 class DbertOutput(BaseModel):
     label: str = Field(..., example="Label_0")
-    confidence: float = Field(..., example=1.0)
+    score: float = Field(..., example=1.0)
