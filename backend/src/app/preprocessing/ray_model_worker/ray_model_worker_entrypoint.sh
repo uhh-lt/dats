@@ -54,4 +54,11 @@ download_and_install_spacy_model "$IT_MODEL_BASE" "$IT_MODEL" "$IT_CHECKSUM_SHA_
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
-serve run app:app -h 0.0.0.0 -p 8000
+# generate the ray spec file
+python generate_ray_model_specs.py
+
+# start the ray cluster
+ray start --head --dashboard-host '0.0.0.0'
+
+# serve the models
+serve run spec.yaml
