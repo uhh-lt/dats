@@ -24,13 +24,10 @@ class WhisperApi:
 
     @api.post(
         "/transcribe",
-        responses={200: {"content": {"application/json": {}}}},
         response_model=WhisperOutput,
     )
     async def transcribe(self, input: WhisperInput) -> WhisperOutput:
-        transcript_ref = await self.whisper.transcribe.remote(
-            input.uncompressed_audio_fp
-        )
+        transcript_ref = await self.whisper.transcribe.remote(input)
         transcript_result = await transcript_ref
         return transcript_result
 
