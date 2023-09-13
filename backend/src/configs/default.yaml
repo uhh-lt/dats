@@ -8,6 +8,12 @@ api:
       algo: ${oc.env:JWT_ALGO, HS256}
       secret: ${oc.env:JWT_SECRET, "c7c802ec8df3f2661a3c64d7f617be89e93cb334fb282409e1df555543742bf2"}
 
+ray_model_worker:
+  protocol: http
+  host: ${oc.env:RAY_MODEL_WORKER_HOST, localhost}
+  port: ${oc.env:RAY_MODEL_WORKER_PORT, 33127}
+
+
 repo:
   root_directory: /tmp/dwts
   content_server:
