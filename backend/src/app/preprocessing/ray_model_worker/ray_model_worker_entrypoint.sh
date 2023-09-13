@@ -55,7 +55,7 @@ export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
 # generate the ray spec file
-python generate_ray_model_worker_specs.py
+python generate_ray_model_worker_specs.py || exit 1
 
 # start the ray cluster
 ray start --head --dashboard-host '0.0.0.0'
