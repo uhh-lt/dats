@@ -8,6 +8,11 @@ api:
       algo: ${oc.env:JWT_ALGO, HS256}
       secret: ${oc.env:JWT_SECRET, ""}
 
+ray_model_worker:
+  protocol: http
+  host: ${oc.env:RAY_MODEL_WORKER_HOST, localhost}
+  port: ${oc.env:RAY_MODEL_WORKER_PORT, 33127}
+
 repo:
   root_directory: /home/7schneid/gitrepos/dwts/docker/backend_repo
   content_server:
