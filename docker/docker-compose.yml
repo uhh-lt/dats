@@ -199,13 +199,14 @@ services:
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
     volumes:
-      - ../backend/src/app/preprocessing/ray:/dwts_code_ray
+      - ../backend/src/app/preprocessing/ray_model_worker:/dwts_code_ray
       - ./spacy_models:/spacy_models
       - ./backend_repo:/tmp/dwts
       - ./models_cache:/models_cache
     ports:
       - "${RAY_API_EXPOSED:-8000}:8000"
       - "${RAY_DASHBOARD_EXPOSED:-8265}:8265"
+    restart: always
     shm_size: 12gb
     networks:
       - dwts_demo_network
