@@ -1,6 +1,6 @@
 import logging
 
-from dto.whisper import WhisperInput, WhisperOutput
+from dto.whisper import WhisperFilePathInput, WhisperTranscriptionOutput
 from fastapi import FastAPI
 from models.whisper import WhisperModel
 from ray import serve
@@ -9,11 +9,6 @@ from ray.serve.handle import RayServeHandle
 api = FastAPI()
 
 logger = logging.getLogger("ray.serve")
-
-tempPath = "/tmp/"
-WHISPER_MODEL = "tiny"
-DEVICE = "cuda"
-DOWNLOAD_DIR = "/models_cache/"
 
 
 @serve.deployment(num_replicas=1, route_prefix="/whisper")
@@ -24,10 +19,12 @@ class WhisperApi:
 
     @api.post(
         "/transcribe",
-        response_model=WhisperOutput,
+        response_model=WhisperTranscriptionOutput,
     )
-    async def transcribe(self, input: WhisperInput) -> WhisperOutput:
-        transcript_ref = await self.whisper.transcribe.remote(input)
+    async def transcribe(
+        self, input: WhisperFilePathInput
+    ) -> WhisperTranscriptionOutput:
+        transcript_ref = await self.whisper.transcribe_fpi.remote(input)
         transcript_result = await transcript_ref
         return transcript_result
 
