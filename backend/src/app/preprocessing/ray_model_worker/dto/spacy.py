@@ -33,7 +33,9 @@ class SpacyToken(BaseModel):
     )
     pos: str = Field(description="The part-of-speech tag of the token", example="PROPN")
     lemma: str = Field(description="The lemma of the token", example="Hamburg")
-    is_stopword: bool = Field(description="Whether the token is a stopword", example=False)
+    is_stopword: bool = Field(
+        description="Whether the token is a stopword", example=False
+    )
     is_punctuation: bool = Field(
         description="Whether the token is a punctuation", example=False
     )
