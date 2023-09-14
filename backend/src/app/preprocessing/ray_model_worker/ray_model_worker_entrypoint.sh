@@ -51,8 +51,8 @@ download_and_install_spacy_model "$DE_MODEL_BASE" "$DE_MODEL" "$DE_CHECKSUM_SHA_
 download_and_install_spacy_model "$EN_MODEL_BASE" "$EN_MODEL" "$EN_CHECKSUM_SHA_256_TGZ"
 download_and_install_spacy_model "$IT_MODEL_BASE" "$IT_MODEL" "$IT_CHECKSUM_SHA_256_TGZ"
 
-export OMP_NUM_THREADS=1
-export MKL_NUM_THREADS=1
+# export OMP_NUM_THREADS=1
+# export MKL_NUM_THREADS=1
 
 # generate the ray spec file
 python generate_ray_model_worker_specs.py || exit 1
