@@ -42,17 +42,6 @@ preprocessing:
   text:
     bulk_threshold: 100
 
-  image:
-    object_detection:
-      model: "facebook/detr-resnet-101"
-      confidence_threshold: 0.75
-      device: cuda:1
-    image_captioning:
-      model: "nlpconnect/vit-gpt2-image-captioning"
-      max_caption_length: 16
-      num_beams: 4
-      device: cpu
-
   simsearch:
     # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
     image_encoder:
