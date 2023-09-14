@@ -8,22 +8,23 @@ from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 def generate_word_frequncies_and_keywords(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
-    doc = pptd.spacy_doc
-    if doc is None:
+    out = pptd.spacy_pipeline_output
+
+    if out is None:
         logger.error(
-            f"spaCy Doc is None for {pptd.filename}! Please run the spaCy pipeline first!"
+            f"spaCy PipelineOutput is None for {pptd.filename}! Please run the spaCy pipeline first!"
         )
         return cargo
 
     pptd.word_freqs = Counter()
-    for token in doc:
+    for token in out.tokens:
         pptd.tokens.append(token.text)
-        pptd.token_character_offsets.append((token.idx, token.idx + len(token)))
-        pptd.pos.append(token.pos_)
-        pptd.lemmas.append(token.lemma_)
-        pptd.stopwords.append(token.is_stop)
+        pptd.token_character_offsets.append((token.start_char, token.end_char))
+        pptd.pos.append(token.pos)
+        pptd.lemmas.append(token.lemma)
+        pptd.stopwords.append(token.is_stopword)
 
-        if not (token.is_stop or token.is_punct) and (token.is_alpha or token.is_digit):
+        if not (token.is_stopword or token.is_punctuation) and (token.is_alpha or token.is_digit):
             pptd.word_freqs.update((token.text,))
 
     # sort the word freqs!
