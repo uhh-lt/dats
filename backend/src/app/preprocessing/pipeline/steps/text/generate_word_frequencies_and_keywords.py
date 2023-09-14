@@ -1,9 +1,8 @@
 from collections import Counter
 
-from loguru import logger
-
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from loguru import logger
 
 
 def generate_word_frequncies_and_keywords(cargo: PipelineCargo) -> PipelineCargo:
@@ -24,7 +23,9 @@ def generate_word_frequncies_and_keywords(cargo: PipelineCargo) -> PipelineCargo
         pptd.lemmas.append(token.lemma)
         pptd.stopwords.append(token.is_stopword)
 
-        if not (token.is_stopword or token.is_punctuation) and (token.is_alpha or token.is_digit):
+        if not (token.is_stopword or token.is_punctuation) and (
+            token.is_alpha or token.is_digit
+        ):
             pptd.word_freqs.update((token.text,))
 
     # sort the word freqs!

@@ -46,31 +46,23 @@ preprocessing:
     object_detection:
       model: "facebook/detr-resnet-101"
       confidence_threshold: 0.75
-      device: cpu
+      device: cuda:1
     image_captioning:
       model: "nlpconnect/vit-gpt2-image-captioning"
       max_caption_length: 16
       num_beams: 4
       device: cpu
 
-  audio:
-    whisper:
-      model: "base"
-      device: cpu
-      options:
-        beam_size: 5
-        best_of: 5
-
   simsearch:
     # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
     image_encoder:
       model: "clip-ViT-B-32"
       batch_size: 32
-      device: cpu
+      device: cuda:1
     text_encoder:
       model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
       batch_size: 32
-      device: cpu
+      device: cuda:1
       min_sentence_length: 5
 
 postgres:

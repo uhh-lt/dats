@@ -2,6 +2,10 @@ from typing import Any, Dict, List
 
 import requests
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
+from app.preprocessing.ray_model_worker.dto.whisper import (
+    WhisperFilePathInput,
+    WhisperTranscriptionOutput,
+)
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
@@ -64,3 +68,9 @@ class RayModelService(metaclass=SingletonMeta):
     def spacy_pipline(self, input: SpacyInput) -> SpacyPipelineOutput:
         response = self._make_post_request("/spacy/pipeline", input.dict())
         return SpacyPipelineOutput.parse_obj(response.json())
+
+    def whisper_transcribe(
+        self, input: WhisperFilePathInput
+    ) -> WhisperTranscriptionOutput:
+        response = self._make_post_request("/whisper/transcribe", input.dict())
+        return WhisperTranscriptionOutput.parse_obj(response.json())
