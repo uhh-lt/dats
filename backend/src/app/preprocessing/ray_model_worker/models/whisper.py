@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 import numpy as np
+import torch
 import whisper_timestamped
 from config import conf
 from dto.whisper import (
@@ -38,6 +39,7 @@ class WhisperModel:
         self.model = whisper_timestamped.load_model(
             WHISPER_MODEL, DEVICE, download_root=DOWNLOAD_DIR
         )
+        self.model.eval()
 
     def _load_uncompressed_audio(self, uncompressed_audio_fp: str) -> np.ndarray:
         fp = Path(uncompressed_audio_fp)
@@ -63,9 +65,10 @@ class WhisperModel:
             task="transcribe", **WHISPER_TRANSCRIBE_OPTIONS
         )
 
-        transcription: Dict[str, Any] = whisper_timestamped.transcribe(
-            self.model, audionp, **transcribe_options
-        )
+        with torch.no_grad():
+            transcription: Dict[str, Any] = whisper_timestamped.transcribe(
+                self.model, audionp, **transcribe_options
+            )
 
         segments: List[SegmentTranscription] = []
         for segment in transcription["segments"]:
