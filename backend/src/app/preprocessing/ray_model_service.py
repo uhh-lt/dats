@@ -1,6 +1,10 @@
 from typing import Any, Dict, List
 
 import requests
+from app.preprocessing.ray_model_worker.dto.detr import (
+    DETRFilePathInput,
+    DETRObjectDetectionOutput,
+)
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from app.preprocessing.ray_model_worker.dto.whisper import (
     WhisperFilePathInput,
@@ -74,3 +78,9 @@ class RayModelService(metaclass=SingletonMeta):
     ) -> WhisperTranscriptionOutput:
         response = self._make_post_request("/whisper/transcribe", input.dict())
         return WhisperTranscriptionOutput.parse_obj(response.json())
+
+    def detr_object_detection(
+        self, input: DETRFilePathInput
+    ) -> DETRObjectDetectionOutput:
+        response = self._make_post_request("/detr/object_detection", input.dict())
+        return DETRObjectDetectionOutput.parse_obj(response.json())
