@@ -33,14 +33,14 @@ class SpacyToken(BaseModel):
     )
     pos: str = Field(description="The part-of-speech tag of the token", example="PROPN")
     lemma: str = Field(description="The lemma of the token", example="Hamburg")
-    stopword: bool = Field(description="Whether the token is a stopword", example=False)
-    punctuation: bool = Field(
+    is_stopword: bool = Field(description="Whether the token is a stopword", example=False)
+    is_punctuation: bool = Field(
         description="Whether the token is a punctuation", example=False
     )
-    alpha: bool = Field(
+    is_alpha: bool = Field(
         description="Whether the token is an alphabetic character", example=True
     )
-    digit: bool = Field(description="Whether the token is a digit", example=False)
+    is_digit: bool = Field(description="Whether the token is a digit", example=False)
 
 
 class SpacyInput(BaseModel):
@@ -49,7 +49,7 @@ class SpacyInput(BaseModel):
 
 
 class SpacyPipelineOutput(BaseModel):
-    tokens: Optional[List[SpacyToken]] = Field(
+    tokens: List[SpacyToken] = Field(
         example=[
             SpacyToken(
                 text="I",
@@ -57,10 +57,10 @@ class SpacyPipelineOutput(BaseModel):
                 end_char=1,
                 pos="PRON",
                 lemma="I",
-                stopword=True,
-                punctuation=False,
-                alpha=True,
-                digit=False,
+                is_stopword=True,
+                is_punctuation=False,
+                is_alpha=True,
+                is_digit=False,
             ),
             SpacyToken(
                 text="love",
@@ -68,10 +68,10 @@ class SpacyPipelineOutput(BaseModel):
                 end_char=6,
                 pos="VERB",
                 lemma="love",
-                stopword=False,
-                punctuation=False,
-                alpha=True,
-                digit=False,
+                is_stopword=False,
+                is_punctuation=False,
+                is_alpha=True,
+                is_digit=False,
             ),
             SpacyToken(
                 text="Hamburg",
@@ -79,10 +79,10 @@ class SpacyPipelineOutput(BaseModel):
                 end_char=14,
                 pos="PROPN",
                 lemma="Hamburg",
-                stopword=False,
-                punctuation=False,
-                alpha=True,
-                digit=False,
+                is_stopword=False,
+                is_punctuation=False,
+                is_alpha=True,
+                is_digit=False,
             ),
             SpacyToken(
                 text="!",
@@ -90,16 +90,16 @@ class SpacyPipelineOutput(BaseModel):
                 end_char=15,
                 pos="PUNCT",
                 lemma="!",
-                stopword=False,
-                punctuation=True,
-                alpha=False,
-                digit=False,
+                is_stopword=False,
+                is_punctuation=True,
+                is_alpha=False,
+                is_digit=False,
             ),
         ],
         default_factory=list,
     )
 
-    ents: Optional[List[SpacySpan]] = Field(
+    ents: List[SpacySpan] = Field(
         example=[
             SpacySpan(
                 label="GPE",
@@ -113,7 +113,7 @@ class SpacyPipelineOutput(BaseModel):
         default_factory=list,
     )
 
-    sents: Optional[List[SpacySpan]] = Field(
+    sents: List[SpacySpan] = Field(
         example=[
             SpacySpan(
                 text="I love Hamburg!",

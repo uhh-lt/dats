@@ -71,10 +71,10 @@ class SpacyModel:
                 label=token.ent_type_,
                 pos=token.pos_,
                 lemma=token.lemma_,
-                stopword=token.is_stop,
-                punctuation=token.is_punct,
-                alpha=token.is_alpha,
-                digit=token.is_digit,
+                is_stopword=token.is_stop,
+                is_punctuation=token.is_punct,
+                is_alpha=token.is_alpha,
+                is_digit=token.is_digit,
             )
             for token in doc
         ]
