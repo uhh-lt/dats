@@ -111,14 +111,17 @@ def __init_services__(
     from app.core.mail.mail_service import MailService
 
     MailService()
+    # import and init RayModelService
+    from app.preprocessing.ray_model_service import RayModelService
+
+    RayModelService()
 
 
 def __create_system_user__() -> None:
-    from pydantic import EmailStr
-
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
+    from pydantic import EmailStr
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):
