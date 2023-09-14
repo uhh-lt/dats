@@ -6,7 +6,12 @@ sentence-transformers==2.2.2
 spacy==3.6.1
 spacy-transformers==1.2.5
 git+https://github.com/linto-ai/whisper-timestamped.git@d767f4fc3b401c78c20d55515b382838ca3c86aa
-
+timm==0.9.7
+accelerate==0.22.0
+peft==0.5.0
+bitsandbytes==0.41.1
+ctranslate2==3.19.0
+faster-whisper==0.8.0
 python-multipart==0.0.5
 ffmpeg-python==0.2.0
 omegaconf==2.3.0
