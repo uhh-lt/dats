@@ -111,6 +111,10 @@ def __init_services__(
     from app.core.mail.mail_service import MailService
 
     MailService()
+    # import and init RayModelService
+    from app.preprocessing.ray_model_service import RayModelService
+
+    RayModelService()
 
 
 def __create_system_user__() -> None:
