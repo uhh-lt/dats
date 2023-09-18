@@ -103,8 +103,14 @@ async def timeline_analysis(
 
     result = []
     for concept in concepts:
-        for hit in similar_sentences_dict[concept.name]:
-            sentences: List[str] = esdocs_dict[hit.sdoc_id]
+        for hit in similar_sentences_dict.get(concept.name, []):
+            sentences: List[str] = esdocs_dict.get(hit.sdoc_id, [])
+            if len(sentences) == 0:
+                continue
+
+            date = sdoc_metadata_dict.get(hit.sdoc_id, None)
+            if date is None:
+                continue
 
             # build context
             context = ""
@@ -118,7 +124,7 @@ async def timeline_analysis(
             result.append(
                 TimelineAnalysisResult(
                     concept_name=concept.name,
-                    date=sdoc_metadata_dict[hit.sdoc_id],
+                    date=date,
                     sentence=sentences[hit.sentence_id],
                     score=hit.score,
                     sdoc_id=hit.sdoc_id,
