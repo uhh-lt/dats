@@ -257,14 +257,14 @@ function Search() {
                 md={isSplitView ? 6 : 12}
                 display={isSplitView || viewDocument ? "flex" : "none"}
                 className="h100"
+                overflow={"auto"}
               >
-                <Container className="h100" sx={{ py: 2 }}>
+                <Container sx={{ my: 2, height: "fit-content" }}>
                   <DocumentViewer
                     sdocId={sdocId ? parseInt(sdocId) : undefined}
                     handleTagClick={handleAddTagFilter}
                     showEntities={isShowEntities}
                     isIdleContent={<Typography>Click a document to read it :)</Typography>}
-                    className="h100"
                   />
                 </Container>
               </Grid>
