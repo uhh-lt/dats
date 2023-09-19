@@ -27,6 +27,30 @@ export const isCodeNodeId = (nodeId: string): boolean => nodeId.startsWith("code
 export const isSpanAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("spanAnnotation-");
 export const isBBoxAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("bboxAnnotation-");
 
+export const isConnectionAllowed = (sourceNodeId: string, targetNodeId: string) => {
+  // do not allow self-connections
+  if (sourceNodeId === targetNodeId) {
+    return false;
+  }
+
+  // code can be manually connected to other code
+  if (isCodeNodeId(sourceNodeId) && isCodeNodeId(targetNodeId)) {
+    return true;
+  }
+
+  // tag can be manually connected to document
+  if (isTagNodeId(sourceNodeId) && isSdocNodeId(targetNodeId)) {
+    return true;
+  }
+
+  // codes can be manually connected to annotations
+  if (isCodeNodeId(sourceNodeId) && (isSpanAnnotationNodeId(targetNodeId) || isBBoxAnnotationNodeId(targetNodeId))) {
+    return true;
+  }
+
+  return false;
+};
+
 export const createTextNode = ({ position }: { position?: XYPosition }): Node<TextNodeData> => {
   return {
     id: uuidv4(),

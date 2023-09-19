@@ -1,5 +1,5 @@
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks";
 import { useAuth } from "../../../auth/AuthProvider";
@@ -21,10 +21,13 @@ import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCrea
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AttachedObjectType } from "../../../api/openapi";
+import ProjectHooks from "../../../api/ProjectHooks";
+import { useParams } from "react-router-dom";
 
 function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<CodeNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
@@ -35,8 +38,17 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(data.codeId);
-  const parentCode = CodeHooks.useGetCode(data.parentCodeId);
+  const parentCode = CodeHooks.useGetCode(code.data?.parent_code_id);
   const memo = CodeHooks.useGetMemo(data.codeId, userId);
+
+  // TODO: This is not optimal!
+  // we need a new route to get all child codes
+  // then we need to invalidate these child codes, on code update
+  // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
+  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
+  const childCodes = useMemo(() => {
+    return projectCodes.data?.filter((projectcode) => projectcode.parent_code_id === data.codeId) ?? [];
+  }, [data.codeId, projectCodes.data]);
 
   // effects
   useEffect(() => {
@@ -48,7 +60,7 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
       .getEdges()
       .filter(isCodeParentCodeEdge)
       .filter((edge) => edge.source === `code-${data.codeId}`)
-      .filter((edge) => parseInt(edge.target.split("-")[1]) !== parentCodeId);
+      .filter((edge) => edge.target !== `code-${parentCodeId}`);
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
     // checks which code nodes are already in the graph and adds edges to the correct node
@@ -63,20 +75,20 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   }, [data.codeId, reactFlowInstance, parentCode.data]);
 
   useEffect(() => {
-    if (!code.data) return;
-    const codeId = code.data.id;
+    const codeId = data.codeId;
+    const childCodeIds = childCodes.map((code) => code.id);
 
     // checks which child code nodes are already in the graph and adds edges to the correct node
     const existingChildCodeNodes = reactFlowInstance
       .getNodes()
       .filter(isCodeNode)
-      .filter((code) => code.data.parentCodeId === codeId);
+      .filter((code) => childCodeIds.includes(code.data.codeId));
     reactFlowInstance.addEdges(
       existingChildCodeNodes.map((childCode) =>
         createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId })
       )
     );
-  }, [reactFlowInstance, code.data]);
+  }, [reactFlowInstance, data.codeId, childCodes]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -116,7 +128,10 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   };
 
   const handleContextMenuExpandChildCodes = () => {
-    alert("Not implemented!");
+    if (childCodes.length === 0) return;
+
+    reactFlowService.addNodes(createCodeNodes({ codes: childCodes, position: { x: xPos, y: yPos - 200 } }));
+    contextMenuRef.current?.close();
   };
 
   const handleContextMenuCreateChildCode = () => {

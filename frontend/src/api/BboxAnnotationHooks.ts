@@ -72,6 +72,14 @@ const useGetAnnotation = (bboxId: number | undefined) =>
   );
 
 const useUpdate = () =>
+  useMutation(BboxAnnotationService.updateById, {
+    onSuccess(data) {
+      queryClient.invalidateQueries([QueryKey.BBOX_ANNOTATION, data.id]);
+      queryClient.invalidateQueries([QueryKey.ADOC_BBOX_ANNOTATIONS, data.annotation_document_id]);
+    },
+  });
+
+const useUpdateBBox = () =>
   useMutation(
     (variables: {
       bboxToUpdate: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode;
@@ -205,6 +213,7 @@ const BboxAnnotationHooks = {
   useCreateAnnotation,
   useGetAnnotation,
   useUpdate,
+  useUpdateBBox,
   useDelete,
   // memo
   useGetMemo,

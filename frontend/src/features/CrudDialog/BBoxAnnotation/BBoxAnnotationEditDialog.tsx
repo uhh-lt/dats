@@ -41,7 +41,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   }, [onOpenEditAnnotation]);
 
   // mutations
-  const updateAnnotationMutation = BboxAnnotationHooks.useUpdate();
+  const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
 
   const handleClose = () => {
     setOpen(false);

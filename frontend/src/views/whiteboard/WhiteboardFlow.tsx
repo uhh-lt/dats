@@ -46,9 +46,13 @@ import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog";
 import AddTagNodeDialog from "./toolbar/AddTagNodeDialog";
 import AddTextNodeButton from "./toolbar/AddTextNodeButton";
 import TextNodeEditMenu, { TextNodeEditMenuHandle } from "./toolbar/TextNodeEditMenu";
-import { isSdocNode, isTagNode, isTextNode } from "./types";
+import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode, isTextNode } from "./types";
 import { DWTSNodeData } from "./types/DWTSNodeData";
 import CodeCreateDialog from "../../features/CrudDialog/Code/CodeCreateDialog";
+import { isConnectionAllowed } from "./whiteboardUtils";
+import CodeHooks from "../../api/CodeHooks";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 
 const nodeTypes: NodeTypes = {
   text: TextNode,
@@ -81,6 +85,10 @@ const createConnectionIfAllowed = (sourceNode: Node<DWTSNodeData>, targetNode: N
       target: `sdoc-${targetNode.data.sdocId}`,
     };
   }
+
+  if (isCodeNode(sourceNode) && isCodeNode(targetNode)) {
+  }
+
   return null;
 };
 
@@ -101,6 +109,9 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
   // mutations
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
+  const updateCodeMutation = CodeHooks.useUpdateCode();
+  const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdate();
+  const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdate();
   const bulkUnlinkDocumentTagsMutation = TagHooks.useBulkUnlinkDocumentTags();
 
   // menu refs
@@ -115,40 +126,102 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const onConnect: OnConnect = useCallback(
     (connection) => {
       if (!connection.source || !connection.target) return;
+      if (!isConnectionAllowed(connection.source, connection.target)) return;
 
       const sourceNode = reactFlowInstance.getNode(connection.source);
       const targetNode = reactFlowInstance.getNode(connection.target);
 
       if (!sourceNode || !targetNode) return;
 
-      let newConnection = createConnectionIfAllowed(sourceNode, targetNode);
-      if (newConnection !== null) {
-        if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
-          bulkLinkDocumentTagsMutation.mutate(
-            {
-              projectId: projectId,
-              requestBody: {
-                document_tag_ids: [sourceNode.data.tagId],
-                source_document_ids: [targetNode.data.sdocId],
-              },
+      // tag can be manually connected to document
+      if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
+        bulkLinkDocumentTagsMutation.mutate(
+          {
+            projectId: projectId,
+            requestBody: {
+              document_tag_ids: [sourceNode.data.tagId],
+              source_document_ids: [targetNode.data.sdocId],
             },
-            {
-              onSuccess(data, variables, context) {
-                SnackbarAPI.openSnackbar({
-                  text: "Tag added to document",
-                  severity: "success",
-                });
-              },
-            }
-          );
-        }
-      } else {
-        alert("Connection not allowed :(");
+          },
+          {
+            onSuccess(data, variables, context) {
+              SnackbarAPI.openSnackbar({
+                text: "Tag added to document",
+                severity: "success",
+              });
+            },
+          }
+        );
       }
 
-      console.log(sourceNode, targetNode);
+      // code can be manually connected to other code
+      if (isCodeNode(sourceNode) && isCodeNode(targetNode)) {
+        updateCodeMutation.mutate(
+          {
+            codeId: sourceNode.data.codeId,
+            requestBody: {
+              parent_code_id: targetNode.data.codeId,
+            },
+          },
+          {
+            onSuccess(data, variables, context) {
+              SnackbarAPI.openSnackbar({
+                text: "Updated parent code",
+                severity: "success",
+              });
+            },
+          }
+        );
+      }
+
+      // codes can be manually connected to annotations
+      if (isCodeNode(sourceNode) && isSpanAnnotationNode(targetNode)) {
+        updateSpanAnnotationMutation.mutate(
+          {
+            spanId: targetNode.data.spanAnnotationId,
+            requestBody: {
+              code_id: sourceNode.data.codeId,
+            },
+          },
+          {
+            onSuccess(data, variables, context) {
+              SnackbarAPI.openSnackbar({
+                text: "Updated span annotation",
+                severity: "success",
+              });
+            },
+          }
+        );
+      }
+
+      // codes can be manually connected to annotations
+      if (isCodeNode(sourceNode) && isBBoxAnnotationNode(targetNode)) {
+        updateBBoxAnnotationMutation.mutate(
+          {
+            bboxId: targetNode.data.bboxAnnotationId,
+            requestBody: {
+              code_id: sourceNode.data.codeId,
+            },
+          },
+          {
+            onSuccess(data, variables, context) {
+              SnackbarAPI.openSnackbar({
+                text: "Updated span annotation",
+                severity: "success",
+              });
+            },
+          }
+        );
+      }
     },
-    [bulkLinkDocumentTagsMutation, projectId, reactFlowInstance]
+    [
+      bulkLinkDocumentTagsMutation,
+      projectId,
+      reactFlowInstance,
+      updateBBoxAnnotationMutation,
+      updateCodeMutation,
+      updateSpanAnnotationMutation,
+    ]
   );
 
   const handleDeleteTagSdocEdge = () => {

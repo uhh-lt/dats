@@ -89,6 +89,14 @@ const useGetAnnotation = (spanId: number | undefined) =>
     { enabled: !!spanId }
   );
 
+const useUpdate = () =>
+  useMutation(SpanAnnotationService.updateById, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, data.id]);
+      queryClient.invalidateQueries([QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id]);
+    },
+  });
+
 const useUpdateSpan = () =>
   useMutation(
     (variables: {
@@ -226,6 +234,7 @@ const SpanAnnotationHooks = {
   useCreateAnnotation,
   useGetAnnotation,
   useUpdateSpan,
+  useUpdate,
   useDeleteSpan,
   // memo
   useGetMemos,
