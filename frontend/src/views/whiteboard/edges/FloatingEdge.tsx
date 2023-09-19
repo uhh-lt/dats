@@ -26,7 +26,11 @@ function FloatingEdge({ id, source, target, markerEnd, style, selected }: EdgePr
       className="react-flow__edge-path"
       d={edgePath}
       markerEnd={markerEnd}
-      style={{ ...style, stroke: selected ? "red" : style?.stroke }}
+      style={{
+        ...style,
+        strokeDashoffset: selected ? "100" : undefined,
+        strokeDasharray: selected ? "10,5" : undefined,
+      }}
     />
   );
 }

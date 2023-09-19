@@ -8,10 +8,11 @@ export interface GenericPositionContextMenuHandle {
 
 interface GenericPositionContextMenuProps extends Omit<MenuProps, "anchorEl" | "open" | "onClose"> {
   children: React.ReactNode;
+  onClose?: () => void;
 }
 
 const GenericPositionMenu = forwardRef<GenericPositionContextMenuHandle, GenericPositionContextMenuProps>(
-  ({ children, ...props }, ref) => {
+  ({ children, onClose, ...props }, ref) => {
     const [anchorPosition, setAnchorPosition] = useState<PopoverPosition | undefined>(undefined);
     const isOpen = Boolean(anchorPosition);
 
@@ -26,6 +27,7 @@ const GenericPositionMenu = forwardRef<GenericPositionContextMenuHandle, Generic
     };
 
     const closeContextMenu = () => {
+      if (onClose) onClose();
       setAnchorPosition(undefined);
     };
 

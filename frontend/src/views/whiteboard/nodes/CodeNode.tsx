@@ -78,6 +78,14 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
     const codeId = data.codeId;
     const childCodeIds = childCodes.map((code) => code.id);
 
+    // checks which edges are already in the graph and removes edges to non-existing codes
+    const edgesToDelete = reactFlowInstance
+      .getEdges()
+      .filter(isCodeParentCodeEdge)
+      .filter((edge) => edge.target === `code-${data.codeId}`)
+      .filter((edge) => !childCodeIds.includes(parseInt(edge.source.split("-")[1])));
+    reactFlowInstance.deleteElements({ edges: edgesToDelete });
+
     // checks which child code nodes are already in the graph and adds edges to the correct node
     const existingChildCodeNodes = reactFlowInstance
       .getNodes()
