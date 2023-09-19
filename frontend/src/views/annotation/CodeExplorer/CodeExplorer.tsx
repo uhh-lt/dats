@@ -206,7 +206,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
           >
             <Button
               variant="contained"
-              onClick={() => openCodeCreateDialog()}
+              onClick={() => openCodeCreateDialog({ parentCodeId: selectedCodeId })}
               startIcon={<AddBoxIcon />}
               sx={{ flexGrow: 1, mr: 1 }}
             >

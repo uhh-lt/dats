@@ -217,6 +217,7 @@ const useCreateMemo = () =>
   useMutation(SpanAnnotationService.addMemo, {
     onSuccess: (memo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, memo.attached_object_id, memo.user_id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id]); // todo: this is not optimal
     },
   });

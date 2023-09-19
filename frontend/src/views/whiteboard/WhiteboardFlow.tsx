@@ -24,11 +24,11 @@ import TagHooks from "../../api/TagHooks";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../components/GenericPositionMenu";
-import BBoxAnnotationEditDialog from "../../features/Annotation/BBoxAnnotationEditDialog";
-import SpanAnnotationEditDialog from "../../features/Annotation/SpanAnnotationEditDialog";
+import BBoxAnnotationEditDialog from "../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
+import SpanAnnotationEditDialog from "../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import CodeEditDialog from "../annotation/CodeExplorer/CodeEditDialog";
-import TagEditDialog from "../search/Tags/TagEdit/TagEditDialog";
+import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog";
+import TagEditDialog from "../../features/CrudDialog/Tag/TagEditDialog";
 import CustomConnectionLine from "./connectionlines/CustomConnectionLine";
 import FloatingEdge from "./edges/FloatingEdge";
 import { useEdgeStateCustom, useNodeStateCustom } from "./hooks/useNodesEdgesStateCustom";
@@ -48,6 +48,7 @@ import AddTextNodeButton from "./toolbar/AddTextNodeButton";
 import TextNodeEditMenu, { TextNodeEditMenuHandle } from "./toolbar/TextNodeEditMenu";
 import { isSdocNode, isTagNode, isTextNode } from "./types";
 import { DWTSNodeData } from "./types/DWTSNodeData";
+import CodeCreateDialog from "../../features/CrudDialog/Code/CodeCreateDialog";
 
 const nodeTypes: NodeTypes = {
   text: TextNode,
@@ -304,6 +305,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
       <TagEditDialog />
       <SpanAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />
+      <CodeCreateDialog />
       {projectCodes.isSuccess && <CodeEditDialog codes={projectCodes.data} />}
     </>
   );

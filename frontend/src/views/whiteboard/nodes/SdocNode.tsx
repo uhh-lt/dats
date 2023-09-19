@@ -1,9 +1,9 @@
-import { CardContent, CardHeader, CardMedia, MenuItem, Typography } from "@mui/material";
+import { CardContent, CardHeader, CardMedia, Divider, MenuItem, Typography } from "@mui/material";
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import SdocHooks from "../../../api/SdocHooks";
-import { DocType, SourceDocumentRead } from "../../../api/openapi";
+import { AttachedObjectType, DocType, SourceDocumentRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
@@ -18,6 +18,7 @@ import {
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
 import BaseNode from "./BaseNode";
+import MemoAPI from "../../../features/Memo/MemoAPI";
 
 function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocNodeData>) {
   // global client state
@@ -97,6 +98,19 @@ function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocN
     contextMenuRef.current?.close();
   };
 
+  const handleContextMenuCreateMemo = () => {
+    if (memo.data) return;
+
+    MemoAPI.openMemo({
+      attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
+      attachedObjectId: data.sdocId,
+      onCreateSuccess: (memo) => {
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos + 200 } }));
+      },
+    });
+    contextMenuRef.current?.close();
+  };
+
   const handleContextMenuExpandAnnotations = () => {
     alert("Not implemented!");
   };
@@ -136,10 +150,14 @@ function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocN
       </BaseNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandTags}>Expand document tags ({tags.data?.length || 0})</MenuItem>
+        <Divider />
         <MenuItem onClick={handleContextMenuExpandAnnotations}>Expand annotations</MenuItem>
-        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memo.data}>
-          Expand memo
-        </MenuItem>
+        <Divider />
+        {memo.data ? (
+          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
+        ) : (
+          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
+        )}
       </GenericPositionMenu>
     </>
   );

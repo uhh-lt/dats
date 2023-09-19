@@ -11,7 +11,12 @@ interface MemoContentCodeProps {
   code: CodeRead;
 }
 
-export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProps & MemoContentProps) {
+export function MemoContentCode({
+  code,
+  memo,
+  closeDialog,
+  onMemoCreateSuccess,
+}: MemoContentCodeProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
@@ -54,11 +59,12 @@ export function MemoContentCode({ code, memo, closeDialog }: MemoContentCodeProp
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             SnackbarAPI.openSnackbar({
               text: `Created memo for code ${code.name}`,
               severity: "success",
             });
+            if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
         }

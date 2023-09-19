@@ -196,6 +196,7 @@ const useCreateMemo = () =>
   useMutation(BboxAnnotationService.addMemo, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_BBOX_ANNOTATION, data.attached_object_id, data.user_id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, data.user_id]); // todo: this is not optimal
     },
   });

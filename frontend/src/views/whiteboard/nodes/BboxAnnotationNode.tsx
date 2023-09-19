@@ -1,4 +1,4 @@
-import { Box, CardContent, CardHeader, MenuItem, Stack, Typography } from "@mui/material";
+import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
@@ -22,7 +22,9 @@ import { BBoxAnnotationNodeData, DWTSNodeData, isCodeNode, isMemoNode, isSdocNod
 import BaseNode from "./BaseNode";
 import ImageCropper from "./ImageCropper";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
-import { openBBoxAnnotationEditDialog } from "../../../features/Annotation/BBoxAnnotationEditDialog";
+import { openBBoxAnnotationEditDialog } from "../../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
+import MemoAPI from "../../../features/Memo/MemoAPI";
+import { AttachedObjectType } from "../../../api/openapi";
 
 function BboxAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<BBoxAnnotationNodeData>) {
   // global client state
@@ -138,6 +140,19 @@ function BboxAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
     contextMenuRef.current?.close();
   };
 
+  const handleContextMenuCreateMemo = () => {
+    if (memo.data) return;
+
+    MemoAPI.openMemo({
+      attachedObjectType: AttachedObjectType.BBOX_ANNOTATION,
+      attachedObjectId: data.bboxAnnotationId,
+      onCreateSuccess: (memo) => {
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos + 200 } }));
+      },
+    });
+    contextMenuRef.current?.close();
+  };
+
   return (
     <>
       <BaseNode
@@ -190,10 +205,14 @@ function BboxAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
       </BaseNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandDocument}>Expand document</MenuItem>
+        <Divider />
         <MenuItem onClick={handleContextMenuExpandCode}>Expand code</MenuItem>
-        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memo.data}>
-          Expand memo
-        </MenuItem>
+        <Divider />
+        {memo.data ? (
+          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
+        ) : (
+          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
+        )}
       </GenericPositionMenu>
     </>
   );

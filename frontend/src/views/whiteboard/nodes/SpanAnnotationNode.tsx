@@ -1,4 +1,4 @@
-import { Box, CardContent, CardHeader, MenuItem, Stack, Typography } from "@mui/material";
+import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import AdocHooks from "../../../api/AdocHooks";
@@ -7,7 +7,7 @@ import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 import { useAuth } from "../../../auth/AuthProvider";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
-import { openSpanAnnotationEditDialog } from "../../../features/Annotation/SpanAnnotationEditDialog";
+import { openSpanAnnotationEditDialog } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import {
   createCodeNodes,
   createCodeSpanAnnotationEdge,
@@ -22,6 +22,8 @@ import {
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { DWTSNodeData, SpanAnnotationNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
 import BaseNode from "./BaseNode";
+import { AttachedObjectType } from "../../../api/openapi";
+import MemoAPI from "../../../features/Memo/MemoAPI";
 
 function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SpanAnnotationNodeData>) {
   // global client state
@@ -139,6 +141,19 @@ function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
     contextMenuRef.current?.close();
   };
 
+  const handleContextMenuCreateMemo = () => {
+    if (memo.data) return;
+
+    MemoAPI.openMemo({
+      attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
+      attachedObjectId: data.spanAnnotationId,
+      onCreateSuccess: (memo) => {
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos + 200 } }));
+      },
+    });
+    contextMenuRef.current?.close();
+  };
+
   return (
     <>
       <BaseNode
@@ -174,10 +189,14 @@ function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
       </BaseNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandDocument}>Expand document</MenuItem>
+        <Divider />
         <MenuItem onClick={handleContextMenuExpandCode}>Expand code</MenuItem>
-        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memo.data}>
-          Expand memo
-        </MenuItem>
+        <Divider />
+        {memo.data ? (
+          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
+        ) : (
+          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
+        )}
       </GenericPositionMenu>
     </>
   );

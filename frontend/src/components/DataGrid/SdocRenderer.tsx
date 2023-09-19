@@ -37,7 +37,11 @@ function SdocRendererWithData({ sdoc, link }: { sdoc: SourceDocumentRead; link: 
   );
 
   if (link) {
-    return <Link href={`../search/doc/${sdoc.id}`}>{content}</Link>;
+    return (
+      <Link href={`../search/doc/${sdoc.id}`} target="_blank">
+        {content}
+      </Link>
+    );
   }
   return content;
 }

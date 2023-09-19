@@ -301,6 +301,7 @@ const useCreateMemo = () =>
   useMutation(SourceDocumentService.addMemo, {
     onSuccess: (memo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SDOC, memo.attached_object_id, memo.user_id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id, memo.attached_object_id]);
     },
   });

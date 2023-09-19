@@ -13,7 +13,7 @@ import {
   TextField,
   rgbToHex,
 } from "@mui/material";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
@@ -22,15 +22,18 @@ import CodeHooks from "../../../api/CodeHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { CodeRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import { AnnoActions } from "../../../views/annotation/annoSlice";
 import { contrastiveColors } from "../../../views/annotation/colors";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 
+type CodeCreateSuccessHandler = ((code: CodeRead) => void) | undefined;
+
 type CodeCreateDialogPayload = {
   name?: string;
   parentCodeId?: number;
+  onSuccess?: CodeCreateSuccessHandler;
 };
 
 export const openCodeCreateDialog = (
@@ -56,13 +59,13 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
   const { user } = useAuth();
 
   // global state (redux)
-  const parentCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const codes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
   // computed
   const parentCodes = useMemo(() => codes.data?.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes.data]);
 
   // local state
+  const onSuccessHandler = useRef<CodeCreateSuccessHandler>(undefined);
   const [isCodeCreateDialogOpen, setIsCodeCreateDialogOpen] = useState(false);
   const [color, setColor] = useState("#000000");
 
@@ -73,7 +76,15 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
     setValue,
     formState: { errors },
     reset,
-  } = useForm<CodeCreateValues>();
+    getValues,
+  } = useForm<CodeCreateValues>({
+    defaultValues: {
+      parentCodeId: -1,
+      name: "",
+      color: "#000000",
+      description: "",
+    },
+  });
 
   // redux
   const dispatch = useAppDispatch();
@@ -89,16 +100,16 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
 
       // reset
       const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
-      reset();
-      setValue("name", event.detail.name ? event.detail.name : "");
-      setValue("color", randomHexColor);
-      if (event.detail.parentCodeId) {
-        setValue("parentCodeId", event.detail.parentCodeId);
-      }
+      reset({
+        name: event.detail.name ? event.detail.name : "",
+        color: randomHexColor,
+        parentCodeId: event.detail.parentCodeId ? event.detail.parentCodeId : -1,
+      });
+      onSuccessHandler.current = event.detail.onSuccess;
       setColor(randomHexColor);
       setIsCodeCreateDialogOpen(true);
     },
-    [reset, setValue]
+    [reset]
   );
 
   useEffect(() => {
@@ -156,6 +167,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
             dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             closeCodeCreateDialog();
             if (onCreateSuccess) onCreateSuccess(data, true);
+            if (onSuccessHandler.current) onSuccessHandler.current(data);
           },
         }
       );
@@ -176,9 +188,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
               select
               label="Parent Code"
               variant="filled"
-              defaultValue={
-                parentCodes && parentCodes.findIndex((code) => code.id === parentCodeId) !== -1 ? parentCodeId : -1
-              }
+              defaultValue={getValues("parentCodeId")}
               {...register("parentCodeId")}
               error={Boolean(errors.parentCodeId)}
               helperText={<ErrorMessage errors={errors} name="parentCodeId" />}

@@ -8,6 +8,7 @@ const useCreateMemo = () =>
   useMutation(CodeService.addMemo, {
     onSuccess: (createdMemo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, createdMemo.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_CODE, createdMemo.attached_object_id, createdMemo.user_id]);
     },
   });
 

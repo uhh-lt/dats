@@ -1,4 +1,4 @@
-import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
+import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks";
@@ -16,7 +16,11 @@ import {
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { CodeNodeData, DWTSNodeData, isCodeNode, isMemoNode } from "../types";
 import BaseNode from "./BaseNode";
-import { openCodeEditDialog } from "../../annotation/CodeExplorer/CodeEditDialog";
+import { openCodeEditDialog } from "../../../features/CrudDialog/Code/CodeEditDialog";
+import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
+import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
+import MemoAPI from "../../../features/Memo/MemoAPI";
+import { AttachedObjectType } from "../../../api/openapi";
 
 function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeNodeData>) {
   // global client state
@@ -115,6 +119,16 @@ function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeN
     alert("Not implemented!");
   };
 
+  const handleContextMenuCreateChildCode = () => {
+    openCodeCreateDialog({
+      parentCodeId: data.codeId,
+      onSuccess: (code) => {
+        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: xPos, y: yPos + 200 } }));
+      },
+    });
+    contextMenuRef.current?.close();
+  };
+
   const handleContextMenuExpandParentCode = () => {
     if (!parentCode.data) return;
 
@@ -126,6 +140,19 @@ function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeN
     if (!memo.data) return;
 
     reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos + 200 } }));
+    contextMenuRef.current?.close();
+  };
+
+  const handleContextMenuCreateMemo = () => {
+    if (memo.data) return;
+
+    MemoAPI.openMemo({
+      attachedObjectType: AttachedObjectType.CODE,
+      attachedObjectId: data.codeId,
+      onCreateSuccess: (memo) => {
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos + 200 } }));
+      },
+    });
     contextMenuRef.current?.close();
   };
 
@@ -158,13 +185,20 @@ function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeN
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandTextAnnotations}>Expand text annotations</MenuItem>
         <MenuItem onClick={handleContextMenuExpandImageAnnotations}>Expand image annotations</MenuItem>
+        <Divider />
         <MenuItem onClick={handleContextMenuExpandParentCode} disabled={!parentCode.data}>
           Expand parent code
         </MenuItem>
         <MenuItem onClick={handleContextMenuExpandChildCodes}>Expand child codes</MenuItem>
-        <MenuItem onClick={handleContextMenuExpandMemo} disabled={!memo.data}>
-          Expand memo
+        <MenuItem onClick={handleContextMenuCreateChildCode} disabled={code.data?.user_id === SYSTEM_USER_ID}>
+          Create child code
         </MenuItem>
+        <Divider />
+        {memo.data ? (
+          <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
+        ) : (
+          <MenuItem onClick={handleContextMenuCreateMemo}>Create memo</MenuItem>
+        )}
       </GenericPositionMenu>
     </>
   );
