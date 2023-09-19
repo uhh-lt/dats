@@ -87,14 +87,14 @@ function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocN
   const handleContextMenuExpandTags = () => {
     if (!tags.data) return;
 
-    reactFlowService.addNodes(createTagNodes({ tags: tags.data, position: { x: xPos, y: yPos + 200 } }));
+    reactFlowService.addNodes(createTagNodes({ tags: tags.data, position: { x: xPos, y: yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos + 200 } }));
+    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
@@ -105,7 +105,7 @@ function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocN
       attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
       attachedObjectId: data.sdocId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos + 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();

@@ -123,7 +123,7 @@ function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeN
     openCodeCreateDialog({
       parentCodeId: data.codeId,
       onSuccess: (code) => {
-        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: xPos, y: yPos + 200 } }));
+        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: xPos, y: yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -132,14 +132,14 @@ function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeN
   const handleContextMenuExpandParentCode = () => {
     if (!parentCode.data) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: [parentCode.data], position: { x: xPos, y: yPos + 200 } }));
+    reactFlowService.addNodes(createCodeNodes({ codes: [parentCode.data], position: { x: xPos, y: yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos + 200 } }));
+    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
@@ -150,7 +150,7 @@ function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeN
       attachedObjectType: AttachedObjectType.CODE,
       attachedObjectId: data.codeId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos + 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();

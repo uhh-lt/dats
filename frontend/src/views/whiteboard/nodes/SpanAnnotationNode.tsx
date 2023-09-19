@@ -122,7 +122,7 @@ function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
     if (!adoc.data) return;
 
     reactFlowService.addNodes(
-      createSdocNodes({ sdocs: [adoc.data.source_document_id], position: { x: xPos, y: yPos + 200 } })
+      createSdocNodes({ sdocs: [adoc.data.source_document_id], position: { x: xPos, y: yPos - 200 } })
     );
     contextMenuRef.current?.close();
   };
@@ -130,14 +130,14 @@ function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
   const handleContextMenuExpandCode = () => {
     if (!code.data) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: [code.data], position: { x: xPos, y: yPos + 200 } }));
+    reactFlowService.addNodes(createCodeNodes({ codes: [code.data], position: { x: xPos, y: yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos + 200 } }));
+    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
@@ -148,7 +148,7 @@ function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
       attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
       attachedObjectId: data.spanAnnotationId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos + 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
