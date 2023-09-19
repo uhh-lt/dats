@@ -186,7 +186,7 @@ const attachedObjectType2Label: Record<AttachedObjectType, string> = {
   [AttachedObjectType.ANNOTATION_DOCUMENT]: "Annotation Document",
 };
 
-function MemoNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<MemoNodeData>) {
+function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<MemoNodeData>) {
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
@@ -248,7 +248,9 @@ function MemoNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<MemoN
   return (
     <>
       <BaseNode
-        raised={selected}
+        nodeId={id}
+        allowDrawConnection={false}
+        selected={selected}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.preventDefault();

@@ -26,7 +26,7 @@ import { openBBoxAnnotationEditDialog } from "../../../features/CrudDialog/BBoxA
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AttachedObjectType } from "../../../api/openapi";
 
-function BboxAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<BBoxAnnotationNodeData>) {
+function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<BBoxAnnotationNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -156,7 +156,9 @@ function BboxAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
   return (
     <>
       <BaseNode
-        raised={selected}
+        nodeId={id}
+        allowDrawConnection={false}
+        selected={selected}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.preventDefault();

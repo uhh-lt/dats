@@ -23,7 +23,7 @@ import BaseNode from "./BaseNode";
 import { AttachedObjectType } from "../../../api/openapi";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
-function TagNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<TagNodeData>) {
+function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<TagNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -120,7 +120,9 @@ function TagNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<TagNod
   return (
     <>
       <BaseNode
-        raised={selected}
+        allowDrawConnection={true}
+        nodeId={id}
+        selected={selected}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.preventDefault();

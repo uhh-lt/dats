@@ -25,7 +25,7 @@ import BaseNode from "./BaseNode";
 import { AttachedObjectType } from "../../../api/openapi";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
-function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SpanAnnotationNodeData>) {
+function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<SpanAnnotationNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -157,7 +157,9 @@ function SpanAnnotationNode({ data, isConnectable, selected, xPos, yPos }: NodeP
   return (
     <>
       <BaseNode
-        raised={selected}
+        allowDrawConnection={false}
+        nodeId={id}
+        selected={selected}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.preventDefault();

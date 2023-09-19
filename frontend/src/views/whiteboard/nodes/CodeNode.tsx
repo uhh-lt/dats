@@ -22,7 +22,7 @@ import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AttachedObjectType } from "../../../api/openapi";
 
-function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeNodeData>) {
+function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<CodeNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -159,7 +159,9 @@ function CodeNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<CodeN
   return (
     <>
       <BaseNode
-        raised={selected}
+        nodeId={id}
+        selected={selected}
+        allowDrawConnection={true}
         onClick={handleClick}
         onContextMenu={(e) => {
           e.preventDefault();

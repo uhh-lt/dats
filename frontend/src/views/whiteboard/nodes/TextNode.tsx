@@ -41,7 +41,13 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
   };
 
   return (
-    <BaseNode raised={selected} onClick={handleClick} style={{ backgroundColor: data.color }}>
+    <BaseNode
+      allowDrawConnection={false}
+      nodeId={id}
+      selected={selected}
+      onClick={handleClick}
+      style={{ backgroundColor: data.color }}
+    >
       {isEditing ? (
         <Box className="nodrag">
           <TextField

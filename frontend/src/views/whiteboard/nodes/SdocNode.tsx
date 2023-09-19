@@ -20,7 +20,7 @@ import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
 import BaseNode from "./BaseNode";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
-function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocNodeData>) {
+function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<SdocNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -118,7 +118,9 @@ function SdocNode({ data, isConnectable, selected, xPos, yPos }: NodeProps<SdocN
   return (
     <>
       <BaseNode
-        raised={selected}
+        nodeId={id}
+        allowDrawConnection={false}
+        selected={selected}
         onContextMenu={(e) => {
           e.preventDefault();
           contextMenuRef.current?.open({

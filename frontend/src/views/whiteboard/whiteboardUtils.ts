@@ -20,6 +20,13 @@ import {
 
 const positionOffset = 50;
 
+export const isMemoNodeId = (nodeId: string): boolean => nodeId.startsWith("memo-");
+export const isTagNodeId = (nodeId: string): boolean => nodeId.startsWith("tag-");
+export const isSdocNodeId = (nodeId: string): boolean => nodeId.startsWith("sdoc-");
+export const isCodeNodeId = (nodeId: string): boolean => nodeId.startsWith("code-");
+export const isSpanAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("spanAnnotation-");
+export const isBBoxAnnotationNodeId = (nodeId: string): boolean => nodeId.startsWith("bboxAnnotation-");
+
 export const createTextNode = ({ position }: { position?: XYPosition }): Node<TextNodeData> => {
   return {
     id: uuidv4(),
