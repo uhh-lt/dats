@@ -104,7 +104,7 @@ async def add_memo(
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),
-        attached_object_id=db_obj.id,
+        attached_object_id=code_id,
         attached_object_type=AttachedObjectType.code
     )
 
