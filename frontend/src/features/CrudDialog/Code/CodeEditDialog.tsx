@@ -9,11 +9,11 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
 import CodeHooks from "../../../api/CodeHooks";
 import { CodeRead, CodeUpdate } from "../../../api/openapi";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import ColorUtils from "../../../utils/ColorUtils";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
-import { AnnoActions } from "../annoSlice";
+import { AnnoActions } from "../../../views/annotation/annoSlice";
 
 export const openCodeEditDialog = (code: CodeRead) => {
   eventBus.dispatch("open-edit-code", code);

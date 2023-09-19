@@ -13,19 +13,31 @@ import {
   TextField,
   rgbToHex,
 } from "@mui/material";
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
+import eventBus from "../../../EventBus";
 import CodeHooks from "../../../api/CodeHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { CodeRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
-import { AnnoActions } from "../annoSlice";
-import { contrastiveColors } from "../colors";
+import { AnnoActions } from "../../../views/annotation/annoSlice";
+import { contrastiveColors } from "../../../views/annotation/colors";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
+
+type CodeCreateDialogPayload = {
+  name?: string;
+  parentCodeId?: number;
+};
+
+export const openCodeCreateDialog = (
+  payload: CodeCreateDialogPayload = { name: undefined, parentCodeId: undefined }
+) => {
+  eventBus.dispatch("open-create-code", payload);
+};
 
 type CodeCreateValues = {
   parentCodeId: string | number;
@@ -34,15 +46,11 @@ type CodeCreateValues = {
   description: string;
 };
 
-interface CodeCreationDialogProps {
+interface CodeCreateDialogProps {
   onCreateSuccess?: (code: CodeRead, isNewCode: boolean) => void;
 }
 
-export interface CodeCreationDialogHandle {
-  open: (name?: string) => void;
-}
-
-const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDialogProps>(({ onCreateSuccess }, ref) => {
+function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
   // global state
   const { projectId } = useParams() as { projectId: string };
   const { user } = useAuth();
@@ -73,22 +81,34 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   // mutations
   const createCodeMutation = CodeHooks.useCreateCode();
 
-  // exposed methods (via forward ref)
-  useImperativeHandle(ref, () => ({
-    open: openCodeCreateDialog,
-  }));
+  // listen to event
+  // create a (memoized) function that stays the same across re-renders
+  const onOpenCreateCode = useCallback(
+    (event: CustomEventInit<CodeCreateDialogPayload>) => {
+      if (!event.detail) return;
+
+      // reset
+      const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
+      reset();
+      setValue("name", event.detail.name ? event.detail.name : "");
+      setValue("color", randomHexColor);
+      if (event.detail.parentCodeId) {
+        setValue("parentCodeId", event.detail.parentCodeId);
+      }
+      setColor(randomHexColor);
+      setIsCodeCreateDialogOpen(true);
+    },
+    [reset, setValue]
+  );
+
+  useEffect(() => {
+    eventBus.on("open-create-code", onOpenCreateCode);
+    return () => {
+      eventBus.remove("open-create-code", onOpenCreateCode);
+    };
+  }, [onOpenCreateCode]);
 
   // methods
-  const openCodeCreateDialog = (name?: string) => {
-    // reset
-    const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
-    reset();
-    setValue("name", name ? name : "");
-    setValue("color", randomHexColor);
-    setColor(randomHexColor);
-    setIsCodeCreateDialogOpen(true);
-  };
-
   const closeCodeCreateDialog = () => {
     setIsCodeCreateDialogOpen(false);
   };
@@ -231,6 +251,6 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
       </form>
     </Dialog>
   );
-});
+}
 
-export default SpanCreationDialog;
+export default CodeCreateDialog;

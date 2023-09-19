@@ -1,7 +1,6 @@
-import eventBus from "../../../../EventBus";
-import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
-import React from "react";
 import AddIcon from "@mui/icons-material/Add";
+import { ListItemButton, ListItemButtonProps, ListItemIcon, ListItemText } from "@mui/material";
+import { openTagCreateDialog } from "../../../../features/CrudDialog/Tag/TagCreateDialog";
 
 interface TagActionButtonCreateProps {
   tagName: string;
@@ -12,12 +11,8 @@ interface TagActionButtonCreateProps {
  * @param tagName The name of the DocumentTag to be created. The button will display the name, and the TagCreationDialog's form will be pre-filled with this name.
  */
 function TagCreationButton({ tagName, ...props }: TagActionButtonCreateProps & ListItemButtonProps) {
-  const handleCreateTag = () => {
-    eventBus.dispatch("open-tag", { tagName: tagName });
-  };
-
   return (
-    <ListItemButton onClick={() => handleCreateTag()} {...props}>
+    <ListItemButton onClick={() => openTagCreateDialog({ tagName })} {...props}>
       <ListItemIcon>
         <AddIcon />
       </ListItemIcon>

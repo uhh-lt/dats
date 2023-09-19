@@ -1,7 +1,7 @@
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import React from "react";
-import { openTagEditDialog } from "./TagEditDialog";
+import { openTagEditDialog } from "../../../../features/CrudDialog/Tag/TagEditDialog";
 
 /**
  * A button that sends the 'open-edit-tag' event to open the TagEditDialog

@@ -1,13 +1,13 @@
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider, Typography } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../EventBus";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import { CodeRead, SpanAnnotationReadResolved } from "../../api/openapi";
-import CodeSelector from "../../components/Selectors/CodeSelector";
 import { LoadingButton } from "@mui/lab";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import SpanAnnotationRenderer from "../../components/DataGrid/SpanAnnotationRenderer";
+import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
+import eventBus from "../../../EventBus";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
+import { CodeRead, SpanAnnotationReadResolved } from "../../../api/openapi";
+import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationRenderer";
+import CodeSelector from "../../../components/Selectors/CodeSelector";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 
 export const openSpanAnnotationEditDialog = (annotation: SpanAnnotationReadResolved) => {
   eventBus.dispatch("open-edit-spanAnnotation", annotation);

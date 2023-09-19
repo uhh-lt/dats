@@ -2,12 +2,12 @@ import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../EventBus";
-import BBoxAnnotationRenderer from "../../components/DataGrid/BBoxAnnotationRenderer";
-import CodeSelector from "../../components/Selectors/CodeSelector";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { BBoxAnnotationReadResolvedCode, CodeRead } from "../../api/openapi";
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
+import eventBus from "../../../EventBus";
+import BBoxAnnotationRenderer from "../../../components/DataGrid/BBoxAnnotationRenderer";
+import CodeSelector from "../../../components/Selectors/CodeSelector";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
+import { BBoxAnnotationReadResolvedCode, CodeRead } from "../../../api/openapi";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
 
 export const openBBoxAnnotationEditDialog = (annotation: BBoxAnnotationReadResolvedCode) => {
   eventBus.dispatch("open-edit-bboxAnnotation", annotation);
