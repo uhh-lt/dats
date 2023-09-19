@@ -1,6 +1,6 @@
 import { Box, Card, CardProps } from "@mui/material";
 import React from "react";
-import { Handle, Position, ReactFlowState, useStore } from "reactflow";
+import { Handle, NodeResizer, Position, ReactFlowState, useStore } from "reactflow";
 import "./nodes.css";
 
 const connectionNodeIdSelector = (state: ReactFlowState) => state.connectionNodeId;
@@ -15,15 +15,25 @@ function BaseNode({ children, ...props }: BaseNodeProps & CardProps) {
   const isConnecting = !!connectionNodeId;
 
   return (
-    <Card {...props}>
-      {!isConnecting && (
-        <Handle className="customHandle" position={Position.Right} type="source" style={{ zIndex: 1 }} />
-      )}
+    <>
+      <NodeResizer
+        isVisible={props.raised}
+        minWidth={200}
+        minHeight={100}
+        handleStyle={{ width: "12px", height: "12px" }}
+      />
+      <Box padding={2} style={{ height: "100%" }}>
+        <Card {...props} style={{ height: "100%" }}>
+          {!isConnecting && (
+            <Handle className="customHandle" position={Position.Right} type="source" style={{ zIndex: 1 }} />
+          )}
 
-      <Handle className="customHandle" position={Position.Left} type="target" />
+          <Handle className="customHandle" position={Position.Left} type="target" />
 
-      <Box style={{ position: "relative", zIndex: 5, margin: "16px" }}>{children}</Box>
-    </Card>
+          <Box style={{ position: "relative", zIndex: 5, margin: "16px" }}>{children}</Box>
+        </Card>
+      </Box>
+    </>
   );
 }
 
