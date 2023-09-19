@@ -1,6 +1,6 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, MenuItem, Paper, Stack } from "@mui/material";
+import { Box, Button, MenuItem, Paper, Stack, Typography } from "@mui/material";
 import { parseInt } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { unstable_useBlocker, useParams } from "react-router-dom";
@@ -263,14 +263,22 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             proOptions={{ hideAttribution: true }}
           >
             <Panel position="top-left">
-              <Paper elevation={1}>
+              <Paper elevation={1} sx={{ mb: 3 }}>
                 <Stack>
-                  <AddTextNodeButton />
+                  <Typography p={1}>DWTS Objects</Typography>
                   <AddDocumentNodeDialog projectId={projectId} />
                   <AddTagNodeDialog projectId={projectId} />
                   <AddCodeNodeDialog projectId={projectId} />
                   {userId && <AddAnnotationNodeDialog projectId={projectId} userIds={[userId]} />}
                   {userId && <AddMemoNodeDialog projectId={projectId} userId={userId} />}
+                </Stack>
+              </Paper>
+              <Paper elevation={1}>
+                <Stack>
+                  <Typography p={1}>Text Elements</Typography>
+                  <AddTextNodeButton />
+                  <Button>Add text</Button>
+                  <Button>Add shape</Button>
                 </Stack>
               </Paper>
             </Panel>

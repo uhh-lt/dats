@@ -12,7 +12,7 @@ function AddTextNodeButton() {
     reactFlowService.addNodes([createTextNode({})]);
   }, [reactFlowService]);
 
-  return <Button onClick={handleAddTextNode}>Add text node</Button>;
+  return <Button onClick={handleAddTextNode}>Add note</Button>;
 }
 
 export default AddTextNodeButton;
