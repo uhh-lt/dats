@@ -1,7 +1,5 @@
 from typing import Optional
 
-from sqlalchemy import inspect
-
 from app.core.data.crud.object_handle import crud_object_handle
 from app.core.data.dto.action import ActionTargetObjectType
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -19,6 +17,7 @@ from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
+from sqlalchemy import inspect
 
 
 def get_parent_project_id(orm: ORMBase) -> Optional[int]:

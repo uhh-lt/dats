@@ -2,16 +2,15 @@ from collections import Counter
 from typing import Dict, List, Tuple
 
 import spacy
-from loguru import logger
-from spacy import Language
-from spacy.tokens import Doc
-from tqdm import tqdm
-
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.text.models.autospan import AutoSpan
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
 from config import conf
+from loguru import logger
+from spacy import Language
+from spacy.tokens import Doc
+from tqdm import tqdm
 
 BULK_THRESHOLD = conf.docprepro.text.bulk_threshold
 

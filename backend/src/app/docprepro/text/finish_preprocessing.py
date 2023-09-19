@@ -1,11 +1,10 @@
 from typing import List
 
-from loguru import logger
-
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.source_document import SDocStatus
 from app.core.db.sql_service import SQLService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+from loguru import logger
 
 
 def finish_preprocessing_(pptds: List[PreProTextDoc]) -> None:

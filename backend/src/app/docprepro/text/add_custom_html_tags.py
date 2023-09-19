@@ -1,13 +1,12 @@
 from typing import List
-from bs4 import BeautifulSoup
-
-from loguru import logger
-from tqdm import tqdm
 
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
 from app.util.string_builder import StringBuilder
+from bs4 import BeautifulSoup
+from loguru import logger
+from tqdm import tqdm
 
 
 def add_custom_html_tags_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:

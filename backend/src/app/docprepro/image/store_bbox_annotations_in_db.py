@@ -1,8 +1,5 @@
 from typing import List
 
-from loguru import logger
-from tqdm import tqdm
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
@@ -16,6 +13,8 @@ from app.core.data.dto.source_document import SDocStatus
 from app.core.db.sql_service import SQLService
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.util import update_sdoc_status
+from loguru import logger
+from tqdm import tqdm
 
 sql = SQLService(echo=False)
 

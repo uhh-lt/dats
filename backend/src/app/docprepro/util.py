@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import Tuple
 
-from fastapi import UploadFile
-
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.doc_type import DocType, get_doc_type, is_archive_file
@@ -17,6 +15,7 @@ from app.docprepro.image import image_document_preprocessing_apply_async
 from app.docprepro.text import text_document_preprocessing_apply_async
 from app.docprepro.video import video_document_preprocessing_apply_async
 from config import conf
+from fastapi import UploadFile
 
 cc = conf.docprepro.celery
 sql: SQLService = SQLService()

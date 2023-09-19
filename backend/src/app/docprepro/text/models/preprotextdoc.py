@@ -1,8 +1,7 @@
 from typing import Dict, List, Tuple
 
-from pydantic import BaseModel, Field
-
 from app.docprepro.text.models.autospan import AutoSpan
+from pydantic import BaseModel, Field
 
 
 class PreProTextDoc(BaseModel):

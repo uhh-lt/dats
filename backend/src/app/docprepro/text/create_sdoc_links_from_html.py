@@ -1,8 +1,5 @@
 from typing import List
 
-from bs4 import BeautifulSoup
-from tqdm import tqdm
-
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
@@ -10,6 +7,8 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
+from bs4 import BeautifulSoup
+from tqdm import tqdm
 
 sql: SQLService = SQLService(echo=False)
 repo: RepoService = RepoService()

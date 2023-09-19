@@ -2,8 +2,6 @@ from typing import List
 
 import numpy as np
 import torch
-from loguru import logger
-
 from app.core.data.crud.faiss_sentence_source_document_link import (
     crud_faiss_sentence_link,
 )
@@ -18,6 +16,7 @@ from app.core.search.index_type import IndexType
 from app.docprepro.simsearch.util import text_encoder
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from config import conf
+from loguru import logger
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)

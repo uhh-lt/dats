@@ -3,7 +3,6 @@ import random
 import string
 
 import pytest
-
 from app.core.startup import startup
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this

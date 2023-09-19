@@ -4,8 +4,6 @@ import zipfile
 from pathlib import Path
 from typing import List, Optional
 
-from loguru import logger
-
 from app.core.data.crawler.crawler_settings import get_settings
 from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
 from app.core.data.crud.project import crud_project
@@ -20,6 +18,7 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
 
 
 class NoDataToCrawlError(Exception):

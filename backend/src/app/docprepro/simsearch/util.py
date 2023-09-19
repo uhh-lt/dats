@@ -2,16 +2,15 @@ from pathlib import Path
 from typing import List, Union
 
 import numpy as np
-from loguru import logger
-from PIL import Image
-from sentence_transformers import SentenceTransformer
-
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from config import conf
+from loguru import logger
+from PIL import Image
+from sentence_transformers import SentenceTransformer
 
 
 def _load_text_encoder() -> SentenceTransformer:

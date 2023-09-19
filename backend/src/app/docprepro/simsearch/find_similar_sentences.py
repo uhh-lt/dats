@@ -1,4 +1,5 @@
 from typing import List
+
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
 from app.docprepro.simsearch.util import encode_query, encode_text_queries

@@ -2,13 +2,12 @@ import os
 from pathlib import Path
 from typing import List
 
-from PIL import Image
-from tqdm import tqdm
-
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.repo.repo_service import RepoService
 from app.docprepro.image import PreProImageDoc
 from app.docprepro.util import update_sdoc_status
+from PIL import Image
+from tqdm import tqdm
 
 repo: RepoService = RepoService()
 

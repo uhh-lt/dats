@@ -1,12 +1,11 @@
 from typing import List
 
-from langdetect import detect_langs
-from loguru import logger
-from tqdm import tqdm
-
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
+from langdetect import detect_langs
+from loguru import logger
+from tqdm import tqdm
 
 
 def detect_language_(pptds: List[PreProTextDoc]) -> List[PreProTextDoc]:

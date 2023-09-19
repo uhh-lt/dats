@@ -1,8 +1,5 @@
 from typing import Dict, List, Union
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
 from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import (
@@ -22,6 +19,8 @@ from app.core.data.dto.search import (
 )
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/search")
 tags = ["search"]

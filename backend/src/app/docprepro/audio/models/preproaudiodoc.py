@@ -1,10 +1,9 @@
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field
-
 # from app.docprepro.audio.models.autotimespan import AutoTimespan
 from app.docprepro.audio.models.wordleveltranscription import WordLevelTranscription
+from pydantic import BaseModel, Field
 
 
 class PreProAudioDoc(BaseModel):

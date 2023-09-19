@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, List
 
+from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import (
     CheckConstraint,
     Column,
@@ -10,8 +11,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import coalesce
-
-from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM

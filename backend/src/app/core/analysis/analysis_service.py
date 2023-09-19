@@ -6,15 +6,15 @@ from app.core.data.dto.analysis import (
     CodeFrequency,
     CodeOccurrence,
 )
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationRead,
+    BBoxAnnotationReadResolvedCode,
+)
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
-)
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM

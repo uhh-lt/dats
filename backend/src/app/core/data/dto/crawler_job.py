@@ -2,9 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
-
 from app.core.data.dto.dto_base import UpdateDTOBase
+from pydantic import BaseModel, Field
 
 # TODO: unify with export job and extract duplicate code to utils!
 

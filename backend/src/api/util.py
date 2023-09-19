@@ -1,10 +1,5 @@
 from typing import List, Optional, Union
 
-from fastapi import HTTPException
-from loguru import logger
-from pydantic import BaseModel, Field
-from starlette import status
-
 from app.core.data.dto.memo import AttachedObjectType, MemoInDB, MemoRead
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
@@ -12,6 +7,10 @@ from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
+from fastapi import HTTPException
+from loguru import logger
+from pydantic import BaseModel, Field
+from starlette import status
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,

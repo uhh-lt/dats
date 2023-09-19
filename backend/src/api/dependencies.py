@@ -1,17 +1,16 @@
 from typing import Dict, Generator, Optional
 
-from fastapi import Depends, Query
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
-from pydantic import ValidationError
-from sqlalchemy.orm import Session
-
 from api.util import credentials_exception
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.user import UserRead
 from app.core.db.sql_service import SQLService
 from app.core.security import decode_jwt
 from config import conf
+from fastapi import Depends, Query
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+from pydantic import ValidationError
+from sqlalchemy.orm import Session
 
 # instantiate here to so that it is reusable for consecutive calls
 reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.api.auth.jwt.token_url)

@@ -1,5 +1,3 @@
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
 from app.core.data.dto.faiss_sentence_source_document_link import (
     FaissSentenceSourceDocumentLinkCreate,
@@ -7,6 +5,7 @@ from app.core.data.dto.faiss_sentence_source_document_link import (
 from app.core.data.orm.faiss_sentence_source_document_link import (
     FaissSentenceSourceDocumentLinkORM,
 )
+from sqlalchemy.orm import Session
 
 
 class CRUDFaissSentenceSourceDocumentLink(

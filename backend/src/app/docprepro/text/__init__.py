@@ -1,11 +1,11 @@
 from pathlib import Path
 from typing import Any, List
 
-# noinspection PyUnresolvedReferences,PyProtectedMember
-from celery import Signature
-
 from app.docprepro.simsearch import index_text_document_in_faiss
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
+
+# noinspection PyUnresolvedReferences,PyProtectedMember
+from celery import Signature
 
 import_text_document = "app.docprepro.text.preprocess.import_text_document"
 

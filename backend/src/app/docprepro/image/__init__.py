@@ -1,9 +1,6 @@
 from pathlib import Path
 from typing import Any, List
 
-# noinspection PyUnresolvedReferences,PyProtectedMember
-from celery import Signature
-
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.simsearch import index_image_document_in_faiss
 from app.docprepro.text import (
@@ -13,6 +10,9 @@ from app.docprepro.text import (
     store_document_in_elasticsearch,
     store_span_annotations_in_db,
 )
+
+# noinspection PyUnresolvedReferences,PyProtectedMember
+from celery import Signature
 
 # Flo: Task names (as they could be imported)
 import_image_document = "app.docprepro.image.preprocess.import_image_document"

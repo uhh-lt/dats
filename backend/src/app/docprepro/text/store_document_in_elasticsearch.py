@@ -1,7 +1,5 @@
 from typing import List
 
-from tqdm import tqdm
-
 from app.core.data.dto.search import (
     ElasticSearchDocumentCreate,
     ElasticSearchIntegerRange,
@@ -11,6 +9,7 @@ from app.core.search.elasticsearch_service import ElasticSearchService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
 from config import conf
+from tqdm import tqdm
 
 BULK_THRESHOLD = conf.docprepro.text.bulk_threshold
 es = ElasticSearchService()

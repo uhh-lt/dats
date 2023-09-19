@@ -1,19 +1,18 @@
 from typing import TYPE_CHECKING, List
 
+from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
-from app.core.data.orm.orm_base import ORMBase
-
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
+    from app.core.data.orm.analysis_table import AnalysisTableORM
     from app.core.data.orm.code import CodeORM
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.user import UserORM
-    from app.core.data.orm.analysis_table import AnalysisTableORM
     from app.core.data.orm.whiteboard import WhiteboardORM
 
 

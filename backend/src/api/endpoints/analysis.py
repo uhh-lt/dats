@@ -10,12 +10,11 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     TimelineAnalysisResult,
 )
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
 from app.core.data.dto.search import SimSearchSentenceHit
 from app.core.search.elasticsearch_service import ElasticSearchService
-
 from app.core.search.search_service import SearchService
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/analysis")
 tags = ["analysis"]
