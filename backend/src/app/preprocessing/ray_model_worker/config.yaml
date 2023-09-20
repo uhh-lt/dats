@@ -115,8 +115,9 @@ detr:
       - hair drier
       - toothbrush
 
-vit-gpt2:
+vit_gpt2:
   model: "nlpconnect/vit-gpt2-image-captioning"
-  max_caption_length: 16
-  num_beams: 4
   device: cuda
+  image_captioning:
+    max_caption_length: 16
+    num_beams: 4
