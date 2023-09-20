@@ -34,6 +34,7 @@
     "react-router-dom": "^6.3.0",
     "react-scripts": "^5.0.1",
     "react-wordcloud": "^1.2.7",
+    "reactflow": "^11.8.3",
     "recharts": "^2.1.14",
     "redux-persist": "^6.0.0",
     "ts-tree-structure": "^1.0.2",
@@ -47,7 +48,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
-    "update-api": "node updateAPI.js -p 33120",
+    "update-api": "node updateAPI.js -p 5500",
     "generate": "openapi --input src/openapi.json --useOptions --output src/api/openapi",
     "generate-dev": "node generateAPI.js",
     "prepare": "cd .. && husky install frontend/.husky"
