@@ -7,9 +7,14 @@ from typing import List
 import srsly
 
 
-def get_all_apps(apps_path: Path) -> List[str]:
+def get_all_apps(
+    apps_path: Path,
+    ignore_apps: List[str] = [],
+) -> List[str]:
     apps = []
     for app in apps_path.glob("./*.py"):
+        if app.stem in ignore_apps:
+            continue
         if "app = " in app.read_text():
             apps.append(f"apps.{app.stem}:app")
     return apps
@@ -25,7 +30,10 @@ def rename_app_names(generated_spec_fp: Path, spec_out_fp: Path) -> dict:
     print(f"Successfully renamed app names in {spec_out_fp}!")
 
 
-def run_build_cmd(apps: List[str], spec_out_fp: Path) -> Path:
+def run_build_cmd(
+    apps: List[str],
+    spec_out_fp: Path,
+) -> Path:
     gen_spec_fn = spec_out_fp.with_suffix(".generated")
     build_cmd = f"serve build {' '.join(apps)} -o {gen_spec_fn}"
     print(f"Running ray serve build command:\n{build_cmd}")
@@ -40,6 +48,7 @@ def generate(
     apps_path: str | Path = "./apps",
     spec_out_fp: str | Path = "./spec.yaml",
     overwrite_existing: bool = True,
+    ignore_apps: List[str] = [],
 ):
     print("Generating ray serve spec file...")
 
@@ -53,7 +62,7 @@ def generate(
         else:
             raise SystemExit(f"Spec file already exists at {spec_out_fp}!")
 
-    apps = get_all_apps(apps_path)
+    apps = get_all_apps(apps_path, ignore_apps)
 
     generated_spec_fp = run_build_cmd(apps, spec_out_fp)
 
@@ -86,9 +95,18 @@ if __name__ == "__main__":
         default=True,
         help="Overwrite existing spec file",
     )
+    arg_parser.add_argument(
+        "--ignore_apps",
+        type=str,
+        nargs="+",
+        default=[],
+        help="List of apps to ignore",
+    )
+
     args = arg_parser.parse_args()
     generate(
         apps_path=args.apps_path,
         spec_out_fp=args.spec_out_fp,
         overwrite_existing=args.overwrite_existing,
+        ignore_apps=args.ignore_apps,
     )
