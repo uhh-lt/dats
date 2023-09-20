@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field
-
 from app.core.data.dto.source_document import SDocStatus
+from pydantic import BaseModel, Field
 
 
 class PreProProjectStatus(BaseModel):

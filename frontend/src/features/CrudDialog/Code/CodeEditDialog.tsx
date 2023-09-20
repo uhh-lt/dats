@@ -1,19 +1,23 @@
+import { ErrorMessage } from "@hookform/error-message";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SaveIcon from "@mui/icons-material/Save";
+import { LoadingButton } from "@mui/lab";
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
-import { CodeRead, CodeUpdate } from "../../../api/openapi";
 import CodeHooks from "../../../api/CodeHooks";
-import { ErrorMessage } from "@hookform/error-message";
-import { LoadingButton } from "@mui/lab";
-import { HexColorPicker } from "react-colorful";
-import ColorUtils from "../../../utils/ColorUtils";
-import SaveIcon from "@mui/icons-material/Save";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
-import { AnnoActions } from "../annoSlice";
+import { CodeRead, CodeUpdate } from "../../../api/openapi";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
+import ColorUtils from "../../../utils/ColorUtils";
+import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
+import { AnnoActions } from "../../../views/annotation/annoSlice";
+
+export const openCodeEditDialog = (code: CodeRead) => {
+  eventBus.dispatch("open-edit-code", code);
+};
 
 type CodeEditValues = {
   parentCodeId: number | undefined;

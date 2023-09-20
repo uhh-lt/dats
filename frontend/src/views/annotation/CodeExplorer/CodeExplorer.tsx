@@ -2,17 +2,17 @@ import AddBoxIcon from "@mui/icons-material/AddBox";
 import { AppBar, Box, BoxProps, Button, Checkbox, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
 import ExporterButton from "../../../features/Exporter/ExporterButton";
 import MemoButton from "../../../features/Memo/MemoButton";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import SpanCreationDialog, { CodeCreationDialogHandle } from "../SpanContextMenu/SpanCreationDialog";
 import { AnnoActions } from "../annoSlice";
 import CodeEditButton from "./CodeEditButton";
-import CodeEditDialog from "./CodeEditDialog";
+import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeTreeView from "./CodeTreeView";
@@ -41,9 +41,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
     const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
     const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
     const dispatch = useAppDispatch();
-
-    // local state
-    const codeCreationDialogRef = useRef<CodeCreationDialogHandle>(null);
 
     // effects
     // update global client state when selection changes
@@ -209,7 +206,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
           >
             <Button
               variant="contained"
-              onClick={() => codeCreationDialogRef.current!.open()}
+              onClick={() => openCodeCreateDialog({ parentCodeId: selectedCodeId })}
               startIcon={<AddBoxIcon />}
               sx={{ flexGrow: 1, mr: 1 }}
             >
@@ -223,7 +220,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
           </Stack>
         )}
         {content}
-        <SpanCreationDialog ref={codeCreationDialogRef} />
+        <CodeCreateDialog />
       </Box>
     );
   }

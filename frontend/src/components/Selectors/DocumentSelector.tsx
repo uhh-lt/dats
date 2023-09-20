@@ -1,11 +1,18 @@
-import { Button, CircularProgress } from "@mui/material";
+import { Button, CircularProgress, Tooltip } from "@mui/material";
 import { DataGrid, GridCallbackDetails, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
 import { useMemo, useState } from "react";
-import { SourceDocumentRead } from "../../api/openapi";
+import { DocType, SourceDocumentRead } from "../../api/openapi";
 import ProjectHooks from "../../api/ProjectHooks";
+import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon";
 
 const columns: GridColDef[] = [
-  { field: "id", headerName: "ID" },
+  { field: "id", headerName: "ID", flex: 0 },
+  {
+    field: "doctype",
+    headerName: "Doc type",
+    flex: 0,
+    renderCell: (params) => <Tooltip title={params.value}>{docTypeToIcon[params.value as DocType]}</Tooltip>,
+  },
   {
     field: "filename",
     headerName: "File name",

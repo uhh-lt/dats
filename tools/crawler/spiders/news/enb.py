@@ -1,12 +1,13 @@
 import scrapy
-from crawler.spiders.spider_base import SpiderBase
 from crawler.items import ENBItem
+from crawler.spiders.spider_base import SpiderBase
 
 
 class ENBSpider(scrapy.Spider):
     name = "enb"
     start_urls = [
-        f"https://enb.iisd.org/negotiations/un-framework-convention-climate-change-unfccc?page={i}" for i in range(9)
+        f"https://enb.iisd.org/negotiations/un-framework-convention-climate-change-unfccc?page={i}"
+        for i in range(9)
     ]
 
     # provide arguments using the -a option
@@ -27,8 +28,12 @@ class ENBSpider(scrapy.Spider):
 
     def parse_conference(self, response, **kwargs):
         # visit the summary report
-        summary_report_url = response.css(".c-final-report__title-link::attr(href)").get()
-        yield scrapy.Request(response.urljoin(summary_report_url), callback=self.parse_report)
+        summary_report_url = response.css(
+            ".c-final-report__title-link::attr(href)"
+        ).get()
+        yield scrapy.Request(
+            response.urljoin(summary_report_url), callback=self.parse_report
+        )
 
     def parse_report(self, response, **kwargs):
         # parse
@@ -42,12 +47,21 @@ class ENBSpider(scrapy.Spider):
         body = "".join(response.css(".c-node__body *::text").getall())
 
         tags_selectors = response.css(".c-tags__items")
-        tags = [[x.strip() for x in tag_selector.css(".c-tags__item ::text").getall() if len(x.strip()) > 0] for tag_selector in tags_selectors] 
+        tags = [
+            [
+                x.strip()
+                for x in tag_selector.css(".c-tags__item ::text").getall()
+                if len(x.strip()) > 0
+            ]
+            for tag_selector in tags_selectors
+        ]
 
         # construct result
         item = ENBItem()
         item["file_name"] = title
-        item["output_dir"] = f"/home/tfischer/Development/dwts/data/enb/{subtitle.replace(' ', '_')}"
+        item[
+            "output_dir"
+        ] = f"/home/tfischer/Development/dwts/data/enb/{subtitle.replace(' ', '_')}"
 
         item["url"] = response.url
         item["title"] = title
@@ -61,6 +75,10 @@ class ENBSpider(scrapy.Spider):
         yield item
 
         # visit next report
-        next_report_url = response.css(".c-node__button-container > a:last-child::attr(href)").get()
+        next_report_url = response.css(
+            ".c-node__button-container > a:last-child::attr(href)"
+        ).get()
         if next_report_url is not None:
-            yield scrapy.Request(response.urljoin(next_report_url), callback=self.parse_report)
+            yield scrapy.Request(
+                response.urljoin(next_report_url), callback=self.parse_report
+            )

@@ -1,9 +1,8 @@
 from pathlib import Path
 from typing import Dict, List
 
-from pydantic import BaseModel, Field
-
 from app.docprepro.image.models.autobbox import AutoBBox
+from pydantic import BaseModel, Field
 
 
 class PreProImageDoc(BaseModel):

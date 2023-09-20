@@ -1,12 +1,11 @@
 from typing import Generic, List, Optional, Type, TypeVar
 
 import srsly
+from app.core.data.dto.action import ActionCreate, ActionType
+from app.core.data.orm.orm_base import ORMBase
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
-from app.core.data.dto.action import ActionCreate, ActionType
-from app.core.data.orm.orm_base import ORMBase
 
 ORMModelType = TypeVar("ORMModelType", bound=ORMBase)
 CreateDTOType = TypeVar("CreateDTOType", bound=BaseModel)

@@ -1,9 +1,6 @@
 from pathlib import Path
 from typing import List
 
-from loguru import logger
-from tqdm import tqdm
-
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
@@ -12,6 +9,8 @@ from app.core.db.sql_service import SQLService
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
+from loguru import logger
+from tqdm import tqdm
 
 sql = SQLService(echo=False)
 repo = RepoService()

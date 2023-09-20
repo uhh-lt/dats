@@ -2,15 +2,14 @@ import os
 from pathlib import Path
 from typing import List, Tuple
 
-from loguru import logger
-from tika import parser
-
 from app.core.data.dto.source_document import SDocStatus, SourceDocumentRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.docprepro.text.html_cleaning_utils import replace_div_class_page_with_page
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import persist_as_sdoc, update_sdoc_status
+from loguru import logger
+from tika import parser
 
 # TODO Flo: Do we want this in the config ?
 TIKA_SUPPORTED_FILE_EXTENSIONS = [".docx", ".doc", ".pdf"]

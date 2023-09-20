@@ -1,10 +1,13 @@
 import eventBus from "../../EventBus";
-import { AttachedObjectType } from "../../api/openapi";
+import { AttachedObjectType, MemoRead } from "../../api/openapi";
+
+export type MemoCreateSuccessHandler = ((memo: MemoRead) => void) | undefined;
 
 export interface MemoEvent {
   memoId?: number;
   attachedObjectType: AttachedObjectType;
   attachedObjectId?: number;
+  onCreateSuccess?: MemoCreateSuccessHandler;
 }
 
 function openMemo(props: MemoEvent) {

@@ -13,19 +13,34 @@ import {
   TextField,
   rgbToHex,
 } from "@mui/material";
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
+import eventBus from "../../../EventBus";
 import CodeHooks from "../../../api/CodeHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { CodeRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
-import { AnnoActions } from "../annoSlice";
-import { contrastiveColors } from "../colors";
+import { AnnoActions } from "../../../views/annotation/annoSlice";
+import { contrastiveColors } from "../../../views/annotation/colors";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
+
+type CodeCreateSuccessHandler = ((code: CodeRead) => void) | undefined;
+
+type CodeCreateDialogPayload = {
+  name?: string;
+  parentCodeId?: number;
+  onSuccess?: CodeCreateSuccessHandler;
+};
+
+export const openCodeCreateDialog = (
+  payload: CodeCreateDialogPayload = { name: undefined, parentCodeId: undefined }
+) => {
+  eventBus.dispatch("open-create-code", payload);
+};
 
 type CodeCreateValues = {
   parentCodeId: string | number;
@@ -34,27 +49,23 @@ type CodeCreateValues = {
   description: string;
 };
 
-interface CodeCreationDialogProps {
+interface CodeCreateDialogProps {
   onCreateSuccess?: (code: CodeRead, isNewCode: boolean) => void;
 }
 
-export interface CodeCreationDialogHandle {
-  open: (name?: string) => void;
-}
-
-const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDialogProps>(({ onCreateSuccess }, ref) => {
+function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
   // global state
   const { projectId } = useParams() as { projectId: string };
   const { user } = useAuth();
 
   // global state (redux)
-  const parentCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
   const codes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
   // computed
   const parentCodes = useMemo(() => codes.data?.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes.data]);
 
   // local state
+  const onSuccessHandler = useRef<CodeCreateSuccessHandler>(undefined);
   const [isCodeCreateDialogOpen, setIsCodeCreateDialogOpen] = useState(false);
   const [color, setColor] = useState("#000000");
 
@@ -65,7 +76,15 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
     setValue,
     formState: { errors },
     reset,
-  } = useForm<CodeCreateValues>();
+    getValues,
+  } = useForm<CodeCreateValues>({
+    defaultValues: {
+      parentCodeId: -1,
+      name: "",
+      color: "#000000",
+      description: "",
+    },
+  });
 
   // redux
   const dispatch = useAppDispatch();
@@ -73,22 +92,34 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
   // mutations
   const createCodeMutation = CodeHooks.useCreateCode();
 
-  // exposed methods (via forward ref)
-  useImperativeHandle(ref, () => ({
-    open: openCodeCreateDialog,
-  }));
+  // listen to event
+  // create a (memoized) function that stays the same across re-renders
+  const onOpenCreateCode = useCallback(
+    (event: CustomEventInit<CodeCreateDialogPayload>) => {
+      if (!event.detail) return;
+
+      // reset
+      const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
+      reset({
+        name: event.detail.name ? event.detail.name : "",
+        color: randomHexColor,
+        parentCodeId: event.detail.parentCodeId ? event.detail.parentCodeId : -1,
+      });
+      onSuccessHandler.current = event.detail.onSuccess;
+      setColor(randomHexColor);
+      setIsCodeCreateDialogOpen(true);
+    },
+    [reset]
+  );
+
+  useEffect(() => {
+    eventBus.on("open-create-code", onOpenCreateCode);
+    return () => {
+      eventBus.remove("open-create-code", onOpenCreateCode);
+    };
+  }, [onOpenCreateCode]);
 
   // methods
-  const openCodeCreateDialog = (name?: string) => {
-    // reset
-    const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
-    reset();
-    setValue("name", name ? name : "");
-    setValue("color", randomHexColor);
-    setColor(randomHexColor);
-    setIsCodeCreateDialogOpen(true);
-  };
-
   const closeCodeCreateDialog = () => {
     setIsCodeCreateDialogOpen(false);
   };
@@ -136,6 +167,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
             dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             closeCodeCreateDialog();
             if (onCreateSuccess) onCreateSuccess(data, true);
+            if (onSuccessHandler.current) onSuccessHandler.current(data);
           },
         }
       );
@@ -156,9 +188,7 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
               select
               label="Parent Code"
               variant="filled"
-              defaultValue={
-                parentCodes && parentCodes.findIndex((code) => code.id === parentCodeId) !== -1 ? parentCodeId : -1
-              }
+              defaultValue={getValues("parentCodeId")}
               {...register("parentCodeId")}
               error={Boolean(errors.parentCodeId)}
               helperText={<ErrorMessage errors={errors} name="parentCodeId" />}
@@ -231,6 +261,6 @@ const SpanCreationDialog = forwardRef<CodeCreationDialogHandle, CodeCreationDial
       </form>
     </Dialog>
   );
-});
+}
 
-export default SpanCreationDialog;
+export default CodeCreateDialog;

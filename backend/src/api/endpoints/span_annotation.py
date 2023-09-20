@@ -1,8 +1,5 @@
 from typing import List, Optional, Union
 
-from fastapi import APIRouter, Depends
-from requests import Session
-
 from api.dependencies import get_db_session, resolve_code_param
 from api.util import get_object_memos
 from app.core.data.crud.memo import crud_memo
@@ -16,6 +13,8 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.span_group import SpanGroupRead
+from fastapi import APIRouter, Depends
+from requests import Session
 
 router = APIRouter(prefix="/span")
 tags = ["spanAnnotation"]

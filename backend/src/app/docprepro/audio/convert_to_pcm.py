@@ -1,9 +1,6 @@
 from typing import List
 
 import ffmpeg
-from loguru import logger
-from tqdm import tqdm
-
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
@@ -11,6 +8,8 @@ from app.core.db.sql_service import SQLService
 from app.docprepro.audio.import_audio_document import import_audio_document_
 from app.docprepro.audio.models.preproaudiodoc import PreProAudioDoc
 from app.docprepro.util import update_sdoc_status
+from loguru import logger
+from tqdm import tqdm
 
 sql = SQLService(echo=False)
 

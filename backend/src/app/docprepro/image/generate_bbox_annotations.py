@@ -1,14 +1,13 @@
 from typing import List
 
 import torch
-from PIL import Image
-from tqdm import tqdm
-
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.image.models.autobbox import AutoBBox
 from app.docprepro.image.models.preproimagedoc import PreProImageDoc
 from app.docprepro.util import update_sdoc_status
 from config import conf
+from PIL import Image
+from tqdm import tqdm
 
 # Flo: This has to be in order!!! (for object detection with DETR)
 coco2017_labels = [

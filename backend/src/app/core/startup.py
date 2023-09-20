@@ -113,11 +113,10 @@ def __init_services__(
 
 
 def __create_system_user__() -> None:
-    from pydantic import EmailStr
-
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
+    from pydantic import EmailStr
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):

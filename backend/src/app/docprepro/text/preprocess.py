@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 
 import torch
-
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.text import PreProTextDoc
 from app.docprepro.text.add_custom_html_tags import add_custom_html_tags_

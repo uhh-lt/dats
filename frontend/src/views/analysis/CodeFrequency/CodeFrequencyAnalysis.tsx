@@ -2,7 +2,6 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import {
-  Box,
   Card,
   CardContent,
   CardHeader,
@@ -35,13 +34,14 @@ import { Node } from "ts-tree-structure";
 import AnalysisHooks from "../../../api/AnalysisHooks";
 import CodeHooks from "../../../api/CodeHooks";
 import { CodeFrequency, CodeRead } from "../../../api/openapi";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
+import { renderTextCellExpand } from "../../../components/DataGrid/renderTextCellExpand";
 import UserName from "../../../components/UserName";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree";
 import { UserSelector } from "../UserSelector";
-import { renderTextCellExpand } from "./renderTextCellExpand";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID" },
@@ -65,16 +65,7 @@ const columns: GridColDef[] = [
     field: "code",
     headerName: "Code",
     flex: 1,
-    valueGetter: (params: GridValueGetterParams) => params.row.code.name,
-    renderCell: (params) => (
-      <Stack direction="row" alignItems="center" component="span">
-        <Box
-          sx={{ width: 20, height: 20, backgroundColor: params.row.code.color, ml: 1.5, mr: 1, flexShrink: 0 }}
-          component="span"
-        />
-        {params.row.code.name}
-      </Stack>
-    ),
+    renderCell: (params) => <CodeRenderer code={params.row.code} />,
   },
   {
     field: "text",

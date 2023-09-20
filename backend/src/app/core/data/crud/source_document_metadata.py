@@ -1,8 +1,5 @@
 from typing import List, Optional
 
-from loguru import logger
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.source_document_metadata import (
@@ -11,6 +8,8 @@ from app.core.data.dto.source_document_metadata import (
 )
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+from loguru import logger
+from sqlalchemy.orm import Session
 
 
 class CRUDSourceDocumentMetadata(

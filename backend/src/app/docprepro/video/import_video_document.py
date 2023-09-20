@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import List
 
 import ffmpeg
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID

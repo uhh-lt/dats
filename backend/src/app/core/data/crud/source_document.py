@@ -1,9 +1,6 @@
 from typing import List, Optional, Set, Tuple
 
 import srsly
-from sqlalchemy import and_, desc, func, or_
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -39,6 +36,8 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):

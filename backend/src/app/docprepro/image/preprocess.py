@@ -2,15 +2,6 @@ from pathlib import Path
 from typing import List
 
 import torch
-from loguru import logger
-from transformers import (
-    AutoTokenizer,
-    DetrFeatureExtractor,
-    DetrForObjectDetection,
-    VisionEncoderDecoderModel,
-    ViTFeatureExtractor,
-)
-
 from app.docprepro.celery.celery_worker import celery_worker
 from app.docprepro.image.convert_to_webp_and_generate_thumbnails import (
     convert_to_webp_and_generate_thumbnails_,
@@ -25,6 +16,14 @@ from app.docprepro.image.store_bbox_annotations_in_db import (
 )
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from config import conf
+from loguru import logger
+from transformers import (
+    AutoTokenizer,
+    DetrFeatureExtractor,
+    DetrForObjectDetection,
+    VisionEncoderDecoderModel,
+    ViTFeatureExtractor,
+)
 
 # Flo: This is important! Otherwise, it will not work with celery thread management and just hang!!!
 torch.set_num_threads(1)

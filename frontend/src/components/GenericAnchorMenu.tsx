@@ -10,7 +10,7 @@ interface GenericAnchorContextMenuProps extends Omit<MenuProps, "anchorEl" | "op
   children: React.ReactNode;
 }
 
-const GenericAnchorContextMenu = forwardRef<GenericAnchorContextMenuHandle, GenericAnchorContextMenuProps>(
+const GenericAnchorMenu = forwardRef<GenericAnchorContextMenuHandle, GenericAnchorContextMenuProps>(
   ({ children, ...props }, ref) => {
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const isOpen = Boolean(anchorEl);
@@ -37,4 +37,4 @@ const GenericAnchorContextMenu = forwardRef<GenericAnchorContextMenuHandle, Gene
   }
 );
 
-export default GenericAnchorContextMenu;
+export default GenericAnchorMenu;

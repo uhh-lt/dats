@@ -1,6 +1,10 @@
-from typing import List
+from typing import List, Union
+
+from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.span_annotation import SpanAnnotationRead
+from app.core.data.dto.span_text import SpanTextRead
 from pydantic import BaseModel, Field
 
 
@@ -38,3 +42,14 @@ class TimelineAnalysisResult(BaseModel):
         description="The id of the SourceDocument the similar sentence belongs to."
     )
     context: str = Field(description="The context of the similar sentence.")
+
+
+class AnnotationOccurrence(BaseModel):
+    annotation: Union[SpanAnnotationRead, BBoxAnnotationRead] = Field(
+        description="The Annotation"
+    )
+    code: CodeRead = Field(description="The occuring Code.")
+    sdoc: SourceDocumentRead = Field(
+        description="The SourceDocument where the Code occurs."
+    )
+    text: str = Field(description="The Tet of the Annotation")

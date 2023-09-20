@@ -143,6 +143,7 @@ const useCreateMemo = () =>
   useMutation(DocumentTagService.addMemo, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, data.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_TAG, data.attached_object_id, data.user_id]);
     },
   });
 

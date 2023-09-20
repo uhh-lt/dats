@@ -1,5 +1,8 @@
 import os
 
+from app.core.data.dto.project import ProjectReadAction
+from app.core.data.dto.source_document import SourceDocumentReadAction
+from app.core.startup import startup
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -11,10 +14,6 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
 
-from app.core.data.dto.project import ProjectReadAction
-from app.core.data.dto.source_document import SourceDocumentReadAction
-from app.core.startup import startup
-
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
@@ -25,6 +24,7 @@ if not STARTUP_DONE:
 from api.endpoints import annotation_document  # noqa E402
 from api.endpoints import (
     analysis,
+    analysis_table,
     bbox_annotation,
     code,
     crawler,
@@ -41,7 +41,7 @@ from api.endpoints import (
     span_annotation,
     span_group,
     user,
-    analysis_table,
+    whiteboard,
 )
 from app.core.data.crawler.crawler_service import (
     CrawlerJobAlreadyStartedOrDoneError,
@@ -243,6 +243,7 @@ app.include_router(prepro.router)
 app.include_router(export.router)
 app.include_router(crawler.router)
 app.include_router(analysis_table.router)
+app.include_router(whiteboard.router)
 
 
 def main() -> None:

@@ -1,5 +1,6 @@
 import { MenuBook } from "@mui/icons-material";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import BookIcon from "@mui/icons-material/Book";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import SearchIcon from "@mui/icons-material/Search";
@@ -15,10 +16,12 @@ function calculateValue(path: string) {
     return 1;
   } else if (path.match(/project\/\d+\/analysis.*/i)) {
     return 2;
-  } else if (path.match(/project\/\d+\/logbook.*/i)) {
+  } else if (path.match(/project\/\d+\/whiteboard.*/i)) {
     return 3;
-  } else if (path.match(/project\/\d+\/autologbook.*/i)) {
+  } else if (path.match(/project\/\d+\/logbook.*/i)) {
     return 4;
+  } else if (path.match(/project\/\d+\/autologbook.*/i)) {
+    return 5;
   }
 }
 
@@ -62,6 +65,13 @@ function BottomBar(props: BottomNavigationProps) {
         icon={<BarChartIcon />}
         component={Link}
         to={`/project/${projectId}/analysis`}
+      />
+
+      <BottomNavigationAction
+        label="Whiteboard"
+        icon={<AccountTreeIcon />}
+        component={Link}
+        to={`/project/${projectId}/whiteboard`}
       />
 
       <BottomNavigationAction

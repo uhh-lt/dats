@@ -1,14 +1,22 @@
 import React, { useCallback, useEffect, useState } from "react";
-import eventBus from "../../../../EventBus";
+import eventBus from "../../../EventBus";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 import { useParams } from "react-router-dom";
 import { HexColorPicker } from "react-colorful";
-import TagHooks from "../../../../api/TagHooks";
+import TagHooks from "../../../api/TagHooks";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from "@mui/icons-material/Save";
+
+type TagCreateDialogPayload = {
+  tagName?: string;
+};
+
+export const openTagCreateDialog = (payload: TagCreateDialogPayload) => {
+  eventBus.dispatch("open-create-tag", payload);
+};
 
 /**
  * A dialog that allows to create a DocumentTag.
@@ -16,7 +24,7 @@ import SaveIcon from "@mui/icons-material/Save";
  * It opens automatically and fills the form with the provided name.
  * @constructor
  */
-function TagCreationDialog() {
+function TagCreateDialog() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // use react hook form
@@ -34,17 +42,19 @@ function TagCreationDialog() {
 
   // create a (memoized) function that stays the same across re-renders
   const openModal = useCallback(
-    (data: CustomEventInit) => {
+    (data: CustomEventInit<TagCreateDialogPayload>) => {
+      if (!data.detail) return;
+
       setOpen(true);
-      setValue("title", data.detail.tagName);
+      setValue("title", data.detail.tagName ? data.detail.tagName : "");
     },
     [setValue]
   );
 
   useEffect(() => {
-    eventBus.on("open-tag", openModal);
+    eventBus.on("open-create-tag", openModal);
     return () => {
-      eventBus.remove("open-tag", openModal);
+      eventBus.remove("open-create-tag", openModal);
     };
   }, [openModal]);
 
@@ -148,4 +158,4 @@ function TagCreationDialog() {
   );
 }
 
-export default TagCreationDialog;
+export default TagCreateDialog;

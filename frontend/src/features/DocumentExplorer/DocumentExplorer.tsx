@@ -1,7 +1,3 @@
-import ArticleIcon from "@mui/icons-material/Article";
-import AudioFileIcon from "@mui/icons-material/AudioFile";
-import VideoFileIcon from "@mui/icons-material/VideoFile";
-import ImageIcon from "@mui/icons-material/Image";
 import LabelIcon from "@mui/icons-material/Label";
 import {
   AppBar,
@@ -29,13 +25,14 @@ import { Link as RouterLink, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SdocHooks from "../../api/SdocHooks";
 import SearchHooks from "../../api/SearchHooks";
-import { AttachedObjectType, DocType } from "../../api/openapi";
+import { AttachedObjectType } from "../../api/openapi";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import DocumentNavigation from "../../components/DocumentNavigation";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { AnnoActions } from "../../views/annotation/annoSlice";
 import MemoButton from "../Memo/MemoButton";
 import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
+import { docTypeToIcon } from "./docTypeToIcon";
 
 function DocumentExplorer({ ...props }: BoxProps) {
   // router
@@ -175,13 +172,6 @@ function DocumentExplorer({ ...props }: BoxProps) {
     </Box>
   );
 }
-
-export const docTypeToIcon: Record<DocType, React.ReactElement> = {
-  [DocType.TEXT]: <ArticleIcon />,
-  [DocType.IMAGE]: <ImageIcon />,
-  [DocType.VIDEO]: <VideoFileIcon />,
-  [DocType.AUDIO]: <AudioFileIcon />,
-};
 
 function DocumentExplorerListItem({
   sdocId,

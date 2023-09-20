@@ -1,9 +1,21 @@
 from typing import List
 
 from app.core.data.crud.project import crud_project
-from app.core.data.dto.analysis import CodeFrequency, CodeOccurrence
+from app.core.data.dto.analysis import (
+    AnnotationOccurrence,
+    CodeFrequency,
+    CodeOccurrence,
+)
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationRead,
+    BBoxAnnotationReadResolvedCode,
+)
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+)
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
@@ -195,6 +207,97 @@ class AnalysisService(metaclass=SingletonMeta):
                     text="Image Annotation",
                     # text=f"Image Annotation ({x[2].x_min}, {x[2].y_min}, {x[2].x_max}, {x[2].y_max})",
                     count=x[3],
+                )
+                for x in res
+            ]
+
+            # 3. return the result
+            return span_code_occurrences + bbox_code_occurrences
+
+    def find_annotation_occurrences(
+        self, project_id: int, user_ids: List[int], code_id: int
+    ) -> List[AnnotationOccurrence]:
+        with self.sqls.db_session() as db:
+            # 1. query all span annotation occurrences of the code
+            query = (
+                db.query(
+                    SpanAnnotationORM,
+                    SourceDocumentORM,
+                    CodeORM,
+                    SpanTextORM.text,
+                )
+                .join(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                )
+                .join(
+                    SpanAnnotationORM,
+                    SpanAnnotationORM.annotation_document_id
+                    == AnnotationDocumentORM.id,
+                )
+                .join(
+                    CurrentCodeORM,
+                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
+                )
+                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
+            )
+            # noinspection PyUnresolvedReferences
+            query = query.filter(
+                and_(
+                    SourceDocumentORM.project_id == project_id,
+                    AnnotationDocumentORM.user_id.in_(user_ids),
+                    CurrentCodeORM.code_id == code_id,
+                )
+            )
+            res = query.all()
+            span_code_occurrences = [
+                AnnotationOccurrence(
+                    annotation=SpanAnnotationRead.from_orm(x[0]),
+                    sdoc=SourceDocumentRead.from_orm(x[1]),
+                    code=CodeRead.from_orm(x[2]),
+                    text=x[3],
+                )
+                for x in res
+            ]
+
+            # 2. query all bbox annotation occurrences of the code
+            query = (
+                db.query(
+                    BBoxAnnotationORM,
+                    SourceDocumentORM,
+                    CodeORM,
+                )
+                .join(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                )
+                .join(
+                    BBoxAnnotationORM,
+                    BBoxAnnotationORM.annotation_document_id
+                    == AnnotationDocumentORM.id,
+                )
+                .join(
+                    CurrentCodeORM,
+                    CurrentCodeORM.id == BBoxAnnotationORM.current_code_id,
+                )
+                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+            )
+            # noinspection PyUnresolvedReferences
+            query = query.filter(
+                and_(
+                    SourceDocumentORM.project_id == project_id,
+                    AnnotationDocumentORM.user_id.in_(user_ids),
+                    CurrentCodeORM.code_id == code_id,
+                )
+            )
+            res = query.all()
+            bbox_code_occurrences = [
+                AnnotationOccurrence(
+                    annotation=BBoxAnnotationRead.from_orm(x[0]),
+                    sdoc=SourceDocumentRead.from_orm(x[1]),
+                    code=CodeRead.from_orm(x[2]),
+                    text="Image Annotation",
                 )
                 for x in res
             ]

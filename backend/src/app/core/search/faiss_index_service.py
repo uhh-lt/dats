@@ -4,13 +4,12 @@ from typing import Dict, Tuple
 
 import faiss
 import numpy as np
-from faiss.swigfaiss import IndexIDMap
-from loguru import logger
-
 from app.core.data.repo.repo_service import RepoService
 from app.core.search.index_type import IndexType
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from faiss.swigfaiss import IndexIDMap
+from loguru import logger
 
 
 class FaissIndexDoesNotExistError(Exception):

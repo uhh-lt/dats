@@ -3,14 +3,13 @@ from pathlib import Path
 from typing import List
 
 import ffmpeg
-from loguru import logger
-from PIL import Image
-from tqdm import tqdm
-
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.repo.repo_service import RepoService
 from app.docprepro.util import update_sdoc_status
 from app.docprepro.video import PreProVideoDoc
+from loguru import logger
+from PIL import Image
+from tqdm import tqdm
 
 repo = RepoService()
 

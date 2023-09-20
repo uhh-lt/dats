@@ -1,4 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LabelIcon from "@mui/icons-material/Label";
 import {
@@ -20,13 +19,13 @@ import React, { useMemo, useState } from "react";
 import ProjectHooks from "../../../api/ProjectHooks";
 import TagHooks from "../../../api/TagHooks";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import TagCreateDialog from "../../../features/CrudDialog/Tag/TagCreateDialog";
+import TagEditDialog from "../../../features/CrudDialog/Tag/TagEditDialog";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import TagCreationButton from "../../search/Tags/TagCreate/TagCreationButton";
 import TagEditButton from "../../search/Tags/TagEdit/TagEditButton";
-import TagEditDialog from "../../search/Tags/TagEdit/TagEditDialog";
 import { ProjectProps } from "./ProjectProps";
 import ProjectTagsContextMenu from "./ProjectTagsContextMenu";
-import TagCreationButton from "../../search/Tags/TagCreate/TagCreationButton";
-import TagCreationDialog from "../../search/Tags/TagCreate/TagCreationDialog";
 
 function ProjectTags({ project }: ProjectProps) {
   // global server state (react query)
@@ -128,7 +127,7 @@ function ProjectTags({ project }: ProjectProps) {
           ))}
         </List>
       )}
-      <TagCreationDialog />
+      <TagCreateDialog />
       <TagEditDialog />
       <ProjectTagsContextMenu
         position={contextMenuPosition}

@@ -1,15 +1,19 @@
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 import { useForm } from "react-hook-form";
-import eventBus from "../../../../EventBus";
-import TagHooks from "../../../../api/TagHooks";
+import eventBus from "../../../EventBus";
+import TagHooks from "../../../api/TagHooks";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import { HexColorPicker } from "react-colorful";
-import ColorUtils from "../../../../utils/ColorUtils";
+import ColorUtils from "../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
+
+export const openTagEditDialog = (tagId: number) => {
+  eventBus.dispatch("open-edit-tag", tagId);
+};
 
 /**
  * A dialog that allows to update a DocumentTag.

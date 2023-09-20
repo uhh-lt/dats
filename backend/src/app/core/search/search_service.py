@@ -1,7 +1,5 @@
 from typing import Dict, List, Union
 
-from PIL.Image import Image
-
 from app.core.data.crud.faiss_sentence_source_document_link import (
     crud_faiss_sentence_link,
 )
@@ -21,6 +19,7 @@ from app.docprepro.simsearch import (
     find_similar_sentences_with_embedding_with_threshold_apply_async,
 )
 from app.util.singleton_meta import SingletonMeta
+from PIL.Image import Image
 
 
 class SearchService(metaclass=SingletonMeta):

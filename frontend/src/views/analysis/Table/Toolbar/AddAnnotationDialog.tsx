@@ -1,13 +1,13 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
+import { AnnotationOccurrence } from "../../../../api/openapi";
 import AnnotationSelector from "../../../../components/Selectors/AnnotationSelector";
-import { CodeOccurrence } from "../../../../api/openapi";
 
 export interface AddAnnotationDialogProps {
   projectId: number;
   userIds: number[];
   shouldOpen: () => boolean;
-  onConfirmSelection: (annotations: CodeOccurrence[], addRows: boolean) => void;
+  onConfirmSelection: (annotations: AnnotationOccurrence[], addRows: boolean) => void;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
@@ -19,7 +19,7 @@ function AddAnnotationDialog({
   buttonProps,
 }: AddAnnotationDialogProps) {
   const [open, setOpen] = useState(false);
-  const [selectedAnnotations, setSelectedAnnotations] = useState<CodeOccurrence[]>([]);
+  const [selectedAnnotations, setSelectedAnnotations] = useState<AnnotationOccurrence[]>([]);
 
   const onOpenDialogClick = () => {
     setOpen(shouldOpen());

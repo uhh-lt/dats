@@ -3,11 +3,10 @@ from html.parser import HTMLParser
 from itertools import accumulate
 from typing import Dict, List, Union
 
-from tqdm import tqdm
-
 from app.core.data.dto.source_document import SDocStatus
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
+from tqdm import tqdm
 
 
 class CustomLineHTMLParser(HTMLParser):

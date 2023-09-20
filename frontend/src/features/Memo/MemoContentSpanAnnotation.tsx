@@ -15,6 +15,7 @@ export function MemoContentSpanAnnotation({
   spanAnnotation,
   memo,
   closeDialog,
+  onMemoCreateSuccess,
 }: MemoContentSpanAnnotationProps & MemoContentProps) {
   const { user } = useAuth();
 
@@ -63,6 +64,7 @@ export function MemoContentSpanAnnotation({
               text: `Created memo for spanAnnotation ${memo.attached_object_id}`,
               severity: "success",
             });
+            if (onMemoCreateSuccess) onMemoCreateSuccess(memo);
             closeDialog();
           },
         }

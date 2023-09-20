@@ -1,9 +1,6 @@
 from pathlib import Path
 from typing import Any, List
 
-# noinspection PyUnresolvedReferences,PyProtectedMember
-from celery import Signature
-
 from app.docprepro.text import (
     add_custom_html_tags,
     clean_html,
@@ -19,6 +16,9 @@ from app.docprepro.text import (
     store_span_annotations_in_db,
 )
 from app.docprepro.video.models.preprovideodoc import PreProVideoDoc
+
+# noinspection PyUnresolvedReferences,PyProtectedMember
+from celery import Signature
 
 # Flo: Task names (as they could be imported)
 import_video_document = "app.docprepro.video.preprocess.import_video_document"

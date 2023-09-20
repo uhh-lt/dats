@@ -1,9 +1,6 @@
 from pathlib import Path
 
 import magic
-from loguru import logger
-from tqdm import tqdm
-
 from app.core.data.doc_type import DocType, get_doc_type
 from app.core.data.repo.repo_service import (
     FileNotFoundInRepositoryError,
@@ -20,6 +17,8 @@ from app.docprepro.text.import_text_document import import_text_document_
 from app.docprepro.video import video_document_preprocessing_without_import_apply_async
 from app.docprepro.video.import_video_document import import_video_document_
 from config import conf
+from loguru import logger
+from tqdm import tqdm
 
 sql: SQLService = SQLService(echo=False)
 repo: RepoService = RepoService()

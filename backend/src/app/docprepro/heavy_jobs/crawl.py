@@ -1,10 +1,9 @@
 from pathlib import Path
 from typing import Tuple
 
-from loguru import logger
-
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobRead
+from loguru import logger
 
 cs: CrawlerService = CrawlerService()
 

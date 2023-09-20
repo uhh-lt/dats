@@ -1,9 +1,5 @@
 from typing import List
 
-from loguru import logger
-from psycopg2 import OperationalError
-from tqdm import tqdm
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -16,6 +12,9 @@ from app.core.db.sql_service import SQLService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
 from app.util.color import get_next_color
+from loguru import logger
+from psycopg2 import OperationalError
+from tqdm import tqdm
 
 sql = SQLService()
 

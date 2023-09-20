@@ -1,14 +1,13 @@
 import json
 from typing import List
 
-from tqdm import tqdm
-
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.db.sql_service import SQLService
 from app.docprepro.text.models.preprotextdoc import PreProTextDoc
 from app.docprepro.util import update_sdoc_status
+from tqdm import tqdm
 
 sql = SQLService()
 

@@ -1,13 +1,13 @@
+import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import React from "react";
-import EditIcon from "@mui/icons-material/Edit";
-import eventBus from "../../../EventBus";
 import { CodeRead } from "../../../api/openapi";
+import { openCodeEditDialog } from "../../../features/CrudDialog/Code/CodeEditDialog";
 
 function CodeEditButton({ code, ...props }: IconButtonProps & { code: CodeRead }) {
   const handleClickOpen = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.stopPropagation();
-    eventBus.dispatch("open-edit-code", code);
+    openCodeEditDialog(code);
   };
 
   return (

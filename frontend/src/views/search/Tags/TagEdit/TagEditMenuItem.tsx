@@ -1,7 +1,7 @@
+import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem } from "@mui/material";
 import React from "react";
-import EditIcon from "@mui/icons-material/Edit";
-import eventBus from "../../../../EventBus";
+import { openTagEditDialog } from "../../../../features/CrudDialog/Tag/TagEditDialog";
 
 interface TagEditMenuItemProps {
   tagId: number;
@@ -16,7 +16,7 @@ function TagEditMenuItem({ tagId, onClick }: TagEditMenuItemProps) {
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     onClick();
-    eventBus.dispatch("open-edit-tag", tagId);
+    openTagEditDialog(tagId);
   };
 
   return (

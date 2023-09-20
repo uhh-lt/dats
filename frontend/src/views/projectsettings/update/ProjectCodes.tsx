@@ -1,3 +1,4 @@
+import AddIcon from "@mui/icons-material/Add";
 import {
   Box,
   CardContent,
@@ -11,20 +12,19 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
 import ProjectHooks from "../../../api/ProjectHooks";
+import { CodeRead } from "../../../api/openapi";
+import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
+import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
 import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton";
-import CodeEditDialog from "../../annotation/CodeExplorer/CodeEditDialog";
 import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton";
+import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton";
 import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
 import { ProjectProps } from "./ProjectProps";
-import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton";
-import AddIcon from "@mui/icons-material/Add";
-import SpanCreationDialog, { CodeCreationDialogHandle } from "../../annotation/SpanContextMenu/SpanCreationDialog";
-import { CodeRead } from "../../../api/openapi";
 
 function ProjectCodes({ project }: ProjectProps) {
   // local state
@@ -40,9 +40,6 @@ function ProjectCodes({ project }: ProjectProps) {
       return prev.slice();
     });
   }, []);
-
-  // local state
-  const codeCreationDialogRef = useRef<CodeCreationDialogHandle>(null);
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(project.id, true);
@@ -150,7 +147,7 @@ function ProjectCodes({ project }: ProjectProps) {
       )}
       <List disablePadding>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => codeCreationDialogRef.current!.open()}>
+          <ListItemButton onClick={() => openCodeCreateDialog({ name: "Tim" })}>
             <ListItemIcon>
               <AddIcon />
             </ListItemIcon>
@@ -158,7 +155,7 @@ function ProjectCodes({ project }: ProjectProps) {
           </ListItemButton>
         </ListItem>
       </List>
-      <SpanCreationDialog ref={codeCreationDialogRef} onCreateSuccess={onCreateCodeSuccess} />
+      <CodeCreateDialog onCreateSuccess={onCreateCodeSuccess} />
       {projectCodes.isSuccess && codeTree && (
         <>
           <CodeTreeView
