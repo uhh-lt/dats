@@ -9,6 +9,14 @@ spacy:
   device: cpu # cpu is faster if concurrency is high!
   max_text_length: 2000000 # in characters (1000000 is spaCy default)
 
+  deployment:
+    ray_actor_options:
+      num_gpus: 0.
+      # num_cpus: 1
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 5
+
 whisper:
   model: base
   device: cuda
@@ -16,13 +24,28 @@ whisper:
     beam_size: 5
     best_of: 5
 
+  deployment:
+    ray_actor_options:
+      num_gpus: .3
+      # num_cpus: 1
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 5
+
 detr:
   model: "facebook/detr-resnet-101"
   device: cuda
+  deployment:
+    ray_actor_options:
+      num_gpus: .3
+      # num_cpus: 1
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 5
   object_detection:
     confidence_threshold: 0.75
     coco2017_labels:
-    # This has to be in order!!! (for object detection with DETR)
+      # This has to be in order!!! (for object detection with DETR)
       - "background"
       - "person"
       - "bicycle"
@@ -121,3 +144,10 @@ vit_gpt2:
   image_captioning:
     max_caption_length: 16
     num_beams: 4
+  deployment:
+    ray_actor_options:
+      num_gpus: .3
+      # num_cpus: 1
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 5

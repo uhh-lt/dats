@@ -2,7 +2,7 @@ import logging
 from typing import List, Tuple
 
 import torch
-from config import conf
+from config import build_ray_model_deployment_config, conf
 from dto.detr import DETRFilePathInput, DETRObjectDetectionOutput, ObjectBBox
 from PIL import Image
 from ray import serve
@@ -18,13 +18,7 @@ COCO_2017_LABELS = cc.object_detection.coco2017_labels
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(
-    ray_actor_options={"num_gpus": 1},
-    autoscaling_config={
-        "min_replicas": 0,
-        "max_replicas": 2,
-    },
-)
+@serve.deployment(**build_ray_model_deployment_config("detr"))
 class DETRModel:
     def __init__(self):
         logger.debug(f"Loading DetrFeatureExtractor {MODEL} ...")

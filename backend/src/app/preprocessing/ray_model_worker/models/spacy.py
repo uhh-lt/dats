@@ -2,35 +2,33 @@ import logging
 from typing import Dict, List
 
 import spacy
-from config import conf
+from config import build_ray_model_deployment_config, conf
 from dto.spacy import SpacyInput, SpacyPipelineOutput, SpacySpan, SpacyToken
 from ray import serve
 from spacy import Language
 
 cc = conf.spacy
 
+DEVICE = cc.device
+MODELS = cc.models
+MAX_TEXT_LENGTH = cc.max_text_length
+
 
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(
-    ray_actor_options={"num_gpus": 1},
-    autoscaling_config={
-        "min_replicas": 0,
-        "max_replicas": 2,
-    },
-)
+@serve.deployment(**build_ray_model_deployment_config("spacy"))
 class SpacyModel:
     def __init__(self):
         logger.debug("Loading spaCy Models...")
 
-        if str(cc.device).startswith("cuda"):
+        if str(DEVICE).startswith("cuda"):
             import torch
 
             if torch.cuda.is_available():
                 device_id = (
-                    int(str(cc.device).split(":")[1])
-                    if len(cc.device) > 4 and ":" in cc.device
+                    int(str(DEVICE).split(":")[1])
+                    if len(DEVICE) > 4 and ":" in DEVICE
                     else 0
                 )
                 spacy.require_gpu(gpu_id=device_id)
@@ -38,7 +36,7 @@ class SpacyModel:
 
         nlp: Dict[str, Language] = dict()
 
-        for lang, model in cc.models.items():
+        for lang, model in MODELS.items():
             if lang == "default":
                 continue
             logger.info(f"Loading spaCy Model '{model}' ...")
@@ -46,10 +44,10 @@ class SpacyModel:
 
         logger.debug("Loading spaCy Models... Done!")
 
-        nlp["default"] = nlp[cc.models.default]
+        nlp["default"] = nlp[MODELS.default]
 
         for lang in nlp.values():
-            lang.max_length = cc.max_text_length
+            lang.max_length = MAX_TEXT_LENGTH
 
         self.spacy_models = nlp
 

@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 import numpy as np
 import torch
 import whisper_timestamped
-from config import conf
+from config import build_ray_model_deployment_config, conf
 from dto.whisper import (
     SegmentTranscription,
     WhisperFilePathInput,
@@ -26,13 +26,7 @@ DOWNLOAD_DIR = os.environ["TRANSFORMERS_CACHE"]
 WHISPER_TRANSCRIBE_OPTIONS = cc.options
 
 
-@serve.deployment(
-    ray_actor_options={"num_gpus": 1},
-    autoscaling_config={
-        "min_replicas": 0,
-        "max_replicas": 2,
-    },
-)
+@serve.deployment(**build_ray_model_deployment_config("whisper"))
 class WhisperModel:
     def __init__(self):
         logger.info(f"Loading Whisper model {WHISPER_MODEL} on {DEVICE}")
