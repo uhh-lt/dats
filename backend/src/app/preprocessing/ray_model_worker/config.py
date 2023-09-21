@@ -1,5 +1,7 @@
 import logging
 import os
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 from omegaconf import OmegaConf
 
@@ -9,10 +11,19 @@ logger = logging.getLogger("ray.serve")
 __conf_file__ = os.getenv("RAY_CONFIG", "./config.yaml")
 conf = OmegaConf.load(__conf_file__)
 
-
-# disabled to not write into containers, you might want to uncomment this for development
-# logger.add(str(Path(conf.repo.root_directory).joinpath("logs/{time}.log")),
-#            rotation=f"{conf.logging.max_file_size} MB",
-#            level=conf.logging.level.upper())
-
 logger.info(f"Loaded config '{__conf_file__}'")
+
+
+def build_ray_model_deployment_config(name: str) -> Dict[str, Dict[str, Any]]:
+    cc = conf.get(name, None)
+    if cc is None:
+        raise KeyError(f"Cannot access {name} in {__conf_file__}")
+
+    dep_cc = cc.get("deployment", None)
+    if dep_cc is None:
+        raise KeyError(f"Cannot access {name}.deployment in {__conf_file__}")
+
+    return {
+        "ray_actor_options": dict(cc.deployment.ray_actor_options),
+        "autoscaling_config": dict(cc.deployment.autoscaling_config),
+    }

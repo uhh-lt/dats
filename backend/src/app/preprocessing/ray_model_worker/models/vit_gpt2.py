@@ -1,7 +1,7 @@
 import logging
 
 import torch
-from config import conf
+from config import build_ray_model_deployment_config, conf
 from dto.vit_gpt2 import ViTGPT2FilePathInput, ViTGPT2Output
 from PIL import Image
 from ray import serve
@@ -22,13 +22,7 @@ NUM_BEAMS = cc.image_captioning.num_beams
 logger = logging.getLogger("ray.serve")
 
 
-@serve.deployment(
-    ray_actor_options={"num_gpus": 0.33},
-    autoscaling_config={
-        "min_replicas": 1,
-        "max_replicas": 5,
-    },
-)
+@serve.deployment(**build_ray_model_deployment_config("vit_gpt2"))
 class ViTGPT2Model:
     def __init__(self):
         logger.debug(f"Loading ViTFeatureExtractor {MODEL} ...")
