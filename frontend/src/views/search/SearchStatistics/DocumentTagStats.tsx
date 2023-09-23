@@ -10,13 +10,23 @@ interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
+  statsSearchBarValue: string;
 }
 
-function DocumentTagStats({ tagStats, handleClick, parentRef }: DocumentTagStatsProps) {
+function DocumentTagStats({ tagStats, handleClick, parentRef, statsSearchBarValue }: DocumentTagStatsProps) {
+  // Filter tagStats results based on search bar value
+  let filterTagStats:any = tagStats.data
+  if(tagStats.data!==undefined){
+    filterTagStats = tagStats.data.filter((item) => {return item!==undefined && item.tag.title.toLowerCase().startsWith(statsSearchBarValue.toLowerCase())})
+  }
+  if (filterTagStats===undefined){
+    filterTagStats=tagStats.error?.message
+  }
+
   return (
     <>
       {tagStats.isSuccess ? (
-        <DocumentTagStatsContent tagStats={tagStats.data} handleClick={handleClick} parentRef={parentRef} />
+        <DocumentTagStatsContent tagStats={filterTagStats} handleClick={handleClick} parentRef={parentRef} />
       ) : tagStats.isError ? (
         <TabPanel value="tags">Error: {tagStats.error.message}</TabPanel>
       ) : tagStats.isLoading && tagStats.isFetching ? (

@@ -9,9 +9,21 @@ interface CodeStatsProps {
   codeStats: SpanEntityDocumentFrequency[];
   handleClick: (stat: SpanEntityDocumentFrequency) => void;
   parentRef: React.RefObject<HTMLDivElement>;
+  statsSearchBarValue: string;
 }
 
-function CodeStats({ codeId, codeStats, handleClick, parentRef }: CodeStatsProps) {
+function CodeStats({ codeId, codeStats, handleClick, parentRef, statsSearchBarValue }: CodeStatsProps) {
+  // Filter codestats results based on search bar value
+  let filterCodeStats:any = codeStats
+  if(codeStats!==undefined){
+    filterCodeStats = codeStats.filter((item) => {return item!==undefined && item.span_text.toLowerCase().startsWith(statsSearchBarValue.toLowerCase())})
+  }
+  if (filterCodeStats===undefined){
+    filterCodeStats=codeStats
+  }
+  
+  codeStats = filterCodeStats
+
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: codeStats.length,
@@ -21,7 +33,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef }: CodeStatsProps
 
   // computed
   const maxValue = useMemo(() => Math.max(...codeStats.map((x) => x.global_count)), [codeStats]);
-
+  
   // render
   return (
     <TabPanel
