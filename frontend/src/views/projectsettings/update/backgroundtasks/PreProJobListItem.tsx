@@ -21,7 +21,7 @@ function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJo
 
   if (preProJob.isSuccess) {
     return (
-      <BackgroundJobListItem jobStatus={preProJob.data.status} title={`Preprocessing Job: ${preProJob.data.id}`} subTitle={`${date.toLocaleTimeString()}, ${date.toDateString()}`}>
+      <BackgroundJobListItem jobStatus={preProJob.data.status} jobId={preProJob.data.id} abortable={true} title={`Preprocessing Job: ${preProJob.data.id}`} subTitle={`${date.toLocaleTimeString()}, ${date.toDateString()}`}>
         <List component="div"
         subheader={
           <ListSubheader sx={{ pl: 8 }}>

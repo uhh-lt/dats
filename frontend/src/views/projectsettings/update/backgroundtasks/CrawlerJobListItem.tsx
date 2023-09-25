@@ -26,7 +26,7 @@ function CrawlerJobListItem({ initialCrawlerJob }: CrawlerJobListItemProps) {
 
   if (crawlerJob.isSuccess) {
     return (
-      <BackgroundJobListItem jobStatus={crawlerJob.data.status} title={`Crawler Job: ${crawlerJob.data.id}`} subTitle={`${date.toLocaleTimeString()}, ${date.toDateString()}`}>
+      <BackgroundJobListItem jobStatus={crawlerJob.data.status} jobId={crawlerJob.data.id} title={`Crawler Job: ${crawlerJob.data.id}`} subTitle={`${date.toLocaleTimeString()}, ${date.toDateString()}`}>
         <List
           component="div"
           disablePadding
