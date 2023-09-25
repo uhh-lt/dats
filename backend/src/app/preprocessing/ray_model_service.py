@@ -1,6 +1,11 @@
 from typing import Any, Dict, List
 
 import requests
+from app.preprocessing.ray_model_worker.dto.clip import (
+    ClipEmbeddingOutput,
+    ClipImageEmbeddingInput,
+    ClipTextEmbeddingInput,
+)
 from app.preprocessing.ray_model_worker.dto.detr import (
     DETRFilePathInput,
     DETRObjectDetectionOutput,
@@ -92,3 +97,13 @@ class RayModelService(metaclass=SingletonMeta):
     def vit_gpt2_image_captioning(self, input: ViTGPT2FilePathInput) -> ViTGPT2Output:
         response = self._make_post_request("/vit_gpt2/image_cationing", input.dict())
         return ViTGPT2Output.parse_obj(response.json())
+
+    def clip_text_embedding(self, input: ClipTextEmbeddingInput) -> ClipEmbeddingOutput:
+        response = self._make_post_request("/clip/embedding/text", input.dict())
+        return ClipEmbeddingOutput.parse_obj(response.json())
+
+    def clip_image_embedding(
+        self, input: ClipImageEmbeddingInput
+    ) -> ClipEmbeddingOutput:
+        response = self._make_post_request("/clip/embedding/image", input.dict())
+        return ClipEmbeddingOutput.parse_obj(response.json())
