@@ -108,7 +108,7 @@ class FaissIndexService(metaclass=SingletonMeta):
         logger.debug(
             f"Adding {len(embeddings)} embeddings to {index_type} index of Project {proj_id}!"
         )
-        if not len(embeddings) == len(embedding_ids):
+        if not embeddings.shape[0] == embedding_ids.shape[0]:
             # TODO Flo: proper exception
             raise ValueError
 
@@ -221,8 +221,9 @@ class FaissIndexService(metaclass=SingletonMeta):
             raise FaissIndexEmptyError(proj_id=proj_id, index_type=index_type)
 
         if threshold >= 1.0 or threshold < 0.0:
-            logger.error("Threshold must be between 0.0 and 1.0!")
-            raise ValueError
+            msg = "Threshold must be between 0.0 and 1.0!"
+            logger.error(msg)
+            raise ValueError(msg)
 
         # search the index
         k = math.floor(0.1 * index.ntotal)
