@@ -1,8 +1,7 @@
-from PIL import Image
-from PIL.ExifTags import TAGS
-
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from PIL import Image
+from PIL.ExifTags import TAGS
 
 
 def create_image_metadata(cargo: PipelineCargo) -> PipelineCargo:

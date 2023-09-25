@@ -1,7 +1,6 @@
-from scrapy import Selector
-
 from app.core.data.crawler.crawled_item import CrawledItem
 from app.core.data.crawler.spiders.spider_base import SpiderBase
+from scrapy import Selector
 
 
 class ExtractMediaUrlsFromHtmlPipeline:

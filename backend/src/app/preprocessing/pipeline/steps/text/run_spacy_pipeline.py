@@ -1,8 +1,7 @@
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 from app.preprocessing.ray_model_service import RayModelService
-
+from app.preprocessing.ray_model_worker.dto.spacy import SpacyInput, SpacyPipelineOutput
 
 rms = RayModelService()
 

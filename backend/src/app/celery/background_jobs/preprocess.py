@@ -1,13 +1,12 @@
 from pathlib import Path
 from typing import List
 
-from loguru import logger
-
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.preprocessing_service import PreprocessingService
+from loguru import logger
 
 sql: SQLService = SQLService(echo=False)
 redis: RedisService = RedisService()

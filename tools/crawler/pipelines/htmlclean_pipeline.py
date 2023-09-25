@@ -10,9 +10,7 @@ import re
 # useful for handling different item types with a single interface
 import lxml.html.clean as clean
 import magic
-from crawler.items import GenericWebsiteItem
-
-from crawler.items import IncelItem
+from crawler.items import GenericWebsiteItem, IncelItem
 
 
 class HTMLCleanPipeline:

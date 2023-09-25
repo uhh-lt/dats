@@ -1,7 +1,6 @@
-from loguru import logger
-
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from loguru import logger
 
 
 def create_and_store_transcript_file(cargo: PipelineCargo) -> PipelineCargo:

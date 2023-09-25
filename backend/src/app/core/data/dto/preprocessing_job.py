@@ -1,7 +1,5 @@
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, Field, PrivateAttr, validator
-
 from app.core.data.doc_type import DocType
 from app.core.data.dto.background_job_base import (
     BackgroundJobBase,
@@ -10,6 +8,7 @@ from app.core.data.dto.background_job_base import (
     BackgroundJobBaseUpdate,
     BackgroundJobStatus,
 )
+from pydantic import BaseModel, Field, PrivateAttr, validator
 
 
 class PreprocessingJobPayload(BaseModel):

@@ -1,7 +1,5 @@
 from typing import List
 
-from sqlalchemy import and_, func
-
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
     AnnotationOccurrence,
@@ -26,6 +24,7 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
+from sqlalchemy import and_, func
 
 
 class AnalysisService(metaclass=SingletonMeta):

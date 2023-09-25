@@ -18,6 +18,7 @@ from app.core.data.crawler.crawler_service import (
 from app.core.data.crawler.crawler_settings import get_settings
 from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
 from app.core.data.dto.background_job_base import BackgroundJobStatus
+from twisted.internet import reactor
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
