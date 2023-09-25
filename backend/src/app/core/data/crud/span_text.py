@@ -1,10 +1,9 @@
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.span_text import SpanTextORM
+from sqlalchemy.orm import Session
 
 
 class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):

@@ -2,7 +2,6 @@ import random
 import string
 
 import pytest
-
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.user import crud_user
 from app.core.data.dto import ProjectRead

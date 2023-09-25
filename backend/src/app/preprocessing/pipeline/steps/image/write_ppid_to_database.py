@@ -1,9 +1,5 @@
 from typing import List
 
-from loguru import logger
-from psycopg2 import OperationalError
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
@@ -22,6 +18,9 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.image.preproimagedoc import PreProImageDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.util.color import get_next_color
+from loguru import logger
+from psycopg2 import OperationalError
+from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()

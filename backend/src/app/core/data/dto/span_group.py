@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
-
 from app.core.data.dto.dto_base import UpdateDTOBase
+from pydantic import BaseModel, Field
 
 
 # Properties shared across all DTOs

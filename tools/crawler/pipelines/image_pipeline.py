@@ -2,9 +2,8 @@ import mimetypes
 from pathlib import Path
 from urllib.parse import urlparse
 
-from scrapy.pipelines.images import ImagesPipeline
-
 from crawler.spiders.utils import slugify
+from scrapy.pipelines.images import ImagesPipeline
 
 
 class MyImagesPipeline(ImagesPipeline):

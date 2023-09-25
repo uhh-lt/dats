@@ -1,9 +1,8 @@
 from typing import TYPE_CHECKING, List
 
+from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
-
-from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM

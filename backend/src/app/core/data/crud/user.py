@@ -1,11 +1,10 @@
 from typing import Optional
 
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.user import UserCreate, UserLogin, UserUpdate
 from app.core.data.orm.user import UserORM
 from app.core.security import generate_password_hash, verify_password
+from sqlalchemy.orm import Session
 
 SYSTEM_USER_ID: int = 1
 

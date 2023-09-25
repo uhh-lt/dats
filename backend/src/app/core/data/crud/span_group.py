@@ -1,10 +1,9 @@
 from typing import List
 
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.span_group import SpanGroupCreate, SpanGroupUpdate
 from app.core.data.orm.span_group import SpanGroupORM
+from sqlalchemy.orm import Session
 
 
 class CRUDSpanGroup(CRUDBase[SpanGroupORM, SpanGroupCreate, SpanGroupUpdate]):

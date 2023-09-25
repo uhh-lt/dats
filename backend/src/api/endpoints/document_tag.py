@@ -1,8 +1,5 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
-from requests import Session
-
 from api.dependencies import get_db_session
 from api.util import get_object_memos
 from app.core.data.crud.document_tag import crud_document_tag
@@ -14,6 +11,8 @@ from app.core.data.dto.document_tag import (
     SourceDocumentDocumentTagMultiLink,
 )
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from fastapi import APIRouter, Depends
+from requests import Session
 
 router = APIRouter(prefix="/doctag")
 tags = ["documentTag"]

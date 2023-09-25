@@ -1,7 +1,6 @@
-from loguru import logger
-
 from app.core.data.dto.export_job import ExportJobRead
 from app.core.data.export.export_service import ExportService
+from loguru import logger
 
 exs: ExportService = ExportService()
 
