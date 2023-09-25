@@ -19,7 +19,6 @@ class CeleryConfig:
     # https://docs.celeryq.dev/en/stable/userguide/routing.html
     task_routes = {
         "app.celery.background_jobs.tasks.*": {"queue": "bgJobsQ"},
-        "app.docprepro.simsearch.preprocess.*": {"queue": "simsearchQ"},
     }
 
     def to_dict(self) -> Dict[str, str]:

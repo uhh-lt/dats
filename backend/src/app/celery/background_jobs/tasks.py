@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from app.celery.background_jobs.crawl import start_crawler_job_
 from app.celery.background_jobs.export import start_export_job_
@@ -9,6 +9,11 @@ from app.celery.background_jobs.preprocess import (
     execute_text_preprocessing_pipeline_,
     execute_video_preprocessing_pipeline_,
     import_uploaded_archive_,
+)
+from app.celery.background_jobs.simsearch import (
+    find_similar_images_,
+    find_similar_sentences_,
+    find_similar_sentences_with_embedding_with_threshold_,
 )
 from app.celery.celery_worker import celery_worker
 from app.core.data.dto.crawler_job import CrawlerJobRead
@@ -72,3 +77,38 @@ def import_uploaded_archive(archive_file_path_and_project_id: Tuple[Path, int]) 
     # we need a tuple to chain the task since chaining only allows for one return object
     archive_file_path, project_id = archive_file_path_and_project_id
     import_uploaded_archive_(archive_file_path=archive_file_path, project_id=project_id)
+
+
+@celery_worker.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 5},
+)
+def find_similar_images_task(
+    proj_id: int, query: int, top_k: int = 10
+) -> Dict[int, float]:
+    return find_similar_images_(proj_id, query, top_k)
+
+
+@celery_worker.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 5},
+)
+def find_similar_sentences_task(
+    proj_id: int, query: str, top_k: int = 10
+) -> Dict[int, float]:
+    return find_similar_sentences_(proj_id, query, top_k)
+
+
+@celery_worker.task(
+    acks_late=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 5, "countdown": 5},
+)
+def find_similar_sentences_with_embedding_with_threshold_task(
+    proj_id: int, query_sentences: List[str], threshold: float
+) -> Dict[int, float]:
+    return find_similar_sentences_with_embedding_with_threshold_(
+        proj_id, query_sentences, threshold
+    )
