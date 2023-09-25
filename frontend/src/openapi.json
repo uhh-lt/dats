@@ -4300,6 +4300,32 @@
         }
       }
     },
+    "/prepro/{prepro_job_id}/abort": {
+      "patch": {
+        "tags": ["prepro"],
+        "summary": "Aborts the PreprocessingJob for the given ID",
+        "description": "Aborts the PreprocessingJob for the given ID if it exists",
+        "operationId": "abort_prepro_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Prepro Job Id", "type": "string" },
+            "name": "prepro_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/prepro/project/{project_id}": {
       "get": {
         "tags": ["prepro"],
@@ -5156,7 +5182,7 @@
       },
       "BackgroundJobStatus": {
         "title": "BackgroundJobStatus",
-        "enum": ["Waiting", "Running", "Finished", "Errorneous"],
+        "enum": ["Waiting", "Running", "Finished", "Errorneous", "Abborted"],
         "type": "string",
         "description": "An enumeration."
       },
@@ -5932,35 +5958,7 @@
       "SDocStatus": {
         "title": "SDocStatus",
         "enum": [
-          "initializing",
-          "undefined_or_erroneous",
-          "import_text_document",
-          "import_image_document",
-          "import_audio_document",
-          "import_video_document",
-          "convert_to_webp_and_generate_thumbnails",
-          "convert_mediafile_to_uncompressed_audio",
-          "create_sdoc_links_from_audio",
-          "generate_word_level_transcriptions",
-          "generate_webp_thumbnails_from_audio",
-          "create_transcript_file",
-          "create_pptd_from_ppad",
-          "create_sdoc_links_from_text",
-          "generate_webp_thumbnails_from_video",
-          "create_ppad_from_ppvd",
-          "clean_html",
-          "extract_text_from_html_and_create_source_mapping",
-          "detect_language",
-          "generate_image_captions",
-          "create_pptd_from_caption",
-          "generate_span_annotations",
-          "generate_bbox_annotations",
-          "add_custom_html_tags",
-          "create_sdoc_links_from_html",
-          "store_metadata_in_db",
-          "store_span_annotations_in_db",
-          "store_bbox_annotations_in_db",
-          "store_document_in_elasticsearch",
+          "unfinished_or_erroneous",
           "index_image_document_in_faiss",
           "index_text_document_in_faiss",
           "finished"
@@ -6993,35 +6991,7 @@
             "title": "SDocStatus",
             "description": "An enumeration.",
             "enum": [
-              "initializing",
-              "undefined_or_erroneous",
-              "import_text_document",
-              "import_image_document",
-              "import_audio_document",
-              "import_video_document",
-              "convert_to_webp_and_generate_thumbnails",
-              "convert_mediafile_to_uncompressed_audio",
-              "create_sdoc_links_from_audio",
-              "generate_word_level_transcriptions",
-              "generate_webp_thumbnails_from_audio",
-              "create_transcript_file",
-              "create_pptd_from_ppad",
-              "create_sdoc_links_from_text",
-              "generate_webp_thumbnails_from_video",
-              "create_ppad_from_ppvd",
-              "clean_html",
-              "extract_text_from_html_and_create_source_mapping",
-              "detect_language",
-              "generate_image_captions",
-              "create_pptd_from_caption",
-              "generate_span_annotations",
-              "generate_bbox_annotations",
-              "add_custom_html_tags",
-              "create_sdoc_links_from_html",
-              "store_metadata_in_db",
-              "store_span_annotations_in_db",
-              "store_bbox_annotations_in_db",
-              "store_document_in_elasticsearch",
+              "unfinished_or_erroneous",
               "index_image_document_in_faiss",
               "index_text_document_in_faiss",
               "finished"

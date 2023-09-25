@@ -10,4 +10,5 @@ export enum BackgroundJobStatus {
   RUNNING = "Running",
   FINISHED = "Finished",
   ERRORNEOUS = "Errorneous",
+  ABBORTED = "Abborted",
 }

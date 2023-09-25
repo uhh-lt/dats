@@ -29,6 +29,25 @@ export class PreproService {
   }
 
   /**
+   * Aborts the PreprocessingJob for the given ID
+   * Aborts the PreprocessingJob for the given ID if it exists
+   * @returns PreprocessingJobRead Successful Response
+   * @throws ApiError
+   */
+  public static abortPreproJob({ preproJobId }: { preproJobId: string }): CancelablePromise<PreprocessingJobRead> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/prepro/{prepro_job_id}/abort",
+      path: {
+        prepro_job_id: preproJobId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns all PreprocessingJobs for the given project ID
    * Returns all PreprocessingJobs for the given project ID if it exists
    * @returns PreprocessingJobRead Successful Response
