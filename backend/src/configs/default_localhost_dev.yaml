@@ -41,18 +41,7 @@ celery:
 preprocessing:
   text:
     bulk_threshold: 100
-
-  simsearch:
-    # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
-    image_encoder:
-      model: "clip-ViT-B-32"
-      batch_size: 32
-      device: cuda:1
-    text_encoder:
-      model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
-      batch_size: 32
-      device: cuda:1
-      min_sentence_length: 5
+    min_sentence_length: 5
 
 postgres:
   host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
