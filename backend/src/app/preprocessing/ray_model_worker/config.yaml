@@ -26,7 +26,7 @@ whisper:
 
   deployment:
     ray_actor_options:
-      num_gpus: .3
+      num_gpus: .19
       # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
@@ -37,7 +37,7 @@ detr:
   device: cuda
   deployment:
     ray_actor_options:
-      num_gpus: .3
+      num_gpus: .19
       # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
@@ -146,7 +146,24 @@ vit_gpt2:
     num_beams: 4
   deployment:
     ray_actor_options:
-      num_gpus: .3
+      num_gpus: .19
+      # num_cpus: 1
+    autoscaling_config:
+      min_replicas: 1
+      max_replicas: 5
+
+clip:
+  text_encoder:
+    model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+    batch_size: 32
+    device: cuda
+  image_encoder:
+    model: "clip-ViT-B-32"
+    batch_size: 32
+    device: cuda
+  deployment:
+    ray_actor_options:
+      num_gpus: .19
       # num_cpus: 1
     autoscaling_config:
       min_replicas: 1
