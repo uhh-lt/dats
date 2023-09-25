@@ -181,6 +181,9 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.image.generate_image_caption import (
         generate_image_caption,
     )
+    from app.preprocessing.pipeline.steps.image.index_image_in_faiss import (
+        index_image_in_faiss,
+    )
     from app.preprocessing.pipeline.steps.image.run_object_detection import (
         run_object_detection,
     )
@@ -239,6 +242,11 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     pipeline.register_step(
         func=write_ppid_to_database,
         required_data=["ppid"],
+    )
+
+    pipeline.register_step(
+        func=index_image_in_faiss,
+        required_data=["ppid", "sdoc_id"],
     )
 
     pipeline.register_step(
