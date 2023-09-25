@@ -8,8 +8,6 @@ from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCre
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from config import conf
-from fastapi import UploadFile
 
 sql: SQLService = SQLService()
 repo: RepoService = RepoService()
