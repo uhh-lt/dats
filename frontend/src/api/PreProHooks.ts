@@ -7,6 +7,9 @@ const useGetPreProProjectStatus = (projectId: number) =>
     PreproService.getProjectPreproStatus({ projId: projectId })
   );
 
+const abortPreProJob = (preProJobId: string) =>
+  PreproService.abortPreproJob({preproJobId: preProJobId})
+
 const usePollPreProProjectStatus = (projectId: number) =>
   useQuery<PreProProjectStatus, Error>(
     [QueryKey.PREPRO_PROJECT_STATUS, projectId],
@@ -72,6 +75,7 @@ const PreProHooks = {
   usePollPreProProjectStatus,
   usePollPreProJob,
   useGetAllPreProJobs,
+  abortPreProJob,
 };
 
 export default PreProHooks;
