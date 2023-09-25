@@ -158,12 +158,31 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
         return cargos
 
+    def abort_preprocessing_job(self, ppj_id: str) -> PreprocessingJobRead:
+        logger.info(f"Aborting PreprocessingJob {ppj_id}...")
+        ppj = self.redis.load_preprocessing_job(ppj_id)
+        if ppj.status != BackgroundJobStatus.RUNNING:
+            raise HTTPException(
+                detail=f"Cannot abort PreprocessingJob {ppj_id} because it is not running!",
+                status_code=400,
+            )
+        ppj = self.redis.update_preprocessing_job(
+            ppj_id, ppj.update_status(BackgroundJobStatus.ABORTED)
+        )
+        for payload in ppj.payloads:
+            payload.status = BackgroundJobStatus.ABORTED
+            payload.error_message = "PreprocessingJob was aborted by a user!"
+            ppj = self.redis.update_preprocessing_job(
+                ppj.id, ppj.update_payload(payload)
+            )
+        return ppj
+
     def create_and_start_preprocessing_job_from_payloads_async(
         self, payloads: List[PreprocessingJobPayload]
     ) -> Optional[PreprocessingJobRead]:
         if len(payloads) == 0:
             return None
-
+        logger.info(f"Creating PreprocessingJob for {len(payloads)} documents ...")
         proj_id = payloads[0].project_id
         if not all([proj_id == p.project_id for p in payloads]):
             raise ValueError("All payloads must have the same project_id!")
