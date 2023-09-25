@@ -9,7 +9,8 @@ class BackgroundJobStatus(str, Enum):
     WAITING = "Waiting"  # Initializing (not started yet)
     RUNNING = "Running"  # (currently in progress)
     FINISHED = "Finished"  # (successfully finished)
-    ERROR = "Errorneous"  # (failed to finish)"
+    ERROR = "Errorneous"  # (failed to finish)
+    ABORTED = "Abborted"  # (abborted by user)
 
 
 # Properties shared across all DTOs
