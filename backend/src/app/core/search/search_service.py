@@ -1,7 +1,10 @@
 from typing import Dict, List, Union
 
-from PIL.Image import Image
-
+from app.celery.background_jobs import (
+    find_similar_images_apply_async,
+    find_similar_sentences_apply_async,
+    find_similar_sentences_with_embedding_with_threshold_apply_async,
+)
 from app.core.data.crud.faiss_sentence_source_document_link import (
     crud_faiss_sentence_link,
 )
@@ -15,12 +18,8 @@ from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
-from app.docprepro.simsearch import (
-    find_similar_images_apply_async,
-    find_similar_sentences_apply_async,
-    find_similar_sentences_with_embedding_with_threshold_apply_async,
-)
 from app.util.singleton_meta import SingletonMeta
+from PIL.Image import Image
 
 
 class SearchService(metaclass=SingletonMeta):
