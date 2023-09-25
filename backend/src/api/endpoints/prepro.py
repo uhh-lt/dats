@@ -6,6 +6,7 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.prepro import PreProProjectStatus
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.db.redis_service import RedisService
+from app.preprocessing.preprocessing_service import PreprocessingService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -13,6 +14,7 @@ router = APIRouter(prefix="/prepro")
 tags = ["prepro"]
 
 redis: RedisService = RedisService()
+pps: PreprocessingService = PreprocessingService()
 
 
 @router.get(
@@ -28,6 +30,21 @@ async def get_prepro_job(
 ) -> Optional[PreprocessingJobRead]:
     # TODO Flo: only if the user has access?
     return redis.load_preprocessing_job(key=prepro_job_id)
+
+
+@router.patch(
+    "/{prepro_job_id}/abort",
+    tags=tags,
+    response_model=Optional[PreprocessingJobRead],
+    summary="Aborts the PreprocessingJob for the given ID",
+    description="Aborts the PreprocessingJob for the given ID if it exists",
+)
+async def abort_prepro_job(
+    *,
+    prepro_job_id: str,
+) -> Optional[PreprocessingJobRead]:
+    # TODO Flo: only if the user has access?
+    return pps.abort_preprocessing_job(ppj_id=prepro_job_id)
 
 
 @router.get(
