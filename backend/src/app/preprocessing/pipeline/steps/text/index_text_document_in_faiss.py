@@ -8,8 +8,8 @@ from app.core.data.dto.faiss_sentence_source_document_link import (
     FaissSentenceSourceDocumentLinkCreate,
 )
 from app.core.db.sql_service import SQLService
-from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
+from app.core.search.simsearch_service import SimSearchService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.preprocessing.ray_model_service import RayModelService
@@ -18,7 +18,7 @@ from config import conf
 from loguru import logger
 
 sqls = SQLService(echo=False)
-faisss = FaissIndexService()
+sss = SimSearchService()
 rms = RayModelService()
 
 MIN_SENTENCE_LENGTH = conf.preprocessing.text.min_sentence_length
@@ -58,7 +58,7 @@ def index_text_document_in_faiss(cargo: PipelineCargo) -> PipelineCargo:
             ]
 
         # add to index (with the IDs of the faiss sentence links)
-        faisss.add_to_index(
+        sss.add_embeddings_to_index(
             embeddings=encoded_sentences.numpy(),
             embedding_ids=np.asarray(faiss_sentence_link_ids),
             proj_id=proj_id,

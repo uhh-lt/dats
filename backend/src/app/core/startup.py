@@ -115,6 +115,10 @@ def __init_services__(
     from app.preprocessing.ray_model_service import RayModelService
 
     RayModelService()
+    # import and init SimSearchService
+    from app.core.search.simsearch_service import SimSearchService
+
+    SimSearchService(flush=reset_database)
 
 
 def __create_system_user__() -> None:

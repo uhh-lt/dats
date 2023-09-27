@@ -7,8 +7,8 @@ from app.core.data.doc_type import DocType
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
-from app.core.search.faiss_index_service import FaissIndexService
 from app.core.search.index_type import IndexType
+from app.core.search.simsearch_service import SimSearchService
 from app.preprocessing.ray_model_service import RayModelService
 from app.preprocessing.ray_model_worker.dto.clip import (
     ClipImageEmbeddingInput,
@@ -18,6 +18,7 @@ from app.preprocessing.ray_model_worker.dto.clip import (
 rms = RayModelService()
 repo = RepoService()
 sqls = SQLService()
+sss = SimSearchService()
 
 
 def _get_image_path_with_sdoc_id(sdoc_id: int) -> Path:
@@ -44,23 +45,26 @@ def _encode_query(query: Union[str, int]) -> np.ndarray:
     else:
         raise NotImplementedError("Only Strings or Images are supported as Query!")
 
-    return encoded_query.numpy()
+    return encoded_query.numpy().squeeze()
 
 
 def find_similar_images_(
     proj_id: int, query: Union[str, int], top_k: int
 ) -> Dict[int, float]:
     encoded_query = _encode_query(query=query)
-    sdoc_ids_with_dists = FaissIndexService().search_index(
-        proj_id=proj_id, index_type=IndexType.IMAGE, query=encoded_query, top_k=top_k
+    sdoc_ids_with_dists = sss.search_index(
+        proj_id=proj_id,
+        index_type=IndexType.IMAGE,
+        query_emb=encoded_query,
+        top_k=top_k,
     )
     return sdoc_ids_with_dists
 
 
 def find_similar_sentences_(proj_id: int, query: str, top_k: int) -> Dict[int, float]:
     encoded_query = _encode_query(query=query)
-    embedding_ids_with_dists = FaissIndexService().search_index(
-        proj_id=proj_id, index_type=IndexType.TEXT, query=encoded_query, top_k=top_k
+    embedding_ids_with_dists = sss.search_index(
+        proj_id=proj_id, index_type=IndexType.TEXT, query_emb=encoded_query, top_k=top_k
     )
     return embedding_ids_with_dists
 
@@ -79,10 +83,10 @@ def find_similar_sentences_with_embedding_with_threshold_(
     # normalize averaged embedding
     query_embedding: np.ndarray = query_embedding / np.linalg.norm(query_embedding)
 
-    embedding_ids_with_dists = FaissIndexService().search_index_with_threshold(
+    embedding_ids_with_dists = sss.search_index(
         proj_id=proj_id,
         index_type=IndexType.TEXT,
-        query=query_embedding,
+        query_emb=query_embedding,
         threshold=threshold,
     )
     return embedding_ids_with_dists

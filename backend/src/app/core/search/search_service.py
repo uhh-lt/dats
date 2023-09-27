@@ -16,8 +16,7 @@ from app.core.data.dto.search import (
 )
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.faiss_index_service import FaissIndexService
-from app.core.search.index_type import IndexType
+from app.core.search.simsearch_service import SimSearchService
 from app.util.singleton_meta import SingletonMeta
 from PIL.Image import Image
 
@@ -25,6 +24,7 @@ from PIL.Image import Image
 class SearchService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqls = SQLService()
+        cls.sss = SimSearchService()
         return super(SearchService, cls).__new__(cls)
 
     def search_sdoc_ids_by_sdoc_query_parameters(
@@ -135,9 +135,6 @@ class SearchService(metaclass=SingletonMeta):
     def find_similar_sentences(
         self, proj_id: int, query: Union[str, Image], top_k: int = 10
     ) -> List[SimSearchSentenceHit]:
-        FaissIndexService().index_exists(
-            proj_id=proj_id, index_type=IndexType.TEXT, raise_if_not_exists=True
-        )
         # perform the simsearch and get the ids of the faiss sentence links
         top_k_similar: Dict[int, float] = find_similar_sentences_apply_async(
             proj_id=proj_id, query=query, top_k=top_k
@@ -163,10 +160,6 @@ class SearchService(metaclass=SingletonMeta):
     def find_similar_images(
         self, proj_id: int, query: Union[str, int], top_k: int = 10
     ) -> List[SimSearchImageHit]:
-        FaissIndexService().index_exists(
-            proj_id=proj_id, index_type=IndexType.IMAGE, raise_if_not_exists=True
-        )
-
         # perform the simsearch and get the sdoc ids with scores
         top_k_similar: Dict[int, float] = find_similar_images_apply_async(
             proj_id=proj_id, query=query, top_k=top_k
@@ -180,10 +173,6 @@ class SearchService(metaclass=SingletonMeta):
     def find_similar_sentences_with_threshold(
         self, proj_id: int, sentences: List[str], threshold: int = 10
     ) -> List[SimSearchSentenceHit]:
-        FaissIndexService().index_exists(
-            proj_id=proj_id, index_type=IndexType.TEXT, raise_if_not_exists=True
-        )
-
         # perform the simsearch and get the ids of the faiss sentence links
         similar_sentences: Dict[
             int, float
