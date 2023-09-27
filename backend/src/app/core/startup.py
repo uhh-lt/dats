@@ -56,6 +56,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
             reset_database=reset_data,
             reset_repo=reset_data,
             reset_elasticsearch=reset_data,
+            reset_weaviate=reset_data,
         )
         if not startup_in_progress:
             __create_system_user__()
@@ -79,6 +80,7 @@ def __init_services__(
     reset_database: bool = False,
     reset_repo: bool = False,
     reset_elasticsearch: bool = False,
+    reset_weaviate: bool = False,
 ) -> None:
     # import celery workers to configure
     # import and init RepoService
