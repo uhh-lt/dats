@@ -92,6 +92,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 ],
                 use_ssl=conf.elasticsearch.use_ssl,
                 verify_certs=conf.elasticsearch.verify_certs,
+                retry_on_timeout=True,
+                maxsize=25,
                 # DO NOT SNIFF WHEN ES IS NOT IN LOCAL NETWORK! This will cause timeout errors
                 # sniff before doing anything
                 sniff_on_start=conf.elasticsearch.sniff_on_start,
