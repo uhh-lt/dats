@@ -169,12 +169,6 @@ class PreprocessingService(metaclass=SingletonMeta):
         ppj = self.redis.update_preprocessing_job(
             ppj_id, ppj.update_status(BackgroundJobStatus.ABORTED)
         )
-        for payload in ppj.payloads:
-            payload.status = BackgroundJobStatus.ABORTED
-            payload.error_message = "PreprocessingJob was aborted by a user!"
-            ppj = self.redis.update_preprocessing_job(
-                ppj.id, ppj.update_payload(payload)
-            )
         return ppj
 
     def create_and_start_preprocessing_job_from_payloads_async(
