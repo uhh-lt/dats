@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 import magic
 from app.core.data.doc_type import DocType, get_doc_type
@@ -7,6 +8,7 @@ from app.core.data.repo.repo_service import (
     RepoService,
     UnsupportedDocTypeForSourceDocument,
 )
+from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.docprepro.audio import audio_document_preprocessing_without_import_apply_async
 from app.docprepro.audio.import_audio_document import import_audio_document_
@@ -16,12 +18,16 @@ from app.docprepro.text import text_document_preprocessing_without_import_apply_
 from app.docprepro.text.import_text_document import import_text_document_
 from app.docprepro.video import video_document_preprocessing_without_import_apply_async
 from app.docprepro.video.import_video_document import import_video_document_
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.preprocessing_service import PreprocessingService
 from config import conf
 from loguru import logger
 from tqdm import tqdm
 
 sql: SQLService = SQLService(echo=False)
+redis: RedisService = RedisService()
 repo: RepoService = RepoService()
+prepro: PreprocessingService = PreprocessingService()
 
 
 def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
@@ -130,3 +136,35 @@ def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
             f"Sending batch of {len(ppvds)} image documents to image preprocessing celery worker!"
         )
         video_document_preprocessing_without_import_apply_async(ppvds=ppvds)
+
+
+def execute_text_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+    pipeline = prepro.get_text_pipeline()
+    logger.info(
+        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    )
+    pipeline.execute(cargos=cargos)
+
+
+def execute_image_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+    pipeline = prepro.get_image_pipeline()
+    logger.info(
+        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    )
+    pipeline.execute(cargos=cargos)
+
+
+def execute_audio_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+    pipeline = prepro.get_audio_pipeline()
+    logger.info(
+        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    )
+    pipeline.execute(cargos=cargos)
+
+
+def execute_video_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+    pipeline = prepro.get_video_pipeline()
+    logger.info(
+        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    )
+    pipeline.execute(cargos=cargos)
