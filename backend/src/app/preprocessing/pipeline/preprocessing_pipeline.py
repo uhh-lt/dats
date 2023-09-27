@@ -71,9 +71,11 @@ class PreprocessingPipeline:
             f"Executing PreprocessingPipeline({self._dt}) parallely for {len(cargos)} cargo(s)!"
         )
 
-        def chain(*funcs):
+        def chain(*step_funcs):
             def chained_call(arg):
-                return reduce(lambda r, f: f(r), funcs, arg)
+                return reduce(
+                    lambda cargo, step_func: step_func(cargo), step_funcs, arg
+                )
 
             return chained_call
 
@@ -86,7 +88,8 @@ class PreprocessingPipeline:
 
         pool = Pool(processes=self.num_workers)
         cargos = list(pool.map(pipeline, cargos))
-        # wait for all issued task to complete
+
+        # wait for all tasks to complete
         pool.close()
         pool.join()
 
