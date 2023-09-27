@@ -6,6 +6,7 @@ import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import CancelIcon from '@mui/icons-material/Cancel';
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import {
+  Box,
   CircularProgress,
   Collapse, IconButton, ListItem, ListItemButton,
   ListItemIcon,
@@ -38,7 +39,7 @@ function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, sub
 
   return (
     <>
-      <ListItemButton onClick={handleExpandClick} sx={{ cursor: "zoom-in" }}>
+      <ListItem >
         <ListItemIcon>
           {jobStatus === BackgroundJobStatus.WAITING ? (
             <HourglassTopOutlinedIcon sx={{ color:  statusToTypographyColor.Waiting}} />
@@ -57,9 +58,20 @@ function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, sub
 
         <ListItemText
           primary={title}
-          secondary={subTitle} />
-        {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
-        {((jobStatus === BackgroundJobStatus.RUNNING || jobStatus === BackgroundJobStatus.WAITING || BackgroundJobStatus.ABBORTED) && abortable) && (
+          secondary={subTitle}
+        />
+        <Tooltip title={expanded ? "Collapse" : "Expand"}>
+          <IconButton
+            edge="end"
+            aria-label="expand"
+            size="large"
+            sx={{ cursor: expanded ? "zoom-out" : "zoom-in" }}
+            onClick={handleExpandClick}
+          >
+            {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Tooltip>
+        {((jobStatus === BackgroundJobStatus.RUNNING || jobStatus === BackgroundJobStatus.WAITING) && abortable) && (
           <Tooltip title={`Abort the Job ${jobId}`}>
             <IconButton
               edge="end"
@@ -73,7 +85,7 @@ function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, sub
             </IconButton>
           </Tooltip>
         )}
-      </ListItemButton>
+      </ListItem>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         {children}
       </Collapse>
