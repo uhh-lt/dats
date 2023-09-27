@@ -12,7 +12,8 @@ import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";
 import KeywordStats from "./KeywordStats";
 import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
-import StatsSearchBar from "./StatsSearchBar"
+import StatsSearchBar from "./StatsSearchBar";
+import { useFilterStats } from "../hooks/useFilterStats";
 
 interface SearchStatisticsProps {
   filter: SearchFilter[];
@@ -57,7 +58,7 @@ function SearchStatistics({
   const codeStats = SearchHooks.useSearchEntityDocumentStats(projectId, filter, sortStatsByGlobal);
   const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter, sortStatsByGlobal);
   const tagStats = SearchHooks.useSearchTagStats(projectId, filter, sortStatsByGlobal);
-  
+
   // computed
   const filteredProjectCodes = useMemo(() => {
     if (!projectCodes.data) return [];
@@ -93,11 +94,13 @@ function SearchStatistics({
 
   // search bar value state initialisation
   const [statsSearchBarValue, setStatsSearchBarValue] = useState("");
-  const onSearchTextChange = (e:any) => {setStatsSearchBarValue(e.target.value)}
+  const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStatsSearchBarValue(event.target.value);
+  };
 
   // The scrollable element for the lists
   const parentRef = useRef<HTMLDivElement>(null);
-  
+
   return (
     <Box className="myFlexContainer" {...(props as BoxProps)}>
       <TabContext value={tab}>
@@ -110,38 +113,35 @@ function SearchStatistics({
             ))}
           </Tabs>
         </Box>
-        
+
         {/* Stats Searchbar Component */}
         <Box ref={parentRef} className="myFlexFitContentContainer" sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <StatsSearchBar 
-            onSearchTextChange = {onSearchTextChange}
-          />                
+          <StatsSearchBar handleSearchTextChange={handleSearchTextChange} />
         </Box>
-        
+
         <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
           <KeywordStats
             keywordStats={keywordStats}
             handleClick={handleKeywordClick}
             parentRef={parentRef}
-            statsSearchBarValue={statsSearchBarValue}
+            filteredStatsData={useFilterStats(keywordStats.data ? keywordStats.data : [], statsSearchBarValue)}
           />
           <DocumentTagStats
             tagStats={tagStats}
             handleClick={handleTagClick}
             parentRef={parentRef}
-            statsSearchBarValue={statsSearchBarValue}
+            filteredStatsData={useFilterStats(tagStats.data ? tagStats.data : [], statsSearchBarValue)}
           />
           {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
-              <CodeStats
-                key={codeId}
-                codeId={codeId}
-                codeStats={data}
-                handleClick={handleCodeClick}
-                parentRef={parentRef}
-                statsSearchBarValue={statsSearchBarValue}
-              />
-            )
-          )}
+            <CodeStats
+              key={codeId}
+              codeId={codeId}
+              codeStats={data}
+              handleClick={handleCodeClick}
+              parentRef={parentRef}
+              statsSearchBarValue={statsSearchBarValue}
+            />
+          ))}
         </Box>
       </TabContext>
       <SearchStatisticsContextMenu

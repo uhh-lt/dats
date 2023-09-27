@@ -3,6 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { SpanEntityDocumentFrequency } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
+import { useFilterStats } from "../hooks/useFilterStats";
 
 interface CodeStatsProps {
   codeId: number;
@@ -13,17 +14,7 @@ interface CodeStatsProps {
 }
 
 function CodeStats({ codeId, codeStats, handleClick, parentRef, statsSearchBarValue }: CodeStatsProps) {
-  // Filter codestats results based on search bar value
-  let filterCodeStats:any = codeStats
-  if(codeStats!==undefined){
-    filterCodeStats = codeStats.filter((item) => {return item!==undefined && item.span_text.toLowerCase().startsWith(statsSearchBarValue.toLowerCase())})
-  }
-  if (filterCodeStats===undefined){
-    filterCodeStats=codeStats
-  }
-  
-  codeStats = filterCodeStats
-
+  codeStats = useFilterStats(codeStats, statsSearchBarValue);
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: codeStats.length,
@@ -33,7 +24,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef, statsSearchBarVa
 
   // computed
   const maxValue = useMemo(() => Math.max(...codeStats.map((x) => x.global_count)), [codeStats]);
-  
+
   // render
   return (
     <TabPanel

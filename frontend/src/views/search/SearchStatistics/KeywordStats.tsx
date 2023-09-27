@@ -9,24 +9,15 @@ interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
   handleClick: (keyword: string) => void;
   parentRef: React.RefObject<HTMLDivElement>;
-  statsSearchBarValue: string;
+  filteredStatsData: KeywordStat[];
 }
 
-function KeywordStats({ keywordStats, handleClick, parentRef, statsSearchBarValue }: KeywordStatsProps) {
-  // Filter keywordStats results based on search bar value
-  let filterKeywordStats:any = keywordStats.data
-  if(keywordStats.data!==undefined){
-    filterKeywordStats = keywordStats.data.filter((item) => {return item!==undefined && item.keyword.toLowerCase().startsWith(statsSearchBarValue.toLowerCase())})
-  }
-  if (filterKeywordStats===undefined){
-    filterKeywordStats=keywordStats.error?.message
-  }
-
+function KeywordStats({ keywordStats, handleClick, parentRef, filteredStatsData }: KeywordStatsProps) {
   // render
   return (
     <>
       {keywordStats.isSuccess ? (
-        <KeywordStatsContent keywordStats={filterKeywordStats} handleClick={handleClick} parentRef={parentRef} />
+        <KeywordStatsContent keywordStats={filteredStatsData} handleClick={handleClick} parentRef={parentRef} />
       ) : keywordStats.isError ? (
         <TabPanel value="keywords">Error: {keywordStats.error.message}</TabPanel>
       ) : keywordStats.isLoading && keywordStats.isFetching ? (
