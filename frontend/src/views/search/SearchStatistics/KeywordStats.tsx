@@ -4,20 +4,22 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { KeywordStat } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
+import { useFilterStats } from "../hooks/useFilterStats";
 
 interface KeywordStatsProps {
   keywordStats: UseQueryResult<KeywordStat[], Error>;
   handleClick: (keyword: string) => void;
   parentRef: React.RefObject<HTMLDivElement>;
-  filteredStatsData: KeywordStat[];
+  filterBy: string;
 }
 
-function KeywordStats({ keywordStats, handleClick, parentRef, filteredStatsData }: KeywordStatsProps) {
+function KeywordStats({ keywordStats, handleClick, parentRef, filterBy }: KeywordStatsProps) {
+  const filteredKeywordStats = useFilterStats(keywordStats.data ? keywordStats.data : [], filterBy);
   // render
   return (
     <>
       {keywordStats.isSuccess ? (
-        <KeywordStatsContent keywordStats={filteredStatsData} handleClick={handleClick} parentRef={parentRef} />
+        <KeywordStatsContent keywordStats={filteredKeywordStats} handleClick={handleClick} parentRef={parentRef} />
       ) : keywordStats.isError ? (
         <TabPanel value="keywords">Error: {keywordStats.error.message}</TabPanel>
       ) : keywordStats.isLoading && keywordStats.isFetching ? (

@@ -5,19 +5,22 @@ import React, { useMemo } from "react";
 import { DocumentTagRead, TagStat } from "../../../api/openapi";
 import TagHooks from "../../../api/TagHooks";
 import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
+import { useFilterStats } from "../hooks/useFilterStats";
 
 interface DocumentTagStatsProps {
   tagStats: UseQueryResult<TagStat[], Error>;
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
-  filteredStatsData: TagStat[];
+  filterBy: string;
 }
 
-function DocumentTagStats({ tagStats, handleClick, parentRef, filteredStatsData }: DocumentTagStatsProps) {
+function DocumentTagStats({ tagStats, handleClick, parentRef, filterBy }: DocumentTagStatsProps) {
+  const filteredTagStats = useFilterStats(tagStats.data ? tagStats.data : [], filterBy);
+
   return (
     <>
       {tagStats.isSuccess ? (
-        <DocumentTagStatsContent tagStats={filteredStatsData} handleClick={handleClick} parentRef={parentRef} />
+        <DocumentTagStatsContent tagStats={filteredTagStats} handleClick={handleClick} parentRef={parentRef} />
       ) : tagStats.isError ? (
         <TabPanel value="tags">Error: {tagStats.error.message}</TabPanel>
       ) : tagStats.isLoading && tagStats.isFetching ? (

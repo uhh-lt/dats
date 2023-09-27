@@ -13,7 +13,6 @@ import DocumentTagStats from "./DocumentTagStats";
 import KeywordStats from "./KeywordStats";
 import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
 import StatsSearchBar from "./StatsSearchBar";
-import { useFilterStats } from "../hooks/useFilterStats";
 
 interface SearchStatisticsProps {
   filter: SearchFilter[];
@@ -92,10 +91,10 @@ function SearchStatistics({
     setTab(navigateTo);
   }, []);
 
-  // search bar value state initialisation
-  const [statsSearchBarValue, setStatsSearchBarValue] = useState("");
+  // stats search bar value state initialisation
+  const [filterStatsBy, setFilterStatsBy] = useState("");
   const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setStatsSearchBarValue(event.target.value);
+    setFilterStatsBy(event.target.value);
   };
 
   // The scrollable element for the lists
@@ -124,13 +123,13 @@ function SearchStatistics({
             keywordStats={keywordStats}
             handleClick={handleKeywordClick}
             parentRef={parentRef}
-            filteredStatsData={useFilterStats(keywordStats.data ? keywordStats.data : [], statsSearchBarValue)}
+            filterBy={filterStatsBy}
           />
           <DocumentTagStats
             tagStats={tagStats}
             handleClick={handleTagClick}
             parentRef={parentRef}
-            filteredStatsData={useFilterStats(tagStats.data ? tagStats.data : [], statsSearchBarValue)}
+            filterBy={filterStatsBy}
           />
           {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
             <CodeStats
@@ -139,7 +138,7 @@ function SearchStatistics({
               codeStats={data}
               handleClick={handleCodeClick}
               parentRef={parentRef}
-              statsSearchBarValue={statsSearchBarValue}
+              filterBy={filterStatsBy}
             />
           ))}
         </Box>

@@ -10,20 +10,20 @@ interface CodeStatsProps {
   codeStats: SpanEntityDocumentFrequency[];
   handleClick: (stat: SpanEntityDocumentFrequency) => void;
   parentRef: React.RefObject<HTMLDivElement>;
-  statsSearchBarValue: string;
+  filterBy: string;
 }
 
-function CodeStats({ codeId, codeStats, handleClick, parentRef, statsSearchBarValue }: CodeStatsProps) {
-  codeStats = useFilterStats(codeStats, statsSearchBarValue);
+function CodeStats({ codeId, codeStats, handleClick, parentRef, filterBy }: CodeStatsProps) {
+  const filteredCodeStats = useFilterStats(codeStats, filterBy);
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
-    count: codeStats.length,
+    count: filteredCodeStats.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...codeStats.map((x) => x.global_count)), [codeStats]);
+  const maxValue = useMemo(() => Math.max(...filteredCodeStats.map((x) => x.global_count)), [filteredCodeStats]);
 
   // render
   return (
@@ -37,7 +37,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef, statsSearchBarVa
       }}
     >
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let codeStat = codeStats[virtualItem.index];
+        let codeStat = filteredCodeStats[virtualItem.index];
 
         return (
           <StatsDisplayButton
