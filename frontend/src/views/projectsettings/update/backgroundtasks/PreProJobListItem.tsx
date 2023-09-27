@@ -1,6 +1,6 @@
 import { List, ListSubheader } from "@mui/material";
 import React from "react";
-import { PreprocessingJobRead } from "../../../../api/openapi";
+import { BackgroundJobStatus, PreprocessingJobRead } from "../../../../api/openapi";
 import PreProHooks from "../../../../api/PreProHooks";
 import BackgroundJobListItem from "./BackgroundJobListItem";
 import PreProJobPayloadListItem from "./PreProJobPayloadListItem";
@@ -16,12 +16,27 @@ function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJo
   const preProJob = PreProHooks.usePollPreProJob(initialPreProJob.id, initialPreProJob);
 
   // local state
-  const date = new Date(initialPreProJob.created);
+  const createdDate = new Date(initialPreProJob.created);
+  const updatedDate = new Date(initialPreProJob.updated);
 
+  let subTitle = `${preProJob.data!.payloads.length} documents, started at ${createdDate.toLocaleTimeString()}, ${createdDate.toDateString()}`
+  if (preProJob.data!.status === BackgroundJobStatus.FINISHED) {
+    subTitle += `, finished at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
+  } else if (preProJob.data!.status === BackgroundJobStatus.ABBORTED) {
+    subTitle += `, aborted at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
+  } else if (preProJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
+    subTitle += `, failed at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
+  }
 
   if (preProJob.isSuccess) {
     return (
-      <BackgroundJobListItem jobStatus={preProJob.data.status} jobId={preProJob.data.id} abortable={true} title={`Preprocessing Job: ${preProJob.data.id}`} subTitle={`${date.toLocaleTimeString()}, ${date.toDateString()}`}>
+      <BackgroundJobListItem
+        jobStatus={preProJob.data.status}
+        jobId={preProJob.data.id}
+        abortable={true}
+        title={`Preprocessing Job: ${preProJob.data.id}`}
+        subTitle={subTitle}
+      >
         <List component="div"
         subheader={
           <ListSubheader sx={{ pl: 8 }}>
