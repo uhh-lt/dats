@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.preprocessing_job_payload import (
     PreprocessingJobPayloadCreate,
     PreprocessingJobPayloadUpdate,
@@ -27,6 +28,37 @@ class CRUDPreprocessingJobPayload(
         self, db: Session, uuids: List[str]
     ) -> List[PreprocessingJobPayloadORM]:
         return db.query(self.model).filter(self.model.id.in_(uuids)).all()
+
+    def read_by_ppj_id_and_status(
+        self,
+        db: Session,
+        ppj_uuid: str,
+        status: BackgroundJobStatus,
+    ) -> List[PreprocessingJobPayloadORM]:
+        return (
+            db.query(self.model)
+            .filter(
+                self.model.prepro_job_id == ppj_uuid,
+                self.model.status == str(status),
+            )
+            .all()
+        )
+
+    def read_ids_by_ppj_id_and_status(
+        self,
+        db: Session,
+        ppj_uuid: str,
+        status: BackgroundJobStatus,
+    ) -> List[str]:
+        res = (
+            db.query(self.model.id)
+            .filter(
+                self.model.prepro_job_id == ppj_uuid,
+                self.model.status == str(status),
+            )
+            .all()
+        )
+        return list(map(lambda r: str(r[0]), res))
 
     def update(
         self, db: Session, *, uuid: str, update_dto: PreprocessingJobPayloadUpdate

@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.preprocessing_job import (
     PreprocessingJobCreate,
     PreprocessingJobUpdate,
@@ -26,6 +27,24 @@ class CRUDPreprocessingJob(
 
     def read_by_proj_id(self, db: Session, proj_id: int) -> List[PreprocessingJobORM]:
         return db.query(self.model).filter(self.model.project_id == proj_id).all()
+
+    def read_ids_by_proj_id(self, db: Session, proj_id: int) -> List[str]:
+        res = db.query(self.model.id).filter(self.model.project_id == proj_id).all()
+        if res is None or len(res) == 0:
+            return []
+        return list(map(lambda r: str(r[0]), res))
+
+    def read_ids_by_proj_id_and_status(
+        self, db: Session, proj_id: int, status: BackgroundJobStatus
+    ) -> List[str]:
+        res = (
+            db.query(self.model.id)
+            .filter(self.model.project_id == proj_id, self.model.status == str(status))
+            .all()
+        )
+        if res is None or len(res) == 0:
+            return []
+        return list(map(lambda r: str(r[0]), res))
 
     def create(
         self, db: Session, *, create_dto: PreprocessingJobCreate
