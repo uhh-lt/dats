@@ -53,6 +53,9 @@ postgres:
   db: ${oc.env:POSTGRES_DB, dwts}
   user: ${oc.env:POSTGRES_USER, dwtsuser}
   password: ${oc.env:POSTGRES_PASSWORD, dwts123}
+  pool:
+    pool_size: 32
+    max_overflow: 16
 
 mail:
   enabled: ${oc.env:MAIL_ENABLED, False}
