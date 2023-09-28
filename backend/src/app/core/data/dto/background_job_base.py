@@ -37,13 +37,9 @@ class BackgroundJobBaseUpdate(BackgroundJobBase):
 
 # Properties to read
 class BackgroundJobBaseRead(BackgroundJobBase):
-    id: str = Field(description="ID of the BackgroundJob")
+    id: str = Field(description="UUID of the BackgroundJob")
     project_id: int = Field(
         description="The ID of the Project for which the BackgroundJob is executed."
     )
     created: datetime = Field(description="Created timestamp of the BackgroundJob")
     updated: datetime = Field(description="Updated timestamp of the BackgroundJob")
-
-    def update_status(self, status: BackgroundJobStatus) -> BackgroundJobBaseUpdate:
-        self.status = status
-        return BackgroundJobBaseUpdate(status=self.status)
