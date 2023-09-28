@@ -32,7 +32,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
       [BackgroundJobStatus.RUNNING]: [],
       [BackgroundJobStatus.FINISHED]: [],
       [BackgroundJobStatus.ERRORNEOUS]: [],
-      [BackgroundJobStatus.ABBORTED]: [],
+      [BackgroundJobStatus.ABORTED]: [],
     };
 
     if (!crawlerJobs.data && !preProJobs.data) {
@@ -121,13 +121,13 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           </List>
           <Toolbar variant="dense">
             <Typography variant="h6" color="inherit" component="div">
-              Abborted
+              Aborted
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
           </Toolbar>
           <Divider />
           <List>
-            {backgroundJobsByStatus[BackgroundJobStatus.ABBORTED].map((job) => {
+            {backgroundJobsByStatus[BackgroundJobStatus.ABORTED].map((job) => {
               if ("parameters" in job) {
                 return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
               } else if ("payloads" in job) {
@@ -136,7 +136,7 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
                 return null
               }
             })}
-            {backgroundJobsByStatus[BackgroundJobStatus.ABBORTED].length === 0 && <Typography pl={3}>empty</Typography>}
+            {backgroundJobsByStatus[BackgroundJobStatus.ABORTED].length === 0 && <Typography pl={3}>empty</Typography>}
           </List>
           <Toolbar variant="dense">
             <Typography variant="h6" color="inherit" component="div">

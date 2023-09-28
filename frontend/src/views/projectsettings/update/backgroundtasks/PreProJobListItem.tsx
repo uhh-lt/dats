@@ -22,7 +22,7 @@ function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJo
   let subTitle = `${preProJob.data!.payloads.length} documents, started at ${createdDate.toLocaleTimeString()}, ${createdDate.toDateString()}`
   if (preProJob.data!.status === BackgroundJobStatus.FINISHED) {
     subTitle += `, finished at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
-  } else if (preProJob.data!.status === BackgroundJobStatus.ABBORTED) {
+  } else if (preProJob.data!.status === BackgroundJobStatus.ABORTED) {
     subTitle += `, aborted at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
   } else if (preProJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
     subTitle += `, failed at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`

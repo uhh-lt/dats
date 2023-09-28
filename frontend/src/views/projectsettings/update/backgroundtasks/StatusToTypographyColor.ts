@@ -5,5 +5,5 @@ export const statusToTypographyColor: Record<BackgroundJobStatus, "secondary.mai
   [BackgroundJobStatus.RUNNING]: "primary.main",
   [BackgroundJobStatus.FINISHED]: "success.main",
   [BackgroundJobStatus.ERRORNEOUS]: "error.main",
-  [BackgroundJobStatus.ABBORTED]: "warning.main",
+  [BackgroundJobStatus.ABORTED]: "warning.main",
 };

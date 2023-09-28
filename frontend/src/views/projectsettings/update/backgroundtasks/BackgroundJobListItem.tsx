@@ -49,8 +49,8 @@ function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, sub
             <TaskAltIcon sx={{ color: statusToTypographyColor.Finished }} />
           ) : jobStatus === BackgroundJobStatus.ERRORNEOUS ? (
             <ErrorOutlineIcon sx={{ color: statusToTypographyColor.Errorneous }} />
-          ) : jobStatus === BackgroundJobStatus.ABBORTED ? (
-            <CancelIcon sx={{ color:  statusToTypographyColor.Abborted }} />
+          ) : jobStatus === BackgroundJobStatus.ABORTED ? (
+            <CancelIcon sx={{ color:  statusToTypographyColor.Aborted }} />
           ) :(
             <MoreHorizOutlinedIcon />
           )}

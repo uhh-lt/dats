@@ -191,10 +191,6 @@ export class DocumentTagService {
     });
   }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> efcf67ee (updated frontend code to comply to new backend api)
   /**
    * Returns the Memo attached to the SpanAnnotation of the User with the given ID
    * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
@@ -214,7 +210,6 @@ export class DocumentTagService {
       },
     });
   }
-<<<<<<< HEAD
 
   /**
    * Returns all SourceDocuments attached to the Tag with the given ID
@@ -234,8 +229,4 @@ export class DocumentTagService {
       },
     });
   }
-=======
->>>>>>> 2a34cb89 (updated generated backend api code in frontend)
-=======
->>>>>>> efcf67ee (updated frontend code to comply to new backend api)
 }

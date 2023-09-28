@@ -5182,7 +5182,7 @@
       },
       "BackgroundJobStatus": {
         "title": "BackgroundJobStatus",
-        "enum": ["Waiting", "Running", "Finished", "Errorneous", "Abborted"],
+        "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
         "type": "string",
         "description": "An enumeration."
       },
@@ -5846,32 +5846,46 @@
           }
         }
       },
-      "PreprocessingJobPayload": {
-        "title": "PreprocessingJobPayload",
-        "required": ["project_id", "filename", "mime_type", "doc_type"],
+      "PreprocessingJobPayloadRead": {
+        "title": "PreprocessingJobPayloadRead",
+        "required": ["id", "prepro_job_id", "project_id", "filename", "mime_type", "doc_type"],
         "type": "object",
         "properties": {
-          "project_id": { "title": "Project Id", "type": "integer", "description": "The ID of the Project." },
-          "filename": {
-            "title": "Filename",
+          "id": { "title": "Id", "type": "string", "description": "ID of the PreprocessingJobPayload" },
+          "prepro_job_id": {
+            "title": "Prepro Job Id",
             "type": "string",
-            "description": "The filename of the document to be preprocessed."
+            "description": "UUID of the PreprocessingJob this payload belongs to."
           },
-          "mime_type": { "title": "Mime Type", "type": "string", "description": "The MIME type of the file." },
-          "doc_type": {
-            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
-            "description": "The DocType of the file."
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "ID of the Project of the PreprocessingJobPayload"
           },
-          "current_pipeline_step": {
-            "title": "Current Pipeline Step",
-            "type": "string",
-            "description": "The current step in the preprocessing pipeline.",
-            "default": ""
+          "source_document_id": {
+            "title": "Source Document Id",
+            "type": "integer",
+            "description": "ID of the SourceDocument that was created from the payload."
           },
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
             "description": "The current status of the payload.",
             "default": "Waiting"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string",
+            "description": "The filename of the document to be preprocessed."
+          },
+          "mime_type": { "title": "Mime Type", "type": "string", "description": "The MIME type of the payload file." },
+          "doc_type": {
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "description": "The DocType of the payload file."
+          },
+          "current_pipeline_step": {
+            "title": "Current Pipeline Step",
+            "type": "string",
+            "description": "The current step in the preprocessing pipeline."
           },
           "error_message": {
             "title": "Error Message",
@@ -5885,33 +5899,29 @@
         "required": ["id", "project_id", "created", "updated", "payloads"],
         "type": "object",
         "properties": {
+          "id": { "title": "Id", "type": "string", "description": "UUID of the PreprocessingJob" },
           "status": {
             "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
-            "description": "Status of the BackgroundJob",
+            "description": "Status of the PreprocessingJob",
             "default": "Waiting"
           },
-          "id": { "title": "Id", "type": "string", "description": "ID of the BackgroundJob" },
-          "project_id": {
-            "title": "Project Id",
-            "type": "integer",
-            "description": "The ID of the Project for which the BackgroundJob is executed."
-          },
+          "project_id": { "title": "Project Id", "type": "integer", "description": "The ID of the Project." },
           "created": {
             "title": "Created",
             "type": "string",
-            "description": "Created timestamp of the BackgroundJob",
+            "description": "Created timestamp of the PreprocessingJob",
             "format": "date-time"
           },
           "updated": {
             "title": "Updated",
             "type": "string",
-            "description": "Updated timestamp of the BackgroundJob",
+            "description": "Updated timestamp of the PreprocessingJob",
             "format": "date-time"
           },
           "payloads": {
             "title": "Payloads",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/PreprocessingJobPayload" },
+            "items": { "$ref": "#/components/schemas/PreprocessingJobPayloadRead" },
             "description": "Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
           }
         }
