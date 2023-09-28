@@ -57,6 +57,8 @@ download_and_install_spacy_model "$IT_MODEL_BASE" "$IT_MODEL" "$IT_CHECKSUM_SHA_
 # generate the ray spec file
 python generate_ray_model_worker_specs.py || exit 1
 
+export CUPY_CACHE_DIR=/tmp/cupy_cache
+
 # start the ray cluster
 ray start --head --dashboard-host '0.0.0.0'
 

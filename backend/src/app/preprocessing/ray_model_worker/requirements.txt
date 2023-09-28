@@ -4,6 +4,7 @@ torchaudio==2.0.1
 transformers==4.30.2
 sentence-transformers==2.2.2
 spacy==3.6.1
+cupy-cuda11x==12.2.0
 spacy-transformers==1.2.5
 git+https://github.com/linto-ai/whisper-timestamped.git@d767f4fc3b401c78c20d55515b382838ca3c86aa
 timm==0.9.7

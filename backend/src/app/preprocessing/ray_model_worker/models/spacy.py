@@ -32,7 +32,6 @@ class SpacyModel:
                     else 0
                 )
                 spacy.require_gpu(gpu_id=device_id)
-            spacy.prefer_gpu()
 
         nlp: Dict[str, Language] = dict()
 
