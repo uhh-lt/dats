@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from api.dependencies import get_db_session
+from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.prepro import PreProProjectStatus
@@ -26,10 +27,12 @@ pps: PreprocessingService = PreprocessingService()
 )
 async def get_prepro_job(
     *,
+    db: Session = Depends(get_db_session),
     prepro_job_id: str,
 ) -> Optional[PreprocessingJobRead]:
     # TODO Flo: only if the user has access?
-    return redis.load_preprocessing_job(key=prepro_job_id)
+    db_obj = crud_prepro_job.read(db=db, uuid=prepro_job_id)
+    return PreprocessingJobRead.from_orm(db_obj)
 
 
 @router.patch(
@@ -56,10 +59,12 @@ async def abort_prepro_job(
 )
 async def get_all_prepro_jobs(
     *,
+    db: Session = Depends(get_db_session),
     project_id: int,
 ) -> List[PreprocessingJobRead]:
     # TODO Flo: only if the user has access?
-    prepro_jobs = redis.get_all_preprocessing_jobs(project_id=project_id)
+    db_objs = crud_prepro_job.read_by_proj_id(db=db, proj_id=project_id)
+    prepro_jobs = [PreprocessingJobRead.from_orm(db_obj) for db_obj in db_objs]
     prepro_jobs.sort(key=lambda x: x.created, reverse=True)
     return prepro_jobs
 
