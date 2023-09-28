@@ -2,6 +2,9 @@ from functools import lru_cache
 
 from app.core.data.doc_type import DocType
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
+from config import conf
+
+cc = conf.preprocessing
 
 
 @lru_cache(maxsize=1)
@@ -58,7 +61,7 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline = PreprocessingPipeline(
-        doc_type=DocType.text, num_workers=1, force_sequential=True
+        doc_type=DocType.text, num_workers=cc.text.num_workers, force_sequential=False
     )
 
     pipeline.register_step(
@@ -204,7 +207,7 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline = PreprocessingPipeline(
-        doc_type=DocType.image, num_workers=1, force_sequential=True
+        doc_type=DocType.image, num_workers=cc.image.num_workers, force_sequential=False
     )
 
     pipeline.register_step(
@@ -325,7 +328,7 @@ def build_audio_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     text_pipeline = build_text_pipeline()
     pipeline = PreprocessingPipeline(
-        doc_type=DocType.audio, num_workers=1, force_sequential=True
+        doc_type=DocType.audio, num_workers=cc.audio.num_workers, force_sequential=False
     )
 
     pipeline.register_step(
@@ -426,7 +429,7 @@ def build_video_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     audio_pipeline = build_audio_pipeline()
     pipeline = PreprocessingPipeline(
-        doc_type=DocType.video, num_workers=1, force_sequential=True
+        doc_type=DocType.video, num_workers=cc.video.num_workers, force_sequential=False
     )
 
     pipeline.register_step(
