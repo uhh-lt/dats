@@ -30,6 +30,7 @@ dependencies:
   - ftfy=6.1
   - beautifulsoup4=4.11.1
   - pytest=7.2.0
+  - ffmpeg-python=0.2.0
   - conda-forge::pandas=1.5.3
   - conda-forge::readability-lxml=0.8.1
   - conda-forge::matplotlib=3.7.1
