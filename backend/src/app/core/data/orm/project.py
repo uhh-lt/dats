@@ -11,6 +11,8 @@ if TYPE_CHECKING:
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.preprocessing_job import PreprocessingJobORM
+    from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
     from app.core.data.orm.source_document import SourceDocumentORM
     from app.core.data.orm.user import UserORM
     from app.core.data.orm.whiteboard import WhiteboardORM
@@ -52,6 +54,14 @@ class ProjectORM(ORMBase):
 
     whiteboards: List["WhiteboardORM"] = relationship(
         "WhiteboardORM", back_populates="project", passive_deletes=True
+    )
+
+    preprocessing_jobs: List["PreprocessingJobORM"] = relationship(
+        "PreprocessingJobORM", back_populates="project", passive_deletes=True
+    )
+
+    preprocessing_payloads: List["PreprocessingJobPayloadORM"] = relationship(
+        "PreprocessingJobPayloadORM", back_populates="project", passive_deletes=True
     )
 
     actions: List["ActionORM"] = relationship(
