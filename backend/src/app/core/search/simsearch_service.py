@@ -1,13 +1,12 @@
 from typing import Dict
 
-import weaviate
 import numpy as np
-from tqdm import tqdm
-
-from app.util.singleton_meta import SingletonMeta
+import weaviate
 from app.core.search.index_type import IndexType
+from app.util.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
+from tqdm import tqdm
 
 
 class SimSearchService(metaclass=SingletonMeta):

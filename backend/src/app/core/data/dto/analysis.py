@@ -1,10 +1,10 @@
 from typing import List, Union
-from pydantic import BaseModel, Field
 
 from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.span_annotation import SpanAnnotationRead
+from pydantic import BaseModel, Field
 
 
 class CodeOccurrence(BaseModel):

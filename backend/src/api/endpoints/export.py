@@ -3,7 +3,6 @@ from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
 from fastapi import APIRouter
 
-
 router = APIRouter(prefix="/export")
 tags = ["export"]
 

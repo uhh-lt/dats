@@ -6,12 +6,11 @@ from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from celery.canvas import Signature
-from celery.result import AsyncResult
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 from celery import Signature
-
+from celery.canvas import Signature
+from celery.result import AsyncResult
 
 import_uploaded_archive_task = (
     "app.celery.background_jobs.tasks.import_uploaded_archive"
