@@ -39,6 +39,11 @@ from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.orm_base import ORMBase
 
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.preprocessing_job import PreprocessingJobORM
+
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
+
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.project import ProjectORM, ProjectUserLinkTable
 
@@ -65,7 +70,6 @@ from app.core.data.orm.user import UserORM
 
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.whiteboard import WhiteboardORM
-
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from sqlalchemy.orm import Session, sessionmaker
