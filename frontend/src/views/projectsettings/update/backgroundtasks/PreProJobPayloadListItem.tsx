@@ -21,9 +21,6 @@ interface PreProJobPayloadListItemProps {
 }
 
 function PreProJobPayloadListItem({ ppj, contextMenuRef }: PreProJobPayloadListItemProps) {
-  // global server state (react-query)
-  const sdocId = ProjectHooks.useResolveSdocIdByFilename(ppj.project_id, ppj.filename);
-
   // local state
   const [expanded, setExpanded] = React.useState(false);
   const handleExpandClick = () => {
@@ -34,8 +31,8 @@ function PreProJobPayloadListItem({ ppj, contextMenuRef }: PreProJobPayloadListI
   // context menu
   const onContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
-    if (!sdocId.data || !contextMenuRef.current) return;
-    contextMenuRef.current.open({ top: event.clientY, left: event.clientX }, ppj.project_id, sdocId.data);
+    if (!contextMenuRef.current) return;
+    contextMenuRef.current.open({ top: event.clientY, left: event.clientX }, ppj.project_id, ppj.source_document_id);
   };
 
   return (
