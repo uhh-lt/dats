@@ -63,7 +63,7 @@ function ProjectDocuments({ project }: ProjectProps) {
   const uploadProgress = PreProHooks.usePollPreProProjectStatus(project.id);
   const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(
     project.id,
-    uploadProgress.data?.in_progress || false
+    (uploadProgress.data && uploadProgress.data.num_active_prepro_job_payloads > 0) || false
   );
   // ^ refetching is not working perfectly: during upload, new documents are uploaded.
   // however, once the uploadd is finished (in_progress = false), the last batch of new documents are not fetched.

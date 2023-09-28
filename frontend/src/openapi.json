@@ -5816,7 +5816,13 @@
       },
       "PreProProjectStatus": {
         "title": "PreProProjectStatus",
-        "required": ["project_id", "in_progress", "num_sdocs_in_progress", "num_sdocs_finished", "num_sdocs_total"],
+        "required": [
+          "project_id",
+          "num_active_prepro_job_payloads",
+          "erroneous_prepro_job_payload_ids",
+          "num_sdocs_finished",
+          "num_sdocs_total"
+        ],
         "type": "object",
         "properties": {
           "project_id": {
@@ -5824,15 +5830,22 @@
             "type": "integer",
             "description": "Project ID this PreProProjectStatus refers to."
           },
-          "in_progress": {
-            "title": "In Progress",
-            "type": "boolean",
-            "description": "Flag if Preprocessing is in progress."
+          "active_prepro_job_ids": {
+            "title": "Active Prepro Job Ids",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of active PreprocessingJob UUIDs"
           },
-          "num_sdocs_in_progress": {
-            "title": "Num Sdocs In Progress",
+          "num_active_prepro_job_payloads": {
+            "title": "Num Active Prepro Job Payloads",
             "type": "integer",
-            "description": "Number of SourceDocuments that are getting preprocessed."
+            "description": "Number of active PreprocessingJobPayloads"
+          },
+          "erroneous_prepro_job_payload_ids": {
+            "title": "Erroneous Prepro Job Payload Ids",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of erroneous or aborted PreprocessingJobPayload UUIDs"
           },
           "num_sdocs_finished": {
             "title": "Num Sdocs Finished",
