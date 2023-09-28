@@ -2,10 +2,13 @@ from typing import List, Optional
 
 from api.dependencies import get_db_session
 from app.core.data.crud.preprocessing_job import crud_prepro_job
+from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.prepro import PreProProjectStatus
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
+from app.core.data.dto.preprocessing_job_payload import PreprocessingJobPayloadRead
 from app.core.db.redis_service import RedisService
 from app.preprocessing.preprocessing_service import PreprocessingService
 from fastapi import APIRouter, Depends
@@ -81,15 +84,47 @@ async def get_project_prepro_status(
 ) -> PreProProjectStatus:
     # TODO Flo: only if the user has access?
     crud_project.exists(db=db, id=proj_id, raise_error=True)
-    all_sdocs = crud_sdoc.count_by_project(db=db, proj_id=proj_id, only_finished=False)
+
+    active_ppj_ids = crud_prepro_job.read_ids_by_proj_id_and_status(
+        db=db,
+        proj_id=proj_id,
+        status=BackgroundJobStatus.RUNNING,
+    )
+
+    num_active_prepro_job_payloads = sum(
+        [
+            len(
+                crud_prepro_job_payload.read_ids_by_ppj_id_and_status(
+                    db=db, ppj_uuid=active_ppj_id, status=BackgroundJobStatus.RUNNING
+                )
+            )
+            for active_ppj_id in active_ppj_ids
+        ]
+    )
+
+    erroneous_prepro_job_payloads = []
+    ppj_ids = crud_prepro_job.read_ids_by_proj_id(db=db, proj_id=proj_id)
+    for ppj_id in ppj_ids:
+        payloads = [
+            PreprocessingJobPayloadRead.from_orm(db_obj)
+            for db_obj in crud_prepro_job_payload.read_by_ppj_id_and_status(
+                db=db, ppj_uuid=ppj_id, status=BackgroundJobStatus.ERROR
+            )
+        ]
+        erroneous_prepro_job_payloads.extend(payloads)
+
     finished_sdocs = crud_sdoc.count_by_project(
         db=db, proj_id=proj_id, only_finished=True
+    )
+    total_sdocs = crud_sdoc.count_by_project(
+        db=db, proj_id=proj_id, only_finished=False
     )
 
     return PreProProjectStatus(
         project_id=proj_id,
-        in_progress=all_sdocs > finished_sdocs,
-        num_sdocs_in_progress=all_sdocs - finished_sdocs,
+        active_prepro_job_ids=active_ppj_ids,
+        num_active_prepro_job_payloads=num_active_prepro_job_payloads,
+        erroneous_prepro_job_payload_ids=erroneous_prepro_job_payloads,
         num_sdocs_finished=finished_sdocs,
-        num_sdocs_total=all_sdocs,
+        num_sdocs_total=total_sdocs,
     )

@@ -1,4 +1,5 @@
-from app.core.data.dto.source_document import SDocStatus
+from typing import List
+
 from pydantic import BaseModel, Field
 
 
@@ -6,18 +7,16 @@ class PreProProjectStatus(BaseModel):
     project_id: int = Field(
         description="Project ID this PreProProjectStatus refers to."
     )
-    in_progress: bool = Field(description="Flag if Preprocessing is in progress.")
-    num_sdocs_in_progress: int = Field(
-        description="Number of SourceDocuments that are getting preprocessed."
+    active_prepro_job_ids: List[str] = Field(
+        description="List of active PreprocessingJob UUIDs", default_factory=[]
+    )
+    num_active_prepro_job_payloads: int = Field(
+        description="Number of active PreprocessingJobPayloads"
+    )
+    erroneous_prepro_job_payload_ids: List[str] = Field(
+        description="List of erroneous or aborted PreprocessingJobPayload UUIDs"
     )
     num_sdocs_finished: int = Field(
         description="Number of SourceDocuments preprocessing has finished."
     )
     num_sdocs_total: int = Field(description="Number of total SourceDocuments.")
-
-
-class PreProSDocStatus(BaseModel):
-    sdoc_id: int = Field(
-        description="SourceDocument ID this PreProSDocStatus refers to."
-    )
-    status: SDocStatus = Field(description="Preprocessing Status of the SourceDocument")
