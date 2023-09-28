@@ -8,6 +8,7 @@ from app.celery.background_jobs import (
     execute_text_preprocessing_pipeline_apply_async,
     execute_video_preprocessing_pipeline_apply_async,
 )
+from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.doc_type import (
     DocType,
     get_doc_type,
@@ -17,15 +18,17 @@ from app.core.data.doc_type import (
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.preprocessing_job import (
     PreprocessingJobCreate,
-    PreprocessingJobPayload,
     PreprocessingJobRead,
+    PreprocessingJobUpdate,
+)
+from app.core.data.dto.preprocessing_job_payload import (
+    PreprocessingJobPayloadCreateWithoutPreproJobId,
 )
 from app.core.data.repo.repo_service import (
     FileNotFoundInRepositoryError,
     RepoService,
     UnsupportedDocTypeForSourceDocument,
 )
-from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
@@ -37,7 +40,6 @@ from tqdm import tqdm
 
 class PreprocessingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.redis: RedisService = RedisService()
         cls.sqls: SQLService = SQLService()
         cls.repo: RepoService = RepoService()
         cls._pipelines: Dict[DocType, PreprocessingPipeline] = dict()
@@ -46,8 +48,8 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def _store_uploaded_files_and_create_payloads(
         self, proj_id: int, uploaded_files: List[UploadFile]
-    ) -> List[PreprocessingJobPayload]:
-        payloads: List[PreprocessingJobPayload] = []
+    ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
+        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
         for uploaded_file in uploaded_files:
             mime_type = uploaded_file.content_type
             if not mime_type_supported(mime_type=mime_type):
@@ -73,7 +75,7 @@ class PreprocessingService(metaclass=SingletonMeta):
             doc_type = get_doc_type(mime_type=mime_type)
 
             payloads.append(
-                PreprocessingJobPayload(
+                PreprocessingJobPayloadCreateWithoutPreproJobId(
                     project_id=proj_id,
                     filename=file_path.name,
                     mime_type=mime_type,
@@ -84,12 +86,12 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def _extract_archive_and_create_payloads(
         self, project_id: int, archive_file_path: Path
-    ) -> List[PreprocessingJobPayload]:
+    ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
         # store and extract the archive
         file_dsts: List[Path] = self.repo.extract_archive_in_project(
             proj_id=project_id, archive_path=archive_file_path
         )
-        payloads: List[PreprocessingJobPayload] = []
+        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
 
         for file_path in tqdm(
             file_dsts,
@@ -101,7 +103,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 doc_type = get_doc_type(mime_type=mime_type)
 
                 payloads.append(
-                    PreprocessingJobPayload(
+                    PreprocessingJobPayloadCreateWithoutPreproJobId(
                         project_id=project_id,
                         filename=file_path.name,
                         mime_type=mime_type,
@@ -122,11 +124,15 @@ class PreprocessingService(metaclass=SingletonMeta):
         return payloads
 
     def _create_and_store_preprocessing_job(
-        self, proj_id: int, payloads: List[PreprocessingJobPayload]
+        self,
+        proj_id: int,
+        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId],
     ) -> PreprocessingJobRead:
         create_dto = PreprocessingJobCreate(project_id=proj_id, payloads=payloads)
         try:
-            read_dto = self.redis.store_preprocessing_job(preprocessing_job=create_dto)
+            with self.sqls.db_session() as db:
+                db_obj = crud_prepro_job.create(db=db, create_dto=create_dto)
+                read_dto = PreprocessingJobRead.from_orm(db_obj)
         except Exception as e:
             raise HTTPException(
                 detail=f"Could not store PreprocessingJob! {e}", status_code=500
@@ -160,26 +166,37 @@ class PreprocessingService(metaclass=SingletonMeta):
 
     def abort_preprocessing_job(self, ppj_id: str) -> PreprocessingJobRead:
         logger.info(f"Aborting PreprocessingJob {ppj_id}...")
-        ppj = self.redis.load_preprocessing_job(ppj_id)
+        with self.sqls.db_session() as db:
+            db_obj = crud_prepro_job.read(db=db, uuid=ppj_id)
+            ppj = PreprocessingJobRead.from_orm(db_obj)
         if ppj.status != BackgroundJobStatus.RUNNING:
             raise HTTPException(
-                detail=f"Cannot abort PreprocessingJob {ppj_id} because it is not running!",
+                detail=(
+                    f"Cannot abort PreprocessingJob {ppj_id} "
+                    "because it is not running!"
+                ),
                 status_code=400,
             )
-        ppj = self.redis.update_preprocessing_job(
-            ppj_id, ppj.update_status(BackgroundJobStatus.ABORTED)
-        )
+        with self.sqls.db_session() as db:
+            db_obj = crud_prepro_job.update(
+                db=db,
+                uuid=ppj_id,
+                update_dto=PreprocessingJobUpdate(status=BackgroundJobStatus.ABORTED),
+            )
+            ppj = PreprocessingJobRead.from_orm(db_obj)
         return ppj
 
-    def create_and_start_preprocessing_job_from_payloads_async(
-        self, payloads: List[PreprocessingJobPayload]
+    def _create_and_start_preprocessing_job_from_payloads_async(
+        self,
+        payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId],
+        proj_id: int,
     ) -> Optional[PreprocessingJobRead]:
         if len(payloads) == 0:
             return None
-        logger.info(f"Creating PreprocessingJob for {len(payloads)} documents ...")
-        proj_id = payloads[0].project_id
-        if not all([proj_id == p.project_id for p in payloads]):
-            raise ValueError("All payloads must have the same project_id!")
+        logger.info(
+            f"Creating PreprocessingJob in Project {proj_id} "
+            f"for {len(payloads)} documents ..."
+        )
 
         ppj = self._create_and_store_preprocessing_job(proj_id, payloads)
 
@@ -206,9 +223,13 @@ class PreprocessingService(metaclass=SingletonMeta):
                 )
 
         # update the PreprocessingJob status to IN_PROGRESS
-        self.redis.update_preprocessing_job(
-            ppj.id, ppj.update_status(BackgroundJobStatus.RUNNING)
-        )
+        with self.sqls.db_session() as db:
+            db_obj = crud_prepro_job.update(
+                db=db,
+                uuid=ppj.id,
+                update_dto=PreprocessingJobUpdate(status=BackgroundJobStatus.RUNNING),
+            )
+            ppj = PreprocessingJobRead.from_orm(db_obj)
 
         return ppj
 
@@ -221,7 +242,8 @@ class PreprocessingService(metaclass=SingletonMeta):
     ) -> Optional[PreprocessingJobRead]:
         if uploaded_files is not None and archive_file_path is not None:
             raise ValueError(
-                "Either uploaded_files or archive_file_path must be specified, but not both!"
+                "Either uploaded_files or archive_file_path"
+                " must be specified, but not both!"
             )
         elif uploaded_files is not None:
             payloads = self._store_uploaded_files_and_create_payloads(
@@ -236,8 +258,9 @@ class PreprocessingService(metaclass=SingletonMeta):
                 "Either uploaded_files or archive_file_path must be specified!"
             )
 
-        return self.create_and_start_preprocessing_job_from_payloads_async(
-            payloads=payloads
+        return self._create_and_start_preprocessing_job_from_payloads_async(
+            payloads=payloads,
+            proj_id=proj_id,
         )
 
     def _get_pipeline(self, doc_type: DocType) -> PreprocessingPipeline:

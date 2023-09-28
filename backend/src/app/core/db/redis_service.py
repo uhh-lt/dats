@@ -34,9 +34,10 @@ class RedisService(metaclass=SingletonMeta):
                 clients[client.lower()] = redis.Redis(
                     host=r_host, port=r_port, db=db_idx, password=r_pass
                 )
-                assert clients[
-                    client
-                ].ping(), f"Couldn't connect to Redis {str(client)} DB #{db_idx} at {r_host}:{r_port}!"
+                assert clients[client].ping(), (
+                    f"Couldn't connect to Redis {str(client)} "
+                    f"DB #{db_idx} at {r_host}:{r_port}!"
+                )
                 logger.info(
                     f"Successfully connected to Redis {str(client)} DB #{db_idx}"
                 )
@@ -220,54 +221,6 @@ class RedisService(metaclass=SingletonMeta):
         logger.debug(f"Successfully stored PreprocessingJob {key}!")
 
         return ppj
-
-    def load_preprocessing_job(self, key: str) -> PreprocessingJobRead:
-        client = self._get_client("preprocessing")
-
-        ppj = client.get(key.encode("utf-8"))
-        if ppj is None:
-            msg = f"PreprocessingJob with ID {key} does not exist!"
-            logger.error(msg)
-            raise KeyError(msg)
-        logger.debug(f"Successfully loaded PreprocessingJob {key}")
-        return PreprocessingJobRead.parse_raw(ppj)
-
-    def update_preprocessing_job(
-        self, key: str, update: PreprocessingJobUpdate
-    ) -> PreprocessingJobRead:
-        ppj = self.load_preprocessing_job(key=key)
-        ppj.updated = datetime.now()
-        data = ppj.dict()
-        data.update(**update.dict(exclude_none=True))
-        ppj = PreprocessingJobRead(**data)
-        ppj = self.store_preprocessing_job(preprocessing_job=ppj)
-
-        logger.debug(f"Updated PreprocessingJob {key}")
-        return ppj
-
-    def delete_preprocessing_job(self, key: str) -> PreprocessingJobRead:
-        ppj = self.load_preprocessing_job(key=key)
-        client = self._get_client("preprocessing")
-        if client.delete(key.encode("utf-8")) != 1:
-            msg = f"Cannot delete PreprocessingJob {key}"
-            logger.error(msg)
-            raise RuntimeError(msg)
-        logger.debug(f"Deleted PreprocessingJob {key}")
-        return ppj
-
-    def get_all_preprocessing_jobs(
-        self, project_id: Optional[int] = None
-    ) -> List[PreprocessingJobRead]:
-        client = self._get_client("preprocessing")
-        all_preprocessing_jobs: List[PreprocessingJobRead] = [
-            self.load_preprocessing_job(str(key, "utf-8")) for key in client.keys()
-        ]
-        if project_id is None:
-            return all_preprocessing_jobs
-        else:
-            return [
-                job for job in all_preprocessing_jobs if job.project_id == project_id
-            ]
 
     def store_feedback(self, feedback: FeedbackCreate) -> FeedbackRead:
         client = self._get_client("feedback")

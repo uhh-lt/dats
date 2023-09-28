@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayload
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayloadRead
 from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
@@ -8,12 +8,9 @@ if TYPE_CHECKING:
 
 
 class PipelineCargo(BaseModel):
-    ppj_payload: PreprocessingJobPayload = Field(
+    ppj_payload: PreprocessingJobPayloadRead = Field(
         description="Parent PreprocessingJobPayload"
     )
-
-    ppj_id: str = Field(description="Parent PreprocessingJob ID")
-
     next_steps: List["PipelineStep"] = Field(
         description="Next Tasks to be executed.", default_factory=list
     )
