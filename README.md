@@ -1,5 +1,7 @@
 # D-WISE Tool Suite
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/uhh-lt/dwts/mwp_v1.svg)](https://results.pre-commit.ci/latest/github/uhh-lt/dwts/mwp_v1)
+
 This is the repository for the D-WISE Tool Suite (DWTS) - an outcome of
 the [D-WISE Project](https://www.dwise.uni-hamburg.de/)
 

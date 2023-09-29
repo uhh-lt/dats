@@ -559,9 +559,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "title": "Response Project-Upload Project Sdoc", "type": "string" } }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -4276,6 +4274,92 @@
         }
       }
     },
+    "/prepro/{prepro_job_id}": {
+      "get": {
+        "tags": ["prepro"],
+        "summary": "Returns the PreprocessingJob for the given ID",
+        "description": "Returns the PreprocessingJob for the given ID if it exists",
+        "operationId": "get_prepro_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Prepro Job Id", "type": "string" },
+            "name": "prepro_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prepro/{prepro_job_id}/abort": {
+      "patch": {
+        "tags": ["prepro"],
+        "summary": "Aborts the PreprocessingJob for the given ID",
+        "description": "Aborts the PreprocessingJob for the given ID if it exists",
+        "operationId": "abort_prepro_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Prepro Job Id", "type": "string" },
+            "name": "prepro_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prepro/project/{project_id}": {
+      "get": {
+        "tags": ["prepro"],
+        "summary": "Returns all PreprocessingJobs for the given project ID",
+        "description": "Returns all PreprocessingJobs for the given project ID if it exists",
+        "operationId": "get_all_prepro_jobs",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Prepro-Get All Prepro Jobs",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PreprocessingJobRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/prepro/project/{proj_id}/status": {
       "get": {
         "tags": ["prepro"],
@@ -5096,6 +5180,12 @@
           "code_id": { "title": "Code Id", "type": "integer", "description": "Code the BBoxAnnotation refers to" }
         }
       },
+      "BackgroundJobStatus": {
+        "title": "BackgroundJobStatus",
+        "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
+        "type": "string",
+        "description": "An enumeration."
+      },
       "Body_analysis-code_frequencies": {
         "title": "Body_analysis-code_frequencies",
         "required": ["user_ids", "code_ids"],
@@ -5107,11 +5197,11 @@
       },
       "Body_project-upload_project_sdoc": {
         "title": "Body_project-upload_project_sdoc",
-        "required": ["doc_files"],
+        "required": ["uploaded_files"],
         "type": "object",
         "properties": {
-          "doc_files": {
-            "title": "Doc Files",
+          "uploaded_files": {
+            "title": "Uploaded Files",
             "type": "array",
             "items": { "type": "string", "format": "binary" },
             "description": "File(s) that get uploaded and represented by the SourceDocument(s)"
@@ -5248,15 +5338,15 @@
         "type": "object",
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/CrawlerJobStatus" }],
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
             "description": "Status of the CrawlerJob",
-            "default": "INIT"
+            "default": "Waiting"
           },
           "id": { "title": "Id", "type": "string", "description": "ID of the CrawlerJob" },
           "parameters": {
             "title": "Parameters",
             "allOf": [{ "$ref": "#/components/schemas/CrawlerJobParameters" }],
-            "description": "The parameters of the export job that defines what to export!"
+            "description": "The parameters of the crawler job that defines what to crawl!"
           },
           "output_dir": {
             "title": "Output Dir",
@@ -5290,12 +5380,6 @@
             "format": "date-time"
           }
         }
-      },
-      "CrawlerJobStatus": {
-        "title": "CrawlerJobStatus",
-        "enum": ["INIT", "IN PROGRESS", "DONE", "FAILED"],
-        "type": "string",
-        "description": "An enumeration."
       },
       "DocType": {
         "title": "DocType",
@@ -5414,9 +5498,9 @@
         "type": "object",
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobStatus" }],
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
             "description": "Status of the ExportJob",
-            "default": "init"
+            "default": "Waiting"
           },
           "results_url": {
             "title": "Results Url",
@@ -5436,12 +5520,6 @@
             "format": "date-time"
           }
         }
-      },
-      "ExportJobStatus": {
-        "title": "ExportJobStatus",
-        "enum": ["init", "in_progress", "done", "failed"],
-        "type": "string",
-        "description": "An enumeration."
       },
       "ExportJobType": {
         "title": "ExportJobType",
@@ -5738,7 +5816,13 @@
       },
       "PreProProjectStatus": {
         "title": "PreProProjectStatus",
-        "required": ["project_id", "in_progress", "num_sdocs_in_progress", "num_sdocs_finished", "num_sdocs_total"],
+        "required": [
+          "project_id",
+          "num_active_prepro_job_payloads",
+          "erroneous_prepro_job_payload_ids",
+          "num_sdocs_finished",
+          "num_sdocs_total"
+        ],
         "type": "object",
         "properties": {
           "project_id": {
@@ -5746,15 +5830,22 @@
             "type": "integer",
             "description": "Project ID this PreProProjectStatus refers to."
           },
-          "in_progress": {
-            "title": "In Progress",
-            "type": "boolean",
-            "description": "Flag if Preprocessing is in progress."
+          "active_prepro_job_ids": {
+            "title": "Active Prepro Job Ids",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of active PreprocessingJob UUIDs"
           },
-          "num_sdocs_in_progress": {
-            "title": "Num Sdocs In Progress",
+          "num_active_prepro_job_payloads": {
+            "title": "Num Active Prepro Job Payloads",
             "type": "integer",
-            "description": "Number of SourceDocuments that are getting preprocessed."
+            "description": "Number of active PreprocessingJobPayloads"
+          },
+          "erroneous_prepro_job_payload_ids": {
+            "title": "Erroneous Prepro Job Payload Ids",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of erroneous or aborted PreprocessingJobPayload UUIDs"
           },
           "num_sdocs_finished": {
             "title": "Num Sdocs Finished",
@@ -5765,6 +5856,86 @@
             "title": "Num Sdocs Total",
             "type": "integer",
             "description": "Number of total SourceDocuments."
+          }
+        }
+      },
+      "PreprocessingJobPayloadRead": {
+        "title": "PreprocessingJobPayloadRead",
+        "required": ["id", "prepro_job_id", "project_id", "filename", "mime_type", "doc_type"],
+        "type": "object",
+        "properties": {
+          "id": { "title": "Id", "type": "string", "description": "ID of the PreprocessingJobPayload" },
+          "prepro_job_id": {
+            "title": "Prepro Job Id",
+            "type": "string",
+            "description": "UUID of the PreprocessingJob this payload belongs to."
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "ID of the Project of the PreprocessingJobPayload"
+          },
+          "source_document_id": {
+            "title": "Source Document Id",
+            "type": "integer",
+            "description": "ID of the SourceDocument that was created from the payload."
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "description": "The current status of the payload.",
+            "default": "Waiting"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string",
+            "description": "The filename of the document to be preprocessed."
+          },
+          "mime_type": { "title": "Mime Type", "type": "string", "description": "The MIME type of the payload file." },
+          "doc_type": {
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "description": "The DocType of the payload file."
+          },
+          "current_pipeline_step": {
+            "title": "Current Pipeline Step",
+            "type": "string",
+            "description": "The current step in the preprocessing pipeline."
+          },
+          "error_message": {
+            "title": "Error Message",
+            "type": "string",
+            "description": "The error message if the payload failed."
+          }
+        }
+      },
+      "PreprocessingJobRead": {
+        "title": "PreprocessingJobRead",
+        "required": ["id", "project_id", "created", "updated", "payloads"],
+        "type": "object",
+        "properties": {
+          "id": { "title": "Id", "type": "string", "description": "UUID of the PreprocessingJob" },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "description": "Status of the PreprocessingJob",
+            "default": "Waiting"
+          },
+          "project_id": { "title": "Project Id", "type": "integer", "description": "The ID of the Project." },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the PreprocessingJob",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the PreprocessingJob",
+            "format": "date-time"
+          },
+          "payloads": {
+            "title": "Payloads",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PreprocessingJobPayloadRead" },
+            "description": "Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
           }
         }
       },
@@ -5810,34 +5981,7 @@
       "SDocStatus": {
         "title": "SDocStatus",
         "enum": [
-          "undefined_or_erroneous",
-          "import_text_document",
-          "import_image_document",
-          "import_audio_document",
-          "import_video_document",
-          "convert_to_webp_and_generate_thumbnails",
-          "convert_mediafile_to_uncompressed_audio",
-          "create_sdoc_links_from_audio",
-          "generate_word_level_transcriptions",
-          "generate_webp_thumbnails_from_audio",
-          "create_transcript_file",
-          "create_pptd_from_ppad",
-          "create_sdoc_links_from_text",
-          "generate_webp_thumbnails_from_video",
-          "create_ppad_from_ppvd",
-          "clean_html",
-          "extract_text_from_html_and_create_source_mapping",
-          "detect_language",
-          "generate_image_captions",
-          "create_pptd_from_caption",
-          "generate_span_annotations",
-          "generate_bbox_annotations",
-          "add_custom_html_tags",
-          "create_sdoc_links_from_html",
-          "store_metadata_in_db",
-          "store_span_annotations_in_db",
-          "store_bbox_annotations_in_db",
-          "store_document_in_elasticsearch",
+          "unfinished_or_erroneous",
           "index_image_document_in_faiss",
           "index_text_document_in_faiss",
           "finished"
@@ -6706,12 +6850,7 @@
           "first_name": { "title": "First Name", "type": "string", "description": "First name of the User" },
           "last_name": { "title": "Last Name", "type": "string", "description": "Last name of the User" },
           "id": { "title": "Id", "type": "integer", "description": "ID of the User" },
-          "password": {
-            "title": "Password",
-            "type": "string",
-            "description": "Hashed password of the User",
-            "exclude": true
-          },
+          "password": { "title": "Password", "type": "string", "description": "Hashed password of the User" },
           "created": {
             "title": "Created",
             "type": "string",
@@ -6875,34 +7014,7 @@
             "title": "SDocStatus",
             "description": "An enumeration.",
             "enum": [
-              "undefined_or_erroneous",
-              "import_text_document",
-              "import_image_document",
-              "import_audio_document",
-              "import_video_document",
-              "convert_to_webp_and_generate_thumbnails",
-              "convert_mediafile_to_uncompressed_audio",
-              "create_sdoc_links_from_audio",
-              "generate_word_level_transcriptions",
-              "generate_webp_thumbnails_from_audio",
-              "create_transcript_file",
-              "create_pptd_from_ppad",
-              "create_sdoc_links_from_text",
-              "generate_webp_thumbnails_from_video",
-              "create_ppad_from_ppvd",
-              "clean_html",
-              "extract_text_from_html_and_create_source_mapping",
-              "detect_language",
-              "generate_image_captions",
-              "create_pptd_from_caption",
-              "generate_span_annotations",
-              "generate_bbox_annotations",
-              "add_custom_html_tags",
-              "create_sdoc_links_from_html",
-              "store_metadata_in_db",
-              "store_span_annotations_in_db",
-              "store_bbox_annotations_in_db",
-              "store_document_in_elasticsearch",
+              "unfinished_or_erroneous",
               "index_image_document_in_faiss",
               "index_text_document_in_faiss",
               "finished"
@@ -7001,12 +7113,7 @@
               "first_name": { "title": "First Name", "description": "First name of the User", "type": "string" },
               "last_name": { "title": "Last Name", "description": "Last name of the User", "type": "string" },
               "id": { "title": "Id", "description": "ID of the User", "type": "integer" },
-              "password": {
-                "title": "Password",
-                "description": "Hashed password of the User",
-                "exclude": true,
-                "type": "string"
-              },
+              "password": { "title": "Password", "description": "Hashed password of the User", "type": "string" },
               "created": {
                 "title": "Created",
                 "description": "Created timestamp of the User",

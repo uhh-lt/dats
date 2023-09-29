@@ -6,7 +6,6 @@ import { DocType, DocumentTagRead } from "../../../api/openapi";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
 import { SearchActions } from "../searchSlice";
-import AudioViewer from "./AudioViewer";
 import { DocumentAdocSelector } from "./DocumentAdocSelector";
 import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import EditableDocumentName, {
@@ -15,10 +14,10 @@ import EditableDocumentName, {
 import DocumentTagChip from "./DocumentTagChip";
 import ImageViewer from "./ImageViewer";
 import TextViewer from "./TextViewer";
-import VideoViewer from "./VideoViewer";
 import { useDeletableDocumentTags } from "./useDeletableDocumentTags";
 import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments";
 import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
+import AudioVideoViewer from "./AudioVideoViewer";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;
@@ -110,10 +109,10 @@ function DocumentViewer({
                 />
               )}
               {sdoc.data.doctype === DocType.AUDIO && (
-                <AudioViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} height={200} />
+                <AudioVideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} height={200} />
               )}
               {sdoc.data.doctype === DocType.VIDEO && (
-                <VideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
+                <AudioVideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} width={800} height={600} />
               )}
             </>
           )}

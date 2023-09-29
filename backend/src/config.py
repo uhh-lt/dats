@@ -1,6 +1,5 @@
 import os
 import sys
-from pathlib import Path
 
 from loguru import logger
 from omegaconf import OmegaConf

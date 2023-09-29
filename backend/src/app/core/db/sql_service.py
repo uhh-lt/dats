@@ -39,6 +39,11 @@ from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.orm_base import ORMBase
 
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.preprocessing_job import PreprocessingJobORM
+
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
+
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.project import ProjectORM, ProjectUserLinkTable
 
@@ -85,10 +90,11 @@ class SQLService(metaclass=SingletonMeta):
             engine = create_engine(
                 db_uri,
                 pool_pre_ping=True,
-                echo=kwargs["echo"] if "echo" in kwargs else False,
+                pool_size=conf.postgres.pool.pool_size,
+                max_overflow=conf.postgres.pool.max_overflow,
+                echo=kwargs["echo"] if "echo" in kwargs else True,
             )
             logger.info("Successfully established connection to PostgresSQL!")
-
             cls.__engine: Engine = engine
             cls.session_maker = sessionmaker(
                 autocommit=False, autoflush=False, bind=engine
@@ -100,6 +106,9 @@ class SQLService(metaclass=SingletonMeta):
             msg = f"Cannot connect to PostgresSQL - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
+
+    def __del__(self):
+        self.__engine.dispose()
 
     def _create_database_and_tables(self, drop_if_exists: bool = False) -> None:
         logger.info("Setting up PostgresSQL DB and tables...")

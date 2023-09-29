@@ -1,7 +1,7 @@
 from typing import List, Optional, Set, Tuple
 
 import srsly
-from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
+from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
@@ -36,6 +36,7 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
+from app.core.search.elasticsearch_service import ElasticSearchService
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
@@ -48,13 +49,13 @@ class SourceDocumentPreprocessingUnfinishedError(Exception):
 class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]):
     def update(
         self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> ORMModelType:
+    ) -> SourceDocumentORM:
         # Flo: We no not want to update SourceDocument
         raise NotImplementedError()
 
     def update_status(
         self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus
-    ) -> ORMModelType:
+    ) -> SourceDocumentORM:
         sdoc_db_obj = self.read(db=db, id=sdoc_id)
         sdoc_db_obj.status = sdoc_status.value
         db.add(sdoc_db_obj)
@@ -66,7 +67,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
         if not self.exists(db=db, id=sdoc_id, raise_error=raise_error_on_unfinished):
-            return SDocStatus.undefined_or_erroneous
+            return SDocStatus.unfinished_or_erroneous
         status = SDocStatus(
             db.query(self.model.status).filter(self.model.id == sdoc_id).scalar()
         )
@@ -155,8 +156,16 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
     def remove(self, db: Session, *, id: int) -> Optional[SourceDocumentORM]:
         sdoc_db_obj = super().remove(db=db, id=id)
 
-        # remove file from repo
-        RepoService().remove_sdoc_file(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+        if sdoc_db_obj is not None:
+            # remove file from repo
+            RepoService().remove_sdoc_file(
+                sdoc=SourceDocumentRead.from_orm(sdoc_db_obj)
+            )
+
+            # remove from elasticsearch
+            ElasticSearchService().delete_document_from_index(
+                sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
+            )
 
         return sdoc_db_obj
 
@@ -181,6 +190,12 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
 
         # remove files from repo
         RepoService().remove_all_project_sdoc_files(proj_id=proj_id)
+
+        # remove from elasticsearch
+        for sdoc_id in ids:
+            ElasticSearchService().delete_document_from_index(
+                proj_id=proj_id, sdoc_id=sdoc_id
+            )
 
         return ids
 
@@ -269,27 +284,6 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
                 self.model.project_id == proj_id, self.model.filename == filename
             )
         return query.first()
-
-    def filename2id(
-        self, db: Session, *, proj_id: int, only_finished: bool = True, filename: str
-    ) -> Optional[int]:
-        query = db.query(self.model.id)
-
-        if only_finished:
-            query = query.filter(
-                self.model.project_id == proj_id,
-                self.model.filename == filename,
-                self.model.status == SDocStatus.finished,
-            )
-        else:
-            query = query.filter(
-                self.model.project_id == proj_id, self.model.filename == filename
-            )
-        result = query.first()
-
-        if result:
-            return result[0]
-        return None
 
     def count_by_project(
         self, db: Session, *, proj_id: int, only_finished: bool = True

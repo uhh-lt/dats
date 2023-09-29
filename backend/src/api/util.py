@@ -9,7 +9,6 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from fastapi import HTTPException
 from loguru import logger
-from pydantic import BaseModel, Field
 from starlette import status
 
 credentials_exception = HTTPException(
@@ -45,7 +44,7 @@ def get_object_memos(
         if len(memo_as_in_db_dtos) == 0:
             return None
         elif len(memo_as_in_db_dtos) > 1:
-            logger.error(f"More than one Memo for the specified User!")
+            logger.error("More than one Memo for the specified User!")
 
     object_types = {
         SourceDocumentORM: AttachedObjectType.source_document,

@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import scrapy
 from crawler.spiders.spider_base import SpiderBase
 
 

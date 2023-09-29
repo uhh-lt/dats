@@ -202,10 +202,19 @@ async def get_keywords(
 
     # if the sdoc is audio or video we return the keywords of the transcript
     if sdoc_db_obj.doctype == DocType.audio or sdoc_db_obj.doctype == DocType.video:
+        # FIXME a video sdoc has one linked sdoc and a audi has two.
+        #   the last is always the transcrip sdoc id.
+        #   but this is very hack and error prone.
         linked_sdocs = crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
-        if not len(linked_sdocs) == 1:
-            raise ValueError(f"Cannot find transcript for SDoc {sdoc_id}")
-        sdoc_id = linked_sdocs[0]
+        if len(linked_sdocs) == 1 and len(linked_sdocs) != 2:
+            # we have to follow the link from the audio sdoc to the transcript sdoc
+            linked_sdocs = crud_sdoc.collect_linked_sdoc_ids(
+                db=db,
+                sdoc_id=linked_sdocs[0],
+            )
+        elif len(linked_sdocs) == 2:
+            raise ValueError(f"Cannot find transcript for SourceDocument {sdoc_id}")
+        sdoc_id = linked_sdocs[-1]
 
     return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(
         sdoc_id=sdoc_id, proj_id=sdoc_db_obj.project_id

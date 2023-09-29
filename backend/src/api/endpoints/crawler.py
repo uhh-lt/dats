@@ -1,8 +1,8 @@
 from typing import List
 
+from app.celery.background_jobs import prepare_and_start_crawling_job_async
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
-from app.docprepro.heavy_jobs import prepare_and_start_crawling_job_async
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/crawler")

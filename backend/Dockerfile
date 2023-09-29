@@ -28,6 +28,7 @@ RUN wget -q https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION}
 # create the 'dwts' python environment with all dependencies
 ENV MAMBA_ROOT_PREFIX=/opt
 COPY environment.yml .
+COPY requirements.txt /tmp/requirements.txt
 RUN micromamba create -f environment.yml -q -y &&\
     micromamba clean -a -f -q -y &&\
     find /opt/ -follow -type f -name '*.a' -delete &&\

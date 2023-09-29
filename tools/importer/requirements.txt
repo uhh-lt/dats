@@ -1,0 +1,2 @@
+python-magic==0.4.27
+tqdm==4.66.1

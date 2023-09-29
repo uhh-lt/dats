@@ -50,8 +50,7 @@
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "update-api": "node updateAPI.js -p 5500",
     "generate": "openapi --input src/openapi.json --useOptions --output src/api/openapi",
-    "generate-dev": "node generateAPI.js",
-    "prepare": "cd .. && husky install frontend/.husky"
+    "generate-dev": "node generateAPI.js"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -73,7 +72,8 @@
     "@types/lodash": "^4.14.182",
     "@types/react": "^18.0.12",
     "@types/react-dom": "^18.0.5",
-    "husky": "^8.0.3",
+    "eslint": "^8.50.0",
+    "eslint-config-react-app": "^7.0.1",
     "minimist": "^1.2.7",
     "openapi-typescript-codegen": "^0.23.0",
     "prettier": "2.6.2"

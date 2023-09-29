@@ -118,12 +118,11 @@ function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
           {preProStatus.isSuccess && (
             <CardContent sx={{ padding: "0px !important" }}>
               <Typography variant="body2" color="text.primary" bgcolor="lightgray" p={2} height={100}>
-                Number of preprocessed Documents: {preProStatus.data.num_sdocs_finished}
+                Number of Documents: {preProStatus.data.num_sdocs_finished}
                 <br />
-                {preProStatus.data.in_progress && <>Document preprocessing is in progress </>}
-                {preProStatus.data.in_progress && (
+                {preProStatus.data.num_active_prepro_job_payloads > 0 && (
                   <>
-                    {preProStatus.data.num_sdocs_in_progress} <CircularProgress />
+                    {preProStatus.data.num_active_prepro_job_payloads} Document(s) are preprocessing <CircularProgress />
                   </>
                 )}
               </Typography>

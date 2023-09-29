@@ -8,6 +8,11 @@ api:
       algo: ${oc.env:JWT_ALGO, HS256}
       secret: ${oc.env:JWT_SECRET, "c7c802ec8df3f2661a3c64d7f617be89e93cb334fb282409e1df555543742bf2"}
 
+ray:
+  protocol: ${oc.env:RAY_PROTOCOL, http}
+  host: ${oc.env:RAY_HOST, localhost}
+  port: ${oc.env:RAY_PORT, 13132}
+
 repo:
   root_directory: /tmp/dwts
   content_server:
@@ -16,67 +21,38 @@ repo:
     port: ${oc.env:CONTENT_SERVER_EXPOSED, 13134}
     context_path: /
 
-docprepro:
+celery:
+  batch_size:
+    text: 200
+    image: 10
+    audio: 10
+    video: 10
+  backend:
+    host: ${oc.env:REDIS_HOST, localhost}
+    port: ${oc.env:REDIS_PORT, 6379}
+    db: 0
+    password: ${oc.env:REDIS_PASSWORD, dwts123}
+  broker:
+    host: ${oc.env:RABBITMQ_HOST, localhost}
+    port: ${oc.env:RABBITMQ_PORT, 5672}
+    user: ${oc.env:RABBITMQ_USER, dwtsuser}
+    password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
+
+weaviate:
+  host: ${oc.env:WEAVIATE_HOST, 127.0.0.1}
+  port: ${oc.env:WEAVIATE_PORT, 8080}
+
+preprocessing:
   text:
-    spacy:
-      # note that the spacy models have to be installed in the env to use it! (docker!)
-      models:
-        en: "/spacy_models/en_core_web_trf-3.4.1"
-        de: "/spacy_models/de_core_news_lg-3.4.0"
-        it: "/spacy_models/it_core_news_lg-3.4.0"
-        default: "en"
-
-      device: cpu # cpu is faster if concurrency is high!
-      max_text_length: 2000000 # in characters (1000000 is spaCy default)
+    num_workers: 32
     bulk_threshold: 100
-
+    min_sentence_length: 5
   image:
-    object_detection:
-      model: "facebook/detr-resnet-101"
-      confidence_threshold: 0.75
-      device: cpu
-    image_captioning:
-      model: "nlpconnect/vit-gpt2-image-captioning"
-      max_caption_length: 16
-      num_beams: 4
-      device: cpu
-
+    num_workers: 32
   audio:
-    whisper:
-      model: "base"
-      device: cpu
-      options:
-        beam_size: 5
-        best_of: 5
-
-  simsearch:
-    # see https://huggingface.co/sentence-transformers/clip-ViT-B-32-multilingual-v1
-    image_encoder:
-      model: "clip-ViT-B-32"
-      batch_size: 32
-      device: cpu
-    text_encoder:
-      model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
-      batch_size: 32
-      device: cpu
-      min_sentence_length: 5
-
-  celery:
-    batch_size:
-      text: 200
-      image: 10
-      audio: 10
-      video: 10
-    backend:
-      host: ${oc.env:REDIS_HOST, localhost}
-      port: ${oc.env:REDIS_PORT, 6379}
-      db: 0
-      password: ${oc.env:REDIS_PASSWORD, dwts123}
-    broker:
-      host: ${oc.env:RABBITMQ_HOST, localhost}
-      port: ${oc.env:RABBITMQ_PORT, 5672}
-      user: ${oc.env:RABBITMQ_USER, dwtsuser}
-      password: ${oc.env:RABBITMQ_PASSWORD, dwts123}
+    num_workers: 4
+  video:
+    num_workers: 4
 
 postgres:
   host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
@@ -84,6 +60,9 @@ postgres:
   db: ${oc.env:POSTGRES_DB, dwts}
   user: ${oc.env:POSTGRES_USER, dwtsuser}
   password: ${oc.env:POSTGRES_PASSWORD, dwts123}
+  pool:
+    pool_size: 32
+    max_overflow: 16
 
 mail:
   enabled: ${oc.env:MAIL_ENABLED, False}
@@ -105,6 +84,7 @@ redis:
     feedback: 1 # name: redis db index -- DO NOT USE DB 0, it's reserved for RabbitMQ!
     export: 2
     crawler: 3
+    preprocessing: 4
 
 logging:
   max_file_size: 500 # MB

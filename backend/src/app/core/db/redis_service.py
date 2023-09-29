@@ -10,6 +10,11 @@ from app.core.data.dto.crawler_job import (
 )
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
+from app.core.data.dto.preprocessing_job import (
+    PreprocessingJobCreate,
+    PreprocessingJobRead,
+    PreprocessingJobUpdate,
+)
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
@@ -29,9 +34,10 @@ class RedisService(metaclass=SingletonMeta):
                 clients[client.lower()] = redis.Redis(
                     host=r_host, port=r_port, db=db_idx, password=r_pass
                 )
-                assert clients[
-                    client
-                ].ping(), f"Couldn't connect to Redis {str(client)} DB #{db_idx} at {r_host}:{r_port}!"
+                assert clients[client].ping(), (
+                    f"Couldn't connect to Redis {str(client)} "
+                    f"DB #{db_idx} at {r_host}:{r_port}!"
+                )
                 logger.info(
                     f"Successfully connected to Redis {str(client)} DB #{db_idx}"
                 )
@@ -40,6 +46,12 @@ class RedisService(metaclass=SingletonMeta):
             msg = f"Cannot connect to Redis DB - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
+
+        if kwargs["flush_all_clients"] if "flush_all_clients" in kwargs else False:
+            logger.warning("Flushing all DWTS Redis Clients!")
+            for typ, client in clients.items():
+                client.flushdb()
+                client.save()
 
         return super(RedisService, cls).__new__(cls)
 
@@ -53,9 +65,13 @@ class RedisService(metaclass=SingletonMeta):
         return str(uuid.uuid4())
 
     def _get_client(self, typ: str):
-        if not typ.lower() in self.__clients:
+        if typ.lower() not in self.__clients:
             raise KeyError(f"Redis Client '{typ.lower()}' does not exist!")
         return self.__clients[typ.lower()]
+
+    def _flush_all_clients(self):
+        for typ in self.__clients.keys():
+            self._flush_client(typ=typ)
 
     def _flush_client(self, typ: str):
         client = self._get_client(typ)
@@ -65,7 +81,7 @@ class RedisService(metaclass=SingletonMeta):
 
     def store_export_job(
         self, export_job: Union[ExportJobCreate, ExportJobRead]
-    ) -> Optional[ExportJobRead]:
+    ) -> ExportJobRead:
         client = self._get_client("export")
 
         if isinstance(export_job, ExportJobCreate):
@@ -76,107 +92,96 @@ class RedisService(metaclass=SingletonMeta):
             exj = export_job
 
         if client.set(key.encode("utf-8"), exj.json()) != 1:
-            logger.error("Cannot store ExportJob!")
-            return None
+            msg = "Cannot store ExportJob!"
+            logger.error(msg)
+            raise RuntimeError(msg)
 
         logger.debug(f"Successfully stored ExportJob {key}!")
 
         return exj
 
-    def load_export_job(self, key: str) -> Optional[ExportJobRead]:
+    def load_export_job(self, key: str) -> ExportJobRead:
         client = self._get_client("export")
         exj = client.get(key.encode("utf-8"))
         if exj is None:
-            logger.error(f"ExportJob with ID {key} does not exist!")
-            return None
-        else:
-            logger.debug(f"Successfully loaded ExportJob {key}")
-            return ExportJobRead.parse_raw(exj)
+            msg = f"ExportJob with ID {key} does not exist!"
+            logger.error(msg)
+            raise KeyError(msg)
 
-    def update_export_job(
-        self, key: str, update: ExportJobUpdate
-    ) -> Optional[ExportJobRead]:
+        logger.debug(f"Successfully loaded ExportJob {key}")
+        return ExportJobRead.parse_raw(exj)
+
+    def update_export_job(self, key: str, update: ExportJobUpdate) -> ExportJobRead:
         exj = self.load_export_job(key=key)
-        if exj is None:
-            logger.error(f"Cannot update ExportJob {key}")
-            return None
         data = exj.dict()
         data.update(**update.dict())
         exj = ExportJobRead(**data)
         exj = self.store_export_job(export_job=exj)
-        if exj is not None:
-            logger.debug(f"Updated ExportJob {key}")
-            return exj
-        else:
-            logger.error(f"Cannot update ExportJob {key}")
+        logger.debug(f"Updated ExportJob {key}")
+        return exj
 
-    def delete_export_job(self, key: str) -> Optional[ExportJobRead]:
+    def delete_export_job(self, key: str) -> ExportJobRead:
         exj = self.load_export_job(key=key)
         client = self._get_client("export")
-        if exj is None or client.delete(key.encode("utf-8")) != 1:
-            logger.error(f"Cannot delete ExportJob {key}")
-            return None
+        if client.delete(key.encode("utf-8")) != 1:
+            msg = f"Cannot delete ExportJob {key}"
+            logger.error(msg)
+            raise RuntimeError(msg)
         logger.debug(f"Deleted ExportJob {key}")
         return exj
 
     def store_crawler_job(
         self, crawler_job: Union[CrawlerJobCreate, CrawlerJobRead]
-    ) -> Optional[CrawlerJobRead]:
+    ) -> CrawlerJobRead:
         client = self._get_client("crawler")
 
         if isinstance(crawler_job, CrawlerJobCreate):
             key = self._generate_random_key()
-            exj = CrawlerJobRead(id=key, created=datetime.now(), **crawler_job.dict())
+            cj = CrawlerJobRead(id=key, created=datetime.now(), **crawler_job.dict())
         elif isinstance(crawler_job, CrawlerJobRead):
             key = crawler_job.id
-            exj = crawler_job
+            cj = crawler_job
 
-        if client.set(key.encode("utf-8"), exj.json()) != 1:
-            logger.error("Cannot store CrawlerJob!")
-            return None
-
+        if client.set(key.encode("utf-8"), cj.json()) != 1:
+            msg = "Cannot store CrawlerJob!"
+            logger.error(msg)
+            raise RuntimeError(msg)
         logger.debug(f"Successfully stored CrawlerJob {key}!")
+        return cj
 
-        return exj
-
-    def load_crawler_job(self, key: str) -> Optional[CrawlerJobRead]:
+    def load_crawler_job(self, key: str) -> CrawlerJobRead:
         client = self._get_client("crawler")
 
-        exj = client.get(key.encode("utf-8"))
-        if exj is None:
-            logger.error(f"CrawlerJob with ID {key} does not exist!")
-            return None
-        else:
-            logger.debug(f"Successfully loaded CrawlerJob {key}")
-            return CrawlerJobRead.parse_raw(exj)
+        cj = client.get(key.encode("utf-8"))
+        if cj is None:
+            msg = f"CrawlerJob with ID {key} does not exist!"
+            logger.error(msg)
+            raise KeyError(msg)
+        logger.debug(f"Successfully loaded CrawlerJob {key}")
+        return CrawlerJobRead.parse_raw(cj)
 
-    def update_crawler_job(
-        self, key: str, update: CrawlerJobUpdate
-    ) -> Optional[CrawlerJobRead]:
-        exj = self.load_crawler_job(key=key)
-        if exj is None:
-            logger.error(f"Cannot update CrawlerJob {key}")
-            return None
-        data = exj.dict()
+    def update_crawler_job(self, key: str, update: CrawlerJobUpdate) -> CrawlerJobRead:
+        cj = self.load_crawler_job(key=key)
+        data = cj.dict()
         data.update(**update.dict())
-        exj = CrawlerJobRead(**data)
-        exj = self.store_crawler_job(crawler_job=exj)
-        if exj is not None:
-            logger.debug(f"Updated CrawlerJob {key}")
-            return exj
-        else:
-            logger.error(f"Cannot update CrawlerJob {key}")
+        cj = CrawlerJobRead(**data)
+        cj = self.store_crawler_job(crawler_job=cj)
+        logger.debug(f"Updated CrawlerJob {key}")
+        return cj
 
-    def delete_crawler_job(self, key: str) -> Optional[CrawlerJobRead]:
-        exj = self.load_crawler_job(key=key)
+    def delete_crawler_job(self, key: str) -> CrawlerJobRead:
+        cj = self.load_crawler_job(key=key)
         client = self._get_client("crawler")
-        if exj is None or client.delete(key.encode("utf-8")) != 1:
-            logger.error(f"Cannot delete CrawlerJob {key}")
-            return None
+        if client.delete(key.encode("utf-8")) != 1:
+            msg = f"Cannot delete CrawlerJob {key}"
+            logger.error(msg)
+            raise RuntimeError(msg)
         logger.debug(f"Deleted CrawlerJob {key}")
-        return exj
+        return cj
 
-    def get_all_crawler_jobs(self, project_id: Optional[int]) -> List[CrawlerJobRead]:
+    def get_all_crawler_jobs(
+        self, project_id: Optional[int] = None
+    ) -> List[CrawlerJobRead]:
         client = self._get_client("crawler")
         all_crawler_jobs: List[CrawlerJobRead] = [
             self.load_crawler_job(str(key, "utf-8")) for key in client.keys()
@@ -190,7 +195,34 @@ class RedisService(metaclass=SingletonMeta):
                 if job.parameters.project_id == project_id
             ]
 
-    def store_feedback(self, feedback: FeedbackCreate) -> Optional[FeedbackRead]:
+    def store_preprocessing_job(
+        self,
+        preprocessing_job: Union[PreprocessingJobCreate, PreprocessingJobRead],
+    ) -> PreprocessingJobRead:
+        client = self._get_client("preprocessing")
+
+        if isinstance(preprocessing_job, PreprocessingJobCreate):
+            key = self._generate_random_key()
+            ppj = PreprocessingJobRead(
+                id=key,
+                created=datetime.now(),
+                updated=datetime.now(),
+                **preprocessing_job.dict(),
+            )
+        elif isinstance(preprocessing_job, PreprocessingJobRead):
+            key = preprocessing_job.id
+            ppj = preprocessing_job
+
+        if client.set(key.encode("utf-8"), ppj.json()) != 1:
+            msg = "Cannot store PreprocessingJob!"
+            logger.error(msg)
+            raise RuntimeError(msg)
+
+        logger.debug(f"Successfully stored PreprocessingJob {key}!")
+
+        return ppj
+
+    def store_feedback(self, feedback: FeedbackCreate) -> FeedbackRead:
         client = self._get_client("feedback")
         key = self._generate_random_key()
         fb = FeedbackRead(
@@ -200,29 +232,29 @@ class RedisService(metaclass=SingletonMeta):
             created=datetime.now(),
         )
         if client.set(key.encode("utf-8"), fb.json()) != 1:
-            logger.error("Cannot store Feedback!")
-            return None
+            msg = "Cannot store Feedback!"
+            logger.error(msg)
+            raise RuntimeError(msg)
 
         logger.debug("Successfully stored Feedback!")
 
         return fb
 
-    def load_feedback(self, key: str) -> Optional[FeedbackRead]:
+    def load_feedback(self, key: str) -> FeedbackRead:
         client = self._get_client("feedback")
         fb = client.get(key.encode("utf-8"))
         if fb is None:
-            logger.error(f"Feedback with ID {key} does not exist!")
-            return None
-        else:
-            logger.debug(f"Successfully loaded Feedback {key}")
-            return FeedbackRead.parse_raw(fb)
+            msg = f"Feedback with ID {key} does not exist!"
+            logger.error(msg)
+            raise KeyError(msg)
 
-    @logger.catch(reraise=True)
+        logger.debug(f"Successfully loaded Feedback {key}")
+        return FeedbackRead.parse_raw(fb)
+
     def get_all_feedbacks(self) -> List[FeedbackRead]:
         client = self._get_client("feedback")
         return [self.load_feedback(str(key, "utf-8")) for key in client.keys()]
 
-    @logger.catch(reraise=True)
     def get_all_feedbacks_of_user(self, user_id: int) -> List[FeedbackRead]:
         fbs = self.get_all_feedbacks()
         return [fb for fb in fbs if fb.user_id == user_id]
