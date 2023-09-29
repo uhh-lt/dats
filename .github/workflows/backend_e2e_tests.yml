@@ -42,10 +42,10 @@ jobs:
   run-end2end-tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Set Swap Space to 10GB
+      - name: Set Swap Space to 20GB
         uses: pierotofy/set-swap-space@master
         with:
-          swap-size-gb: 10
+          swap-size-gb: 20
       - uses: actions/checkout@v3
       - name: Start Docker Containers
         run: |
@@ -55,7 +55,8 @@ jobs:
           python monkey_patch_docker_compose_for_backend_tests.py
           export GID=$(id -g)
           export API_PRODUCTION_WORKERS=0
-          docker compose -f compose-test.yml up -d --quiet-pull
+          export RAY_CONFIG="./config_test_no_gpu.yaml"
+          docker compose -f compose-test.yml up -d
           echo Waiting for containers to start...
           sleep 240
           cd ..
