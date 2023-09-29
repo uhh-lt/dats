@@ -122,7 +122,7 @@ export class AnalysisService {
       url: "/analysis/timeline_analysis",
       query: {
         project_id: projectId,
-        threshold: threshold,
+        threshold: threshold / 100.0,
         metadata_key: metadataKey,
       },
       body: requestBody,

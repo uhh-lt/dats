@@ -47,8 +47,8 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.text.generate_word_frequencies_and_keywords import (
         generate_word_frequncies_and_keywords,
     )
-    from app.preprocessing.pipeline.steps.text.index_text_document_in_faiss import (
-        index_text_document_in_faiss,
+    from app.preprocessing.pipeline.steps.text.index_text_document_for_simsearch import (
+        index_text_document_for_simsearch,
     )
     from app.preprocessing.pipeline.steps.text.run_spacy_pipeline import (
         run_spacy_pipeline,
@@ -146,7 +146,7 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=index_text_document_in_faiss,
+        func=index_text_document_for_simsearch,
         required_data=["pptd", "sdoc_id"],
     )
 
@@ -184,8 +184,8 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.image.generate_image_caption import (
         generate_image_caption,
     )
-    from app.preprocessing.pipeline.steps.image.index_image_in_faiss import (
-        index_image_in_faiss,
+    from app.preprocessing.pipeline.steps.image.index_image_document_for_simsearch import (
+        index_image_document_for_simsearch,
     )
     from app.preprocessing.pipeline.steps.image.run_object_detection import (
         run_object_detection,
@@ -248,7 +248,7 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     )
 
     pipeline.register_step(
-        func=index_image_in_faiss,
+        func=index_image_document_for_simsearch,
         required_data=["ppid", "sdoc_id"],
     )
 

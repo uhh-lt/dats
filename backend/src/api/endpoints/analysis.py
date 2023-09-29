@@ -10,7 +10,7 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     TimelineAnalysisResult,
 )
-from app.core.data.dto.search import SimSearchSentenceHit
+from app.core.data.dto.search import SimSearchQuery, SimSearchSentenceHit
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
 from fastapi import APIRouter, Depends
@@ -77,9 +77,10 @@ async def timeline_analysis(
     db: Session = Depends(get_db_session),
     project_id: int,
     concepts: List[AnalysisConcept],
-    threshold: int,
+    threshold: float,
     metadata_key: str
 ) -> List[TimelineAnalysisResult]:
+    # FIXME move this to AnalysisService!
     # ensure that metadata key is valid
     sdoc_metadata_dict = {
         sdoc_meta.source_document_id: sdoc_meta.value
@@ -94,10 +95,13 @@ async def timeline_analysis(
     sdoc_ids = []
     similar_sentences_dict: Dict[str, List[SimSearchSentenceHit]] = {}
     for concept in concepts:
-        hits: List[
-            SimSearchSentenceHit
-        ] = SearchService().find_similar_sentences_with_threshold(
-            proj_id=project_id, sentences=concept.sentences, threshold=threshold
+        hits: List[SimSearchSentenceHit] = SearchService().find_similar_sentences(
+            query=SimSearchQuery(
+                proj_id=project_id,
+                query=concept.sentences,
+                threshold=threshold,
+                top_k=10000,
+            )
         )
         similar_sentences_dict[concept.name] = hits
         sdoc_ids.extend([hit.sdoc_id for hit in hits])

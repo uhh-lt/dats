@@ -3741,21 +3741,10 @@
         "summary": "Returns similar sentences according to a textual or visual query.",
         "description": "Returns similar sentences according to a textual or visual query.",
         "operationId": "find_similar_sentences",
-        "parameters": [
-          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
-          {
-            "required": true,
-            "schema": { "title": "Query", "anyOf": [{ "type": "string" }, { "type": "integer" }] },
-            "name": "query",
-            "in": "query"
-          },
-          {
-            "required": false,
-            "schema": { "title": "Top K", "type": "integer", "default": 10 },
-            "name": "top_k",
-            "in": "query"
-          }
-        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3782,21 +3771,10 @@
         "summary": "Returns similar images according to a textual or visual query.",
         "description": "Returns similar images according to a textual or visual query.",
         "operationId": "find_similar_images",
-        "parameters": [
-          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
-          {
-            "required": true,
-            "schema": { "title": "Query", "anyOf": [{ "type": "string" }, { "type": "integer" }] },
-            "name": "query",
-            "in": "query"
-          },
-          {
-            "required": false,
-            "schema": { "title": "Top K", "type": "integer", "default": 10 },
-            "name": "top_k",
-            "in": "query"
-          }
-        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3806,47 +3784,6 @@
                   "title": "Response Search-Find Similar Images",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SimSearchImageHit" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/search/simsearch/sentences_threshold": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns similar sentences according to a averaged representation of multiple query sentences.",
-        "description": "Returns similar sentences according to a averaged representation of multiple query sentences.",
-        "operationId": "find_similar_sentences_with_threshold",
-        "parameters": [
-          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
-          {
-            "required": false,
-            "schema": { "title": "Threshold", "type": "integer", "default": 10 },
-            "name": "threshold",
-            "in": "query"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "title": "Sentences", "type": "array", "items": { "type": "string" } } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Search-Find Similar Sentences With Threshold",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" }
                 }
               }
             }
@@ -4231,7 +4168,7 @@
           },
           {
             "required": true,
-            "schema": { "title": "Threshold", "type": "integer" },
+            "schema": { "title": "Threshold", "type": "number" },
             "name": "threshold",
             "in": "query"
           },
@@ -5980,12 +5917,7 @@
       },
       "SDocStatus": {
         "title": "SDocStatus",
-        "enum": [
-          "unfinished_or_erroneous",
-          "index_image_document_in_faiss",
-          "index_text_document_in_faiss",
-          "finished"
-        ],
+        "enum": ["unfinished_or_erroneous", "finished"],
         "type": "string",
         "description": "An enumeration."
       },
@@ -6067,6 +5999,35 @@
             "description": "The ID of the SourceDocument similar to the query."
           },
           "score": { "title": "Score", "type": "number", "description": "The similarity score." }
+        }
+      },
+      "SimSearchQuery": {
+        "title": "SimSearchQuery",
+        "required": ["proj_id", "query"],
+        "type": "object",
+        "properties": {
+          "proj_id": {
+            "title": "Proj Id",
+            "type": "integer",
+            "description": "The ID of the Project the SourceDocuments have to belong to."
+          },
+          "query": {
+            "title": "Query",
+            "anyOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }, { "type": "integer" }],
+            "description": "The query term. This can be either a single string, a list of strings for which the average embedding gets computed, or an integer which is interpreted as the SDoc ID of an Image."
+          },
+          "top_k": {
+            "title": "Top K",
+            "type": "integer",
+            "description": "The number of results to return.",
+            "default": 10
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number",
+            "description": "The minimum distance to use for the sim search.",
+            "default": 0
+          }
         }
       },
       "SimSearchSentenceHit": {
@@ -7013,12 +6974,7 @@
           "SDocStatus": {
             "title": "SDocStatus",
             "description": "An enumeration.",
-            "enum": [
-              "unfinished_or_erroneous",
-              "index_image_document_in_faiss",
-              "index_text_document_in_faiss",
-              "finished"
-            ],
+            "enum": ["unfinished_or_erroneous", "finished"],
             "type": "string"
           },
           "DocumentTagRead": {

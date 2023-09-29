@@ -105,13 +105,6 @@ elasticsearch:
     docs: configs/default_sdoc_index_settings.json
     memos: configs/default_memo_index_settings.json
 
-faiss:
-  # see https://github.com/facebookresearch/faiss/wiki/Guidelines-to-choose-an-index
-  index_factory_string: "IDMap,Flat"
-  index_search_metric: IP # or L2
-  index_dimension: 512 # has to match the encoder dimensions!
-  device: cpu
-
 system_codes:
   SYSTEM_CODE:
     desc: "A system code"

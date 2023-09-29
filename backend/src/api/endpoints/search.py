@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from api.dependencies import get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
@@ -10,6 +10,7 @@ from app.core.data.dto.search import (
     PaginatedMemoSearchResults,
     SearchSDocsQueryParameters,
     SimSearchImageHit,
+    SimSearchQuery,
     SimSearchSentenceHit,
     SourceDocumentContentQuery,
     SourceDocumentFilenameQuery,
@@ -24,6 +25,9 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/search")
 tags = ["search"]
+
+ss = SearchService()
+es = ElasticSearchService()
 
 
 @router.post(
@@ -107,7 +111,7 @@ async def search_keyword_stats(
     )
     if len(sdoc_ids) == 0:
         return []
-    keyword_stats = ElasticSearchService().get_sdoc_keyword_counts_by_sdoc_ids(
+    keyword_stats = es.get_sdoc_keyword_counts_by_sdoc_ids(
         proj_id=query_params.proj_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
@@ -149,7 +153,7 @@ async def search_sdocs_by_content_query(
     content_query: SourceDocumentContentQuery,
     skip_limit: Dict[str, str] = Depends(skip_limit_params)
 ) -> PaginatedElasticSearchDocumentHits:
-    return ElasticSearchService().search_sdocs_by_content_query(
+    return es.search_sdocs_by_content_query(
         proj_id=content_query.proj_id, query=content_query.content_query, **skip_limit
     )
 
@@ -167,13 +171,13 @@ async def search_sdocs_by_filename_query(
     skip_limit: Dict[str, str] = Depends(skip_limit_params)
 ) -> PaginatedElasticSearchDocumentHits:
     if filename_query.prefix:
-        return ElasticSearchService().search_sdocs_by_prefix_filename(
+        return es.search_sdocs_by_prefix_filename(
             proj_id=filename_query.proj_id,
             filename_prefix=filename_query.filename_query,
             **skip_limit
         )
     else:
-        return ElasticSearchService().search_sdocs_by_exact_filename(
+        return es.search_sdocs_by_exact_filename(
             proj_id=filename_query.proj_id,
             exact_filename=filename_query.filename_query,
             **skip_limit
@@ -192,7 +196,7 @@ async def search_memos_by_content_query(
     content_query: MemoContentQuery,
     skip_limit: Dict[str, str] = Depends(skip_limit_params)
 ) -> PaginatedMemoSearchResults:
-    return ElasticSearchService().search_memos_by_content_query(
+    return es.search_memos_by_content_query(
         proj_id=content_query.proj_id,
         query=content_query.content_query,
         user_id=content_query.user_id,
@@ -214,7 +218,7 @@ async def search_memos_by_title_query(
     skip_limit: Dict[str, str] = Depends(skip_limit_params)
 ) -> PaginatedMemoSearchResults:
     if title_query.prefix:
-        return ElasticSearchService().search_memos_by_prefix_title(
+        return es.search_memos_by_prefix_title(
             proj_id=title_query.proj_id,
             user_id=title_query.user_id,
             title_prefix=title_query.title_query,
@@ -222,7 +226,7 @@ async def search_memos_by_title_query(
             **skip_limit
         )
     else:
-        return ElasticSearchService().search_memos_by_exact_title(
+        return es.search_memos_by_exact_title(
             proj_id=title_query.proj_id,
             user_id=title_query.user_id,
             exact_title=title_query.title_query,
@@ -238,13 +242,8 @@ async def search_memos_by_title_query(
     summary="Returns similar sentences according to a textual or visual query.",
     description="Returns similar sentences according to a textual or visual query.",
 )
-async def find_similar_sentences(
-    proj_id: int, query: Union[str, int], top_k: int = 10
-) -> List[SimSearchSentenceHit]:
-    # FIXME: Image query type not a valid pydantic type --> use uploaded image file or sdoc_id!
-    return SearchService().find_similar_sentences(
-        proj_id=proj_id, query=query, top_k=top_k
-    )
+async def find_similar_sentences(query: SimSearchQuery) -> List[SimSearchSentenceHit]:
+    return ss.find_similar_sentences(query=query)
 
 
 @router.post(
@@ -254,24 +253,5 @@ async def find_similar_sentences(
     summary="Returns similar images according to a textual or visual query.",
     description="Returns similar images according to a textual or visual query.",
 )
-async def find_similar_images(
-    proj_id: int, query: Union[str, int], top_k: int = 10
-) -> List[SimSearchImageHit]:
-    return SearchService().find_similar_images(
-        proj_id=proj_id, query=query, top_k=top_k
-    )
-
-
-@router.post(
-    "/simsearch/sentences_threshold",
-    tags=tags,
-    response_model=List[SimSearchSentenceHit],
-    summary="Returns similar sentences according to a averaged representation of multiple query sentences.",
-    description="Returns similar sentences according to a averaged representation of multiple query sentences.",
-)
-async def find_similar_sentences_with_threshold(
-    proj_id: int, sentences: List[str], threshold: int = 10
-) -> List[SimSearchSentenceHit]:
-    return SearchService().find_similar_sentences_with_threshold(
-        proj_id=proj_id, sentences=sentences, threshold=threshold
-    )
+async def find_similar_images(query: SimSearchQuery) -> List[SimSearchImageHit]:
+    return ss.find_similar_images(query=query)

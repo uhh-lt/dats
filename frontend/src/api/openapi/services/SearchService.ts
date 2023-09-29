@@ -8,6 +8,7 @@ import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElas
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
 import type { SearchSDocsQueryParameters } from "../models/SearchSDocsQueryParameters";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
+import type { SimSearchQuery } from "../models/SimSearchQuery";
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SourceDocumentContentQuery } from "../models/SourceDocumentContentQuery";
 import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
@@ -299,22 +300,15 @@ export class SearchService {
    * @throws ApiError
    */
   public static findSimilarSentences({
-    projId,
-    query,
-    topK = 10,
+    requestBody,
   }: {
-    projId: number;
-    query: string | number;
-    topK?: number;
+    requestBody: SimSearchQuery;
   }): CancelablePromise<Array<SimSearchSentenceHit>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/simsearch/sentences",
-      query: {
-        proj_id: projId,
-        query: query,
-        top_k: topK,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
@@ -328,50 +322,13 @@ export class SearchService {
    * @throws ApiError
    */
   public static findSimilarImages({
-    projId,
-    query,
-    topK = 10,
+    requestBody,
   }: {
-    projId: number;
-    query: string | number;
-    topK?: number;
+    requestBody: SimSearchQuery;
   }): CancelablePromise<Array<SimSearchImageHit>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/simsearch/images",
-      query: {
-        proj_id: projId,
-        query: query,
-        top_k: topK,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns similar sentences according to a averaged representation of multiple query sentences.
-   * Returns similar sentences according to a averaged representation of multiple query sentences.
-   * @returns SimSearchSentenceHit Successful Response
-   * @throws ApiError
-   */
-  public static findSimilarSentencesWithThreshold({
-    projId,
-    requestBody,
-    threshold = 10,
-  }: {
-    projId: number;
-    requestBody: Array<string>;
-    threshold?: number;
-  }): CancelablePromise<Array<SimSearchSentenceHit>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/simsearch/sentences_threshold",
-      query: {
-        proj_id: projId,
-        threshold: threshold,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
