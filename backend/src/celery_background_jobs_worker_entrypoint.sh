@@ -5,6 +5,9 @@ set -e
 # assert that ES is healthy!
 ./test_es.sh
 
+# assert ray is reachable
+./test_ray.sh
+
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 
