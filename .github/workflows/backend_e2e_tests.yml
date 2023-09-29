@@ -80,6 +80,7 @@ jobs:
           TESTDATA_PASSWORD: ${{ secrets.TESTDATA_PASSWORD }}
         run: |
           cd tools/importer
+          pip install -r requirements.txt
           wget -q http://ltdata1.informatik.uni-hamburg.de/dwts/totalitarismo.zip
           unzip -q -P "$TESTDATA_PASSWORD" totalitarismo.zip
           python dwts_importer.py --input_dir images --backend_url http://localhost:13120/ --project_name incel --tag_name totalitarisimo
