@@ -65,6 +65,7 @@ export type { ProjectUpdate } from "./models/ProjectUpdate";
 export { SDocStatus } from "./models/SDocStatus";
 export type { SearchSDocsQueryParameters } from "./models/SearchSDocsQueryParameters";
 export type { SimSearchImageHit } from "./models/SimSearchImageHit";
+export type { SimSearchQuery } from "./models/SimSearchQuery";
 export type { SimSearchSentenceHit } from "./models/SimSearchSentenceHit";
 export type { SingleDocAllUserAnnotationsExportJobParams } from "./models/SingleDocAllUserAnnotationsExportJobParams";
 export type { SingleDocSingleUserAnnotationsExportJobParams } from "./models/SingleDocSingleUserAnnotationsExportJobParams";

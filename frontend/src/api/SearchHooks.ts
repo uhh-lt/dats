@@ -121,9 +121,11 @@ const sentenceSimilaritySearchQueryFn = async (
   query: number | string
 ): Promise<SentenceSimilaritySearchResults> => {
   const result = await SearchService.findSimilarSentences({
-    projId: projectId,
-    query: query,
-    topK: 10,
+    requestBody: {
+      proj_id: projectId,
+      query: query,
+      top_k: 10,
+    }
   });
 
   // combine multiple results (sentences) per document
@@ -142,9 +144,11 @@ const imageSimilaritySearchQueryFn = async (
   query: number | string
 ): Promise<ImageSimilaritySearchResults> => {
   const results = await SearchService.findSimilarImages({
-    projId: projectId,
-    query: query,
-    topK: 10,
+    requestBody: {
+      proj_id: projectId,
+      query: query,
+      top_k: 10,
+    }
   });
 
   return new ImageSimilaritySearchResults(results);
