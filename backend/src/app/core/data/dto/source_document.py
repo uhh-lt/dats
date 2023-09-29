@@ -14,13 +14,7 @@ SDOC_SUFFIX_MAX_LENGTH = 30
 
 class SDocStatus(str, Enum):
     unfinished_or_erroneous = "unfinished_or_erroneous"
-    index_image_document_in_faiss = (
-        "index_image_document_in_faiss"  # "added document to faiss index"
-    )
-    index_text_document_in_faiss = (
-        "index_text_document_in_faiss"  # "added document to faiss index"
-    )
-    finished = "finished"  # "added document to faiss index"
+    finished = "finished"  # preprocessing has finished
 
 
 """

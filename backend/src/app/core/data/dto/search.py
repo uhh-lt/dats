@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Union
 
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
@@ -363,6 +363,29 @@ class PaginatedElasticSearchDocumentHits(PaginatedResults):
 class PaginatedMemoSearchResults(PaginatedResults):
     memos: List[MemoRead] = Field(
         description="The Memo search results on the requested page."
+    )
+
+
+class SimSearchQuery(BaseModel):
+    proj_id: int = Field(
+        description="The ID of the Project the SourceDocuments have to belong to."
+    )
+    query: Union[str, List[str], int] = Field(
+        description=(
+            "The query term. This can be either a single string, "
+            "a list of strings for which the average embedding gets computed, "
+            "or an integer which is interpreted as the SDoc ID of an Image."
+        )
+    )
+    top_k: int = Field(
+        description="The number of results to return.",
+        default=10,
+    )
+    threshold: float = Field(
+        description="The minimum distance to use for the sim search.",
+        default=0.0,
+        min=0.0,
+        max=1.0,
     )
 
 
