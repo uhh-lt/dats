@@ -27,11 +27,6 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.faiss_sentence_source_document_link import (
-    FaissSentenceSourceDocumentLinkORM,
-)
-
-# noinspection PyUnresolvedReferences
 from app.core.data.orm.memo import MemoORM
 
 # noinspection PyUnresolvedReferences
