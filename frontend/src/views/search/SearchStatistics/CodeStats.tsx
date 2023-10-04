@@ -3,24 +3,27 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
 import { SpanEntityDocumentFrequency } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
+import { useFilterStats } from "../hooks/useFilterStats";
 
 interface CodeStatsProps {
   codeId: number;
   codeStats: SpanEntityDocumentFrequency[];
   handleClick: (stat: SpanEntityDocumentFrequency) => void;
   parentRef: React.RefObject<HTMLDivElement>;
+  filterBy: string;
 }
 
-function CodeStats({ codeId, codeStats, handleClick, parentRef }: CodeStatsProps) {
+function CodeStats({ codeId, codeStats, handleClick, parentRef, filterBy }: CodeStatsProps) {
+  const filteredCodeStats = useFilterStats(codeStats, filterBy);
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
-    count: codeStats.length,
+    count: filteredCodeStats.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...codeStats.map((x) => x.global_count)), [codeStats]);
+  const maxValue = useMemo(() => Math.max(...filteredCodeStats.map((x) => x.global_count)), [filteredCodeStats]);
 
   // render
   return (
@@ -34,7 +37,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef }: CodeStatsProps
       }}
     >
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let codeStat = codeStats[virtualItem.index];
+        let codeStat = filteredCodeStats[virtualItem.index];
 
         return (
           <StatsDisplayButton

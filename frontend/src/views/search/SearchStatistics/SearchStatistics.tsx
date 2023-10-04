@@ -12,6 +12,7 @@ import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";
 import KeywordStats from "./KeywordStats";
 import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
+import StatsSearchBar from "./StatsSearchBar";
 
 interface SearchStatisticsProps {
   filter: SearchFilter[];
@@ -90,6 +91,12 @@ function SearchStatistics({
     setTab(navigateTo);
   }, []);
 
+  // stats search bar value state initialisation
+  const [filterStatsBy, setFilterStatsBy] = useState("");
+  const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilterStatsBy(event.target.value);
+  };
+
   // The scrollable element for the lists
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -105,27 +112,35 @@ function SearchStatistics({
             ))}
           </Tabs>
         </Box>
+
+        {/* Stats Searchbar Component */}
+        <Box ref={parentRef} className="myFlexFitContentContainer" sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <StatsSearchBar handleSearchTextChange={handleSearchTextChange} />
+        </Box>
+
         <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
           <KeywordStats
             keywordStats={keywordStats}
             handleClick={handleKeywordClick}
             parentRef={parentRef}
+            filterBy={filterStatsBy}
           />
           <DocumentTagStats
             tagStats={tagStats}
             handleClick={handleTagClick}
             parentRef={parentRef}
+            filterBy={filterStatsBy}
           />
           {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
-              <CodeStats
-                key={codeId}
-                codeId={codeId}
-                codeStats={data}
-                handleClick={handleCodeClick}
-                parentRef={parentRef}
-              />
-            )
-          )}
+            <CodeStats
+              key={codeId}
+              codeId={codeId}
+              codeStats={data}
+              handleClick={handleCodeClick}
+              parentRef={parentRef}
+              filterBy={filterStatsBy}
+            />
+          ))}
         </Box>
       </TabContext>
       <SearchStatisticsContextMenu
