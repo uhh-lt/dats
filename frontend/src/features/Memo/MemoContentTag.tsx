@@ -11,7 +11,12 @@ interface MemoContentTagProps {
   tag: DocumentTagRead;
 }
 
-export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps & MemoContentProps) {
+export function MemoContentTag({
+  tag,
+  memo,
+  closeDialog,
+  onMemoCreateSuccess,
+}: MemoContentTagProps & MemoContentProps) {
   const { user } = useAuth();
 
   // mutations
@@ -54,11 +59,12 @@ export function MemoContentTag({ tag, memo, closeDialog }: MemoContentTagProps &
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             SnackbarAPI.openSnackbar({
               text: `Created memo for tag ${tag.title}`,
               severity: "success",
             });
+            if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
         }

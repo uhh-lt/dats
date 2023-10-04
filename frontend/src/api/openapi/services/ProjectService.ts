@@ -9,6 +9,7 @@ import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { PaginatedSourceDocumentReads } from "../models/PaginatedSourceDocumentReads";
+import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
 import type { ProjectCreate } from "../models/ProjectCreate";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
@@ -178,7 +179,7 @@ export class ProjectService {
   /**
    * Uploads one or multiple SourceDocument to the Project
    * Uploads one or multiple SourceDocument to the Project with the given ID if it exists
-   * @returns string Successful Response
+   * @returns PreprocessingJobRead Successful Response
    * @throws ApiError
    */
   public static uploadProjectSdoc({
@@ -187,7 +188,7 @@ export class ProjectService {
   }: {
     projId: number;
     formData: Body_project_upload_project_sdoc;
-  }): CancelablePromise<string> {
+  }): CancelablePromise<PreprocessingJobRead> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/project/{proj_id}/sdoc",

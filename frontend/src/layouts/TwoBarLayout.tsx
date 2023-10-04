@@ -3,7 +3,7 @@ import { Box, CssBaseline } from "@mui/material";
 import { Outlet, useParams } from "react-router-dom";
 import MemoDialog from "../features/Memo/MemoDialog";
 import SnackbarDialog from "../features/Snackbar/SnackbarDialog";
-import TagCreationDialog from "../views/search/Tags/TagCreate/TagCreationDialog";
+import TagCreateDialog from "../features/CrudDialog/Tag/TagCreateDialog";
 import BottomBar from "../components/NavBarBottom/BottomBar";
 import TopBar from "../components/NavBarTop/TopBar";
 import "./Layout.css";
@@ -34,7 +34,7 @@ function TwoBarLayout() {
           <FloatingFeedbackButton />
           <MemoDialog />
           <SnackbarDialog />
-          <TagCreationDialog />
+          <TagCreateDialog />
           <ConfirmationDialog />
           <ExporterDialog />
         </AppBarContext.Provider>

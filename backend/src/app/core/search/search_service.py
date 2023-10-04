@@ -1,31 +1,22 @@
-from typing import Dict, List, Union
+from typing import List
 
-from PIL.Image import Image
-
-from app.core.data.crud.faiss_sentence_source_document_link import (
-    crud_faiss_sentence_link,
-)
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import (
     SearchSDocsQueryParameters,
     SimSearchImageHit,
+    SimSearchQuery,
     SimSearchSentenceHit,
 )
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.faiss_index_service import FaissIndexService
-from app.core.search.index_type import IndexType
-from app.docprepro.simsearch import (
-    find_similar_images_apply_async,
-    find_similar_sentences_apply_async,
-    find_similar_sentences_with_embedding_with_threshold_apply_async,
-)
+from app.core.search.simsearch_service import SimSearchService
 from app.util.singleton_meta import SingletonMeta
 
 
 class SearchService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqls = SQLService()
+        cls.sss = SimSearchService()
         return super(SearchService, cls).__new__(cls)
 
     def search_sdoc_ids_by_sdoc_query_parameters(
@@ -35,6 +26,9 @@ class SearchService(metaclass=SingletonMeta):
 
         with self.sqls.db_session() as db:
             sdocs_ids = []
+
+            if crud_sdoc.count_by_project(db=db, proj_id=query_params.proj_id) == 0:
+                return sdocs_ids
 
             if query_params.span_entities:
                 sdocs_ids.append(
@@ -131,79 +125,9 @@ class SearchService(metaclass=SingletonMeta):
                 return list(set.intersection(*map(set, sdocs_ids)))
 
     def find_similar_sentences(
-        self, proj_id: int, query: Union[str, Image], top_k: int = 10
+        self, query: SimSearchQuery
     ) -> List[SimSearchSentenceHit]:
-        FaissIndexService().index_exists(
-            proj_id=proj_id, index_type=IndexType.TEXT, raise_if_not_exists=True
-        )
-        # perform the simsearch and get the ids of the faiss sentence links
-        top_k_similar: Dict[int, float] = find_similar_sentences_apply_async(
-            proj_id=proj_id, query=query, top_k=top_k
-        ).get()
+        return self.sss.find_similar_sentences(query=query)
 
-        with self.sqls.db_session() as db:
-            faiss_links = {
-                link.id: link
-                for link in crud_faiss_sentence_link.read_by_ids(
-                    db=db, ids=list(top_k_similar.keys())
-                )
-            }
-
-            return [
-                SimSearchSentenceHit(
-                    sdoc_id=faiss_links[link_id].source_document_id,
-                    score=score,
-                    sentence_id=faiss_links[link_id].sentence_id,
-                )
-                for link_id, score in top_k_similar.items()
-            ]
-
-    def find_similar_images(
-        self, proj_id: int, query: Union[str, int], top_k: int = 10
-    ) -> List[SimSearchImageHit]:
-        FaissIndexService().index_exists(
-            proj_id=proj_id, index_type=IndexType.IMAGE, raise_if_not_exists=True
-        )
-
-        # perform the simsearch and get the sdoc ids with scores
-        top_k_similar: Dict[int, float] = find_similar_images_apply_async(
-            proj_id=proj_id, query=query, top_k=top_k
-        ).get()
-
-        return [
-            SimSearchImageHit(sdoc_id=sdoc_id, score=score)
-            for sdoc_id, score in top_k_similar.items()
-        ]
-
-    def find_similar_sentences_with_threshold(
-        self, proj_id: int, sentences: List[str], threshold: int = 10
-    ) -> List[SimSearchSentenceHit]:
-        FaissIndexService().index_exists(
-            proj_id=proj_id, index_type=IndexType.TEXT, raise_if_not_exists=True
-        )
-
-        # perform the simsearch and get the ids of the faiss sentence links
-        similar_sentences: Dict[
-            int, float
-        ] = find_similar_sentences_with_embedding_with_threshold_apply_async(
-            proj_id=proj_id,
-            query_sentences=sentences,
-            threshold=threshold / 100.0,
-        ).get()
-
-        with self.sqls.db_session() as db:
-            faiss_links = {
-                link.id: link
-                for link in crud_faiss_sentence_link.read_by_ids(
-                    db=db, ids=list(similar_sentences.keys())
-                )
-            }
-
-            return [
-                SimSearchSentenceHit(
-                    sdoc_id=faiss_links[link_id].source_document_id,
-                    score=score,
-                    sentence_id=faiss_links[link_id].sentence_id,
-                )
-                for link_id, score in similar_sentences.items()
-            ]
+    def find_similar_images(self, query: SimSearchQuery) -> List[SimSearchImageHit]:
+        return self.sss.find_similar_images(query=query)

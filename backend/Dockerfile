@@ -21,18 +21,19 @@ ENV TIKA_PATH=/tika
 RUN wget https://repo1.maven.org/maven2/org/apache/tika/tika-server/${TIKA_VERSION}/tika-server-${TIKA_VERSION}.jar -O /opt/tika.jar -q &&\
     wget https://repo1.maven.org/maven2/org/apache/tika/tika-server/${TIKA_VERSION}/tika-server-${TIKA_VERSION}.jar.md5 -O /opt/tika.jar.md5 -q
 
-# install micromamba for anaconda python package management 
+# install micromamba for anaconda python package management
 ARG MICROMAMBA_VERSION=0.27.0
 RUN wget -q https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION} -O mamba.tar.bz2 && tar -xvj -f mamba.tar.bz2 bin/micromamba && rm mamba.tar.bz2
 
 # create the 'dwts' python environment with all dependencies
 ENV MAMBA_ROOT_PREFIX=/opt
 COPY environment.yml .
+COPY requirements.txt /tmp/requirements.txt
 RUN micromamba create -f environment.yml -q -y &&\
     micromamba clean -a -f -q -y &&\
     find /opt/ -follow -type f -name '*.a' -delete &&\
     find /opt/ -follow -type f -name '*.js.map' -delete &&\
-    rm -r /root/.cache 
+    rm -r /root/.cache
 
 
 # These settings & scripts are needed to automatically start any CMD in the container with the python environment
@@ -47,7 +48,7 @@ SHELL ["/usr/local/bin/_dockerfile_shell.sh"]
 
 
 
-# set up python env variables 
+# set up python env variables
 ARG DWTS_ENV
 ENV DWTS_ENV=${DWTS_ENV} \
     PYTHONFAULTHANDLER=1 \

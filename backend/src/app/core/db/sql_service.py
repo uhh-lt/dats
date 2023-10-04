@@ -8,10 +8,11 @@ from sqlalchemy.engine import Engine
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
 """we import all ORM here so that SQLAlchemy knows about them to generate the SQL tables"""
-from sqlalchemy.orm import Session, sessionmaker
-
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.action import ActionORM
+
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.analysis_table import AnalysisTableORM
 
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -26,11 +27,6 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.faiss_sentence_source_document_link import (
-    FaissSentenceSourceDocumentLinkORM,
-)
-
-# noinspection PyUnresolvedReferences
 from app.core.data.orm.memo import MemoORM
 
 # noinspection PyUnresolvedReferences
@@ -38,6 +34,11 @@ from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.orm_base import ORMBase
 
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.preprocessing_job import PreprocessingJobORM
+
+# noinspection PyUnresolvedReferences
+from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
+
 # noinspection PyUnresolvedReferences
 from app.core.data.orm.project import ProjectORM, ProjectUserLinkTable
 
@@ -60,12 +61,13 @@ from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.span_text import SpanTextORM
 
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.analysis_table import AnalysisTableORM
+from app.core.data.orm.user import UserORM
 
 # noinspection PyUnresolvedReferences
-from app.core.data.orm.user import UserORM
+from app.core.data.orm.whiteboard import WhiteboardORM
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from sqlalchemy.orm import Session, sessionmaker
 
 
 class SQLService(metaclass=SingletonMeta):
@@ -83,10 +85,11 @@ class SQLService(metaclass=SingletonMeta):
             engine = create_engine(
                 db_uri,
                 pool_pre_ping=True,
-                echo=kwargs["echo"] if "echo" in kwargs else False,
+                pool_size=conf.postgres.pool.pool_size,
+                max_overflow=conf.postgres.pool.max_overflow,
+                echo=kwargs["echo"] if "echo" in kwargs else True,
             )
             logger.info("Successfully established connection to PostgresSQL!")
-
             cls.__engine: Engine = engine
             cls.session_maker = sessionmaker(
                 autocommit=False, autoflush=False, bind=engine
@@ -98,6 +101,9 @@ class SQLService(metaclass=SingletonMeta):
             msg = f"Cannot connect to PostgresSQL - Error '{e}'"
             logger.error(msg)
             raise SystemExit(msg)
+
+    def __del__(self):
+        self.__engine.dispose()
 
     def _create_database_and_tables(self, drop_if_exists: bool = False) -> None:
         logger.info("Setting up PostgresSQL DB and tables...")

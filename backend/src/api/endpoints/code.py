@@ -1,8 +1,5 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
 from api.dependencies import get_db_session
 from api.util import get_object_memos
 from app.core.data.crud.code import crud_code
@@ -10,6 +7,8 @@ from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/code")
 tags = ["code"]
@@ -104,7 +103,7 @@ async def add_memo(
     memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),
-        attached_object_id=db_obj.id,
+        attached_object_id=code_id,
         attached_object_type=AttachedObjectType.code
     )
 

@@ -8,13 +8,17 @@ export type PreProProjectStatus = {
    */
   project_id: number;
   /**
-   * Flag if Preprocessing is in progress.
+   * List of active PreprocessingJob UUIDs
    */
-  in_progress: boolean;
+  active_prepro_job_ids?: Array<string>;
   /**
-   * Number of SourceDocuments that are getting preprocessed.
+   * Number of active PreprocessingJobPayloads
    */
-  num_sdocs_in_progress: number;
+  num_active_prepro_job_payloads: number;
+  /**
+   * List of erroneous or aborted PreprocessingJobPayload UUIDs
+   */
+  erroneous_prepro_job_payload_ids: Array<string>;
   /**
    * Number of SourceDocuments preprocessing has finished.
    */

@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
-
 from app.util.color import get_next_color
+from pydantic import BaseModel, Field
 
 from .dto_base import UpdateDTOBase
 

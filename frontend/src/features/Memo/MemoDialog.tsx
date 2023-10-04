@@ -97,26 +97,39 @@ export default function MemoDialog() {
       {attachedObject.isSuccess && (memo.isSuccess || !memo.isLoading) && memoEventData && (
         <>
           {memoEventData.attachedObjectType === AttachedObjectType.CODE ? (
-            <MemoContentCode memo={memo.data} code={attachedObject.data as CodeRead} closeDialog={handleClose} />
+            <MemoContentCode
+              memo={memo.data}
+              code={attachedObject.data as CodeRead}
+              closeDialog={handleClose}
+              onMemoCreateSuccess={memoEventData.onCreateSuccess}
+            />
           ) : memoEventData.attachedObjectType === AttachedObjectType.SOURCE_DOCUMENT ? (
             <MemoContentSourceDocument
               memo={memo.data}
               sdoc={attachedObject.data as SourceDocumentRead}
               closeDialog={handleClose}
+              onMemoCreateSuccess={memoEventData.onCreateSuccess}
             />
           ) : memoEventData.attachedObjectType === AttachedObjectType.DOCUMENT_TAG ? (
-            <MemoContentTag memo={memo.data} tag={attachedObject.data as DocumentTagRead} closeDialog={handleClose} />
+            <MemoContentTag
+              memo={memo.data}
+              tag={attachedObject.data as DocumentTagRead}
+              closeDialog={handleClose}
+              onMemoCreateSuccess={memoEventData.onCreateSuccess}
+            />
           ) : memoEventData.attachedObjectType === AttachedObjectType.SPAN_ANNOTATION ? (
             <MemoContentSpanAnnotation
               memo={memo.data}
               spanAnnotation={attachedObject.data as SpanAnnotationReadResolved}
               closeDialog={handleClose}
+              onMemoCreateSuccess={memoEventData.onCreateSuccess}
             />
           ) : memoEventData.attachedObjectType === AttachedObjectType.BBOX_ANNOTATION ? (
             <MemoContentBboxAnnotation
               memo={memo.data}
               bboxAnnotation={attachedObject.data as BBoxAnnotationReadResolvedCode}
               closeDialog={handleClose}
+              onMemoCreateSuccess={memoEventData.onCreateSuccess}
             />
           ) : (
             <div>This memo type is not supported!</div>

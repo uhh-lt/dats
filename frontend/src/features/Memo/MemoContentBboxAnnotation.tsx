@@ -1,13 +1,14 @@
-import React from "react";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { BBoxAnnotationReadResolvedCode, MemoRead } from "../../api/openapi";
-import MemoHooks from "../../api/MemoHooks";
-import { MemoForm } from "./MemoForm";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
+import MemoHooks from "../../api/MemoHooks";
+import { BBoxAnnotationReadResolvedCode, MemoRead } from "../../api/openapi";
 import { useAuth } from "../../auth/AuthProvider";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
+import { MemoCreateSuccessHandler } from "./MemoAPI";
+import { MemoForm } from "./MemoForm";
 
 export interface MemoContentProps {
   memo: MemoRead | undefined;
+  onMemoCreateSuccess?: MemoCreateSuccessHandler;
   closeDialog: () => void;
 }
 
@@ -19,6 +20,7 @@ export function MemoContentBboxAnnotation({
   bboxAnnotation,
   memo,
   closeDialog,
+  onMemoCreateSuccess,
 }: MemoContentBboxAnnotationProps & MemoContentProps) {
   const { user } = useAuth();
 
@@ -62,11 +64,12 @@ export function MemoContentBboxAnnotation({
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             SnackbarAPI.openSnackbar({
               text: `Created memo for bboxAnnotation ${bboxAnnotation.id}`,
               severity: "success",
             });
+            if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
         }

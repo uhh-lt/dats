@@ -78,8 +78,6 @@ async def reply_to(
 ) -> str:
     # todo: load_feedback should raise exception, if it does not exist!
     feedback: Optional[FeedbackRead] = RedisService().load_feedback(key=feedback_id)
-    if feedback is None:
-        return f"Feedback with id {feedback_id} not found."
 
     user = crud_user.read(db=db, id=feedback.user_id)
 

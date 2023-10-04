@@ -559,9 +559,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "title": "Response Project-Upload Project Sdoc", "type": "string" } }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -1980,6 +1978,35 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/MemoRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/doctag/{tag_id}/sdocs": {
+      "get": {
+        "tags": ["documentTag"],
+        "summary": "Returns all SourceDocuments attached to the Tag with the given ID",
+        "description": "Returns all SourceDocuments attached to the Tag with the given ID if it exists.",
+        "operationId": "get_sdocs_by_tag_id",
+        "parameters": [
+          { "required": true, "schema": { "title": "Tag Id", "type": "integer" }, "name": "tag_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Documenttag-Get Sdocs By Tag Id",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentRead" }
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -3714,21 +3741,10 @@
         "summary": "Returns similar sentences according to a textual or visual query.",
         "description": "Returns similar sentences according to a textual or visual query.",
         "operationId": "find_similar_sentences",
-        "parameters": [
-          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
-          {
-            "required": true,
-            "schema": { "title": "Query", "anyOf": [{ "type": "string" }, { "type": "integer" }] },
-            "name": "query",
-            "in": "query"
-          },
-          {
-            "required": false,
-            "schema": { "title": "Top K", "type": "integer", "default": 10 },
-            "name": "top_k",
-            "in": "query"
-          }
-        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3755,21 +3771,10 @@
         "summary": "Returns similar images according to a textual or visual query.",
         "description": "Returns similar images according to a textual or visual query.",
         "operationId": "find_similar_images",
-        "parameters": [
-          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
-          {
-            "required": true,
-            "schema": { "title": "Query", "anyOf": [{ "type": "string" }, { "type": "integer" }] },
-            "name": "query",
-            "in": "query"
-          },
-          {
-            "required": false,
-            "schema": { "title": "Top K", "type": "integer", "default": 10 },
-            "name": "top_k",
-            "in": "query"
-          }
-        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -3779,47 +3784,6 @@
                   "title": "Response Search-Find Similar Images",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/SimSearchImageHit" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/search/simsearch/sentences_threshold": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns similar sentences according to a averaged representation of multiple query sentences.",
-        "description": "Returns similar sentences according to a averaged representation of multiple query sentences.",
-        "operationId": "find_similar_sentences_with_threshold",
-        "parameters": [
-          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "query" },
-          {
-            "required": false,
-            "schema": { "title": "Threshold", "type": "integer", "default": 10 },
-            "name": "threshold",
-            "in": "query"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "title": "Sentences", "type": "array", "items": { "type": "string" } } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Search-Find Similar Sentences With Threshold",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SimSearchSentenceHit" }
                 }
               }
             }
@@ -4148,6 +4112,47 @@
         }
       }
     },
+    "/analysis/annotation_occurrences": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns all SourceDocument IDs that match the query parameters.",
+        "description": "Returns all SourceDocument Ids that match the query parameters.",
+        "operationId": "annotation_occurrences",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          { "required": true, "schema": { "title": "Code Id", "type": "integer" }, "name": "code_id", "in": "query" }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "title": "User Ids", "type": "array", "items": { "type": "integer" } } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Annotation Occurrences",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnotationOccurrence" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/analysis/timeline_analysis": {
       "post": {
         "tags": ["analysis"],
@@ -4163,7 +4168,7 @@
           },
           {
             "required": true,
-            "schema": { "title": "Threshold", "type": "integer" },
+            "schema": { "title": "Threshold", "type": "number" },
             "name": "threshold",
             "in": "query"
           },
@@ -4195,6 +4200,92 @@
                   "title": "Response Analysis-Timeline Analysis",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/TimelineAnalysisResult" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prepro/{prepro_job_id}": {
+      "get": {
+        "tags": ["prepro"],
+        "summary": "Returns the PreprocessingJob for the given ID",
+        "description": "Returns the PreprocessingJob for the given ID if it exists",
+        "operationId": "get_prepro_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Prepro Job Id", "type": "string" },
+            "name": "prepro_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prepro/{prepro_job_id}/abort": {
+      "patch": {
+        "tags": ["prepro"],
+        "summary": "Aborts the PreprocessingJob for the given ID",
+        "description": "Aborts the PreprocessingJob for the given ID if it exists",
+        "operationId": "abort_prepro_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Prepro Job Id", "type": "string" },
+            "name": "prepro_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PreprocessingJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/prepro/project/{project_id}": {
+      "get": {
+        "tags": ["prepro"],
+        "summary": "Returns all PreprocessingJobs for the given project ID",
+        "description": "Returns all PreprocessingJobs for the given project ID if it exists",
+        "operationId": "get_all_prepro_jobs",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Prepro-Get All Prepro Jobs",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/PreprocessingJobRead" }
                 }
               }
             }
@@ -4491,6 +4582,141 @@
           }
         }
       }
+    },
+    "/whiteboard": {
+      "put": {
+        "tags": ["whiteboard"],
+        "summary": "Creates an Whiteboard",
+        "description": "Creates an Whiteboard",
+        "operationId": "create",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/whiteboard/{whiteboard_id}": {
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns the Whiteboard",
+        "description": "Returns the Whiteboard with the given ID if it exists",
+        "operationId": "get_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Whiteboard Id", "type": "integer" },
+            "name": "whiteboard_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["whiteboard"],
+        "summary": "Removes the Whiteboard",
+        "description": "Removes the Whiteboard with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Whiteboard Id", "type": "integer" },
+            "name": "whiteboard_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["whiteboard"],
+        "summary": "Updates the Whiteboard",
+        "description": "Updates the Whiteboard with the given ID if it exists",
+        "operationId": "update_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Whiteboard Id", "type": "integer" },
+            "name": "whiteboard_id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardUpdate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/whiteboard/project/{project_id}/user/{user_id}": {
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns Whiteboards of the Project of the User",
+        "description": "Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
+        "operationId": "get_by_project_and_user",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Whiteboard-Get By Project And User",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WhiteboardRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4699,6 +4925,32 @@
           }
         }
       },
+      "AnnotationOccurrence": {
+        "title": "AnnotationOccurrence",
+        "required": ["annotation", "code", "sdoc", "text"],
+        "type": "object",
+        "properties": {
+          "annotation": {
+            "title": "Annotation",
+            "anyOf": [
+              { "$ref": "#/components/schemas/SpanAnnotationRead" },
+              { "$ref": "#/components/schemas/BBoxAnnotationRead" }
+            ],
+            "description": "The Annotation"
+          },
+          "code": {
+            "title": "Code",
+            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
+            "description": "The occuring Code."
+          },
+          "sdoc": {
+            "title": "Sdoc",
+            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "description": "The SourceDocument where the Code occurs."
+          },
+          "text": { "title": "Text", "type": "string", "description": "The Tet of the Annotation" }
+        }
+      },
       "AttachedObjectType": {
         "title": "AttachedObjectType",
         "enum": [
@@ -4865,6 +5117,12 @@
           "code_id": { "title": "Code Id", "type": "integer", "description": "Code the BBoxAnnotation refers to" }
         }
       },
+      "BackgroundJobStatus": {
+        "title": "BackgroundJobStatus",
+        "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
+        "type": "string",
+        "description": "An enumeration."
+      },
       "Body_analysis-code_frequencies": {
         "title": "Body_analysis-code_frequencies",
         "required": ["user_ids", "code_ids"],
@@ -4876,11 +5134,11 @@
       },
       "Body_project-upload_project_sdoc": {
         "title": "Body_project-upload_project_sdoc",
-        "required": ["doc_files"],
+        "required": ["uploaded_files"],
         "type": "object",
         "properties": {
-          "doc_files": {
-            "title": "Doc Files",
+          "uploaded_files": {
+            "title": "Uploaded Files",
             "type": "array",
             "items": { "type": "string", "format": "binary" },
             "description": "File(s) that get uploaded and represented by the SourceDocument(s)"
@@ -5017,15 +5275,15 @@
         "type": "object",
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/CrawlerJobStatus" }],
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
             "description": "Status of the CrawlerJob",
-            "default": "INIT"
+            "default": "Waiting"
           },
           "id": { "title": "Id", "type": "string", "description": "ID of the CrawlerJob" },
           "parameters": {
             "title": "Parameters",
             "allOf": [{ "$ref": "#/components/schemas/CrawlerJobParameters" }],
-            "description": "The parameters of the export job that defines what to export!"
+            "description": "The parameters of the crawler job that defines what to crawl!"
           },
           "output_dir": {
             "title": "Output Dir",
@@ -5059,12 +5317,6 @@
             "format": "date-time"
           }
         }
-      },
-      "CrawlerJobStatus": {
-        "title": "CrawlerJobStatus",
-        "enum": ["INIT", "IN PROGRESS", "DONE", "FAILED"],
-        "type": "string",
-        "description": "An enumeration."
       },
       "DocType": {
         "title": "DocType",
@@ -5183,9 +5435,9 @@
         "type": "object",
         "properties": {
           "status": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobStatus" }],
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
             "description": "Status of the ExportJob",
-            "default": "init"
+            "default": "Waiting"
           },
           "results_url": {
             "title": "Results Url",
@@ -5205,12 +5457,6 @@
             "format": "date-time"
           }
         }
-      },
-      "ExportJobStatus": {
-        "title": "ExportJobStatus",
-        "enum": ["init", "in_progress", "done", "failed"],
-        "type": "string",
-        "description": "An enumeration."
       },
       "ExportJobType": {
         "title": "ExportJobType",
@@ -5507,7 +5753,13 @@
       },
       "PreProProjectStatus": {
         "title": "PreProProjectStatus",
-        "required": ["project_id", "in_progress", "num_sdocs_in_progress", "num_sdocs_finished", "num_sdocs_total"],
+        "required": [
+          "project_id",
+          "num_active_prepro_job_payloads",
+          "erroneous_prepro_job_payload_ids",
+          "num_sdocs_finished",
+          "num_sdocs_total"
+        ],
         "type": "object",
         "properties": {
           "project_id": {
@@ -5515,15 +5767,22 @@
             "type": "integer",
             "description": "Project ID this PreProProjectStatus refers to."
           },
-          "in_progress": {
-            "title": "In Progress",
-            "type": "boolean",
-            "description": "Flag if Preprocessing is in progress."
+          "active_prepro_job_ids": {
+            "title": "Active Prepro Job Ids",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of active PreprocessingJob UUIDs"
           },
-          "num_sdocs_in_progress": {
-            "title": "Num Sdocs In Progress",
+          "num_active_prepro_job_payloads": {
+            "title": "Num Active Prepro Job Payloads",
             "type": "integer",
-            "description": "Number of SourceDocuments that are getting preprocessed."
+            "description": "Number of active PreprocessingJobPayloads"
+          },
+          "erroneous_prepro_job_payload_ids": {
+            "title": "Erroneous Prepro Job Payload Ids",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of erroneous or aborted PreprocessingJobPayload UUIDs"
           },
           "num_sdocs_finished": {
             "title": "Num Sdocs Finished",
@@ -5534,6 +5793,86 @@
             "title": "Num Sdocs Total",
             "type": "integer",
             "description": "Number of total SourceDocuments."
+          }
+        }
+      },
+      "PreprocessingJobPayloadRead": {
+        "title": "PreprocessingJobPayloadRead",
+        "required": ["id", "prepro_job_id", "project_id", "filename", "mime_type", "doc_type"],
+        "type": "object",
+        "properties": {
+          "id": { "title": "Id", "type": "string", "description": "ID of the PreprocessingJobPayload" },
+          "prepro_job_id": {
+            "title": "Prepro Job Id",
+            "type": "string",
+            "description": "UUID of the PreprocessingJob this payload belongs to."
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "ID of the Project of the PreprocessingJobPayload"
+          },
+          "source_document_id": {
+            "title": "Source Document Id",
+            "type": "integer",
+            "description": "ID of the SourceDocument that was created from the payload."
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "description": "The current status of the payload.",
+            "default": "Waiting"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string",
+            "description": "The filename of the document to be preprocessed."
+          },
+          "mime_type": { "title": "Mime Type", "type": "string", "description": "The MIME type of the payload file." },
+          "doc_type": {
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "description": "The DocType of the payload file."
+          },
+          "current_pipeline_step": {
+            "title": "Current Pipeline Step",
+            "type": "string",
+            "description": "The current step in the preprocessing pipeline."
+          },
+          "error_message": {
+            "title": "Error Message",
+            "type": "string",
+            "description": "The error message if the payload failed."
+          }
+        }
+      },
+      "PreprocessingJobRead": {
+        "title": "PreprocessingJobRead",
+        "required": ["id", "project_id", "created", "updated", "payloads"],
+        "type": "object",
+        "properties": {
+          "id": { "title": "Id", "type": "string", "description": "UUID of the PreprocessingJob" },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "description": "Status of the PreprocessingJob",
+            "default": "Waiting"
+          },
+          "project_id": { "title": "Project Id", "type": "integer", "description": "The ID of the Project." },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the PreprocessingJob",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the PreprocessingJob",
+            "format": "date-time"
+          },
+          "payloads": {
+            "title": "Payloads",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PreprocessingJobPayloadRead" },
+            "description": "Payloads of the PreprocessingJobs, i.e., documents to be preprocessed and imported to the project within this PreprocessingJob"
           }
         }
       },
@@ -5578,39 +5917,7 @@
       },
       "SDocStatus": {
         "title": "SDocStatus",
-        "enum": [
-          "undefined_or_erroneous",
-          "import_text_document",
-          "import_image_document",
-          "import_audio_document",
-          "import_video_document",
-          "convert_to_webp_and_generate_thumbnails",
-          "convert_mediafile_to_uncompressed_audio",
-          "create_sdoc_links_from_audio",
-          "generate_word_level_transcriptions",
-          "generate_webp_thumbnails_from_audio",
-          "create_transcript_file",
-          "create_pptd_from_ppad",
-          "create_sdoc_links_from_text",
-          "generate_webp_thumbnails_from_video",
-          "create_ppad_from_ppvd",
-          "clean_html",
-          "extract_text_from_html_and_create_source_mapping",
-          "detect_language",
-          "generate_image_captions",
-          "create_pptd_from_caption",
-          "generate_span_annotations",
-          "generate_bbox_annotations",
-          "add_custom_html_tags",
-          "create_sdoc_links_from_html",
-          "store_metadata_in_db",
-          "store_span_annotations_in_db",
-          "store_bbox_annotations_in_db",
-          "store_document_in_elasticsearch",
-          "index_image_document_in_faiss",
-          "index_text_document_in_faiss",
-          "finished"
-        ],
+        "enum": ["unfinished_or_erroneous", "finished"],
         "type": "string",
         "description": "An enumeration."
       },
@@ -5692,6 +5999,35 @@
             "description": "The ID of the SourceDocument similar to the query."
           },
           "score": { "title": "Score", "type": "number", "description": "The similarity score." }
+        }
+      },
+      "SimSearchQuery": {
+        "title": "SimSearchQuery",
+        "required": ["proj_id", "query"],
+        "type": "object",
+        "properties": {
+          "proj_id": {
+            "title": "Proj Id",
+            "type": "integer",
+            "description": "The ID of the Project the SourceDocuments have to belong to."
+          },
+          "query": {
+            "title": "Query",
+            "anyOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }, { "type": "integer" }],
+            "description": "The query term. This can be either a single string, a list of strings for which the average embedding gets computed, or an integer which is interpreted as the SDoc ID of an Image."
+          },
+          "top_k": {
+            "title": "Top K",
+            "type": "integer",
+            "description": "The number of results to return.",
+            "default": 10
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number",
+            "description": "The minimum distance to use for the sim search.",
+            "default": 0
+          }
         }
       },
       "SimSearchSentenceHit": {
@@ -6475,12 +6811,7 @@
           "first_name": { "title": "First Name", "type": "string", "description": "First name of the User" },
           "last_name": { "title": "Last Name", "type": "string", "description": "Last name of the User" },
           "id": { "title": "Id", "type": "integer", "description": "ID of the User" },
-          "password": {
-            "title": "Password",
-            "type": "string",
-            "description": "Hashed password of the User",
-            "exclude": true
-          },
+          "password": { "title": "Password", "type": "string", "description": "Hashed password of the User" },
           "created": {
             "title": "Created",
             "type": "string",
@@ -6517,6 +6848,58 @@
           },
           "msg": { "title": "Message", "type": "string" },
           "type": { "title": "Error Type", "type": "string" }
+        }
+      },
+      "WhiteboardCreate": {
+        "title": "WhiteboardCreate",
+        "required": ["title", "content", "project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the Whiteboard" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the Whiteboard" },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the Whiteboard belongs to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the Whiteboard belongs to" }
+        }
+      },
+      "WhiteboardRead": {
+        "title": "WhiteboardRead",
+        "required": ["title", "content", "id", "project_id", "user_id", "created", "updated"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the Whiteboard" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the Whiteboard" },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the Whiteboard" },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the Whiteboard belongs to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the Whiteboard belongs to" },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the Whiteboard",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the Whiteboard",
+            "format": "date-time"
+          }
+        }
+      },
+      "WhiteboardUpdate": {
+        "title": "WhiteboardUpdate",
+        "required": ["title", "content"],
+        "type": "object",
+        "properties": {
+          "title": { "title": "Title", "type": "string", "description": "Title of the Whiteboard" },
+          "content": { "title": "Content", "type": "string", "description": "Content of the Whiteboard" }
         }
       },
       "SourceDocumentReadAction": {
@@ -6591,39 +6974,7 @@
           "SDocStatus": {
             "title": "SDocStatus",
             "description": "An enumeration.",
-            "enum": [
-              "undefined_or_erroneous",
-              "import_text_document",
-              "import_image_document",
-              "import_audio_document",
-              "import_video_document",
-              "convert_to_webp_and_generate_thumbnails",
-              "convert_mediafile_to_uncompressed_audio",
-              "create_sdoc_links_from_audio",
-              "generate_word_level_transcriptions",
-              "generate_webp_thumbnails_from_audio",
-              "create_transcript_file",
-              "create_pptd_from_ppad",
-              "create_sdoc_links_from_text",
-              "generate_webp_thumbnails_from_video",
-              "create_ppad_from_ppvd",
-              "clean_html",
-              "extract_text_from_html_and_create_source_mapping",
-              "detect_language",
-              "generate_image_captions",
-              "create_pptd_from_caption",
-              "generate_span_annotations",
-              "generate_bbox_annotations",
-              "add_custom_html_tags",
-              "create_sdoc_links_from_html",
-              "store_metadata_in_db",
-              "store_span_annotations_in_db",
-              "store_bbox_annotations_in_db",
-              "store_document_in_elasticsearch",
-              "index_image_document_in_faiss",
-              "index_text_document_in_faiss",
-              "finished"
-            ],
+            "enum": ["unfinished_or_erroneous", "finished"],
             "type": "string"
           },
           "DocumentTagRead": {
@@ -6718,12 +7069,7 @@
               "first_name": { "title": "First Name", "description": "First name of the User", "type": "string" },
               "last_name": { "title": "Last Name", "description": "Last name of the User", "type": "string" },
               "id": { "title": "Id", "description": "ID of the User", "type": "integer" },
-              "password": {
-                "title": "Password",
-                "description": "Hashed password of the User",
-                "exclude": true,
-                "type": "string"
-              },
+              "password": { "title": "Password", "description": "Hashed password of the User", "type": "string" },
               "created": {
                 "title": "Created",
                 "description": "Created timestamp of the User",

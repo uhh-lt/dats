@@ -7,6 +7,7 @@ import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentDocumentTagMultiLink } from "../models/SourceDocumentDocumentTagMultiLink";
+import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -203,6 +204,25 @@ export class DocumentTagService {
       path: {
         tag_id: tagId,
         user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all SourceDocuments attached to the Tag with the given ID
+   * Returns all SourceDocuments attached to the Tag with the given ID if it exists.
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static getSdocsByTagId({ tagId }: { tagId: number }): CancelablePromise<Array<SourceDocumentRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/doctag/{tag_id}/sdocs",
+      path: {
+        tag_id: tagId,
       },
       errors: {
         422: `Validation Error`,

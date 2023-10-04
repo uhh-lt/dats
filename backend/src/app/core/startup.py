@@ -56,6 +56,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
             reset_database=reset_data,
             reset_repo=reset_data,
             reset_elasticsearch=reset_data,
+            reset_weaviate=reset_data,
         )
         if not startup_in_progress:
             __create_system_user__()
@@ -79,11 +80,12 @@ def __init_services__(
     reset_database: bool = False,
     reset_repo: bool = False,
     reset_elasticsearch: bool = False,
+    reset_weaviate: bool = False,
 ) -> None:
     # import celery workers to configure
     # import and init RepoService
+    from app.celery.celery_worker import celery_worker
     from app.core.data.repo.repo_service import RepoService
-    from app.docprepro.celery.celery_worker import celery_worker
 
     repos = RepoService()
     if create_root_repo_directory_structure:
@@ -101,7 +103,8 @@ def __init_services__(
     # import and init RedisService
     from app.core.db.redis_service import RedisService
 
-    RedisService()
+    RedisService(flush_all_clients=reset_database)
+
     # import and init AnalysisService
     from app.core.analysis.analysis_service import AnalysisService
 
@@ -110,14 +113,21 @@ def __init_services__(
     from app.core.mail.mail_service import MailService
 
     MailService()
+    # import and init RayModelService
+    from app.preprocessing.ray_model_service import RayModelService
+
+    RayModelService()
+    # import and init SimSearchService
+    from app.core.search.simsearch_service import SimSearchService
+
+    SimSearchService(flush=reset_database)
 
 
 def __create_system_user__() -> None:
-    from pydantic import EmailStr
-
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
+    from pydantic import EmailStr
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):

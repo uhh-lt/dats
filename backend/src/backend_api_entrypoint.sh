@@ -9,6 +9,9 @@ API_PRODUCTION_WORKERS=${API_PRODUCTION_WORKERS:-10}
 # assert that ES is healthy!
 ./test_es.sh
 
+# assert ray is reachable
+./test_ray.sh
+
 if [ "${API_PRODUCTION_MODE}" -ge 1 ]; then
   # start api in production mode without hot reload and only X worker
   uvicorn --log-level "${LOG_LEVEL}" --port "${API_PORT}" --host "0.0.0.0" --workers "${API_PRODUCTION_WORKERS}" main:app
@@ -16,4 +19,3 @@ else
   # start api in dev mode with hot reload and only 1 worker
   uvicorn --reload --log-level "${LOG_LEVEL}" --port "${API_PORT}" --host "0.0.0.0" main:app
 fi
-

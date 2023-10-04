@@ -2,14 +2,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { ExportJobParameters } from "./ExportJobParameters";
-import type { ExportJobStatus } from "./ExportJobStatus";
 
 export type ExportJobRead = {
   /**
    * Status of the ExportJob
    */
-  status?: ExportJobStatus;
+  status?: BackgroundJobStatus;
   /**
    * URL to download the results when done.
    */

@@ -2,20 +2,20 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { CrawlerJobParameters } from "./CrawlerJobParameters";
-import type { CrawlerJobStatus } from "./CrawlerJobStatus";
 
 export type CrawlerJobRead = {
   /**
    * Status of the CrawlerJob
    */
-  status?: CrawlerJobStatus;
+  status?: BackgroundJobStatus;
   /**
    * ID of the CrawlerJob
    */
   id: string;
   /**
-   * The parameters of the export job that defines what to export!
+   * The parameters of the crawler job that defines what to crawl!
    */
   parameters: CrawlerJobParameters;
   /**

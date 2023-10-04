@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-cd frontend || exit
-npm run lint
+
+NUM_FRONTEND_CHANGE=$(echo $(git diff --cached) | grep -c 'frontend/' || return 0)
+
+if [ $NUM_FRONTEND_CHANGE  -ge 1 ]; then
+  cd frontend || exit
+  npm run lint
+else
+  echo "Skipping frontend linting!"
+fi

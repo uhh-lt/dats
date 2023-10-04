@@ -1,19 +1,11 @@
 from datetime import datetime
-from enum import Enum
 from typing import List, Optional
 
+from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.dto.dto_base import UpdateDTOBase
 from pydantic import BaseModel, Field
 
-from app.core.data.dto.dto_base import UpdateDTOBase
-
 # TODO: unify with export job and extract duplicate code to utils!
-
-
-class CrawlerJobStatus(str, Enum):
-    INIT = "INIT"
-    IN_PROGRESS = "IN PROGRESS"
-    DONE = "DONE"
-    FAILED = "FAILED"
 
 
 class CrawlerJobParameters(BaseModel):
@@ -25,15 +17,15 @@ class CrawlerJobParameters(BaseModel):
 
 # Properties shared across all DTOs
 class CrawlerJobBaseDTO(BaseModel):
-    status: CrawlerJobStatus = Field(
-        default=CrawlerJobStatus.INIT, description="Status of the CrawlerJob"
+    status: BackgroundJobStatus = Field(
+        default=BackgroundJobStatus.WAITING, description="Status of the CrawlerJob"
     )
 
 
 # Properties to create
 class CrawlerJobCreate(CrawlerJobBaseDTO):
     parameters: CrawlerJobParameters = Field(
-        description="The parameters of the export job that defines what to export!"
+        description="The parameters of the crawler job that defines what to crawl!"
     )
     output_dir: str = Field(
         description="Internal temporary output directory for the crawled data."
@@ -51,7 +43,7 @@ class CrawlerJobCreate(CrawlerJobBaseDTO):
 
 # Properties to update
 class CrawlerJobUpdate(CrawlerJobBaseDTO, UpdateDTOBase):
-    status: Optional[CrawlerJobStatus] = Field(
+    status: Optional[BackgroundJobStatus] = Field(
         default=None, description="Status of the CrawlerJob"
     )
     crawled_data_zip_path: Optional[str] = Field(
@@ -64,7 +56,7 @@ class CrawlerJobUpdate(CrawlerJobBaseDTO, UpdateDTOBase):
 class CrawlerJobRead(CrawlerJobBaseDTO):
     id: str = Field(description="ID of the CrawlerJob")
     parameters: CrawlerJobParameters = Field(
-        description="The parameters of the export job that defines what to export!"
+        description="The parameters of the crawler job that defines what to crawl!"
     )
     output_dir: str = Field(
         description="Internal temporary output directory for the crawled data."

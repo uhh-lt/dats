@@ -37,7 +37,11 @@ class WritePipeline:
         # write json
         json_output_dir.mkdir(parents=True, exist_ok=True)
         with open(json_output_dir / f"{item['file_name']}.json", "w") as f:
-            data = {key: value for key, value in item.items() if key != "output_dir" and key != "file_name"}
+            data = {
+                key: value
+                for key, value in item.items()
+                if key != "output_dir" and key != "file_name"
+            }
             json.dump(data, f)
 
         # write txt

@@ -4,22 +4,19 @@ import zipfile
 from pathlib import Path
 from typing import List, Optional
 
-from loguru import logger
-
-from app.core.data.crawler.crawler_settings import get_settings
-from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
 from app.core.data.crud.project import crud_project
+from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.crawler_job import (
     CrawlerJobCreate,
     CrawlerJobParameters,
     CrawlerJobRead,
-    CrawlerJobStatus,
     CrawlerJobUpdate,
 )
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
+from loguru import logger
 
 
 class NoDataToCrawlError(Exception):
@@ -28,8 +25,8 @@ class NoDataToCrawlError(Exception):
 
 
 class CrawlerJobPreparationError(Exception):
-    def __init__(self) -> None:
-        super().__init__("Cannot prepare and create the CrawlerJob!")
+    def __init__(self, cause: Exception) -> None:
+        super().__init__(f"Cannot prepare and create the CrawlerJob! {e}")
 
 
 class CrawlerJobAlreadyStartedOrDoneError(Exception):
@@ -40,8 +37,8 @@ class CrawlerJobAlreadyStartedOrDoneError(Exception):
 
 
 class NoSuchCrawlerJobError(Exception):
-    def __init__(self, crawler_job_id: str) -> None:
-        super().__init__(f"There exists not CrawlerJob with ID {crawler_job_id}")
+    def __init__(self, crawler_job_id: str, cause: Exception) -> None:
+        super().__init__(f"There exists not CrawlerJob with ID {crawler_job_id}! {e}")
 
 
 class UnknownCrawlerJobError(Exception):
@@ -171,16 +168,18 @@ class CrawlerService(metaclass=SingletonMeta):
             videos_store_path=str(temp_videos_store_path),
             audios_store_path=str(temp_audios_store_path),
         )
-        cj_read = self.redis.store_crawler_job(crawler_job=cj_create)
-        if cj_read is None:
-            raise CrawlerJobPreparationError()
+        try:
+            cj_read = self.redis.store_crawler_job(crawler_job=cj_create)
+        except Exception as e:
+            raise CrawlerJobPreparationError(cause=e)
 
         return cj_read
 
     def get_crawler_job(self, crawler_job_id: str) -> CrawlerJobRead:
-        cj = self.redis.load_crawler_job(key=crawler_job_id)
-        if cj is None:
-            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id)
+        try:
+            cj = self.redis.load_crawler_job(key=crawler_job_id)
+        except Exception as e:
+            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id, cause=e)
 
         return cj
 
@@ -190,15 +189,16 @@ class CrawlerService(metaclass=SingletonMeta):
     def _update_crawler_job(
         self,
         crawler_job_id: str,
-        status: Optional[CrawlerJobStatus] = None,
+        status: Optional[BackgroundJobStatus] = None,
         crawled_data_zip_path: Optional[str] = None,
     ) -> CrawlerJobRead:
         update = CrawlerJobUpdate(
             status=status, crawled_data_zip_path=crawled_data_zip_path
         )
-        cj = self.redis.update_crawler_job(key=crawler_job_id, update=update)
-        if cj is None:
-            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id)
+        try:
+            cj = self.redis.update_crawler_job(key=crawler_job_id, update=update)
+        except Exception as e:
+            raise NoSuchCrawlerJobError(crawler_job_id=crawler_job_id, cause=e)
         return cj
 
     def start_crawler_job_sync(self, crawler_job_id: str) -> Path:
@@ -226,16 +226,19 @@ class CrawlerService(metaclass=SingletonMeta):
                 f"Cannot finish Scrapy Crawler Script for CrawlerJob {cj.id}: {e}"
             )
             self._update_crawler_job(
-                status=CrawlerJobStatus.FAILED,
+                status=BackgroundJobStatus.ERROR,
                 crawler_job_id=crawler_job_id,
             )
             raise e
 
         cj = self.get_crawler_job(crawler_job_id=crawler_job_id)
-        if not cj.status == CrawlerJobStatus.DONE or cj.crawled_data_zip_path is None:
+        if (
+            not cj.status == BackgroundJobStatus.FINISHED
+            or cj.crawled_data_zip_path is None
+        ):
             logger.error(f"Cannot finish CrawlerJob {cj.id} for unkown reasons!")
             self._update_crawler_job(
-                status=CrawlerJobStatus.FAILED,
+                status=BackgroundJobStatus.ERROR,
                 crawler_job_id=crawler_job_id,
             )
             raise UnknownCrawlerJobError(crawler_job_id=crawler_job_id)

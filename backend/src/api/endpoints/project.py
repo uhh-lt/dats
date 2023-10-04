@@ -1,23 +1,20 @@
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
-from sqlalchemy.orm import Session
-
 from api.dependencies import get_db_session, skip_limit_params
 from api.util import get_object_memos
 from app.core.data.crud.action import crud_action
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.doc_type import mime_type_supported
-from app.core.data.dto import ProjectCreate, ProjectRead, ProjectUpdate
+from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
+from app.core.data.dto.preprocessing_job import PreprocessingJobRead
+from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
     SourceDocumentRead,
@@ -25,7 +22,9 @@ from app.core.data.dto.source_document import (
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.docprepro.util import preprocess_uploaded_file
+from app.preprocessing.preprocessing_service import PreprocessingService
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/project")
 tags = ["project"]
@@ -46,7 +45,7 @@ async def create_new_project(
     try:
         # create the ES Indices
         ElasticSearchService().create_project_indices(proj_id=db_obj.id)
-    except Exception as e:
+    except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,
@@ -118,7 +117,7 @@ async def delete_project(
     try:
         # remove the ES Indices # Flo Do we want this?!
         ElasticSearchService().remove_project_indices(proj_id=db_obj.id)
-    except Exception as e:
+    except Exception:
         crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,
@@ -138,7 +137,7 @@ async def delete_project(
 async def get_project_sdocs(
     *,
     proj_id: int,
-    only_finished: Optional[bool] = True,
+    only_finished: bool = True,
     db: Session = Depends(get_db_session),
     skip_limit: Dict[str, str] = Depends(skip_limit_params),
 ) -> PaginatedSourceDocumentReads:
@@ -169,7 +168,7 @@ async def get_project_sdocs(
 @router.put(
     "/{proj_id}/sdoc",
     tags=tags,
-    response_model=str,
+    response_model=Optional[PreprocessingJobRead],
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
 )
@@ -179,23 +178,17 @@ async def get_project_sdocs(
 async def upload_project_sdoc(
     *,
     proj_id: int,
-    doc_files: List[UploadFile] = File(
+    uploaded_files: List[UploadFile] = File(
         ...,
         description=(
             "File(s) that get uploaded and " "represented by the SourceDocument(s)"
         ),
     ),
-) -> str:
-    for doc_file in doc_files:
-        if not mime_type_supported(mime_type=doc_file.content_type):
-            raise HTTPException(
-                detail=f"Document with MIME type {doc_file.content_type} not supported!",
-                status_code=406,
-            )
-        preprocess_uploaded_file(proj_id=proj_id, uploaded_file=doc_file)
-
-    # TODO Flo: How to notify user or system when done?
-    return f"Upload and preprocessing of {len(doc_files)} Document(s) started in the background!"
+) -> Optional[PreprocessingJobRead]:
+    pps: PreprocessingService = PreprocessingService()
+    return pps.prepare_and_start_preprocessing_job_async(
+        proj_id=proj_id, uploaded_files=uploaded_files
+    )
 
 
 @router.delete(
@@ -496,11 +489,14 @@ async def resolve_filename(
     db: Session = Depends(get_db_session),
     proj_id: int,
     filename: str,
-    only_finished: Optional[bool] = True,
+    only_finished: bool = True,
 ) -> Optional[int]:
-    return crud_sdoc.filename2id(
+    sdoc = crud_sdoc.read_by_filename(
         db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
     )
+    if sdoc is not None:
+        return sdoc.id
+    return None
 
 
 @router.get(

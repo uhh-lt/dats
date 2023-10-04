@@ -14,7 +14,7 @@ import ProjectDetails from "./ProjectDetails";
 import ProjectDocuments from "./ProjectDocuments";
 import ProjectTags from "./ProjectTags";
 import ProjectUsers from "./ProjectUsers";
-import ProjectBackgroundTasks from "./ProjectBackgroundTasks";
+import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
 
 function ProjectUpdate() {
   const { user } = useAuth();
@@ -52,7 +52,7 @@ function ProjectUpdate() {
   return (
     <Card className="myFlexContainer h100">
       <TabContext value={tab}>
-        <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
+        <AppBar position="relative" color="primary" className="myFlexFitContentContainer">
           <Stack direction="row" sx={{ px: 2, pt: 2 }}>
             <Typography variant="h6" color="inherit" component="div">
               {project.isSuccess ? project.data.title : "Project name"}
@@ -70,7 +70,7 @@ function ProjectUpdate() {
             >
               Delete
             </LoadingButton>
-            <Button variant="contained" startIcon={<CloseIcon />} component={Link} to="/projects">
+            <Button variant="contained" color="secondary" startIcon={<CloseIcon />} component={Link} to="/projects">
               Close
             </Button>
           </Stack>

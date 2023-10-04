@@ -89,6 +89,14 @@ const useGetAnnotation = (spanId: number | undefined) =>
     { enabled: !!spanId }
   );
 
+const useUpdate = () =>
+  useMutation(SpanAnnotationService.updateById, {
+    onSuccess: (data) => {
+      queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, data.id]);
+      queryClient.invalidateQueries([QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id]);
+    },
+  });
+
 const useUpdateSpan = () =>
   useMutation(
     (variables: {
@@ -217,6 +225,7 @@ const useCreateMemo = () =>
   useMutation(SpanAnnotationService.addMemo, {
     onSuccess: (memo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, memo.attached_object_id, memo.user_id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id]); // todo: this is not optimal
     },
   });
@@ -225,6 +234,7 @@ const SpanAnnotationHooks = {
   useCreateAnnotation,
   useGetAnnotation,
   useUpdateSpan,
+  useUpdate,
   useDeleteSpan,
   // memo
   useGetMemos,

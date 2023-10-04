@@ -15,6 +15,7 @@ export function MemoContentSourceDocument({
   sdoc,
   memo,
   closeDialog,
+  onMemoCreateSuccess,
 }: MemoContentSourceDocumentProps & MemoContentProps) {
   const { user } = useAuth();
 
@@ -58,11 +59,12 @@ export function MemoContentSourceDocument({
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             SnackbarAPI.openSnackbar({
               text: `Created memo for source document ${sdoc.filename}`,
               severity: "success",
             });
+            if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
         }

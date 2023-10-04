@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AnalysisConcept } from "../models/AnalysisConcept";
+import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
@@ -70,6 +71,36 @@ export class AnalysisService {
   }
 
   /**
+   * Returns all SourceDocument IDs that match the query parameters.
+   * Returns all SourceDocument Ids that match the query parameters.
+   * @returns AnnotationOccurrence Successful Response
+   * @throws ApiError
+   */
+  public static annotationOccurrences({
+    projectId,
+    codeId,
+    requestBody,
+  }: {
+    projectId: number;
+    codeId: number;
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<AnnotationOccurrence>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/annotation_occurrences",
+      query: {
+        project_id: projectId,
+        code_id: codeId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Perform timeline analysis.
    * Perform timeline analysis.
    * @returns TimelineAnalysisResult Successful Response
@@ -91,7 +122,7 @@ export class AnalysisService {
       url: "/analysis/timeline_analysis",
       query: {
         project_id: projectId,
-        threshold: threshold,
+        threshold: threshold / 100.0,
         metadata_key: metadataKey,
       },
       body: requestBody,

@@ -1,18 +1,14 @@
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from api.util import credentials_exception
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
-from app.core.data.dto import ProjectRead
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoRead
+from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import (
     UserAuthorizationHeaderData,
     UserCreate,
@@ -22,6 +18,9 @@ from app.core.data.dto.user import (
 )
 from app.core.mail.mail_service import MailService
 from app.core.security import generate_jwt
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/user")
 tags = ["user"]

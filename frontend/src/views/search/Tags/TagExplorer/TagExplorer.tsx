@@ -16,7 +16,7 @@ import ProjectHooks from "../../../../api/ProjectHooks";
 import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
 import ExporterButton from "../../../../features/Exporter/ExporterButton";
 import TagCreationButton from "../TagCreate/TagCreationButton";
-import TagEditDialog from "../TagEdit/TagEditDialog";
+import TagEditDialog from "../../../../features/CrudDialog/Tag/TagEditDialog";
 import TagExplorerContextMenu from "./TagExplorerContextMenu";
 import TagListItem from "./TagListItem";
 

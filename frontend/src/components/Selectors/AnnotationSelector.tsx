@@ -1,4 +1,3 @@
-import { Box, Stack } from "@mui/material";
 import {
   DataGrid,
   GridCallbackDetails,
@@ -9,12 +8,13 @@ import {
 import * as React from "react";
 import { useState } from "react";
 import AnalysisHooks from "../../api/AnalysisHooks";
-import { CodeOccurrence, CodeRead } from "../../api/openapi";
-import { renderTextCellExpand } from "../../views/analysis/CodeFrequency/renderTextCellExpand";
+import { AnnotationOccurrence, CodeRead } from "../../api/openapi";
+import CodeRenderer from "../DataGrid/CodeRenderer";
+import { renderTextCellExpand } from "../DataGrid/renderTextCellExpand";
 import CodeSelector from "./CodeSelector";
 
 const columns: GridColDef[] = [
-  { field: "id", headerName: "ID" },
+  { field: "id", headerName: "ID", valueGetter: (params: GridValueGetterParams) => params.row.annotation.id },
   {
     field: "sdoc",
     headerName: "Document",
@@ -27,15 +27,7 @@ const columns: GridColDef[] = [
     headerName: "Code",
     flex: 1,
     valueGetter: (params: GridValueGetterParams) => params.row.code.name,
-    renderCell: (params) => (
-      <Stack direction="row" alignItems="center" component="span">
-        <Box
-          sx={{ width: 20, height: 20, backgroundColor: params.row.code.color, ml: 1.5, mr: 1, flexShrink: 0 }}
-          component="span"
-        />
-        {params.row.code.name}
-      </Stack>
-    ),
+    renderCell: (params) => <CodeRenderer code={params.row.code} />,
   },
   {
     field: "text",
@@ -44,13 +36,12 @@ const columns: GridColDef[] = [
     description: "The text of the annotation",
     renderCell: renderTextCellExpand,
   },
-  { field: "count", headerName: "Count", type: "number" },
 ];
 
 interface AnnotationSelectorProps {
   projectId: number;
   userIds: number[];
-  setSelectedAnnotations: (annotations: CodeOccurrence[]) => void;
+  setSelectedAnnotations: (annotations: AnnotationOccurrence[]) => void;
 }
 
 function AnnotationSelector({ projectId, userIds, setSelectedAnnotations }: AnnotationSelectorProps) {
@@ -64,18 +55,18 @@ function AnnotationSelector({ projectId, userIds, setSelectedAnnotations }: Anno
   };
 
   // global server state
-  const codeOccurrences = AnalysisHooks.useCodeOccurrences(projectId, userIds, selectedCode?.id);
+  const annotationOccurrences = AnalysisHooks.useAnnotationOccurrences(projectId, userIds, selectedCode?.id);
   const data = React.useMemo(() => {
     // we have to transform the data, better do this elsewhere?
-    if (!codeOccurrences.data) return [];
+    if (!annotationOccurrences.data) return [];
 
-    return codeOccurrences.data.map((row, index) => {
+    return annotationOccurrences.data.map((row, index) => {
       return {
         ...row,
         id: index,
       };
     });
-  }, [codeOccurrences.data]);
+  }, [annotationOccurrences.data]);
 
   // events
   const onSelectionChange = (selectionModel: GridRowSelectionModel, details: GridCallbackDetails<any>) => {
@@ -96,7 +87,6 @@ function AnnotationSelector({ projectId, userIds, setSelectedAnnotations }: Anno
           rows={data}
           columns={columns}
           autoPageSize
-          // sx={{ border: "none" }}
           getRowId={(row) => row.id}
           checkboxSelection
           onRowSelectionModelChange={onSelectionChange}

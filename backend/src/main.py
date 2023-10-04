@@ -1,5 +1,8 @@
 import os
 
+from app.core.data.dto.project import ProjectReadAction
+from app.core.data.dto.source_document import SourceDocumentReadAction
+from app.core.startup import startup
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -11,20 +14,19 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
 
-from app.core.data.dto.project import ProjectReadAction
-from app.core.data.dto.source_document import SourceDocumentReadAction
-from app.core.startup import startup
+from app.core.startup import startup  # isort: skip
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
-    startup(reset_data=False)
+    startup(reset_data=False, sql_echo=True)
     os.environ["STARTUP_DONE"] = "1"
 
-from api.endpoints import annotation_document  # noqa E402
 from api.endpoints import (
     analysis,
+    analysis_table,
+    annotation_document,
     bbox_annotation,
     code,
     crawler,
@@ -41,7 +43,7 @@ from api.endpoints import (
     span_annotation,
     span_group,
     user,
-    analysis_table,
+    whiteboard,
 )
 from app.core.data.crawler.crawler_service import (
     CrawlerJobAlreadyStartedOrDoneError,
@@ -49,26 +51,29 @@ from app.core.data.crawler.crawler_service import (
     NoDataToCrawlError,
     NoSuchCrawlerJobError,
 )
-from app.core.data.crud.crud_base import NoSuchElementError  # noqa E402
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.source_document import (
     SourceDocumentPreprocessingUnfinishedError,
 )
-from app.core.data.export.export_service import (  # noqa E402
+from app.core.data.dto.project import ProjectReadAction
+from app.core.data.dto.source_document import SourceDocumentReadAction
+from app.core.data.export.export_service import (
     ExportJobPreparationError,
     NoDataToExportError,
     NoSuchExportFormatError,
     NoSuchExportJobError,
 )
-from app.core.data.repo.repo_service import (  # noqa E402
+from app.core.data.repo.repo_service import (
+    FileAlreadyExistsInRepositoryError,
     FileNotFoundInRepositoryError,
     RepoService,
     SourceDocumentNotFoundInRepositoryError,
 )
-from app.core.search.elasticsearch_service import (  # noqa E402
+from app.core.search.elasticsearch_service import (
     NoSuchMemoInElasticSearchError,
     NoSuchSourceDocumentInElasticSearchError,
 )
-from config import conf  # noqa E402
+from config import conf
 
 
 # custom method to generate OpenApi function names
@@ -203,6 +208,13 @@ async def file_not_found_in_repository_error_handler(
     return PlainTextResponse(str(exc), status_code=500)
 
 
+@app.exception_handler(FileAlreadyExistsInRepositoryError)
+async def file_already_exists_in_repository_error_handler(
+    _, exc: FileAlreadyExistsInRepositoryError
+):
+    return PlainTextResponse(str(exc), status_code=406)
+
+
 @app.exception_handler(IntegrityError)
 async def integrity_error_handler(_, exc: IntegrityError):
     if isinstance(exc.orig, UniqueViolation):
@@ -243,6 +255,7 @@ app.include_router(prepro.router)
 app.include_router(export.router)
 app.include_router(crawler.router)
 app.include_router(analysis_table.router)
+app.include_router(whiteboard.router)
 
 
 def main() -> None:

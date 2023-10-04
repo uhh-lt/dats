@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, List
 
+from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import (
     Column,
     DateTime,
@@ -10,8 +11,6 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import relationship
-
-from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM

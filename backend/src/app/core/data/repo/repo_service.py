@@ -8,9 +8,6 @@ from typing import List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import magic
-from fastapi import HTTPException, UploadFile
-from loguru import logger
-
 from app.core.data.doc_type import DocType, get_doc_type
 from app.core.data.dto.source_document import (
     SDOC_FILENAME_MAX_LENGTH,
@@ -21,6 +18,8 @@ from app.core.data.dto.source_document import (
 )
 from app.util.singleton_meta import SingletonMeta
 from config import conf
+from fastapi import HTTPException, UploadFile
+from loguru import logger
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...
@@ -118,7 +117,7 @@ class RepoService(metaclass=SingletonMeta):
                         elif file_path.is_dir():
                             shutil.rmtree(file_path)
                     except Exception as e:
-                        print(f"Failed to remove {file_path} because: {e}")
+                        logger.error(f"Failed to remove {file_path} because: {e}")
 
             # make sure repository root dir exists
             if not self.repo_root.exists():
@@ -143,7 +142,7 @@ class RepoService(metaclass=SingletonMeta):
                 logger.info(f"Created DWTS project root at {str(self.proj_root)}")
 
         except Exception as e:
-            msg = f"Cannot create repository directory structure at {conf.repo.root_directory}"
+            msg = f"Cannot create repository directory structure at {conf.repo.root_directory}: {e}"
             logger.error(msg)
             raise SystemExit(msg)
 
@@ -327,6 +326,23 @@ class RepoService(metaclass=SingletonMeta):
             return relative_url
         return url.urljoin(self.base_url, relative_url)
 
+    def get_url_from_file_in_repo(
+        self,
+        file_path: Path,
+        relative: bool = True,
+        webp: bool = False,
+        thumbnail: bool = False,
+    ) -> str:
+        if not file_path.exists():
+            msg = f"File {file_path} not found in Repository!"
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+
+        relative_url = str(file_path.relative_to(self.repo_root))
+        if relative:
+            return relative_url
+        return url.urljoin(self.base_url, relative_url)
+
     def extract_archive_in_project(
         self, proj_id: int, archive_path: Path
     ) -> List[Path]:
@@ -396,7 +412,7 @@ class RepoService(metaclass=SingletonMeta):
                 proj_id=proj_id, filename=fn
             )
             logger.info(
-                f"Storing Uploaded File {fn} in Project {proj_id} Repo at {in_project_dst}"
+                f"Storing Uploaded File {fn} in Project {proj_id} Repo at {in_project_dst.relative_to(self.repo_root)} ..."
             )
             real_file_size = 0
             with open(in_project_dst, "wb") as f:
@@ -450,6 +466,6 @@ class RepoService(metaclass=SingletonMeta):
             filename=filename,
             doctype=doctype,
             project_id=proj_id,
-            status=SDocStatus.undefined_or_erroneous,
+            status=SDocStatus.unfinished_or_erroneous,
         )
         return dst_path, create_dto

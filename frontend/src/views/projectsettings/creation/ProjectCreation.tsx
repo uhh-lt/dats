@@ -62,14 +62,14 @@ function ProjectCreation() {
 
   return (
     <Card>
-      <AppBar position="relative" color="secondary">
+      <AppBar position="relative">
         <Toolbar variant="dense" sx={{ flexDirection: "column", alignItems: "flex-start" }} disableGutters>
           <Toolbar variant="dense" sx={{ width: "100%" }}>
             <Typography variant="h6" color="inherit" component="div">
               Create new project
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
-            <Button variant="contained" startIcon={<CloseIcon />} component={Link} to="/projects">
+            <Button variant="contained" color="secondary" startIcon={<CloseIcon />} component={Link} to="/projects">
               Close
             </Button>
           </Toolbar>

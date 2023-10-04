@@ -5,6 +5,7 @@ import {
   AnnotationDocumentService,
   DocType,
   DocumentTagRead,
+  DocumentTagService,
   MemoRead,
   MetadataService,
   ProjectService,
@@ -35,8 +36,7 @@ const fetchSdoc = async (sdocId: number) => {
       sdoc.content = x.html;
       break;
     case DocType.IMAGE:
-      let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId });
-      url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
+      let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
       sdoc.content = encodeURI(process.env.REACT_APP_CONTENT + "/" + url);
       break;
     case DocType.VIDEO:
@@ -196,6 +196,18 @@ const useDeleteDocuments = () =>
   );
 
 // tags
+const useGetByTagId = (tagId: number | undefined) =>
+  useQuery<SourceDocumentRead[], Error>(
+    [QueryKey.SDOCS_BY_TAG_ID, tagId],
+    () =>
+      DocumentTagService.getSdocsByTagId({
+        tagId: tagId!,
+      }),
+    {
+      enabled: !!tagId,
+    }
+  );
+
 const useGetAllDocumentTags = (sdocId: number | undefined) =>
   useQuery<DocumentTagRead[], Error>(
     [QueryKey.SDOC_TAGS, sdocId],
@@ -289,6 +301,7 @@ const useCreateMemo = () =>
   useMutation(SourceDocumentService.addMemo, {
     onSuccess: (memo) => {
       queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
+      queryClient.invalidateQueries([QueryKey.MEMO_SDOC, memo.attached_object_id, memo.user_id]);
       queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id, memo.attached_object_id]);
     },
   });
@@ -396,6 +409,7 @@ const SdocHooks = {
   useDeleteDocuments,
   useGetDocumentIdByFilename,
   // tags
+  useGetByTagId,
   useGetAllDocumentTags,
   useGetAllDocumentTagsBatch,
   useRemoveDocumentTag,

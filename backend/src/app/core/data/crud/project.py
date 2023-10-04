@@ -1,9 +1,6 @@
 from typing import Optional
 
 import srsly
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
-
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.source_document import crud_sdoc
@@ -20,6 +17,8 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):

@@ -1,3 +1,5 @@
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   Autocomplete,
   Box,
@@ -11,20 +13,18 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import React, { forwardRef, SyntheticEvent, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { ICode } from "../TextAnnotator/ICode";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import SpanCreationDialog, { CodeCreationDialogHandle } from "./SpanCreationDialog";
+import { forwardRef, SyntheticEvent, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import CodeHooks from "../../../api/CodeHooks";
-import MemoButton from "../../../features/Memo/MemoButton";
 import {
   AttachedObjectType,
   BBoxAnnotationReadResolvedCode,
   CodeRead,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
+import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
+import MemoButton from "../../../features/Memo/MemoButton";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { ICode } from "../TextAnnotator/ICode";
 
 interface ICodeFilter extends CodeRead {
   title: string;
@@ -52,7 +52,6 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     const codes = useAppSelector((state) => state.annotations.codesForSelection);
 
     // local client state
-    const codeCreationDialogRef = useRef<CodeCreationDialogHandle>(null);
     const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const [showCodeSelection, setShowCodeSelection] = useState(false);
@@ -128,7 +127,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
       // if code does not exist, open the code creation dialog
       if (newValue.id === -1) {
-        codeCreationDialogRef.current!.open(newValue.name);
+        openCodeCreateDialog({ name: newValue.name });
         return;
       }
 
@@ -241,7 +240,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
               open={isAutoCompleteOpen}
               onClose={(event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
             />
-            <SpanCreationDialog ref={codeCreationDialogRef} onCreateSuccess={submit} />
+            <CodeCreateDialog onCreateSuccess={submit} />
           </>
         )}
       </Popover>
