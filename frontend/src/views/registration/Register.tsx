@@ -20,6 +20,7 @@ import UserHooks from "../../api/UserHooks";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+import { EMAIL_REGEX } from "../../utils/GlobalConstants";
 
 function Register() {
   let navigate = useNavigate();
@@ -117,7 +118,12 @@ function Register() {
               label="E-Mail"
               type="email"
               margin="dense"
-              {...register("mail", { required: "E-Mail is required" })}
+              {...register("mail", {
+                required: "E-Mail is required",
+                validate: (value) => {
+                  return [EMAIL_REGEX].every((pattern) => pattern.test(value)) || "Please enter a valid email address!";
+                },
+              })}
               error={Boolean(errors.mail)}
               helperText={<ErrorMessage errors={errors} name="mail" />}
             />

@@ -57,6 +57,14 @@ const useGetRecentActivity = (userId: number | undefined, k: number) => {
   );
 };
 
+const useUpdate = () =>
+  useMutation(UserService.updateById, {
+    onSuccess: (user) => {
+      queryClient.invalidateQueries([QueryKey.USERS]);
+      queryClient.invalidateQueries([QueryKey.USER, user.id]);
+    },
+  });
+
 const UserHooks = {
   useGetProjects,
   useGetUser,
@@ -65,6 +73,7 @@ const UserHooks = {
   useGetAllCodes,
   useGetAllAdocs,
   useGetRecentActivity,
+  useUpdate,
 };
 
 export default UserHooks;

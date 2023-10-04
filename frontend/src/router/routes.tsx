@@ -7,7 +7,6 @@ import About from "../views/About";
 import Imprint from "../views/Imprint";
 import Login from "../views/Login";
 import NotFound from "../views/NotFound";
-import User from "../views/User";
 import Analysis from "../views/analysis/Analysis";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
@@ -29,6 +28,7 @@ import Whiteboard from "../views/whiteboard/Whiteboard";
 import TableDashboard from "../views/analysis/Table/TableDashboard";
 import TableView from "../views/analysis/Table/TableView";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
+import Profile from "../views/profile/Profile";
 
 const router = createBrowserRouter([
   {
@@ -93,7 +93,7 @@ const router = createBrowserRouter([
         path: "/user/:userId",
         element: (
           <RequireAuth>
-            <User />
+            <Profile />
           </RequireAuth>
         ),
       },
