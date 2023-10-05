@@ -10,11 +10,6 @@ from app.core.data.dto.crawler_job import (
 )
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
-from app.core.data.dto.preprocessing_job import (
-    PreprocessingJobCreate,
-    PreprocessingJobRead,
-    PreprocessingJobUpdate,
-)
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from loguru import logger
@@ -194,33 +189,6 @@ class RedisService(metaclass=SingletonMeta):
                 for job in all_crawler_jobs
                 if job.parameters.project_id == project_id
             ]
-
-    def store_preprocessing_job(
-        self,
-        preprocessing_job: Union[PreprocessingJobCreate, PreprocessingJobRead],
-    ) -> PreprocessingJobRead:
-        client = self._get_client("preprocessing")
-
-        if isinstance(preprocessing_job, PreprocessingJobCreate):
-            key = self._generate_random_key()
-            ppj = PreprocessingJobRead(
-                id=key,
-                created=datetime.now(),
-                updated=datetime.now(),
-                **preprocessing_job.dict(),
-            )
-        elif isinstance(preprocessing_job, PreprocessingJobRead):
-            key = preprocessing_job.id
-            ppj = preprocessing_job
-
-        if client.set(key.encode("utf-8"), ppj.json()) != 1:
-            msg = "Cannot store PreprocessingJob!"
-            logger.error(msg)
-            raise RuntimeError(msg)
-
-        logger.debug(f"Successfully stored PreprocessingJob {key}!")
-
-        return ppj
 
     def store_feedback(self, feedback: FeedbackCreate) -> FeedbackRead:
         client = self._get_client("feedback")
