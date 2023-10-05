@@ -18,9 +18,10 @@ spacy:
       max_replicas: 5
 
 whisper:
-  model: base
+  model: large-v2
   device: cuda
   options:
+    word_timestamps: True
     beam_size: 5
     best_of: 5
 
