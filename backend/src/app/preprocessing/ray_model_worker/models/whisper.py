@@ -1,11 +1,12 @@
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
+from faster_whisper import WhisperModel as wm
 import numpy as np
 import torch
-import whisper_timestamped
+
 from config import build_ray_model_deployment_config, conf
 from dto.whisper import (
     SegmentTranscription,
@@ -30,10 +31,7 @@ WHISPER_TRANSCRIBE_OPTIONS = cc.options
 class WhisperModel:
     def __init__(self):
         logger.info(f"Loading Whisper model {WHISPER_MODEL} on {DEVICE}")
-        self.model = whisper_timestamped.load_model(
-            WHISPER_MODEL, DEVICE, download_root=DOWNLOAD_DIR
-        )
-        self.model.eval()
+        self.model = wm(WHISPER_MODEL, DEVICE, download_root=DOWNLOAD_DIR)
 
     def _load_uncompressed_audio(self, uncompressed_audio_fp: str) -> np.ndarray:
         fp = Path(uncompressed_audio_fp)
@@ -60,23 +58,25 @@ class WhisperModel:
         )
 
         with torch.no_grad():
-            transcription: Dict[str, Any] = whisper_timestamped.transcribe(
-                self.model, audionp, **transcribe_options
+            result: Tuple[Dict[str, Any], Any] = self.model.transcribe(
+                audio=audionp, **transcribe_options
             )
+            transcriptions = list(result[0])
 
         segments: List[SegmentTranscription] = []
-        for segment in transcription["segments"]:
+        for segment in transcriptions:
+            logger.warning(f"{segment=}")
             words: List[WordTranscription] = []
             st = SegmentTranscription(
-                start_ms=int(segment["start"] * 1000),
-                end_ms=int(segment["end"] * 1000),
+                start_ms=int(segment.start * 1000),
+                end_ms=int(segment.end * 1000),
             )
-            for w in segment["words"]:
+            for word in segment.words:
                 words.append(
                     WordTranscription(
-                        text=w["text"],
-                        start_ms=int(w["start"] * 1000),
-                        end_ms=int(w["end"] * 1000),
+                        text=word.word,
+                        start_ms=int(word.start * 1000),
+                        end_ms=int(word.end * 1000),
                     )
                 )
             st.words = words
