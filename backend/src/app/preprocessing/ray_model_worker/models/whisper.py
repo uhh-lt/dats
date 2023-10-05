@@ -3,10 +3,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-from faster_whisper import WhisperModel as wm
 import numpy as np
 import torch
-
 from config import build_ray_model_deployment_config, conf
 from dto.whisper import (
     SegmentTranscription,
@@ -14,6 +12,7 @@ from dto.whisper import (
     WhisperTranscriptionOutput,
     WordTranscription,
 )
+from faster_whisper import WhisperModel as wm
 from ray import serve
 from scipy.io import wavfile
 
