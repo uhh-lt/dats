@@ -1,15 +1,20 @@
 name: dwts
 channels:
   - conda-forge
+  - pytorch
   - defaults
 dependencies:
   - python=3.11.6
-  - conda-forge::pip=23.2.1
-  - pydantic=2.4.2
-  - fastapi=0.104.1
+  - conda-forge::pip=23.3.2
+  - pytorch::pytorch=2.1.2
+  - conda-forge::cudatoolkit=11.8.0
+  - conda-forge::transformers=4.36.2
+  - conda-forge::sentence-transformers>=2.2.2
+  - pydantic=2.5.3
+  - fastapi=0.108.0
   - srsly=2.4.8
   - tqdm=4.66.1
-  - sqlalchemy=2.0.22
+  - sqlalchemy=2.0.25
   - psycopg2-binary=2.9
   - redis-py=4.3
   - celery=5.2
