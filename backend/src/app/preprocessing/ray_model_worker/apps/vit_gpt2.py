@@ -17,9 +17,9 @@ class ViTGPT2Api:
     def __init__(self, vit_gpt2_model_handle: RayServeHandle) -> None:
         self.vit_gpt2 = vit_gpt2_model_handle
 
-    @api.post("/image_cationing", response_model=ViTGPT2Output)
+    @api.post("/image_captioning", response_model=ViTGPT2Output)
     async def classify(self, input: ViTGPT2FilePathInput):
-        predict_ref = await self.vit_gpt2.image_cationing.remote(input)
+        predict_ref = await self.vit_gpt2.image_captioning.remote(input)
         predict_result = await predict_ref
         return predict_result
 
