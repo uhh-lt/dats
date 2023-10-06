@@ -43,7 +43,7 @@ class ViTGPT2Model:
         self.captioning_model = captioning_model
         self.tokenizer = tokenizer
 
-    def image_cationing(self, input: ViTGPT2FilePathInput) -> ViTGPT2Output:
+    def image_captioning(self, input: ViTGPT2FilePathInput) -> ViTGPT2Output:
         # load the image
         with Image.open(input.image_fp) as img:
             if img.mode != "RGB":
