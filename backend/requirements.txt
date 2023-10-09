@@ -5,6 +5,8 @@ Scrapy==2.10.0
 scrapy-playwright==0.0.31
 cssselect==1.2.0
 Twisted==22.10.0
+pymupdf==1.23.4
+mammoth==1.6.0
 pre-commit==3.3.3
 black==23.7.0
 rope==1.9.0
