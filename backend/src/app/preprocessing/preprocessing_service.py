@@ -84,19 +84,21 @@ class PreprocessingService(metaclass=SingletonMeta):
             )
         return payloads
 
-    def _extract_archive_and_create_payloads(
-        self, project_id: int, archive_file_path: Path
+    def _create_ppj_payloads_from_unimported_project_files(
+        self,
+        unimported_project_files: List[Path],
+        project_id: int,
     ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
-        # store and extract the archive
-        file_dsts: List[Path] = self.repo.extract_archive_in_project(
-            proj_id=project_id, archive_path=archive_file_path
-        )
+
         payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
 
         for file_path in tqdm(
-            file_dsts,
-            total=len(file_dsts),
-            desc=f"Processing files in archive {archive_file_path}... ",
+            unimported_project_files,
+            total=len(unimported_project_files),
+            desc=(
+                "Creating PreprocessingJobPayloads from "
+                f"{len(unimported_project_files)} unimported project files... "
+            ),
         ):
             try:
                 mime_type = magic.from_file(file_path, mime=True)
@@ -122,6 +124,17 @@ class PreprocessingService(metaclass=SingletonMeta):
                 continue
 
         return payloads
+
+    def _extract_archive_and_create_payloads(
+        self, project_id: int, archive_file_path: Path
+    ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
+        # store and extract the archive
+        file_dsts: List[Path] = self.repo.extract_archive_in_project(
+            proj_id=project_id, archive_path=archive_file_path
+        )
+        return self._create_ppj_payloads_from_unimported_project_files(
+            unimported_project_files=file_dsts, project_id=project_id
+        )
 
     def _create_and_store_preprocessing_job(
         self,
@@ -239,10 +252,15 @@ class PreprocessingService(metaclass=SingletonMeta):
         proj_id: int,
         uploaded_files: Optional[List[UploadFile]] = None,
         archive_file_path: Optional[Path] = None,
+        unimported_project_files: Optional[List[Path]] = None,
     ) -> Optional[PreprocessingJobRead]:
-        if uploaded_files is not None and archive_file_path is not None:
+        if (
+            uploaded_files is not None
+            and archive_file_path is not None
+            and unimported_project_files is not None
+        ):
             raise ValueError(
-                "Either uploaded_files or archive_file_path"
+                "Either uploaded_files or archive_file_path or unimported_project_files"
                 " must be specified, but not both!"
             )
         elif uploaded_files is not None:
@@ -252,6 +270,11 @@ class PreprocessingService(metaclass=SingletonMeta):
         elif archive_file_path is not None:
             payloads = self._extract_archive_and_create_payloads(
                 project_id=proj_id, archive_file_path=archive_file_path
+            )
+        elif unimported_project_files is not None:
+            payloads = self._create_ppj_payloads_from_unimported_project_files(
+                unimported_project_files=unimported_project_files,
+                project_id=proj_id,
             )
         else:
             raise ValueError(
