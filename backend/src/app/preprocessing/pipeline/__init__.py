@@ -22,6 +22,9 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
         apply_html_source_mapping_with_custom_html_tags,
     )
     from app.preprocessing.pipeline.steps.text.clean_html import clean_content_in_html
+    from app.preprocessing.pipeline.steps.text.create_ppj_from_extracted_images import (
+        create_ppj_from_extracted_images,
+    )
     from app.preprocessing.pipeline.steps.text.create_pptd import create_pptd
     from app.preprocessing.pipeline.steps.text.detect_content_language import (
         detect_content_language,
@@ -153,6 +156,11 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     pipeline.register_step(
         func=update_sdoc_status_to_finish,
         required_data=["pptd", "sdoc_id"],
+    )
+
+    pipeline.register_step(
+        func=create_ppj_from_extracted_images,
+        required_data=["pptd", "extracted_images"],
     )
 
     pipeline.freeze()
