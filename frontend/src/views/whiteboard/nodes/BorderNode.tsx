@@ -1,10 +1,10 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { NoteNodeData } from "../types/NoteNodeData";
-import BaseCardNode from "./BaseCardNode";
+import BaseNode from "./BaseNode";
+import { BorderNodeData } from "../types";
 
-function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
+function BorderNode({ id, data, selected }: NodeProps<BorderNodeData>) {
   const reactFlowInstance = useReactFlow();
   const theme = useTheme();
 
@@ -41,13 +41,19 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
   };
 
   return (
-    <BaseCardNode
+    <BaseNode
       allowDrawConnection={false}
       nodeId={id}
       selected={selected}
       onClick={handleClick}
-      backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
       alignment={data.verticalAlign}
+      style={{
+        borderRadius: data.borderRadius,
+        borderColor: data.borderColor,
+        borderWidth: data.borderWidth,
+        borderStyle: data.borderStyle,
+        backgroundColor: data.bgcolor + data.bgalpha.toString(16).padStart(2, "0"),
+      }}
     >
       {isEditing ? (
         <Box className="nodrag">
@@ -81,8 +87,8 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
           {data.text}
         </Typography>
       )}
-    </BaseCardNode>
+    </BaseNode>
   );
 }
 
-export default NoteNode;
+export default BorderNode;

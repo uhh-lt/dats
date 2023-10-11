@@ -38,8 +38,10 @@ import CustomConnectionLine from "./connectionlines/CustomConnectionLine";
 import FloatingEdge from "./edges/FloatingEdge";
 import { useEdgeStateCustom, useNodeStateCustom } from "./hooks/useNodesEdgesStateCustom";
 import BboxAnnotationNode from "./nodes/BboxAnnotationNode";
+import BorderNode from "./nodes/BorderNode";
 import CodeNode from "./nodes/CodeNode";
 import MemoNode from "./nodes/MemoNode";
+import NoteNode from "./nodes/NoteNode";
 import SdocNode from "./nodes/SdocNode";
 import SpanAnnotationNode from "./nodes/SpanAnnotationNode";
 import TagNode from "./nodes/TagNode";
@@ -48,16 +50,17 @@ import AddAnnotationNodeDialog from "./toolbar/AddAnnotationNodeDialog";
 import AddCodeNodeDialog from "./toolbar/AddCodeNodeDialog";
 import AddDocumentNodeDialog from "./toolbar/AddDocumentNodeDialog";
 import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog";
+import AddNoteNodeButton from "./toolbar/AddNoteNodeButton";
 import AddTagNodeDialog from "./toolbar/AddTagNodeDialog";
 import AddTextNodeButton from "./toolbar/AddTextNodeButton";
 import TextNodeEditMenu, { TextNodeEditMenuHandle } from "./toolbar/TextNodeEditMenu";
 import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode, isTextNode } from "./types";
 import { DWTSNodeData } from "./types/DWTSNodeData";
 import { isCodeParentCodeEdge, isConnectionAllowed, isTagSdocEdge } from "./whiteboardUtils";
-import NoteNode from "./nodes/NoteNode";
-import AddNoteNodeButton from "./toolbar/AddNoteNodeButton";
+import AddBorderNodeButton from "./toolbar/AddBorderNodeButton";
 
 const nodeTypes: NodeTypes = {
+  border: BorderNode,
   note: NoteNode,
   text: TextNode,
   memo: MemoNode,
@@ -384,7 +387,9 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                   <Typography p={1}>Text Elements</Typography>
                   <AddNoteNodeButton />
                   <AddTextNodeButton />
-                  <Button>Add shape</Button>
+                  <AddBorderNodeButton type="Ellipse" />
+                  <AddBorderNodeButton type="Rectangle" />
+                  <AddBorderNodeButton type="Rounded" />
                 </Stack>
               </Paper>
             </Panel>

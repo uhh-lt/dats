@@ -8,6 +8,7 @@ import {
   MemoNodeData,
   CodeNodeData,
   NoteNodeData,
+  BorderNodeData,
 } from ".";
 import { Node } from "reactflow";
 
@@ -28,6 +29,18 @@ export const isNoteNode = (node: Node<DWTSNodeData>): node is Node<NoteNodeData>
   let data = node.data as NoteNodeData;
   return (
     data.color !== undefined && data.text !== undefined && data.variant !== undefined && data.bgcolor !== undefined
+  );
+};
+
+export const isBorderNode = (node: Node<DWTSNodeData>): node is Node<BorderNodeData> => {
+  let data = node.data as BorderNodeData;
+  return (
+    data.color !== undefined &&
+    data.text !== undefined &&
+    data.variant !== undefined &&
+    data.bgcolor !== undefined &&
+    data.borderRadius !== undefined &&
+    data.borderColor !== undefined
   );
 };
 

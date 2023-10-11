@@ -10,6 +10,7 @@ import {
 } from "../../api/openapi";
 import {
   BBoxAnnotationNodeData,
+  BorderNodeData,
   CodeNodeData,
   MemoNodeData,
   NoteNodeData,
@@ -58,7 +59,7 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
     data: {
       text: "test",
       variant: "h3",
-      color: "black",
+      color: "#000000",
       bold: false,
       italic: false,
       underline: false,
@@ -76,8 +77,9 @@ export const createNoteNode = ({ position }: { position?: XYPosition }): Node<No
     data: {
       text: "test",
       variant: "h3",
-      color: "black",
+      color: "#000000",
       bgcolor: "#ffffff",
+      bgalpha: 255,
       bold: false,
       italic: false,
       underline: false,
@@ -85,6 +87,36 @@ export const createNoteNode = ({ position }: { position?: XYPosition }): Node<No
       verticalAlign: "top",
     },
     type: "note",
+    position: { x: position?.x || 0, y: position?.y || 0 },
+  };
+};
+
+export const createBorderNode = ({
+  position,
+  borderRadius,
+}: {
+  position?: XYPosition;
+  borderRadius: string;
+}): Node<BorderNodeData> => {
+  return {
+    id: uuidv4(),
+    data: {
+      text: "test",
+      variant: "h3",
+      color: "#000000",
+      bgcolor: "#ffffff",
+      bgalpha: 127,
+      bold: false,
+      italic: false,
+      underline: false,
+      horizontalAlign: "center",
+      verticalAlign: "center",
+      borderColor: "#000000",
+      borderRadius: borderRadius,
+      borderStyle: "solid",
+      borderWidth: 1,
+    },
+    type: "border",
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };

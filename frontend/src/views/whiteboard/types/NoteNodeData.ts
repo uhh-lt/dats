@@ -5,6 +5,7 @@ export interface NoteNodeData {
   variant: TypographyVariant;
   color: string;
   bgcolor: string;
+  bgalpha: number;
   horizontalAlign: "left" | "center" | "right";
   verticalAlign: "top" | "center" | "bottom";
   bold: boolean;

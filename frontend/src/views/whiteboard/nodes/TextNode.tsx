@@ -2,7 +2,6 @@ import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import { TextNodeData } from "../types/TextNodeData";
-import BaseCardNode from "./BaseCardNode";
 import BaseNode from "./BaseNode";
 
 function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {

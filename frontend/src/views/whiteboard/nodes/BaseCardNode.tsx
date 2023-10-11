@@ -26,12 +26,7 @@ function BaseCardNode({
 
   return (
     <>
-      <NodeResizer
-        isVisible={selected}
-        minWidth={200}
-        minHeight={100}
-        handleStyle={{ width: "12px", height: "12px" }}
-      />
+      <NodeResizer isVisible={selected} minWidth={50} minHeight={50} handleStyle={{ width: "12px", height: "12px" }} />
       <Box padding={2} style={{ height: "100%" }}>
         <Card
           {...props}

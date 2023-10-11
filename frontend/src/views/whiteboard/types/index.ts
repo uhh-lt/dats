@@ -3,6 +3,7 @@ export type { SdocNodeData } from "./SdocNodeData";
 export type { TagNodeData } from "./TagNodeData";
 export type { TextNodeData } from "./TextNodeData";
 export type { NoteNodeData } from "./NoteNodeData";
+export type { BorderNodeData } from "./BorderNodeData";
 export type { MemoNodeData } from "./MemoNodeData";
 export type { CodeNodeData } from "./CodeNodeData";
 export type { SpanAnnotationNodeData } from "./SpanAnnotationNodeData";
@@ -13,6 +14,7 @@ export {
   isSdocNode,
   isTextNode,
   isNoteNode,
+  isBorderNode,
   isSpanAnnotationNode,
   isBBoxAnnotationNode,
   isMemoNode,
