@@ -9,9 +9,19 @@ interface BaseNodeProps {
   selected: boolean;
   nodeId: string;
   allowDrawConnection: boolean;
+  backgroundColor?: string;
+  alignment?: "top" | "center" | "bottom";
 }
 
-function BaseNode({ children, selected, nodeId, allowDrawConnection, ...props }: BaseNodeProps & CardProps) {
+function BaseNode({
+  children,
+  selected,
+  nodeId,
+  allowDrawConnection,
+  backgroundColor,
+  alignment,
+  ...props
+}: BaseNodeProps & CardProps) {
   const { isConnecting, isValidConnectionTarget } = useConnectionHelper(nodeId);
 
   return (
@@ -54,8 +64,10 @@ function BaseNode({ children, selected, nodeId, allowDrawConnection, ...props }:
               margin: "8px",
               borderRadius: "inherit",
               height: "calc(100% - 16px)",
+              display: "flex",
+              alignItems: alignment === "center" ? "center" : alignment === "bottom" ? "flex-end" : "flex-start",
             }}
-            sx={{ backgroundColor: (theme) => theme.palette.background.paper }}
+            sx={{ backgroundColor: backgroundColor ? backgroundColor : (theme) => theme.palette.background.paper }}
           >
             {children}
           </Box>

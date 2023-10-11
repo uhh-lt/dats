@@ -46,7 +46,8 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
       nodeId={id}
       selected={selected}
       onClick={handleClick}
-      style={{ backgroundColor: data.color }}
+      backgroundColor={data.bgcolor}
+      alignment={data.verticalAlign}
     >
       {isEditing ? (
         <Box className="nodrag">
@@ -65,7 +66,18 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
           />
         </Box>
       ) : (
-        <Typography variant={data.variant} color="text.secondary" whiteSpace="pre-wrap">
+        <Typography
+          variant={data.variant}
+          color={data.color}
+          style={{
+            ...(data.italic && { fontStyle: "italic" }),
+            ...(data.bold && { fontWeight: "bold" }),
+            ...(data.underline && { textDecoration: "underline" }),
+            textAlign: data.horizontalAlign,
+            width: "100%",
+          }}
+          whiteSpace="pre-wrap"
+        >
           {data.text}
         </Typography>
       )}
