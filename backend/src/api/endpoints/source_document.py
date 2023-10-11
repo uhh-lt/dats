@@ -11,6 +11,7 @@ from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.source_document import (
+    SDocStatus,
     SourceDocumentContent,
     SourceDocumentHTML,
     SourceDocumentKeywords,
@@ -87,6 +88,47 @@ async def get_all_by_id(
         ],
         memos=memos if memos is not None else [],
     )
+
+
+@router.get(
+    "/{sdoc_ids}/all_bulk",
+    tags=tags,
+    response_model=List[SourceDocumentReadAll],
+    summary="Returns the SourceDocument with all Information",
+    description="Returns the SourceDocument with all related information with the given ID if it exists",
+)
+async def get_all_by_id_bulk(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_ids: List[int],
+    only_if_finished: bool = True,
+) -> List[SourceDocumentReadAll]:
+    # TODO Flo: only if the user has access?
+
+    db_objs = crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
+    result = []
+    for db_obj in db_objs:
+        if only_if_finished and not db_obj.status == SDocStatus.finished:
+            return []
+
+        memos = get_object_memos(db_obj=db_obj)
+        result.append(
+            SourceDocumentReadAll(
+                **SourceDocumentRead.from_orm(db_obj).dict(),
+                tags=[DocumentTagRead.from_orm(tag) for tag in db_obj.document_tags],
+                metadata=[
+                    SourceDocumentMetadataRead.from_orm(md)
+                    for md in db_obj.metadata_
+                    if md.key != "word_frequencies"
+                ],
+                links=[
+                    SourceDocumentLinkRead.from_orm(link)
+                    for link in db_obj.source_document_links
+                ],
+                memos=memos if memos is not None else [],
+            )
+        )
+    return result
 
 
 @router.delete(
