@@ -175,24 +175,51 @@ if len(files) != 0:
 
     print("Upload success!!!")
 
-# create new tag if it does not exist
-tag = api.get_tag_by_title(proj_id=project["id"], title=args.tag_name)
-if tag is None:
-    tag = api.create_tag(
-        title=args.tag_name,
-        description=args.tag_description,
-        color="blue",
-        project_id=project["id"],
-    )
+# # create new tag if it does not exist
+# tag = api.get_tag_by_title(proj_id=project["id"], title=args.tag_name)
+# if tag is None:
+#     tag = api.create_tag(
+#         title=args.tag_name,
+#         description=args.tag_description,
+#         color="blue",
+#         project_id=project["id"],
+#     )
 
-# apply tag to all untagged documents
-tag_ids = [tag["id"] for tag in api.read_all_tags(project_id=project["id"])]
-sdoc_ids = set(api.read_all_sdocs(project_id=project["id"]))
-tagged_sdoc_ids = set(
-    api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids)
-)
-untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
-api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
+# # apply tag to all untagged documents
+# tag_ids = [tag["id"] for tag in api.read_all_tags(project_id=project["id"])]
+# sdoc_ids = set(api.read_all_sdocs(project_id=project["id"]))
+# tagged_sdoc_ids = set(
+#     api.read_all_sdocs_by_tags(project_id=project["id"], tags=tag_ids)
+# )
+# untagged_sdoc_ids = sdoc_ids - tagged_sdoc_ids
+# api.bulk_apply_tags(sdoc_ids=list(untagged_sdoc_ids), tag_ids=[tag["id"]])
+
+# create tags from metadata
+for filename, data in tqdm(json_data.items(), total=len(json_data)):
+    if "tags" in data and len(data["tags"]) > 0:
+        # get sdoc id
+        sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+            proj_id=project["id"], filename=filename
+        )
+        if sdoc_id is None:
+            print(f"Could not find sdoc id for {filename}")
+            continue
+
+        # create tags
+        tag_ids = []
+        for tag_title in data["tags"]:
+            tag = api.get_tag_by_title(proj_id=project["id"], title=tag_title)
+            if tag is None:
+                tag = api.create_tag(
+                    title=tag_title,
+                    description="",
+                    color="blue",
+                    project_id=project["id"],
+                )
+            tag_ids.append(tag["id"])
+
+        # apply tags
+        api.bulk_apply_tags(sdoc_ids=[sdoc_id], tag_ids=tag_ids)
 
 # apply metadata
 applied = set()
@@ -202,7 +229,6 @@ for filename, data in tqdm(json_data.items(), total=len(json_data)):
         proj_id=project["id"], filename=filename
     )
     if sdoc_id not in applied and sdoc_id is not None:
-        api.create_metadata(sdoc_id=sdoc_id, key="origin", value=data["url"])
         if "published_date" in data and data["published_date"] != "":
             api.create_metadata(
                 sdoc_id=sdoc_id, key="published_date", value=data["published_date"]
@@ -213,29 +239,49 @@ for filename, data in tqdm(json_data.items(), total=len(json_data)):
             )
         if "author" in data and data["author"] != "":
             api.create_metadata(sdoc_id=sdoc_id, key="author", value=data["author"])
+
+        if "participants" in data and len(data["participants"]) > 0:
+            api.create_metadata(
+                sdoc_id=sdoc_id,
+                key="participants",
+                value=", ".join(data["participants"]),
+            )
+        if "title" in data and data["title"] != "":
+            api.create_metadata(sdoc_id=sdoc_id, key="title", value=data["title"])
+        if "subtitle" in data and data["subtitle"] != "":
+            api.create_metadata(sdoc_id=sdoc_id, key="subtitle", value=data["subtitle"])
+        if "url" in data and data["url"] != "":
+            api.create_metadata(sdoc_id=sdoc_id, key="url", value=data["url"])
+        if "date" in data and data["date"] != "":
+            api.create_metadata(sdoc_id=sdoc_id, key="date", value=data["date"])
         applied.add(sdoc_id)
 
-    for image_name in data["image_names"]:
-        if image_name:
-            sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
-                proj_id=project["id"], filename=filename
-            )
-            if sdoc_id not in applied and sdoc_id is not None:
-                api.create_metadata(sdoc_id=sdoc_id, key="origin", value=data["url"])
-                if "published_date" in data and data["published_date"] != "":
+    if "image_names" in data and len(data["image_names"]) > 0:
+        for image_name in data["image_names"]:
+            if image_name:
+                sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
+                    proj_id=project["id"], filename=filename
+                )
+                if sdoc_id not in applied and sdoc_id is not None:
                     api.create_metadata(
-                        sdoc_id=sdoc_id,
-                        key="published_date",
-                        value=data["published_date"],
+                        sdoc_id=sdoc_id, key="origin", value=data["url"]
                     )
-                if "visited_date" in data and data["visited_date"] != "":
-                    api.create_metadata(
-                        sdoc_id=sdoc_id, key="visited_date", value=data["visited_date"]
-                    )
-                if "author" in data and data["author"] != "":
-                    api.create_metadata(
-                        sdoc_id=sdoc_id, key="author", value=data["author"]
-                    )
-                applied.add(sdoc_id)
+                    if "published_date" in data and data["published_date"] != "":
+                        api.create_metadata(
+                            sdoc_id=sdoc_id,
+                            key="published_date",
+                            value=data["published_date"],
+                        )
+                    if "visited_date" in data and data["visited_date"] != "":
+                        api.create_metadata(
+                            sdoc_id=sdoc_id,
+                            key="visited_date",
+                            value=data["visited_date"],
+                        )
+                    if "author" in data and data["author"] != "":
+                        api.create_metadata(
+                            sdoc_id=sdoc_id, key="author", value=data["author"]
+                        )
+                    applied.add(sdoc_id)
 
 print("(: FINISHED :)")

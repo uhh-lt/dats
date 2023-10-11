@@ -64,7 +64,7 @@ class SpiderBase(scrapy.Spider):
         if cookie.startswith("Cookie: "):
             cookie = cookie[8:]
         cookies = cookie.replace(" ", "").split(";")
-        return dict([c.split("=") for c in cookies])
+        return dict([c.split("=", 1) for c in cookies])
 
     def init_item(
         self,
