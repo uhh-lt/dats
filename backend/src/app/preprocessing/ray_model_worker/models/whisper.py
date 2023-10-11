@@ -64,7 +64,6 @@ class WhisperModel:
 
         segments: List[SegmentTranscription] = []
         for segment in transcriptions:
-            logger.warning(f"{segment=}")
             words: List[WordTranscription] = []
             st = SegmentTranscription(
                 start_ms=int(segment.start * 1000),
