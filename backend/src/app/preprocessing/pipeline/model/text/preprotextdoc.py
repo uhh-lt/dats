@@ -24,3 +24,4 @@ class PreProTextDoc(PreProDocBase):
     spans: Dict[str, List[AutoSpan]] = Field(default_factory=dict)
     sentences: List[AutoSpan] = Field(default_factory=list)
     sdoc_link_create_dtos: List[SourceDocumentLinkCreate] = Field(default_factory=list)
+    extracted_images: List[Path] = Field(default_factory=list)

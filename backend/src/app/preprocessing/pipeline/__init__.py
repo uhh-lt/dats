@@ -160,7 +160,7 @@ def build_text_pipeline(foo: str = "bar") -> PreprocessingPipeline:
 
     pipeline.register_step(
         func=create_ppj_from_extracted_images,
-        required_data=["pptd", "extracted_images"],
+        required_data=["pptd"],
     )
 
     pipeline.freeze()

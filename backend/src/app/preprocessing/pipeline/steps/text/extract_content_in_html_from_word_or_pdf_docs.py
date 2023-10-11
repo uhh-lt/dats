@@ -100,6 +100,6 @@ def extract_content_in_html_from_word_or_pdf_docs(
         extracted_images = []
 
     pptd.html = html
-    cargo.data["extracted_images"] = extracted_images
+    pptd.extracted_images = extracted_images
 
     return cargo
