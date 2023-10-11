@@ -55,7 +55,7 @@ download_and_install_spacy_model "$IT_MODEL_BASE" "$IT_MODEL" "$IT_CHECKSUM_SHA_
 # export MKL_NUM_THREADS=1
 
 # generate the ray spec file
-python generate_ray_model_worker_specs.py || exit 1
+python generate_ray_model_worker_specs.py --ignore_apps vit_gpt2 || exit 1
 
 export CUPY_CACHE_DIR=/tmp/cupy_cache
 
