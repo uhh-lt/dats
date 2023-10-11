@@ -87,7 +87,7 @@ class SQLService(metaclass=SingletonMeta):
                 pool_pre_ping=True,
                 pool_size=conf.postgres.pool.pool_size,
                 max_overflow=conf.postgres.pool.max_overflow,
-                echo=kwargs["echo"] if "echo" in kwargs else True,
+                echo=kwargs["echo"] if "echo" in kwargs else False,
             )
             logger.info("Successfully established connection to PostgresSQL!")
             cls.__engine: Engine = engine
