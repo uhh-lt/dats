@@ -67,7 +67,7 @@ class RayModelService(metaclass=SingletonMeta):
     def _make_post_request(self, endpoint: str, data: Dict[str, Any]) -> Response:
         url = f"{self.base_url}{endpoint}"
         logger.debug(f"Making POST request to {url} with data: {data}")
-        response = requests.post(url, json=data)
+        response = requests.post(url, json=data, timeout=1200)
         if not response.status_code == 200:
             msg = (
                 f"Request to {url} failed with "
