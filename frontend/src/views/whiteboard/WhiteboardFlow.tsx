@@ -54,8 +54,11 @@ import TextNodeEditMenu, { TextNodeEditMenuHandle } from "./toolbar/TextNodeEdit
 import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode, isTextNode } from "./types";
 import { DWTSNodeData } from "./types/DWTSNodeData";
 import { isCodeParentCodeEdge, isConnectionAllowed, isTagSdocEdge } from "./whiteboardUtils";
+import NoteNode from "./nodes/NoteNode";
+import AddNoteNodeButton from "./toolbar/AddNoteNodeButton";
 
 const nodeTypes: NodeTypes = {
+  note: NoteNode,
   text: TextNode,
   memo: MemoNode,
   sdoc: SdocNode,
@@ -379,8 +382,8 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               <Paper elevation={1}>
                 <Stack>
                   <Typography p={1}>Text Elements</Typography>
+                  <AddNoteNodeButton />
                   <AddTextNodeButton />
-                  <Button>Add text</Button>
                   <Button>Add shape</Button>
                 </Stack>
               </Paper>

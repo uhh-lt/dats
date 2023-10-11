@@ -1,18 +1,27 @@
-import { Box, CardProps } from "@mui/material";
+import { Box, Card, CardProps } from "@mui/material";
 import React from "react";
 import { Handle, NodeResizer, Position } from "reactflow";
 import "./nodes.css";
 import { useConnectionHelper } from "./useConnectionHelper";
 
-interface BaseNodeProps {
+interface BaseCardNodeProps {
   children: React.ReactNode;
   selected: boolean;
   nodeId: string;
   allowDrawConnection: boolean;
+  backgroundColor?: string;
   alignment?: "top" | "center" | "bottom";
 }
 
-function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, ...props }: BaseNodeProps & CardProps) {
+function BaseCardNode({
+  children,
+  selected,
+  nodeId,
+  allowDrawConnection,
+  backgroundColor,
+  alignment,
+  ...props
+}: BaseCardNodeProps & CardProps) {
   const { isConnecting, isValidConnectionTarget } = useConnectionHelper(nodeId);
 
   return (
@@ -24,10 +33,20 @@ function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, 
         handleStyle={{ width: "12px", height: "12px" }}
       />
       <Box padding={2} style={{ height: "100%" }}>
-        <Box
+        <Card
+          {...props}
+          variant="outlined"
           style={{
             height: "100%",
             position: "relative",
+          }}
+          sx={{
+            backgroundColor: (theme) =>
+              isValidConnectionTarget
+                ? theme.palette.success.light
+                : allowDrawConnection
+                ? theme.palette.grey[300]
+                : theme.palette.grey[50],
           }}
         >
           {!isConnecting && (
@@ -46,15 +65,16 @@ function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, 
               borderRadius: "inherit",
               height: "calc(100% - 16px)",
               display: "flex",
-              alignItems: alignment === "center" ? "center" : alignment === "bottom" ? "flex-end" : "flex-start",
+              alignItems: alignment === "center" ? "center" : alignment == "bottom" ? "flex-end" : "flex-start",
             }}
+            sx={{ backgroundColor: backgroundColor ? backgroundColor : (theme) => theme.palette.background.paper }}
           >
             {children}
           </Box>
-        </Box>
+        </Card>
       </Box>
     </>
   );
 }
 
-export default BaseNode;
+export default BaseCardNode;

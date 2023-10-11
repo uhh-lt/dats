@@ -7,6 +7,7 @@ import {
   BBoxAnnotationNodeData,
   MemoNodeData,
   CodeNodeData,
+  NoteNodeData,
 } from ".";
 import { Node } from "reactflow";
 
@@ -21,6 +22,13 @@ export const isSdocNode = (node: Node<DWTSNodeData>): node is Node<SdocNodeData>
 export const isTextNode = (node: Node<DWTSNodeData>): node is Node<TextNodeData> => {
   let data = node.data as TextNodeData;
   return data.color !== undefined && data.text !== undefined && data.variant !== undefined;
+};
+
+export const isNoteNode = (node: Node<DWTSNodeData>): node is Node<NoteNodeData> => {
+  let data = node.data as NoteNodeData;
+  return (
+    data.color !== undefined && data.text !== undefined && data.variant !== undefined && data.bgcolor !== undefined
+  );
 };
 
 export const isSpanAnnotationNode = (node: Node<DWTSNodeData>): node is Node<SpanAnnotationNodeData> => {

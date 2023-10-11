@@ -21,7 +21,7 @@ import {
 } from "../whiteboardUtils";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { DWTSNodeData, SpanAnnotationNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 import { AttachedObjectType } from "../../../api/openapi";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
@@ -156,7 +156,7 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
 
   return (
     <>
-      <BaseNode
+      <BaseCardNode
         allowDrawConnection={false}
         nodeId={id}
         selected={selected}
@@ -188,7 +188,7 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
         ) : (
           <>Loading...</>
         )}
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandDocument}>Expand document</MenuItem>
         <Divider />

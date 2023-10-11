@@ -19,7 +19,7 @@ import {
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { DWTSNodeData, isMemoNode, isSdocNode } from "../types";
 import { TagNodeData } from "../types/TagNodeData";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 import { AttachedObjectType } from "../../../api/openapi";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
@@ -119,7 +119,7 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
 
   return (
     <>
-      <BaseNode
+      <BaseCardNode
         allowDrawConnection={true}
         nodeId={id}
         selected={selected}
@@ -144,7 +144,7 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
         ) : (
           <>Loading...</>
         )}
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandDocuments}>Expand documents ({sdocs.data?.length || 0})</MenuItem>
         <Divider />

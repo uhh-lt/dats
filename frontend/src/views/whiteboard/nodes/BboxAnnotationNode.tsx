@@ -19,7 +19,7 @@ import {
 } from "../whiteboardUtils";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { BBoxAnnotationNodeData, DWTSNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 import ImageCropper from "./ImageCropper";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import { openBBoxAnnotationEditDialog } from "../../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
@@ -155,7 +155,7 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
 
   return (
     <>
-      <BaseNode
+      <BaseCardNode
         nodeId={id}
         allowDrawConnection={false}
         selected={selected}
@@ -204,7 +204,7 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
         ) : (
           <>Loading...</>
         )}
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandDocument}>Expand document</MenuItem>
         <Divider />

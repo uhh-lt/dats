@@ -45,7 +45,7 @@ import {
   isMemoSpanAnnotationEdge,
   isMemoTagEdge,
 } from "../whiteboardUtils";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 
 const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
   switch (attachedObjectType) {
@@ -247,7 +247,7 @@ function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<M
 
   return (
     <>
-      <BaseNode
+      <BaseCardNode
         nodeId={id}
         allowDrawConnection={false}
         selected={selected}
@@ -272,7 +272,7 @@ function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<M
         ) : (
           <Typography variant="body2">Loading ...</Typography>
         )}
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
         {memo.data && (
           <MenuItem onClick={handleContextMenuExpandAttachedObject} disabled={!attachedObject.data}>

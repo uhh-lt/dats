@@ -15,7 +15,7 @@ import {
 } from "../whiteboardUtils";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { CodeNodeData, DWTSNodeData, isCodeNode, isMemoNode } from "../types";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 import { openCodeEditDialog } from "../../../features/CrudDialog/Code/CodeEditDialog";
 import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
@@ -181,7 +181,7 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
   return (
     <>
-      <BaseNode
+      <BaseCardNode
         nodeId={id}
         selected={selected}
         allowDrawConnection={true}
@@ -206,7 +206,7 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
         ) : (
           <>Loading...</>
         )}
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandTextAnnotations}>Expand text annotations</MenuItem>
         <MenuItem onClick={handleContextMenuExpandImageAnnotations}>Expand image annotations</MenuItem>

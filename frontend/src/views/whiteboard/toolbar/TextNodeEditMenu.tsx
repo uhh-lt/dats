@@ -1,7 +1,7 @@
 import { Button, ButtonGroup, Divider, OutlinedInput, Paper, Stack, TypographyVariant } from "@mui/material";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useReactFlow } from "reactflow";
-import { TextNodeData } from "../types";
+import { NoteNodeData, TextNodeData, isNoteNode } from "../types";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
@@ -20,7 +20,7 @@ export interface TextNodeEditMenuHandle {
 }
 
 const TextNodeEditMenu = forwardRef<TextNodeEditMenuHandle, TextNodeEditMenuProps>(({}, ref) => {
-  const reactFlowInstance = useReactFlow<TextNodeData>();
+  const reactFlowInstance = useReactFlow<TextNodeData | NoteNodeData>();
 
   const [nodeId, setNodeId] = useState<string | null>(null);
   const [node, setNode] = useState(nodeId ? reactFlowInstance.getNode(nodeId) : undefined);
@@ -196,7 +196,7 @@ const TextNodeEditMenu = forwardRef<TextNodeEditMenuHandle, TextNodeEditMenuProp
             <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
             Color:
             <OutlinedInput
-              key={nodeId}
+              key={`color-${nodeId}`}
               sx={{ bgcolor: "background.paper", p: 0, ml: 0.5, mr: 1 }}
               className="nodrag"
               type="color"
@@ -210,22 +210,26 @@ const TextNodeEditMenu = forwardRef<TextNodeEditMenuHandle, TextNodeEditMenuProp
                 },
               }}
             />
-            BG:
-            <OutlinedInput
-              key={nodeId}
-              sx={{ bgcolor: "background.paper", p: 0, ml: 0.5 }}
-              className="nodrag"
-              type="color"
-              onChange={handleBGColorChange}
-              defaultValue={node.data.bgcolor}
-              inputProps={{
-                style: {
-                  padding: "1.5px 3px",
-                  height: "28px",
-                  width: "28px",
-                },
-              }}
-            />
+            {isNoteNode(node) && (
+              <>
+                BG:
+                <OutlinedInput
+                  key={`bgcolor-${nodeId}`}
+                  sx={{ bgcolor: "background.paper", p: 0, ml: 0.5 }}
+                  className="nodrag"
+                  type="color"
+                  onChange={handleBGColorChange}
+                  defaultValue={node.data.bgcolor}
+                  inputProps={{
+                    style: {
+                      padding: "1.5px 3px",
+                      height: "28px",
+                      width: "28px",
+                    },
+                  }}
+                />
+              </>
+            )}
             <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
             <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
               <Button variant={node.data.bold ? "contained" : "outlined"} onClick={handleStyleClick("bold")}>

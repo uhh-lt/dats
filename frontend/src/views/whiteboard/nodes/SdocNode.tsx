@@ -17,7 +17,7 @@ import {
 } from "../whiteboardUtils";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
 function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<SdocNodeData>) {
@@ -117,7 +117,7 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
 
   return (
     <>
-      <BaseNode
+      <BaseCardNode
         nodeId={id}
         allowDrawConnection={false}
         selected={selected}
@@ -149,7 +149,7 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
             <Typography variant="body2">Loading ...</Typography>
           )}
         </CardContent>
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandTags}>Expand document tags ({tags.data?.length || 0})</MenuItem>
         <Divider />

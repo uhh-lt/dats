@@ -12,6 +12,7 @@ import {
   BBoxAnnotationNodeData,
   CodeNodeData,
   MemoNodeData,
+  NoteNodeData,
   SdocNodeData,
   SpanAnnotationNodeData,
   TagNodeData,
@@ -58,7 +59,6 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
       text: "test",
       variant: "h3",
       color: "black",
-      bgcolor: "#ffffff",
       bold: false,
       italic: false,
       underline: false,
@@ -66,6 +66,25 @@ export const createTextNode = ({ position }: { position?: XYPosition }): Node<Te
       verticalAlign: "top",
     },
     type: "text",
+    position: { x: position?.x || 0, y: position?.y || 0 },
+  };
+};
+
+export const createNoteNode = ({ position }: { position?: XYPosition }): Node<NoteNodeData> => {
+  return {
+    id: uuidv4(),
+    data: {
+      text: "test",
+      variant: "h3",
+      color: "black",
+      bgcolor: "#ffffff",
+      bold: false,
+      italic: false,
+      underline: false,
+      horizontalAlign: "left",
+      verticalAlign: "top",
+    },
+    type: "note",
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };

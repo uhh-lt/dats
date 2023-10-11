@@ -1,11 +1,10 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { TextNodeData } from "../types/TextNodeData";
+import { NoteNodeData } from "../types/NoteNodeData";
 import BaseCardNode from "./BaseCardNode";
-import BaseNode from "./BaseNode";
 
-function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
+function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
   const reactFlowInstance = useReactFlow();
   const theme = useTheme();
 
@@ -42,11 +41,12 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
   };
 
   return (
-    <BaseNode
+    <BaseCardNode
       allowDrawConnection={false}
       nodeId={id}
       selected={selected}
       onClick={handleClick}
+      backgroundColor={data.bgcolor}
       alignment={data.verticalAlign}
     >
       {isEditing ? (
@@ -81,8 +81,8 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
           {data.text}
         </Typography>
       )}
-    </BaseNode>
+    </BaseCardNode>
   );
 }
 
-export default TextNode;
+export default NoteNode;
