@@ -4,6 +4,8 @@ from typing import List, Optional, Tuple
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.memo import MemoRead
+from app.core.data.dto.source_document_link import SourceDocumentLinkRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.util import PaginatedResults
 from pydantic import BaseModel, Field
@@ -56,6 +58,17 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
 
     class Config:
         orm_mode = True
+
+
+class SourceDocumentReadAll(SourceDocumentRead):
+    tags: List[DocumentTagRead] = Field(description="Tags of the SourceDocument")
+    metadata: List[SourceDocumentMetadataRead] = Field(
+        description="Metadata of the SourceDocument"
+    )
+    memos: List[MemoRead] = Field(description="Memos of the SourceDocument")
+    links: List[SourceDocumentLinkRead] = Field(
+        description="Links of the SourceDocument"
+    )
 
 
 class SourceDocumentReadAction(SourceDocumentRead):
