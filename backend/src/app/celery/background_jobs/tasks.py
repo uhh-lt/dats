@@ -32,8 +32,8 @@ def start_crawler_job(crawler_job: CrawlerJobRead) -> Tuple[Path, int]:
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_text_preprocessing_pipeline_task(cargos: List[PipelineCargo]) -> None:
-    execute_text_preprocessing_pipeline_(cargos=cargos)
+def execute_text_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
+    execute_text_preprocessing_pipeline_(cargo=cargo)
 
 
 @celery_worker.task(
@@ -41,8 +41,8 @@ def execute_text_preprocessing_pipeline_task(cargos: List[PipelineCargo]) -> Non
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_image_preprocessing_pipeline_task(cargos: List[PipelineCargo]) -> None:
-    execute_image_preprocessing_pipeline_(cargos=cargos)
+def execute_image_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
+    execute_image_preprocessing_pipeline_(cargo=cargo)
 
 
 @celery_worker.task(
@@ -50,8 +50,8 @@ def execute_image_preprocessing_pipeline_task(cargos: List[PipelineCargo]) -> No
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_audio_preprocessing_pipeline_task(cargos: List[PipelineCargo]) -> None:
-    execute_audio_preprocessing_pipeline_(cargos=cargos)
+def execute_audio_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
+    execute_audio_preprocessing_pipeline_(cargo=cargo)
 
 
 @celery_worker.task(
@@ -59,8 +59,8 @@ def execute_audio_preprocessing_pipeline_task(cargos: List[PipelineCargo]) -> No
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 5, "countdown": 5},
 )
-def execute_video_preprocessing_pipeline_task(cargos: List[PipelineCargo]) -> None:
-    execute_video_preprocessing_pipeline_(cargos=cargos)
+def execute_video_preprocessing_pipeline_task(cargo: PipelineCargo) -> None:
+    execute_video_preprocessing_pipeline_(cargo=cargo)
 
 
 @celery_worker.task(

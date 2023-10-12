@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
@@ -10,6 +10,7 @@ from app.core.data.dto.preprocessing_job import (
 from app.core.data.dto.preprocessing_job_payload import PreprocessingJobPayloadCreate
 from app.core.data.orm.preprocessing_job import PreprocessingJobORM
 from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
 
@@ -45,6 +46,41 @@ class CRUDPreprocessingJob(
         if res is None or len(res) == 0:
             return []
         return list(map(lambda r: str(r[0]), res))
+
+    def get_status_by_id(self, db: Session, uuid: str) -> BackgroundJobStatus:
+        db_str_obj = db.query(self.model.status).filter(self.model.id == uuid).scalar()
+        if not db_str_obj:
+            raise NoSuchElementError(self.model, id=id)
+        return BackgroundJobStatus(db_str_obj)
+
+    def get_number_of_running_or_waiting_payloads(self, db: Session, uuid: str) -> int:
+        from app.core.data.orm.preprocessing_job_payload import (
+            PreprocessingJobPayloadORM,
+        )
+
+        # SELECT COUNT(ppjp)
+        #  FROM preprocessingjob ppj
+        #  JOIN preprocessingjobpayload ppjp ON ppj.id = ppjp.prepro_job_id
+        #  WHERE ppj.status = 'Running' OR ppj.status = 'Waiting'
+
+        query = (
+            db.query(func.count(self.model.id))
+            .join(
+                PreprocessingJobPayloadORM,
+                self.model.id == PreprocessingJobPayloadORM.prepro_job_id,
+            )
+            .filter(
+                and_(
+                    self.model.id == uuid,
+                    or_(
+                        self.model.status == BackgroundJobStatus.RUNNING.value,
+                        self.model.status == BackgroundJobStatus.WAITING.value,
+                    ),
+                )
+            )
+        )
+
+        return query.scalar()
 
     def create(
         self, db: Session, *, create_dto: PreprocessingJobCreate

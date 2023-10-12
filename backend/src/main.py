@@ -1,8 +1,5 @@
 import os
 
-from app.core.data.dto.project import ProjectReadAction
-from app.core.data.dto.source_document import SourceDocumentReadAction
-from app.core.startup import startup
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -16,8 +13,8 @@ from uvicorn.main import uvicorn
 
 from app.core.startup import startup  # isort: skip
 
-# Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
-# file once more manually, so it would be executed twice.
+# Flo: just do it once. We have to check because if we start the main function,
+#  unvicorn will import this file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
     startup(reset_data=False, sql_echo=True)
@@ -46,7 +43,6 @@ from api.endpoints import (
     whiteboard,
 )
 from app.core.data.crawler.crawler_service import (
-    CrawlerJobAlreadyStartedOrDoneError,
     CrawlerJobPreparationError,
     NoDataToCrawlError,
     NoSuchCrawlerJobError,

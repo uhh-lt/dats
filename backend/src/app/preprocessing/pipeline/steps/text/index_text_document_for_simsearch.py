@@ -1,11 +1,10 @@
 from app.core.search.simsearch_service import SimSearchService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from config import conf
 
 sss = SimSearchService()
 
-MIN_SENTENCE_LENGTH = conf.preprocessing.text.min_sentence_length
+MIN_SENTENCE_LENGTH = 5
 
 
 def index_text_document_for_simsearch(cargo: PipelineCargo) -> PipelineCargo:

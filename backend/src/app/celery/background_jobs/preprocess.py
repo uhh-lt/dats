@@ -20,33 +20,37 @@ def import_uploaded_archive_(archive_file_path: Path, project_id: int) -> None:
     )
 
 
-def execute_text_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+def execute_text_preprocessing_pipeline_(cargo: PipelineCargo) -> None:
     pipeline = prepro.get_text_pipeline()
-    logger.info(
-        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    logger.debug(
+        f"Executing text Preprocessing Pipeline\n\t{pipeline}\n\t for cargo"
+        f" {cargo.ppj_payload.filename}!"
     )
-    pipeline.execute(cargos=cargos)
+    pipeline.execute(cargo=cargo)
 
 
-def execute_image_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+def execute_image_preprocessing_pipeline_(cargo: PipelineCargo) -> None:
     pipeline = prepro.get_image_pipeline()
-    logger.info(
-        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    logger.debug(
+        f"Executing image Preprocessing Pipeline\n\t{pipeline}\n\t for cargo"
+        f" {cargo.ppj_payload.filename}!"
     )
-    pipeline.execute(cargos=cargos)
+    pipeline.execute(cargo=cargo)
 
 
-def execute_audio_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+def execute_audio_preprocessing_pipeline_(cargo: PipelineCargo) -> None:
     pipeline = prepro.get_audio_pipeline()
-    logger.info(
-        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    logger.debug(
+        f"Executing audio Preprocessing Pipeline\n\t{pipeline}\n\t for cargo"
+        f" {cargo.ppj_payload.filename}!"
     )
-    pipeline.execute(cargos=cargos)
+    pipeline.execute(cargo=cargo)
 
 
-def execute_video_preprocessing_pipeline_(cargos: List[PipelineCargo]) -> None:
+def execute_video_preprocessing_pipeline_(cargo: PipelineCargo) -> None:
     pipeline = prepro.get_video_pipeline()
-    logger.info(
-        f"Executing Preprocessing Pipeline\n\t{pipeline}\n\t with {len(cargos)} cargos!"
+    logger.debug(
+        f"Executing audio Preprocessing Pipeline\n\t{pipeline}\n\t for cargo"
+        f" {cargo.ppj_payload.filename}!"
     )
-    pipeline.execute(cargos=cargos)
+    pipeline.execute(cargo=cargo)

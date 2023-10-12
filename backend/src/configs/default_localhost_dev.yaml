@@ -48,18 +48,6 @@ weaviate:
   host: ${oc.env:WEAVIATE_HOST, 127.0.0.1}
   port: ${oc.env:WEAVIATE_PORT, 8080}
 
-preprocessing:
-  text:
-    num_workers: 32
-    bulk_threshold: 100
-    min_sentence_length: 5
-  image:
-    num_workers: 32
-  audio:
-    num_workers: 4
-  video:
-    num_workers: 4
-
 postgres:
   host: ${oc.env:POSTGRES_HOST, 127.0.0.1}
   port: ${oc.env:POSTGRES_PORT, 5432}
