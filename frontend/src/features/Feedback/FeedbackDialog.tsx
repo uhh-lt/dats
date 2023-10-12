@@ -1,38 +1,33 @@
 import FeedbackHooks from "../../api/FeedbackHooks";
 import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, Stack, TextField } from "@mui/material";
-import FeedbackIcon from "@mui/icons-material/Feedback";
-import { useAuth } from "../../auth/AuthProvider";
+import { DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import SaveIcon from "@mui/icons-material/Save";
-import { useLocation } from "react-router-dom";
+import { UserRead } from "../../api/openapi";
+import { QueryObserverResult } from "@tanstack/react-query";
 
-function FloatingFeedbackButton() {
-  const { user, isLoggedIn } = useAuth();
-  const location = useLocation();
+interface FeedbackDialogProps {
+  setIsFeedbackDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  user: QueryObserverResult<UserRead, Error>;
+  isLoggedIn: boolean;
+  locPathName: string;
+}
 
+function FeedbackDialog({ setIsFeedbackDialogOpen, user, isLoggedIn, locPathName }: FeedbackDialogProps) {
   // react form
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm();
-
-  // local state
-  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
 
   // mutations
   const createMutation = FeedbackHooks.useCreateFeedback();
 
-  // dialog event handlers
-  const openFeedbackDialog = () => {
-    reset();
-    setIsFeedbackDialogOpen(true);
-  };
+  // close dialog event handler
   const closeFeedbackDialog = () => {
     setIsFeedbackDialogOpen(false);
   };
@@ -44,7 +39,7 @@ function FloatingFeedbackButton() {
         {
           requestBody: {
             user_id: user.data.id,
-            user_content: `URL: ${location.pathname}\n${data.content}`,
+            user_content: `URL: ${locPathName}\n${data.content}`,
           },
         },
         {
@@ -64,16 +59,6 @@ function FloatingFeedbackButton() {
   return (
     <>
       {isLoggedIn ? (
-        <Fab
-          color="primary"
-          size="medium"
-          onClick={openFeedbackDialog}
-          sx={{ position: "absolute", bottom: 8, right: 8, zIndex: (theme) => theme.zIndex.appBar + 1 }}
-        >
-          <FeedbackIcon />
-        </Fab>
-      ) : null}
-      <Dialog open={isFeedbackDialogOpen} onClose={closeFeedbackDialog} maxWidth="md" fullWidth>
         <form onSubmit={handleSubmit(handleSubmitFeedback, handleError)}>
           <DialogTitle>Submit your feedback</DialogTitle>
           <DialogContent>
@@ -104,9 +89,9 @@ function FloatingFeedbackButton() {
             </LoadingButton>
           </DialogActions>
         </form>
-      </Dialog>
+      ) : null}
     </>
   );
 }
 
-export default FloatingFeedbackButton;
+export default FeedbackDialog;
