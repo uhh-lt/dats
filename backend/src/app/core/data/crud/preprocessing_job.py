@@ -1,4 +1,4 @@
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
@@ -10,8 +10,8 @@ from app.core.data.dto.preprocessing_job import (
 from app.core.data.dto.preprocessing_job_payload import PreprocessingJobPayloadCreate
 from app.core.data.orm.preprocessing_job import PreprocessingJobORM
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
 
 
 class CRUDPreprocessingJob(
@@ -55,8 +55,9 @@ class CRUDPreprocessingJob(
 
     def get_number_of_running_or_waiting_payloads(self, db: Session, uuid: str) -> int:
         from app.core.data.orm.preprocessing_job_payload import (
-            PreprocessingJobPayloadORM
+            PreprocessingJobPayloadORM,
         )
+
         # SELECT COUNT(ppjp)
         #  FROM preprocessingjob ppj
         #  JOIN preprocessingjobpayload ppjp ON ppj.id = ppjp.prepro_job_id

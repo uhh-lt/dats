@@ -73,31 +73,34 @@ def prepare_and_start_crawling_job_async(
 def execute_text_preprocessing_pipeline_apply_async(
     cargos: List[PipelineCargo],
 ) -> None:
-    Signature(
-        execute_text_preprocessing_pipeline_task, kwargs={"cargos": cargos}
-    ).apply_async()
+    for cargo in cargos:
+        Signature(
+            execute_text_preprocessing_pipeline_task, kwargs={"cargo": cargo}
+        ).apply_async()
 
 
 def execute_image_preprocessing_pipeline_apply_async(
     cargos: List[PipelineCargo],
 ) -> None:
-    Signature(
-        execute_image_preprocessing_pipeline_task, kwargs={"cargos": cargos}
-    ).apply_async()
+    for cargo in cargos:
+        Signature(
+            execute_image_preprocessing_pipeline_task, kwargs={"cargo": cargo}
+        ).apply_async()
 
 
 def execute_audio_preprocessing_pipeline_apply_async(
     cargos: List[PipelineCargo],
 ) -> None:
-    Signature(
-        execute_audio_preprocessing_pipeline_task, kwargs={"cargos": cargos}
-    ).apply_async()
+    for cargo in cargos:
+        Signature(
+            execute_audio_preprocessing_pipeline_task, kwargs={"cargo": cargo}
+        ).apply_async()
 
 
 def execute_video_preprocessing_pipeline_apply_async(
     cargos: List[PipelineCargo],
 ) -> None:
-    Signature(
-        execute_video_preprocessing_pipeline_task, kwargs={"cargos": cargos}
-    ).apply_async()
-
+    for cargo in cargos:
+        Signature(
+            execute_video_preprocessing_pipeline_task, kwargs={"cargo": cargo}
+        ).apply_async()
