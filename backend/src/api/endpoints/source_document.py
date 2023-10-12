@@ -90,8 +90,8 @@ async def get_all_by_id(
     )
 
 
-@router.get(
-    "/{sdoc_ids}/all_bulk",
+@router.post(
+    "/all_bulk",
     tags=tags,
     response_model=List[SourceDocumentReadAll],
     summary="Returns the SourceDocument with all Information",
