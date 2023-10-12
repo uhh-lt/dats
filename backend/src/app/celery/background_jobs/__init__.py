@@ -8,7 +8,6 @@ from app.core.data.export.export_service import ExportService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
-from celery import Signature
 from celery.canvas import Signature
 from celery.result import AsyncResult
 
@@ -30,12 +29,6 @@ execute_audio_preprocessing_pipeline_task = (
 execute_video_preprocessing_pipeline_task = (
     "app.celery.background_jobs.tasks.execute_video_preprocessing_pipeline_task"
 )
-
-find_similar_images_task = "app.celery.background_jobs.tasks.find_similar_images_task"
-find_similar_sentences_task = (
-    "app.celery.background_jobs.tasks.find_similar_sentences_task"
-)
-find_similar_sentences_with_embedding_with_threshold_task = "app.celery.background_jobs.tasks.find_similar_sentences_with_embedding_with_threshold_task"
 
 
 def import_uploaded_archive_apply_async(
@@ -108,29 +101,3 @@ def execute_video_preprocessing_pipeline_apply_async(
         execute_video_preprocessing_pipeline_task, kwargs={"cargos": cargos}
     ).apply_async()
 
-
-def find_similar_images_apply_async(
-    proj_id: int, query: int, top_k: int
-) -> AsyncResult:
-    return Signature(
-        find_similar_images_task,
-        kwargs={"proj_id": proj_id, "query": query, "top_k": top_k},
-    ).apply_async()
-
-
-def find_similar_sentences_apply_async(
-    proj_id: int, query: str, top_k: int
-) -> AsyncResult:
-    return Signature(
-        find_similar_sentences_task,
-        kwargs={"proj_id": proj_id, "query": query, "top_k": top_k},
-    ).apply_async()
-
-
-def find_similar_sentences_with_embedding_with_threshold_apply_async(
-    proj_id: int, queries: List[str], top_k: int
-) -> AsyncResult:
-    return Signature(
-        find_similar_sentences_with_embedding_with_threshold_task,
-        kwargs={"proj_id": proj_id, "queries": queries, "top_k": top_k},
-    ).apply_async()
