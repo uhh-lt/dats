@@ -13,7 +13,7 @@ DEVICE = cc.device
 MODEL = cc.model
 MAX_CAPTION_LENGTH = cc.image_captioning.max_caption_length
 NUM_BEAMS = cc.image_captioning.num_beams
-
+PRECISION_BIT = cc.precision_bit
 
 logger = logging.getLogger("ray.serve")
 
@@ -24,13 +24,33 @@ class Blip2Model:
         logger.debug(f"Loading Blip2Processor {MODEL} ...")
         image_processor: Blip2Processor = Blip2Processor.from_pretrained(MODEL)
 
-        logger.debug(f"Loading Blip2ForConditionalGeneration {MODEL} ...")
-        captioning_model: Blip2ForConditionalGeneration = (
-            Blip2ForConditionalGeneration.from_pretrained(MODEL)
-        )
-        captioning_model.to(DEVICE)
-        captioning_model.eval()
+        deviceMap = {"": 0}
+        eightBit = False
+        if PRECISION_BIT == 32:
+            dataType = torch.float32
+            if DEVICE == "cpu":
+                deviceMap = {"": "cpu"}
+        elif DEVICE == "cuda" and PRECISION_BIT == 16:
+            dataType = torch.float16
+        elif DEVICE == "cuda" and PRECISION_BIT == 8:
+            dataType = torch.bfloat16
+            eightBit = True
+        else:
+            msg = f"Cannot run {MODEL} in {PRECISION_BIT}-bit on CPU"
+            logger.error(msg)
+            raise RuntimeError(msg)
 
+        logger.debug(
+            f"Loading Blip2ForConditionalGeneration {MODEL} with {PRECISION_BIT} precision ..."
+        )
+
+        captioning_model: Blip2ForConditionalGeneration = (
+            Blip2ForConditionalGeneration.from_pretrained(
+                MODEL, load_in_8bit=eightBit, device_map=deviceMap, torch_dtype=dataType
+            )
+        )
+        captioning_model.eval()
+        self.datatype = dataType
         self.feature_extractor = image_processor
         self.captioning_model = captioning_model
 
@@ -41,7 +61,7 @@ class Blip2Model:
                 img = img.convert("RGB")
             pixel_values = self.feature_extractor(
                 images=[img], return_tensors="pt"
-            ).pixel_values.to(DEVICE)
+            ).pixel_values.to(DEVICE, dtype=self.datatype)
 
         with torch.no_grad():
             output_ids = self.captioning_model.generate(
