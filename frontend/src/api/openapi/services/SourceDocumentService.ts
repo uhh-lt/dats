@@ -11,6 +11,7 @@ import type { SourceDocumentKeywords } from "../models/SourceDocumentKeywords";
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
+import type { SourceDocumentReadAll } from "../models/SourceDocumentReadAll";
 import type { SourceDocumentSentences } from "../models/SourceDocumentSentences";
 import type { SourceDocumentTokens } from "../models/SourceDocumentTokens";
 
@@ -60,6 +61,61 @@ export class SourceDocumentService {
       path: {
         sdoc_id: sdocId,
       },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the SourceDocument with all Information
+   * Returns the SourceDocument with all related information with the given ID if it exists
+   * @returns SourceDocumentReadAll Successful Response
+   * @throws ApiError
+   */
+  public static getAllById({
+    sdocId,
+    onlyIfFinished = true,
+  }: {
+    sdocId: number;
+    onlyIfFinished?: boolean;
+  }): CancelablePromise<SourceDocumentReadAll> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/all",
+      path: {
+        sdoc_id: sdocId,
+      },
+      query: {
+        only_if_finished: onlyIfFinished,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the SourceDocument with all Information
+   * Returns the SourceDocument with all related information with the given ID if it exists
+   * @returns SourceDocumentReadAll Successful Response
+   * @throws ApiError
+   */
+  public static getAllByIdBulk({
+    requestBody,
+    onlyIfFinished = true,
+  }: {
+    requestBody: Array<number>;
+    onlyIfFinished?: boolean;
+  }): CancelablePromise<Array<SourceDocumentReadAll>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/sdoc/all_bulk",
+      query: {
+        only_if_finished: onlyIfFinished,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

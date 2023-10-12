@@ -1147,6 +1147,73 @@
         }
       }
     },
+    "/sdoc/{sdoc_id}/all": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the SourceDocument with all Information",
+        "description": "Returns the SourceDocument with all related information with the given ID if it exists",
+        "operationId": "get_all_by_id",
+        "parameters": [
+          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
+          {
+            "required": false,
+            "schema": { "title": "Only If Finished", "type": "boolean", "default": true },
+            "name": "only_if_finished",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentReadAll" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/sdoc/all_bulk": {
+      "post": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the SourceDocument with all Information",
+        "description": "Returns the SourceDocument with all related information with the given ID if it exists",
+        "operationId": "get_all_by_id_bulk",
+        "parameters": [
+          {
+            "required": false,
+            "schema": { "title": "Only If Finished", "type": "boolean", "default": true },
+            "name": "only_if_finished",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Sourcedocument-Get All By Id Bulk",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SourceDocumentReadAll" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc/{sdoc_id}/content": {
       "get": {
         "tags": ["sourceDocument"],
@@ -6026,7 +6093,9 @@
             "title": "Threshold",
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
-            "default": 0
+            "default": 0,
+            "max": 1,
+            "min": 0
           }
         }
       },
@@ -6319,6 +6388,29 @@
           }
         }
       },
+      "SourceDocumentLinkRead": {
+        "title": "SourceDocumentLinkRead",
+        "required": ["parent_source_document_id", "linked_source_document_filename", "id", "linked_source_document_id"],
+        "type": "object",
+        "properties": {
+          "parent_source_document_id": {
+            "title": "Parent Source Document Id",
+            "type": "integer",
+            "description": "ID of the parent SourceDocument."
+          },
+          "linked_source_document_filename": {
+            "title": "Linked Source Document Filename",
+            "type": "string",
+            "description": "The filename of the linked SourceDocument."
+          },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the SourceDocumentLink" },
+          "linked_source_document_id": {
+            "title": "Linked Source Document Id",
+            "type": "integer",
+            "description": "ID of the linked SourceDocument."
+          }
+        }
+      },
       "SourceDocumentMetadataCreate": {
         "title": "SourceDocumentMetadataCreate",
         "required": ["key", "value", "source_document_id"],
@@ -6405,6 +6497,83 @@
             "type": "string",
             "description": "Updated timestamp of the Memo",
             "format": "date-time"
+          }
+        }
+      },
+      "SourceDocumentReadAll": {
+        "title": "SourceDocumentReadAll",
+        "required": [
+          "filename",
+          "content",
+          "doctype",
+          "status",
+          "project_id",
+          "id",
+          "created",
+          "updated",
+          "tags",
+          "metadata",
+          "memos",
+          "links"
+        ],
+        "type": "object",
+        "properties": {
+          "filename": {
+            "title": "Filename",
+            "maxLength": 230,
+            "type": "string",
+            "description": "Filename of the SourceDocument"
+          },
+          "content": { "title": "Content", "type": "string", "description": "Content of the SourceDocument" },
+          "doctype": {
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "description": "DOCTYPE of the SourceDocument"
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/SDocStatus" }],
+            "description": "Status of the SourceDocument"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the SourceDocument belongs to"
+          },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the SourceDocument" },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "The created timestamp of the SourceDocument",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the Memo",
+            "format": "date-time"
+          },
+          "tags": {
+            "title": "Tags",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "description": "Tags of the SourceDocument"
+          },
+          "metadata": {
+            "title": "Metadata",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" },
+            "description": "Metadata of the SourceDocument"
+          },
+          "memos": {
+            "title": "Memos",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/MemoRead" },
+            "description": "Memos of the SourceDocument"
+          },
+          "links": {
+            "title": "Links",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SourceDocumentLinkRead" },
+            "description": "Links of the SourceDocument"
           }
         }
       },

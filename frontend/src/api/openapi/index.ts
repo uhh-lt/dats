@@ -81,11 +81,13 @@ export type { SourceDocumentDocumentTagMultiLink } from "./models/SourceDocument
 export type { SourceDocumentFilenameQuery } from "./models/SourceDocumentFilenameQuery";
 export type { SourceDocumentHTML } from "./models/SourceDocumentHTML";
 export type { SourceDocumentKeywords } from "./models/SourceDocumentKeywords";
+export type { SourceDocumentLinkRead } from "./models/SourceDocumentLinkRead";
 export type { SourceDocumentMetadataCreate } from "./models/SourceDocumentMetadataCreate";
 export type { SourceDocumentMetadataRead } from "./models/SourceDocumentMetadataRead";
 export type { SourceDocumentMetadataUpdate } from "./models/SourceDocumentMetadataUpdate";
 export type { SourceDocumentRead } from "./models/SourceDocumentRead";
 export type { SourceDocumentReadAction } from "./models/SourceDocumentReadAction";
+export type { SourceDocumentReadAll } from "./models/SourceDocumentReadAll";
 export type { SourceDocumentSentences } from "./models/SourceDocumentSentences";
 export type { SourceDocumentTokens } from "./models/SourceDocumentTokens";
 export type { SpanAnnotationCreateWithCodeId } from "./models/SpanAnnotationCreateWithCodeId";
