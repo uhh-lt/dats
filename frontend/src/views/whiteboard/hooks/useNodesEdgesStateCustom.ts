@@ -1,4 +1,4 @@
-import { useState, useCallback, Dispatch } from "react";
+import { useState, useCallback, Dispatch, SetStateAction } from "react";
 import { Node, Edge, EdgeChange, NodeChange, applyEdgeChanges, applyNodeChanges } from "reactflow";
 
 type OnChange<ChangesType> = (changes: ChangesType[]) => void;
@@ -10,7 +10,9 @@ const uniqueItemsById = <T extends { id: string }>(items: T[]): T[] => {
   return Object.values(uniqueItems);
 };
 
-export const useEdgeStateCustom = (initialEdges: Edge[]): [Edge[], Dispatch<Edge[]>, OnChange<EdgeChange>] => {
+export const useEdgeStateCustom = (
+  initialEdges: Edge[]
+): [Edge[], Dispatch<SetStateAction<Edge[]>>, OnChange<EdgeChange>] => {
   const [edges, setEdges] = useState(initialEdges);
 
   const setItemsUnique = useCallback((edges: Edge[] | ((edges: Edge[]) => Edge[])) => {
@@ -25,7 +27,7 @@ export const useEdgeStateCustom = (initialEdges: Edge[]): [Edge[], Dispatch<Edge
     [setItemsUnique]
   );
 
-  return [edges, setEdges, onEdgesChange];
+  return [edges, setItemsUnique, onEdgesChange];
 };
 
 export const useNodeStateCustom = <T>(

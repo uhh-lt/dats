@@ -8,6 +8,7 @@ export type { MemoNodeData } from "./MemoNodeData";
 export type { CodeNodeData } from "./CodeNodeData";
 export type { SpanAnnotationNodeData } from "./SpanAnnotationNodeData";
 export type { BBoxAnnotationNodeData } from "./BBoxAnnotationNodeData";
+export type { CustomEdgeData } from "./CustomEdgeData";
 
 export {
   isTagNode,

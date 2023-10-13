@@ -1,0 +1,15 @@
+.selected-handle {
+  background: #3367d9 !important;
+}
+
+.whiteboardflow .react-flow__handle {
+  background: #3367d9;
+}
+
+.whiteboardflow .react-flow__handle-connecting {
+  background: red;
+}
+
+.whiteboardflow .react-flow__handle-valid {
+  background: green;
+}

@@ -1,8 +1,8 @@
-import { Box, BoxProps, CardProps } from "@mui/material";
+import { Box, BoxProps } from "@mui/material";
 import React from "react";
 import { Handle, NodeResizer, Position } from "reactflow";
 import "./nodes.css";
-import { useConnectionHelper } from "./useConnectionHelper";
+import { useConnectionHelper } from "../hooks/useConnectionHelper";
 
 interface BaseNodeProps {
   children: React.ReactNode;
@@ -13,11 +13,25 @@ interface BaseNodeProps {
 }
 
 function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, ...props }: BaseNodeProps & BoxProps) {
-  const { isConnecting, isValidConnectionTarget } = useConnectionHelper(nodeId);
+  const { isValidCustomConnectionTarget } = useConnectionHelper(nodeId);
 
   return (
     <>
       <NodeResizer isVisible={selected} minWidth={50} minHeight={50} handleStyle={{ width: "12px", height: "12px" }} />
+      {[Position.Top, Position.Right, Position.Bottom, Position.Left].map((position) => (
+        <Handle
+          key={position}
+          type="source"
+          position={position}
+          id={position}
+          style={{
+            width: "12px",
+            height: "12px",
+            [position]: "-20px",
+            background: !isValidCustomConnectionTarget && !selected ? "transparent" : undefined,
+          }}
+        />
+      ))}
       <Box padding={2} style={{ height: "100%" }}>
         <Box
           style={{
@@ -25,12 +39,6 @@ function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, 
             position: "relative",
           }}
         >
-          {!isConnecting && (
-            <Handle className="customHandle" position={Position.Right} type="source" style={{ zIndex: 1 }} />
-          )}
-
-          <Handle className="customHandle" position={Position.Left} type="target" />
-
           {!allowDrawConnection && <Box className="customHandle" style={{ zIndex: 5 }} />}
 
           <Box
@@ -43,7 +51,8 @@ function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, 
               borderRadius: props.style?.borderRadius ? props.style.borderRadius : "inherit",
               height: "calc(100% - 16px)",
               display: "flex",
-              alignItems: alignment === "center" ? "center" : alignment === "bottom" ? "flex-end" : "flex-start",
+              flexDirection: "column",
+              justifyContent: alignment === "center" ? "center" : alignment === "bottom" ? "flex-end" : "flex-start",
             }}
           >
             {children}

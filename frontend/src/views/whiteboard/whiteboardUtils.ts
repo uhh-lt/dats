@@ -1,4 +1,4 @@
-import { Edge, Node, XYPosition } from "reactflow";
+import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
 import {
   BBoxAnnotationReadResolvedCode,
@@ -19,8 +19,18 @@ import {
   TagNodeData,
   TextNodeData,
 } from "./types";
+import { theme } from "../../plugins/ReactMUI";
 
 const positionOffset = 50;
+
+export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
+  style: { strokeWidth: 3, stroke: theme.palette.grey[400] },
+  type: "floating",
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    color: theme.palette.grey[400],
+  },
+};
 
 export const isMemoNodeId = (nodeId: string): boolean => nodeId.startsWith("memo-");
 export const isTagNodeId = (nodeId: string): boolean => nodeId.startsWith("tag-");
@@ -218,14 +228,21 @@ export const createBBoxAnnotationNodes = ({
 
 export const createCodeParentCodeEdge = ({ codeId, parentCodeId }: { codeId: number; parentCodeId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-code-${parentCodeId}`,
     source: `code-${codeId}`,
     target: `code-${parentCodeId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
+export const isDatabaseEdge = (edge: Edge): boolean => {
+  return edge.sourceHandle === "database" && edge.targetHandle === "database";
+};
+
 export const isCodeParentCodeEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("code-") && edge.target.startsWith("code-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("code-");
 };
 
 export const createMemoSpanAnnotationEdge = ({
@@ -236,38 +253,47 @@ export const createMemoSpanAnnotationEdge = ({
   spanAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-spanAnnotation-${spanAnnotationId}`,
     source: `memo-${memoId}`,
     target: `spanAnnotation-${spanAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoSpanAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("spanAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("spanAnnotation-");
 };
 
 export const createMemoSdocEdge = ({ memoId, sdocId }: { memoId: number; sdocId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-sdoc-${sdocId}`,
     source: `memo-${memoId}`,
     target: `sdoc-${sdocId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoSdocEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("sdoc-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("sdoc-");
 };
 
 export const createMemoTagEdge = ({ memoId, tagId }: { memoId: number; tagId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-tag-${tagId}`,
     source: `memo-${memoId}`,
     target: `tag-${tagId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoTagEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("tag-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("tag-");
 };
 
 export const createCodeSpanAnnotationEdge = ({
@@ -278,14 +304,17 @@ export const createCodeSpanAnnotationEdge = ({
   spanAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-spanAnnotation-${spanAnnotationId}`,
     source: `code-${codeId}`,
     target: `spanAnnotation-${spanAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isCodeSpanAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("code-") && edge.target.startsWith("spanAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("spanAnnotation-");
 };
 
 export const createSdocSpanAnnotationEdge = ({
@@ -296,14 +325,17 @@ export const createSdocSpanAnnotationEdge = ({
   spanAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `sdoc-${sdocId}-spanAnnotation-${spanAnnotationId}`,
     source: `sdoc-${sdocId}`,
     target: `spanAnnotation-${spanAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isSdocSpanAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("sdoc-") && edge.target.startsWith("spanAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("spanAnnotation-");
 };
 
 export const createCodeBBoxAnnotationEdge = ({
@@ -314,14 +346,17 @@ export const createCodeBBoxAnnotationEdge = ({
   bboxAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-bboxAnnotation-${bboxAnnotationId}`,
     source: `code-${codeId}`,
     target: `bboxAnnotation-${bboxAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isCodeBBoxAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("code-") && edge.target.startsWith("bboxAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("bboxAnnotation-");
 };
 
 export const createSdocBBoxAnnotationEdge = ({
@@ -332,14 +367,17 @@ export const createSdocBBoxAnnotationEdge = ({
   bboxAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `sdoc-${sdocId}-bboxAnnotation-${bboxAnnotationId}`,
     source: `sdoc-${sdocId}`,
     target: `bboxAnnotation-${bboxAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isSdocBBoxAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("sdoc-") && edge.target.startsWith("bboxAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("bboxAnnotation-");
 };
 
 export const createMemoBBoxAnnotationEdge = ({
@@ -350,36 +388,45 @@ export const createMemoBBoxAnnotationEdge = ({
   bboxAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-bboxAnnotation-${bboxAnnotationId}`,
     source: `memo-${memoId}`,
     target: `bboxAnnotation-${bboxAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoBBoxAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("bboxAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("bboxAnnotation-");
 };
 
 export const createMemoCodeEdge = ({ memoId, codeId }: { memoId: number; codeId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-code-${codeId}`,
     source: `memo-${memoId}`,
     target: `code-${codeId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoCodeEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("code-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("code-");
 };
 
 export const createTagSdocEdge = ({ sdocId, tagId }: { sdocId: number; tagId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `tag-${tagId}-sdoc-${sdocId}`,
     source: `tag-${tagId}`,
     target: `sdoc-${sdocId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isTagSdocEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("tag-") && edge.target.startsWith("sdoc-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("tag-") && edge.target.startsWith("sdoc-");
 };

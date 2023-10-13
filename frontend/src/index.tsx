@@ -17,14 +17,7 @@ import queryClient from "./plugins/ReactQueryClient";
 import "./plugins/i18n";
 import router from "./router/routes";
 import { store } from "./store/store";
-
-const theme = createTheme({
-  palette: {
-    secondary: {
-      main: "#185cc9",
-    },
-  },
-});
+import { theme } from "./plugins/ReactMUI";
 
 const persistor = persistStore(store);
 const container = document.getElementById("root");

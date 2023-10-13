@@ -1,0 +1,138 @@
+import { Box, TextField, Typography, useTheme } from "@mui/material";
+import { useMemo, useState } from "react";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  EdgeProps,
+  getBezierPath,
+  getSimpleBezierPath,
+  getSmoothStepPath,
+  getStraightPath,
+  useReactFlow,
+} from "reactflow";
+import { CustomEdgeData } from "../types/CustomEdgeData";
+
+const useGetPath = (edge: EdgeProps<CustomEdgeData>): [string, number, number] => {
+  const [edgePath, labelX, labelY] = useMemo(() => {
+    switch (edge.data?.type) {
+      case "bezier":
+        return getBezierPath(edge);
+      case "simplebezier":
+        return getSimpleBezierPath(edge);
+      case "straight":
+        return getStraightPath(edge);
+      case "smoothstep":
+        return getSmoothStepPath(edge);
+      default:
+        return getStraightPath(edge);
+    }
+  }, [edge]);
+
+  return [edgePath, labelX, labelY];
+};
+
+function CustomEdge(props: EdgeProps<CustomEdgeData>) {
+  const [edgePath, labelX, labelY] = useGetPath(props);
+
+  const reactFlowInstance = useReactFlow();
+  const theme = useTheme();
+
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    console.log(event);
+    if (event.detail >= 2) {
+      setIsEditing(true);
+    }
+  };
+
+  const handleChangeText = (
+    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>
+  ) => {
+    // @ts-ignore
+    const value: string = event.target.value;
+    console.log(value);
+    reactFlowInstance.setEdges((edges) =>
+      edges.map((edge) => {
+        if (edge.id === props.id) {
+          return {
+            ...edge,
+            data: {
+              ...edge.data,
+              label: {
+                ...edge.data.label,
+                text: value,
+              },
+            },
+          };
+        }
+
+        return edge;
+      })
+    );
+    setIsEditing(false);
+  };
+
+  return (
+    <>
+      <BaseEdge path={edgePath} {...props} />
+      {props.data && props.data?.label.text.trim() !== "" && (
+        <EdgeLabelRenderer>
+          <Box
+            style={{
+              position: "absolute",
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              backgroundColor: props.data.label.bgcolor + props.data.label.bgalpha.toString(16).padStart(2, "0"),
+              padding: 10,
+              borderRadius: 5,
+              fontWeight: 700,
+              alignItems:
+                props.data.label.verticalAlign === "center"
+                  ? "center"
+                  : props.data.label.verticalAlign === "bottom"
+                  ? "flex-end"
+                  : "flex-start",
+              pointerEvents: "all",
+            }}
+            onClick={handleClick}
+          >
+            {isEditing ? (
+              <Box className="nodrag">
+                <TextField
+                  variant="outlined"
+                  defaultValue={props.data.label.text}
+                  onBlur={handleChangeText}
+                  onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
+                  inputProps={{
+                    style: {
+                      ...theme.typography[props.data.label.variant],
+                    },
+                  }}
+                  multiline
+                  autoFocus
+                />
+              </Box>
+            ) : (
+              <Typography
+                variant={props.data.label.variant}
+                color={props.data.label.color}
+                style={{
+                  ...(props.data.label.italic && { fontStyle: "italic" }),
+                  ...(props.data.label.bold && { fontWeight: "bold" }),
+                  ...(props.data.label.underline && { textDecoration: "underline" }),
+                  textAlign: props.data.label.horizontalAlign,
+                  width: "100%",
+                }}
+                whiteSpace="pre-wrap"
+              >
+                {props.data.label.text}
+              </Typography>
+            )}
+          </Box>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+
+export default CustomEdge;

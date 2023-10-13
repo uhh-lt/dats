@@ -1,7 +1,7 @@
 import React from "react";
 import { getStraightPath, ConnectionLineComponentProps } from "reactflow";
 
-function CustomConnectionLine({ fromX, fromY, toX, toY, connectionLineStyle }: ConnectionLineComponentProps) {
+function StraightConnectionLine({ fromX, fromY, toX, toY, connectionLineStyle }: ConnectionLineComponentProps) {
   const [edgePath] = getStraightPath({
     sourceX: fromX,
     sourceY: fromY,
@@ -17,4 +17,4 @@ function CustomConnectionLine({ fromX, fromY, toX, toY, connectionLineStyle }: C
   );
 }
 
-export default CustomConnectionLine;
+export default StraightConnectionLine;
