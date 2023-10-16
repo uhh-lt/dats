@@ -46,6 +46,7 @@ import {
   isMemoTagEdge,
 } from "../whiteboardUtils";
 import BaseCardNode from "./BaseCardNode";
+import MemoRenderer from "../../../components/DataGrid/MemoRenderer";
 
 const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
   switch (attachedObjectType) {
@@ -262,7 +263,7 @@ function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<M
       >
         {memo.isSuccess ? (
           <>
-            <CardHeader title={"Memo: " + memo.data.title} />
+            <CardHeader title={<MemoRenderer memo={memo.data} />} />
             <CardContent>
               <Typography>{memo.data.content}</Typography>
             </CardContent>
