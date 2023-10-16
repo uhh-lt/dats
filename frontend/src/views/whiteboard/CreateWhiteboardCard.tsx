@@ -11,7 +11,7 @@ function CreateWhiteboardCard({ title, description, onClick }: CreateWhiteboardC
     <Card
       style={{
         width: "250px",
-        height: "300px",
+        height: "calc(100% - 8px)",
         marginRight: "16px",
         display: "inline-block",
         whiteSpace: "normal",

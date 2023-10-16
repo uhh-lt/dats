@@ -200,10 +200,14 @@ function TableDashboard() {
         </Typography>
       </Portal>
       <Container maxWidth="xl" className="h100" style={{ display: "flex", flexDirection: "column" }} sx={{ py: 2 }}>
-        <Card sx={{ width: "100%", mb: 2 }} elevation={2}>
+        <Card
+          sx={{ width: "100%", height: "50%", maxHeight: "400px", mb: 2 }}
+          elevation={2}
+          className="myFlexFillAllContainer myFlexContainer"
+        >
           <CardHeader title="Create table" />
-          <CardContent>
-            <Box height="332" overflow="auto" whiteSpace="nowrap">
+          <CardContent className="myFlexFillAllContainer">
+            <Box height="100%" overflow="auto" whiteSpace="nowrap">
               <CreateTableCard
                 title="Empty table"
                 description="Create an empty table with no template"
@@ -227,7 +231,11 @@ function TableDashboard() {
             </Box>
           </CardContent>
         </Card>
-        <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer">
+        <Card
+          sx={{ width: "100%", minHeight: "225.5px" }}
+          elevation={2}
+          className="myFlexFillAllContainer myFlexContainer"
+        >
           <CardHeader title="Load table" />
           <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
             <div className="h100" style={{ width: "100%" }}>
