@@ -20,6 +20,7 @@ import {
   TextNodeData,
 } from "./types";
 import { theme } from "../../plugins/ReactMUI";
+import { DatabaseNodeData } from "./types/DatabaseNodeData";
 
 const positionOffset = 50;
 
@@ -30,6 +31,11 @@ export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
     type: MarkerType.ArrowClosed,
     color: theme.palette.grey[400],
   },
+};
+
+const defaultDatabaseNodeData: DatabaseNodeData = {
+  bgcolor: "#ffffff",
+  bgalpha: 255,
 };
 
 export const isMemoNodeId = (nodeId: string): boolean => nodeId.startsWith("memo-");
@@ -142,7 +148,7 @@ export const createTagNodes = ({
   return tagIds.map((tagId, index) => ({
     id: `tag-${tagId}`,
     type: "tag",
-    data: { tagId },
+    data: { ...defaultDatabaseNodeData, tagId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -158,7 +164,7 @@ export const createMemoNodes = ({
   return memoIds.map((memoId, index) => ({
     id: `memo-${memoId}`,
     type: "memo",
-    data: { memoId },
+    data: { ...defaultDatabaseNodeData, memoId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -174,7 +180,7 @@ export const createSdocNodes = ({
   return sdocIds.map((sdocId, index) => ({
     id: `sdoc-${sdocId}`,
     type: "sdoc",
-    data: { sdocId: sdocId },
+    data: { ...defaultDatabaseNodeData, sdocId: sdocId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -189,7 +195,7 @@ export const createCodeNodes = ({
   return codes.map((code, index) => ({
     id: `code-${code.id}`,
     type: "code",
-    data: { codeId: code.id, parentCodeId: code.parent_code_id },
+    data: { ...defaultDatabaseNodeData, codeId: code.id, parentCodeId: code.parent_code_id },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -205,7 +211,7 @@ export const createSpanAnnotationNodes = ({
   return spanAnnotationIds.map((spanAnnotationId, index) => ({
     id: `spanAnnotation-${spanAnnotationId}`,
     type: "spanAnnotation",
-    data: { spanAnnotationId },
+    data: { ...defaultDatabaseNodeData, spanAnnotationId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -221,7 +227,7 @@ export const createBBoxAnnotationNodes = ({
   return bboxAnnotationIds.map((bboxAnnotationId, index) => ({
     id: `bboxAnnotation-${bboxAnnotationId}`,
     type: "bboxAnnotation",
-    data: { bboxAnnotationId },
+    data: { ...defaultDatabaseNodeData, bboxAnnotationId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };

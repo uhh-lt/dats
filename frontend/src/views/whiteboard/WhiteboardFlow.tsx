@@ -67,6 +67,7 @@ import { DWTSNodeData } from "./types/DWTSNodeData";
 import "./whiteboard.css";
 import { defaultDatabaseEdgeOptions, isCodeParentCodeEdge, isDatabaseEdge, isTagSdocEdge } from "./whiteboardUtils";
 import StraightConnectionLine from "./connectionlines/StraightConnectionLine";
+import DatabaseNodeEditMenu, { DatabaseNodeEditMenuHandle } from "./toolbar/DatabaseNodeEditMenu";
 
 const nodeTypes: NodeTypes = {
   border: BorderNode,
@@ -154,6 +155,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   // menu refs
   const edgeContextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
   const textNodeEditMenuRef = useRef<TextNodeEditMenuHandle>(null);
+  const databaseNodeEditMenuRef = useRef<DatabaseNodeEditMenuHandle>(null);
   const edgeEditMenuRef = useRef<EdgeEditMenuHandle>(null);
 
   // local state
@@ -358,10 +360,15 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
       setCurrentEdge(undefined);
     }
 
-    if (nodes.length === 1 && edges.length === 0 && isTextNode(nodes[0])) {
-      textNodeEditMenuRef.current?.open(nodes[0].id);
+    if (nodes.length === 1 && edges.length === 0) {
+      if (isTextNode(nodes[0])) {
+        textNodeEditMenuRef.current?.open(nodes[0].id);
+      } else {
+        databaseNodeEditMenuRef.current?.open(nodes[0].id);
+      }
     } else {
       textNodeEditMenuRef.current?.close();
+      databaseNodeEditMenuRef.current?.close();
     }
   };
 
@@ -473,6 +480,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               </Paper>
             </Panel>
             <Panel position="top-center">
+              <DatabaseNodeEditMenu ref={databaseNodeEditMenuRef} />
               <TextNodeEditMenu ref={textNodeEditMenuRef} />
               <EdgeEditMenu ref={edgeEditMenuRef} />
             </Panel>

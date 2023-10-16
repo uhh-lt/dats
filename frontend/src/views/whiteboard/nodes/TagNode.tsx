@@ -131,6 +131,7 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
             left: e.clientX,
           });
         }}
+        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
       >
         {tag.isSuccess ? (
           <>

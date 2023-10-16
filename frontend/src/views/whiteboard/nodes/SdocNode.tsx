@@ -128,6 +128,7 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
             left: e.clientX,
           });
         }}
+        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
       >
         <CardHeader title={<SdocRenderer sdoc={data.sdocId} link={true} />} />
         <CardContent>

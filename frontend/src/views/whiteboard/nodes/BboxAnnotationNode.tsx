@@ -167,6 +167,7 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
             left: e.clientX,
           });
         }}
+        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
       >
         {annotation.isSuccess ? (
           <>
