@@ -1,10 +1,11 @@
-import { CircularProgress, Portal, Typography } from "@mui/material";
+import { CircularProgress, Portal } from "@mui/material";
 import { useContext } from "react";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import WhiteboardFlow from "./WhiteboardFlow";
+import { useParams } from "react-router-dom";
 import { ReactFlowProvider } from "reactflow";
 import WhiteboardHooks from "../../api/WhiteboardHooks";
-import { useParams } from "react-router-dom";
+import EditableTypography from "../../components/NavBarTop/EditableTypography";
+import { AppBarContext } from "../../layouts/TwoBarLayout";
+import WhiteboardFlow from "./WhiteboardFlow";
 
 function Whiteboard() {
   // global client state
@@ -14,14 +15,25 @@ function Whiteboard() {
   const whiteboardId = parseInt(urlParams.whiteboardId);
 
   // global server state
+  const updateWhiteboardMutation = WhiteboardHooks.useUpdateWhiteboard();
   const whiteboard = WhiteboardHooks.useGetWhiteboard(whiteboardId);
+
+  const handleChange = (value: string) => {
+    if (!whiteboard.data || whiteboard.data.title === value) return;
+
+    updateWhiteboardMutation.mutate({
+      whiteboardId: whiteboard.data.id,
+      requestBody: {
+        title: value,
+        content: JSON.stringify(whiteboard.data.content),
+      },
+    });
+  };
 
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
-          Whiteboard: {whiteboard.data?.title}
-        </Typography>
+        <EditableTypography value={whiteboard.data?.title || "Loading"} onChange={handleChange} variant="h6" />
       </Portal>
       {whiteboard.isSuccess ? (
         <ReactFlowProvider>
