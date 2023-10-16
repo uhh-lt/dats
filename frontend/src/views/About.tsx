@@ -3,7 +3,17 @@ import { Container, Typography } from "@mui/material";
 
 function About() {
   return (
-    <Container maxWidth="md">
+    <Container
+      maxWidth="md"
+      sx={{
+        overflow: "auto",
+        height: "100%",
+        "-ms-overflow-style": "none",
+        "::-webkit-scrollbar": {
+          display: "none",
+        },
+      }}
+    >
       <Typography variant={"h3"} gutterBottom mt={3}>
         About
       </Typography>
