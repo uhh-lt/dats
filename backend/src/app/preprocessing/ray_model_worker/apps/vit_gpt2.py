@@ -18,7 +18,7 @@ class ViTGPT2Api:
         self.vit_gpt2 = vit_gpt2_model_handle
 
     @api.post("/image_captioning", response_model=ViTGPT2Output)
-    async def classify(self, input: ViTGPT2FilePathInput):
+    async def image_captioning(self, input: ViTGPT2FilePathInput):
         predict_ref = await self.vit_gpt2.image_captioning.remote(input)
         predict_result = await predict_ref
         return predict_result

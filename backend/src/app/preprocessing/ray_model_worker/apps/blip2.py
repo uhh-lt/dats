@@ -18,7 +18,7 @@ class Blip2Api:
         self.blip2 = blip2_model_handle
 
     @api.post("/image_captioning", response_model=Blip2Output)
-    async def classify(self, input: Blip2FilePathInput):
+    async def image_captioning(self, input: Blip2FilePathInput):
         predict_ref = await self.blip2.image_captioning.remote(input)
         predict_result = await predict_ref
         return predict_result
