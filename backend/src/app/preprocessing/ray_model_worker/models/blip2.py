@@ -24,17 +24,17 @@ class Blip2Model:
         logger.debug(f"Loading Blip2Processor {MODEL} ...")
         image_processor: Blip2Processor = Blip2Processor.from_pretrained(MODEL)
 
-        deviceMap = {"": 0}
-        eightBit = False
+        device_map = {"": 0}
+        load_in_8bit = False
         if PRECISION_BIT == 32:
-            dataType = torch.float32
+            data_type = torch.float32
             if DEVICE == "cpu":
-                deviceMap = {"": "cpu"}
+                device_map = {"": "cpu"}
         elif DEVICE == "cuda" and PRECISION_BIT == 16:
-            dataType = torch.float16
+            data_type = torch.float16
         elif DEVICE == "cuda" and PRECISION_BIT == 8:
-            dataType = torch.bfloat16
-            eightBit = True
+            data_type = torch.bfloat16
+            load_in_8bit = True
         else:
             msg = f"Cannot run {MODEL} in {PRECISION_BIT}-bit on CPU"
             logger.error(msg)
@@ -46,11 +46,14 @@ class Blip2Model:
 
         captioning_model: Blip2ForConditionalGeneration = (
             Blip2ForConditionalGeneration.from_pretrained(
-                MODEL, load_in_8bit=eightBit, device_map=deviceMap, torch_dtype=dataType
+                MODEL,
+                load_in_8bit=load_in_8bit,
+                device_map=device_map,
+                torch_dtype=data_type,
             )
         )
         captioning_model.eval()
-        self.datatype = dataType
+        self.datatype = data_type
         self.feature_extractor = image_processor
         self.captioning_model = captioning_model
 

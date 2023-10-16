@@ -96,6 +96,7 @@ class RayModelService(metaclass=SingletonMeta):
         return DETRObjectDetectionOutput.parse_obj(response.json())
 
     def vit_gpt2_image_captioning(self, input: ViTGPT2FilePathInput) -> ViTGPT2Output:
+        raise NotImplementedError
         response = self._make_post_request("/vit_gpt2/image_captioning", input.dict())
         return ViTGPT2Output.parse_obj(response.json())
 
