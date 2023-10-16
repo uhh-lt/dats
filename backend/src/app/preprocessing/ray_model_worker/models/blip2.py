@@ -53,7 +53,7 @@ class Blip2Model:
             )
         )
         captioning_model.eval()
-        self.datatype = data_type
+        self.data_type = data_type
         self.feature_extractor = image_processor
         self.captioning_model = captioning_model
 
@@ -64,7 +64,7 @@ class Blip2Model:
                 img = img.convert("RGB")
             pixel_values = self.feature_extractor(
                 images=[img], return_tensors="pt"
-            ).pixel_values.to(DEVICE, dtype=self.datatype)
+            ).pixel_values.to(DEVICE, dtype=self.data_type)
 
         with torch.no_grad():
             output_ids = self.captioning_model.generate(
