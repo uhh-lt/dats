@@ -1,7 +1,10 @@
-from fastapi import APIRouter
+from api.dependencies import get_current_user
+from fastapi import APIRouter, Depends
 from fastapi.responses import RedirectResponse
 
-router = APIRouter()
+from api.dependencies import get_current_user
+
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.get("/heartbeat", tags=["general"])

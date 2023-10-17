@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memos
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
@@ -27,7 +27,7 @@ from app.core.search.elasticsearch_service import ElasticSearchService
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/sdoc")
+router = APIRouter(prefix="/sdoc", dependencies=[Depends(get_current_user)])
 tags = ["sourceDocument"]
 
 
