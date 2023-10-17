@@ -14,11 +14,13 @@ import ReactFlow, {
   IsValidConnection,
   MarkerType,
   MiniMap,
+  NodeMouseHandler,
   NodeTypes,
   OnConnect,
   OnSelectionChangeFunc,
   Panel,
   ReactFlowState,
+  XYPosition,
   addEdge,
   updateEdge,
   useReactFlow,
@@ -39,9 +41,10 @@ import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog";
 import SpanAnnotationEditDialog from "../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import TagEditDialog from "../../features/CrudDialog/Tag/TagEditDialog";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
+import StraightConnectionLine from "./connectionlines/StraightConnectionLine";
 import CustomEdge from "./edges/CustomEdge";
-import { CustomEdgeData } from "./types/CustomEdgeData";
 import FloatingEdge from "./edges/FloatingEdge";
+import { useReactFlowService } from "./hooks/ReactFlowService";
 import { useEdgeStateCustom, useNodeStateCustom } from "./hooks/useNodesEdgesStateCustom";
 import BboxAnnotationNode from "./nodes/BboxAnnotationNode";
 import BorderNode from "./nodes/BorderNode";
@@ -60,14 +63,15 @@ import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog";
 import AddNoteNodeButton from "./toolbar/AddNoteNodeButton";
 import AddTagNodeDialog from "./toolbar/AddTagNodeDialog";
 import AddTextNodeButton from "./toolbar/AddTextNodeButton";
+import DatabaseNodeEditMenu, { DatabaseNodeEditMenuHandle } from "./toolbar/DatabaseNodeEditMenu";
 import EdgeEditMenu, { EdgeEditMenuHandle } from "./toolbar/EdgeEditMenu";
 import TextNodeEditMenu, { TextNodeEditMenuHandle } from "./toolbar/TextNodeEditMenu";
 import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode, isTextNode } from "./types";
+import { CustomEdgeData } from "./types/CustomEdgeData";
 import { DWTSNodeData } from "./types/DWTSNodeData";
+import { PendingAddNodeAction } from "./types/PendingAddNodeAction";
 import "./whiteboard.css";
 import { defaultDatabaseEdgeOptions, isCodeParentCodeEdge, isDatabaseEdge, isTagSdocEdge } from "./whiteboardUtils";
-import StraightConnectionLine from "./connectionlines/StraightConnectionLine";
-import DatabaseNodeEditMenu, { DatabaseNodeEditMenuHandle } from "./toolbar/DatabaseNodeEditMenu";
 
 const nodeTypes: NodeTypes = {
   border: BorderNode,
@@ -135,6 +139,7 @@ interface WhiteboardFlowProps {
 function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   // whiteboard (react-flow)
   const reactFlowInstance = useReactFlow<DWTSNodeData>();
+  const reactFlowService = useReactFlowService(reactFlowInstance);
   const resetSelection = useStore(resetSelectedElementsSelector);
   const connectionHandleId = useStore(connectionHandleIdSelector);
 
@@ -159,12 +164,31 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const edgeEditMenuRef = useRef<EdgeEditMenuHandle>(null);
 
   // local state
-  const [nodes, setNodes, onNodesChange] = useNodeStateCustom<DWTSNodeData>(whiteboard.content.nodes);
+  const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
+  const [nodes, , onNodesChange] = useNodeStateCustom<DWTSNodeData>(whiteboard.content.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
   const [currentEdge, setCurrentEdge] = useState<Edge | undefined>(undefined);
 
+  const handleChangePendingAction = useCallback(
+    (action: PendingAddNodeAction | undefined) => {
+      resetSelection();
+      setPendingAction(() => action);
+    },
+    [resetSelection]
+  );
+
+  const handleExecutePendingAction = (event: React.MouseEvent<Element, MouseEvent>) => {
+    if (!pendingAction) return;
+
+    // 64 is toolbar sizse
+    const whiteboardPosition: XYPosition = reactFlowInstance.project({ x: event.clientX, y: event.clientY - 64 });
+    pendingAction(whiteboardPosition, reactFlowService);
+    setPendingAction(undefined);
+  };
+
   const onConnect: OnConnect = useCallback(
     (connection) => {
+      setPendingAction(undefined);
       if (!connection.source || !connection.target) return;
 
       if (connection.sourceHandle === "database" && connection.targetHandle === "database") {
@@ -184,7 +208,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               },
             },
             {
-              onSuccess(data, variables, context) {
+              onSuccess() {
                 SnackbarAPI.openSnackbar({
                   text: "Tag added to document",
                   severity: "success",
@@ -204,7 +228,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               },
             },
             {
-              onSuccess(data, variables, context) {
+              onSuccess() {
                 SnackbarAPI.openSnackbar({
                   text: "Updated parent code",
                   severity: "success",
@@ -224,7 +248,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               },
             },
             {
-              onSuccess(data, variables, context) {
+              onSuccess() {
                 SnackbarAPI.openSnackbar({
                   text: "Updated span annotation",
                   severity: "success",
@@ -244,7 +268,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               },
             },
             {
-              onSuccess(data, variables, context) {
+              onSuccess() {
                 SnackbarAPI.openSnackbar({
                   text: "Updated span annotation",
                   severity: "success",
@@ -292,7 +316,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
           },
         },
         {
-          onSuccess(data, variables, context) {
+          onSuccess() {
             SnackbarAPI.openSnackbar({
               text: "Tag removed from document",
               severity: "success",
@@ -324,7 +348,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
           },
         },
         {
-          onSuccess(data, variables, context) {
+          onSuccess(data) {
             SnackbarAPI.openSnackbar({
               text: `Removed parent code from code "${data.name}"`,
               severity: "success",
@@ -338,7 +362,13 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
     setCurrentEdge(undefined);
   };
 
+  const onNodeClick: NodeMouseHandler = () => {
+    setPendingAction(undefined);
+  };
+
   const onEdgeClick = (event: React.MouseEvent<Element, MouseEvent>, edge: Edge) => {
+    setPendingAction(undefined);
+
     if (!isDatabaseEdge(edge)) {
       return;
     }
@@ -413,7 +443,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Saved whiteboard '${data.title}'`,
             severity: "success",
@@ -430,12 +460,13 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
           <ReactFlow
             className="whiteboardflow"
             nodes={nodes}
-            onNodesChange={onNodesChange}
             nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onNodeClick={onNodeClick}
             edges={edges}
-            onEdgesChange={onEdgesChange}
             edgeTypes={edgeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
+            onEdgesChange={onEdgesChange}
             onEdgeClick={onEdgeClick}
             onEdgeContextMenu={onEdgeClick}
             onEdgeUpdate={onEdgeUpdate}
@@ -450,6 +481,10 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                     stroke: "black",
                   }
             }
+            style={{
+              cursor: pendingAction ? "crosshair" : "grab",
+            }}
+            onPaneClick={handleExecutePendingAction}
             connectionMode={ConnectionMode.Loose}
             isValidConnection={isValidConnection}
             // do not allow edge delete with backspace for database edges
@@ -461,25 +496,34 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
               <Paper elevation={1} sx={{ mb: 3 }}>
                 <Stack>
                   <Typography p={1}>DWTS Objects</Typography>
-                  <AddDocumentNodeDialog projectId={projectId} />
-                  <AddTagNodeDialog projectId={projectId} />
-                  <AddCodeNodeDialog projectId={projectId} />
-                  {userId && <AddAnnotationNodeDialog projectId={projectId} userIds={[userId]} />}
-                  {userId && <AddMemoNodeDialog projectId={projectId} userId={userId} />}
+                  <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                  <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                  <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                  {userId && (
+                    <AddAnnotationNodeDialog
+                      projectId={projectId}
+                      userIds={[userId]}
+                      onClick={handleChangePendingAction}
+                    />
+                  )}
+                  {userId && (
+                    <AddMemoNodeDialog projectId={projectId} userId={userId} onClick={handleChangePendingAction} />
+                  )}
                 </Stack>
               </Paper>
               <Paper elevation={1}>
                 <Stack>
                   <Typography p={1}>Text Elements</Typography>
-                  <AddNoteNodeButton />
-                  <AddTextNodeButton />
-                  <AddBorderNodeButton type="Ellipse" />
-                  <AddBorderNodeButton type="Rectangle" />
-                  <AddBorderNodeButton type="Rounded" />
+                  <AddNoteNodeButton onClick={handleChangePendingAction} />
+                  <AddTextNodeButton onClick={handleChangePendingAction} />
+                  <AddBorderNodeButton type="Ellipse" onClick={handleChangePendingAction} />
+                  <AddBorderNodeButton type="Rectangle" onClick={handleChangePendingAction} />
+                  <AddBorderNodeButton type="Rounded" onClick={handleChangePendingAction} />
                 </Stack>
               </Paper>
             </Panel>
             <Panel position="top-center">
+              {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
               <DatabaseNodeEditMenu ref={databaseNodeEditMenuRef} />
               <TextNodeEditMenu ref={textNodeEditMenuRef} />
               <EdgeEditMenu ref={edgeEditMenuRef} />

@@ -1,20 +1,18 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import DocumentSelector from "../../../components/Selectors/DocumentSelector";
+import { XYPosition } from "reactflow";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead";
-import { useReactFlow } from "reactflow";
-import { useReactFlowService } from "../hooks/ReactFlowService";
+import DocumentSelector from "../../../components/Selectors/DocumentSelector";
+import { ReactFlowService } from "../hooks/ReactFlowService";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 import { createSdocNodes } from "../whiteboardUtils";
 
-export interface AddDocumentNodeDialogProps {
+export interface AddDocumentNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddDocumentNodeDialog({ projectId, buttonProps }: AddDocumentNodeDialogProps) {
-  const reactFlowInstance = useReactFlow();
-  const reactFlowService = useReactFlowService(reactFlowInstance);
-
+function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentNodeDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedDocuments, setSelectedDocuments] = useState<SourceDocumentRead[]>([]);
 
@@ -28,7 +26,9 @@ function AddDocumentNodeDialog({ projectId, buttonProps }: AddDocumentNodeDialog
   };
 
   const handleConfirmSelection = () => {
-    reactFlowService.addNodes(createSdocNodes({ sdocs: selectedDocuments }));
+    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes(createSdocNodes({ sdocs: selectedDocuments, position: position }));
+    onClick(addNode);
     handleClose();
   };
 

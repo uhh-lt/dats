@@ -1,12 +1,13 @@
 import { Button } from "@mui/material";
 import React, { useCallback } from "react";
-import { useReactFlow } from "reactflow";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { createBorderNode, createTextNode } from "../whiteboardUtils";
+import { XYPosition } from "reactflow";
+import { ReactFlowService } from "../hooks/ReactFlowService";
+import { createBorderNode } from "../whiteboardUtils";
 
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 
 type BorderNodeType = "Rounded" | "Ellipse" | "Rectangle";
 
@@ -16,27 +17,27 @@ const borderNodeType2Icons: Record<BorderNodeType, React.ReactElement> = {
   Rectangle: <SquareOutlinedIcon />,
 };
 
-interface AddBorderNodeButtonProps {
+interface AddBorderNodeButtonProps extends AddNodeDialogProps {
   type: BorderNodeType;
 }
 
-function AddBorderNodeButton({ type }: AddBorderNodeButtonProps) {
-  const reactFlowInstance = useReactFlow();
-  const reactFlowService = useReactFlowService(reactFlowInstance);
-
+function AddBorderNodeButton({ type, onClick }: AddBorderNodeButtonProps) {
   const handleAddBorderNode = useCallback(() => {
-    switch (type) {
-      case "Rounded":
-        reactFlowService.addNodes([createBorderNode({ borderRadius: "25px" })]);
-        break;
-      case "Ellipse":
-        reactFlowService.addNodes([createBorderNode({ borderRadius: "100%" })]);
-        break;
-      case "Rectangle":
-        reactFlowService.addNodes([createBorderNode({ borderRadius: "0px" })]);
-        break;
-    }
-  }, [reactFlowService, type]);
+    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) => {
+      switch (type) {
+        case "Rounded":
+          reactFlowService.addNodes([createBorderNode({ borderRadius: "25px", position })]);
+          break;
+        case "Ellipse":
+          reactFlowService.addNodes([createBorderNode({ borderRadius: "100%", position })]);
+          break;
+        case "Rectangle":
+          reactFlowService.addNodes([createBorderNode({ borderRadius: "0px", position })]);
+          break;
+      }
+    };
+    onClick(addNode);
+  }, [onClick, type]);
 
   return (
     <Button onClick={handleAddBorderNode}>

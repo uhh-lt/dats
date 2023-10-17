@@ -1,21 +1,18 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import CodeSelector from "../../../components/Selectors/CodeSelector";
+import { XYPosition } from "reactflow";
 import { CodeRead } from "../../../api/openapi";
-import { useReactFlow } from "reactflow";
-import { useReactFlowService } from "../hooks/ReactFlowService";
+import CodeSelector from "../../../components/Selectors/CodeSelector";
+import { ReactFlowService } from "../hooks/ReactFlowService";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 import { createCodeNodes } from "../whiteboardUtils";
 
-export interface AddCodeNodeDialogProps extends ButtonProps {
+export interface AddCodeNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddCodeNodeDialog({ projectId, buttonProps }: AddCodeNodeDialogProps) {
-  // whiteboard (react-flow)
-  const reactFlowInstance = useReactFlow();
-  const reactFlowService = useReactFlowService(reactFlowInstance);
-
+function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedCodes, setSelectedCodes] = useState<CodeRead[]>([]);
 
@@ -29,7 +26,9 @@ function AddCodeNodeDialog({ projectId, buttonProps }: AddCodeNodeDialogProps) {
   };
 
   const handleConfirmSelection = () => {
-    reactFlowService.addNodes(createCodeNodes({ codes: selectedCodes }));
+    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes(createCodeNodes({ codes: selectedCodes, position: position }));
+    onClick(addNode);
     handleClose();
   };
 

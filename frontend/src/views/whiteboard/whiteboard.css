@@ -13,3 +13,7 @@
 .whiteboardflow .react-flow__handle-valid {
   background: green;
 }
+
+.react-flow__pane {
+  cursor: inherit;
+}

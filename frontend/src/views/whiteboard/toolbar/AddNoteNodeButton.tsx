@@ -1,16 +1,16 @@
 import { Button } from "@mui/material";
 import { useCallback } from "react";
-import { useReactFlow } from "reactflow";
-import { useReactFlowService } from "../hooks/ReactFlowService";
+import { XYPosition } from "reactflow";
+import { ReactFlowService } from "../hooks/ReactFlowService";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 import { createNoteNode } from "../whiteboardUtils";
 
-function AddNoteNodeButton() {
-  const reactFlowInstance = useReactFlow();
-  const reactFlowService = useReactFlowService(reactFlowInstance);
-
+function AddNoteNodeButton({ onClick }: AddNodeDialogProps) {
   const handleAddNoteNode = useCallback(() => {
-    reactFlowService.addNodes([createNoteNode({})]);
-  }, [reactFlowService]);
+    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes([createNoteNode({ position: position })]);
+    onClick(addNode);
+  }, [onClick]);
 
   return <Button onClick={handleAddNoteNode}>Add note</Button>;
 }
