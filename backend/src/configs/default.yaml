@@ -20,7 +20,7 @@ ray:
   port: ${oc.env:RAY_PORT, 13132}
 
 repo:
-  root_directory: /tmp/dwts
+  root_directory: ${oc.env:REPO_ROOT, /tmp/dwts}
   content_server:
     https: False
     host: ${oc.env:CONTENT_SERVER_HOST, 127.0.0.1}
