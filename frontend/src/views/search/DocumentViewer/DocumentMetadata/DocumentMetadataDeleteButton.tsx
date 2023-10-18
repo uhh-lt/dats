@@ -15,7 +15,8 @@ function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadata
   const deleteMutation = MetadataHooks.useDeleteMetadata();
 
   const handleDeleteMetadata = useCallback(() => {
-    deleteMutation.mutate(
+    const mutation = deleteMutation.mutate;
+    mutation(
       {
         metadataId: metadataId,
       },
@@ -28,7 +29,7 @@ function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadata
         },
       }
     );
-  }, [deleteMutation, metadataId]);
+  }, [deleteMutation.mutate, metadataId]);
 
   return (
     <Tooltip title="Delete">

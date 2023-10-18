@@ -38,19 +38,21 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
       if (adoc) {
         if (adoc !== annotationDocument) {
           setAnnotationDocument(adoc);
-          createAdocMutation.reset();
+          const reset = createAdocMutation.reset;
+          reset();
         }
         return;
       }
 
-      // we just created an annotation document, no need to create another one
-      if (createAdocMutation.isSuccess) return;
+      // // we just created an annotation document, no need to create another one
+      // if (createAdocMutation.isSuccess) return;
 
-      // we are creating an annotation document, no need to create another one
-      if (createAdocMutation.isLoading || isMutating.current) return;
+      // // we are creating an annotation document, no need to create another one
+      // if (createAdocMutation.isLoading) return;
 
       // we are not creating an annotation document, but we need to create one
-      createAdocMutation.mutate(
+      const mutation = createAdocMutation.mutate;
+      mutation(
         {
           requestBody: {
             user_id: user.data.id,
@@ -69,7 +71,14 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
       );
       isMutating.current = true;
     }
-  }, [annotationDocument, user.data, annotationDocuments.data, createAdocMutation, sdocId, isMutating]);
+  }, [
+    annotationDocument,
+    user.data,
+    annotationDocuments.data,
+    createAdocMutation.mutate,
+    createAdocMutation.reset,
+    sdocId,
+  ]);
 
   // only return an annotation document if it matches with the source document
   return annotationDocument?.source_document_id === sdocId ? annotationDocument : undefined;

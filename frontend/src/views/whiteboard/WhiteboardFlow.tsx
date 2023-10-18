@@ -199,7 +199,8 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
         // tag can be manually connected to document
         if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
-          bulkLinkDocumentTagsMutation.mutate(
+          const mutation = bulkLinkDocumentTagsMutation.mutate;
+          mutation(
             {
               projectId: projectId,
               requestBody: {
@@ -220,7 +221,8 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
         // code can be manually connected to other code
         if (isCodeNode(sourceNode) && isCodeNode(targetNode)) {
-          updateCodeMutation.mutate(
+          const mutation = updateCodeMutation.mutate;
+          mutation(
             {
               codeId: sourceNode.data.codeId,
               requestBody: {
@@ -240,7 +242,8 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isSpanAnnotationNode(targetNode)) {
-          updateSpanAnnotationMutation.mutate(
+          const mutation = updateSpanAnnotationMutation.mutate;
+          mutation(
             {
               spanId: targetNode.data.spanAnnotationId,
               requestBody: {
@@ -260,7 +263,8 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
         // codes can be manually connected to annotations
         if (isCodeNode(sourceNode) && isBBoxAnnotationNode(targetNode)) {
-          updateBBoxAnnotationMutation.mutate(
+          const mutation = updateBBoxAnnotationMutation.mutate;
+          mutation(
             {
               bboxId: targetNode.data.bboxAnnotationId,
               requestBody: {
@@ -282,13 +286,13 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
       }
     },
     [
-      bulkLinkDocumentTagsMutation,
       projectId,
       reactFlowInstance,
-      updateBBoxAnnotationMutation,
-      updateCodeMutation,
-      updateSpanAnnotationMutation,
       setEdges,
+      bulkLinkDocumentTagsMutation.mutate,
+      updateBBoxAnnotationMutation.mutate,
+      updateCodeMutation.mutate,
+      updateSpanAnnotationMutation.mutate,
     ]
   );
 
@@ -432,9 +436,10 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   });
 
   const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
-  const handleSaveWhiteboard = () => {
+  const handleSaveWhiteboard = useCallback(() => {
     const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
-    updateWhiteboard.mutate(
+    const mutation = updateWhiteboard.mutate;
+    mutation(
       {
         whiteboardId: whiteboard.id,
         requestBody: {
@@ -451,7 +456,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
         },
       }
     );
-  };
+  }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
 
   return (
     <>

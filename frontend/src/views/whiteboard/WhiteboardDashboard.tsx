@@ -139,7 +139,8 @@ function WhiteboardDashboard() {
       const whiteboard = userWhiteboards.data.find((whiteboard) => whiteboard.id === id);
       if (!whiteboard) return;
 
-      createWhiteboard.mutate(
+      const mutation = createWhiteboard.mutate;
+      mutation(
         {
           requestBody: {
             project_id: projectId,
@@ -158,7 +159,7 @@ function WhiteboardDashboard() {
         }
       );
     },
-    [createWhiteboard, projectId, user.data, userWhiteboards.data]
+    [createWhiteboard.mutate, projectId, user.data, userWhiteboards.data]
   );
 
   const handleDeleteClick = (id: GridRowId) => () => {

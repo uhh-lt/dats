@@ -33,7 +33,8 @@ function DeleteButton({ sdocIds, navigateTo, ...props }: DeleteButtonProps & Ico
         ", "
       )}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
-        deleteMutation.mutate(
+        const mutation = deleteMutation.mutate;
+        mutation(
           {
             sdocIds: sdocIds,
           },
@@ -51,7 +52,7 @@ function DeleteButton({ sdocIds, navigateTo, ...props }: DeleteButtonProps & Ico
         );
       },
     });
-  }, [deleteMutation, dispatch, navigate, navigateTo, sdocIds]);
+  }, [deleteMutation.mutate, dispatch, navigate, navigateTo, sdocIds]);
 
   return (
     <Tooltip title="Delete">

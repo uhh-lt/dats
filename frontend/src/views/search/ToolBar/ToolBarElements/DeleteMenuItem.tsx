@@ -32,13 +32,13 @@ function DeleteMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteMenuIte
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete document(s) ${sdocId}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
-        deleteMutation.mutate(
+        const mutation = deleteMutation.mutate;
+        mutation(
           {
             sdocIds: [sdocId],
           },
           {
             onSuccess: (sdocs) => {
-              console.log("HOHOH");
               const filenames = sdocs.map((sdoc) => sdoc.filename).join(", ");
               SnackbarAPI.openSnackbar({
                 text: `Successfully deleted ${sdocs.length} document(s): ${filenames}`,
@@ -57,7 +57,7 @@ function DeleteMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteMenuIte
         if (onClick) onClick();
       },
     });
-  }, [deleteMutation, dispatch, navigate, onClick, sdocId, navigateTo]);
+  }, [deleteMutation.mutate, dispatch, navigate, onClick, sdocId, navigateTo]);
 
   return (
     <MenuItem onClick={handleClick} {...props} disabled={!sdocId}>

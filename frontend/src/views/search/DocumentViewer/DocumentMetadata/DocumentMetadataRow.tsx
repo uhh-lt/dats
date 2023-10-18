@@ -44,7 +44,8 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
     (data: any) => {
       // only update if data has changed!
       if (metadata.key !== data.key || metadata.value !== data.value) {
-        updateMutation.mutate(
+        const mutation = updateMutation.mutate;
+        mutation(
           {
             metadataId: metadata.id,
             requestBody: {
@@ -63,7 +64,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
         );
       }
     },
-    [metadata.key, metadata.value, metadata.id, updateMutation]
+    [metadata.key, metadata.value, metadata.id, updateMutation.mutate]
   );
   const handleError = useCallback((data: any) => console.error(data), []);
 

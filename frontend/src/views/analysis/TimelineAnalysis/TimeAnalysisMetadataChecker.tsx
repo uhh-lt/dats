@@ -137,7 +137,8 @@ function MetadataEditor({ metadata }: MetadataEditorProps) {
     (data) => {
       // only update if data has changed!
       if (metadata.value !== data.value) {
-        updateMutation.mutate(
+        const mutation = updateMutation.mutate;
+        mutation(
           {
             metadataId: metadata.id,
             requestBody: {
@@ -156,7 +157,7 @@ function MetadataEditor({ metadata }: MetadataEditorProps) {
         );
       }
     },
-    [metadata.key, metadata.value, metadata.id, updateMutation]
+    [metadata.key, metadata.value, metadata.id, updateMutation.mutate]
   );
   const handleError: SubmitErrorHandler<MetadataUpdateFormValues> = useCallback((data) => console.error(data), []);
 
