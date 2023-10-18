@@ -22,6 +22,7 @@ import { useAuth } from "../../auth/AuthProvider";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import CreateWhiteboardCard from "./CreateWhiteboardCard";
+import { dateToLocaleString } from "../../utils/DateUtils";
 
 function WhiteboardDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -54,6 +55,7 @@ function WhiteboardDashboard() {
       field: "updated",
       headerName: "Last modified",
       flex: 0.5,
+      valueGetter: (params) => dateToLocaleString(params.value as string),
     },
     {
       field: "actions",

@@ -5,10 +5,11 @@ import PreProHooks from "../../../../api/PreProHooks";
 import BackgroundJobListItem from "./BackgroundJobListItem";
 import PreProJobPayloadListItem from "./PreProJobPayloadListItem";
 import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu";
+import { dateToLocaleString } from "../../../../utils/DateUtils";
 
 interface PreprocessingJobListItemProps {
   initialPreProJob: PreprocessingJobRead;
-  contextMenuRef: React.RefObject<ProjectDocumentsContextMenuHandle>
+  contextMenuRef: React.RefObject<ProjectDocumentsContextMenuHandle>;
 }
 
 function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJobListItemProps) {
@@ -16,16 +17,16 @@ function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJo
   const preProJob = PreProHooks.usePollPreProJob(initialPreProJob.id, initialPreProJob);
 
   // local state
-  const createdDate = new Date(initialPreProJob.created);
-  const updatedDate = new Date(initialPreProJob.updated);
+  const createdDate = dateToLocaleString(initialPreProJob.created);
+  const updatedDate = dateToLocaleString(initialPreProJob.updated);
 
-  let subTitle = `${preProJob.data!.payloads.length} documents, started at ${createdDate.toLocaleTimeString()}, ${createdDate.toDateString()}`
+  let subTitle = `${preProJob.data!.payloads.length} documents, started at ${createdDate}`;
   if (preProJob.data!.status === BackgroundJobStatus.FINISHED) {
-    subTitle += `, finished at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
+    subTitle += `, finished at ${updatedDate}`;
   } else if (preProJob.data!.status === BackgroundJobStatus.ABORTED) {
-    subTitle += `, aborted at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
+    subTitle += `, aborted at ${updatedDate}`;
   } else if (preProJob.data!.status === BackgroundJobStatus.ERRORNEOUS) {
-    subTitle += `, failed at ${updatedDate.toLocaleTimeString()}, ${updatedDate.toDateString()}`
+    subTitle += `, failed at ${updatedDate}`;
   }
 
   if (preProJob.isSuccess) {
@@ -37,14 +38,12 @@ function PreProJobListItem({ initialPreProJob, contextMenuRef }: PreprocessingJo
         title={`Preprocessing Job: ${preProJob.data.id}`}
         subTitle={subTitle}
       >
-        <List component="div"
-        subheader={
-          <ListSubheader sx={{ pl: 8 }}>
-            Processed Documents
-          </ListSubheader>
-        }
-        disablePadding
-        dense>
+        <List
+          component="div"
+          subheader={<ListSubheader sx={{ pl: 8 }}>Processed Documents</ListSubheader>}
+          disablePadding
+          dense
+        >
           {preProJob.data.payloads.map((ppj, index) => (
             <PreProJobPayloadListItem key={index} ppj={ppj} contextMenuRef={contextMenuRef} />
           ))}

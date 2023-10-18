@@ -10,6 +10,7 @@ import AttachedObjectLink from "./AttachedObjectLink";
 import "./MemoCard.css";
 import { MemoColors, MemoShortnames } from "./MemoEnumUtils";
 import { MemoCardContextMenuData } from "./MemoResults";
+import { dateToLocaleString } from "../../utils/DateUtils";
 
 interface MemoCardProps {
   memoId: number;
@@ -72,9 +73,9 @@ const MemoCard = forwardRef<any, MemoCardProps>(({ memoId, onContextMenu, style,
               }
               action={<MemoStarButton memoId={memo.data.id} isStarred={memo.data.starred} />}
               title={memo.data.title}
-              subheader={`Created: ${new Date(memo.data.created).toLocaleDateString("en-CA")} Updated: ${new Date(
+              subheader={`Created: ${dateToLocaleString(memo.data.created)} Updated: ${dateToLocaleString(
                 memo.data.updated
-              ).toLocaleDateString("en-CA")}`}
+              )}`}
               sx={{ pb: 0, pt: 1 }}
               titleTypographyProps={{
                 variant: "h5",
