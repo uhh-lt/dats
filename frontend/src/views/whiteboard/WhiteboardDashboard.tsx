@@ -1,4 +1,5 @@
 import CancelIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -21,9 +22,8 @@ import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/Whiteboa
 import { useAuth } from "../../auth/AuthProvider";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
-import CreateWhiteboardCard from "./CreateWhiteboardCard";
 import { dateToLocaleString } from "../../utils/DateUtils";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CreateWhiteboardCard from "./CreateWhiteboardCard";
 
 function WhiteboardDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -62,7 +62,7 @@ function WhiteboardDashboard() {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      width: 200,
+      width: 110,
       cellClassName: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;

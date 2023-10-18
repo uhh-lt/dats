@@ -1,4 +1,5 @@
 import CancelIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -62,7 +63,7 @@ function TableDashboard() {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      width: 100,
+      width: 110,
       cellClassName: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
@@ -95,6 +96,12 @@ function TableDashboard() {
             onClick={handleEditClick(id)}
             color="inherit"
           />,
+          <GridActionsCellItem
+            icon={<ContentCopyIcon />}
+            label="Duplicate"
+            onClick={handleDuplicateTable(id as number)}
+            color="inherit"
+          />,
           <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} color="inherit" />,
         ];
       },
@@ -120,6 +127,33 @@ function TableDashboard() {
         onSuccess(data, variables, context) {
           SnackbarAPI.openSnackbar({
             text: `Create new table '${data.title}'`,
+            severity: "success",
+          });
+        },
+      }
+    );
+  };
+
+  const handleDuplicateTable = (id: number) => () => {
+    if (!user.data?.id || !userTables.data) return;
+
+    const table = userTables.data.find((table) => table.id === id);
+    if (!table) return;
+
+    createTable.mutate(
+      {
+        requestBody: {
+          project_id: projectId,
+          user_id: user.data.id,
+          title: table.title + " (copy)",
+          content: JSON.stringify(table.content),
+          table_type: table.table_type,
+        },
+      },
+      {
+        onSuccess(data, variables, context) {
+          SnackbarAPI.openSnackbar({
+            text: `Duplicated table '${table.title}'`,
             severity: "success",
           });
         },
