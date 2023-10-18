@@ -21,6 +21,12 @@ from app.core.data.dto.user import UserCreate, UserRead
 from app.core.db.sql_service import SQLService
 
 
+# Always use the asyncio backend for async tests
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+
 @pytest.fixture
 def code(session: SQLService, project: int, user: int) -> int:
     name = "".join(random.choices(string.ascii_letters, k=15))
