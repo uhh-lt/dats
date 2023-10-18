@@ -99,7 +99,7 @@ function WhiteboardDashboard() {
   ];
 
   // CRUD whiteboard actions
-  const handleCreateWhiteboard = () => {
+  const handleCreateWhiteboard = (title: string) => {
     if (!user.data?.id) return;
 
     const content: WhiteboardGraph = { nodes: [], edges: [] };
@@ -108,14 +108,14 @@ function WhiteboardDashboard() {
         requestBody: {
           project_id: projectId,
           user_id: user.data.id,
-          title: "New Whiteboard",
+          title: title,
           content: JSON.stringify(content),
         },
       },
       {
         onSuccess(data, variables, context) {
           SnackbarAPI.openSnackbar({
-            text: `Create new whiteboard '${data.title}'`,
+            text: `Created new whiteboard '${data.title}'`,
             severity: "success",
           });
         },
@@ -206,17 +206,17 @@ function WhiteboardDashboard() {
               <CreateWhiteboardCard
                 title="Empty whiteboard"
                 description="Create an empty whiteboard with no template"
-                onClick={() => handleCreateWhiteboard()}
+                onClick={() => handleCreateWhiteboard("New Whiteboard")}
               />
               <CreateWhiteboardCard
                 title="Code whiteboard"
                 description="Create a whiteboard with all of your codes"
-                onClick={() => handleCreateWhiteboard()}
+                onClick={() => handleCreateWhiteboard("New Code Whiteboard")}
               />
               <CreateWhiteboardCard
                 title="Image whiteboard"
                 description="Create a whiteboard with images"
-                onClick={() => handleCreateWhiteboard()}
+                onClick={() => handleCreateWhiteboard("New Image Whiteboard")}
               />
             </Box>
           </CardContent>
