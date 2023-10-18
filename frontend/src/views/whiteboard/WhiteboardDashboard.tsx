@@ -14,7 +14,7 @@ import {
   GridRowModes,
   GridRowModesModel,
 } from "@mui/x-data-grid";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useParams } from "react-router";
 import { useNavigate } from "react-router-dom";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
@@ -23,6 +23,7 @@ import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import CreateWhiteboardCard from "./CreateWhiteboardCard";
 import { dateToLocaleString } from "../../utils/DateUtils";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 function WhiteboardDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -61,7 +62,7 @@ function WhiteboardDashboard() {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      width: 100,
+      width: 200,
       cellClassName: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
@@ -94,6 +95,12 @@ function WhiteboardDashboard() {
             onClick={handleEditClick(id)}
             color="inherit"
           />,
+          <GridActionsCellItem
+            icon={<ContentCopyIcon />}
+            label="Duplicate"
+            onClick={handleDuplicateWhiteboard(id as number)}
+            color="inherit"
+          />,
           <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} color="inherit" />,
         ];
       },
@@ -124,6 +131,35 @@ function WhiteboardDashboard() {
       }
     );
   };
+
+  const handleDuplicateWhiteboard = useCallback(
+    (id: number) => () => {
+      if (!user.data?.id || !userWhiteboards.data) return;
+
+      const whiteboard = userWhiteboards.data.find((whiteboard) => whiteboard.id === id);
+      if (!whiteboard) return;
+
+      createWhiteboard.mutate(
+        {
+          requestBody: {
+            project_id: projectId,
+            user_id: user.data.id,
+            title: whiteboard.title + " (copy)",
+            content: JSON.stringify(whiteboard.content),
+          },
+        },
+        {
+          onSuccess(data, variables, context) {
+            SnackbarAPI.openSnackbar({
+              text: `Duplicated whiteboard '${whiteboard.title}'`,
+              severity: "success",
+            });
+          },
+        }
+      );
+    },
+    [createWhiteboard, projectId, user.data, userWhiteboards.data]
+  );
 
   const handleDeleteClick = (id: GridRowId) => () => {
     deleteWhiteboard.mutate(
