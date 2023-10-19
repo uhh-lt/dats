@@ -10,8 +10,8 @@ def test_authentication_required():
     public_routes: Sequence[Tuple[Set[str], str]] = [
         ({"GET"}, "/"),
         ({"GET"}, "/heartbeat"),
-        ({"POST"}, "/user/login"),
-        ({"PUT"}, "/user"),
+        ({"POST"}, "/authentication/login"),
+        ({"POST"}, "/authentication/register"),
         # This route requires authentication, but does so
         # in a manner we couldn't easily verify in the test.
         ({"GET"}, "/user/me"),

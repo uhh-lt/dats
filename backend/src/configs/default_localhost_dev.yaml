@@ -3,7 +3,7 @@ api:
   max_upload_file_size: 104857600 # 100 MB in bytes
   auth:
     jwt:
-      token_url: /user/login
+      token_url: /authentication/login
       ttl: ${oc.env:JWT_TTL, 600} # seconds
       algo: ${oc.env:JWT_ALGO, HS256}
       secret: ${oc.env:JWT_SECRET, ""}

@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type Body_user_login = {
+export type Body_authentication_login = {
   grant_type?: string;
   username: string;
   password: string;

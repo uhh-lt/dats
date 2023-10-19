@@ -24,66 +24,12 @@
         "operationId": "root_to_docs",
         "responses": {
           "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
+        }
       }
     },
-    "/user": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns all Users",
-        "description": "Returns all Users that exist in the system",
-        "operationId": "get_all",
-        "parameters": [
-          {
-            "description": "The number of elements to skip (offset)",
-            "required": false,
-            "schema": {
-              "title": "Skip",
-              "maximum": 10000000,
-              "minimum": 0,
-              "type": "integer",
-              "description": "The number of elements to skip (offset)"
-            },
-            "name": "skip",
-            "in": "query"
-          },
-          {
-            "description": "The maximum number of returned elements",
-            "required": false,
-            "schema": {
-              "title": "Limit",
-              "maximum": 1000,
-              "minimum": 1,
-              "type": "integer",
-              "description": "The maximum number of returned elements"
-            },
-            "name": "limit",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response User-Get All",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserRead" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      },
-      "put": {
-        "tags": ["user"],
+    "/authentication/register": {
+      "post": {
+        "tags": ["authentication"],
         "summary": "Registers a new User",
         "description": "Registers a new User and returns it with the generated ID.",
         "operationId": "register",
@@ -103,15 +49,17 @@
         }
       }
     },
-    "/user/login": {
+    "/authentication/login": {
       "post": {
-        "tags": ["user"],
+        "tags": ["authentication"],
         "summary": "Returns the JWT access token for the provided user login data",
         "description": "Returns the JWT access token for the provided user login data if the login was successful. This is usually only called from an OAuth2 client!",
         "operationId": "login",
         "requestBody": {
           "content": {
-            "application/x-www-form-urlencoded": { "schema": { "$ref": "#/components/schemas/Body_user-login" } }
+            "application/x-www-form-urlencoded": {
+              "schema": { "$ref": "#/components/schemas/Body_authentication-login" }
+            }
           },
           "required": true
         },
@@ -201,6 +149,61 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/user": {
+      "get": {
+        "tags": ["user"],
+        "summary": "Returns all Users",
+        "description": "Returns all Users that exist in the system",
+        "operationId": "get_all",
+        "parameters": [
+          {
+            "description": "The number of elements to skip (offset)",
+            "required": false,
+            "schema": {
+              "title": "Skip",
+              "maximum": 10000000,
+              "minimum": 0,
+              "type": "integer",
+              "description": "The number of elements to skip (offset)"
+            },
+            "name": "skip",
+            "in": "query"
+          },
+          {
+            "description": "The maximum number of returned elements",
+            "required": false,
+            "schema": {
+              "title": "Limit",
+              "maximum": 1000,
+              "minimum": 1,
+              "type": "integer",
+              "description": "The maximum number of returned elements"
+            },
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response User-Get All",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/UserRead" }
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5289,6 +5292,19 @@
           "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } }
         }
       },
+      "Body_authentication-login": {
+        "title": "Body_authentication-login",
+        "required": ["username", "password"],
+        "type": "object",
+        "properties": {
+          "grant_type": { "title": "Grant Type", "pattern": "password", "type": "string" },
+          "username": { "title": "Username", "type": "string" },
+          "password": { "title": "Password", "type": "string" },
+          "scope": { "title": "Scope", "type": "string", "default": "" },
+          "client_id": { "title": "Client Id", "type": "string" },
+          "client_secret": { "title": "Client Secret", "type": "string" }
+        }
+      },
       "Body_project-upload_project_sdoc": {
         "title": "Body_project-upload_project_sdoc",
         "required": ["uploaded_files"],
@@ -5300,19 +5316,6 @@
             "items": { "type": "string", "format": "binary" },
             "description": "File(s) that get uploaded and represented by the SourceDocument(s)"
           }
-        }
-      },
-      "Body_user-login": {
-        "title": "Body_user-login",
-        "required": ["username", "password"],
-        "type": "object",
-        "properties": {
-          "grant_type": { "title": "Grant Type", "pattern": "password", "type": "string" },
-          "username": { "title": "Username", "type": "string" },
-          "password": { "title": "Password", "type": "string" },
-          "scope": { "title": "Scope", "type": "string", "default": "" },
-          "client_id": { "title": "Client Id", "type": "string" },
-          "client_secret": { "title": "Client Secret", "type": "string" }
         }
       },
       "CodeCreate": {
@@ -7248,7 +7251,10 @@
       }
     },
     "securitySchemes": {
-      "OAuth2PasswordBearer": { "type": "oauth2", "flows": { "password": { "scopes": {}, "tokenUrl": "/user/login" } } }
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": { "password": { "scopes": {}, "tokenUrl": "/authentication/login" } }
+      }
     }
   }
 }
