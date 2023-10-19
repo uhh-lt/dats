@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
@@ -11,17 +12,19 @@ if TYPE_CHECKING:
 
 
 class DocumentTagORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False, index=True)
-    description = Column(String, nullable=True, index=True)
-    color = Column(String, nullable=True)
-    created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    description: Mapped[str] = mapped_column(String, nullable=True, index=True)
+    color: Mapped[str] = mapped_column(String, nullable=True)
+    created: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="document_tag",
@@ -29,16 +32,18 @@ class DocumentTagORM(ORMBase):
     )
 
     # many to one
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    project: "ProjectORM" = relationship("ProjectORM", back_populates="document_tags")
+    project: Mapped["ProjectORM"] = relationship(
+        "ProjectORM", back_populates="document_tags"
+    )
 
     # many to many
-    source_documents: List["SourceDocumentORM"] = relationship(
+    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM",
         secondary="SourceDocumentDocumentTagLinkTable".lower(),
         back_populates="document_tags",
@@ -47,9 +52,9 @@ class DocumentTagORM(ORMBase):
 
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):
-    source_document_id = Column(
+    source_document_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), primary_key=True
     )
-    document_tag_id = Column(
+    document_tag_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), primary_key=True
     )

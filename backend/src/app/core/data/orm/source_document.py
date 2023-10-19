@@ -1,16 +1,9 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import (
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    UniqueConstraint,
-    func,
-)
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -22,20 +15,22 @@ if TYPE_CHECKING:
 
 
 class SourceDocumentORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String, nullable=False, index=True)
-    content = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    filename: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    content = mapped_column(
         String, nullable=False, index=False
     )  # TODO Flo: This will go to ES soon!
-    doctype = Column(String, nullable=False, index=True)
-    status = Column(String, nullable=False, index=True)
-    created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(
+    doctype: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    created: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="source_document",
@@ -43,28 +38,28 @@ class SourceDocumentORM(ORMBase):
     )
 
     # many to one
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    project: "ProjectORM" = relationship(
+    project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="source_documents"
     )
 
     # one to many
-    metadata_: List["SourceDocumentMetadataORM"] = relationship(
+    metadata_: Mapped[List["SourceDocumentMetadataORM"]] = relationship(
         "SourceDocumentMetadataORM",
         back_populates="source_document",
         passive_deletes=True,
     )
 
-    annotation_documents: List["AnnotationDocumentORM"] = relationship(
+    annotation_documents: Mapped[List["AnnotationDocumentORM"]] = relationship(
         "AnnotationDocumentORM", back_populates="source_document", passive_deletes=True
     )
 
-    source_document_links: List["SourceDocumentLinkORM"] = relationship(
+    source_document_links: Mapped[List["SourceDocumentLinkORM"]] = relationship(
         "SourceDocumentLinkORM",
         back_populates="parent_source_document",
         passive_deletes=True,
@@ -72,7 +67,7 @@ class SourceDocumentORM(ORMBase):
     )
 
     # many to many
-    document_tags: List["DocumentTagORM"] = relationship(
+    document_tags: Mapped[List["DocumentTagORM"]] = relationship(
         "DocumentTagORM",
         secondary="SourceDocumentDocumentTagLinkTable".lower(),
         back_populates="source_documents",

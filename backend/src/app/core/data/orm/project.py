@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
@@ -19,60 +20,66 @@ if TYPE_CHECKING:
 
 
 class ProjectORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False, unique=True, index=True)
-    description = Column(String, nullable=False, index=True)
-    created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    description: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    created: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM", uselist=False, back_populates="project", passive_deletes=True
     )
 
     # one to many
-    codes: List["CodeORM"] = relationship(
+    codes: Mapped[List["CodeORM"]] = relationship(
         "CodeORM", back_populates="project", passive_deletes=True
     )
 
-    source_documents: List["SourceDocumentORM"] = relationship(
+    source_documents: Mapped[List["SourceDocumentORM"]] = relationship(
         "SourceDocumentORM", back_populates="project", passive_deletes=True
     )
 
-    memos: List["MemoORM"] = relationship(
+    memos: Mapped[List["MemoORM"]] = relationship(
         "MemoORM", back_populates="project", passive_deletes=True
     )
 
-    document_tags: List["DocumentTagORM"] = relationship(
+    document_tags: Mapped[List["DocumentTagORM"]] = relationship(
         "DocumentTagORM", back_populates="project", passive_deletes=True
     )
 
-    analysis_tables: List["AnalysisTableORM"] = relationship(
+    analysis_tables: Mapped[List["AnalysisTableORM"]] = relationship(
         "AnalysisTableORM", back_populates="project", passive_deletes=True
     )
 
-    whiteboards: List["WhiteboardORM"] = relationship(
+    whiteboards: Mapped[List["WhiteboardORM"]] = relationship(
         "WhiteboardORM", back_populates="project", passive_deletes=True
     )
 
-    preprocessing_jobs: List["PreprocessingJobORM"] = relationship(
+    preprocessing_jobs: Mapped[List["PreprocessingJobORM"]] = relationship(
         "PreprocessingJobORM", back_populates="project", passive_deletes=True
     )
 
-    preprocessing_payloads: List["PreprocessingJobPayloadORM"] = relationship(
+    preprocessing_payloads: Mapped[List["PreprocessingJobPayloadORM"]] = relationship(
         "PreprocessingJobPayloadORM", back_populates="project", passive_deletes=True
     )
 
-    actions: List["ActionORM"] = relationship(
+    actions: Mapped[List["ActionORM"]] = relationship(
         "ActionORM", back_populates="project", passive_deletes=True
     )
     # many to many
-    users: List["UserORM"] = relationship(
+    users: Mapped[List["UserORM"]] = relationship(
         "UserORM", secondary="ProjectUserLinkTable".lower(), back_populates="projects"
     )
 
 
 class ProjectUserLinkTable(ORMBase):
-    project_id = Column(Integer, ForeignKey("project.id"), primary_key=True)
-    user_id = Column(Integer, ForeignKey("user.id"), primary_key=True)
+    project_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("project.id"), primary_key=True
+    )
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("user.id"), primary_key=True
+    )

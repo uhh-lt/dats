@@ -1,15 +1,8 @@
 from typing import TYPE_CHECKING, List
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import (
-    CheckConstraint,
-    Column,
-    ForeignKey,
-    Index,
-    Integer,
-    UniqueConstraint,
-)
-from sqlalchemy.orm import relationship
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import coalesce
 
 if TYPE_CHECKING:
@@ -28,10 +21,10 @@ if TYPE_CHECKING:
 
 
 class ObjectHandleORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # one to many
-    attached_memos: List["MemoORM"] = relationship(
+    attached_memos: Mapped[List["MemoORM"]] = relationship(
         "MemoORM",
         back_populates="attached_to",
         passive_deletes=True,
@@ -39,80 +32,90 @@ class ObjectHandleORM(ORMBase):
     )
 
     # one to one (ObjectHandle is child)
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
-    user: "UserORM" = relationship("UserORM", back_populates="object_handle")
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True
+    )
+    user: Mapped["UserORM"] = relationship("UserORM", back_populates="object_handle")
 
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("project.id", ondelete="CASCADE"), index=True
     )
-    project: "ProjectORM" = relationship("ProjectORM", back_populates="object_handle")
+    project: Mapped["ProjectORM"] = relationship(
+        "ProjectORM", back_populates="object_handle"
+    )
 
-    memo_id = Column(Integer, ForeignKey("memo.id", ondelete="CASCADE"), index=True)
-    memo = relationship(
+    memo_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("memo.id", ondelete="CASCADE"), index=True
+    )
+    memo: Mapped["MemoORM"] = relationship(
         "MemoORM", back_populates="object_handle", foreign_keys="objecthandle.c.memo_id"
     )
 
-    code_id = Column(Integer, ForeignKey("code.id", ondelete="CASCADE"), index=True)
-    code: "CodeORM" = relationship("CodeORM", back_populates="object_handle")
+    code_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("code.id", ondelete="CASCADE"), index=True
+    )
+    code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="object_handle")
 
-    current_code_id = Column(
+    current_code_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("currentcode.id", ondelete="CASCADE"), index=True
     )
-    current_code: "CurrentCodeORM" = relationship(
+    current_code: Mapped["CurrentCodeORM"] = relationship(
         "CurrentCodeORM", back_populates="object_handle"
     )
 
-    source_document_id = Column(
+    source_document_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("sourcedocument.id", ondelete="CASCADE"), index=True
     )
-    source_document: "SourceDocumentORM" = relationship(
+    source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="object_handle"
     )
 
-    source_document_metadata_id = Column(
+    source_document_metadata_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("sourcedocumentmetadata.id", ondelete="CASCADE"), index=True
     )
-    source_document_metadata: "SourceDocumentMetadataORM" = relationship(
+    source_document_metadata: Mapped["SourceDocumentMetadataORM"] = relationship(
         "SourceDocumentMetadataORM", back_populates="object_handle"
     )
 
-    annotation_document_id = Column(
+    annotation_document_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("annotationdocument.id", ondelete="CASCADE"), index=True
     )
-    annotation_document: "AnnotationDocumentORM" = relationship(
+    annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM", back_populates="object_handle"
     )
 
-    span_annotation_id = Column(
+    span_annotation_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("spanannotation.id", ondelete="CASCADE"), index=True
     )
-    span_annotation: "SpanAnnotationORM" = relationship(
+    span_annotation: Mapped["SpanAnnotationORM"] = relationship(
         "SpanAnnotationORM", back_populates="object_handle"
     )
 
-    span_group_id = Column(
+    span_group_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("spangroup.id", ondelete="CASCADE"), index=True
     )
-    span_group: "SpanGroupORM" = relationship(
+    span_group: Mapped["SpanGroupORM"] = relationship(
         "SpanGroupORM", back_populates="object_handle"
     )
 
-    bbox_annotation_id = Column(
+    bbox_annotation_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("bboxannotation.id", ondelete="CASCADE"), index=True
     )
-    bbox_annotation: "BBoxAnnotationORM" = relationship(
+    bbox_annotation: Mapped["BBoxAnnotationORM"] = relationship(
         "BBoxAnnotationORM", back_populates="object_handle"
     )
 
-    document_tag_id = Column(
+    document_tag_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("documenttag.id", ondelete="CASCADE"), index=True
     )
-    document_tag: "DocumentTagORM" = relationship(
+    document_tag: Mapped["DocumentTagORM"] = relationship(
         "DocumentTagORM", back_populates="object_handle"
     )
 
-    action_id = Column(Integer, ForeignKey("action.id", ondelete="CASCADE"), index=True)
-    action: "ActionORM" = relationship(
+    action_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("action.id", ondelete="CASCADE"), index=True
+    )
+    action: Mapped["ActionORM"] = relationship(
         "ActionORM",
         back_populates="object_handle",
         foreign_keys="objecthandle.c.action_id",
