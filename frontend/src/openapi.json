@@ -5068,6 +5068,242 @@
           }
         }
       }
+    },
+    "/trainer/": {
+      "post": {
+        "tags": ["trainer"],
+        "summary": "Starts a TrainerJob",
+        "description": "Starts a TrainerJob with the given parameters",
+        "operationId": "start_trainer_job",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainerJobParameters" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainerJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/trainer/use/{trainer_job_id}": {
+      "get": {
+        "tags": ["trainer"],
+        "summary": "Uses a model from a TrainerJob",
+        "description": "Uses a model from a TrainerJob with the given parameter",
+        "operationId": "use_trainer_model",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Trainer Job Id", "type": "string" },
+            "name": "trainer_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Trainer-Use Trainer Model",
+                  "type": "array",
+                  "items": { "type": "number" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/trainer/{trainer_job_id}": {
+      "get": {
+        "tags": ["trainer"],
+        "summary": "Returns the TrainerJob for the given ID",
+        "description": "Returns the TrainerJob for the given ID if it exists",
+        "operationId": "get_trainer_job",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Trainer Job Id", "type": "string" },
+            "name": "trainer_job_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TrainerJobRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/trainer/project/{project_id}": {
+      "get": {
+        "tags": ["trainer"],
+        "summary": "Returns all TrainerJobs for the given project ID",
+        "description": "Returns all TrainerJobs for the given project ID if it exists",
+        "operationId": "get_all_trainer_jobs",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Trainer-Get All Trainer Jobs",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TrainerJobRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/cota": {
+      "put": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Creates an ConceptOverTimeAnalysis",
+        "description": "Creates an ConceptOverTimeAnalysis",
+        "operationId": "create",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTACreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/cota/{cota_id}": {
+      "get": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Returns the ConceptOverTimeAnalysis",
+        "description": "Returns the ConceptOverTimeAnalysis with the given ID if it exists",
+        "operationId": "get_by_id",
+        "parameters": [
+          { "required": true, "schema": { "title": "Cota Id", "type": "integer" }, "name": "cota_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Removes the ConceptOverTimeAnalysis",
+        "description": "Removes the ConceptOverTimeAnalysis with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "parameters": [
+          { "required": true, "schema": { "title": "Cota Id", "type": "integer" }, "name": "cota_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Updates the Analysis Table",
+        "description": "Updates the Analysis Table with the given ID if it exists",
+        "operationId": "update_by_id",
+        "parameters": [
+          { "required": true, "schema": { "title": "Cota Id", "type": "integer" }, "name": "cota_id", "in": "path" }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTAUpdate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/COTARead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/cota/project/{project_id}/user/{user_id}": {
+      "get": {
+        "tags": ["conceptOverTimeAnalysis"],
+        "summary": "Returns COTAs of the Project of the User",
+        "description": "Returns the ConceptOverTimeAnalysis of the Project with the given ID and the User with the given ID if it exists",
+        "operationId": "get_by_project_and_user",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Conceptovertimeanalysis-Get By Project And User",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/COTARead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5704,6 +5940,128 @@
         "type": "string",
         "enum": ["BOOLEAN_EQUALS", "BOOLEAN_NOT_EQUALS"],
         "title": "BooleanOperator"
+      },
+      "COTAConcept": {
+        "title": "COTAConcept",
+        "required": ["name", "description"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string", "description": "Name of the Concept" },
+          "description": { "title": "Description", "type": "string", "description": "Description of the Concept" }
+        }
+      },
+      "COTACreate": {
+        "title": "COTACreate",
+        "required": ["name", "description", "project_id", "user_id"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string", "description": "Name of the ConceptOverTimeAnalysis" },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "description": "Description of the ConceptOverTimeAnalysis"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the ConceptOverTimeAnalysis belongs to"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer",
+            "description": "User the ConceptOverTimeAnalysis belongs to"
+          }
+        }
+      },
+      "COTARead": {
+        "title": "COTARead",
+        "required": [
+          "name",
+          "description",
+          "id",
+          "user_id",
+          "project_id",
+          "concepts",
+          "sentence_search_space",
+          "created",
+          "updated"
+        ],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string", "description": "Name of the ConceptOverTimeAnalysis" },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "description": "Description of the ConceptOverTimeAnalysis"
+          },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the ConceptOverTimeAnalysis" },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer",
+            "description": "User the ConceptOverTimeAnalysis belongs to"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the ConceptOverTimeAnalysis belongs to"
+          },
+          "concepts": {
+            "title": "Concepts",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/COTAConcept" },
+            "description": "List of Concepts that are part of the ConceptOverTimeAnalysis"
+          },
+          "sentence_search_space": {
+            "title": "Sentence Search Space",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/COTASentence" },
+            "description": "List of Sentences that form the search space of the ConceptOverTimeAnalysis"
+          },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the ConceptOverTimeAnalysis",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the ConceptOverTimeAnalysis",
+            "format": "date-time"
+          }
+        }
+      },
+      "COTASentence": {
+        "title": "COTASentence",
+        "required": ["sentence_id", "sdoc_id"],
+        "type": "object",
+        "properties": {
+          "sentence_id": { "title": "Sentence Id", "type": "integer", "description": "ID of the Sentence in the SDoc" },
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "ID of the Sentence Document that contains the Sentence"
+          }
+        }
+      },
+      "COTAUpdate": {
+        "title": "COTAUpdate",
+        "required": ["name", "description", "concepts"],
+        "type": "object",
+        "properties": {
+          "name": { "title": "Name", "type": "string", "description": "Name of the ConceptOverTimeAnalysis" },
+          "description": {
+            "title": "Description",
+            "type": "string",
+            "description": "Description of the ConceptOverTimeAnalysis"
+          },
+          "concepts": {
+            "title": "Concepts",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/COTAConcept" },
+            "description": "List of Concepts that are part of the ConceptOverTimeAnalysis"
+          }
+        }
       },
       "CodeCreate": {
         "properties": {
@@ -7039,11 +7397,22 @@
             "minimum": 0,
             "title": "Threshold",
             "description": "The minimum distance to use for the sim search.",
+<<<<<<< HEAD
             "default": 0
           },
           "filter": {
             "allOf": [{ "$ref": "#/components/schemas/Filter_SearchColumns_" }],
             "description": "Only return documents matching this filter"
+=======
+            "default": 0,
+<<<<<<< HEAD
+            "max": 1,
+            "min": 0
+=======
+            "min": 0,
+            "max": 1
+>>>>>>> ec0cd350 (updated frontend code to comply to new backend api)
+>>>>>>> 8693a12d (updated frontend code to comply to new backend api)
           }
         },
         "type": "object",
@@ -8082,6 +8451,56 @@
         },
         "type": "object",
         "title": "TimelineAnalysisUpdate"
+      },
+      "TrainerJobParameters": {
+        "title": "TrainerJobParameters",
+        "required": ["project_id", "model_name"],
+        "type": "object",
+        "properties": {
+          "project_id": { "title": "Project Id", "type": "integer", "description": "The ID of the Project." },
+          "base_model_name": {
+            "title": "Base Model Name",
+            "type": "string",
+            "description": "The name of the base model.",
+            "default": "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+          },
+          "model_name": { "title": "Model Name", "type": "string", "description": "The name of the new model." }
+        }
+      },
+      "TrainerJobRead": {
+        "title": "TrainerJobRead",
+        "required": ["id", "parameters", "created", "updated"],
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/BackgroundJobStatus" }],
+            "description": "Status of the TrainerJob",
+            "default": "Waiting"
+          },
+          "id": { "title": "Id", "type": "string", "description": "ID of the TrainerJob" },
+          "parameters": {
+            "title": "Parameters",
+            "allOf": [{ "$ref": "#/components/schemas/TrainerJobParameters" }],
+            "description": "The parameters of the TrainerJob that defines how to train!"
+          },
+          "saved_model_path": {
+            "title": "Saved Model Path",
+            "type": "string",
+            "description": "The path to the saved model."
+          },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "Created timestamp of the TrainerJob",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the TrainerJob",
+            "format": "date-time"
+          }
+        }
       },
       "UserAuthorizationHeaderData": {
         "properties": {
