@@ -3,4 +3,8 @@ backend_repo
 sample_data
 image_models
 models_cache
+notebooks
+.idea
+.pytest_cache
+.run
 Dockerfile
