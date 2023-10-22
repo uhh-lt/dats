@@ -13,6 +13,7 @@ import {
   SourceDocumentKeywords,
   SourceDocumentMetadataRead,
   SourceDocumentRead,
+  SourceDocumentReadAll,
   SourceDocumentSentences,
   SourceDocumentService,
   SourceDocumentTokens,
@@ -394,6 +395,30 @@ const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
     }
   );
 
+const useGetAllDocumentDataByDocId = (sdocId: number | undefined) =>
+  useQuery<SourceDocumentReadAll, Error>(
+    [QueryKey.SDOC_ID, sdocId],
+    async () => {
+      const sdoc_data = await SourceDocumentService.getAllById({ sdocId: sdocId! });
+      return sdoc_data;
+    },
+    {
+      enabled: !!sdocId,
+    }
+  );
+
+const useGetAllDocumentDataBulk = (requestBody: Array<number> | undefined) =>
+  useQuery<Array<SourceDocumentReadAll>, Error>(
+    [QueryKey.SDOCS_ALL, requestBody],
+    async () => {
+      const sdoc_data_bulk = await SourceDocumentService.getAllByIdBulk({ requestBody: requestBody! });
+      return sdoc_data_bulk;
+    },
+    {
+      enabled: !!requestBody,
+    }
+  );
+
 const SdocHooks = {
   // sdoc
   useGetDocument,
@@ -429,6 +454,9 @@ const SdocHooks = {
   useGetMetadata,
   useGetWordFrequencies,
   useGetWordLevelTranscriptions,
+  // all data
+  useGetAllDocumentDataByDocId,
+  useGetAllDocumentDataBulk,
 };
 
 export default SdocHooks;

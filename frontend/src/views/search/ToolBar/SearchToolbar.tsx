@@ -15,6 +15,7 @@ import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton
 import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton";
 import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
 import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
+import ToggleTableView from "./ToolBarElements/ToggleTableView";
 
 interface DocumentViewerToolbarProps {
   sdocId: number | undefined | null;
@@ -82,6 +83,7 @@ function SearchToolbar({
             <TableNavigation numDocuments={numSearchResults} />
             <ToggleShowTagsButton />
             <ToggleSplitViewButton />
+            <ToggleTableView />
           </Box>
         )}
         {sdocId && (

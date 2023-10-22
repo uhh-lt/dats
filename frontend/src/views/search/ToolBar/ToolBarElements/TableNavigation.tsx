@@ -69,12 +69,26 @@ interface TableNavigationProps {
 function TableNavigation({ numDocuments }: TableNavigationProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
-  const page = useAppSelector((state) => state.search.page);
-  const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
+  let page = useAppSelector((state) => state.search.page);
+  let rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
 
-  // ui event handlers
+  //handle table view pagination
+  const tableViewPaginationModel = useAppSelector((state) => state.search.tableViewPaginationModel);
+  const isTableView = useAppSelector((state) => state.search.isTableView);
+  if (isTableView) {
+    page = tableViewPaginationModel.page;
+  }
+
   const handleChangePage = (event: unknown, newPage: number) => {
-    dispatch(SearchActions.setPage(newPage));
+    //handle table view pagination
+    if (isTableView) {
+      dispatch(
+        SearchActions.setTableViewPaginationModel({
+          page: newPage,
+          pageSize: rowsPerPage,
+        })
+      );
+    } else dispatch(SearchActions.setPage(newPage));
   };
 
   const text = `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, numDocuments)} of ${numDocuments}`;

@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SearchFilter, FilterType } from "./SearchFilter";
 import { QueryType } from "./QueryType";
 import { DocType } from "../../api/openapi";
+import { GridPaginationModel } from "@mui/x-data-grid";
 
 export interface AnchorState {
   pos: number;
@@ -19,6 +20,8 @@ interface SearchState {
   rowsPerPage: number;
   resultModalities: DocType[];
   searchType: QueryType;
+  isTableView: boolean;
+  tableViewPaginationModel: GridPaginationModel;
 }
 
 const initialState: SearchState = {
@@ -32,6 +35,11 @@ const initialState: SearchState = {
   rowsPerPage: 10,
   resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
   searchType: QueryType.LEXICAL,
+  isTableView: true,
+  tableViewPaginationModel: {
+    page: 0,
+    pageSize: 10,
+  },
 };
 
 export const searchSlice = createSlice({
@@ -168,6 +176,12 @@ export const searchSlice = createSlice({
     },
     setSearchType: (state, action: PayloadAction<QueryType>) => {
       state.searchType = action.payload;
+    },
+    toggleTableView: (state) => {
+      state.isTableView = !state.isTableView;
+    },
+    setTableViewPaginationModel: (state, action: PayloadAction<GridPaginationModel>) => {
+      state.tableViewPaginationModel = action.payload;
     },
   },
 });

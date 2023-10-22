@@ -18,6 +18,7 @@ import LexicalSearchResultCard from "./Cards/LexicalSearchResultCard";
 import SentenceSimilaritySearchResultCard from "./Cards/SentenceSimilaritySearchResultCard";
 import SearchResultContextMenu from "./SearchResultContextMenu";
 import "./SearchResults.css";
+import SearchResultsTableView from "./SearchResultsTableView";
 
 interface SearchResultsViewProps {
   searchResults: SearchResults<any>;
@@ -35,7 +36,7 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
   const page = useAppSelector((state) => state.search.page);
   const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
   const dispatch = useAppDispatch();
-
+  const isTableView = useAppSelector((state) => state.search.isTableView);
   // context menu
   const [contextMenuData, setContextMenuData] = useState<number>();
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
@@ -60,16 +61,25 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
       return;
     }
     if (width && height) {
-      let numCardsX = Math.floor(width / 300);
-      numCardsX = width - numCardsX * 300 - (numCardsX - 1) * 15 > 0 ? numCardsX : numCardsX - 1;
+      if (!isTableView) {
+        let numCardsX = Math.floor(width / 300);
+        numCardsX = width - numCardsX * 300 - (numCardsX - 1) * 15 > 0 ? numCardsX : numCardsX - 1;
 
-      let numCardsY = Math.floor(height / 370);
-      numCardsY = height - numCardsY * 370 - (numCardsY - 1) * 15 > 0 ? numCardsY : numCardsY - 1;
-
-      dispatch(SearchActions.setRowsPerPage(numCardsX * numCardsY));
+        let numCardsY = Math.floor(height / 370);
+        numCardsY = height - numCardsY * 370 - (numCardsY - 1) * 15 > 0 ? numCardsY : numCardsY - 1;
+        if (page * rowsPerPage + 1 >= searchResults.getSearchResultSDocIds().length) {
+          dispatch(SearchActions.setPage(0));
+          dispatch(SearchActions.setRowsPerPage(searchResults.getSearchResultSDocIds().length));
+        } else dispatch(SearchActions.setRowsPerPage(numCardsX * numCardsY));
+      } else {
+        let numRows = Math.floor(height / 100);
+        numRows = height - numRows * 100 - (numRows - 1) * 15 > 0 ? numRows : numRows - 1;
+        dispatch(SearchActions.setRowsPerPage(numRows));
+        return;
+      }
       return;
     }
-  }, [dispatch, width, height, searchResults]);
+  }, [dispatch, width, height, searchResults, isTableView, page, rowsPerPage]);
 
   // handle selection
   const handleChange = useCallback(
@@ -86,85 +96,104 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
 
   let resultsView = null;
   const isSentenceSimilaritySearchResult = searchResults instanceof SentenceSimilaritySearchResults;
+  if (!isTableView) {
+    if (searchResults instanceof LexicalSearchResults) {
+      resultsView = (
+        <>
+          {searchResults
+            .getSearchResultSDocIds()
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .map((sdocId) => (
+              <LexicalSearchResultCard
+                key={sdocId}
+                sdocId={sdocId}
+                handleClick={handleResultClick}
+                handleOnContextMenu={openContextMenu}
+                handleOnCheckboxChange={handleChange}
+              />
+            ))}
+        </>
+      );
+    } else if (searchResults instanceof SentenceSimilaritySearchResults) {
+      resultsView = (
+        <>
+          {Array.from(searchResults.getResults().entries())
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .map(([sdocId, hits]) => (
+              <SentenceSimilaritySearchResultCard
+                key={sdocId}
+                sdocId={sdocId}
+                hits={hits}
+                handleClick={handleResultClick}
+                handleOnContextMenu={openContextMenu}
+                handleOnCheckboxChange={handleChange}
+              />
+            ))}
+        </>
+      );
+    } else if (searchResults instanceof ImageSimilaritySearchResults) {
+      resultsView = (
+        <>
+          {searchResults
+            .getResults()
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .map((hit) => (
+              <ImageSimilaritySearchResultCard
+                key={hit.sdoc_id}
+                sdocId={hit.sdoc_id}
+                hit={hit}
+                handleClick={handleResultClick}
+                handleOnContextMenu={openContextMenu}
+                handleOnCheckboxChange={handleChange}
+              />
+            ))}
+        </>
+      );
+    } else {
+      resultsView = <>Search Result Type is not supported :(</>;
+    }
 
-  if (searchResults instanceof LexicalSearchResults) {
-    resultsView = (
-      <>
-        {searchResults
-          .getSearchResultSDocIds()
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-          .map((sdocId) => (
-            <LexicalSearchResultCard
-              key={sdocId}
-              sdocId={sdocId}
-              handleClick={handleResultClick}
-              handleOnContextMenu={openContextMenu}
-              handleOnCheckboxChange={handleChange}
-            />
-          ))}
-      </>
-    );
-  } else if (searchResults instanceof SentenceSimilaritySearchResults) {
-    resultsView = (
-      <>
-        {Array.from(searchResults.getResults().entries())
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-          .map(([sdocId, hits]) => (
-            <SentenceSimilaritySearchResultCard
-              key={sdocId}
-              sdocId={sdocId}
-              hits={hits}
-              handleClick={handleResultClick}
-              handleOnContextMenu={openContextMenu}
-              handleOnCheckboxChange={handleChange}
-            />
-          ))}
-      </>
-    );
-  } else if (searchResults instanceof ImageSimilaritySearchResults) {
-    resultsView = (
-      <>
-        {searchResults
-          .getResults()
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-          .map((hit) => (
-            <ImageSimilaritySearchResultCard
-              key={hit.sdoc_id}
-              sdocId={hit.sdoc_id}
-              hit={hit}
-              handleClick={handleResultClick}
-              handleOnContextMenu={openContextMenu}
-              handleOnCheckboxChange={handleChange}
-            />
-          ))}
-      </>
+    return (
+      <Container
+        ref={ref}
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          placeContent: "flex-start",
+          gap: "15px",
+          overflowY: "auto",
+          p: 2,
+          width: "100%",
+          maxWidth: isSentenceSimilaritySearchResult ? undefined : "100% !important",
+        }}
+        className={className}
+      >
+        {resultsView}
+        <SearchResultContextMenu
+          projectId={projectId}
+          sdocId={contextMenuData}
+          handleClose={closeContextMenu}
+          position={contextMenuPosition}
+        />
+      </Container>
     );
   } else {
-    resultsView = <>Search Result Type is not supported :(</>;
+    resultsView = (
+      <>
+        <SearchResultsTableView
+          searchResults={searchResults}
+          handleResultClick={handleResultClick}
+          handleOnContextMenu={openContextMenu}
+          handleOnCheckboxChange={handleChange}
+        />
+        <SearchResultContextMenu
+          projectId={projectId}
+          sdocId={contextMenuData}
+          handleClose={closeContextMenu}
+          position={contextMenuPosition}
+        />
+      </>
+    );
+    return resultsView;
   }
-
-  return (
-    <Container
-      ref={ref}
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        placeContent: "flex-start",
-        gap: "15px",
-        overflowY: "auto",
-        p: 2,
-        width: "100%",
-        maxWidth: isSentenceSimilaritySearchResult ? undefined : "100% !important",
-      }}
-      className={className}
-    >
-      {resultsView}
-      <SearchResultContextMenu
-        projectId={projectId}
-        sdocId={contextMenuData}
-        handleClose={closeContextMenu}
-        position={contextMenuPosition}
-      />
-    </Container>
-  );
 }
