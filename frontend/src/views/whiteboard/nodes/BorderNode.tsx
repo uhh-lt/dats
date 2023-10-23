@@ -4,7 +4,7 @@ import { NodeProps, useReactFlow } from "reactflow";
 import BaseNode from "./BaseNode";
 import { BorderNodeData } from "../types";
 
-function BorderNode({ id, data, selected }: NodeProps<BorderNodeData>) {
+function BorderNode(props: NodeProps<BorderNodeData>) {
   const reactFlowInstance = useReactFlow();
   const theme = useTheme();
 
@@ -17,14 +17,14 @@ function BorderNode({ id, data, selected }: NodeProps<BorderNodeData>) {
   };
 
   const handleChangeText = (
-    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>
+    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     // @ts-ignore
     const value: string = event.target.value;
     console.log(value);
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) => {
-        if (node.id === id) {
+        if (node.id === props.id) {
           return {
             ...node,
             data: {
@@ -35,7 +35,7 @@ function BorderNode({ id, data, selected }: NodeProps<BorderNodeData>) {
         }
 
         return node;
-      })
+      }),
     );
     setIsEditing(false);
   };
@@ -43,28 +43,27 @@ function BorderNode({ id, data, selected }: NodeProps<BorderNodeData>) {
   return (
     <BaseNode
       allowDrawConnection={false}
-      nodeId={id}
-      selected={selected}
+      nodeProps={props}
       onClick={handleClick}
-      alignment={data.verticalAlign}
+      alignment={props.data.verticalAlign}
       style={{
-        borderRadius: data.borderRadius,
-        borderColor: data.borderColor,
-        borderWidth: data.borderWidth,
-        borderStyle: data.borderStyle,
-        backgroundColor: data.bgcolor + data.bgalpha.toString(16).padStart(2, "0"),
+        borderRadius: props.data.borderRadius,
+        borderColor: props.data.borderColor,
+        borderWidth: props.data.borderWidth,
+        borderStyle: props.data.borderStyle,
+        backgroundColor: props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0"),
       }}
     >
       {isEditing ? (
         <Box className="nodrag">
           <TextField
             variant="outlined"
-            defaultValue={data.text}
+            defaultValue={props.data.text}
             onBlur={handleChangeText}
             onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
             inputProps={{
               style: {
-                ...theme.typography[data.variant],
+                ...theme.typography[props.data.variant],
               },
             }}
             multiline
@@ -73,18 +72,18 @@ function BorderNode({ id, data, selected }: NodeProps<BorderNodeData>) {
         </Box>
       ) : (
         <Typography
-          variant={data.variant}
-          color={data.color}
+          variant={props.data.variant}
+          color={props.data.color}
           style={{
-            ...(data.italic && { fontStyle: "italic" }),
-            ...(data.bold && { fontWeight: "bold" }),
-            ...(data.underline && { textDecoration: "underline" }),
-            textAlign: data.horizontalAlign,
+            ...(props.data.italic && { fontStyle: "italic" }),
+            ...(props.data.bold && { fontWeight: "bold" }),
+            ...(props.data.underline && { textDecoration: "underline" }),
+            textAlign: props.data.horizontalAlign,
             width: "100%",
           }}
           whiteSpace="pre-wrap"
         >
-          {data.text}
+          {props.data.text}
         </Typography>
       )}
     </BaseNode>

@@ -133,9 +133,10 @@ const connectionHandleIdSelector = (state: ReactFlowState) => state.connectionHa
 
 interface WhiteboardFlowProps {
   whiteboard: Whiteboard;
+  readonly: boolean;
 }
 
-function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
+function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   // whiteboard (react-flow)
   const reactFlowInstance = useReactFlow<DWTSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
@@ -395,7 +396,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             onEdgesChange={onEdgesChange}
             onEdgeClick={onEdgeClick}
             onEdgeContextMenu={onEdgeClick}
-            onEdgeUpdate={onEdgeUpdate}
+            onEdgeUpdate={readonly ? undefined : onEdgeUpdate}
             onSelectionChange={handleSelectionChange}
             onConnect={onConnect}
             connectionLineComponent={connectionHandleId === "database" ? StraightConnectionLine : undefined}
@@ -417,59 +418,68 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             deleteKeyCode={isCustomEdgeArray(currentEdges) ? undefined : ""}
             fitView
             proOptions={{ hideAttribution: true }}
+            elementsSelectable={!readonly}
+            nodesDraggable={!readonly}
+            nodesConnectable={!readonly} // we misuse this as readonly flag for database nodes
+            nodesFocusable={!readonly}
+            edgesFocusable={!readonly}
           >
-            <Panel position="top-left">
-              <Paper elevation={1} sx={{ mb: 3 }}>
-                <Stack>
-                  <Typography p={1}>DWTS Objects</Typography>
-                  <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                  <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                  <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                  {userId && (
-                    <AddAnnotationNodeDialog
-                      projectId={projectId}
-                      userIds={[userId]}
-                      onClick={handleChangePendingAction}
-                    />
-                  )}
-                  {userId && (
-                    <AddMemoNodeDialog projectId={projectId} userId={userId} onClick={handleChangePendingAction} />
-                  )}
-                </Stack>
-              </Paper>
-              <Paper elevation={1}>
-                <Stack>
-                  <Typography p={1}>Text Elements</Typography>
-                  <AddNoteNodeButton onClick={handleChangePendingAction} />
-                  <AddTextNodeButton onClick={handleChangePendingAction} />
-                  <AddBorderNodeButton type="Ellipse" onClick={handleChangePendingAction} />
-                  <AddBorderNodeButton type="Rectangle" onClick={handleChangePendingAction} />
-                  <AddBorderNodeButton type="Rounded" onClick={handleChangePendingAction} />
-                </Stack>
-              </Paper>
-            </Panel>
-            <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-              {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
-              <NodeEditMenu ref={textNodeEditMenuRef} />
-              <EdgeEditMenu ref={edgeEditMenuRef} />
-              <DatabaseEdgeEditMenu projectId={projectId} ref={databaseEdgeEditMenuRef} />
-            </Panel>
-            <Panel position="top-right">
-              <Paper elevation={1}>
-                <LoadingButton
-                  variant="contained"
-                  color="success"
-                  startIcon={<SaveIcon />}
-                  fullWidth
-                  type="submit"
-                  loading={updateWhiteboard.isLoading}
-                  loadingPosition="start"
-                  onClick={handleSaveWhiteboard}
-                >
-                  Save whiteboard
-                </LoadingButton>
-              </Paper>
-            </Panel>
+            {!readonly && (
+              <>
+                <Panel position="top-left">
+                  <Paper elevation={1} sx={{ mb: 3 }}>
+                    <Stack>
+                      <Typography p={1}>DWTS Objects</Typography>
+                      <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      {userId && (
+                        <AddAnnotationNodeDialog
+                          projectId={projectId}
+                          userIds={[userId]}
+                          onClick={handleChangePendingAction}
+                        />
+                      )}
+                      {userId && (
+                        <AddMemoNodeDialog projectId={projectId} userId={userId} onClick={handleChangePendingAction} />
+                      )}
+                    </Stack>
+                  </Paper>
+                  <Paper elevation={1}>
+                    <Stack>
+                      <Typography p={1}>Text Elements</Typography>
+                      <AddNoteNodeButton onClick={handleChangePendingAction} />
+                      <AddTextNodeButton onClick={handleChangePendingAction} />
+                      <AddBorderNodeButton type="Ellipse" onClick={handleChangePendingAction} />
+                      <AddBorderNodeButton type="Rectangle" onClick={handleChangePendingAction} />
+                      <AddBorderNodeButton type="Rounded" onClick={handleChangePendingAction} />
+                    </Stack>
+                  </Paper>
+                </Panel>
+                <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
+                  <NodeEditMenu ref={textNodeEditMenuRef} />
+                  <EdgeEditMenu ref={edgeEditMenuRef} />
+                  <DatabaseEdgeEditMenu projectId={projectId} ref={databaseEdgeEditMenuRef} />
+                </Panel>
+                <Panel position="top-right">
+                  <Paper elevation={1}>
+                    <LoadingButton
+                      variant="contained"
+                      color="success"
+                      startIcon={<SaveIcon />}
+                      fullWidth
+                      type="submit"
+                      loading={updateWhiteboard.isLoading}
+                      loadingPosition="start"
+                      onClick={handleSaveWhiteboard}
+                    >
+                      Save whiteboard
+                    </LoadingButton>
+                  </Paper>
+                </Panel>
+              </>
+            )}
             <Background />
             <Controls />
             <MiniMap />

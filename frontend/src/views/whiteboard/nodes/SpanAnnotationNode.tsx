@@ -25,7 +25,7 @@ import BaseCardNode from "./BaseCardNode";
 import { AttachedObjectType } from "../../../api/openapi";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
-function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<SpanAnnotationNodeData>) {
+function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -35,12 +35,13 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
 
   // context menu
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = SpanAnnotationHooks.useGetAnnotation(data.spanAnnotationId);
+  const annotation = SpanAnnotationHooks.useGetAnnotation(props.data.spanAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
   const adoc = AdocHooks.useGetAdoc(annotation.data?.annotation_document_id);
-  const memo = SpanAnnotationHooks.useGetMemo(data.spanAnnotationId, userId);
+  const memo = SpanAnnotationHooks.useGetMemo(props.data.spanAnnotationId, userId);
 
   // effects
   useEffect(() => {
@@ -51,7 +52,7 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isCodeSpanAnnotationEdge)
-      .filter((edge) => edge.target === `spanAnnotation-${data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => edge.target === `spanAnnotation-${props.data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== codeId); // isEdgeForIncorrectCode
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -61,9 +62,11 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
       .filter(isCodeNode)
       .map((code) => code.data.codeId);
     if (existingCodeNodeIds.includes(codeId)) {
-      reactFlowInstance.addEdges([createCodeSpanAnnotationEdge({ codeId, spanAnnotationId: data.spanAnnotationId })]);
+      reactFlowInstance.addEdges([
+        createCodeSpanAnnotationEdge({ codeId, spanAnnotationId: props.data.spanAnnotationId }),
+      ]);
     }
-  }, [data.spanAnnotationId, reactFlowInstance, code.data]);
+  }, [props.data.spanAnnotationId, reactFlowInstance, code.data]);
 
   useEffect(() => {
     if (!adoc.data) return;
@@ -73,7 +76,7 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isSdocSpanAnnotationEdge)
-      .filter((edge) => edge.target === `spanAnnotation-${data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => edge.target === `spanAnnotation-${props.data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== sdocId); // isEdgeForIncorrectSdoc
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -83,9 +86,11 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
       .filter(isSdocNode)
       .map((sdoc) => sdoc.data.sdocId);
     if (existingSdocNodeIds.includes(sdocId)) {
-      reactFlowInstance.addEdges([createSdocSpanAnnotationEdge({ sdocId, spanAnnotationId: data.spanAnnotationId })]);
+      reactFlowInstance.addEdges([
+        createSdocSpanAnnotationEdge({ sdocId, spanAnnotationId: props.data.spanAnnotationId }),
+      ]);
     }
-  }, [data.spanAnnotationId, reactFlowInstance, adoc.data]);
+  }, [props.data.spanAnnotationId, reactFlowInstance, adoc.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -95,7 +100,7 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoSpanAnnotationEdge)
-      .filter((edge) => edge.target === `spanAnnotation-${data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => edge.target === `spanAnnotation-${props.data.spanAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -105,9 +110,11 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoSpanAnnotationEdge({ memoId, spanAnnotationId: data.spanAnnotationId })]);
+      reactFlowInstance.addEdges([
+        createMemoSpanAnnotationEdge({ memoId, spanAnnotationId: props.data.spanAnnotationId }),
+      ]);
     }
-  }, [data.spanAnnotationId, reactFlowInstance, memo.data]);
+  }, [props.data.spanAnnotationId, reactFlowInstance, memo.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (!annotation.data) return;
@@ -122,7 +129,7 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     if (!adoc.data) return;
 
     reactFlowService.addNodes(
-      createSdocNodes({ sdocs: [adoc.data.source_document_id], position: { x: xPos, y: yPos - 200 } })
+      createSdocNodes({ sdocs: [adoc.data.source_document_id], position: { x: props.xPos, y: props.yPos - 200 } }),
     );
     contextMenuRef.current?.close();
   };
@@ -130,14 +137,18 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
   const handleContextMenuExpandCode = () => {
     if (!code.data) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: [code.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createCodeNodes({ codes: [code.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -146,9 +157,9 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
 
     MemoAPI.openMemo({
       attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
-      attachedObjectId: data.spanAnnotationId,
+      attachedObjectId: props.data.spanAnnotationId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -158,17 +169,20 @@ function SpanAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     <>
       <BaseCardNode
         allowDrawConnection={false}
-        nodeId={id}
-        selected={selected}
-        onClick={handleClick}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          contextMenuRef.current?.open({
-            top: e.clientY,
-            left: e.clientX,
-          });
-        }}
-        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
+        nodeProps={props}
+        onClick={readonly ? undefined : handleClick}
+        onContextMenu={
+          readonly
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                contextMenuRef.current?.open({
+                  top: e.clientY,
+                  left: e.clientX,
+                });
+              }
+        }
+        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
       >
         {annotation.isSuccess ? (
           <>

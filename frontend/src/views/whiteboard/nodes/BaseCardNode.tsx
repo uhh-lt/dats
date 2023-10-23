@@ -1,13 +1,12 @@
 import { Box, Card, CardProps } from "@mui/material";
 import React from "react";
-import { Handle, NodeResizer, Position } from "reactflow";
+import { Handle, NodeProps, NodeResizer, Position } from "reactflow";
 import "./nodes.css";
 import { useConnectionHelper } from "../hooks/useConnectionHelper";
 
 interface BaseCardNodeProps {
   children: React.ReactNode;
-  selected: boolean;
-  nodeId: string;
+  nodeProps: NodeProps;
   allowDrawConnection: boolean;
   backgroundColor?: string;
   alignment?: "top" | "center" | "bottom";
@@ -15,21 +14,26 @@ interface BaseCardNodeProps {
 
 function BaseCardNode({
   children,
-  selected,
-  nodeId,
+  nodeProps,
   allowDrawConnection,
   backgroundColor,
   alignment,
   ...props
 }: BaseCardNodeProps & CardProps) {
-  const { isValidDatabaseConnectionTarget, isValidCustomConnectionTarget } = useConnectionHelper(nodeId);
+  const { isValidDatabaseConnectionTarget, isValidCustomConnectionTarget } = useConnectionHelper(nodeProps.id);
 
   return (
     <>
-      <NodeResizer isVisible={selected} minWidth={50} minHeight={50} handleStyle={{ width: "12px", height: "12px" }} />
+      <NodeResizer
+        isVisible={nodeProps.selected}
+        minWidth={50}
+        minHeight={50}
+        handleStyle={{ width: "12px", height: "12px" }}
+      />
       {[Position.Top, Position.Right, Position.Bottom, Position.Left].map((position) => (
         <Handle
           key={position}
+          isConnectable={nodeProps.isConnectable}
           type="source"
           position={position}
           id={position}
@@ -37,7 +41,7 @@ function BaseCardNode({
             width: "12px",
             height: "12px",
             [position]: "-20px",
-            background: !isValidCustomConnectionTarget && !selected ? "transparent" : undefined,
+            background: !isValidCustomConnectionTarget && !nodeProps.selected ? "transparent" : undefined,
           }}
         />
       ))}
@@ -60,6 +64,7 @@ function BaseCardNode({
           }}
         >
           <Handle
+            isConnectable={nodeProps.isConnectable}
             className="customHandle"
             position={Position.Right}
             type="source"

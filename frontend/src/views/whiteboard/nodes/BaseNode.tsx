@@ -1,25 +1,30 @@
 import { Box, BoxProps } from "@mui/material";
 import React from "react";
-import { Handle, NodeResizer, Position } from "reactflow";
+import { Handle, NodeProps, NodeResizer, Position } from "reactflow";
 import "./nodes.css";
 import { useConnectionHelper } from "../hooks/useConnectionHelper";
 
 interface BaseNodeProps {
   children: React.ReactNode;
-  selected: boolean;
-  nodeId: string;
+  nodeProps: NodeProps;
   allowDrawConnection: boolean;
   alignment?: "top" | "center" | "bottom";
 }
 
-function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, ...props }: BaseNodeProps & BoxProps) {
-  const { isValidCustomConnectionTarget } = useConnectionHelper(nodeId);
+function BaseNode({ children, nodeProps, allowDrawConnection, alignment, ...props }: BaseNodeProps & BoxProps) {
+  const { isValidCustomConnectionTarget } = useConnectionHelper(nodeProps.id);
 
   return (
     <>
-      <NodeResizer isVisible={selected} minWidth={50} minHeight={50} handleStyle={{ width: "12px", height: "12px" }} />
+      <NodeResizer
+        isVisible={nodeProps.selected}
+        minWidth={50}
+        minHeight={50}
+        handleStyle={{ width: "12px", height: "12px" }}
+      />
       {[Position.Top, Position.Right, Position.Bottom, Position.Left].map((position) => (
         <Handle
+          isConnectable={nodeProps.isConnectable}
           key={position}
           type="source"
           position={position}
@@ -28,7 +33,7 @@ function BaseNode({ children, selected, nodeId, allowDrawConnection, alignment, 
             width: "12px",
             height: "12px",
             [position]: "-20px",
-            background: !isValidCustomConnectionTarget && !selected ? "transparent" : undefined,
+            background: !isValidCustomConnectionTarget && !nodeProps.selected ? "transparent" : undefined,
           }}
         />
       ))}

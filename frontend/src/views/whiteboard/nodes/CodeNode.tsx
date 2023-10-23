@@ -24,7 +24,7 @@ import { AttachedObjectType } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useParams } from "react-router-dom";
 
-function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<CodeNodeData>) {
+function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
@@ -35,11 +35,12 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
   // context menu
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const code = CodeHooks.useGetCode(data.codeId);
+  const code = CodeHooks.useGetCode(props.data.codeId);
   const parentCode = CodeHooks.useGetCode(code.data?.parent_code_id);
-  const memo = CodeHooks.useGetMemo(data.codeId, userId);
+  const memo = CodeHooks.useGetMemo(props.data.codeId, userId);
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes
@@ -47,8 +48,8 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
   const childCodes = useMemo(() => {
-    return projectCodes.data?.filter((projectcode) => projectcode.parent_code_id === data.codeId) ?? [];
-  }, [data.codeId, projectCodes.data]);
+    return projectCodes.data?.filter((projectcode) => projectcode.parent_code_id === props.data.codeId) ?? [];
+  }, [props.data.codeId, projectCodes.data]);
 
   // effects
   useEffect(() => {
@@ -59,7 +60,7 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isCodeParentCodeEdge)
-      .filter((edge) => edge.target === `code-${data.codeId}`)
+      .filter((edge) => edge.target === `code-${props.data.codeId}`)
       .filter((edge) => edge.source !== `code-${parentCodeId}`);
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -70,12 +71,12 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
       .map((code) => code.data.codeId);
 
     if (existingCodeNodeIds.includes(parentCodeId)) {
-      reactFlowInstance.addEdges([createCodeParentCodeEdge({ codeId: data.codeId, parentCodeId })]);
+      reactFlowInstance.addEdges([createCodeParentCodeEdge({ codeId: props.data.codeId, parentCodeId })]);
     }
-  }, [data.codeId, reactFlowInstance, parentCode.data]);
+  }, [props.data.codeId, reactFlowInstance, parentCode.data]);
 
   useEffect(() => {
-    const codeId = data.codeId;
+    const codeId = props.data.codeId;
     const childCodeIds = childCodes.map((code) => code.id);
 
     // checks which edges are already in the graph and removes edges to non-existing codes
@@ -96,7 +97,7 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
         createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId }),
       ),
     );
-  }, [reactFlowInstance, data.codeId, childCodes]);
+  }, [reactFlowInstance, props.data.codeId, childCodes]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -106,7 +107,7 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoCodeEdge)
-      .filter((edge) => edge.target === `code-${data.codeId}`) // isEdgeForThisCode
+      .filter((edge) => edge.target === `code-${props.data.codeId}`) // isEdgeForThisCode
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -116,9 +117,9 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoCodeEdge({ memoId, codeId: data.codeId })]);
+      reactFlowInstance.addEdges([createMemoCodeEdge({ memoId, codeId: props.data.codeId })]);
     }
-  }, [data.codeId, reactFlowInstance, memo.data]);
+  }, [props.data.codeId, reactFlowInstance, memo.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2 && code.isSuccess) {
@@ -138,15 +139,15 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   const handleContextMenuExpandChildCodes = () => {
     if (childCodes.length === 0) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: childCodes, position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(createCodeNodes({ codes: childCodes, position: { x: props.xPos, y: props.yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuCreateChildCode = () => {
     openCodeCreateDialog({
-      parentCodeId: data.codeId,
+      parentCodeId: props.data.codeId,
       onSuccess: (code) => {
-        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -155,14 +156,18 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   const handleContextMenuExpandParentCode = () => {
     if (!parentCode.data) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: [parentCode.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createCodeNodes({ codes: [parentCode.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -171,9 +176,9 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
     MemoAPI.openMemo({
       attachedObjectType: AttachedObjectType.CODE,
-      attachedObjectId: data.codeId,
+      attachedObjectId: props.data.codeId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -182,18 +187,21 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   return (
     <>
       <BaseCardNode
-        nodeId={id}
-        selected={selected}
+        nodeProps={props}
         allowDrawConnection={true}
-        onClick={handleClick}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          contextMenuRef.current?.open({
-            top: e.clientY,
-            left: e.clientX,
-          });
-        }}
-        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
+        onClick={readonly ? undefined : handleClick}
+        onContextMenu={
+          readonly
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                contextMenuRef.current?.open({
+                  top: e.clientY,
+                  left: e.clientX,
+                });
+              }
+        }
+        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
       >
         {code.isSuccess ? (
           <>

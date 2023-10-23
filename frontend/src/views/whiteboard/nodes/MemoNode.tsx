@@ -102,7 +102,7 @@ const getAttachedObjectNodeId = (attachedObjectType: AttachedObjectType) => (nod
 const createMemoAttachedObjectEdge = (
   attachedObjectType: AttachedObjectType,
   attachedObjectId: number,
-  memoId: number
+  memoId: number,
 ): Edge | undefined => {
   switch (attachedObjectType) {
     case AttachedObjectType.DOCUMENT_TAG:
@@ -144,7 +144,7 @@ const createAttachedObjectNodes = (
     | BBoxAnnotationReadResolvedCode
     | SourceDocumentRead,
   memoId: number,
-  position: XYPosition
+  position: XYPosition,
 ): Node<DWTSNodeData>[] => {
   switch (attachedObjectType) {
     case AttachedObjectType.DOCUMENT_TAG:
@@ -187,16 +187,17 @@ const attachedObjectType2Label: Record<AttachedObjectType, string> = {
   [AttachedObjectType.ANNOTATION_DOCUMENT]: "Annotation Document",
 };
 
-function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<MemoNodeData>) {
+function MemoNode(props: NodeProps<MemoNodeData>) {
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const memo = MemoHooks.useGetMemo(data.memoId);
+  const memo = MemoHooks.useGetMemo(props.data.memoId);
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
 
   useEffect(() => {
@@ -207,7 +208,7 @@ function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<M
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoAttachedObjectEdge(memo.data.attached_object_type))
-      .filter((edge) => edge.source === `memo-${data.memoId}`) // isEdgeForThisMemo
+      .filter((edge) => edge.source === `memo-${props.data.memoId}`) // isEdgeForThisMemo
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== attachedObjectId); // isEdgeForIncorrectAttachedObject
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -218,12 +219,12 @@ function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<M
       .map(getAttachedObjectNodeId(memo.data.attached_object_type));
 
     if (existingAttachedObjectNodeIds.includes(attachedObjectId)) {
-      const newEdge = createMemoAttachedObjectEdge(memo.data.attached_object_type, attachedObjectId, data.memoId);
+      const newEdge = createMemoAttachedObjectEdge(memo.data.attached_object_type, attachedObjectId, props.data.memoId);
       if (newEdge) {
         reactFlowInstance.addEdges(newEdge);
       }
     }
-  }, [data.memoId, reactFlowInstance, memo.data, attachedObject.data]);
+  }, [props.data.memoId, reactFlowInstance, memo.data, attachedObject.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (!memo.data) return;
@@ -241,7 +242,10 @@ function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<M
     if (!memo.data || !attachedObject.data) return;
 
     reactFlowService.addNodes(
-      createAttachedObjectNodes(memo.data.attached_object_type, attachedObject.data, data.memoId, { x: xPos, y: yPos })
+      createAttachedObjectNodes(memo.data.attached_object_type, attachedObject.data, props.data.memoId, {
+        x: props.xPos,
+        y: props.yPos,
+      }),
     );
     contextMenuRef.current?.close();
   };
@@ -249,18 +253,21 @@ function MemoNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<M
   return (
     <>
       <BaseCardNode
-        nodeId={id}
+        nodeProps={props}
         allowDrawConnection={false}
-        selected={selected}
-        onClick={handleClick}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          contextMenuRef.current?.open({
-            top: e.clientY,
-            left: e.clientX,
-          });
-        }}
-        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
+        onClick={readonly ? undefined : handleClick}
+        onContextMenu={
+          readonly
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                contextMenuRef.current?.open({
+                  top: e.clientY,
+                  left: e.clientX,
+                });
+              }
+        }
+        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
       >
         {memo.isSuccess ? (
           <>

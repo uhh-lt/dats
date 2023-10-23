@@ -20,7 +20,7 @@ import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
 import BaseCardNode from "./BaseCardNode";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
-function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<SdocNodeData>) {
+function SdocNode(props: NodeProps<SdocNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -30,11 +30,12 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
 
   // context menu
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const sdoc = SdocHooks.useGetDocument(data.sdocId);
-  const tags = SdocHooks.useGetAllDocumentTags(data.sdocId);
-  const memo = SdocHooks.useGetMemo(data.sdocId, userId);
+  const sdoc = SdocHooks.useGetDocument(props.data.sdocId);
+  const tags = SdocHooks.useGetAllDocumentTags(props.data.sdocId);
+  const memo = SdocHooks.useGetMemo(props.data.sdocId, userId);
 
   const docType = sdoc.data?.doctype;
 
@@ -47,7 +48,7 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isTagSdocEdge) // isTagEdge
-      .filter((edge) => edge.target === `sdoc-${data.sdocId}`) // isEdgeForThisSdoc
+      .filter((edge) => edge.target === `sdoc-${props.data.sdocId}`) // isEdgeForThisSdoc
       .filter((edge) => !tagIds.includes(parseInt(edge.source.split("-")[1]))); // isEdgeForNonExistingTag
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -57,10 +58,10 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
       .filter(isTagNode)
       .map((tag) => tag.data.tagId);
     const edgesToAdd = intersection(existingTagNodeIds, tagIds).map((tagId) =>
-      createTagSdocEdge({ tagId, sdocId: data.sdocId })
+      createTagSdocEdge({ tagId, sdocId: props.data.sdocId }),
     );
     reactFlowInstance.addEdges(edgesToAdd);
-  }, [data.sdocId, reactFlowInstance, tags.data]);
+  }, [props.data.sdocId, reactFlowInstance, tags.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -70,7 +71,7 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoSdocEdge)
-      .filter((edge) => edge.target === `sdoc-${data.sdocId}`) // isEdgeForThisSdoc
+      .filter((edge) => edge.target === `sdoc-${props.data.sdocId}`) // isEdgeForThisSdoc
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -80,21 +81,23 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoSdocEdge({ memoId, sdocId: data.sdocId })]);
+      reactFlowInstance.addEdges([createMemoSdocEdge({ memoId, sdocId: props.data.sdocId })]);
     }
-  }, [data.sdocId, reactFlowInstance, memo.data]);
+  }, [props.data.sdocId, reactFlowInstance, memo.data]);
 
   const handleContextMenuExpandTags = () => {
     if (!tags.data) return;
 
-    reactFlowService.addNodes(createTagNodes({ tags: tags.data, position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(createTagNodes({ tags: tags.data, position: { x: props.xPos, y: props.yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -103,9 +106,9 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
 
     MemoAPI.openMemo({
       attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
-      attachedObjectId: data.sdocId,
+      attachedObjectId: props.data.sdocId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -118,19 +121,22 @@ function SdocNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<S
   return (
     <>
       <BaseCardNode
-        nodeId={id}
+        nodeProps={props}
         allowDrawConnection={false}
-        selected={selected}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          contextMenuRef.current?.open({
-            top: e.clientY,
-            left: e.clientX,
-          });
-        }}
-        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
+        onContextMenu={
+          readonly
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                contextMenuRef.current?.open({
+                  top: e.clientY,
+                  left: e.clientX,
+                });
+              }
+        }
+        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
       >
-        <CardHeader title={<SdocRenderer sdoc={data.sdocId} link={true} />} />
+        <CardHeader title={<SdocRenderer sdoc={props.data.sdocId} link={true} />} />
         <CardContent>
           {sdoc.isSuccess ? (
             <>

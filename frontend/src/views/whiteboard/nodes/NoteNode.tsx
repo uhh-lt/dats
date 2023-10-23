@@ -4,7 +4,7 @@ import { NodeProps, useReactFlow } from "reactflow";
 import { NoteNodeData } from "../types/customnodes/NoteNodeData";
 import BaseCardNode from "./BaseCardNode";
 
-function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
+function NoteNode(props: NodeProps<NoteNodeData>) {
   const reactFlowInstance = useReactFlow();
   const theme = useTheme();
 
@@ -24,7 +24,7 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
     console.log(value);
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) => {
-        if (node.id === id) {
+        if (node.id === props.id) {
           return {
             ...node,
             data: {
@@ -43,22 +43,21 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
   return (
     <BaseCardNode
       allowDrawConnection={false}
-      nodeId={id}
-      selected={selected}
+      nodeProps={props}
       onClick={handleClick}
-      backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
-      alignment={data.verticalAlign}
+      backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
+      alignment={props.data.verticalAlign}
     >
       {isEditing ? (
         <Box className="nodrag">
           <TextField
             variant="outlined"
-            defaultValue={data.text}
+            defaultValue={props.data.text}
             onBlur={handleChangeText}
             onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
             inputProps={{
               style: {
-                ...theme.typography[data.variant],
+                ...theme.typography[props.data.variant],
               },
             }}
             multiline
@@ -67,18 +66,18 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
         </Box>
       ) : (
         <Typography
-          variant={data.variant}
-          color={data.color}
+          variant={props.data.variant}
+          color={props.data.color}
           style={{
-            ...(data.italic && { fontStyle: "italic" }),
-            ...(data.bold && { fontWeight: "bold" }),
-            ...(data.underline && { textDecoration: "underline" }),
-            textAlign: data.horizontalAlign,
+            ...(props.data.italic && { fontStyle: "italic" }),
+            ...(props.data.bold && { fontWeight: "bold" }),
+            ...(props.data.underline && { textDecoration: "underline" }),
+            textAlign: props.data.horizontalAlign,
             width: "100%",
           }}
           whiteSpace="pre-wrap"
         >
-          {data.text}
+          {props.data.text}
         </Typography>
       )}
     </BaseCardNode>

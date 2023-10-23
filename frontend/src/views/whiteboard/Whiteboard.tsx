@@ -6,9 +6,11 @@ import WhiteboardHooks from "../../api/WhiteboardHooks";
 import EditableTypography from "../../components/NavBarTop/EditableTypography";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import WhiteboardFlow from "./WhiteboardFlow";
+import { useAuth } from "../../auth/AuthProvider";
 
 function Whiteboard() {
   // global client state
+  const { user } = useAuth();
   const appBarContainerRef = useContext(AppBarContext);
   const urlParams = useParams() as { projectId: string; whiteboardId: string };
   const projectId = parseInt(urlParams.projectId);
@@ -37,7 +39,11 @@ function Whiteboard() {
       </Portal>
       {whiteboard.isSuccess ? (
         <ReactFlowProvider>
-          <WhiteboardFlow key={`${projectId}-${whiteboardId}`} whiteboard={whiteboard.data} />
+          <WhiteboardFlow
+            key={`${projectId}-${whiteboardId}`}
+            whiteboard={whiteboard.data}
+            readonly={whiteboard.data.user_id !== user.data?.id}
+          />
         </ReactFlowProvider>
       ) : whiteboard.isLoading ? (
         <CircularProgress />

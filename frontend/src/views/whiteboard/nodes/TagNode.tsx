@@ -23,7 +23,7 @@ import BaseCardNode from "./BaseCardNode";
 import { AttachedObjectType } from "../../../api/openapi";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 
-function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<TagNodeData>) {
+function TagNode(props: NodeProps<TagNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -33,11 +33,12 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
 
   // context menu
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const tag = TagHooks.useGetTag(data.tagId);
-  const sdocs = SdocHooks.useGetByTagId(data.tagId);
-  const memo = TagHooks.useGetMemo(data.tagId, userId);
+  const tag = TagHooks.useGetTag(props.data.tagId);
+  const sdocs = SdocHooks.useGetByTagId(props.data.tagId);
+  const memo = TagHooks.useGetMemo(props.data.tagId, userId);
 
   // effects
   useEffect(() => {
@@ -48,7 +49,7 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isTagSdocEdge)
-      .filter((edge) => edge.source === `tag-${data.tagId}`) // isEdgeForThisTag
+      .filter((edge) => edge.source === `tag-${props.data.tagId}`) // isEdgeForThisTag
       .filter((edge) => !sdocIds.includes(parseInt(edge.target.split("-")[1]))); // isEdgeForNonExistingSdoc
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -58,10 +59,10 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
       .filter(isSdocNode)
       .map((sdoc) => sdoc.data.sdocId);
     const edgesToAdd = intersection(existingSdocNodeIds, sdocIds).map((sdocId) =>
-      createTagSdocEdge({ tagId: data.tagId, sdocId }),
+      createTagSdocEdge({ tagId: props.data.tagId, sdocId }),
     );
     reactFlowInstance.addEdges(edgesToAdd);
-  }, [data.tagId, reactFlowInstance, sdocs.data]);
+  }, [props.data.tagId, reactFlowInstance, sdocs.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -71,7 +72,7 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoTagEdge)
-      .filter((edge) => edge.target === `tag-${data.tagId}`) // isEdgeForThisTag
+      .filter((edge) => edge.target === `tag-${props.data.tagId}`) // isEdgeForThisTag
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -81,26 +82,28 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoTagEdge({ memoId, tagId: data.tagId })]);
+      reactFlowInstance.addEdges([createMemoTagEdge({ memoId, tagId: props.data.tagId })]);
     }
-  }, [data.tagId, reactFlowInstance, memo.data]);
+  }, [props.data.tagId, reactFlowInstance, memo.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2) {
-      openTagEditDialog(data.tagId);
+      openTagEditDialog(props.data.tagId);
     }
   };
 
   const handleContextMenuExpandDocuments = () => {
     if (!sdocs.data) return;
-    reactFlowService.addNodes(createSdocNodes({ sdocs: sdocs.data, position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(createSdocNodes({ sdocs: sdocs.data, position: { x: props.xPos, y: props.yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -109,9 +112,9 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
 
     MemoAPI.openMemo({
       attachedObjectType: AttachedObjectType.DOCUMENT_TAG,
-      attachedObjectId: data.tagId,
+      attachedObjectId: props.data.tagId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -121,17 +124,20 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
     <>
       <BaseCardNode
         allowDrawConnection={true}
-        nodeId={id}
-        selected={selected}
-        onClick={handleClick}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          contextMenuRef.current?.open({
-            top: e.clientY,
-            left: e.clientX,
-          });
-        }}
-        backgroundColor={data.bgcolor + data.bgalpha.toString(16).padStart(2, "0")}
+        nodeProps={props}
+        onClick={readonly ? undefined : handleClick}
+        onContextMenu={
+          readonly
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                contextMenuRef.current?.open({
+                  top: e.clientY,
+                  left: e.clientX,
+                });
+              }
+        }
+        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
       >
         {tag.isSuccess ? (
           <>
