@@ -23,7 +23,23 @@ const useGetWhiteboard = (whiteboardId: number | undefined) =>
       retry: false,
       enabled: !!whiteboardId,
       select: (data) => data,
-    }
+    },
+  );
+
+const useGetProjectWhiteboards = (projectId: number | undefined) =>
+  useQuery<Whiteboard[], Error>(
+    [QueryKey.WHITEBOARDS_PROJECT, projectId],
+    async () => {
+      const data = await WhiteboardService.getByProject({ projectId: projectId! });
+      return data.map((whiteboard) => {
+        const content = JSON.parse(whiteboard.content) as WhiteboardGraph;
+        return { ...whiteboard, content };
+      });
+    },
+    {
+      retry: false,
+      enabled: !!projectId,
+    },
   );
 
 const useGetUserWhiteboards = (projectId: number | undefined, userId: number | undefined) =>
@@ -39,7 +55,7 @@ const useGetUserWhiteboards = (projectId: number | undefined, userId: number | u
     {
       retry: false,
       enabled: !!projectId && !!userId,
-    }
+    },
   );
 
 const useCreateWhiteboard = () =>
@@ -68,6 +84,7 @@ const useDeleteWhiteboard = () =>
 
 const WhiteboardHooks = {
   useGetWhiteboard,
+  useGetProjectWhiteboards,
   useGetUserWhiteboards,
   useCreateWhiteboard,
   useUpdateWhiteboard,
