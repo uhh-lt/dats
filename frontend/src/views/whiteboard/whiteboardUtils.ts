@@ -236,8 +236,8 @@ export const createCodeParentCodeEdge = ({ codeId, parentCodeId }: { codeId: num
   return {
     ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-code-${parentCodeId}`,
-    source: `code-${codeId}`,
-    target: `code-${parentCodeId}`,
+    source: `code-${parentCodeId}`,
+    target: `code-${codeId}`,
     sourceHandle: "database",
     targetHandle: "database",
   };

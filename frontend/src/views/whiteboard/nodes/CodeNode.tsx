@@ -59,8 +59,8 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isCodeParentCodeEdge)
-      .filter((edge) => edge.source === `code-${data.codeId}`)
-      .filter((edge) => edge.target !== `code-${parentCodeId}`);
+      .filter((edge) => edge.target === `code-${data.codeId}`)
+      .filter((edge) => edge.source !== `code-${parentCodeId}`);
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
     // checks which code nodes are already in the graph and adds edges to the correct node
@@ -82,8 +82,8 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isCodeParentCodeEdge)
-      .filter((edge) => edge.target === `code-${data.codeId}`)
-      .filter((edge) => !childCodeIds.includes(parseInt(edge.source.split("-")[1])));
+      .filter((edge) => edge.source === `code-${codeId}`)
+      .filter((edge) => !childCodeIds.includes(parseInt(edge.target.split("-")[1])));
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
     // checks which child code nodes are already in the graph and adds edges to the correct node
@@ -93,8 +93,8 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
       .filter((code) => childCodeIds.includes(code.data.codeId));
     reactFlowInstance.addEdges(
       existingChildCodeNodes.map((childCode) =>
-        createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId })
-      )
+        createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId }),
+      ),
     );
   }, [reactFlowInstance, data.codeId, childCodes]);
 
