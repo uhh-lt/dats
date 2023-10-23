@@ -42,6 +42,24 @@ async def get_by_id(
 
 
 @router.get(
+    "/project/{project_id}",
+    tags=tags,
+    response_model=List[WhiteboardRead],
+    summary="Returns Whiteboards of the Project ",
+    description="Returns the Whiteboards of the Project with the given ID",
+)
+async def get_by_project(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+) -> List[WhiteboardRead]:
+    db_objs = crud_whiteboard.read_by_project(
+        db=db, project_id=project_id, raise_error=False
+    )
+    return [WhiteboardRead.from_orm(db_obj) for db_obj in db_objs]
+
+
+@router.get(
     "/project/{project_id}/user/{user_id}",
     tags=tags,
     response_model=List[WhiteboardRead],
@@ -68,7 +86,7 @@ async def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     whiteboard_id: int,
-    whiteboard: WhiteboardUpdate
+    whiteboard: WhiteboardUpdate,
 ) -> Optional[WhiteboardRead]:
     db_obj = crud_whiteboard.update(db=db, id=whiteboard_id, update_dto=whiteboard)
     return WhiteboardRead.from_orm(db_obj)
