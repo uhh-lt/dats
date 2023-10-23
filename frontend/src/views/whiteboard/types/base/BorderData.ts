@@ -1,6 +1,4 @@
-import { NoteNodeData } from "./NoteNodeData";
-
-export interface BorderNodeData extends NoteNodeData {
+export interface BorderData {
   borderColor: string;
   borderRadius: string;
   borderWidth: number;

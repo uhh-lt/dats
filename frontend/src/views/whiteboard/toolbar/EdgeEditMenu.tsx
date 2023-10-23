@@ -50,15 +50,13 @@ const type2icon: Record<string, React.ReactElement> = {
 };
 
 export interface EdgeEditMenuHandle {
-  open: (edgeId: string) => void;
+  open: (edges: Edge<CustomEdgeData>[]) => void;
   close: () => void;
 }
 
 const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) => {
   const reactFlowInstance = useReactFlow<any, CustomEdgeData>();
-
-  const [edgeId, setEdgeId] = useState<string | null>(null);
-  const [edge, setEdge] = useState<Edge<CustomEdgeData> | undefined>();
+  const [edges, setEdges] = useState<Edge<CustomEdgeData>[]>([]);
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -67,23 +65,25 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   }));
 
   // methods
-  const openMenu = (edgeId: string) => {
-    setEdgeId(edgeId);
-    setEdge(reactFlowInstance.getEdge(edgeId));
+  const openMenu = (edges: Edge<CustomEdgeData>[]) => {
+    // TODO: This is a workaround. It seems there is a bug in react-flow
+    setEdges(edges.map((edge) => reactFlowInstance.getEdge(edge.id)!));
   };
 
   const closeMenu = () => {
-    setEdgeId(null);
-    setEdge(undefined);
+    setEdges([]);
   };
 
-  const updateEdge = useCallback(
-    (edgeId: string | null, updateFnc: (oldEdge: Edge<CustomEdgeData>) => Edge<CustomEdgeData>) => {
+  const updateEdges = useCallback(
+    (updateFnc: (oldEdge: Edge<CustomEdgeData>) => Edge<CustomEdgeData>) => {
+      const idsToCheck = new Set(edges.map((edge) => edge.id));
+      const updatedEdges: Edge<CustomEdgeData>[] = [];
       reactFlowInstance.setEdges((edges) => {
         const newEdges = edges.map((edge) => {
-          if (edge.id === edgeId) {
+          if (idsToCheck.has(edge.id)) {
             const newEdge = updateFnc(edge);
-            setEdge(newEdge);
+            updatedEdges.push(newEdge);
+            idsToCheck.delete(edge.id);
             return newEdge;
           }
 
@@ -92,11 +92,11 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
         return newEdges;
       });
     },
-    [reactFlowInstance]
+    [edges, reactFlowInstance],
   );
 
   const handleTypeChange = (event: SelectChangeEvent<"smoothstep" | "bezier" | "simplebezier" | "straight">) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
@@ -110,7 +110,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleColorChange = (color: string) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         style: {
@@ -134,7 +134,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleStrokeWidthChange = (strokeWidth: number) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       if (isDashed(oldEdge)) {
         return {
           ...oldEdge,
@@ -167,7 +167,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleMarkerStartChange = (event: SelectChangeEvent) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       if (event.target.value === "noarrow") {
         return {
           ...oldEdge,
@@ -186,7 +186,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleMarkerEndChange = (event: SelectChangeEvent) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       if (event.target.value === "noarrow") {
         return {
           ...oldEdge,
@@ -205,7 +205,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleStrokeStyleChange = (borderStyle: "dashed" | "solid" | "dotted" | undefined) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         style: {
@@ -222,7 +222,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleAddTextClick = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
@@ -239,7 +239,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleFontColorChange = (color: string) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
@@ -256,7 +256,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleFontSizeChange = (variant: TypographyVariant) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
@@ -273,7 +273,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleBGColorChange = (color: string) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
@@ -290,7 +290,7 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleBGAlphaChange = (alpha: number) => {
-    updateEdge(edgeId, (oldEdge) => {
+    updateEdges((oldEdge) => {
       return {
         ...oldEdge,
         ...(oldEdge.data && {
@@ -307,20 +307,22 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
   };
 
   const handleDeleteClick = () => {
-    reactFlowInstance.setEdges((edges) => edges.filter((edge) => edge.id !== edgeId));
+    const edgeIds = edges.map((edge) => edge.id);
+    reactFlowInstance.setEdges((edges) => edges.filter((edge) => edgeIds.indexOf(edge.id) === -1));
+    closeMenu();
   };
 
   return (
     <>
-      {edge !== undefined && (
-        <Paper sx={{ p: 1 }}>
+      {edges.length > 0 && (
+        <Paper sx={{ p: 1, mb: 1, width: "fit-content" }}>
           <Stack direction="row" alignItems="center">
             <Select
+              key={`markerStart-${edges[0].id}`}
               style={{ height: "32px" }}
               sx={{ mr: 0.5 }}
               size="small"
-              key={`markerStart-${edgeId}`}
-              defaultValue={edge.markerStart ? (edge.markerStart as EdgeMarker).type : "noarrow"}
+              defaultValue={edges[0].markerStart ? (edges[0].markerStart as EdgeMarker).type : "noarrow"}
               onChange={handleMarkerStartChange}
             >
               {["noarrow", "arrow", "arrowclosed"].map((type) => (
@@ -330,11 +332,11 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
               ))}
             </Select>
             <Select
+              key={`markerEnd-${edges[0].id}`}
               style={{ height: "32px" }}
               sx={{ mr: 1 }}
               size="small"
-              key={`markerEnd-${edgeId}`}
-              defaultValue={edge.markerEnd ? (edge.markerEnd as EdgeMarker).type : "noarrow"}
+              defaultValue={edges[0].markerEnd ? (edges[0].markerEnd as EdgeMarker).type : "noarrow"}
               onChange={handleMarkerEndChange}
             >
               {["noarrow", "arrow", "arrowclosed"].map((type) => (
@@ -345,28 +347,29 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
             </Select>
             <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
             <ColorTool
-              key={`stroke-color-${edgeId}`}
+              key={`stroke-color-${edges[0].id}`}
               caption="Edge:"
-              color={edge.style?.stroke}
+              color={edges[0].style?.stroke}
               onColorChange={handleColorChange}
             />
             <NumberTool
-              key={`stroke-width-${edgeId}`}
-              value={edge.style?.strokeWidth as number | undefined}
+              key={`stroke-width-${edges[0].id}`}
+              value={edges[0].style?.strokeWidth as number | undefined}
               onValueChange={handleStrokeWidthChange}
               min={1}
               max={20}
             />
             <SolidDashedDottedTool
-              value={isDashed(edge) ? "dashed" : isDotted(edge) ? "dotted" : "solid"}
+              key={`stroke-style-${edges[0].id}`}
+              value={isDashed(edges[0]) ? "dashed" : isDotted(edges[0]) ? "dotted" : "solid"}
               onValueChange={handleStrokeStyleChange}
             />
             <Select
+              key={`type-${edges[0].id}`}
               style={{ height: "32px" }}
               sx={{ mr: 1 }}
               size="small"
-              key={`type-${edgeId}`}
-              defaultValue={edge.data?.type}
+              defaultValue={edges[0].data?.type}
               onChange={handleTypeChange}
             >
               {["bezier", "simplebezier", "straight", "smoothstep"].map((type) => (
@@ -375,39 +378,48 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
                 </MenuItem>
               ))}
             </Select>
-            <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
-            {edge.data?.label.text.trim() === "" ? (
-              <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
-                <Button variant={!edge.style?.strokeDasharray ? "contained" : "outlined"} onClick={handleAddTextClick}>
-                  AddText
-                </Button>
-              </ButtonGroup>
-            ) : edge.data ? (
+            {edges.every((edge) => edge.data?.label === undefined || edge.data?.label.text.trim() === "") && (
               <>
+                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
+                <ButtonGroup size="small" className="nodrag" sx={{ mr: 1, bgcolor: "background.paper" }}>
+                  <Button
+                    variant={!edges[0].style?.strokeDasharray ? "contained" : "outlined"}
+                    onClick={handleAddTextClick}
+                  >
+                    Add Text
+                  </Button>
+                </ButtonGroup>
+              </>
+            )}
+            {edges.every(
+              (edge) => edge.data && edge.data.label !== undefined && edge.data.label.text.trim().length > 0,
+            ) && (
+              <>
+                <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
                 <TypographyVariantTool
-                  key={`variant-${edge.id}`}
-                  variant={edge.data.label.variant}
+                  key={`variant-${edges[0].id}`}
+                  variant={edges[0].data!.label.variant}
                   onVariantChange={handleFontSizeChange}
                 />
                 <ColorTool
-                  key={`font-color-${edge.id}`}
+                  key={`font-color-${edges[0].id}`}
                   caption={undefined}
-                  color={edge.data.label.color}
+                  color={edges[0].data!.label.color}
                   onColorChange={handleFontColorChange}
                 />
                 <ColorTool
-                  key={`bg-color-${edge.id}`}
+                  key={`bg-color-${edges[0].id}`}
                   caption="BG:"
-                  color={edge.data.label.bgcolor}
+                  color={edges[0].data!.label.bgcolor}
                   onColorChange={handleBGColorChange}
                 />
                 <SliderTool
-                  key={`bg-alpha-${edge.id}`}
-                  value={edge.data.label.bgalpha}
+                  key={`bg-alpha-${edges[0].id}`}
+                  value={edges[0].data!.label.bgalpha}
                   onValueChange={handleBGAlphaChange}
                 />
               </>
-            ) : null}
+            )}
             <Divider orientation="vertical" flexItem sx={{ mr: 1 }} />
             <ButtonGroup size="small" className="nodrag" sx={{ bgcolor: "background.paper" }}>
               <Button onClick={handleDeleteClick}>

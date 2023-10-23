@@ -1,6 +1,6 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, MenuItem, Paper, Stack, Typography } from "@mui/material";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 import { parseInt } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { unstable_useBlocker, useParams } from "react-router-dom";
@@ -34,7 +34,6 @@ import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import TagHooks from "../../api/TagHooks";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../components/GenericPositionMenu";
 import BBoxAnnotationEditDialog from "../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
 import CodeCreateDialog from "../../features/CrudDialog/Code/CodeCreateDialog";
 import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog";
@@ -63,15 +62,15 @@ import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog";
 import AddNoteNodeButton from "./toolbar/AddNoteNodeButton";
 import AddTagNodeDialog from "./toolbar/AddTagNodeDialog";
 import AddTextNodeButton from "./toolbar/AddTextNodeButton";
-import DatabaseNodeEditMenu, { DatabaseNodeEditMenuHandle } from "./toolbar/DatabaseNodeEditMenu";
+import DatabaseEdgeEditMenu, { DatabaseEdgeEditMenuHandle } from "./toolbar/DatabaseEdgeEditMenu";
 import EdgeEditMenu, { EdgeEditMenuHandle } from "./toolbar/EdgeEditMenu";
-import TextNodeEditMenu, { TextNodeEditMenuHandle } from "./toolbar/TextNodeEditMenu";
-import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode, isTextNode } from "./types";
+import NodeEditMenu, { NodeEditMenuHandle } from "./toolbar/NodeEditMenu";
+import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode } from "./types";
 import { CustomEdgeData } from "./types/CustomEdgeData";
 import { DWTSNodeData } from "./types/DWTSNodeData";
 import { PendingAddNodeAction } from "./types/PendingAddNodeAction";
 import "./whiteboard.css";
-import { defaultDatabaseEdgeOptions, isCodeParentCodeEdge, isDatabaseEdge, isTagSdocEdge } from "./whiteboardUtils";
+import { defaultDatabaseEdgeOptions, isCustomEdge, isCustomEdgeArray, isDatabaseEdge } from "./whiteboardUtils";
 
 const nodeTypes: NodeTypes = {
   border: BorderNode,
@@ -155,26 +154,24 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdate();
   const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdate();
-  const bulkUnlinkDocumentTagsMutation = TagHooks.useBulkUnlinkDocumentTags();
 
   // menu refs
-  const edgeContextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
-  const textNodeEditMenuRef = useRef<TextNodeEditMenuHandle>(null);
-  const databaseNodeEditMenuRef = useRef<DatabaseNodeEditMenuHandle>(null);
+  const textNodeEditMenuRef = useRef<NodeEditMenuHandle>(null);
   const edgeEditMenuRef = useRef<EdgeEditMenuHandle>(null);
+  const databaseEdgeEditMenuRef = useRef<DatabaseEdgeEditMenuHandle>(null);
 
   // local state
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
   const [nodes, , onNodesChange] = useNodeStateCustom<DWTSNodeData>(whiteboard.content.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
-  const [currentEdge, setCurrentEdge] = useState<Edge | undefined>(undefined);
+  const [currentEdges, setCurrentEdges] = useState<Edge[]>([]);
 
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
       resetSelection();
       setPendingAction(() => action);
     },
-    [resetSelection]
+    [resetSelection],
   );
 
   const handleExecutePendingAction = (event: React.MouseEvent<Element, MouseEvent>) => {
@@ -215,7 +212,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                   severity: "success",
                 });
               },
-            }
+            },
           );
         }
 
@@ -236,7 +233,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                   severity: "success",
                 });
               },
-            }
+            },
           );
         }
 
@@ -257,7 +254,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                   severity: "success",
                 });
               },
-            }
+            },
           );
         }
 
@@ -278,7 +275,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                   severity: "success",
                 });
               },
-            }
+            },
           );
         }
       } else {
@@ -293,78 +290,14 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
       updateBBoxAnnotationMutation.mutate,
       updateCodeMutation.mutate,
       updateSpanAnnotationMutation.mutate,
-    ]
+    ],
   );
 
   // gets called after end of edge gets dragged to another source or target
   const onEdgeUpdate = useCallback(
     (oldEdge: Edge, newConnection: Connection) => setEdges((els) => updateEdge(oldEdge, newConnection, els)),
-    [setEdges]
+    [setEdges],
   );
-
-  const handleDeleteTagSdocEdge = () => {
-    if (!currentEdge) return;
-
-    const sourceNode = reactFlowInstance.getNode(currentEdge.source);
-    const targetNode = reactFlowInstance.getNode(currentEdge.target);
-
-    if (!sourceNode || !targetNode) return;
-
-    if (isSdocNode(targetNode) && isTagNode(sourceNode)) {
-      bulkUnlinkDocumentTagsMutation.mutate(
-        {
-          projectId: projectId,
-          requestBody: {
-            document_tag_ids: [sourceNode.data.tagId],
-            source_document_ids: [targetNode.data.sdocId],
-          },
-        },
-        {
-          onSuccess() {
-            SnackbarAPI.openSnackbar({
-              text: "Tag removed from document",
-              severity: "success",
-            });
-          },
-        }
-      );
-    }
-
-    edgeContextMenuRef.current?.close();
-    setCurrentEdge(undefined);
-  };
-
-  const handleDeleteCodeCodeEdge = () => {
-    if (!currentEdge) return;
-
-    const sourceNode = reactFlowInstance.getNode(currentEdge.source);
-    const targetNode = reactFlowInstance.getNode(currentEdge.target);
-
-    if (!sourceNode || !targetNode) return;
-
-    if (isCodeNode(targetNode) && isCodeNode(sourceNode)) {
-      updateCodeMutation.mutate(
-        {
-          codeId: sourceNode.data.codeId,
-          requestBody: {
-            // @ts-ignore
-            parent_code_id: null,
-          },
-        },
-        {
-          onSuccess(data) {
-            SnackbarAPI.openSnackbar({
-              text: `Removed parent code from code "${data.name}"`,
-              severity: "success",
-            });
-          },
-        }
-      );
-    }
-
-    edgeContextMenuRef.current?.close();
-    setCurrentEdge(undefined);
-  };
 
   const onNodeClick: NodeMouseHandler = () => {
     setPendingAction(undefined);
@@ -372,54 +305,42 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
 
   const onEdgeClick = (event: React.MouseEvent<Element, MouseEvent>, edge: Edge) => {
     setPendingAction(undefined);
-
-    if (!isDatabaseEdge(edge)) {
-      return;
-    }
-    event.preventDefault();
-    edgeContextMenuRef.current?.open({
-      top: event.clientY,
-      left: event.clientX,
-    });
   };
 
   const handleSelectionChange: OnSelectionChangeFunc = ({ nodes, edges }) => {
-    if (edges.length === 1) {
-      setCurrentEdge(edges[0]);
-      if (!isDatabaseEdge(edges[0])) {
-        edgeEditMenuRef.current?.open(edges[0].id);
-      }
+    setCurrentEdges(edges);
+
+    if (edges.length >= 1) {
+      // only open database edge edit menu if all edges are database edges
+      databaseEdgeEditMenuRef.current?.open(edges.filter((edge) => isDatabaseEdge(edge)));
+      edgeEditMenuRef.current?.open(edges.filter((edge) => isCustomEdge(edge)));
     } else {
       edgeEditMenuRef.current?.close();
-      setCurrentEdge(undefined);
+      databaseEdgeEditMenuRef.current?.close();
     }
 
-    if (nodes.length === 1 && edges.length === 0) {
-      if (isTextNode(nodes[0])) {
-        textNodeEditMenuRef.current?.open(nodes[0].id);
-      } else {
-        databaseNodeEditMenuRef.current?.open(nodes[0].id);
-      }
+    if (nodes.length >= 1) {
+      textNodeEditMenuRef.current?.open(nodes);
     } else {
       textNodeEditMenuRef.current?.close();
-      databaseNodeEditMenuRef.current?.close();
     }
   };
 
+  // HIGHLIGHT Feature
+  // highlight handles of selected edges
   useEffect(() => {
     const elements = document.getElementsByClassName("selected-handle");
     Array.from(elements).forEach((element: Element) => {
       (element as HTMLElement).classList.remove("selected-handle");
     });
 
-    if (currentEdge) {
+    currentEdges.forEach((currentEdge) => {
       let sourceHandle = document.querySelector(`[data-id='${currentEdge.source}-${currentEdge.sourceHandle}-source']`);
       let targetHandle = document.querySelector(`[data-id='${currentEdge.target}-${currentEdge.targetHandle}-source']`);
-
       sourceHandle?.classList.add("selected-handle");
       targetHandle?.classList.add("selected-handle");
-    }
-  }, [currentEdge]);
+    });
+  }, [currentEdges]);
 
   // SAVE Feature
   // block navigation if we have changes
@@ -454,7 +375,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             severity: "success",
           });
         },
-      }
+      },
     );
   }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
 
@@ -493,7 +414,7 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
             connectionMode={ConnectionMode.Loose}
             isValidConnection={isValidConnection}
             // do not allow edge delete with backspace for database edges
-            deleteKeyCode={currentEdge ? (isDatabaseEdge(currentEdge) ? "" : undefined) : undefined}
+            deleteKeyCode={isCustomEdgeArray(currentEdges) ? undefined : ""}
             fitView
             proOptions={{ hideAttribution: true }}
           >
@@ -527,11 +448,11 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
                 </Stack>
               </Paper>
             </Panel>
-            <Panel position="top-center">
+            <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
-              <DatabaseNodeEditMenu ref={databaseNodeEditMenuRef} />
-              <TextNodeEditMenu ref={textNodeEditMenuRef} />
+              <NodeEditMenu ref={textNodeEditMenuRef} />
               <EdgeEditMenu ref={edgeEditMenuRef} />
+              <DatabaseEdgeEditMenu projectId={projectId} ref={databaseEdgeEditMenuRef} />
             </Panel>
             <Panel position="top-right">
               <Paper elevation={1}>
@@ -555,17 +476,6 @@ function WhiteboardFlow({ whiteboard }: WhiteboardFlowProps) {
           </ReactFlow>
         </Box>
       </Box>
-      <GenericPositionMenu ref={edgeContextMenuRef} onClose={() => resetSelection()}>
-        {!currentEdge ? (
-          <MenuItem disabled={true}>No action available</MenuItem>
-        ) : isCodeParentCodeEdge(currentEdge) ? (
-          <MenuItem onClick={handleDeleteCodeCodeEdge}>Remove connection to parent code</MenuItem>
-        ) : isTagSdocEdge(currentEdge) ? (
-          <MenuItem onClick={handleDeleteTagSdocEdge}>Remove tag from document</MenuItem>
-        ) : (
-          <MenuItem disabled={true}>No action available</MenuItem>
-        )}
-      </GenericPositionMenu>
       <TagEditDialog />
       <SpanAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />

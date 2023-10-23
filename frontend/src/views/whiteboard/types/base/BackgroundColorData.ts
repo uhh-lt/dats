@@ -1,4 +1,4 @@
-export interface DatabaseNodeData {
+export interface BackgroundColorData {
   bgcolor: string;
   bgalpha: number;
 }

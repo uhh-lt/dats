@@ -1,10 +1,10 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { TextNodeData } from "../types/TextNodeData";
+import { TextData } from "../types/base/TextData";
 import BaseNode from "./BaseNode";
 
-function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
+function TextNode({ id, data, selected }: NodeProps<TextData>) {
   const reactFlowInstance = useReactFlow();
   const theme = useTheme();
 
@@ -17,7 +17,7 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
   };
 
   const handleChangeText = (
-    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>
+    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     // @ts-ignore
     const value: string = event.target.value;
@@ -35,7 +35,7 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
         }
 
         return node;
-      })
+      }),
     );
     setIsEditing(false);
   };

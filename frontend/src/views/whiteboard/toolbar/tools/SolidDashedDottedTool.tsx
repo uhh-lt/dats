@@ -3,8 +3,8 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import { Button, ButtonGroup } from "@mui/material";
 
 interface SolidDashedDottedToolProps {
-  value: "solid" | "dashed" | "dotted" | undefined;
-  onValueChange: (value: "solid" | "dashed" | "dotted" | undefined) => void;
+  value: "solid" | "dashed" | "dotted";
+  onValueChange: (value: "solid" | "dashed" | "dotted") => void;
 }
 
 function SolidDashedDottedTool({ value, onValueChange }: SolidDashedDottedToolProps) {

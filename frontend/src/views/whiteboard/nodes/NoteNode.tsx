@@ -1,7 +1,7 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { NoteNodeData } from "../types/NoteNodeData";
+import { NoteNodeData } from "../types/customnodes/NoteNodeData";
 import BaseCardNode from "./BaseCardNode";
 
 function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
@@ -17,7 +17,7 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
   };
 
   const handleChangeText = (
-    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>
+    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     // @ts-ignore
     const value: string = event.target.value;
@@ -35,7 +35,7 @@ function NoteNode({ id, data, selected }: NodeProps<NoteNodeData>) {
         }
 
         return node;
-      })
+      }),
     );
     setIsEditing(false);
   };

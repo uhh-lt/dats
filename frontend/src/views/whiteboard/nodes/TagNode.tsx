@@ -18,7 +18,7 @@ import {
 } from "../whiteboardUtils";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { DWTSNodeData, isMemoNode, isSdocNode } from "../types";
-import { TagNodeData } from "../types/TagNodeData";
+import { TagNodeData } from "../types/dbnodes/TagNodeData";
 import BaseCardNode from "./BaseCardNode";
 import { AttachedObjectType } from "../../../api/openapi";
 import MemoAPI from "../../../features/Memo/MemoAPI";
@@ -58,7 +58,7 @@ function TagNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<Ta
       .filter(isSdocNode)
       .map((sdoc) => sdoc.data.sdocId);
     const edgesToAdd = intersection(existingSdocNodeIds, sdocIds).map((sdocId) =>
-      createTagSdocEdge({ tagId: data.tagId, sdocId })
+      createTagSdocEdge({ tagId: data.tagId, sdocId }),
     );
     reactFlowInstance.addEdges(edgesToAdd);
   }, [data.tagId, reactFlowInstance, sdocs.data]);

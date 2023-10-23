@@ -20,7 +20,7 @@ import {
   TextNodeData,
 } from "./types";
 import { theme } from "../../plugins/ReactMUI";
-import { DatabaseNodeData } from "./types/DatabaseNodeData";
+import { BackgroundColorData } from "./types/base/BackgroundColorData";
 
 const positionOffset = 50;
 
@@ -33,7 +33,7 @@ export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
   },
 };
 
-const defaultDatabaseNodeData: DatabaseNodeData = {
+const defaultDatabaseNodeData: BackgroundColorData = {
   bgcolor: "#ffffff",
   bgalpha: 255,
 };
@@ -247,8 +247,24 @@ export const isDatabaseEdge = (edge: Edge): boolean => {
   return edge.sourceHandle === "database" && edge.targetHandle === "database";
 };
 
+export const isDatabaseEdgeArray = (edges: Edge[]): boolean => {
+  return edges.every(isDatabaseEdge);
+};
+
+export const isCustomEdge = (edge: Edge<any>): boolean => {
+  return !isDatabaseEdge(edge);
+};
+
+export const isCustomEdgeArray = (edges: Edge[]): boolean => {
+  return !edges.some(isDatabaseEdge);
+};
+
 export const isCodeParentCodeEdge = (edge: Edge): boolean => {
   return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("code-");
+};
+
+export const isCodeParentCodeEdgeArray = (edges: Edge[]): boolean => {
+  return edges.every(isCodeParentCodeEdge);
 };
 
 export const createMemoSpanAnnotationEdge = ({
@@ -435,4 +451,8 @@ export const createTagSdocEdge = ({ sdocId, tagId }: { sdocId: number; tagId: nu
 
 export const isTagSdocEdge = (edge: Edge): boolean => {
   return isDatabaseEdge(edge) && edge.source.startsWith("tag-") && edge.target.startsWith("sdoc-");
+};
+
+export const isTagSdocEdgeArray = (edges: Edge[]): boolean => {
+  return edges.every(isTagSdocEdge);
 };

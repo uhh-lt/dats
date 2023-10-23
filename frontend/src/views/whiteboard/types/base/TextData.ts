@@ -1,6 +1,6 @@
 import { TypographyVariant } from "@mui/material";
 
-export interface TextNodeData {
+export interface TextData {
   text: string;
   variant: TypographyVariant;
   color: string;

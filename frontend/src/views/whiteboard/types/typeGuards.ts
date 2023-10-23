@@ -1,16 +1,16 @@
+import { Node } from "reactflow";
 import {
+  BBoxAnnotationNodeData,
+  BorderData,
+  CodeNodeData,
   DWTSNodeData,
+  MemoNodeData,
   SdocNodeData,
   SpanAnnotationNodeData,
   TagNodeData,
-  TextNodeData,
-  BBoxAnnotationNodeData,
-  MemoNodeData,
-  CodeNodeData,
-  NoteNodeData,
-  BorderNodeData,
+  TextData,
 } from ".";
-import { Node } from "reactflow";
+import { BackgroundColorData } from "./base/BackgroundColorData";
 
 export const isTagNode = (node: Node<DWTSNodeData>): node is Node<TagNodeData> => {
   return (node.data as TagNodeData).tagId !== undefined;
@@ -20,28 +20,45 @@ export const isSdocNode = (node: Node<DWTSNodeData>): node is Node<SdocNodeData>
   return (node.data as SdocNodeData).sdocId !== undefined;
 };
 
-export const isTextNode = (node: Node<DWTSNodeData>): node is Node<TextNodeData> => {
-  let data = node.data as TextNodeData;
-  return data.color !== undefined && data.text !== undefined && data.variant !== undefined;
-};
-
-export const isNoteNode = (node: Node<DWTSNodeData>): node is Node<NoteNodeData> => {
-  let data = node.data as NoteNodeData;
+export const hasBorderData = (node: Node<any>): node is Node<BorderData> => {
+  let data = node.data as BorderData;
   return (
-    data.color !== undefined && data.text !== undefined && data.variant !== undefined && data.bgcolor !== undefined
+    data.borderRadius !== undefined &&
+    data.borderColor !== undefined &&
+    data.borderStyle !== undefined &&
+    data.borderWidth !== undefined
   );
 };
 
-export const isBorderNode = (node: Node<DWTSNodeData>): node is Node<BorderNodeData> => {
-  let data = node.data as BorderNodeData;
+export const isBorderDataArray = (nodes: Node<any>[]): nodes is Node<BorderData>[] => {
+  return nodes.every(hasBorderData);
+};
+
+export const hasTextData = (node: Node<any>): node is Node<TextData> => {
+  let data = node.data as TextData;
   return (
-    data.color !== undefined &&
     data.text !== undefined &&
     data.variant !== undefined &&
-    data.bgcolor !== undefined &&
-    data.borderRadius !== undefined &&
-    data.borderColor !== undefined
+    data.color !== undefined &&
+    data.horizontalAlign !== undefined &&
+    data.verticalAlign !== undefined &&
+    data.bold !== undefined &&
+    data.italic !== undefined &&
+    data.underline !== undefined
   );
+};
+
+export const isTextDataArray = (nodes: Node<any>[]): nodes is Node<TextData>[] => {
+  return nodes.every(hasTextData);
+};
+
+export const hasBackgroundColorData = (node: Node<any>): node is Node<BackgroundColorData> => {
+  let data = node.data as BackgroundColorData;
+  return data.bgcolor !== undefined && data.bgalpha !== undefined;
+};
+
+export const isBackgroundColorDataArray = (nodes: Node<any>[]): nodes is Node<BackgroundColorData>[] => {
+  return nodes.every(hasBackgroundColorData);
 };
 
 export const isSpanAnnotationNode = (node: Node<DWTSNodeData>): node is Node<SpanAnnotationNodeData> => {
