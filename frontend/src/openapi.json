@@ -4842,6 +4842,40 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/whiteboard/project/{project_id}": {
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns Whiteboards of the Project ",
+        "description": "Returns the Whiteboards of the Project with the given ID",
+        "operationId": "get_by_project",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Whiteboard-Get By Project",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WhiteboardRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/whiteboard/project/{project_id}/user/{user_id}": {
       "get": {
         "tags": ["whiteboard"],

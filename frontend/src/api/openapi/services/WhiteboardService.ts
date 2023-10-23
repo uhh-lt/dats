@@ -94,6 +94,25 @@ export class WhiteboardService {
   }
 
   /**
+   * Returns Whiteboards of the Project
+   * Returns the Whiteboards of the Project with the given ID
+   * @returns WhiteboardRead Successful Response
+   * @throws ApiError
+   */
+  public static getByProject({ projectId }: { projectId: number }): CancelablePromise<Array<WhiteboardRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/whiteboard/project/{project_id}",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns Whiteboards of the Project of the User
    * Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists
    * @returns WhiteboardRead Successful Response
