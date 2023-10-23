@@ -34,7 +34,7 @@ function WhiteboardDashboard() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
-  const userWhiteboards = WhiteboardHooks.useGetUserWhiteboards(projectId, user.data?.id);
+  const projectWhiteboards = WhiteboardHooks.useGetProjectWhiteboards(projectId);
 
   // local client state
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
@@ -128,15 +128,15 @@ function WhiteboardDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 
   const handleDuplicateWhiteboard = useCallback(
     (id: number) => () => {
-      if (!user.data?.id || !userWhiteboards.data) return;
+      if (!user.data?.id || !projectWhiteboards.data) return;
 
-      const whiteboard = userWhiteboards.data.find((whiteboard) => whiteboard.id === id);
+      const whiteboard = projectWhiteboards.data.find((whiteboard) => whiteboard.id === id);
       if (!whiteboard) return;
 
       const mutation = createWhiteboard.mutate;
@@ -156,10 +156,10 @@ function WhiteboardDashboard() {
               severity: "success",
             });
           },
-        }
+        },
       );
     },
-    [createWhiteboard.mutate, projectId, user.data, userWhiteboards.data]
+    [createWhiteboard.mutate, projectId, user.data, projectWhiteboards.data],
   );
 
   const handleDeleteClick = (id: GridRowId) => () => {
@@ -174,7 +174,7 @@ function WhiteboardDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 
@@ -194,7 +194,7 @@ function WhiteboardDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
     return newRow;
   };
@@ -269,7 +269,7 @@ function WhiteboardDashboard() {
           <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
             <div className="h100" style={{ width: "100%" }}>
               <DataGrid
-                rows={userWhiteboards.data || []}
+                rows={projectWhiteboards.data || []}
                 columns={columns}
                 autoPageSize
                 getRowId={(row) => row.id}

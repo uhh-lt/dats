@@ -1,4 +1,4 @@
-import { CircularProgress, Portal } from "@mui/material";
+import { CircularProgress, Portal, Stack, Typography } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import { ReactFlowProvider } from "reactflow";
@@ -20,6 +20,8 @@ function Whiteboard() {
   const updateWhiteboardMutation = WhiteboardHooks.useUpdateWhiteboard();
   const whiteboard = WhiteboardHooks.useGetWhiteboard(whiteboardId);
 
+  const readonly = whiteboard.data?.user_id !== user.data?.id;
+
   const handleChange = (value: string) => {
     if (!whiteboard.data || whiteboard.data.title === value) return;
 
@@ -35,15 +37,15 @@ function Whiteboard() {
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
-        <EditableTypography value={whiteboard.data?.title || "Loading"} onChange={handleChange} variant="h6" />
+        {readonly ? (
+          <Typography variant="h6">{whiteboard.data?.title} - READONLY</Typography>
+        ) : (
+          <EditableTypography value={whiteboard.data?.title || "Loading"} onChange={handleChange} variant="h6" />
+        )}
       </Portal>
       {whiteboard.isSuccess ? (
         <ReactFlowProvider>
-          <WhiteboardFlow
-            key={`${projectId}-${whiteboardId}`}
-            whiteboard={whiteboard.data}
-            readonly={whiteboard.data.user_id !== user.data?.id}
-          />
+          <WhiteboardFlow key={`${projectId}-${whiteboardId}`} whiteboard={whiteboard.data} readonly={readonly} />
         </ReactFlowProvider>
       ) : whiteboard.isLoading ? (
         <CircularProgress />

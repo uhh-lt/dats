@@ -62,6 +62,7 @@ const useCreateWhiteboard = () =>
   useMutation(WhiteboardService.create, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.WHITEBOARD, data.id]);
+      queryClient.invalidateQueries([QueryKey.WHITEBOARDS_PROJECT, data.project_id]);
       queryClient.invalidateQueries([QueryKey.WHITEBOARDS_PROJECT_USER, data.project_id, data.user_id]);
     },
   });
@@ -70,6 +71,7 @@ const useUpdateWhiteboard = () =>
   useMutation(WhiteboardService.updateById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.WHITEBOARD, data.id]);
+      queryClient.invalidateQueries([QueryKey.WHITEBOARDS_PROJECT, data.project_id]);
       queryClient.invalidateQueries([QueryKey.WHITEBOARDS_PROJECT_USER, data.project_id, data.user_id]);
     },
   });
@@ -78,6 +80,7 @@ const useDeleteWhiteboard = () =>
   useMutation(WhiteboardService.deleteById, {
     onSuccess: (data) => {
       queryClient.invalidateQueries([QueryKey.WHITEBOARD, data.id]);
+      queryClient.invalidateQueries([QueryKey.WHITEBOARDS_PROJECT, data.project_id]);
       queryClient.invalidateQueries([QueryKey.WHITEBOARDS_PROJECT_USER, data.project_id, data.user_id]);
     },
   });
