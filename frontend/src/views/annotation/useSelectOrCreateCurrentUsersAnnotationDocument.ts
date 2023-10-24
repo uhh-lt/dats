@@ -1,6 +1,6 @@
 import { useAuth } from "../../auth/AuthProvider";
 import SdocHooks from "../../api/SdocHooks";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnnotationDocumentRead } from "../../api/openapi";
 import AdocHooks from "../../api/AdocHooks";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
@@ -24,6 +24,12 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
   // mutation
   const createAdocMutation = AdocHooks.useCreateAdoc();
 
+  // Make sure the mutation is only fired once.
+  // `createAdocMutation`.isLoading will be outdated when the effect
+  // below is called twice, because mutation state is only updated after a
+  // re-render.
+  const isMutating = useRef(false);
+
   // create annotation document for user if no adoc exists
   useEffect(() => {
     if (annotationDocuments.data && user.data) {
@@ -41,7 +47,7 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
       if (createAdocMutation.isSuccess) return;
 
       // we are creating an annotation document, no need to create another one
-      if (createAdocMutation.isLoading) return;
+      if (createAdocMutation.isLoading || isMutating.current) return;
 
       // we are not creating an annotation document, but we need to create one
       createAdocMutation.mutate(
@@ -57,11 +63,13 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
               text: `Added annotation document for ${data.user_id} (${user.data!.first_name})`,
               severity: "success",
             });
+            isMutating.current = false;
           },
         }
       );
+      isMutating.current = true;
     }
-  }, [annotationDocument, user.data, annotationDocuments.data, createAdocMutation, sdocId]);
+  }, [annotationDocument, user.data, annotationDocuments.data, createAdocMutation, sdocId, isMutating]);
 
   // only return an annotation document if it matches with the source document
   return annotationDocument?.source_document_id === sdocId ? annotationDocument : undefined;
