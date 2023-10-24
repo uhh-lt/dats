@@ -335,7 +335,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     }
 
     if (nodes.length >= 1) {
-      const customNodes = nodes.filter((node) => isCustomNode(node));
       nodeEditMenuRef.current?.open(nodes);
     } else {
       nodeEditMenuRef.current?.close();
