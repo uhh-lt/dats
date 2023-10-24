@@ -165,6 +165,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const databaseEdgeEditMenuRef = useRef<DatabaseEdgeEditMenuHandle>(null);
 
   // local state
+  const lastSaveTime = useRef<number>(Date.now());
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
   const [nodes, , onNodesChange] = useNodeStateCustom<DWTSNodeData>(whiteboard.content.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
@@ -383,6 +384,12 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     );
   }, [edges, nodes, updateWhiteboard.mutate, whiteboard.id, whiteboard.title]);
 
+  // autosave whiteboard every 3 minutes
+  if (Date.now() - lastSaveTime.current > 1000 * 60 * 3) {
+    lastSaveTime.current = Date.now();
+    handleSaveWhiteboard();
+  }
+
   return (
     <>
       <Box className="myFlexContainer h100">
@@ -429,6 +436,16 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             nodesConnectable={!readonly} // we misuse this as readonly flag for database nodes
             nodesFocusable={!readonly}
             edgesFocusable={!readonly}
+            onKeyDown={(event) => {
+              // copy
+              if (event.key === "c" && (event.metaKey || event.ctrlKey)) {
+                console.log("copy");
+              }
+              // paste
+              if (event.key === "v" && (event.metaKey || event.ctrlKey)) {
+                console.log("paste");
+              }
+            }}
           >
             {!readonly && (
               <>
