@@ -6,10 +6,12 @@ import { useAuth } from "../../../auth/AuthProvider";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
 import {
+  createBBoxAnnotationNodes,
   createCodeNodes,
   createCodeParentCodeEdge,
   createMemoCodeEdge,
   createMemoNodes,
+  createSpanAnnotationNodes,
   isCodeParentCodeEdge,
   isMemoCodeEdge,
 } from "../whiteboardUtils";
@@ -23,6 +25,8 @@ import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AttachedObjectType } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useParams } from "react-router-dom";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 
 function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
@@ -39,6 +43,8 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
 
   // global server state (react-query)
   const code = CodeHooks.useGetCode(props.data.codeId);
+  const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
+  const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
   const parentCode = CodeHooks.useGetCode(code.data?.parent_code_id);
   const memo = CodeHooks.useGetMemo(props.data.codeId, userId);
 
@@ -129,11 +135,27 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
 
   // context menu actions
   const handleContextMenuExpandImageAnnotations = () => {
-    alert("Not implemented!");
+    if (!bboxAnnotations.data || bboxAnnotations.data.length === 0) return;
+
+    reactFlowService.addNodes(
+      createBBoxAnnotationNodes({
+        bboxAnnotations: bboxAnnotations.data,
+        position: { x: props.xPos, y: props.yPos - 200 },
+      }),
+    );
+    contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandTextAnnotations = () => {
-    alert("Not implemented!");
+    if (!spanAnnotations.data || spanAnnotations.data.length === 0) return;
+
+    reactFlowService.addNodes(
+      createSpanAnnotationNodes({
+        spanAnnotations: spanAnnotations.data,
+        position: { x: props.xPos, y: props.yPos - 200 },
+      }),
+    );
+    contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandChildCodes = () => {
@@ -217,8 +239,12 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
         )}
       </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
-        <MenuItem onClick={handleContextMenuExpandTextAnnotations}>Expand text annotations</MenuItem>
-        <MenuItem onClick={handleContextMenuExpandImageAnnotations}>Expand image annotations</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandTextAnnotations}>
+          Expand text annotations ({spanAnnotations.data?.length || 0})
+        </MenuItem>
+        <MenuItem onClick={handleContextMenuExpandImageAnnotations}>
+          Expand image annotations ({bboxAnnotations.data?.length || 0})
+        </MenuItem>
         <Divider />
         <MenuItem onClick={handleContextMenuExpandParentCode} disabled={!parentCode.data}>
           Expand parent code
