@@ -308,4 +308,30 @@ export class SpanAnnotationService {
       },
     });
   }
+
+  /**
+   * Returns SpanAnnotations with the given Code of the User with the given ID
+   * Returns SpanAnnotations with the given Code of the User with the given ID
+   * @returns SpanAnnotationReadResolved Successful Response
+   * @throws ApiError
+   */
+  public static getByUserCode({
+    codeId,
+    userId,
+  }: {
+    codeId: number;
+    userId: number;
+  }): CancelablePromise<Array<SpanAnnotationReadResolved>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/span/code/{code_id}/user/{user_id}",
+      path: {
+        code_id: codeId,
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
