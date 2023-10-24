@@ -8,6 +8,7 @@ import ReactFlow, {
   Background,
   Connection,
   ConnectionMode,
+  ControlButton,
   Controls,
   DefaultEdgeOptions,
   Edge,
@@ -71,6 +72,7 @@ import { DWTSNodeData } from "./types/DWTSNodeData";
 import { PendingAddNodeAction } from "./types/PendingAddNodeAction";
 import "./whiteboard.css";
 import { defaultDatabaseEdgeOptions, isCustomEdge, isCustomEdgeArray, isDatabaseEdge } from "./whiteboardUtils";
+import { toPng } from "html-to-image";
 
 const nodeTypes: NodeTypes = {
   border: BorderNode,
@@ -156,7 +158,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const updateSpanAnnotationMutation = SpanAnnotationHooks.useUpdate();
   const updateBBoxAnnotationMutation = BboxAnnotationHooks.useUpdate();
 
-  // menu refs
+  // refs
+  const flowRef = useRef<HTMLDivElement>(null);
   const textNodeEditMenuRef = useRef<NodeEditMenuHandle>(null);
   const edgeEditMenuRef = useRef<EdgeEditMenuHandle>(null);
   const databaseEdgeEditMenuRef = useRef<DatabaseEdgeEditMenuHandle>(null);
@@ -385,6 +388,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       <Box className="myFlexContainer h100">
         <Box className="myFlexFillAllContainer custom-table">
           <ReactFlow
+            ref={flowRef}
             className="whiteboardflow"
             nodes={nodes}
             nodeTypes={nodeTypes}
@@ -483,7 +487,32 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
               </>
             )}
             <Background />
-            <Controls />
+            <Controls>
+              <ControlButton
+                onClick={() => {
+                  if (flowRef.current === null) return;
+                  reactFlowInstance.fitView({
+                    duration: 0,
+                    padding: 0.01,
+                  });
+                  toPng(flowRef.current, {
+                    filter: (node) =>
+                      !(
+                        node?.classList?.contains("react-flow__minimap") ||
+                        node?.classList?.contains("react-flow__controls") ||
+                        node?.classList?.contains("react-flow__panel")
+                      ),
+                  }).then((dataUrl) => {
+                    const a = document.createElement("a");
+                    a.setAttribute("download", "reactflow.png");
+                    a.setAttribute("href", dataUrl);
+                    a.click();
+                  });
+                }}
+              >
+                <img src="assets/export.png" alt="Export" width="16px" height="16px" />
+              </ControlButton>
+            </Controls>
             <MiniMap />
           </ReactFlow>
         </Box>

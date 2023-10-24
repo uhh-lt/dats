@@ -4,6 +4,7 @@
 
 .whiteboardflow .react-flow__handle {
   background: #3367d9;
+  border: none;
 }
 
 .whiteboardflow .react-flow__handle-connecting {
