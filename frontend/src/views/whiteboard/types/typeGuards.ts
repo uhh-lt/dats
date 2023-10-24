@@ -12,14 +12,6 @@ import {
 } from ".";
 import { BackgroundColorData } from "./base/BackgroundColorData";
 
-export const isTagNode = (node: Node<DWTSNodeData>): node is Node<TagNodeData> => {
-  return (node.data as TagNodeData).tagId !== undefined;
-};
-
-export const isSdocNode = (node: Node<DWTSNodeData>): node is Node<SdocNodeData> => {
-  return (node.data as SdocNodeData).sdocId !== undefined;
-};
-
 export const hasBorderData = (node: Node<any>): node is Node<BorderData> => {
   let data = node.data as BorderData;
   return (
@@ -48,6 +40,11 @@ export const hasTextData = (node: Node<any>): node is Node<TextData> => {
   );
 };
 
+// we exploit the fact that every custoom node has text data, but none of the database nodes
+export const isCustomNode = (node: Node): boolean => {
+  return hasTextData(node);
+};
+
 export const isTextDataArray = (nodes: Node<any>[]): nodes is Node<TextData>[] => {
   return nodes.every(hasTextData);
 };
@@ -59,6 +56,14 @@ export const hasBackgroundColorData = (node: Node<any>): node is Node<Background
 
 export const isBackgroundColorDataArray = (nodes: Node<any>[]): nodes is Node<BackgroundColorData>[] => {
   return nodes.every(hasBackgroundColorData);
+};
+
+export const isTagNode = (node: Node<DWTSNodeData>): node is Node<TagNodeData> => {
+  return (node.data as TagNodeData).tagId !== undefined;
+};
+
+export const isSdocNode = (node: Node<DWTSNodeData>): node is Node<SdocNodeData> => {
+  return (node.data as SdocNodeData).sdocId !== undefined;
 };
 
 export const isSpanAnnotationNode = (node: Node<DWTSNodeData>): node is Node<SpanAnnotationNodeData> => {

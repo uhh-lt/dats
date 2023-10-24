@@ -11,6 +11,7 @@ import ReactFlow, {
   ControlButton,
   Controls,
   DefaultEdgeOptions,
+  Node,
   Edge,
   IsValidConnection,
   MarkerType,
@@ -71,8 +72,15 @@ import { CustomEdgeData } from "./types/CustomEdgeData";
 import { DWTSNodeData } from "./types/DWTSNodeData";
 import { PendingAddNodeAction } from "./types/PendingAddNodeAction";
 import "./whiteboard.css";
-import { defaultDatabaseEdgeOptions, isCustomEdge, isCustomEdgeArray, isDatabaseEdge } from "./whiteboardUtils";
+import {
+  defaultDatabaseEdgeOptions,
+  duplicateCustomNodes,
+  isCustomEdge,
+  isCustomEdgeArray,
+  isDatabaseEdge,
+} from "./whiteboardUtils";
 import { toPng } from "html-to-image";
+import { isCustomNode } from "./types/typeGuards";
 
 const nodeTypes: NodeTypes = {
   border: BorderNode,
@@ -160,7 +168,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   // refs
   const flowRef = useRef<HTMLDivElement>(null);
-  const textNodeEditMenuRef = useRef<NodeEditMenuHandle>(null);
+  const nodeEditMenuRef = useRef<NodeEditMenuHandle>(null);
   const edgeEditMenuRef = useRef<EdgeEditMenuHandle>(null);
   const databaseEdgeEditMenuRef = useRef<DatabaseEdgeEditMenuHandle>(null);
 
@@ -169,7 +177,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   const [pendingAction, setPendingAction] = useState<PendingAddNodeAction | undefined>(undefined);
   const [nodes, , onNodesChange] = useNodeStateCustom<DWTSNodeData>(whiteboard.content.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgeStateCustom(whiteboard.content.edges);
-  const [currentEdges, setCurrentEdges] = useState<Edge[]>([]);
+  const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
+  const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
 
   const handleChangePendingAction = useCallback(
     (action: PendingAddNodeAction | undefined) => {
@@ -313,7 +322,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   };
 
   const handleSelectionChange: OnSelectionChangeFunc = ({ nodes, edges }) => {
-    setCurrentEdges(edges);
+    setSelectedEdges(edges);
+    setSelectedNodes(nodes);
 
     if (edges.length >= 1) {
       // only open database edge edit menu if all edges are database edges
@@ -325,9 +335,10 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     }
 
     if (nodes.length >= 1) {
-      textNodeEditMenuRef.current?.open(nodes);
+      const customNodes = nodes.filter((node) => isCustomNode(node));
+      nodeEditMenuRef.current?.open(nodes);
     } else {
-      textNodeEditMenuRef.current?.close();
+      nodeEditMenuRef.current?.close();
     }
   };
 
@@ -339,13 +350,13 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       (element as HTMLElement).classList.remove("selected-handle");
     });
 
-    currentEdges.forEach((currentEdge) => {
+    selectedEdges.forEach((currentEdge) => {
       let sourceHandle = document.querySelector(`[data-id='${currentEdge.source}-${currentEdge.sourceHandle}-source']`);
       let targetHandle = document.querySelector(`[data-id='${currentEdge.target}-${currentEdge.targetHandle}-source']`);
       sourceHandle?.classList.add("selected-handle");
       targetHandle?.classList.add("selected-handle");
     });
-  }, [currentEdges]);
+  }, [selectedEdges]);
 
   // SAVE Feature
   // block navigation if we have changes
@@ -426,7 +437,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             connectionMode={ConnectionMode.Loose}
             isValidConnection={isValidConnection}
             // do not allow edge delete with backspace for database edges
-            deleteKeyCode={isCustomEdgeArray(currentEdges) ? undefined : ""}
+            deleteKeyCode={isCustomEdgeArray(selectedEdges) ? undefined : ""}
             fitView
             proOptions={{ hideAttribution: true }}
             minZoom={0.1}
@@ -439,11 +450,16 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             onKeyDown={(event) => {
               // copy
               if (event.key === "c" && (event.metaKey || event.ctrlKey)) {
-                console.log("copy");
+                const action: PendingAddNodeAction = (position, reactFlowService) => {
+                  reactFlowService.addNodesWithoutDelay(
+                    duplicateCustomNodes(position, selectedNodes.filter(isCustomNode)),
+                  );
+                };
+                setPendingAction(() => action);
               }
-              // paste
-              if (event.key === "v" && (event.metaKey || event.ctrlKey)) {
-                console.log("paste");
+              // cancel
+              if (event.key === "Escape") {
+                setPendingAction(undefined);
               }
             }}
           >
@@ -481,7 +497,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                 </Panel>
                 <Panel position="top-center" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   {pendingAction && <Paper sx={{ p: 1 }}>Click anywhere to add node(s)!</Paper>}
-                  <NodeEditMenu ref={textNodeEditMenuRef} />
+                  <NodeEditMenu ref={nodeEditMenuRef} />
                   <EdgeEditMenu ref={edgeEditMenuRef} />
                   <DatabaseEdgeEditMenu projectId={projectId} ref={databaseEdgeEditMenuRef} />
                 </Panel>

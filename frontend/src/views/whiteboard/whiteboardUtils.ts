@@ -1,4 +1,4 @@
-import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition } from "reactflow";
+import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
 import {
   BBoxAnnotationReadResolvedCode,
@@ -67,6 +67,25 @@ export const isConnectionAllowed = (sourceNodeId: string, targetNodeId: string) 
   }
 
   return false;
+};
+
+export const duplicateCustomNodes = (
+  position: XYPosition,
+  nodes: Node<TextNodeData | NoteNodeData | BorderNodeData>[],
+): Node<TextNodeData | NoteNodeData | BorderNodeData>[] => {
+  const rect = getRectOfNodes(nodes);
+  const newNodes = nodes.map((node) => {
+    return {
+      ...node,
+      id: uuidv4(),
+      position: { x: node.position.x - rect.x + position.x, y: node.position.y - rect.y + position.y },
+    };
+  });
+
+  console.log("nodes", nodes);
+  console.log("newNodes", newNodes);
+
+  return newNodes;
 };
 
 export const createTextNode = ({ position }: { position?: XYPosition }): Node<TextNodeData> => {
