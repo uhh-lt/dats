@@ -15,6 +15,8 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationUpdate,
 )
 from app.core.data.dto.span_text import SpanTextCreate
+from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
@@ -117,6 +119,19 @@ class CRUDSpanAnnotation(
             .where(self.model.annotation_document_id == adoc_id)
             .offset(skip)
             .limit(limit)
+        )
+
+        return query.all()
+
+    def read_by_code_and_user(
+        self, db: Session, *, code_id: int, user_id: int
+    ) -> List[SpanAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(AnnotationDocumentORM)
+            .join(CurrentCodeORM)
+            .join(CodeORM)
+            .filter(CodeORM.id == code_id, AnnotationDocumentORM.user_id == user_id)
         )
 
         return query.all()

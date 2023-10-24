@@ -248,3 +248,30 @@ async def get_user_memo(
 ) -> Optional[MemoRead]:
     db_obj = crud_span_anno.read(db=db, id=span_id)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
+
+
+@router.get(
+    "/code/{code_id}/user/{user_id}",
+    tags=tags,
+    response_model=List[SpanAnnotationReadResolved],
+    summary="Returns SpanAnnotations with the given Code of the User with the given ID",
+    description=(
+        "Returns SpanAnnotations with the given Code of the User with the given ID"
+    ),
+)
+async def get_by_user_code(
+    *, db: Session = Depends(get_db_session), code_id: int, user_id: int
+) -> List[SpanAnnotationReadResolved]:
+    db_objs = crud_span_anno.read_by_code_and_user(
+        db=db, code_id=code_id, user_id=user_id
+    )
+    return [
+        SpanAnnotationReadResolved(
+            **SpanAnnotationRead.from_orm(db_obj).dict(
+                exclude={"current_code_id", "span_text_id"}
+            ),
+            code=CodeRead.from_orm(db_obj.current_code.code),
+            span_text=db_obj.span_text.text
+        )
+        for db_obj in db_objs
+    ]
