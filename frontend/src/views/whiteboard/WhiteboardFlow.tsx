@@ -418,6 +418,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             deleteKeyCode={isCustomEdgeArray(currentEdges) ? undefined : ""}
             fitView
             proOptions={{ hideAttribution: true }}
+            minZoom={0.1}
+            maxZoom={2}
             elementsSelectable={!readonly}
             nodesDraggable={!readonly}
             nodesConnectable={!readonly} // we misuse this as readonly flag for database nodes
