@@ -10,6 +10,7 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     TimelineAnalysisResult,
 )
+from app.core.data.dto.filter import Filter
 from app.core.data.dto.search import SimSearchQuery, SimSearchSentenceHit
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
@@ -28,10 +29,10 @@ tags = ["analysis"]
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
 async def code_frequencies(
-    *, project_id: int, user_ids: List[int], code_ids: List[int]
+    *, project_id: int, code_ids: List[int], filter: Filter
 ) -> List[CodeFrequency]:
     return AnalysisService().compute_code_frequency(
-        project_id=project_id, user_ids=user_ids, code_ids=code_ids
+        project_id=project_id, code_ids=code_ids, filter=filter
     )
 
 

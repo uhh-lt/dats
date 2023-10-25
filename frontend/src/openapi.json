@@ -5125,11 +5125,11 @@
       },
       "Body_analysis-code_frequencies": {
         "title": "Body_analysis-code_frequencies",
-        "required": ["user_ids", "code_ids"],
+        "required": ["code_ids", "filter"],
         "type": "object",
         "properties": {
-          "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } },
-          "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } }
+          "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } },
+          "filter": { "$ref": "#/components/schemas/Filter" }
         }
       },
       "Body_project-upload_project_sdoc": {
@@ -5158,6 +5158,7 @@
           "client_secret": { "title": "Client Secret", "type": "string" }
         }
       },
+      "CodeColumn": { "title": "CodeColumn", "enum": ["id"], "type": "string", "description": "An enumeration." },
       "CodeCreate": {
         "title": "CodeCreate",
         "required": ["name", "description", "project_id", "user_id"],
@@ -5241,6 +5242,20 @@
           "color": { "title": "Color", "type": "string", "description": "Color of the Code" },
           "description": { "title": "Description", "type": "string", "description": "Description of the Code" },
           "parent_code_id": { "title": "Parent Code Id", "type": "integer", "description": "Parent of the Code" }
+        }
+      },
+      "ColumnExpression": {
+        "title": "ColumnExpression",
+        "required": ["column", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/ProjectColumn" }, { "$ref": "#/components/schemas/CodeColumn" }],
+            "description": "Column to filter on"
+          },
+          "operator": { "allOf": [{ "$ref": "#/components/schemas/FieldOperator" }], "description": "Operator to use" },
+          "value": { "title": "Value", "type": "string", "description": "Value to compare against" }
         }
       },
       "CrawlerJobParameters": {
@@ -5498,6 +5513,27 @@
           }
         }
       },
+      "FieldOperator": {
+        "title": "FieldOperator",
+        "enum": ["equals"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "Filter": {
+        "title": "Filter",
+        "required": ["items", "operator"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "anyOf": [{ "$ref": "#/components/schemas/ColumnExpression" }, { "$ref": "#/components/schemas/Filter" }]
+            }
+          },
+          "operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        }
+      },
       "HTTPValidationError": {
         "title": "HTTPValidationError",
         "type": "object",
@@ -5531,6 +5567,12 @@
             "description": "Number of occurrences of the keyword in the entire collection"
           }
         }
+      },
+      "LogicalOperator": {
+        "title": "LogicalOperator",
+        "enum": ["or", "and"],
+        "type": "string",
+        "description": "An enumeration."
       },
       "MemoContentQuery": {
         "title": "MemoContentQuery",
@@ -5876,6 +5918,7 @@
           }
         }
       },
+      "ProjectColumn": { "title": "ProjectColumn", "enum": ["id"], "type": "string", "description": "An enumeration." },
       "ProjectCreate": {
         "title": "ProjectCreate",
         "required": ["title", "description"],
@@ -6026,7 +6069,9 @@
             "title": "Threshold",
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
-            "default": 0
+            "default": 0,
+            "max": 1,
+            "min": 0
           }
         }
       },
