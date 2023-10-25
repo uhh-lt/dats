@@ -12,6 +12,8 @@ import {
   DocumentTagRead,
   MemoRead,
   SpanAnnotationReadResolved,
+  IdIsOneOf,
+  LogicalOperator,
   TimelineAnalysisResult,
 } from "./openapi";
 
@@ -20,10 +22,20 @@ const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: numbe
     AnalysisService.codeFrequencies({
       projectId,
       requestBody: {
-        user_ids: userIds,
+        filter: {
+          items: [
+            {
+              operator: {
+                discriminator: IdIsOneOf.discriminator.ID_IS_ONE_OF,
+                value: userIds,
+              },
+            },
+          ],
+          logic_operator: LogicalOperator.AND,
+        },
         code_ids: codeIds,
       },
-    }),
+    })
   );
 
 const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
@@ -37,7 +49,7 @@ const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number
       }),
     {
       enabled: userIds.length > 0 && !!codeId,
-    },
+    }
   );
 
 const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
@@ -51,7 +63,7 @@ const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: 
       }),
     {
       enabled: userIds.length > 0 && !!codeId,
-    },
+    }
   );
 
 const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: number, concepts: AnalysisConcept[]) =>
@@ -66,7 +78,7 @@ const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: 
       }),
     {
       enabled: concepts.length > 0 && metadataKey.length > 0,
-    },
+    }
   );
 
 const useAnnotatedSegments = (projectId: number | undefined, userId: number | undefined) =>
@@ -108,7 +120,7 @@ const useAnnotatedSegments = (projectId: number | undefined, userId: number | un
           queryClient.setQueryData([QueryKey.MEMO, memo.id], memo);
         });
       },
-    },
+    }
   );
 
 const AnalysisHooks = {

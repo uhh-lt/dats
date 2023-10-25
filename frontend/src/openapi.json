@@ -5220,6 +5220,17 @@
           "user_id": { "title": "User Id", "type": "integer", "description": "User the AnnotationDocument belongs to" }
         }
       },
+      "AnnotationDocumentOwnerExpression": {
+        "title": "AnnotationDocumentOwnerExpression",
+        "required": ["operator"],
+        "type": "object",
+        "properties": {
+          "operator": {
+            "title": "Operator",
+            "anyOf": [{ "$ref": "#/components/schemas/IdEquals" }, { "$ref": "#/components/schemas/IdIsOneOf" }]
+          }
+        }
+      },
       "AnnotationDocumentRead": {
         "title": "AnnotationDocumentRead",
         "required": ["source_document_id", "user_id", "id", "created", "updated"],
@@ -5446,11 +5457,11 @@
       },
       "Body_analysis-code_frequencies": {
         "title": "Body_analysis-code_frequencies",
-        "required": ["user_ids", "code_ids"],
+        "required": ["code_ids", "filter"],
         "type": "object",
         "properties": {
-          "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } },
-          "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } }
+          "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } },
+          "filter": { "$ref": "#/components/schemas/CodeFrequencyFilter" }
         }
       },
       "Body_authentication-login": {
@@ -5500,6 +5511,25 @@
           "code_id": { "title": "Code Id", "type": "integer", "description": "The id of the code." },
           "count": { "title": "Count", "type": "integer", "description": "The number of occurrences of the code." }
         }
+      },
+      "CodeFrequencyFilter": {
+        "title": "CodeFrequencyFilter",
+        "required": ["items", "logic_operator"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/AnnotationDocumentOwnerExpression" },
+                { "$ref": "#/components/schemas/CodeFrequencyFilter" }
+              ]
+            }
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "description": "A tree of column expressions for filtering on many database columns using various\ncomparisons."
       },
       "CodeOccurrence": {
         "title": "CodeOccurrence",
@@ -5826,6 +5856,26 @@
           "detail": { "title": "Detail", "type": "array", "items": { "$ref": "#/components/schemas/ValidationError" } }
         }
       },
+      "IdEquals": {
+        "title": "IdEquals",
+        "required": ["discriminator", "value"],
+        "type": "object",
+        "properties": {
+          "discriminator": { "title": "Discriminator", "enum": ["id_equals"], "type": "string" },
+          "value": { "title": "Value", "type": "integer" }
+        },
+        "description": "Helper class that provides a standard way to create an ABC using\ninheritance."
+      },
+      "IdIsOneOf": {
+        "title": "IdIsOneOf",
+        "required": ["discriminator", "value"],
+        "type": "object",
+        "properties": {
+          "discriminator": { "title": "Discriminator", "enum": ["id_is_one_of"], "type": "string" },
+          "value": { "title": "Value", "type": "array", "items": { "type": "integer" } }
+        },
+        "description": "Helper class that provides a standard way to create an ABC using\ninheritance."
+      },
       "KeyValue": {
         "title": "KeyValue",
         "required": ["key", "value"],
@@ -5852,6 +5902,12 @@
             "description": "Number of occurrences of the keyword in the entire collection"
           }
         }
+      },
+      "LogicalOperator": {
+        "title": "LogicalOperator",
+        "enum": ["or", "and"],
+        "type": "string",
+        "description": "This tells our filter how to combine multiple column expressions."
       },
       "MemoContentQuery": {
         "title": "MemoContentQuery",

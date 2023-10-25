@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.analysis_service import AnalysisService
@@ -11,6 +11,7 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     TimelineAnalysisResult,
 )
+from app.core.data.dto.filter import AnnotationDocumentOwnerExpression, Filter
 from app.core.data.dto.search import SimSearchQuery, SimSearchSentenceHit
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
@@ -22,6 +23,13 @@ router = APIRouter(
 )
 
 
+class CodeFrequencyFilter(Filter):
+    items: List[Union[AnnotationDocumentOwnerExpression, "CodeFrequencyFilter"]]
+
+
+CodeFrequencyFilter.update_forward_refs()
+
+
 @router.post(
     "/code_frequencies",
     response_model=List[CodeFrequency],
@@ -29,10 +37,13 @@ router = APIRouter(
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
 async def code_frequencies(
-    *, project_id: int, user_ids: List[int], code_ids: List[int]
+    *,
+    project_id: int,
+    code_ids: List[int],
+    filter: CodeFrequencyFilter,
 ) -> List[CodeFrequency]:
     return AnalysisService().compute_code_frequency(
-        project_id=project_id, user_ids=user_ids, code_ids=code_ids
+        project_id=project_id, code_ids=code_ids, filter=filter
     )
 
 
@@ -43,7 +54,10 @@ async def code_frequencies(
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
 async def code_occurrences(
-    *, project_id: int, user_ids: List[int], code_id: int
+    *,
+    project_id: int,
+    user_ids: List[int],
+    code_id: int,
 ) -> List[CodeOccurrence]:
     return AnalysisService().find_code_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
