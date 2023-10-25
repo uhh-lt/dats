@@ -103,8 +103,10 @@ export const QueryKey = {
   SDOCS_BY_TAG_ID: "searchResults",
   // the name of a single SourceDocument (by project id and filename)
   SDOC_NAME_BY_PROJECT_AND_FILENAME: "sdocNameByProjectAndFilename",
-  // multiple docs (by project id)
-  SDOCS_ALL: "sdocIds",
+  //all doc data (by doc id)
+  SDOC_ALL: "sdocAll",
+  // multiple docs (by list of doc ids)
+  SDOCS_ALL: "sdocsAll",
 
   // adoc (by adoc id)
   ADOC: "adoc",

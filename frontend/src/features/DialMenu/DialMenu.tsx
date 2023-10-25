@@ -1,4 +1,4 @@
-import { Backdrop, Dialog, SpeedDial, SpeedDialAction } from "@mui/material";
+import { Dialog, SpeedDial, SpeedDialAction } from "@mui/material";
 import FeedbackIcon from "@mui/icons-material/Feedback";
 import { useAuth } from "../../auth/AuthProvider";
 import { useMemo, useState } from "react";
@@ -41,26 +41,14 @@ function DialMenu() {
     if (!location.pathname.includes("imprint")) window.open(USER_GUIDE_BASE_URL + wikiTargetRoute.route, "_blank");
   };
 
-  const [openDial, setOpenDial] = useState(false);
-  const handleOpenDial = () => {
-    setOpenDial(true);
-  };
-  const handleCloseDial = () => {
-    setOpenDial(false);
-  };
-
   return (
     <>
       {isLoggedIn ? (
         <>
-          <Backdrop open={openDial} sx={{ zIndex: (theme) => theme.zIndex.appBar + 1 }} />
           <SpeedDial
             ariaLabel="DialMenu"
             icon={<SupportAgentIcon />}
             sx={{ position: "absolute", bottom: 10, right: 16, zIndex: (theme) => theme.zIndex.appBar + 1 }}
-            open={openDial}
-            onOpen={handleOpenDial}
-            onClose={handleCloseDial}
           >
             <SpeedDialAction
               key="help"

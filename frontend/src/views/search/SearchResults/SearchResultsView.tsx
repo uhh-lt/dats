@@ -37,6 +37,7 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
   const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
   const dispatch = useAppDispatch();
   const isTableView = useAppSelector((state) => state.search.isTableView);
+  const tableViewPaginationModel = useAppSelector((state) => state.search.tableViewPaginationModel);
   // context menu
   const [contextMenuData, setContextMenuData] = useState<number>();
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
@@ -72,14 +73,22 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
           dispatch(SearchActions.setRowsPerPage(searchResults.getSearchResultSDocIds().length));
         } else dispatch(SearchActions.setRowsPerPage(numCardsX * numCardsY));
       } else {
-        let numRows = Math.floor(height / 100);
-        numRows = height - numRows * 100 - (numRows - 1) * 15 > 0 ? numRows : numRows - 1;
+        const sdocIdsLen = searchResults.getSearchResultSDocIds().length;
+        const estimatedRowHeight = 100;
+
+        let numRows = Math.floor(height / estimatedRowHeight);
+        numRows = height - numRows * estimatedRowHeight - (numRows - 1) * 15 > 0 ? numRows : numRows - 1;
         dispatch(SearchActions.setRowsPerPage(numRows));
-        return;
+        dispatch(
+          SearchActions.setTableViewPaginationModel({
+            page: numRows >= sdocIdsLen ? 0 : tableViewPaginationModel.page,
+            pageSize: numRows,
+          })
+        );
       }
       return;
     }
-  }, [dispatch, width, height, searchResults, isTableView, page, rowsPerPage]);
+  }, [dispatch, width, height, searchResults, isTableView, tableViewPaginationModel.page, page, rowsPerPage]);
 
   // handle selection
   const handleChange = useCallback(
@@ -152,48 +161,38 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
     } else {
       resultsView = <>Search Result Type is not supported :(</>;
     }
-
-    return (
-      <Container
-        ref={ref}
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          placeContent: "flex-start",
-          gap: "15px",
-          overflowY: "auto",
-          p: 2,
-          width: "100%",
-          maxWidth: isSentenceSimilaritySearchResult ? undefined : "100% !important",
-        }}
-        className={className}
-      >
-        {resultsView}
-        <SearchResultContextMenu
-          projectId={projectId}
-          sdocId={contextMenuData}
-          handleClose={closeContextMenu}
-          position={contextMenuPosition}
-        />
-      </Container>
-    );
   } else {
     resultsView = (
-      <>
-        <SearchResultsTableView
-          searchResults={searchResults}
-          handleResultClick={handleResultClick}
-          handleOnContextMenu={openContextMenu}
-          handleOnCheckboxChange={handleChange}
-        />
-        <SearchResultContextMenu
-          projectId={projectId}
-          sdocId={contextMenuData}
-          handleClose={closeContextMenu}
-          position={contextMenuPosition}
-        />
-      </>
+      <SearchResultsTableView
+        searchResults={searchResults}
+        handleResultClick={handleResultClick}
+        handleOnContextMenu={openContextMenu}
+        handleOnCheckboxChange={handleChange}
+      />
     );
-    return resultsView;
   }
+  return (
+    <Container
+      ref={ref}
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        placeContent: "flex-start",
+        gap: "15px",
+        overflowY: "auto",
+        p: 2,
+        width: "100%",
+        maxWidth: isSentenceSimilaritySearchResult ? undefined : "100% !important",
+      }}
+      className={className}
+    >
+      {resultsView}
+      <SearchResultContextMenu
+        projectId={projectId}
+        sdocId={contextMenuData}
+        handleClose={closeContextMenu}
+        position={contextMenuPosition}
+      />
+    </Container>
+  );
 }
