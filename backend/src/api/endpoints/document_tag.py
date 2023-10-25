@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memos
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
@@ -15,7 +15,7 @@ from app.core.data.dto.source_document import SourceDocumentRead
 from fastapi import APIRouter, Depends
 from requests import Session
 
-router = APIRouter(prefix="/doctag")
+router = APIRouter(prefix="/doctag", dependencies=[Depends(get_current_user)])
 tags = ["documentTag"]
 
 

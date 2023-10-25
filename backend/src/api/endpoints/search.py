@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from api.dependencies import get_db_session, skip_limit_params
+from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import (
     KeywordStat,
@@ -23,7 +23,7 @@ from app.core.search.search_service import SearchService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/search")
+router = APIRouter(prefix="/search", dependencies=[Depends(get_current_user)])
 tags = ["search"]
 
 ss = SearchService()

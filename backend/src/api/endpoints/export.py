@@ -1,9 +1,10 @@
+from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_export_job_async
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/export")
+router = APIRouter(prefix="/export", dependencies=[Depends(get_current_user)])
 tags = ["export"]
 
 exs: ExportService = ExportService()

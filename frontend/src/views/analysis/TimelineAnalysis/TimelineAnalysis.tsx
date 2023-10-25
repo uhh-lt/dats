@@ -28,7 +28,7 @@ function TimelineAnalysis() {
   const analysisResults = AnalysisHooks.useTimelineAnalysis(
     parseInt(projectId!),
     metadataKey,
-    threshold,
+    threshold / 100.0,
     concepts.map((c) => {
       return {
         name: c.name,

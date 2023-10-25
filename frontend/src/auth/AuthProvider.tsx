@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-import { OpenAPI, UserRead, UserService } from "../api/openapi";
+import { AuthenticationService, OpenAPI, UserRead, UserService } from "../api/openapi";
 import { QueryObserverResult, useQuery } from "@tanstack/react-query";
 
 // init once
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
    * @throws ApiError
    */
   const login = async (username: string, password: string) => {
-    const authData = await UserService.login({ formData: { username, password } });
+    const authData = await AuthenticationService.login({ formData: { username, password } });
     localStorage.setItem("dwts-access", authData.access_token);
     OpenAPI.TOKEN = authData.access_token;
     setAccessToken(authData.access_token);

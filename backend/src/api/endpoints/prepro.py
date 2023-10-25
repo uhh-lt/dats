@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
 from app.core.data.crud.project import crud_project
@@ -14,7 +14,7 @@ from app.preprocessing.preprocessing_service import PreprocessingService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/prepro")
+router = APIRouter(prefix="/prepro", dependencies=[Depends(get_current_user)])
 tags = ["prepro"]
 
 redis: RedisService = RedisService()

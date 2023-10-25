@@ -24,6 +24,7 @@ from api.endpoints import (
     analysis,
     analysis_table,
     annotation_document,
+    authentication,
     bbox_annotation,
     code,
     crawler,
@@ -233,6 +234,7 @@ async def shutdown_event():
 
 # include the endpoint routers
 app.include_router(general.router)
+app.include_router(authentication.router)
 app.include_router(user.router)
 app.include_router(project.router)
 app.include_router(source_document.router)

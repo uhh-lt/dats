@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient";
-import { AnnotationDocumentRead, CodeRead, ProjectRead, UserRead, UserService } from "./openapi";
+import { AnnotationDocumentRead, AuthenticationService, CodeRead, ProjectRead, UserRead, UserService } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import { useSelectEnabledCodes } from "./utils";
 
@@ -21,7 +21,7 @@ const useGetUser = (userId: number | undefined) =>
   });
 
 const useRegister = () =>
-  useMutation(UserService.register, {
+  useMutation(AuthenticationService.register, {
     onSuccess: () => {
       queryClient.invalidateQueries([QueryKey.USERS]);
     },

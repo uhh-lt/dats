@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.whiteboard import crud_whiteboard
 from app.core.data.dto.whiteboard import (
     WhiteboardCreate,
@@ -10,7 +10,7 @@ from app.core.data.dto.whiteboard import (
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/whiteboard")
+router = APIRouter(prefix="/whiteboard", dependencies=[Depends(get_current_user)])
 tags = ["whiteboard"]
 
 

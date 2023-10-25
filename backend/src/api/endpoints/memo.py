@@ -1,12 +1,12 @@
 from typing import Optional
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.memo import MemoRead, MemoUpdate
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/memo")
+router = APIRouter(prefix="/memo", dependencies=[Depends(get_current_user)])
 tags = ["memo"]
 
 
