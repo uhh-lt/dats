@@ -64,6 +64,9 @@ export default function SearchResultsTableView({
       <DataGrid
         rows={sdocs ? sdocs : []}
         columns={columns}
+        getRowHeight={() => 100}
+        // getRowHeight={() => "auto"}
+        // getEstimatedRowHeight={() => 100}
         initialState={{
           pagination: {
             paginationModel: {
@@ -75,7 +78,6 @@ export default function SearchResultsTableView({
         paginationModel={paginationModel}
         onRowClick={(data) => handleResultClick(data.row)}
         disableRowSelectionOnClick
-        getRowHeight={() => 100}
         checkboxSelection={false}
         hideFooter
         slots={{

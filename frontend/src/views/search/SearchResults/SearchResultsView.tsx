@@ -105,8 +105,9 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
 
   let resultsView = null;
   const isSentenceSimilaritySearchResult = searchResults instanceof SentenceSimilaritySearchResults;
-  if (!isTableView) {
-    if (searchResults instanceof LexicalSearchResults) {
+
+  if (searchResults instanceof LexicalSearchResults) {
+    if (!isTableView) {
       resultsView = (
         <>
           {searchResults
@@ -123,7 +124,18 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
             ))}
         </>
       );
-    } else if (searchResults instanceof SentenceSimilaritySearchResults) {
+    } else {
+      resultsView = (
+        <SearchResultsTableView
+          searchResults={searchResults}
+          handleResultClick={handleResultClick}
+          handleOnContextMenu={openContextMenu}
+          handleOnCheckboxChange={handleChange}
+        />
+      );
+    }
+  } else if (searchResults instanceof SentenceSimilaritySearchResults) {
+    if (!isTableView) {
       resultsView = (
         <>
           {Array.from(searchResults.getResults().entries())
@@ -140,7 +152,18 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
             ))}
         </>
       );
-    } else if (searchResults instanceof ImageSimilaritySearchResults) {
+    } else {
+      resultsView = (
+        <SearchResultsTableView
+          searchResults={searchResults}
+          handleResultClick={handleResultClick}
+          handleOnContextMenu={openContextMenu}
+          handleOnCheckboxChange={handleChange}
+        />
+      );
+    }
+  } else if (searchResults instanceof ImageSimilaritySearchResults) {
+    if (!isTableView) {
       resultsView = (
         <>
           {searchResults
@@ -159,18 +182,19 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
         </>
       );
     } else {
-      resultsView = <>Search Result Type is not supported :(</>;
+      resultsView = (
+        <SearchResultsTableView
+          searchResults={searchResults}
+          handleResultClick={handleResultClick}
+          handleOnContextMenu={openContextMenu}
+          handleOnCheckboxChange={handleChange}
+        />
+      );
     }
   } else {
-    resultsView = (
-      <SearchResultsTableView
-        searchResults={searchResults}
-        handleResultClick={handleResultClick}
-        handleOnContextMenu={openContextMenu}
-        handleOnCheckboxChange={handleChange}
-      />
-    );
+    resultsView = <>Search Result Type is not supported :(</>;
   }
+
   return (
     <Container
       ref={ref}

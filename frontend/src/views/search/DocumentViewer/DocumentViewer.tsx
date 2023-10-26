@@ -21,7 +21,7 @@ import AudioVideoViewer from "./AudioVideoViewer";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;
-  handleTagClick: (tagId: number) => void;
+  handleTagClick: (event: React.MouseEvent<HTMLDivElement, MouseEvent>, tagId: number) => void;
   showEntities: boolean;
   isIdleContent?: React.ReactNode;
 }
@@ -77,7 +77,7 @@ function DocumentViewer({
                 <DocumentTagChip
                   key={tag.id}
                   tagId={tag.id}
-                  handleClick={(tag) => handleTagClick(tag.id)}
+                  handleClick={(event, tag) => handleTagClick(event, tag.id)}
                   handleDelete={handleDeleteDocumentTag}
                 />
               ))}
@@ -112,7 +112,13 @@ function DocumentViewer({
                 <AudioVideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} height={200} />
               )}
               {sdoc.data.doctype === DocType.VIDEO && (
-                <AudioVideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} width={800} height={600} />
+                <AudioVideoViewer
+                  sdoc={sdoc.data}
+                  adoc={selectedAdoc}
+                  showEntities={showEntities}
+                  width={800}
+                  height={600}
+                />
               )}
             </>
           )}

@@ -50,27 +50,6 @@ export const tableViewColDef = [
     sortable: false,
     filterable: false,
     renderCell: (data: any) =>
-      // <Tabs
-      //   value={false}
-      //   variant="scrollable"
-      //   scrollButtons={true}
-      //   TabScrollButtonProps={{
-      //     sx: {
-      //       width: "1em",
-      //       "&.Mui-disabled": {
-      //         width: 0,
-      //       },
-      //       transition: "width 0.5s",
-      //     },
-      //   }}
-      //   sx={{ pr: 2 }}
-      //   TabIndicatorProps={{ hidden: true }}
-      // >
-      //   <Tab
-      //     sx={{ pl: 0 }}
-      //     label={
-      //       <ListItem>
-      //         {
       data.row.tags.length > 0 ? (
         <Stack direction={"row"} spacing={0.2} overflow={"auto"}>
           {data.row.tags.map((tag: DocumentTagRead) => {
@@ -80,11 +59,6 @@ export const tableViewColDef = [
       ) : (
         <Typography align="center">{EMPTY_TOKEN}</Typography>
       ),
-    //         }
-    //       </ListItem>
-    //     }
-    //   />
-    // </Tabs>
   },
   {
     field: "memos",

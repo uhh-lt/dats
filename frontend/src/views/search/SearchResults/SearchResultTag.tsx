@@ -8,7 +8,15 @@ interface SearchResultTagProps {
 function SearchResultTag({ tagId }: SearchResultTagProps) {
   const handleAddTagFilter = useAddTagFilter();
 
-  return <DocumentTagChip tagId={tagId} handleClick={(tag) => handleAddTagFilter(tag.id)} />;
+  return (
+    <DocumentTagChip
+      tagId={tagId}
+      handleClick={(event, tag) => {
+        event.stopPropagation();
+        handleAddTagFilter(tag.id);
+      }}
+    />
+  );
 }
 
 export default SearchResultTag;

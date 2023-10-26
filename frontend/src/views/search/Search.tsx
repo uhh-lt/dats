@@ -262,7 +262,7 @@ function Search() {
                 <Container sx={{ my: 2, height: "fit-content" }}>
                   <DocumentViewer
                     sdocId={sdocId ? parseInt(sdocId) : undefined}
-                    handleTagClick={handleAddTagFilter}
+                    handleTagClick={(event, tag) => handleAddTagFilter(tag)}
                     showEntities={isShowEntities}
                     isIdleContent={<Typography>Click a document to read it :)</Typography>}
                   />
