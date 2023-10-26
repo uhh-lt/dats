@@ -7,6 +7,7 @@ import string
 
 # Allow app to detect if it's running inside tests
 import sys
+from typing import Generator
 
 import pytest
 from app.core.startup import startup
@@ -36,7 +37,7 @@ def anyio_backend():
 
 
 @pytest.fixture
-def code(session: SQLService, project: int, user: int) -> int:
+def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -64,7 +65,7 @@ def session() -> SQLService:
 
 
 @pytest.fixture
-def project(session: int, user: int) -> int:
+def project(session: SQLService, user: int) -> Generator[int, None, None]:
     title = "".join(random.choices(string.ascii_letters, k=15))
     description = "Test description"
 
@@ -81,7 +82,7 @@ def project(session: int, user: int) -> int:
 
 
 @pytest.fixture
-def user(session: SQLService) -> int:
+def user(session: SQLService) -> Generator[int, None, None]:
     email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))

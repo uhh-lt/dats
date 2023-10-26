@@ -3,6 +3,7 @@
 
 import os
 
+from app.core.authorization.authorization_service import ForbiddenError
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -223,6 +224,11 @@ async def integrity_error_handler(_, exc: IntegrityError):
         return PlainTextResponse(msg, status_code=409)
     else:
         return PlainTextResponse(str(exc), status_code=500)
+
+
+@app.exception_handler(ForbiddenError)
+def forbidden_error_handler(_, exc: ForbiddenError):
+    return PlainTextResponse(str(exc), status_code=403)
 
 
 @app.on_event("startup")

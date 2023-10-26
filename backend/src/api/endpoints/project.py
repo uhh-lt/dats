@@ -7,7 +7,7 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.action import ActionQueryParameters, ActionRead
+from app.core.data.dto.action import ActionQueryParameters, ActionRead, ActionType
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
@@ -28,7 +28,9 @@ from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from api.util import get_object_memos
 
 router = APIRouter(
-    prefix="/project", dependencies=[Depends(get_current_user)], tags=["project"]
+    prefix="/project",
+    dependencies=[Depends(get_current_user)],
+    tags=["project"],
 )
 
 
@@ -76,6 +78,7 @@ async def read_all(
     response_model=Optional[ProjectRead],
     summary="Returns the Project with the given ID",
     description="Returns the Project with the given ID if it exists",
+    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
 async def read_project(
     *, db: Session = Depends(get_db_session), proj_id: int
@@ -166,6 +169,13 @@ async def get_project_sdocs(
     response_model=Optional[PreprocessingJobRead],
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
+    dependencies=[
+        is_authorized(
+            ActionType.UPDATE,
+            crud_project,
+            "proj_id",
+        )
+    ],
 )
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
