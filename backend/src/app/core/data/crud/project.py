@@ -1,8 +1,15 @@
 from typing import Optional
 
 import srsly
+from app.core.authorization.project import (
+    can_associate_user_to_project,
+    can_create_project,
+    can_dissociate_user_from_project,
+    can_read_project,
+    can_remove_project,
+)
 from app.core.data.crud.code import crud_code
-from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.crud_base import CRUDBase, UnauthorizedError
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.action import ActionType
@@ -22,7 +29,11 @@ from sqlalchemy.orm import Session
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
-    def create(self, db: Session, *, create_dto: ProjectCreate) -> ProjectORM:
+    def create(
+        self, db: Session, *, create_dto: ProjectCreate, subject: UserRead
+    ) -> ProjectORM:
+        if not can_create_project(subject):
+            raise UnauthorizedError("create", self.model)
         # 1) create the project
         dto_obj_data = jsonable_encoder(create_dto)
         # noinspection PyArgumentList
@@ -41,28 +52,51 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         )
 
         # 3) associate the system user
-        self.associate_user(db=db, proj_id=project_id, user_id=SYSTEM_USER_ID)
+        system_user = UserRead.from_orm(crud_user.read(db, SYSTEM_USER_ID))
+        self.associate_user(
+            db=db, proj_id=project_id, user_id=SYSTEM_USER_ID, subject=system_user
+        )
 
-        # 4) create system codes
+        # 4) associate the user creating the project
+        self.associate_user(
+            db=db, proj_id=project_id, user_id=subject.id, subject=system_user
+        )
+
+        # 5) create system codes
         crud_code.create_system_codes_for_project(db=db, proj_id=project_id)
 
-        # 5) create repo directory structure
+        # 6) create repo directory structure
         RepoService().create_directory_structure_for_project(proj_id=project_id)
 
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> Optional[ProjectORM]:
+    def read(self, db: Session, id: int, subject: UserRead) -> ProjectORM:
+        db_obj = super().read(db, id)
+        if not can_read_project(db_obj, subject):
+            raise UnauthorizedError("read", self.model)
+        return db_obj
+
+    def remove(
+        self, db: Session, *, id: int, subject: UserRead
+    ) -> Optional[ProjectORM]:
+        if not can_remove_project(super().read(db, id), subject):
+            raise UnauthorizedError("remove", self.model)
         # 1) delete the project and all connected data via cascading delete
-        proj_db_obj = super().remove(db=db, id=id)
+        proj_db_obj = super().remove(db=db, id=id, subject=subject)
         # 2) delete the files from repo
         RepoService().purge_project_data(proj_id=id)
 
         return proj_db_obj
 
-    def associate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+    def associate_user(
+        self, db: Session, *, proj_id: int, user_id: int, subject: UserRead
+    ) -> UserORM:
         # create before_state
-        proj_db_obj = self.read(db=db, id=proj_id)
+        proj_db_obj = self.read(db=db, id=proj_id, subject=subject)
         before_state = self._get_action_state_from_orm(db_obj=proj_db_obj)
+
+        if not can_associate_user_to_project(proj_db_obj, subject):
+            raise UnauthorizedError("associate_user", self.model)
 
         # add user to project
         user_db_obj = crud_user.read(db=db, id=user_id)
@@ -84,10 +118,15 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return user_db_obj
 
-    def dissociate_user(self, db: Session, *, proj_id: int, user_id: int) -> UserORM:
+    def dissociate_user(
+        self, db: Session, *, proj_id: int, user_id: int, subject: UserRead
+    ) -> UserORM:
         # create before_state
-        proj_db_obj = self.read(db=db, id=proj_id)
+        proj_db_obj = self.read(db=db, id=proj_id, subject=subject)
         before_state = self._get_action_state_from_orm(db_obj=proj_db_obj)
+
+        if not can_dissociate_user_from_project(proj_db_obj, subject):
+            raise UnauthorizedError("dissociate_user", self.model)
 
         # remove user from project
         user_db_obj = crud_user.read(db=db, id=user_id)
@@ -118,7 +157,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
             ProjectReadAction(
                 **ProjectRead.from_orm(db_obj).dict(),
                 users=[UserRead.from_orm(user) for user in db_obj.users],
-                num_sdocs=num_sdocs
+                num_sdocs=num_sdocs,
             ).dict()
         )
 

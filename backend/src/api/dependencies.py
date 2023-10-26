@@ -1,4 +1,4 @@
-from typing import Dict, Generator, Optional
+from typing import Annotated, Dict, Generator, Optional
 
 from api.util import credentials_exception
 from app.core.data.crud.user import crud_user
@@ -42,7 +42,7 @@ async def resolve_code_param(
         " SpanAnnotation gets resolved and replaced"
         " by the respective Code entity",
         default=True,
-    )
+    ),
 ) -> bool:
     return resolve
 
@@ -71,3 +71,7 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+# A convenience type alias for depending `get_current_user` in endpoints
+AuthenticatedUser = Annotated[UserRead, Depends(get_current_user)]

@@ -4,6 +4,7 @@ import string
 
 # Allow app to detect if it's running inside tests
 import sys
+from typing import Generator
 
 import pytest
 from app.core.startup import startup
@@ -19,7 +20,7 @@ if not STARTUP_DONE:
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
-from app.core.data.crud.user import crud_user
+from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.code import CodeCreate, CodeRead
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserCreate, UserRead
@@ -33,7 +34,7 @@ def anyio_backend():
 
 
 @pytest.fixture
-def code(session: SQLService, project: int, user: int) -> int:
+def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -61,24 +62,30 @@ def session() -> SQLService:
 
 
 @pytest.fixture
-def project(session: int, user: int) -> int:
+def project(session: SQLService, user: int) -> Generator[int, None, None]:
     title = "".join(random.choices(string.ascii_letters, k=15))
     description = "Test description"
 
     with session.db_session() as sess:
+        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
         id = crud_project.create(
-            db=sess, create_dto=ProjectCreate(title=title, description=description)
+            db=sess,
+            create_dto=ProjectCreate(title=title, description=description),
+            subject=system_user,
         ).id
-        crud_project.associate_user(db=sess, proj_id=id, user_id=user)
+        crud_project.associate_user(
+            db=sess, proj_id=id, user_id=user, subject=system_user
+        )
 
     yield id
 
     with session.db_session() as sess:
-        crud_project.remove(db=sess, id=id)
+        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
+        crud_project.remove(db=sess, id=id, subject=system_user)
 
 
 @pytest.fixture
-def user(session: SQLService) -> int:
+def user(session: SQLService) -> Generator[int, None, None]:
     email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))

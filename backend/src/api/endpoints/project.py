@@ -1,6 +1,11 @@
-from typing import Dict, List, Optional
+from typing import Annotated, Dict, List, Optional
 
-from api.dependencies import get_current_user, get_db_session, skip_limit_params
+from api.dependencies import (
+    AuthenticatedUser,
+    get_current_user,
+    get_db_session,
+    skip_limit_params,
+)
 from api.util import get_object_memos
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
@@ -38,15 +43,18 @@ router = APIRouter(
     description="Creates a new Project.",
 )
 async def create_new_project(
-    *, db: Session = Depends(get_db_session), proj: ProjectCreate
+    *,
+    db: Session = Depends(get_db_session),
+    proj: ProjectCreate,
+    subject: AuthenticatedUser,
 ) -> ProjectRead:
-    db_obj = crud_project.create(db=db, create_dto=proj)
+    db_obj = crud_project.create(db=db, create_dto=proj, subject=subject)
 
     try:
         # create the ES Indices
         ElasticSearchService().create_project_indices(proj_id=db_obj.id)
     except Exception:
-        crud_project.remove(db=db, id=db_obj.id)
+        crud_project.remove(db=db, id=db_obj.id, subject=subject)
         raise HTTPException(
             status_code=500,
             detail="Cannot create ElasticSearch Indices for the Project!",
@@ -66,6 +74,7 @@ async def read_all(
     skip_limit: Dict[str, str] = Depends(skip_limit_params),
 ) -> List[ProjectRead]:
     # TODO Flo: only return the projects of the current user
+    # TODO how to manage authorization for methods in the base class?
     db_objs = crud_project.read_multi(db=db, **skip_limit)
     return [ProjectRead.from_orm(proj) for proj in db_objs]
 
@@ -77,10 +86,9 @@ async def read_all(
     description="Returns the Project with the given ID if it exists",
 )
 async def read_project(
-    *, db: Session = Depends(get_db_session), proj_id: int
+    *, db: Session = Depends(get_db_session), proj_id: int, subject: AuthenticatedUser
 ) -> Optional[ProjectRead]:
-    # TODO Flo: only if the user has access?
-    db_obj = crud_project.read(db=db, id=proj_id)
+    db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
     return ProjectRead.from_orm(db_obj)
 
 
@@ -105,19 +113,20 @@ async def update_project(
     description="Removes the Project with the given ID.",
 )
 async def delete_project(
-    *, db: Session = Depends(get_db_session), proj_id: int
+    *, db: Session = Depends(get_db_session), proj_id: int, subject: AuthenticatedUser
 ) -> ProjectRead:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.remove(db=db, id=proj_id)
+    db_obj = crud_project.remove(db=db, id=proj_id, subject=subject)
 
     try:
         # remove the ES Indices # Flo Do we want this?!
         ElasticSearchService().remove_project_indices(proj_id=db_obj.id)
     except Exception:
-        crud_project.remove(db=db, id=db_obj.id)
+        # TODO why remove the project again? We already did it above
+        crud_project.remove(db=db, id=db_obj.id, subject=subject)
         raise HTTPException(
             status_code=500,
-            detail="Cannot create ElasticSearch Indices for the Project!",
+            detail="Cannot remove ElasticSearch Indices for the Project!",
         )
 
     return ProjectRead.from_orm(db_obj)
@@ -205,10 +214,15 @@ async def delete_project_sdocs(
     description="Associates an existing User to the Project with the given ID if it exists",
 )
 async def associate_user_to_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    user=Depends(get_current_user),
 ) -> Optional[UserRead]:
-    # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
+    user_db_obj = crud_project.associate_user(
+        db=db, proj_id=proj_id, user_id=user_id, subject=user
+    )
     return UserRead.from_orm(user_db_obj)
 
 
@@ -219,10 +233,15 @@ async def associate_user_to_project(
     description="Dissociates the Users with the Project with the given ID if it exists",
 )
 async def dissociate_user_from_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    subject: AuthenticatedUser,
 ) -> Optional[UserRead]:
-    # TODO Flo: only if the user has access?
-    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
+    user_db_obj = crud_project.dissociate_user(
+        db=db, proj_id=proj_id, user_id=user_id, subject=subject
+    )
     return UserRead.from_orm(user_db_obj)
 
 
@@ -233,10 +252,13 @@ async def dissociate_user_from_project(
     description="Returns all Users of the Project with the given ID",
 )
 async def get_project_users(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    subject: AuthenticatedUser,
 ) -> List[UserRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    proj_db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
     return [UserRead.from_orm(user) for user in proj_db_obj.users]
 
 
@@ -247,10 +269,10 @@ async def get_project_users(
     description="Returns all Codes of the Project with the given ID",
 )
 async def get_project_codes(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *, proj_id: int, db: Session = Depends(get_db_session), subject: AuthenticatedUser
 ) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    proj_db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
     result = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
     result.sort(key=lambda c: c.id)
     return result
@@ -276,10 +298,10 @@ async def delete_project_codes(
     description="Returns all DocumentTags of the Project with the given ID",
 )
 async def get_project_tags(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *, proj_id: int, db: Session = Depends(get_db_session), subject: AuthenticatedUser
 ) -> List[DocumentTagRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=proj_id)
+    proj_db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
     return [DocumentTagRead.from_orm(tag) for tag in proj_db_obj.document_tags]
 
 
@@ -430,9 +452,9 @@ async def add_memo(
     description="Returns the Memo of the current User for the Project with the given ID.",
 )
 async def get_memos(
-    *, db: Session = Depends(get_db_session), proj_id: int
+    *, db: Session = Depends(get_db_session), proj_id: int, subject: AuthenticatedUser
 ) -> List[MemoRead]:
-    db_obj = crud_project.read(db=db, id=proj_id)
+    db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
     return get_object_memos(db_obj=db_obj)
 
 
@@ -446,9 +468,13 @@ async def get_memos(
     ),
 )
 async def get_user_memo(
-    *, db: Session = Depends(get_db_session), proj_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    user_id: int,
+    subject: AuthenticatedUser,
 ) -> Optional[MemoRead]:
-    db_obj = crud_project.read(db=db, id=proj_id)
+    db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
 
 
