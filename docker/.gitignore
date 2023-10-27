@@ -2,3 +2,4 @@
 /backend_repo/*
 /models_cache/*
 /tika/*
+.env
