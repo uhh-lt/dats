@@ -1,3 +1,5 @@
+import ReorderIcon from "@mui/icons-material/Reorder";
+import VerticalSplitIcon from "@mui/icons-material/VerticalSplit";
 import {
   Box,
   Button,
@@ -5,13 +7,15 @@ import {
   CardContent,
   CardHeader,
   CircularProgress,
-  Container,
+  Grid,
+  IconButton,
   MenuItem,
   Portal,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridEventListener, GridRowParams, GridValueGetterParams } from "@mui/x-data-grid";
+import { DataGrid, GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
 import React, { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AnalysisHooks from "../../../api/AnalysisHooks";
@@ -27,6 +31,7 @@ import SpanAnnotationEditDialog, {
 } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
+import SpanAnnotationCard from "./SpanAnnotationCard";
 
 const columns: GridColDef[] = [
   {
@@ -77,20 +82,27 @@ function AnnotatedSegments() {
     // we have to transform the data, better do this elsewhere?
     if (!annotatedSegments.data) return [];
 
-    return annotatedSegments.data.reduce((previousValue, currentValue) => {
-      return {
-        ...previousValue,
-        [currentValue.annotation.id]: currentValue,
-      };
-    }, {} as Record<number, AnnotatedSegment>);
+    return annotatedSegments.data.reduce(
+      (previousValue, currentValue) => {
+        return {
+          ...previousValue,
+          [currentValue.annotation.id]: currentValue,
+        };
+      },
+      {} as Record<number, AnnotatedSegment>,
+    );
   }, [annotatedSegments.data]);
 
   // local state
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
-  const [viewSegment, setViewSegment] = useState<AnnotatedSegment | undefined>(undefined);
   const [selectedSegments, setSelectedSegments] = useState<AnnotatedSegment[]>([]);
+  const [isSplitView, setIsSplitView] = useState<boolean>(false);
 
   // actions
+  const handleClickSplitView = () => {
+    setIsSplitView(!isSplitView);
+  };
+
   const openMemo = (annotatedSegment: AnnotatedSegment) => {
     MemoAPI.openMemo({
       memoId: annotatedSegment.memo?.id,
@@ -104,14 +116,6 @@ function AnnotatedSegments() {
   };
 
   // events
-  const handleRowClick: GridEventListener<"rowClick"> = (params: GridRowParams<AnnotatedSegment>, event) => {
-    setViewSegment(params.row as AnnotatedSegment);
-
-    if (event.detail >= 2) {
-      openMemo(params.row);
-    }
-  };
-
   const handleChangeCodeClick = () => {
     openSpanAnnotation(selectedSegments);
   };
@@ -124,22 +128,22 @@ function AnnotatedSegments() {
     }
     const rowId = Number((event.currentTarget as HTMLDivElement).getAttribute("data-id"));
     const rowData = annotatedSegmentsMap[rowId];
-    setViewSegment(rowData);
+    setSelectedSegments([rowData]);
     contextMenuRef.current?.open({ left: event.clientX, top: event.clientY });
   };
 
   const handleContextMenuOpenMemo = () => {
-    if (!viewSegment) return;
+    if (selectedSegments.length !== 1) return;
 
     contextMenuRef.current?.close();
-    openMemo(viewSegment);
+    openMemo(selectedSegments[0]);
   };
 
   const handleContextMenuChangeCode = () => {
-    if (!viewSegment) return;
+    if (selectedSegments.length !== 1) return;
 
     contextMenuRef.current?.close();
-    openSpanAnnotation([viewSegment]);
+    openSpanAnnotation([selectedSegments[0]]);
   };
 
   return (
@@ -149,84 +153,87 @@ function AnnotatedSegments() {
           Annotated Segments
         </Typography>
       </Portal>
-      <Container maxWidth="xl" className="h100" style={{ display: "flex", flexDirection: "column" }} sx={{ py: 2 }}>
-        <Card sx={{ mb: 2 }} elevation={2}>
-          <CardContent sx={{ p: 1, pb: "8px !important" }}>
-            <Stack direction="row" alignItems="center">
-              {selectedSegments.length > 0 && (
-                <Button onClick={handleChangeCodeClick}>
-                  Change code of {selectedSegments.length} annotated segments
-                </Button>
-              )}
-              <Box sx={{ flexGrow: 1 }} />
-              <Button>Export segments</Button>
-            </Stack>
-          </CardContent>
-        </Card>
-        <Card
-          sx={{ width: "100%", height: "50%", maxHeight: "300px", mb: 2 }}
-          elevation={2}
-          className="myFlexFillAllContainer myFlexContainer"
-        >
-          <CardHeader title="View Segment" />
-          <CardContent className="myFlexFillAllContainer">
-            <Box height="100%">
-              {viewSegment ? (
-                <Typography variant="body1" color="inherit" component="div">
-                  {viewSegment.annotation.span_text}
-                </Typography>
-              ) : (
-                <Typography variant="body1" color="inherit" component="div">
-                  No segment selected. Click on a row to view a segment.
-                </Typography>
-              )}
-            </Box>
-          </CardContent>
-        </Card>
-        <Card
-          sx={{ width: "100%", minHeight: "225.5px" }}
-          elevation={2}
-          className="myFlexFillAllContainer myFlexContainer"
-        >
-          <CardHeader title="Annotated Segments" />
-          <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-            <div className="h100" style={{ width: "100%" }}>
-              {annotatedSegments.isSuccess ? (
-                <DataGrid
-                  rows={annotatedSegments.data}
-                  columns={columns}
-                  autoPageSize
-                  disableRowSelectionOnClick
-                  getRowId={(row: AnnotatedSegment) => row.annotation.id}
-                  onRowClick={handleRowClick}
-                  style={{ border: "none" }}
-                  checkboxSelection
-                  onRowSelectionModelChange={(selectionModel) =>
-                    setSelectedSegments(selectionModel.map((id) => annotatedSegmentsMap[id as number]))
-                  }
-                  slotProps={{
-                    row: {
-                      onContextMenu: handleContextMenu,
-                    },
-                  }}
-                />
-              ) : annotatedSegments.isLoading ? (
-                <CircularProgress />
-              ) : (
-                <Typography variant="body1" color="inherit" component="div">
-                  {annotatedSegments.error?.message}
-                </Typography>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </Container>
+      <Grid container className="h100" columnSpacing={2} padding={2} bgcolor={"grey.200"}>
+        <Grid item md={isSplitView ? 6 : 12} className="myFlexContainer h100">
+          <Card sx={{ mb: 2, flexShrink: 0 }} elevation={2}>
+            <CardContent sx={{ p: 1, pb: "8px !important" }}>
+              <Stack direction="row" alignItems="center">
+                {selectedSegments.length > 0 && (
+                  <Button onClick={handleChangeCodeClick}>
+                    Change code of {selectedSegments.length} annotated segments
+                  </Button>
+                )}
+                <Box sx={{ flexGrow: 1 }} />
+                <Button>Export segments</Button>
+                <Tooltip title="Split/not split view">
+                  <IconButton onClick={handleClickSplitView}>
+                    {isSplitView ? <ReorderIcon /> : <VerticalSplitIcon />}
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </CardContent>
+          </Card>
+
+          {!isSplitView && selectedSegments.length > 0 && (
+            <SpanAnnotationCard
+              key={selectedSegments[selectedSegments.length - 1].annotation.id}
+              annotationId={selectedSegments[selectedSegments.length - 1].annotation.id}
+              sx={{ mb: 2, flexShrink: 0 }}
+            />
+          )}
+
+          <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer h100">
+            <CardHeader title="Annotated Segments" />
+            <CardContent className="myFlexFillAllContainer h100" style={{ padding: 0 }}>
+              <div className="h100" style={{ width: "100%" }}>
+                {annotatedSegments.isSuccess ? (
+                  <DataGrid
+                    rows={annotatedSegments.data}
+                    columns={columns}
+                    autoPageSize
+                    getRowId={(row: AnnotatedSegment) => row.annotation.id}
+                    style={{ border: "none" }}
+                    checkboxSelection
+                    onRowSelectionModelChange={(selectionModel) =>
+                      setSelectedSegments(selectionModel.map((id) => annotatedSegmentsMap[id as number]))
+                    }
+                    slotProps={{
+                      row: {
+                        onContextMenu: handleContextMenu,
+                      },
+                    }}
+                  />
+                ) : annotatedSegments.isLoading ? (
+                  <CircularProgress />
+                ) : (
+                  <Typography variant="body1" color="inherit" component="div">
+                    {annotatedSegments.error?.message}
+                  </Typography>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </Grid>
+        {isSplitView && (
+          <Grid item md={6} className="h100WithScroll">
+            {selectedSegments.length > 0 ? (
+              selectedSegments.map((segment) => (
+                <SpanAnnotationCard key={segment.annotation.id} annotationId={segment.annotation.id} sx={{ mb: 1 }} />
+              ))
+            ) : (
+              <Typography variant="body1" color="inherit" component="div">
+                No segment selected. Click on a row to view a segment.
+              </Typography>
+            )}
+          </Grid>
+        )}
+      </Grid>
       <SpanAnnotationEditDialog projectId={projectId} />
       <GenericPositionMenu ref={contextMenuRef}>
-        {viewSegment && (
+        {selectedSegments.length === 1 && (
           <>
             <MenuItem onClick={handleContextMenuChangeCode}>Change code</MenuItem>
-            {viewSegment.memo ? (
+            {selectedSegments[0].memo ? (
               <MenuItem onClick={handleContextMenuOpenMemo}>Edit memo</MenuItem>
             ) : (
               <MenuItem onClick={handleContextMenuOpenMemo}>Create memo</MenuItem>
