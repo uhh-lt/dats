@@ -120,7 +120,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
     if (!annotation.data) return;
 
     if (event.detail >= 2) {
-      openSpanAnnotationEditDialog(annotation.data);
+      openSpanAnnotationEditDialog([annotation.data]);
     }
   };
 
