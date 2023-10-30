@@ -1,6 +1,7 @@
-import { Edge, Node, XYPosition } from "reactflow";
+import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
 import {
+  BBoxAnnotationRead,
   BBoxAnnotationReadResolvedCode,
   CodeRead,
   DocumentTagRead,
@@ -10,15 +11,33 @@ import {
 } from "../../api/openapi";
 import {
   BBoxAnnotationNodeData,
+  BorderNodeData,
   CodeNodeData,
   MemoNodeData,
+  NoteNodeData,
   SdocNodeData,
   SpanAnnotationNodeData,
   TagNodeData,
   TextNodeData,
 } from "./types";
+import { theme } from "../../plugins/ReactMUI";
+import { BackgroundColorData } from "./types/base/BackgroundColorData";
 
 const positionOffset = 50;
+
+export const defaultDatabaseEdgeOptions: DefaultEdgeOptions = {
+  style: { strokeWidth: 3, stroke: theme.palette.grey[400] },
+  type: "floating",
+  markerEnd: {
+    type: MarkerType.ArrowClosed,
+    color: theme.palette.grey[400],
+  },
+};
+
+const defaultDatabaseNodeData: BackgroundColorData = {
+  bgcolor: "#ffffff",
+  bgalpha: 255,
+};
 
 export const isMemoNodeId = (nodeId: string): boolean => nodeId.startsWith("memo-");
 export const isTagNodeId = (nodeId: string): boolean => nodeId.startsWith("tag-");
@@ -51,15 +70,89 @@ export const isConnectionAllowed = (sourceNodeId: string, targetNodeId: string) 
   return false;
 };
 
+export const duplicateCustomNodes = (
+  position: XYPosition,
+  nodes: Node<TextNodeData | NoteNodeData | BorderNodeData>[],
+): Node<TextNodeData | NoteNodeData | BorderNodeData>[] => {
+  const rect = getRectOfNodes(nodes);
+  const newNodes = nodes.map((node) => {
+    return {
+      ...node,
+      id: uuidv4(),
+      position: { x: node.position.x - rect.x + position.x, y: node.position.y - rect.y + position.y },
+    };
+  });
+
+  console.log("nodes", nodes);
+  console.log("newNodes", newNodes);
+
+  return newNodes;
+};
+
 export const createTextNode = ({ position }: { position?: XYPosition }): Node<TextNodeData> => {
   return {
     id: uuidv4(),
     data: {
       text: "test",
-      variant: "h1",
-      color: "#ffffff",
+      variant: "h3",
+      color: "#000000",
+      bold: false,
+      italic: false,
+      underline: false,
+      horizontalAlign: "left",
+      verticalAlign: "top",
     },
     type: "text",
+    position: { x: position?.x || 0, y: position?.y || 0 },
+  };
+};
+
+export const createNoteNode = ({ position }: { position?: XYPosition }): Node<NoteNodeData> => {
+  return {
+    id: uuidv4(),
+    data: {
+      text: "test",
+      variant: "h3",
+      color: "#000000",
+      bgcolor: "#ffffff",
+      bgalpha: 255,
+      bold: false,
+      italic: false,
+      underline: false,
+      horizontalAlign: "left",
+      verticalAlign: "top",
+    },
+    type: "note",
+    position: { x: position?.x || 0, y: position?.y || 0 },
+  };
+};
+
+export const createBorderNode = ({
+  position,
+  borderRadius,
+}: {
+  position?: XYPosition;
+  borderRadius: string;
+}): Node<BorderNodeData> => {
+  return {
+    id: uuidv4(),
+    data: {
+      text: "test",
+      variant: "h3",
+      color: "#000000",
+      bgcolor: "#ffffff",
+      bgalpha: 127,
+      bold: false,
+      italic: false,
+      underline: false,
+      horizontalAlign: "center",
+      verticalAlign: "center",
+      borderColor: "#000000",
+      borderRadius: borderRadius,
+      borderStyle: "solid",
+      borderWidth: 1,
+    },
+    type: "border",
     position: { x: position?.x || 0, y: position?.y || 0 },
   };
 };
@@ -75,7 +168,7 @@ export const createTagNodes = ({
   return tagIds.map((tagId, index) => ({
     id: `tag-${tagId}`,
     type: "tag",
-    data: { tagId },
+    data: { ...defaultDatabaseNodeData, tagId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -91,7 +184,7 @@ export const createMemoNodes = ({
   return memoIds.map((memoId, index) => ({
     id: `memo-${memoId}`,
     type: "memo",
-    data: { memoId },
+    data: { ...defaultDatabaseNodeData, memoId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -107,7 +200,7 @@ export const createSdocNodes = ({
   return sdocIds.map((sdocId, index) => ({
     id: `sdoc-${sdocId}`,
     type: "sdoc",
-    data: { sdocId: sdocId },
+    data: { ...defaultDatabaseNodeData, sdocId: sdocId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -122,7 +215,7 @@ export const createCodeNodes = ({
   return codes.map((code, index) => ({
     id: `code-${code.id}`,
     type: "code",
-    data: { codeId: code.id, parentCodeId: code.parent_code_id },
+    data: { ...defaultDatabaseNodeData, codeId: code.id, parentCodeId: code.parent_code_id },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -138,7 +231,7 @@ export const createSpanAnnotationNodes = ({
   return spanAnnotationIds.map((spanAnnotationId, index) => ({
     id: `spanAnnotation-${spanAnnotationId}`,
     type: "spanAnnotation",
-    data: { spanAnnotationId },
+    data: { ...defaultDatabaseNodeData, spanAnnotationId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
@@ -147,28 +240,51 @@ export const createBBoxAnnotationNodes = ({
   bboxAnnotations,
   position,
 }: {
-  bboxAnnotations: number[] | BBoxAnnotationReadResolvedCode[];
+  bboxAnnotations: number[] | BBoxAnnotationReadResolvedCode[] | BBoxAnnotationRead[];
   position?: XYPosition;
 }): Node<BBoxAnnotationNodeData>[] => {
   const bboxAnnotationIds = bboxAnnotations.map((bbox) => (typeof bbox === "number" ? bbox : bbox.id));
   return bboxAnnotationIds.map((bboxAnnotationId, index) => ({
     id: `bboxAnnotation-${bboxAnnotationId}`,
     type: "bboxAnnotation",
-    data: { bboxAnnotationId },
+    data: { ...defaultDatabaseNodeData, bboxAnnotationId },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };
 
 export const createCodeParentCodeEdge = ({ codeId, parentCodeId }: { codeId: number; parentCodeId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-code-${parentCodeId}`,
-    source: `code-${codeId}`,
-    target: `code-${parentCodeId}`,
+    source: `code-${parentCodeId}`,
+    target: `code-${codeId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
+export const isDatabaseEdge = (edge: Edge): boolean => {
+  return edge.sourceHandle === "database" && edge.targetHandle === "database";
+};
+
+export const isDatabaseEdgeArray = (edges: Edge[]): boolean => {
+  return edges.every(isDatabaseEdge);
+};
+
+export const isCustomEdge = (edge: Edge<any>): boolean => {
+  return !isDatabaseEdge(edge);
+};
+
+export const isCustomEdgeArray = (edges: Edge[]): boolean => {
+  return !edges.some(isDatabaseEdge);
+};
+
 export const isCodeParentCodeEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("code-") && edge.target.startsWith("code-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("code-");
+};
+
+export const isCodeParentCodeEdgeArray = (edges: Edge[]): boolean => {
+  return edges.every(isCodeParentCodeEdge);
 };
 
 export const createMemoSpanAnnotationEdge = ({
@@ -179,38 +295,47 @@ export const createMemoSpanAnnotationEdge = ({
   spanAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-spanAnnotation-${spanAnnotationId}`,
     source: `memo-${memoId}`,
     target: `spanAnnotation-${spanAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoSpanAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("spanAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("spanAnnotation-");
 };
 
 export const createMemoSdocEdge = ({ memoId, sdocId }: { memoId: number; sdocId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-sdoc-${sdocId}`,
     source: `memo-${memoId}`,
     target: `sdoc-${sdocId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoSdocEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("sdoc-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("sdoc-");
 };
 
 export const createMemoTagEdge = ({ memoId, tagId }: { memoId: number; tagId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-tag-${tagId}`,
     source: `memo-${memoId}`,
     target: `tag-${tagId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoTagEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("tag-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("tag-");
 };
 
 export const createCodeSpanAnnotationEdge = ({
@@ -221,14 +346,17 @@ export const createCodeSpanAnnotationEdge = ({
   spanAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-spanAnnotation-${spanAnnotationId}`,
     source: `code-${codeId}`,
     target: `spanAnnotation-${spanAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isCodeSpanAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("code-") && edge.target.startsWith("spanAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("spanAnnotation-");
 };
 
 export const createSdocSpanAnnotationEdge = ({
@@ -239,14 +367,17 @@ export const createSdocSpanAnnotationEdge = ({
   spanAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `sdoc-${sdocId}-spanAnnotation-${spanAnnotationId}`,
     source: `sdoc-${sdocId}`,
     target: `spanAnnotation-${spanAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isSdocSpanAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("sdoc-") && edge.target.startsWith("spanAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("spanAnnotation-");
 };
 
 export const createCodeBBoxAnnotationEdge = ({
@@ -257,14 +388,17 @@ export const createCodeBBoxAnnotationEdge = ({
   bboxAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `code-${codeId}-bboxAnnotation-${bboxAnnotationId}`,
     source: `code-${codeId}`,
     target: `bboxAnnotation-${bboxAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isCodeBBoxAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("code-") && edge.target.startsWith("bboxAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("code-") && edge.target.startsWith("bboxAnnotation-");
 };
 
 export const createSdocBBoxAnnotationEdge = ({
@@ -275,14 +409,17 @@ export const createSdocBBoxAnnotationEdge = ({
   bboxAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `sdoc-${sdocId}-bboxAnnotation-${bboxAnnotationId}`,
     source: `sdoc-${sdocId}`,
     target: `bboxAnnotation-${bboxAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isSdocBBoxAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("sdoc-") && edge.target.startsWith("bboxAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("sdoc-") && edge.target.startsWith("bboxAnnotation-");
 };
 
 export const createMemoBBoxAnnotationEdge = ({
@@ -293,36 +430,49 @@ export const createMemoBBoxAnnotationEdge = ({
   bboxAnnotationId: number;
 }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-bboxAnnotation-${bboxAnnotationId}`,
     source: `memo-${memoId}`,
     target: `bboxAnnotation-${bboxAnnotationId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoBBoxAnnotationEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("bboxAnnotation-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("bboxAnnotation-");
 };
 
 export const createMemoCodeEdge = ({ memoId, codeId }: { memoId: number; codeId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `memo-${memoId}-code-${codeId}`,
     source: `memo-${memoId}`,
     target: `code-${codeId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isMemoCodeEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("memo-") && edge.target.startsWith("code-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("memo-") && edge.target.startsWith("code-");
 };
 
 export const createTagSdocEdge = ({ sdocId, tagId }: { sdocId: number; tagId: number }): Edge => {
   return {
+    ...defaultDatabaseEdgeOptions,
     id: `tag-${tagId}-sdoc-${sdocId}`,
     source: `tag-${tagId}`,
     target: `sdoc-${sdocId}`,
+    sourceHandle: "database",
+    targetHandle: "database",
   };
 };
 
 export const isTagSdocEdge = (edge: Edge): boolean => {
-  return edge.source.startsWith("tag-") && edge.target.startsWith("sdoc-");
+  return isDatabaseEdge(edge) && edge.source.startsWith("tag-") && edge.target.startsWith("sdoc-");
+};
+
+export const isTagSdocEdgeArray = (edges: Edge[]): boolean => {
+  return edges.every(isTagSdocEdge);
 };

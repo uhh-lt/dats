@@ -1,18 +1,19 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import { useReactFlow } from "reactflow";
+import { XYPosition, useReactFlow } from "reactflow";
 import { AnnotationOccurrence, DocType } from "../../../api/openapi";
 import AnnotationSelector from "../../../components/Selectors/AnnotationSelector";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { createBBoxAnnotationNodes, createSpanAnnotationNodes } from "../whiteboardUtils";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 
-export interface AddAnnotationNodeDialogProps {
+export interface AddAnnotationNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
   userIds: number[];
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddAnnotationNodeDialog({ projectId, userIds, buttonProps }: AddAnnotationNodeDialogProps) {
+function AddAnnotationNodeDialog({ projectId, userIds, buttonProps, onClick }: AddAnnotationNodeDialogProps) {
   // whiteboard (react-flow)
   const reactFlowInstance = useReactFlow();
   const reactFlowService = useReactFlowService(reactFlowInstance);
@@ -30,17 +31,20 @@ function AddAnnotationNodeDialog({ projectId, userIds, buttonProps }: AddAnnotat
   };
 
   const handleConfirmSelection = () => {
-    const spanAnnotations = selectedAnnotations
-      .filter((annotation) => annotation.sdoc.doctype === DocType.TEXT)
-      .map((annotation) => annotation.annotation.id);
-    const bboxAnnotations = selectedAnnotations
-      .filter((annotation) => annotation.sdoc.doctype === DocType.IMAGE)
-      .map((annotation) => annotation.annotation.id);
+    onClick((position: XYPosition) => {
+      const spanAnnotations = selectedAnnotations
+        .filter((annotation) => annotation.sdoc.doctype === DocType.TEXT)
+        .map((annotation) => annotation.annotation.id);
+      const bboxAnnotations = selectedAnnotations
+        .filter((annotation) => annotation.sdoc.doctype === DocType.IMAGE)
+        .map((annotation) => annotation.annotation.id);
 
-    reactFlowService.addNodes([
-      ...createSpanAnnotationNodes({ spanAnnotations }),
-      ...createBBoxAnnotationNodes({ bboxAnnotations }),
-    ]);
+      reactFlowService.addNodes([
+        ...createSpanAnnotationNodes({ spanAnnotations, position }),
+        ...createBBoxAnnotationNodes({ bboxAnnotations, position }),
+      ]);
+    });
+
     handleClose();
   };
 

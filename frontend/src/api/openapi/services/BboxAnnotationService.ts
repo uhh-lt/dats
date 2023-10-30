@@ -217,4 +217,30 @@ export class BboxAnnotationService {
       },
     });
   }
+
+  /**
+   * Returns BBoxAnnotation with the given Code of the User with the given ID
+   * Returns BBoxAnnotation with the given Code of the User with the given ID
+   * @returns BBoxAnnotationRead Successful Response
+   * @throws ApiError
+   */
+  public static getByUserCode({
+    codeId,
+    userId,
+  }: {
+    codeId: number;
+    userId: number;
+  }): CancelablePromise<Array<BBoxAnnotationRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/bbox/code/{code_id}/user/{user_id}",
+      path: {
+        code_id: codeId,
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

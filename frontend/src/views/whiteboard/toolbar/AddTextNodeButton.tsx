@@ -1,18 +1,18 @@
 import { Button } from "@mui/material";
 import { useCallback } from "react";
-import { useReactFlow } from "reactflow";
-import { useReactFlowService } from "../hooks/ReactFlowService";
+import { XYPosition } from "reactflow";
+import { ReactFlowService } from "../hooks/ReactFlowService";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 import { createTextNode } from "../whiteboardUtils";
 
-function AddTextNodeButton() {
-  const reactFlowInstance = useReactFlow();
-  const reactFlowService = useReactFlowService(reactFlowInstance);
-
+function AddTextNodeButton({ onClick }: AddNodeDialogProps) {
   const handleAddTextNode = useCallback(() => {
-    reactFlowService.addNodes([createTextNode({})]);
-  }, [reactFlowService]);
+    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes([createTextNode({ position: position })]);
+    onClick(addNode);
+  }, [onClick]);
 
-  return <Button onClick={handleAddTextNode}>Add note</Button>;
+  return <Button onClick={handleAddTextNode}>Add text</Button>;
 }
 
 export default AddTextNodeButton;

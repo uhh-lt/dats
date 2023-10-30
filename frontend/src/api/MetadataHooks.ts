@@ -17,7 +17,7 @@ const useGetMetadata = (metadataId: number | undefined) =>
     () => MetadataService.getById({ metadataId: metadataId! }),
     {
       enabled: !!metadataId,
-    }
+    },
   );
 
 const useUpdateMetadata = () =>

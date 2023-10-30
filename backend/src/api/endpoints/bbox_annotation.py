@@ -177,3 +177,21 @@ async def get_user_memo(
 ) -> Optional[MemoRead]:
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
+
+
+@router.get(
+    "/code/{code_id}/user/{user_id}",
+    tags=tags,
+    response_model=List[BBoxAnnotationRead],
+    summary="Returns BBoxAnnotation with the given Code of the User with the given ID",
+    description=(
+        "Returns BBoxAnnotation with the given Code of the User with the given ID"
+    ),
+)
+async def get_by_user_code(
+    *, db: Session = Depends(get_db_session), code_id: int, user_id: int
+) -> List[BBoxAnnotationRead]:
+    db_objs = crud_bbox_anno.read_by_code_and_user(
+        db=db, code_id=code_id, user_id=user_id
+    )
+    return [BBoxAnnotationRead.from_orm(db_obj) for db_obj in db_objs]

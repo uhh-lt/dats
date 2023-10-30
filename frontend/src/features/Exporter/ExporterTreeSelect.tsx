@@ -48,7 +48,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
             }
             return true;
           },
-          { strategy: "breadth" }
+          { strategy: "breadth" },
         );
 
         // filter the filteredCodeTree

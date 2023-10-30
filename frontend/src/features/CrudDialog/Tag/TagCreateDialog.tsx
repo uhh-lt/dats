@@ -48,7 +48,7 @@ function TagCreateDialog() {
       setOpen(true);
       setValue("title", data.detail.tagName ? data.detail.tagName : "");
     },
-    [setValue]
+    [setValue],
   );
 
   useEffect(() => {
@@ -86,7 +86,7 @@ function TagCreateDialog() {
           });
           reset(); // reset form
         },
-      }
+      },
     );
   };
   const handleError = (data: any) => console.error(data);

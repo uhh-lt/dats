@@ -118,7 +118,7 @@ function Search() {
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId]
+    [dispatch, navigateIfNecessary, projectId],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
@@ -126,7 +126,7 @@ function Search() {
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId]
+    [dispatch, navigateIfNecessary, projectId],
   );
   const handleAddTagFilter = useAddTagFilter();
   const handleAddTextFilter = useCallback(
@@ -135,7 +135,7 @@ function Search() {
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId]
+    [dispatch, navigateIfNecessary, projectId],
   );
   const handleAddFileFilter = useCallback(
     (filename: string) => {
@@ -143,7 +143,7 @@ function Search() {
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId]
+    [dispatch, navigateIfNecessary, projectId],
   );
 
   const handleAddSentenceFilter = useCallback(
@@ -152,14 +152,14 @@ function Search() {
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId]
+    [dispatch, navigateIfNecessary, projectId],
   );
 
   const handleRemoveFilter = useCallback(
     (filter: SearchFilter) => {
       dispatch(SearchActions.removeFilter(filter));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // hack to disable sentences

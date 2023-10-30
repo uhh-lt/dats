@@ -57,7 +57,7 @@ function StatsDisplayButton({
             fontSize: 13,
             background: `linear-gradient(90deg, rgba(40,40,40,1) ${gradRatio}%, rgba(255,255,255,1) ${gradRatio}%, rgba(25, 118, 210,1) ${Math.min(
               gradRatio + 1,
-              100
+              100,
             )}%)`,
           }}
           {...(btnProps as ButtonProps)}

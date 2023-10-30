@@ -152,7 +152,7 @@ const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptions): Pr
         ...headers,
         [key]: String(value),
       }),
-      {} as Record<string, string>
+      {} as Record<string, string>,
     );
 
   if (isStringWithValue(token)) {
@@ -199,7 +199,7 @@ export const sendRequest = async (
   body: any,
   formData: FormData | undefined,
   headers: Headers,
-  onCancel: OnCancel
+  onCancel: OnCancel,
 ): Promise<Response> => {
   const controller = new AbortController();
 

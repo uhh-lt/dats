@@ -97,7 +97,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         sentenceContextMenuRef.current?.open(
           position,
           sentence,
-          annos ? annos.map((a) => annotationMap.get(a)!) : undefined
+          annos ? annos.map((a) => annotationMap.get(a)!) : undefined,
         );
       }
     }

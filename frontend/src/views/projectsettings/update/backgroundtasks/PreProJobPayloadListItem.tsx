@@ -3,11 +3,14 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   CircularProgress,
-  Collapse, Grid, ListItemButton,
+  Collapse,
+  Grid,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
-  Stack, Tooltip,
-  Typography
+  Stack,
+  Tooltip,
+  Typography,
 } from "@mui/material";
 import React from "react";
 import { BackgroundJobStatus, PreprocessingJobPayloadRead } from "../../../../api/openapi";
@@ -17,7 +20,7 @@ import { docTypeToIcon } from "../../../../features/DocumentExplorer/docTypeToIc
 
 interface PreProJobPayloadListItemProps {
   ppj: PreprocessingJobPayloadRead;
-  contextMenuRef: React.RefObject<ProjectDocumentsContextMenuHandle>
+  contextMenuRef: React.RefObject<ProjectDocumentsContextMenuHandle>;
 }
 
 function PreProJobPayloadListItem({ ppj, contextMenuRef }: PreProJobPayloadListItemProps) {
@@ -25,7 +28,6 @@ function PreProJobPayloadListItem({ ppj, contextMenuRef }: PreProJobPayloadListI
   const [expanded, setExpanded] = React.useState(false);
   const handleExpandClick = () => {
     setExpanded(!expanded);
-
   };
 
   // context menu
@@ -40,13 +42,11 @@ function PreProJobPayloadListItem({ ppj, contextMenuRef }: PreProJobPayloadListI
       <Tooltip title="Click to view details" followCursor={true} enterDelay={1000}>
         <ListItemButton sx={{ pl: 8 }} onClick={handleExpandClick} onContextMenu={onContextMenu}>
           <ListItemIcon sx={{ color: `${statusToTypographyColor[ppj.status!]}` }}>
-            {
-              ppj.status === BackgroundJobStatus.RUNNING ? (
-                <CircularProgress color="secondary" size={"1.5em"} />
-              ) : (
-                docTypeToIcon[ppj.doc_type]
-              )
-            }
+            {ppj.status === BackgroundJobStatus.RUNNING ? (
+              <CircularProgress color="secondary" size={"1.5em"} />
+            ) : (
+              docTypeToIcon[ppj.doc_type]
+            )}
           </ListItemIcon>
           <ListItemText>
             <Typography variant="body2" color="text.secondary">

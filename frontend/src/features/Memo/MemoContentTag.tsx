@@ -45,7 +45,7 @@ export function MemoContentTag({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -67,7 +67,7 @@ export function MemoContentTag({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        }
+        },
       );
     }
   };
@@ -83,7 +83,7 @@ export function MemoContentTag({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");

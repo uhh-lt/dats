@@ -30,7 +30,7 @@ const useGetAllTags = (projectId: number) =>
         const arrayForSort = [...tag];
         return arrayForSort.sort((a, b) => a.id - b.id);
       },
-    }
+    },
   );
 
 // project
@@ -43,7 +43,7 @@ const useGetProject = (projectId: number | undefined) =>
       ProjectService.readProject({
         projId: projectId!,
       }),
-    { enabled: !!projectId }
+    { enabled: !!projectId },
   );
 
 // sdoc
@@ -59,7 +59,7 @@ const useGetProjectDocuments = (projectId: number) =>
   useQuery<PaginatedSourceDocumentReads, Error>([QueryKey.PROJECT_SDOCS, projectId], () =>
     ProjectService.getProjectSdocs({
       projId: projectId,
-    })
+    }),
   );
 
 const useGetProjectDocumentsInfinite = (projectId: number, refetch: boolean) =>
@@ -74,16 +74,16 @@ const useGetProjectDocumentsInfinite = (projectId: number, refetch: boolean) =>
     {
       getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.next_page_offset : undefined),
       refetchInterval: refetch ? 1000 : false,
-    }
+    },
   );
 
 const useResolveSdocIdByFilename = (projectId: number, filename: string) =>
-    useQuery<number, Error>([QueryKey.SDOC_NAME_BY_PROJECT_AND_FILENAME, projectId, filename], () =>
-        ProjectService.resolveFilename({
-            projId: projectId,
-            filename: filename,
-        })
-    );
+  useQuery<number, Error>([QueryKey.SDOC_NAME_BY_PROJECT_AND_FILENAME, projectId, filename], () =>
+    ProjectService.resolveFilename({
+      projId: projectId,
+      filename: filename,
+    }),
+  );
 
 const useCreateProject = () =>
   useMutation(
@@ -99,7 +99,7 @@ const useCreateProject = () =>
       onSuccess: (project, variables) => {
         queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
       },
-    }
+    },
   );
 
 const useUpdateProject = () =>
@@ -115,7 +115,7 @@ const useUpdateProject = () =>
         queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
         queryClient.invalidateQueries([QueryKey.PROJECT, data.id]);
       },
-    }
+    },
   );
 
 const useDeleteProject = () =>
@@ -125,7 +125,7 @@ const useDeleteProject = () =>
       onSuccess: (data, variables) => {
         queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
       },
-    }
+    },
   );
 
 // users
@@ -138,7 +138,7 @@ const useGetAllUsers = (projectId: number | undefined) =>
       }),
     {
       enabled: !!projectId,
-    }
+    },
   );
 const useAddUser = () =>
   useMutation(ProjectService.associateUserToProject, {
@@ -167,7 +167,7 @@ const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
       }),
     {
       select: returnAll ? undefined : selectEnabledCodes,
-    }
+    },
   );
 };
 
@@ -183,7 +183,7 @@ const useGetMemo = (projectId: number | undefined, userId: number | undefined) =
     {
       retry: false,
       enabled: !!projectId && !!userId,
-    }
+    },
   );
 
 const useGetAllUserMemos = (projectId: number | undefined, userId: number | undefined) =>
@@ -197,7 +197,7 @@ const useGetAllUserMemos = (projectId: number | undefined, userId: number | unde
     {
       retry: false,
       enabled: !!projectId && !!userId,
-    }
+    },
   );
 
 const useCreateMemo = () =>
@@ -218,14 +218,14 @@ const useGetActions = (projectId: number, userId: number) =>
       }),
     {
       refetchOnWindowFocus: false,
-    }
+    },
   );
 
 const useQueryActions = (requestBody: ActionQueryParameters) =>
   useQuery<ActionRead[], Error>([QueryKey.ACTIONS_QUERY, requestBody], () =>
     ProjectService.queryActionsOfProject({
       requestBody: requestBody,
-    })
+    }),
   );
 
 // metadata
@@ -236,7 +236,7 @@ const useGetMetadataByKey = (projectId: number, metadataKey: string) =>
       ProjectService.getProjectMetadataByMetadataKey({
         projId: projectId,
         metadataKey: metadataKey,
-      })
+      }),
   );
 
 const ProjectHooks = {

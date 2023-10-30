@@ -3,7 +3,7 @@ import { KeywordStat, SpanEntityDocumentFrequency, TagStat } from "../../../api/
 
 export function useFilterStats<T extends Array<KeywordStat | TagStat | SpanEntityDocumentFrequency>>(
   statsData: T,
-  filterBy: string
+  filterBy: string,
 ): T {
   const filteredStatsData = useMemo(() => {
     // Filter stats data based on search bar value

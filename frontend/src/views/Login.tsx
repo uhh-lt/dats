@@ -48,7 +48,7 @@ function Login() {
   useEffect(() => {
     if (!navigator.userAgent.includes("Chrome")) {
       alert(
-        "Please use the Chrome browser for the best experience! We cannot guarantee that the DWTS works properly in other browsers."
+        "Please use the Chrome browser for the best experience! We cannot guarantee that the DWTS works properly in other browsers.",
       );
     }
   }, []);

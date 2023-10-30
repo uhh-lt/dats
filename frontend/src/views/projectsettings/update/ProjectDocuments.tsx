@@ -20,18 +20,17 @@ import { useInView } from "react-intersection-observer";
 import PreProHooks from "../../../api/PreProHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { SourceDocumentRead } from "../../../api/openapi";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import EditableDocumentName, {
   EditableDocumentNameHandle,
 } from "../../../components/EditableDocumentName/EditableDocumentName";
 import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
 import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
+import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "./ProjectDocumentsContextMenu";
 import { ProjectProps } from "./ProjectProps";
-import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
@@ -63,7 +62,7 @@ function ProjectDocuments({ project }: ProjectProps) {
   const uploadProgress = PreProHooks.usePollPreProProjectStatus(project.id);
   const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(
     project.id,
-    (uploadProgress.data && uploadProgress.data.num_active_prepro_job_payloads > 0) || false
+    (uploadProgress.data && uploadProgress.data.num_active_prepro_job_payloads > 0) || false,
   );
   // ^ refetching is not working perfectly: during upload, new documents are uploaded.
   // however, once the uploadd is finished (in_progress = false), the last batch of new documents are not fetched.
@@ -119,7 +118,7 @@ function ProjectDocuments({ project }: ProjectProps) {
             setFiles([]);
             setWaiting(true);
           },
-        }
+        },
       );
     }
   };

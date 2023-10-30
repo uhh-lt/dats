@@ -69,7 +69,7 @@ function LogbookEditor() {
               severity: "success",
             });
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -90,7 +90,7 @@ function LogbookEditor() {
               severity: "success",
             });
           },
-        }
+        },
       );
     }
   };

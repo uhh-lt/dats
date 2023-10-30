@@ -1,4 +1,5 @@
 import CancelIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -62,7 +63,7 @@ function TableDashboard() {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      width: 100,
+      width: 110,
       cellClassName: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
@@ -95,6 +96,12 @@ function TableDashboard() {
             onClick={handleEditClick(id)}
             color="inherit"
           />,
+          <GridActionsCellItem
+            icon={<ContentCopyIcon />}
+            label="Duplicate"
+            onClick={handleDuplicateTable(id as number)}
+            color="inherit"
+          />,
           <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} color="inherit" />,
         ];
       },
@@ -123,7 +130,34 @@ function TableDashboard() {
             severity: "success",
           });
         },
-      }
+      },
+    );
+  };
+
+  const handleDuplicateTable = (id: number) => () => {
+    if (!user.data?.id || !userTables.data) return;
+
+    const table = userTables.data.find((table) => table.id === id);
+    if (!table) return;
+
+    createTable.mutate(
+      {
+        requestBody: {
+          project_id: projectId,
+          user_id: user.data.id,
+          title: table.title + " (copy)",
+          content: JSON.stringify(table.content),
+          table_type: table.table_type,
+        },
+      },
+      {
+        onSuccess(data, variables, context) {
+          SnackbarAPI.openSnackbar({
+            text: `Duplicated table '${table.title}'`,
+            severity: "success",
+          });
+        },
+      },
     );
   };
 
@@ -139,7 +173,7 @@ function TableDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 
@@ -160,7 +194,7 @@ function TableDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
     return newRow;
   };
@@ -200,10 +234,14 @@ function TableDashboard() {
         </Typography>
       </Portal>
       <Container maxWidth="xl" className="h100" style={{ display: "flex", flexDirection: "column" }} sx={{ py: 2 }}>
-        <Card sx={{ width: "100%", mb: 2 }} elevation={2}>
+        <Card
+          sx={{ width: "100%", height: "50%", maxHeight: "400px", mb: 2 }}
+          elevation={2}
+          className="myFlexFillAllContainer myFlexContainer"
+        >
           <CardHeader title="Create table" />
-          <CardContent>
-            <Box height="332" overflow="auto" whiteSpace="nowrap">
+          <CardContent className="myFlexFillAllContainer">
+            <Box height="100%" overflow="auto" whiteSpace="nowrap">
               <CreateTableCard
                 title="Empty table"
                 description="Create an empty table with no template"
@@ -227,7 +265,11 @@ function TableDashboard() {
             </Box>
           </CardContent>
         </Card>
-        <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer">
+        <Card
+          sx={{ width: "100%", minHeight: "225.5px" }}
+          elevation={2}
+          className="myFlexFillAllContainer myFlexContainer"
+        >
           <CardHeader title="Load table" />
           <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
             <div className="h100" style={{ width: "100%" }}>

@@ -7,12 +7,7 @@ import { LoadingButton } from "@mui/lab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import UserHooks from "../../api/UserHooks";
-
-const toDateString = (date: string) => {
-  const yourDate = new Date(date);
-  const offset = yourDate.getTimezoneOffset();
-  return new Date(yourDate.getTime() - offset * 60 * 1000).toISOString().split("T")[0];
-};
+import { dateToLocaleYYYYMMDDString } from "../../utils/DateUtils";
 
 interface MemoFormProps {
   title: string;
@@ -81,7 +76,7 @@ export function MemoForm({
                   <TextField
                     fullWidth
                     label="Created"
-                    value={toDateString(memo.created)}
+                    value={dateToLocaleYYYYMMDDString(memo.created)}
                     type="date"
                     variant="standard"
                     InputLabelProps={{ shrink: true }}
@@ -90,7 +85,7 @@ export function MemoForm({
                   <TextField
                     fullWidth
                     label="Updated"
-                    value={toDateString(memo.updated)}
+                    value={dateToLocaleYYYYMMDDString(memo.updated)}
                     type="date"
                     variant="standard"
                     InputLabelProps={{ shrink: true }}

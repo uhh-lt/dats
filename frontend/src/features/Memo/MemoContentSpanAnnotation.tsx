@@ -45,7 +45,7 @@ export function MemoContentSpanAnnotation({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -67,7 +67,7 @@ export function MemoContentSpanAnnotation({
             if (onMemoCreateSuccess) onMemoCreateSuccess(memo);
             closeDialog();
           },
-        }
+        },
       );
     }
   };
@@ -83,7 +83,7 @@ export function MemoContentSpanAnnotation({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       throw Error("Invalid invocation of handleDeleteSpanAnnotationMemo. No memo to delete.");

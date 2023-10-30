@@ -50,7 +50,8 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
   const handleUpdate = useCallback(() => {
     // only update if data has changed!
     if (keywords.keywords !== keywordInput) {
-      updateMutation.mutate(
+      const mutation = updateMutation.mutate;
+      mutation(
         {
           requestBody: {
             source_document_id: sdocId,
@@ -64,15 +65,16 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
               severity: "success",
             });
           },
-        }
+        },
       );
     }
-  }, [keywords.keywords, keywordInput, updateMutation, sdocId]);
+  }, [keywords.keywords, keywordInput, updateMutation.mutate, sdocId]);
 
   const handleClear = useCallback(() => {
     // only update if data has changed!
     if (keywords.keywords.length > 0) {
-      updateMutation.mutate(
+      const mutation = updateMutation.mutate;
+      mutation(
         {
           requestBody: {
             source_document_id: sdocId,
@@ -86,10 +88,10 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
               severity: "success",
             });
           },
-        }
+        },
       );
     }
-  }, [keywords.keywords.length, sdocId, updateMutation]);
+  }, [keywords.keywords.length, sdocId, updateMutation.mutate]);
 
   return (
     <>

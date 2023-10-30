@@ -14,7 +14,8 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
   const createMutation = MetadataHooks.useCreateMetadata();
 
   const handleAddMetadata = useCallback(() => {
-    createMutation.mutate(
+    const mutation = createMutation.mutate;
+    mutation(
       {
         requestBody: {
           source_document_id: sdocId,
@@ -36,9 +37,9 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
             severity: "error",
           });
         },
-      }
+      },
     );
-  }, [createMutation, sdocId]);
+  }, [createMutation.mutate, sdocId]);
 
   return (
     <Grid item md={2}>

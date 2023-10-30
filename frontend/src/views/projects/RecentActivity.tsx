@@ -5,6 +5,7 @@ import ProjectHooks from "../../api/ProjectHooks";
 import SdocHooks from "../../api/SdocHooks";
 import UserHooks from "../../api/UserHooks";
 import { useAuth } from "../../auth/AuthProvider";
+import { dateToLocaleString } from "../../utils/DateUtils";
 
 function RecentActivity() {
   const { user } = useAuth();
@@ -61,7 +62,7 @@ function RecentActivityCard({ sdocId, updateTS }: RecentActivityButtonProps) {
                 {sdoc.data.filename}
               </Typography>
               <Typography sx={{ fontSize: 14 }} color="text.secondary">
-                {`${updateTS.toLocaleTimeString()} ${updateTS.toDateString()}`}
+                {`${dateToLocaleString(updateTS)}`}
               </Typography>
             </CardContent>
           </CardActionArea>

@@ -19,14 +19,14 @@ import {
 } from "../whiteboardUtils";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { BBoxAnnotationNodeData, DWTSNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 import ImageCropper from "./ImageCropper";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import { openBBoxAnnotationEditDialog } from "../../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AttachedObjectType } from "../../../api/openapi";
 
-function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<BBoxAnnotationNodeData>) {
+function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
 
@@ -36,12 +36,13 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
 
   // context menu
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const annotation = BboxAnnotationHooks.useGetAnnotation(data.bboxAnnotationId);
+  const annotation = BboxAnnotationHooks.useGetAnnotation(props.data.bboxAnnotationId);
   const code = CodeHooks.useGetCode(annotation.data?.code.id);
   const sdoc = SdocHooks.useGetDocumentByAdocId(annotation.data?.annotation_document_id);
-  const memo = BboxAnnotationHooks.useGetMemo(data.bboxAnnotationId, userId);
+  const memo = BboxAnnotationHooks.useGetMemo(props.data.bboxAnnotationId, userId);
 
   // effects
   useEffect(() => {
@@ -52,7 +53,7 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isCodeBBoxAnnotationEdge)
-      .filter((edge) => edge.target === `bboxAnnotation-${data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => edge.target === `bboxAnnotation-${props.data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== codeId); // isEdgeForIncorrectCode
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -62,9 +63,11 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
       .filter(isCodeNode)
       .map((code) => code.data.codeId);
     if (existingCodeNodeIds.includes(codeId)) {
-      reactFlowInstance.addEdges([createCodeBBoxAnnotationEdge({ codeId, bboxAnnotationId: data.bboxAnnotationId })]);
+      reactFlowInstance.addEdges([
+        createCodeBBoxAnnotationEdge({ codeId, bboxAnnotationId: props.data.bboxAnnotationId }),
+      ]);
     }
-  }, [data.bboxAnnotationId, reactFlowInstance, code.data]);
+  }, [props.data.bboxAnnotationId, reactFlowInstance, code.data]);
 
   useEffect(() => {
     if (!sdoc.data) return;
@@ -74,7 +77,7 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isSdocBBoxAnnotationEdge)
-      .filter((edge) => edge.target === `bboxAnnotation-${data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => edge.target === `bboxAnnotation-${props.data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== sdocId); // isEdgeForIncorrectSdoc
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -84,9 +87,11 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
       .filter(isSdocNode)
       .map((sdoc) => sdoc.data.sdocId);
     if (existingSdocNodeIds.includes(sdocId)) {
-      reactFlowInstance.addEdges([createSdocBBoxAnnotationEdge({ sdocId, bboxAnnotationId: data.bboxAnnotationId })]);
+      reactFlowInstance.addEdges([
+        createSdocBBoxAnnotationEdge({ sdocId, bboxAnnotationId: props.data.bboxAnnotationId }),
+      ]);
     }
-  }, [data.bboxAnnotationId, reactFlowInstance, sdoc.data]);
+  }, [props.data.bboxAnnotationId, reactFlowInstance, sdoc.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -96,7 +101,7 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoBBoxAnnotationEdge)
-      .filter((edge) => edge.target === `bboxAnnotation-${data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
+      .filter((edge) => edge.target === `bboxAnnotation-${props.data.bboxAnnotationId}`) // isEdgeForThisSpanAnnotation
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -106,9 +111,11 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoBBoxAnnotationEdge({ memoId, bboxAnnotationId: data.bboxAnnotationId })]);
+      reactFlowInstance.addEdges([
+        createMemoBBoxAnnotationEdge({ memoId, bboxAnnotationId: props.data.bboxAnnotationId }),
+      ]);
     }
-  }, [data.bboxAnnotationId, reactFlowInstance, memo.data]);
+  }, [props.data.bboxAnnotationId, reactFlowInstance, memo.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (!annotation.data) return;
@@ -122,21 +129,27 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
   const handleContextMenuExpandDocument = () => {
     if (!sdoc.data) return;
 
-    reactFlowService.addNodes(createSdocNodes({ sdocs: [sdoc.data.id], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createSdocNodes({ sdocs: [sdoc.data.id], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandCode = () => {
     if (!code.data) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: [code.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createCodeNodes({ codes: [code.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -145,9 +158,9 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
 
     MemoAPI.openMemo({
       attachedObjectType: AttachedObjectType.BBOX_ANNOTATION,
-      attachedObjectId: data.bboxAnnotationId,
+      attachedObjectId: props.data.bboxAnnotationId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -155,18 +168,22 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
 
   return (
     <>
-      <BaseNode
-        nodeId={id}
+      <BaseCardNode
+        nodeProps={props}
         allowDrawConnection={false}
-        selected={selected}
-        onClick={handleClick}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          contextMenuRef.current?.open({
-            top: e.clientY,
-            left: e.clientX,
-          });
-        }}
+        onClick={readonly ? undefined : handleClick}
+        onContextMenu={
+          readonly
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                contextMenuRef.current?.open({
+                  top: e.clientY,
+                  left: e.clientX,
+                });
+              }
+        }
+        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
       >
         {annotation.isSuccess ? (
           <>
@@ -204,7 +221,7 @@ function BboxAnnotationNode({ id, data, isConnectable, selected, xPos, yPos }: N
         ) : (
           <>Loading...</>
         )}
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuExpandDocument}>Expand document</MenuItem>
         <Divider />

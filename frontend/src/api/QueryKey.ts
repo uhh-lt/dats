@@ -119,8 +119,12 @@ export const QueryKey = {
 
   // a single span annotation (by span annotation id)
   SPAN_ANNOTATION: "annotation",
+  // multiple span annotations (by user id and code id)
+  SPAN_ANNOTATIONS_USER_CODE: "annotationsUserCode",
   // a single bbox annotation (by bbox annotation id)
   BBOX_ANNOTATION: "bboxAnnotation",
+  // multiple bbox annotations (by user id and code id)
+  BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
 
   // a single metadata (by metadata id)
   METADATA: "metadata",
@@ -139,6 +143,8 @@ export const QueryKey = {
 
   // a single WHITEBOARD (by WHITEBOARD id)
   WHITEBOARD: "whiteboard",
+  // all project WHITEBOARDs (by project id)
+  WHITEBOARDS_PROJECT: "whiteboardsProject",
   // all project, user WHITEBOARDs (by user id and project id)
   WHITEBOARDS_PROJECT_USER: "whiteboardsProjectUser",
 

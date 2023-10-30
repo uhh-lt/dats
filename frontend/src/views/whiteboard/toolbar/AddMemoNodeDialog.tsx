@@ -1,22 +1,19 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import { useReactFlow } from "reactflow";
+import { XYPosition } from "reactflow";
 import { MemoRead } from "../../../api/openapi";
 import MemoSelector from "../../../components/Selectors/MemoSelector";
-import { useReactFlowService } from "../hooks/ReactFlowService";
+import { ReactFlowService } from "../hooks/ReactFlowService";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 import { createMemoNodes } from "../whiteboardUtils";
 
-export interface AddMemoNodeDialogProps {
+export interface AddMemoNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
   userId: number;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddMemoNodeDialog({ projectId, userId, buttonProps }: AddMemoNodeDialogProps) {
-  // whiteboard (react-flow)
-  const reactFlowInstance = useReactFlow();
-  const reactFlowService = useReactFlowService(reactFlowInstance);
-
+function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoNodeDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedMemos, setSelectedMemos] = useState<MemoRead[]>([]);
 
@@ -30,7 +27,9 @@ function AddMemoNodeDialog({ projectId, userId, buttonProps }: AddMemoNodeDialog
   };
 
   const handleConfirmSelection = () => {
-    reactFlowService.addNodes(createMemoNodes({ memos: selectedMemos }));
+    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes(createMemoNodes({ memos: selectedMemos, position: position }));
+    onClick(addNode);
     handleClose();
   };
 

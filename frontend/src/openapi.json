@@ -2775,6 +2775,36 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/span/code/{code_id}/user/{user_id}": {
+      "get": {
+        "tags": ["spanAnnotation"],
+        "summary": "Returns SpanAnnotations with the given Code of the User with the given ID",
+        "description": "Returns SpanAnnotations with the given Code of the User with the given ID",
+        "operationId": "get_by_user_code",
+        "parameters": [
+          { "required": true, "schema": { "title": "Code Id", "type": "integer" }, "name": "code_id", "in": "path" },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Spanannotation-Get By User Code",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanAnnotationReadResolved" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/spangroup": {
       "put": {
         "tags": ["spanGroup"],
@@ -3199,6 +3229,36 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/bbox/code/{code_id}/user/{user_id}": {
+      "get": {
+        "tags": ["bboxAnnotation"],
+        "summary": "Returns BBoxAnnotation with the given Code of the User with the given ID",
+        "description": "Returns BBoxAnnotation with the given Code of the User with the given ID",
+        "operationId": "get_by_user_code",
+        "parameters": [
+          { "required": true, "schema": { "title": "Code Id", "type": "integer" }, "name": "code_id", "in": "path" },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Bboxannotation-Get By User Code",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BBoxAnnotationRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/code": {
@@ -4840,6 +4900,40 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/whiteboard/project/{project_id}": {
+      "get": {
+        "tags": ["whiteboard"],
+        "summary": "Returns Whiteboards of the Project ",
+        "description": "Returns the Whiteboards of the Project with the given ID",
+        "operationId": "get_by_project",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Whiteboard-Get By Project",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WhiteboardRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
       }
     },
     "/whiteboard/project/{project_id}/user/{user_id}": {

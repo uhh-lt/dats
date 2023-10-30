@@ -89,7 +89,7 @@ function TagEditDialog() {
               severity: "success",
             });
           },
-        }
+        },
       );
     } else {
       throw new Error("Invalid invocation of method handleTagUpdate! Only call when tag.data is available!");
@@ -108,7 +108,7 @@ function TagEditDialog() {
               severity: "success",
             });
           },
-        }
+        },
       );
     } else {
       throw new Error("Invalid invocation of method handleDelete! Only call when tag.data is available!");

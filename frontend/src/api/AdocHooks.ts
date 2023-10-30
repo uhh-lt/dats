@@ -27,7 +27,7 @@ const useGetAdoc = (adocId: number | undefined) => {
       }),
     {
       enabled: !!adocId,
-    }
+    },
   );
 };
 
@@ -44,7 +44,7 @@ const useGetAllSpanAnnotations = (adocId: number | undefined) => {
     {
       enabled: !!adocId,
       select: selectEnabledAnnotations,
-    }
+    },
   );
 };
 
@@ -62,7 +62,7 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) => {
           }) as Promise<SpanAnnotationReadResolved[]>,
         select: selectEnabledAnnotations,
       })),
-    })
+    }),
   );
 };
 
@@ -79,7 +79,7 @@ const useGetAllBboxAnnotations = (adocId: number | undefined) => {
     {
       enabled: !!adocId,
       select: selectEnabledAnnotations,
-    }
+    },
   );
 };
 
@@ -97,7 +97,7 @@ const useGetAllBboxAnnotationsBatch = (adocIds: number[]) => {
           }) as Promise<BBoxAnnotationReadResolvedCode[]>,
         select: selectEnabledAnnotations,
       })),
-    })
+    }),
   );
 };
 

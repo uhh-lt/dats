@@ -157,7 +157,7 @@ function TableViewContent({ table }: TableViewContentProps) {
           });
           setHasChanged(false);
         },
-      }
+      },
     );
   };
 
@@ -244,7 +244,7 @@ function TableViewContent({ table }: TableViewContentProps) {
 
     const cellInfo = getSelectedCellInfo(hot);
     const dataToAdd = annotations.map(
-      (a) => `<annotation sdocId="${a.sdoc.id}" codeId="${a.code.id}">${a.text}</annotation>`
+      (a) => `<annotation sdocId="${a.sdoc.id}" codeId="${a.code.id}">${a.text}</annotation>`,
     );
     addData(hot, cellInfo, dataToAdd, addRows);
   };

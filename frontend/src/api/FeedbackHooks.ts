@@ -16,7 +16,7 @@ const useGetFeedback = (feedbackId: string) =>
     () => FeedbackService.getById({ feedbackId: feedbackId! }),
     {
       enabled: !!feedbackId && feedbackId.length > 0,
-    }
+    },
   );
 
 const useGetAllFeedback = () => useQuery<FeedbackRead[], Error>([QueryKey.FEEDBACKS], () => FeedbackService.getAll());

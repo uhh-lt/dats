@@ -1,11 +1,4 @@
-
-import {
-  Box,
-  Divider,
-  List,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { Box, Divider, List, Toolbar, Typography } from "@mui/material";
 import React, { useMemo, useRef } from "react";
 import CrawlerHooks from "../../../../api/CrawlerHooks";
 import { CrawlerJobRead, PreprocessingJobRead, BackgroundJobStatus, ProjectRead } from "../../../../api/openapi";
@@ -13,7 +6,6 @@ import PreProHooks from "../../../../api/PreProHooks";
 import CrawlerJobListItem from "./CrawlerJobListItem";
 import PreProJobListItem from "./PreProJobListItem";
 import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu";
-
 
 interface ProjectBackgroundTasksProps {
   project: ProjectRead;
@@ -72,11 +64,17 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.WAITING].map((job) => {
               if ("parameters" in job) {
-                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
+                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef} />
+                return (
+                  <PreProJobListItem
+                    key={job.id}
+                    initialPreProJob={job as PreprocessingJobRead}
+                    contextMenuRef={contextMenuRef}
+                  />
+                );
               } else {
-                return null
+                return null;
               }
             })}
             {backgroundJobsByStatus[BackgroundJobStatus.WAITING].length === 0 && <Typography pl={3}>empty</Typography>}
@@ -91,11 +89,17 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.RUNNING].map((job) => {
               if ("parameters" in job) {
-                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
+                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef}/>
+                return (
+                  <PreProJobListItem
+                    key={job.id}
+                    initialPreProJob={job as PreprocessingJobRead}
+                    contextMenuRef={contextMenuRef}
+                  />
+                );
               } else {
-                return null
+                return null;
               }
             })}
             {backgroundJobsByStatus[BackgroundJobStatus.RUNNING].length === 0 && <Typography pl={3}>empty</Typography>}
@@ -110,11 +114,17 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.FINISHED].map((job) => {
               if ("parameters" in job) {
-                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
+                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef} />
+                return (
+                  <PreProJobListItem
+                    key={job.id}
+                    initialPreProJob={job as PreprocessingJobRead}
+                    contextMenuRef={contextMenuRef}
+                  />
+                );
               } else {
-                return null
+                return null;
               }
             })}
             {backgroundJobsByStatus[BackgroundJobStatus.FINISHED].length === 0 && <Typography pl={3}>empty</Typography>}
@@ -129,11 +139,17 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.ABORTED].map((job) => {
               if ("parameters" in job) {
-                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
+                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef} />
+                return (
+                  <PreProJobListItem
+                    key={job.id}
+                    initialPreProJob={job as PreprocessingJobRead}
+                    contextMenuRef={contextMenuRef}
+                  />
+                );
               } else {
-                return null
+                return null;
               }
             })}
             {backgroundJobsByStatus[BackgroundJobStatus.ABORTED].length === 0 && <Typography pl={3}>empty</Typography>}
@@ -148,18 +164,26 @@ function ProjectBackgroundTasks({ project }: ProjectBackgroundTasksProps) {
           <List>
             {backgroundJobsByStatus[BackgroundJobStatus.ERRORNEOUS].map((job) => {
               if ("parameters" in job) {
-                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />
+                return <CrawlerJobListItem key={job.id} initialCrawlerJob={job as CrawlerJobRead} />;
               } else if ("payloads" in job) {
-                return <PreProJobListItem key={job.id} initialPreProJob={job as PreprocessingJobRead} contextMenuRef={contextMenuRef} />
+                return (
+                  <PreProJobListItem
+                    key={job.id}
+                    initialPreProJob={job as PreprocessingJobRead}
+                    contextMenuRef={contextMenuRef}
+                  />
+                );
               } else {
-                return null
+                return null;
               }
             })}
-            {backgroundJobsByStatus[BackgroundJobStatus.ERRORNEOUS].length === 0 && <Typography pl={3}>empty</Typography>}
+            {backgroundJobsByStatus[BackgroundJobStatus.ERRORNEOUS].length === 0 && (
+              <Typography pl={3}>empty</Typography>
+            )}
           </List>
         </>
       )}
-      <ProjectDocumentsContextMenu ref={contextMenuRef}/>
+      <ProjectDocumentsContextMenu ref={contextMenuRef} />
     </>
   );
 }

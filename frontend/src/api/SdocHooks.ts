@@ -64,7 +64,7 @@ const useGetDocumentNoContent = (sdocId: number | undefined) =>
     },
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useGetDocument = (sdocId: number | undefined) =>
@@ -84,7 +84,7 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
     {
       enabled: !!filename,
       staleTime: Infinity,
-    }
+    },
   );
 
 const useGetDocumentByAdocId = (adocId: number | undefined) =>
@@ -96,7 +96,7 @@ const useGetDocumentByAdocId = (adocId: number | undefined) =>
     },
     {
       enabled: !!adocId,
-    }
+    },
   );
 
 const useGetDocumentTokens = (sdocId: number | undefined) =>
@@ -109,7 +109,7 @@ const useGetDocumentTokens = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useGetDocumentKeywords = (sdocId: number | undefined) =>
@@ -121,7 +121,7 @@ const useGetDocumentKeywords = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useUpdateDocumentKeywords = () =>
@@ -140,7 +140,7 @@ const useGetDocumentSentences = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useGetDocumentContent = (sdocId: number | undefined) =>
@@ -152,7 +152,7 @@ const useGetDocumentContent = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useGetLinkedSdocIds = (sdocId: number | undefined) =>
@@ -164,7 +164,7 @@ const useGetLinkedSdocIds = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useDeleteDocument = () =>
@@ -192,7 +192,7 @@ const useDeleteDocuments = () =>
           queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, sdoc.project_id]);
         });
       },
-    }
+    },
   );
 
 // tags
@@ -205,7 +205,7 @@ const useGetByTagId = (tagId: number | undefined) =>
       }),
     {
       enabled: !!tagId,
-    }
+    },
   );
 
 const useGetAllDocumentTags = (sdocId: number | undefined) =>
@@ -217,7 +217,7 @@ const useGetAllDocumentTags = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useGetAllDocumentTagsBatch = (sdocIds: number[]) =>
@@ -230,7 +230,7 @@ const useGetAllDocumentTagsBatch = (sdocIds: number[]) =>
             sdocId: sdocId,
           }),
       })),
-    })
+    }),
   );
 
 const useRemoveDocumentTag = () =>
@@ -251,7 +251,7 @@ const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
       }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 };
 
@@ -266,7 +266,7 @@ const useGetMemos = (sdocId: number | undefined) =>
     {
       retry: false,
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
@@ -280,7 +280,7 @@ const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
     {
       retry: false,
       enabled: !!sdocId && !!userId,
-    }
+    },
   );
 
 const useGetRelatedMemos = (sdocId: number | undefined, userId: number | undefined) =>
@@ -294,7 +294,7 @@ const useGetRelatedMemos = (sdocId: number | undefined, userId: number | undefin
     {
       retry: false,
       enabled: !!sdocId && !!userId,
-    }
+    },
   );
 
 const useCreateMemo = () =>
@@ -313,7 +313,7 @@ const useGetName = (sdocId: number | undefined) =>
     async () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "name" }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useUpdateName = () =>
@@ -332,7 +332,7 @@ const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
     {
       enabled: !!sdocId,
       select: (url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + url),
-    }
+    },
   );
 
 const useGetThumbnailURL = (sdocId: number | undefined) =>
@@ -342,7 +342,7 @@ const useGetThumbnailURL = (sdocId: number | undefined) =>
     {
       enabled: !!sdocId,
       select: (thumbnail_url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + thumbnail_url),
-    }
+    },
   );
 
 const useGetMetadata = (sdocId: number | undefined) =>
@@ -361,7 +361,7 @@ const useGetMetadata = (sdocId: number | undefined) =>
     },
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const useGetWordFrequencies = (sdocId: number | undefined) =>
@@ -370,7 +370,7 @@ const useGetWordFrequencies = (sdocId: number | undefined) =>
     () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_frequencies" }),
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 interface WordLevelTranscription {
@@ -391,7 +391,7 @@ const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
     },
     {
       enabled: !!sdocId,
-    }
+    },
   );
 
 const SdocHooks = {

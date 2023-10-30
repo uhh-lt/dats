@@ -13,7 +13,9 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.code import CodeRead
+from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
+from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from sqlalchemy.orm import Session
 
 
@@ -60,6 +62,19 @@ class CRUDBBoxAnnotation(
             .limit(limit)
             .all()
         )
+
+    def read_by_code_and_user(
+        self, db: Session, *, code_id: int, user_id: int
+    ) -> List[BBoxAnnotationORM]:
+        query = (
+            db.query(self.model)
+            .join(AnnotationDocumentORM)
+            .join(CurrentCodeORM)
+            .join(CodeORM)
+            .filter(CodeORM.id == code_id, AnnotationDocumentORM.user_id == user_id)
+        )
+
+        return query.all()
 
     def update(
         self, db: Session, *, id: int, update_dto: BBoxAnnotationUpdate

@@ -42,7 +42,7 @@ const GenericPositionMenu = forwardRef<GenericPositionContextMenuHandle, Generic
         {children}
       </Menu>
     );
-  }
+  },
 );
 
 export default GenericPositionMenu;

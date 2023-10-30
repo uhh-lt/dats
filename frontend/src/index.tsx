@@ -2,7 +2,7 @@ import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import { ThemeProvider, createTheme } from "@mui/material";
+import { ThemeProvider } from "@mui/material";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import React from "react";
@@ -13,18 +13,11 @@ import { persistStore } from "redux-persist";
 import { PersistGate } from "redux-persist/integration/react";
 import { AuthProvider } from "./auth/AuthProvider";
 import "./index.css";
+import { theme } from "./plugins/ReactMUI";
 import queryClient from "./plugins/ReactQueryClient";
 import "./plugins/i18n";
 import router from "./router/routes";
 import { store } from "./store/store";
-
-const theme = createTheme({
-  palette: {
-    secondary: {
-      main: "#185cc9",
-    },
-  },
-});
 
 const persistor = persistStore(store);
 const container = document.getElementById("root");
@@ -43,5 +36,5 @@ root.render(
       </Provider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

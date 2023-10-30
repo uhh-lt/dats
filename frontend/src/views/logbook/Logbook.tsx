@@ -53,7 +53,7 @@ function Logbook() {
   // filter out memos that are not supported yet
   const memos = useMemo(
     () => (searchTerm.trim().length > 0 ? searchMemos : userMemos),
-    [searchMemos, searchTerm, userMemos]
+    [searchMemos, searchTerm, userMemos],
   );
 
   // searchbar form

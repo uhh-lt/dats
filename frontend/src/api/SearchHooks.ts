@@ -50,7 +50,7 @@ export class LexicalSearchResults extends SearchResults<number[]> {
 }
 
 export abstract class SimilaritySearchResults<
-  T extends Map<number, SimSearchSentenceHit[]> | SimSearchImageHit[]
+  T extends Map<number, SimSearchSentenceHit[]> | SimSearchImageHit[],
 > extends SearchResults<T> {}
 
 export class SentenceSimilaritySearchResults extends SimilaritySearchResults<Map<number, SimSearchSentenceHit[]>> {
@@ -97,7 +97,7 @@ const filterSearchQueryFn = async (
     images: number[];
     filenames: string[];
     metadata: { key: string; value: string }[];
-  }
+  },
 ): Promise<LexicalSearchResults> => {
   const sdocIds = await SearchService.searchSdocs({
     requestBody: {
@@ -118,14 +118,14 @@ const filterSearchQueryFn = async (
 
 const sentenceSimilaritySearchQueryFn = async (
   projectId: number,
-  query: number | string
+  query: number | string,
 ): Promise<SentenceSimilaritySearchResults> => {
   const result = await SearchService.findSimilarSentences({
     requestBody: {
       proj_id: projectId,
       query: query,
       top_k: 10,
-    }
+    },
   });
 
   // combine multiple results (sentences) per document
@@ -141,14 +141,14 @@ const sentenceSimilaritySearchQueryFn = async (
 
 const imageSimilaritySearchQueryFn = async (
   projectId: number,
-  query: number | string
+  query: number | string,
 ): Promise<ImageSimilaritySearchResults> => {
   const results = await SearchService.findSimilarImages({
     requestBody: {
       proj_id: projectId,
       query: query,
       top_k: 10,
-    }
+    },
   });
 
   return new ImageSimilaritySearchResults(results);
@@ -194,7 +194,7 @@ const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: Sea
         console.error("ERROR!");
         return new LexicalSearchResults([]);
       }
-    }
+    },
   );
 };
 
@@ -210,7 +210,7 @@ const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, ta
         },
       });
     },
-    { enabled: !!tagId && !!projectId }
+    { enabled: !!tagId && !!projectId },
   );
 
 const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[], sortStatsByGlobal: boolean) => {
@@ -235,7 +235,7 @@ const useSearchEntityDocumentStats = (projectId: number, filters: SearchFilter[]
         },
       });
       return new Map(Object.entries(data.stats).map((x) => [parseInt(x[0]), x[1]]));
-    }
+    },
   );
 };
 
@@ -261,7 +261,7 @@ const useSearchKeywordStats = (projectId: number, filters: SearchFilter[], sortB
         },
         sortByGlobal: sortByGlobal,
       });
-    }
+    },
   );
 };
 
@@ -295,7 +295,7 @@ const useSearchTagStats = (projectId: number, filters: SearchFilter[], sortStats
           queryClient.setQueryData([QueryKey.TAG, tagStat.tag.id], tagStat.tag);
         });
       },
-    }
+    },
   );
 };
 
@@ -311,7 +311,7 @@ const useSearchMemoContent = (params: MemoContentQuery) =>
     },
     {
       enabled: params.content_query.length > 0,
-    }
+    },
   );
 
 const useSearchMemoTitle = (params: MemoTitleQuery) =>
@@ -323,7 +323,7 @@ const useSearchMemoTitle = (params: MemoTitleQuery) =>
       }),
     {
       enabled: params.title_query.length > 0,
-    }
+    },
   );
 
 const SearchHooks = {

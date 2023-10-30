@@ -1,17 +1,18 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import { useReactFlow } from "reactflow";
+import { XYPosition, useReactFlow } from "reactflow";
 import { DocumentTagRead } from "../../../api/openapi";
 import TagSelector from "../../../components/Selectors/TagSelector";
 import { useReactFlowService } from "../hooks/ReactFlowService";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
 import { createTagNodes } from "../whiteboardUtils";
 
-export interface AddTagNodeDialogProps {
+export interface AddTagNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddTagNodeDialog({ projectId, buttonProps }: AddTagNodeDialogProps) {
+function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogProps) {
   // whiteboard (react-flow)
   const reactFlowInstance = useReactFlow();
   const reactFlowService = useReactFlowService(reactFlowInstance);
@@ -29,7 +30,9 @@ function AddTagNodeDialog({ projectId, buttonProps }: AddTagNodeDialogProps) {
   };
 
   const handleConfirmSelection = () => {
-    reactFlowService.addNodes(createTagNodes({ tags: selectedTags }));
+    const addTagNode = (position: XYPosition) =>
+      reactFlowService.addNodes(createTagNodes({ tags: selectedTags, position: position }));
+    onClick(addTagNode);
     handleClose();
   };
 

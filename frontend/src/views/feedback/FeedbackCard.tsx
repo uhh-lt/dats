@@ -50,7 +50,7 @@ function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
           reset();
           setExpanded(false);
         },
-      }
+      },
     );
   };
 

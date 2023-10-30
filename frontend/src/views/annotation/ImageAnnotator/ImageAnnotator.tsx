@@ -70,7 +70,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
       codeSelectorRef.current!.open(position, [d]);
       setSelectedBbox(d);
     },
-    [codeSelectorRef]
+    [codeSelectorRef],
   );
 
   // drag handling
@@ -220,7 +220,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
               severity: "success",
             });
           },
-        }
+        },
       );
       // console.log("Add", code);
       // console.log(`drag end: {x: ${x}, y: ${y}, width: ${width}, height: ${height}}`);
@@ -231,7 +231,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
 
   const onCodeSelectorEditCode = (
     annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-    code: ICode
+    code: ICode,
   ) => {
     if (selectedBbox) {
       updateMutation.mutate(
@@ -249,7 +249,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
               severity: "success",
             });
           },
-        }
+        },
       );
       // console.log("Edit", code);
     } else {
@@ -268,7 +268,7 @@ function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
               severity: "success",
             });
           },
-        }
+        },
       );
       // console.log("Delete", code);
     } else {

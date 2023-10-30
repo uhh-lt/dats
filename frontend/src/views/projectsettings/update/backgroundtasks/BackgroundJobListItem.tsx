@@ -1,22 +1,15 @@
+import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import HourglassTopOutlinedIcon from '@mui/icons-material/HourglassTopOutlined';
-import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
-import CancelIcon from '@mui/icons-material/Cancel';
+import HourglassTopOutlinedIcon from "@mui/icons-material/HourglassTopOutlined";
+import MoreHorizOutlinedIcon from "@mui/icons-material/MoreHorizOutlined";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import {
-  Box,
-  CircularProgress,
-  Collapse, IconButton, ListItem, ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Tooltip
-} from "@mui/material";
+import { CircularProgress, Collapse, IconButton, ListItem, ListItemIcon, ListItemText, Tooltip } from "@mui/material";
 import React from "react";
+import PreProHooks from "../../../../api/PreProHooks";
 import { BackgroundJobStatus } from "../../../../api/openapi";
 import { statusToTypographyColor } from "./StatusToTypographyColor";
-import PreProHooks from "../../../../api/PreProHooks";
 
 interface BackgroundJobListItemProps {
   jobStatus?: BackgroundJobStatus;
@@ -26,7 +19,14 @@ interface BackgroundJobListItemProps {
   subTitle: string;
   children: React.ReactNode;
 }
-function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, subTitle, children }: BackgroundJobListItemProps) {
+function BackgroundJobListItem({
+  jobStatus,
+  jobId,
+  abortable = false,
+  title,
+  subTitle,
+  children,
+}: BackgroundJobListItemProps) {
   // local state
   const [expanded, setExpanded] = React.useState(false);
 
@@ -36,13 +36,12 @@ function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, sub
 
   const handleAbortClick = () => PreProHooks.abortPreProJob(jobId!);
 
-
   return (
     <>
-      <ListItem >
+      <ListItem>
         <ListItemIcon>
           {jobStatus === BackgroundJobStatus.WAITING ? (
-            <HourglassTopOutlinedIcon sx={{ color:  statusToTypographyColor.Waiting}} />
+            <HourglassTopOutlinedIcon sx={{ color: statusToTypographyColor.Waiting }} />
           ) : jobStatus === BackgroundJobStatus.RUNNING ? (
             <CircularProgress color="secondary" size={24} />
           ) : jobStatus === BackgroundJobStatus.FINISHED ? (
@@ -50,16 +49,13 @@ function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, sub
           ) : jobStatus === BackgroundJobStatus.ERRORNEOUS ? (
             <ErrorOutlineIcon sx={{ color: statusToTypographyColor.Errorneous }} />
           ) : jobStatus === BackgroundJobStatus.ABORTED ? (
-            <CancelIcon sx={{ color:  statusToTypographyColor.Aborted }} />
-          ) :(
+            <CancelIcon sx={{ color: statusToTypographyColor.Aborted }} />
+          ) : (
             <MoreHorizOutlinedIcon />
           )}
         </ListItemIcon>
 
-        <ListItemText
-          primary={title}
-          secondary={subTitle}
-        />
+        <ListItemText primary={title} secondary={subTitle} />
         <Tooltip title={expanded ? "Collapse" : "Expand"}>
           <IconButton
             edge="end"
@@ -71,7 +67,7 @@ function BackgroundJobListItem({ jobStatus, jobId, abortable = false, title, sub
             {expanded ? <ExpandLess /> : <ExpandMoreIcon />}
           </IconButton>
         </Tooltip>
-        {((jobStatus === BackgroundJobStatus.RUNNING || jobStatus === BackgroundJobStatus.WAITING) && abortable) && (
+        {(jobStatus === BackgroundJobStatus.RUNNING || jobStatus === BackgroundJobStatus.WAITING) && abortable && (
           <Tooltip title={`Abort the Job ${jobId}`}>
             <IconButton
               edge="end"

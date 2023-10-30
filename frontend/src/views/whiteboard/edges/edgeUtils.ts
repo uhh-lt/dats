@@ -1,4 +1,19 @@
-import { Position } from "reactflow";
+import { Edge, Position } from "reactflow";
+
+export const isDashed = (edge: Edge) => {
+  return (
+    edge.style?.strokeDasharray ===
+    `${2 * (edge.style!.strokeWidth! as number)} ${2 * (edge.style!.strokeWidth! as number)}`
+  );
+};
+
+export const isSolid = (edge: Edge) => {
+  return edge.style?.strokeDasharray === undefined;
+};
+
+export const isDotted = (edge: Edge) => {
+  return edge.style?.strokeDasharray === `${edge.style?.strokeWidth} ${edge.style?.strokeWidth}`;
+};
 
 // this helper function returns the intersection point
 // of the line between the center of the intersectionNode and the target node

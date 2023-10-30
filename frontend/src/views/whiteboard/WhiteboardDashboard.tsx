@@ -1,4 +1,5 @@
 import CancelIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
@@ -14,13 +15,14 @@ import {
   GridRowModes,
   GridRowModesModel,
 } from "@mui/x-data-grid";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useParams } from "react-router";
 import { useNavigate } from "react-router-dom";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
+import { dateToLocaleString } from "../../utils/DateUtils";
 import CreateWhiteboardCard from "./CreateWhiteboardCard";
 
 function WhiteboardDashboard() {
@@ -32,7 +34,7 @@ function WhiteboardDashboard() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
-  const userWhiteboards = WhiteboardHooks.useGetUserWhiteboards(projectId, user.data?.id);
+  const projectWhiteboards = WhiteboardHooks.useGetProjectWhiteboards(projectId);
 
   // local client state
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
@@ -54,12 +56,13 @@ function WhiteboardDashboard() {
       field: "updated",
       headerName: "Last modified",
       flex: 0.5,
+      valueGetter: (params) => dateToLocaleString(params.value as string),
     },
     {
       field: "actions",
       type: "actions",
       headerName: "Actions",
-      width: 100,
+      width: 110,
       cellClassName: "actions",
       getActions: ({ id }) => {
         const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
@@ -92,6 +95,12 @@ function WhiteboardDashboard() {
             onClick={handleEditClick(id)}
             color="inherit"
           />,
+          <GridActionsCellItem
+            icon={<ContentCopyIcon />}
+            label="Duplicate"
+            onClick={handleDuplicateWhiteboard(id as number)}
+            color="inherit"
+          />,
           <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} color="inherit" />,
         ];
       },
@@ -99,7 +108,7 @@ function WhiteboardDashboard() {
   ];
 
   // CRUD whiteboard actions
-  const handleCreateWhiteboard = () => {
+  const handleCreateWhiteboard = (title: string) => {
     if (!user.data?.id) return;
 
     const content: WhiteboardGraph = { nodes: [], edges: [] };
@@ -108,20 +117,50 @@ function WhiteboardDashboard() {
         requestBody: {
           project_id: projectId,
           user_id: user.data.id,
-          title: "New Whiteboard",
+          title: title,
           content: JSON.stringify(content),
         },
       },
       {
         onSuccess(data, variables, context) {
           SnackbarAPI.openSnackbar({
-            text: `Create new whiteboard '${data.title}'`,
+            text: `Created new whiteboard '${data.title}'`,
             severity: "success",
           });
         },
-      }
+      },
     );
   };
+
+  const handleDuplicateWhiteboard = useCallback(
+    (id: number) => () => {
+      if (!user.data?.id || !projectWhiteboards.data) return;
+
+      const whiteboard = projectWhiteboards.data.find((whiteboard) => whiteboard.id === id);
+      if (!whiteboard) return;
+
+      const mutation = createWhiteboard.mutate;
+      mutation(
+        {
+          requestBody: {
+            project_id: projectId,
+            user_id: user.data.id,
+            title: whiteboard.title + " (copy)",
+            content: JSON.stringify(whiteboard.content),
+          },
+        },
+        {
+          onSuccess(data, variables, context) {
+            SnackbarAPI.openSnackbar({
+              text: `Duplicated whiteboard '${whiteboard.title}'`,
+              severity: "success",
+            });
+          },
+        },
+      );
+    },
+    [createWhiteboard.mutate, projectId, user.data, projectWhiteboards.data],
+  );
 
   const handleDeleteClick = (id: GridRowId) => () => {
     deleteWhiteboard.mutate(
@@ -135,7 +174,7 @@ function WhiteboardDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 
@@ -155,7 +194,7 @@ function WhiteboardDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
     return newRow;
   };
@@ -195,34 +234,42 @@ function WhiteboardDashboard() {
         </Typography>
       </Portal>
       <Container maxWidth="xl" className="h100" style={{ display: "flex", flexDirection: "column" }} sx={{ py: 2 }}>
-        <Card sx={{ width: "100%", mb: 2 }} elevation={2}>
+        <Card
+          sx={{ width: "100%", height: "50%", maxHeight: "400px", mb: 2 }}
+          elevation={2}
+          className="myFlexFillAllContainer myFlexContainer"
+        >
           <CardHeader title="Create whiteboard" />
-          <CardContent>
-            <Box height="332" overflow="auto" whiteSpace="nowrap">
+          <CardContent className="myFlexFillAllContainer">
+            <Box height="100%" overflow="auto" whiteSpace="nowrap">
               <CreateWhiteboardCard
                 title="Empty whiteboard"
                 description="Create an empty whiteboard with no template"
-                onClick={() => handleCreateWhiteboard()}
+                onClick={() => handleCreateWhiteboard("New Whiteboard")}
               />
               <CreateWhiteboardCard
                 title="Code whiteboard"
                 description="Create a whiteboard with all of your codes"
-                onClick={() => handleCreateWhiteboard()}
+                onClick={() => handleCreateWhiteboard("New Code Whiteboard")}
               />
               <CreateWhiteboardCard
                 title="Image whiteboard"
                 description="Create a whiteboard with images"
-                onClick={() => handleCreateWhiteboard()}
+                onClick={() => handleCreateWhiteboard("New Image Whiteboard")}
               />
             </Box>
           </CardContent>
         </Card>
-        <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer">
+        <Card
+          sx={{ width: "100%", minHeight: "225.5px" }}
+          elevation={2}
+          className="myFlexFillAllContainer myFlexContainer"
+        >
           <CardHeader title="Load whiteboard" />
           <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
             <div className="h100" style={{ width: "100%" }}>
               <DataGrid
-                rows={userWhiteboards.data || []}
+                rows={projectWhiteboards.data || []}
                 columns={columns}
                 autoPageSize
                 getRowId={(row) => row.id}

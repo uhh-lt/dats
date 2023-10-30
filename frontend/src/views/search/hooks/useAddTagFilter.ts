@@ -23,6 +23,6 @@ export function useAddTagFilter() {
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId]
+    [dispatch, navigateIfNecessary, projectId],
   );
 }

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { Node, ReactFlowInstance } from "reactflow";
 import { DWTSNodeData } from "../types";
 
-class ReactFlowService {
+export class ReactFlowService {
   zoom = 1.85;
   duration = 1000;
   timeout = 100;
@@ -22,14 +22,12 @@ class ReactFlowService {
         this.reactFlowInstance.addNodes(node);
       }, this.timeout * index);
     });
+  }
 
-    // if we actually added a new node, zoom in
-    if (newNodes.length > 0) {
-      this.reactFlowInstance.setCenter(newNodes[0].position.x, newNodes[0].position.y, {
-        zoom: this.zoom,
-        duration: this.duration,
-      });
-    }
+  addNodesWithoutDelay(nodes: Node<DWTSNodeData>[]) {
+    const currentNodes = this.reactFlowInstance.getNodes();
+    const newNodes = differenceBy(nodes, currentNodes, "id");
+    this.reactFlowInstance.addNodes(newNodes);
   }
 }
 

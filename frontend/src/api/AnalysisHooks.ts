@@ -17,7 +17,7 @@ const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: numbe
         user_ids: userIds,
         code_ids: codeIds,
       },
-    })
+    }),
   );
 
 const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
@@ -31,7 +31,7 @@ const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number
       }),
     {
       enabled: userIds.length > 0 && !!codeId,
-    }
+    },
   );
 
 const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
@@ -45,7 +45,7 @@ const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: 
       }),
     {
       enabled: userIds.length > 0 && !!codeId,
-    }
+    },
   );
 
 const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: number, concepts: AnalysisConcept[]) =>
@@ -60,7 +60,7 @@ const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: 
       }),
     {
       enabled: concepts.length > 0 && metadataKey.length > 0,
-    }
+    },
   );
 
 const AnalysisHooks = {

@@ -30,10 +30,11 @@ function DeleteButton({ sdocIds, navigateTo, ...props }: DeleteButtonProps & Ico
   const onClick = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to delete document(s) ${sdocIds.join(
-        ", "
+        ", ",
       )}? This action cannot be undone and  will remove all annotations as well as memos associated with this document!`,
       onAccept: () => {
-        deleteMutation.mutate(
+        const mutation = deleteMutation.mutate;
+        mutation(
           {
             sdocIds: sdocIds,
           },
@@ -47,11 +48,11 @@ function DeleteButton({ sdocIds, navigateTo, ...props }: DeleteButtonProps & Ico
               dispatch(SearchActions.updateSelectedDocumentsOnMultiDelete(sdocs.map((sdoc) => sdoc.id)));
               if (navigateTo) navigate(navigateTo);
             },
-          }
+          },
         );
       },
     });
-  }, [deleteMutation, dispatch, navigate, navigateTo, sdocIds]);
+  }, [deleteMutation.mutate, dispatch, navigate, navigateTo, sdocIds]);
 
   return (
     <Tooltip title="Delete">

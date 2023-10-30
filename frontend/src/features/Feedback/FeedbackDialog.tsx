@@ -50,7 +50,7 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, isLoggedIn, locPathName
             });
             closeFeedbackDialog();
           },
-        }
+        },
       );
     }
   };

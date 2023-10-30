@@ -1,10 +1,10 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { TextNodeData } from "../types/TextNodeData";
+import { TextData } from "../types/base/TextData";
 import BaseNode from "./BaseNode";
 
-function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
+function TextNode(props: NodeProps<TextData>) {
   const reactFlowInstance = useReactFlow();
   const theme = useTheme();
 
@@ -17,14 +17,14 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
   };
 
   const handleChangeText = (
-    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>
+    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     // @ts-ignore
     const value: string = event.target.value;
     console.log(value);
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) => {
-        if (node.id === id) {
+        if (node.id === props.id) {
           return {
             ...node,
             data: {
@@ -35,29 +35,23 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
         }
 
         return node;
-      })
+      }),
     );
     setIsEditing(false);
   };
 
   return (
-    <BaseNode
-      allowDrawConnection={false}
-      nodeId={id}
-      selected={selected}
-      onClick={handleClick}
-      style={{ backgroundColor: data.color }}
-    >
+    <BaseNode allowDrawConnection={false} nodeProps={props} onClick={handleClick} alignment={props.data.verticalAlign}>
       {isEditing ? (
         <Box className="nodrag">
           <TextField
             variant="outlined"
-            defaultValue={data.text}
+            defaultValue={props.data.text}
             onBlur={handleChangeText}
             onKeyDown={(event) => event.key === "Escape" && handleChangeText(event)}
             inputProps={{
               style: {
-                ...theme.typography[data.variant],
+                ...theme.typography[props.data.variant],
               },
             }}
             multiline
@@ -65,8 +59,19 @@ function TextNode({ id, data, selected }: NodeProps<TextNodeData>) {
           />
         </Box>
       ) : (
-        <Typography variant={data.variant} color="text.secondary" whiteSpace="pre-wrap">
-          {data.text}
+        <Typography
+          variant={props.data.variant}
+          color={props.data.color}
+          style={{
+            ...(props.data.italic && { fontStyle: "italic" }),
+            ...(props.data.bold && { fontWeight: "bold" }),
+            ...(props.data.underline && { textDecoration: "underline" }),
+            textAlign: props.data.horizontalAlign,
+            width: "100%",
+          }}
+          whiteSpace="pre-wrap"
+        >
+          {props.data.text}
         </Typography>
       )}
     </BaseNode>

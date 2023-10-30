@@ -50,7 +50,7 @@ export function MemoContentBboxAnnotation({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -72,7 +72,7 @@ export function MemoContentBboxAnnotation({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        }
+        },
       );
     }
   };
@@ -88,7 +88,7 @@ export function MemoContentBboxAnnotation({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       throw Error("Invalid invocation of handleDeleteBboxAnnotationMemo. No memo to delete.");

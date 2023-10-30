@@ -76,7 +76,7 @@ function CustomHTMLCellRenderer(props: any) {
     return htmlToReactParser.parseWithInstructions(
       props.value,
       isValidNode,
-      processingInstructions(props.col, props.row)
+      processingInstructions(props.col, props.row),
     );
   }, [props.col, props.row, props.value]);
 

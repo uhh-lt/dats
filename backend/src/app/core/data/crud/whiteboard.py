@@ -22,5 +22,19 @@ class CRUDWhiteboard(CRUDBase[WhiteboardORM, WhiteboardCreate, WhiteboardUpdate]
             raise NoSuchElementError(self.model, project_id=project_id, user_id=user_id)
         return db_obj
 
+    def read_by_project(
+        self, db: Session, *, project_id: int, raise_error: bool = True
+    ) -> List[WhiteboardORM]:
+        db_obj = (
+            db.query(self.model)
+            .filter(
+                self.model.project_id == project_id,
+            )
+            .all()
+        )
+        if raise_error and not db_obj:
+            raise NoSuchElementError(self.model, project_id=project_id)
+        return db_obj
+
 
 crud_whiteboard = CRUDWhiteboard(WhiteboardORM)

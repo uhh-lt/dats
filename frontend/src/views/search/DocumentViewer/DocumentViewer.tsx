@@ -112,7 +112,13 @@ function DocumentViewer({
                 <AudioVideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} height={200} />
               )}
               {sdoc.data.doctype === DocType.VIDEO && (
-                <AudioVideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} width={800} height={600} />
+                <AudioVideoViewer
+                  sdoc={sdoc.data}
+                  adoc={selectedAdoc}
+                  showEntities={showEntities}
+                  width={800}
+                  height={600}
+                />
               )}
             </>
           )}

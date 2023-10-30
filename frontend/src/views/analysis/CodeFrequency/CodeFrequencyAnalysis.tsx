@@ -246,7 +246,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
   const chartData = AnalysisHooks.useCodeFrequencies(
     projectId,
     userIds,
-    data.children.map((node) => node.model.code.id) || []
+    data.children.map((node) => node.model.code.id) || [],
   );
   console.log(chartData.data);
 

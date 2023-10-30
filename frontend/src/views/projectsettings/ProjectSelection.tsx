@@ -46,7 +46,13 @@ function ProjectSelection() {
               Projects
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
-            <Button variant="contained" color="secondary" startIcon={<AddIcon />} component={Link} to="/projectsettings">
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<AddIcon />}
+              component={Link}
+              to="/projectsettings"
+            >
               Create
             </Button>
           </Toolbar>

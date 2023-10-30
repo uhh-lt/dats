@@ -6,16 +6,18 @@ import { useAuth } from "../../../auth/AuthProvider";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
 import {
+  createBBoxAnnotationNodes,
   createCodeNodes,
   createCodeParentCodeEdge,
   createMemoCodeEdge,
   createMemoNodes,
+  createSpanAnnotationNodes,
   isCodeParentCodeEdge,
   isMemoCodeEdge,
 } from "../whiteboardUtils";
 import { useReactFlowService } from "../hooks/ReactFlowService";
 import { CodeNodeData, DWTSNodeData, isCodeNode, isMemoNode } from "../types";
-import BaseNode from "./BaseNode";
+import BaseCardNode from "./BaseCardNode";
 import { openCodeEditDialog } from "../../../features/CrudDialog/Code/CodeEditDialog";
 import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
@@ -23,8 +25,10 @@ import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AttachedObjectType } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useParams } from "react-router-dom";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 
-function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<CodeNodeData>) {
+function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
   const userId = useAuth().user.data!.id;
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
@@ -35,11 +39,14 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
   // context menu
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const readonly = !props.isConnectable;
 
   // global server state (react-query)
-  const code = CodeHooks.useGetCode(data.codeId);
+  const code = CodeHooks.useGetCode(props.data.codeId);
+  const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
+  const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
   const parentCode = CodeHooks.useGetCode(code.data?.parent_code_id);
-  const memo = CodeHooks.useGetMemo(data.codeId, userId);
+  const memo = CodeHooks.useGetMemo(props.data.codeId, userId);
 
   // TODO: This is not optimal!
   // we need a new route to get all child codes
@@ -47,8 +54,8 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
   const childCodes = useMemo(() => {
-    return projectCodes.data?.filter((projectcode) => projectcode.parent_code_id === data.codeId) ?? [];
-  }, [data.codeId, projectCodes.data]);
+    return projectCodes.data?.filter((projectcode) => projectcode.parent_code_id === props.data.codeId) ?? [];
+  }, [props.data.codeId, projectCodes.data]);
 
   // effects
   useEffect(() => {
@@ -59,8 +66,8 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isCodeParentCodeEdge)
-      .filter((edge) => edge.source === `code-${data.codeId}`)
-      .filter((edge) => edge.target !== `code-${parentCodeId}`);
+      .filter((edge) => edge.target === `code-${props.data.codeId}`)
+      .filter((edge) => edge.source !== `code-${parentCodeId}`);
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
     // checks which code nodes are already in the graph and adds edges to the correct node
@@ -70,20 +77,20 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
       .map((code) => code.data.codeId);
 
     if (existingCodeNodeIds.includes(parentCodeId)) {
-      reactFlowInstance.addEdges([createCodeParentCodeEdge({ codeId: data.codeId, parentCodeId })]);
+      reactFlowInstance.addEdges([createCodeParentCodeEdge({ codeId: props.data.codeId, parentCodeId })]);
     }
-  }, [data.codeId, reactFlowInstance, parentCode.data]);
+  }, [props.data.codeId, reactFlowInstance, parentCode.data]);
 
   useEffect(() => {
-    const codeId = data.codeId;
+    const codeId = props.data.codeId;
     const childCodeIds = childCodes.map((code) => code.id);
 
     // checks which edges are already in the graph and removes edges to non-existing codes
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isCodeParentCodeEdge)
-      .filter((edge) => edge.target === `code-${data.codeId}`)
-      .filter((edge) => !childCodeIds.includes(parseInt(edge.source.split("-")[1])));
+      .filter((edge) => edge.source === `code-${codeId}`)
+      .filter((edge) => !childCodeIds.includes(parseInt(edge.target.split("-")[1])));
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
     // checks which child code nodes are already in the graph and adds edges to the correct node
@@ -93,10 +100,10 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
       .filter((code) => childCodeIds.includes(code.data.codeId));
     reactFlowInstance.addEdges(
       existingChildCodeNodes.map((childCode) =>
-        createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId })
-      )
+        createCodeParentCodeEdge({ codeId: childCode.data.codeId, parentCodeId: codeId }),
+      ),
     );
-  }, [reactFlowInstance, data.codeId, childCodes]);
+  }, [reactFlowInstance, props.data.codeId, childCodes]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -106,7 +113,7 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isMemoCodeEdge)
-      .filter((edge) => edge.target === `code-${data.codeId}`) // isEdgeForThisCode
+      .filter((edge) => edge.target === `code-${props.data.codeId}`) // isEdgeForThisCode
       .filter((edge) => parseInt(edge.source.split("-")[1]) !== memoId); // isEdgeForIncorrectMemo
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
@@ -116,9 +123,9 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
       .filter(isMemoNode)
       .map((memo) => memo.data.memoId);
     if (existingMemoNodeIds.includes(memoId)) {
-      reactFlowInstance.addEdges([createMemoCodeEdge({ memoId, codeId: data.codeId })]);
+      reactFlowInstance.addEdges([createMemoCodeEdge({ memoId, codeId: props.data.codeId })]);
     }
-  }, [data.codeId, reactFlowInstance, memo.data]);
+  }, [props.data.codeId, reactFlowInstance, memo.data]);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2 && code.isSuccess) {
@@ -128,25 +135,41 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
   // context menu actions
   const handleContextMenuExpandImageAnnotations = () => {
-    alert("Not implemented!");
+    if (!bboxAnnotations.data || bboxAnnotations.data.length === 0) return;
+
+    reactFlowService.addNodes(
+      createBBoxAnnotationNodes({
+        bboxAnnotations: bboxAnnotations.data,
+        position: { x: props.xPos, y: props.yPos - 200 },
+      }),
+    );
+    contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandTextAnnotations = () => {
-    alert("Not implemented!");
+    if (!spanAnnotations.data || spanAnnotations.data.length === 0) return;
+
+    reactFlowService.addNodes(
+      createSpanAnnotationNodes({
+        spanAnnotations: spanAnnotations.data,
+        position: { x: props.xPos, y: props.yPos - 200 },
+      }),
+    );
+    contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandChildCodes = () => {
     if (childCodes.length === 0) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: childCodes, position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(createCodeNodes({ codes: childCodes, position: { x: props.xPos, y: props.yPos - 200 } }));
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuCreateChildCode = () => {
     openCodeCreateDialog({
-      parentCodeId: data.codeId,
+      parentCodeId: props.data.codeId,
       onSuccess: (code) => {
-        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -155,14 +178,18 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
   const handleContextMenuExpandParentCode = () => {
     if (!parentCode.data) return;
 
-    reactFlowService.addNodes(createCodeNodes({ codes: [parentCode.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createCodeNodes({ codes: [parentCode.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
   const handleContextMenuExpandMemo = () => {
     if (!memo.data) return;
 
-    reactFlowService.addNodes(createMemoNodes({ memos: [memo.data], position: { x: xPos, y: yPos - 200 } }));
+    reactFlowService.addNodes(
+      createMemoNodes({ memos: [memo.data], position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -171,9 +198,9 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
     MemoAPI.openMemo({
       attachedObjectType: AttachedObjectType.CODE,
-      attachedObjectId: data.codeId,
+      attachedObjectId: props.data.codeId,
       onCreateSuccess: (memo) => {
-        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: xPos, y: yPos - 200 } }));
+        reactFlowService.addNodes(createMemoNodes({ memos: [memo], position: { x: props.xPos, y: props.yPos - 200 } }));
       },
     });
     contextMenuRef.current?.close();
@@ -181,18 +208,22 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
 
   return (
     <>
-      <BaseNode
-        nodeId={id}
-        selected={selected}
+      <BaseCardNode
+        nodeProps={props}
         allowDrawConnection={true}
-        onClick={handleClick}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          contextMenuRef.current?.open({
-            top: e.clientY,
-            left: e.clientX,
-          });
-        }}
+        onClick={readonly ? undefined : handleClick}
+        onContextMenu={
+          readonly
+            ? undefined
+            : (e) => {
+                e.preventDefault();
+                contextMenuRef.current?.open({
+                  top: e.clientY,
+                  left: e.clientX,
+                });
+              }
+        }
+        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
       >
         {code.isSuccess ? (
           <>
@@ -206,10 +237,14 @@ function CodeNode({ id, data, isConnectable, selected, xPos, yPos }: NodeProps<C
         ) : (
           <>Loading...</>
         )}
-      </BaseNode>
+      </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
-        <MenuItem onClick={handleContextMenuExpandTextAnnotations}>Expand text annotations</MenuItem>
-        <MenuItem onClick={handleContextMenuExpandImageAnnotations}>Expand image annotations</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandTextAnnotations}>
+          Expand text annotations ({spanAnnotations.data?.length || 0})
+        </MenuItem>
+        <MenuItem onClick={handleContextMenuExpandImageAnnotations}>
+          Expand image annotations ({bboxAnnotations.data?.length || 0})
+        </MenuItem>
         <Divider />
         <MenuItem onClick={handleContextMenuExpandParentCode} disabled={!parentCode.data}>
           Expand parent code

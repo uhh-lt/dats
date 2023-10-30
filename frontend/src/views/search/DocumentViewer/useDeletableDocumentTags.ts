@@ -13,7 +13,8 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
   const handleDeleteDocumentTag = useCallback(
     (tag: DocumentTagRead) => {
       if (sdocId) {
-        removeTagMutation.mutate(
+        const mutation = removeTagMutation.mutate;
+        mutation(
           {
             sdocId: sdocId,
             tagId: tag.id,
@@ -25,13 +26,13 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
                 severity: "success",
               });
             },
-          }
+          },
         );
       } else {
         throw new Error("Trying to delete DocumentTag from undefined SourceDocument");
       }
     },
-    [removeTagMutation, sdocId]
+    [removeTagMutation.mutate, sdocId],
   );
 
   return { documentTags, handleDeleteDocumentTag };
