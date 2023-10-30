@@ -1,3 +1,14 @@
+# scrapy-selenium settings
+from shutil import which
+
+from webdriver_manager.chrome import ChromeDriverManager
+
+SELENIUM_DRIVER_NAME = "chrome"
+SELENIUM_DRIVER_EXECUTABLE_PATH = which(ChromeDriverManager().install())
+SELENIUM_DRIVER_ARGUMENTS = [
+    "--headless=new"
+]  # '--headless' if using chrome instead of firefox
+
 # Scrapy settings for incel project
 #
 # For simplicity, this file contains only settings considered important or
@@ -51,9 +62,10 @@ DOWNLOAD_DELAY = 0.25
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-# DOWNLOADER_MIDDLEWARES = {
-#    'incel.middlewares.IncelDownloaderMiddleware': 543,
-# }
+DOWNLOADER_MIDDLEWARES = {
+    #   'incel.middlewares.IncelDownloaderMiddleware': 543,
+    "scrapy_selenium.SeleniumMiddleware": 800
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
