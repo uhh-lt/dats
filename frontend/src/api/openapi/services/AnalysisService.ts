@@ -2,6 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AnalysisConcept } from "../models/AnalysisConcept";
+import type { AnnotatedSegment } from "../models/AnnotatedSegment";
 import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { CodeFrequency } from "../models/CodeFrequency";
@@ -71,8 +72,8 @@ export class AnalysisService {
   }
 
   /**
-   * Returns all SourceDocument IDs that match the query parameters.
-   * Returns all SourceDocument Ids that match the query parameters.
+   * Returns AnnotationOccurrences.
+   * Returns AnnotationOccurrences.
    * @returns AnnotationOccurrence Successful Response
    * @throws ApiError
    */
@@ -94,6 +95,32 @@ export class AnalysisService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns AnnotationSegments.
+   * Returns AnnotationSegments.
+   * @returns AnnotatedSegment Successful Response
+   * @throws ApiError
+   */
+  public static annotatedSegments({
+    projectId,
+    userId,
+  }: {
+    projectId: number;
+    userId: number;
+  }): CancelablePromise<Array<AnnotatedSegment>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/annotated_segments",
+      query: {
+        project_id: projectId,
+        user_id: userId,
+      },
       errors: {
         422: `Validation Error`,
       },

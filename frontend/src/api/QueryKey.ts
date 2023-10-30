@@ -156,6 +156,7 @@ export const QueryKey = {
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",
   ANALYSIS_ANNOTATION_OCCURRENCES: "analysisAnnotationOccurrences",
+  ANALYSIS_ANNOTATED_SEGMENTS: "analysisAnnotatedSegments",
   ANALYSIS_TIMELINE: "anaylsisTimeline",
 
   // preprocessing status of the project (by project id)
