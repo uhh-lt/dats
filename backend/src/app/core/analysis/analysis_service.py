@@ -1,7 +1,9 @@
 from typing import List
 
+from api.util import get_object_memos
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
+    AnnotatedSegment,
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
@@ -304,3 +306,57 @@ class AnalysisService(metaclass=SingletonMeta):
 
             # 3. return the result
             return span_code_occurrences + bbox_code_occurrences
+
+    def find_annotated_segments(
+        self, project_id: int, user_id: int
+    ) -> List[AnnotatedSegment]:
+        with self.sqls.db_session() as db:
+            # 1. query all span annotation occurrences of the code
+            query = (
+                db.query(
+                    SpanAnnotationORM,
+                    SourceDocumentORM,
+                    CodeORM,
+                    SpanTextORM.text,
+                )
+                .join(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                )
+                .join(
+                    SpanAnnotationORM,
+                    SpanAnnotationORM.annotation_document_id
+                    == AnnotationDocumentORM.id,
+                )
+                .join(
+                    CurrentCodeORM,
+                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
+                )
+                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
+            )
+            # noinspection PyUnresolvedReferences
+            query = query.filter(
+                and_(
+                    SourceDocumentORM.project_id == project_id,
+                    AnnotationDocumentORM.user_id == user_id,
+                )
+            )
+            res = query.all()
+            annotated_segments = [
+                AnnotatedSegment(
+                    annotation=SpanAnnotationReadResolved(
+                        **SpanAnnotationRead.from_orm(x[0]).dict(
+                            exclude={"current_code_id", "span_text_id"}
+                        ),
+                        code=CodeRead.from_orm(x[2]),
+                        span_text=x[3],
+                    ),
+                    sdoc=SourceDocumentRead.from_orm(x[1]),
+                    memo=get_object_memos(db_obj=x[0], user_id=user_id),
+                    tags=[],
+                )
+                for x in res
+            ]
+
+            return annotated_segments
