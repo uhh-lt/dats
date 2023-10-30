@@ -34,7 +34,7 @@ function TimelineAnalysis() {
         name: c.name,
         sentences: c.data,
       };
-    })
+    }),
   );
   const isValidInput = metadataKey.length > 0 && concepts.length > 0;
 

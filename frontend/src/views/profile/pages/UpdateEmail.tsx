@@ -50,7 +50,7 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
                 severity: "error",
               });
             },
-          }
+          },
         )
       : console.log("User not found");
   };

@@ -23,7 +23,7 @@ export interface SentenceContextMenuHandle {
   open: (
     position: PopoverPosition,
     sentence: string | undefined,
-    annotations: SpanAnnotationReadResolved[] | undefined
+    annotations: SpanAnnotationReadResolved[] | undefined,
   ) => void;
   close: () => void;
 }
@@ -51,7 +51,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   const openContextMenu = (
     position: PopoverPosition,
     sentence: string | undefined,
-    annotations: SpanAnnotationReadResolved[] | undefined
+    annotations: SpanAnnotationReadResolved[] | undefined,
   ) => {
     setIsPopoverOpen(true);
     setPosition(position);

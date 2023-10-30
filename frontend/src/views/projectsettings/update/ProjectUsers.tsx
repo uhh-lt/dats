@@ -64,7 +64,7 @@ function ProjectUsers({ project }: ProjectProps) {
           });
           setSelectedUser(null);
         },
-      }
+      },
     );
   };
 
@@ -83,7 +83,7 @@ function ProjectUsers({ project }: ProjectProps) {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 

@@ -49,7 +49,7 @@ const enabledComponentsPerType = new Map<string, string[]>(
     Memos: ["users"],
     Logbook: ["users"],
     Annotations: ["singleUser"],
-  })
+  }),
 );
 const componentIsDisabled = (type: string, component: string): boolean => {
   if (enabledComponentsPerType.has(type)) {
@@ -179,7 +179,7 @@ function ExporterDialog() {
           });
           setExportJobId(exportJobRead.id);
         },
-      }
+      },
     );
   };
 
@@ -206,7 +206,7 @@ function ExporterDialog() {
       }
       setExporterData(event.detail!);
     },
-    [user]
+    [user],
   );
 
   useEffect(() => {

@@ -47,7 +47,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
   };
 
   const handleChangeText = (
-    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>
+    event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
     // @ts-ignore
     const value: string = event.target.value;
@@ -68,7 +68,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
         }
 
         return edge;
-      })
+      }),
     );
     setIsEditing(false);
   };

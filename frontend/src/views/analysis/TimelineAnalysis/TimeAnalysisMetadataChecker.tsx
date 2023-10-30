@@ -153,11 +153,11 @@ function MetadataEditor({ metadata }: MetadataEditorProps) {
                 severity: "success",
               });
             },
-          }
+          },
         );
       }
     },
-    [metadata.key, metadata.value, metadata.id, updateMutation.mutate]
+    [metadata.key, metadata.value, metadata.id, updateMutation.mutate],
   );
   const handleError: SubmitErrorHandler<MetadataUpdateFormValues> = useCallback((data) => console.error(data), []);
 

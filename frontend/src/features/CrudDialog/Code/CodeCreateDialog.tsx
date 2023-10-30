@@ -37,7 +37,7 @@ type CodeCreateDialogPayload = {
 };
 
 export const openCodeCreateDialog = (
-  payload: CodeCreateDialogPayload = { name: undefined, parentCodeId: undefined }
+  payload: CodeCreateDialogPayload = { name: undefined, parentCodeId: undefined },
 ) => {
   eventBus.dispatch("open-create-code", payload);
 };
@@ -109,7 +109,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
       setColor(randomHexColor);
       setIsCodeCreateDialogOpen(true);
     },
-    [reset]
+    [reset],
   );
 
   useEffect(() => {
@@ -169,7 +169,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
             if (onCreateSuccess) onCreateSuccess(data, true);
             if (onSuccessHandler.current) onSuccessHandler.current(data);
           },
-        }
+        },
       );
     }
   };

@@ -36,12 +36,12 @@ const ForceLayout = ({ data, width, height }: ForceDirectedGraphProps) => {
   const nodes = useRef<MyNode[]>(
     data.nodes.map((node) => {
       return { code: node, index: node.id };
-    })
+    }),
   );
   const links = useRef<MyLink[]>(
     data.links.map((link) => {
       return { ...link };
-    })
+    }),
   );
 
   // create simulation (once)
@@ -51,7 +51,7 @@ const ForceLayout = ({ data, width, height }: ForceDirectedGraphProps) => {
       .forceSimulation<MyNode, MyLink>(nodes.current)
       .force(
         "link",
-        d3.forceLink<MyNode, MyLink>(links.current).id((d) => d.code.id)
+        d3.forceLink<MyNode, MyLink>(links.current).id((d) => d.code.id),
       )
       .force("charge", d3.forceManyBody().strength(-400))
       // Adjust the force center to take the margin into account

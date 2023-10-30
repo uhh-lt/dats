@@ -60,11 +60,11 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
                 severity: "success",
               });
             },
-          }
+          },
         );
       }
     },
-    [metadata.key, metadata.value, metadata.id, updateMutation.mutate]
+    [metadata.key, metadata.value, metadata.id, updateMutation.mutate],
   );
   const handleError = useCallback((data: any) => console.error(data), []);
 

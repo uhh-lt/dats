@@ -68,7 +68,7 @@ function CodeSelector({
             }
             return true;
           },
-          { strategy: "breadth" }
+          { strategy: "breadth" },
         );
 
         // filter the codeTree

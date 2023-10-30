@@ -67,7 +67,7 @@ function Register() {
             navigate("/login");
           }, 1000);
         },
-      }
+      },
     );
   };
   const handleError = (data: any) => console.error(data);

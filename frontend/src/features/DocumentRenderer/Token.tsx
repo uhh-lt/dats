@@ -20,7 +20,7 @@ function Token({ token, spanAnnotations, cssClassnames }: TokenProps) {
   // computed
   const spans = useMemo(
     () => spanAnnotations.filter((span) => hiddenCodeIds.indexOf(span.code.id) === -1),
-    [spanAnnotations, hiddenCodeIds]
+    [spanAnnotations, hiddenCodeIds],
   );
   const marks = useMemo(() => {
     const markCount = spans.length;

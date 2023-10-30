@@ -30,7 +30,7 @@ const useGetExportJob = (exportJobId: string | undefined) => {
         }
         return false;
       },
-    }
+    },
   );
 };
 

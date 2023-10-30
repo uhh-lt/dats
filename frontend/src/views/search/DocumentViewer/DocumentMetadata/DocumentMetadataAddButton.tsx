@@ -37,7 +37,7 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
             severity: "error",
           });
         },
-      }
+      },
     );
   }, [createMutation.mutate, sdocId]);
 

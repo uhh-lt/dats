@@ -45,7 +45,7 @@ export function MemoContentCode({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -67,7 +67,7 @@ export function MemoContentCode({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        }
+        },
       );
     }
   };
@@ -83,7 +83,7 @@ export function MemoContentCode({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       throw Error("Invalid invocation of handleDeleteCodeMemo. No memo to delete.");

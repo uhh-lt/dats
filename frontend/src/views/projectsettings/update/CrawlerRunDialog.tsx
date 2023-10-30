@@ -73,7 +73,7 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
           });
           closeDialog();
         },
-      }
+      },
     );
   };
 

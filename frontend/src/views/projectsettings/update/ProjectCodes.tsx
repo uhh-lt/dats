@@ -75,7 +75,7 @@ function ProjectCodes({ project }: ProjectProps) {
             }
             return true;
           },
-          { strategy: "breadth" }
+          { strategy: "breadth" },
         );
 
         // filter the codeTree

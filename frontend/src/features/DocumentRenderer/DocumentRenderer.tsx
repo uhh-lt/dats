@@ -52,11 +52,11 @@ const getHighlightedTokenSet = (tokenData: IToken[] | undefined, filters: Search
   }
   // filter the array of SearchFilters to only contain filters that are searchable in a text document
   const tokenFilters: SearchFilter[] = filters.filter(
-    (f) => f.type === FilterType.KEYWORD || f.type === FilterType.TERM || f.type === FilterType.CODE
+    (f) => f.type === FilterType.KEYWORD || f.type === FilterType.TERM || f.type === FilterType.CODE,
   );
   // standardize the format of tokens strings to make them better searchable in the document
   const tokenFilterHighlights: string[] = tokenFilters.map((f) =>
-    (typeof f.data === "object" ? (f.data as SpanEntity).span_text : (f.data as string)).toLowerCase().trim()
+    (typeof f.data === "object" ? (f.data as SpanEntity).span_text : (f.data as string)).toLowerCase().trim(),
   );
   // An array that keeps track of the number of occurrences of each filter during the search loop
   const filterOccurrences: number[] = new Array<number>(tokenFilterHighlights.length).fill(0);
@@ -330,7 +330,7 @@ function DocumentRenderer({
             const tokenId = parseInt(node.attribs.id);
             const token = tokenData[tokenId];
             const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map(
-              (annotationId) => annotationMap.get(annotationId)!
+              (annotationId) => annotationMap.get(annotationId)!,
             );
             const filters = anchorInfos?.get(tokenId);
             let result = undefined;

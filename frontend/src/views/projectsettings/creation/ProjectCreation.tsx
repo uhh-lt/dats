@@ -53,7 +53,7 @@ function ProjectCreation() {
           });
           navigate(`/projectsettings/${project.id}`);
         },
-      }
+      },
     );
   };
   const handleError = (error: any) => {

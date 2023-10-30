@@ -64,7 +64,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
         setColor(c);
       }
     },
-    [reset]
+    [reset],
   );
 
   // listen to event
@@ -75,7 +75,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       setCode(event.detail);
       resetForm(event.detail);
     },
-    [resetForm]
+    [resetForm],
   );
 
   useEffect(() => {
@@ -132,7 +132,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               severity: "success",
             });
           },
-        }
+        },
       );
     }
   };
@@ -150,7 +150,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               severity: "success",
             });
           },
-        }
+        },
       );
     } else {
       throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");

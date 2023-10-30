@@ -42,7 +42,7 @@ interface CodeSelectorProps {
 export interface CodeSelectorHandle {
   open: (
     position: PopoverPosition,
-    annotations?: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolvedCode[] | undefined
+    annotations?: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolvedCode[] | undefined,
   ) => void;
 }
 
@@ -82,7 +82,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     // methods
     const openCodeSelector = (
       position: PopoverPosition,
-      annotations: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolvedCode[] | undefined = undefined
+      annotations: SpanAnnotationReadResolved[] | BBoxAnnotationReadResolvedCode[] | undefined = undefined,
     ) => {
       setEditingAnnotation(undefined);
       setAnnotationsToEdit(annotations);
@@ -136,7 +136,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
     const handleEdit = (
       annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-      code: CodeRead
+      code: CodeRead,
     ) => {
       setEditingAnnotation(annotationToEdit);
       setAutoCompleteValue({ ...code, title: code.name });
@@ -245,7 +245,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
         )}
       </Popover>
     );
-  }
+  },
 );
 
 export default SpanContextMenu;
@@ -257,12 +257,12 @@ interface CodeSelectorListItemProps {
   handleDelete: (annotationToDelete: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode) => void;
   handleEdit: (
     annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-    newCode: CodeRead
+    newCode: CodeRead,
   ) => void;
 }
 
 const isBboxAnnotation = (
-  annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode
+  annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
 ): annotation is BBoxAnnotationReadResolvedCode => {
   return (annotation as BBoxAnnotationReadResolvedCode).x_min !== undefined;
 };

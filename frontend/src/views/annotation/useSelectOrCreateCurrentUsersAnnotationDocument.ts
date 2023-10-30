@@ -67,7 +67,7 @@ export function useSelectOrCreateCurrentUsersAnnotationDocument(sdocId: number |
             });
             isMutating.current = false;
           },
-        }
+        },
       );
       isMutating.current = true;
     }

@@ -25,7 +25,7 @@ const useGetMemo = (codeId: number | undefined, userId: number | undefined) =>
     {
       retry: false,
       enabled: !!codeId && !!userId,
-    }
+    },
   );
 
 // code

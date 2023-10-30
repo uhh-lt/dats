@@ -55,7 +55,7 @@ function ProjectTags({ project }: ProjectProps) {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 

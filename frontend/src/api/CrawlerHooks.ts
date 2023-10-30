@@ -37,7 +37,7 @@ const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawle
         return false;
       },
       initialData,
-    }
+    },
   );
 };
 
@@ -50,7 +50,7 @@ const useGetAllCrawlerJobs = (projectId: number | undefined) => {
       }),
     {
       enabled: !!projectId,
-    }
+    },
   );
 };
 

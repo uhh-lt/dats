@@ -74,7 +74,7 @@ const MemoCard = forwardRef<any, MemoCardProps>(({ memoId, onContextMenu, style,
               action={<MemoStarButton memoId={memo.data.id} isStarred={memo.data.starred} />}
               title={memo.data.title}
               subheader={`Created: ${dateToLocaleString(memo.data.created)} Updated: ${dateToLocaleString(
-                memo.data.updated
+                memo.data.updated,
               )}`}
               sx={{ pb: 0, pt: 1 }}
               titleTypographyProps={{

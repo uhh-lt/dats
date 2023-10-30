@@ -12,6 +12,6 @@ export function useNavigateIfNecessary() {
         navigate(to);
       }
     },
-    [location.pathname, navigate]
+    [location.pathname, navigate],
   );
 }

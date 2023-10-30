@@ -55,7 +55,7 @@ function EditableTypography({
       setText(newValue);
       setIsEditing(false);
     },
-    [onChange]
+    [onChange],
   );
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement | HTMLTextAreaElement> = useCallback(
@@ -69,7 +69,7 @@ function EditableTypography({
         setIsEditing(false);
       }
     },
-    [onChange, text, value]
+    [onChange, text, value],
   );
 
   return (

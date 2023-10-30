@@ -50,7 +50,7 @@ function DeleteMenuItem({ sdocId, navigateTo, onClick, ...props }: DeleteMenuIte
             onSettled: () => {
               if (onClick) onClick();
             },
-          }
+          },
         );
       },
       onReject: () => {

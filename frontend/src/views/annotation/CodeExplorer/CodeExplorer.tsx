@@ -223,7 +223,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
         <CodeCreateDialog />
       </Box>
     );
-  }
+  },
 );
 
 export default CodeExplorer;

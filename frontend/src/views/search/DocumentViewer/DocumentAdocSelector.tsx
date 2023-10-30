@@ -18,10 +18,13 @@ export function DocumentAdocSelector({
   ...props
 }: DocumentAdocSelectorProps & AppBarProps) {
   const id2Adoc = useMemo(() => {
-    return annotationDocuments.reduce((acc, adoc) => {
-      acc[adoc.id] = adoc;
-      return acc;
-    }, {} as Record<number, AnnotationDocumentRead>);
+    return annotationDocuments.reduce(
+      (acc, adoc) => {
+        acc[adoc.id] = adoc;
+        return acc;
+      },
+      {} as Record<number, AnnotationDocumentRead>,
+    );
   }, [annotationDocuments]);
 
   // handlers (for ui)

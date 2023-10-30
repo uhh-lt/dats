@@ -11,7 +11,7 @@ export interface ImageSimilaritySearchResultCardProps extends SearchResultProps 
 }
 
 function ImageSimilaritySearchResultCard({ hit, ...props }: ImageSimilaritySearchResultCardProps & CardProps) {
-  const thumbnailUrl = SdocHooks.useGetThumbnailURL(props.sdocId).data ?? '';
+  const thumbnailUrl = SdocHooks.useGetThumbnailURL(props.sdocId).data ?? "";
 
   return (
     <SearchResultCardBase

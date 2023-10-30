@@ -27,7 +27,7 @@ function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadata
             severity: "success",
           });
         },
-      }
+      },
     );
   }, [deleteMutation.mutate, metadataId]);
 

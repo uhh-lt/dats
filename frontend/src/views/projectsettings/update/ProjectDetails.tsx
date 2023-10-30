@@ -47,7 +47,7 @@ function ProjectDetails({ project }: ProjectProps) {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
   const handleError = (error: any) => {

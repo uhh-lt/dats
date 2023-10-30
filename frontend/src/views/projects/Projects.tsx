@@ -122,7 +122,8 @@ function ProjectCard({ project, onContextMenu }: ProjectCardProps) {
                 <br />
                 {preProStatus.data.num_active_prepro_job_payloads > 0 && (
                   <>
-                    {preProStatus.data.num_active_prepro_job_payloads} Document(s) are preprocessing <CircularProgress />
+                    {preProStatus.data.num_active_prepro_job_payloads} Document(s) are preprocessing{" "}
+                    <CircularProgress />
                   </>
                 )}
               </Typography>

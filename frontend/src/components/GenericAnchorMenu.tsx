@@ -34,7 +34,7 @@ const GenericAnchorMenu = forwardRef<GenericAnchorContextMenuHandle, GenericAnch
         {children}
       </Menu>
     );
-  }
+  },
 );
 
 export default GenericAnchorMenu;

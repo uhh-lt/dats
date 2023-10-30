@@ -77,7 +77,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
             .attr("stroke-width", 3),
 
         (update) => update.attr("x", (d) => scaledRatio * d.x_min + xCentering),
-        (exit) => exit.remove()
+        (exit) => exit.remove(),
       );
 
     // add click listener
@@ -104,7 +104,7 @@ function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerPro
             .text((d) => d.code.name),
 
         (update) => update.attr("x", (d) => scaledRatio * (d.x_min + 3) + xCentering),
-        (exit) => exit.remove()
+        (exit) => exit.remove(),
       );
   }, [width, height, annotations.data, showEntities, sdoc.content]);
 

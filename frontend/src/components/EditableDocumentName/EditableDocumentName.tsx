@@ -81,7 +81,7 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
               });
               setIsEditing(false);
             },
-          }
+          },
         );
       }
     };
@@ -144,7 +144,7 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
         </DocumentLinkToOriginal>
       );
     }
-  }
+  },
 );
 
 export default EditableDocumentName;

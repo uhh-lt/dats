@@ -33,7 +33,7 @@ function MemoStarButton({ memoId, isStarred, onClick, ...props }: MemoStarButton
             severity: "success",
           });
         },
-      }
+      },
     );
     onClick();
   };

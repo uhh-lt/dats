@@ -130,7 +130,7 @@ function TableDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 
@@ -157,7 +157,7 @@ function TableDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 
@@ -173,7 +173,7 @@ function TableDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 
@@ -194,7 +194,7 @@ function TableDashboard() {
             severity: "success",
           });
         },
-      }
+      },
     );
     return newRow;
   };

@@ -45,7 +45,7 @@ export function MemoContentSourceDocument({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -67,7 +67,7 @@ export function MemoContentSourceDocument({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        }
+        },
       );
     }
   };
@@ -83,7 +83,7 @@ export function MemoContentSourceDocument({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       throw Error("Invalid invocation of handleDeleteSdocMemo. No memo to delete.");

@@ -69,7 +69,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
             severity: "success",
           });
         },
-      }
+      },
     );
   };
 

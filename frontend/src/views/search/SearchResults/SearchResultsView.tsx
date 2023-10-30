@@ -48,7 +48,7 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
       setContextMenuData(sdocId);
       setContextMenuPosition({ x: event.pageX, y: event.pageY });
     },
-    [dispatch, selectedDocumentIds]
+    [dispatch, selectedDocumentIds],
   );
   const closeContextMenu = useCallback(() => {
     setContextMenuPosition(null);
@@ -77,7 +77,7 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
       event.stopPropagation();
       dispatch(SearchActions.toggleDocument(sdocId));
     },
-    [dispatch]
+    [dispatch],
   );
 
   if (searchResults.getNumberOfHits() === 0) {

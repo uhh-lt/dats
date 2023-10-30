@@ -26,13 +26,13 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
                 severity: "success",
               });
             },
-          }
+          },
         );
       } else {
         throw new Error("Trying to delete DocumentTag from undefined SourceDocument");
       }
     },
-    [removeTagMutation.mutate, sdocId]
+    [removeTagMutation.mutate, sdocId],
   );
 
   return { documentTags, handleDeleteDocumentTag };

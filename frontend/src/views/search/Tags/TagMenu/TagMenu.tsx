@@ -101,7 +101,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             : docTagCount < maxTags
             ? CheckboxState.INDETERMINATE
             : CheckboxState.CHECKED,
-        ])
+        ]),
       );
     }
     return undefined;
@@ -129,9 +129,9 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
           tagId,
           checked.get(tagId) === CheckboxState.NOT_CHECKED || checked.get(tagId) === CheckboxState.INDETERMINATE
             ? CheckboxState.CHECKED
-            : CheckboxState.NOT_CHECKED
-        )
-      )
+            : CheckboxState.NOT_CHECKED,
+        ),
+      ),
     );
   };
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +154,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
               severity: "success",
             });
           },
-        }
+        },
       );
     } else {
       addTagsMutation.mutate(
@@ -172,7 +172,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
               severity: "success",
             });
           },
-        }
+        },
       );
     }
     handleClose();
@@ -193,7 +193,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             severity: "success",
           });
         },
-      }
+      },
     );
     handleClose();
   };
@@ -208,7 +208,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
             Apply
           </Typography>
         </ListItemButton>
-      </ListItem>
+      </ListItem>,
     );
   }
 

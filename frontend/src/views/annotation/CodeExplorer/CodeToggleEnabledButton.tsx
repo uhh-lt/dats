@@ -12,7 +12,7 @@ import { RootState } from "../../../store/store";
 function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: ICodeTree | null | undefined }) {
   // redux (global client state)
   const isDisabled = useAppSelector((state: RootState) =>
-    code ? state.settings.disabledCodeIds.indexOf(code.code.id) !== -1 : false
+    code ? state.settings.disabledCodeIds.indexOf(code.code.id) !== -1 : false,
   );
   const dispatch = useAppDispatch();
 

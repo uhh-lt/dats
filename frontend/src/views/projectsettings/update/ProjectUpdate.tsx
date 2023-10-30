@@ -44,7 +44,7 @@ function ProjectUpdate() {
             });
             navigate(`/projectsettings`);
           },
-        }
+        },
       );
     }
   };

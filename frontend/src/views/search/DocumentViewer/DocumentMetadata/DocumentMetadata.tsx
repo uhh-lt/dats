@@ -21,7 +21,7 @@ const MyAccordion = styled((props: AccordionProps) => <Accordion disableGutters 
     "&:before": {
       display: "none",
     },
-  })
+  }),
 );
 
 const MyAccordionSummary = styled((props: AccordionSummaryProps) => (

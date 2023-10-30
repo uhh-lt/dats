@@ -37,7 +37,7 @@ function ExporterItemSelectList({ items, value, onChange, itemsPerPage, singleSe
 
   const emptyItems = useMemo(
     () => (page > 0 ? Math.max(0, page * itemsPerPage - filteredItems.length) : 0),
-    [filteredItems, page, itemsPerPage]
+    [filteredItems, page, itemsPerPage],
   );
 
   // ui events

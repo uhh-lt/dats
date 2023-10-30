@@ -46,7 +46,7 @@ const useBulkLinkDocumentTags = () =>
         queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
         queryClient.invalidateQueries([QueryKey.SEARCH_TAG_STATISTICS]); // todo: zu unspezifisch!
       },
-    }
+    },
   );
 
 const useBulkUnlinkDocumentTags = () =>
@@ -62,7 +62,7 @@ const useBulkUnlinkDocumentTags = () =>
         queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
         queryClient.invalidateQueries([QueryKey.SEARCH_TAG_STATISTICS]); // todo: zu unspezifisch!
       },
-    }
+    },
   );
 
 const useBulkUpdateDocumentTags = () =>
@@ -97,7 +97,7 @@ const useBulkUpdateDocumentTags = () =>
               source_document_ids: variables.sourceDocumentIds,
               document_tag_ids: addTags,
             },
-          })
+          }),
         );
       }
       if (removeTags.length > 0) {
@@ -119,7 +119,7 @@ const useBulkUpdateDocumentTags = () =>
         queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
         queryClient.invalidateQueries([QueryKey.SEARCH_TAG_STATISTICS]); // todo: zu unspezifisch!
       },
-    }
+    },
   );
 
 // memos
@@ -136,7 +136,7 @@ const useGetMemo = (tagId: number | undefined, userId: number | undefined) =>
     {
       retry: false,
       enabled: !!tagId && !!userId,
-    }
+    },
   );
 
 const useCreateMemo = () =>

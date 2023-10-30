@@ -51,7 +51,7 @@ const GenericAnchorPopover = forwardRef<GenericAnchorPopoverHandle, GenericAncho
         {children}
       </Popover>
     );
-  }
+  },
 );
 
 export default GenericAnchorPopover;

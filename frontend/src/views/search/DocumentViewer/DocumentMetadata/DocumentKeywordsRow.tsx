@@ -65,7 +65,7 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
               severity: "success",
             });
           },
-        }
+        },
       );
     }
   }, [keywords.keywords, keywordInput, updateMutation.mutate, sdocId]);
@@ -88,7 +88,7 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
               severity: "success",
             });
           },
-        }
+        },
       );
     }
   }, [keywords.keywords.length, sdocId, updateMutation.mutate]);

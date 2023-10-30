@@ -23,7 +23,7 @@ const useGetTable = (tableId: number | undefined) =>
       retry: false,
       enabled: !!tableId,
       select: (data) => data,
-    }
+    },
   );
 
 const useGetUserTables = (projectId: number | undefined, userId: number | undefined) =>
@@ -39,7 +39,7 @@ const useGetUserTables = (projectId: number | undefined, userId: number | undefi
     {
       retry: false,
       enabled: !!projectId && !!userId,
-    }
+    },
   );
 
 const useCreateTable = () =>

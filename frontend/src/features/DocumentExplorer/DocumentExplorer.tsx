@@ -69,7 +69,7 @@ function DocumentExplorer({ ...props }: BoxProps) {
       setContextMenuData(sdocId);
       setContextMenuPosition({ x: event.pageX, y: event.pageY });
     },
-    []
+    [],
   );
   const closeContextMenu = useCallback(() => {
     setContextMenuPosition(null);

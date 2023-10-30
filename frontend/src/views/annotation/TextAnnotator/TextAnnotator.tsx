@@ -85,7 +85,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       // open code selector
       spanContextMenuRef.current!.open(
         position,
-        annos.map((a) => annotationMap.get(a)!)
+        annos.map((a) => annotationMap.get(a)!),
       );
     }
   };
@@ -188,7 +188,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
   // handle code selector events
   const handleCodeSelectorDeleteAnnotation = (
-    annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode
+    annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
   ) => {
     deleteMutation.mutate(
       { spanAnnotationToDelete: annotation as SpanAnnotationReadResolved },
@@ -199,12 +199,12 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
   const handleCodeSelectorEditCode = (
     annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
-    code: ICode
+    code: ICode,
   ) => {
     updateMutation.mutate(
       {
@@ -220,7 +220,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
   const handleCodeSelectorAddCode = (code: CodeRead, isNewCode: boolean) => {
@@ -243,7 +243,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
             severity: "success",
           });
         },
-      }
+      },
     );
   };
   const handleCodeSelectorClose = (reason?: "backdropClick" | "escapeKeyDown") => {
@@ -261,7 +261,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
                 severity: "success",
               });
             },
-          }
+          },
         );
       }
       // i clicked escape because i want to cancel the annotation
@@ -274,7 +274,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
               return undefined;
             }
             return old.filter((spanAnnotation) => spanAnnotation.id !== -1);
-          }
+          },
         );
       }
     }

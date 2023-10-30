@@ -56,7 +56,7 @@ function AudioVideoViewer({ sdoc, width, height }: AudioVideoViewerProps) {
               color: index === highlightedWordId ? "red" : undefined,
               fontSize: index === highlightedWordId ? "1.5em" : undefined,
               fontWeight: index === highlightedWordId ? "bold" : undefined,
-              cursor: "pointer"
+              cursor: "pointer",
             }}
             onClick={() => handleJumpToTimestamp(word.start_ms, index)}
             ref={index === highlightedWordId ? currentHighlightedWordSpanRef : undefined}
@@ -81,8 +81,8 @@ function AudioVideoViewer({ sdoc, width, height }: AudioVideoViewerProps) {
         />
       </Box>
       <h3>Automatic Transcription:</h3>
-      <Box sx={{ maxHeight: 200, height: 200, overflowY: "scroll", border: "1px solid grey", borderRadius: 1}} >
-          {transcript}
+      <Box sx={{ maxHeight: 200, height: 200, overflowY: "scroll", border: "1px solid grey", borderRadius: 1 }}>
+        {transcript}
       </Box>
     </>
   );

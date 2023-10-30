@@ -4,14 +4,17 @@ import { Node, Edge, EdgeChange, NodeChange, applyEdgeChanges, applyNodeChanges 
 type OnChange<ChangesType> = (changes: ChangesType[]) => void;
 
 const uniqueItemsById = <T extends { id: string }>(items: T[]): T[] => {
-  const uniqueItems = items.reduce((acc, item) => {
-    return { ...acc, [item.id]: item };
-  }, {} as Record<string, T>);
+  const uniqueItems = items.reduce(
+    (acc, item) => {
+      return { ...acc, [item.id]: item };
+    },
+    {} as Record<string, T>,
+  );
   return Object.values(uniqueItems);
 };
 
 export const useEdgeStateCustom = (
-  initialEdges: Edge[]
+  initialEdges: Edge[],
 ): [Edge[], Dispatch<SetStateAction<Edge[]>>, OnChange<EdgeChange>] => {
   const [edges, setEdges] = useState(initialEdges);
 
@@ -24,14 +27,14 @@ export const useEdgeStateCustom = (
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => setItemsUnique((edges) => applyEdgeChanges(changes, edges)),
-    [setItemsUnique]
+    [setItemsUnique],
   );
 
   return [edges, setItemsUnique, onEdgesChange];
 };
 
 export const useNodeStateCustom = <T>(
-  initialNodes: Node<T>[]
+  initialNodes: Node<T>[],
 ): [Node<T>[], Dispatch<Node<T>[]>, OnChange<NodeChange>] => {
   const [nodes, setNodes] = useState(initialNodes);
 
@@ -44,7 +47,7 @@ export const useNodeStateCustom = <T>(
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => setItemsUnique((nodes) => applyNodeChanges(changes, nodes)),
-    [setItemsUnique]
+    [setItemsUnique],
   );
 
   return [nodes, setNodes, onNodesChange];
