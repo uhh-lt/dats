@@ -17,6 +17,7 @@ import { useParams } from "react-router-dom";
 import AnalysisHooks from "../../../api/AnalysisHooks";
 import { AnnotatedSegment, AttachedObjectType, DocumentTagRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
+import MemoRenderer from "../../../components/DataGrid/MemoRenderer";
 import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
 import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationRenderer";
 import TagRenderer from "../../../components/DataGrid/TagRenderer";
@@ -34,7 +35,7 @@ const columns: GridColDef[] = [
     flex: 4,
     description: "Your comments on the annotation",
     valueGetter: (params: GridValueGetterParams) => params.row.memo?.content || "",
-    renderCell: (params) => "HI",
+    renderCell: (params) => (params.row.memo ? <MemoRenderer memo={params.row.memo} /> : "empty"),
   },
   {
     field: "sdoc",
