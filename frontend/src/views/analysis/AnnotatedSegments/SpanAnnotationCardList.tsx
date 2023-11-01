@@ -1,19 +1,18 @@
 import { Grid, Typography } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
-import { AnnotatedSegment } from "../../../api/openapi";
 import SpanAnnotationCard from "./SpanAnnotationCard";
 
-interface AnnotatedSegmentsListProps {
-  annotatedSegments: AnnotatedSegment[];
+interface SpanAnnotationCardListProps {
+  spanAnnotationIds: number[];
 }
 
-function AnnotatedSegmentsList({ annotatedSegments }: AnnotatedSegmentsListProps) {
+function SpanAnnotationCardList({ spanAnnotationIds }: SpanAnnotationCardListProps) {
   const listRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
 
   // The virtualizer
   const virtualizer = useVirtualizer({
-    count: annotatedSegments.length,
+    count: spanAnnotationIds.length,
     getScrollElement: () => listRef.current,
     estimateSize: () => 200,
   });
@@ -27,7 +26,7 @@ function AnnotatedSegmentsList({ annotatedSegments }: AnnotatedSegmentsListProps
           position: "relative",
         }}
       >
-        {annotatedSegments.length > 0 ? (
+        {spanAnnotationIds.length > 0 ? (
           virtualizer.getVirtualItems().map((virtualItem) => (
             <div
               key={virtualItem.key}
@@ -41,7 +40,7 @@ function AnnotatedSegmentsList({ annotatedSegments }: AnnotatedSegmentsListProps
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              <SpanAnnotationCard annotationId={annotatedSegments[virtualItem.index].annotation.id} sx={{ mb: 1 }} />
+              <SpanAnnotationCard annotationId={spanAnnotationIds[virtualItem.index]} sx={{ mb: 1 }} />
             </div>
           ))
         ) : (
@@ -54,4 +53,4 @@ function AnnotatedSegmentsList({ annotatedSegments }: AnnotatedSegmentsListProps
   );
 }
 
-export default AnnotatedSegmentsList;
+export default SpanAnnotationCardList;

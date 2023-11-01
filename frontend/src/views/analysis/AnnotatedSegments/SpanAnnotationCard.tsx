@@ -10,12 +10,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
+import SdocHooks from "../../../api/SdocHooks";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 import { AttachedObjectType } from "../../../api/openapi";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import { openSpanAnnotationEditDialog } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import MemoButton from "../../../features/Memo/MemoButton";
-import SdocHooks from "../../../api/SdocHooks";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 
 interface SpanAnnotationCardProps {
