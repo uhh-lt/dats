@@ -1,6 +1,7 @@
 import os
 import random
 import time
+import traceback
 
 from loguru import logger
 
@@ -64,6 +65,7 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
     except Exception as e:
         msg = f"Error while starting the API! Exception: {str(e)}"
         logger.error(msg)
+        logger.error(traceback.format_exc())
         raise SystemExit(msg)
     finally:
         delete_progress_indicator_file()
