@@ -69,7 +69,7 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
               severity: "success",
             });
           },
-        }
+        },
       );
     });
   };

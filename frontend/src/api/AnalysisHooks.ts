@@ -108,7 +108,7 @@ const useAnnotatedSegments = (projectId: number | undefined, userId: number | un
           queryClient.setQueryData([QueryKey.MEMO, memo.id], memo);
         });
       },
-    }
+    },
   );
 
 const AnalysisHooks = {
