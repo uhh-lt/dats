@@ -61,6 +61,8 @@ const useCreateAnnotation = () =>
           },
           created: "",
           updated: "",
+          sdoc_id: 0,
+          user_id: 0,
         };
         return old === undefined ? [spanAnnotation] : [...old, spanAnnotation];
       });

@@ -2802,7 +2802,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/spangroup": {
@@ -3258,7 +3259,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/code": {
@@ -4385,7 +4387,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/analysis/timeline_analysis": {
@@ -4968,7 +4971,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/whiteboard/project/{project_id}/user/{user_id}": {
@@ -6874,6 +6878,8 @@
           "span_text",
           "code",
           "annotation_document_id",
+          "user_id",
+          "sdoc_id",
           "created",
           "updated"
         ],
@@ -6906,6 +6912,12 @@
             "title": "Annotation Document Id",
             "type": "integer",
             "description": "AnnotationDocument the SpanAnnotation refers to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the SpanAnnotation belongs to" },
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "SourceDocument the SpanAnnotation refers to"
           },
           "created": {
             "title": "Created",
