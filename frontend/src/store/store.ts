@@ -5,6 +5,7 @@ import logbookReducer from "../views/logbook/logbookSlice";
 import autologbookReducer from "../views/autologbook/autologbookSlice";
 import settingsReducer from "../views/settings/settingsSlice";
 import analysisReducer from "../views/analysis/analysisSlice";
+import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 
@@ -25,6 +26,7 @@ export const store = configureStore({
     logbook: logbookReducer,
     autologbook: autologbookReducer,
     settings: persistedSettingsReducer,
+    annotatedSegments: annotatedSegmentsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
