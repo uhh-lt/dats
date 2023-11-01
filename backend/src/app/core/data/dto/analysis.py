@@ -1,9 +1,17 @@
-from typing import List, Union
+from typing import List, Optional, Union
 
-from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationRead,
+    BBoxAnnotationReadResolvedCode,
+)
 from app.core.data.dto.code import CodeRead
+from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+)
 from pydantic import BaseModel, Field
 
 
@@ -51,4 +59,13 @@ class AnnotationOccurrence(BaseModel):
     sdoc: SourceDocumentRead = Field(
         description="The SourceDocument where the Code occurs."
     )
-    text: str = Field(description="The Tet of the Annotation")
+    text: str = Field(description="The Text of the Annotation")
+
+
+class AnnotatedSegment(BaseModel):
+    annotation: SpanAnnotationReadResolved = Field(description="The Annotation")
+    sdoc: SourceDocumentRead = Field(
+        description="The SourceDocument where the Code occurs."
+    )
+    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation")
+    tags: List[DocumentTagRead] = Field(description="The Tags of the Document")

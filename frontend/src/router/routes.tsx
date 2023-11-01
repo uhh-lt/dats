@@ -29,6 +29,7 @@ import TableDashboard from "../views/analysis/Table/TableDashboard";
 import TableView from "../views/analysis/Table/TableView";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
 import Profile from "../views/profile/Profile";
+import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments";
 
 const router = createBrowserRouter([
   {
@@ -153,6 +154,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/timeline",
         element: <TimelineAnalysis />,
+      },
+      {
+        path: "/project/:projectId/analysis/code-segments",
+        element: <AnnotatedSegments />,
       },
       {
         path: "/project/:projectId/analysis/table",

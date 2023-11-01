@@ -152,6 +152,7 @@ const useGetDocumentContent = (sdocId: number | undefined) =>
       }),
     {
       enabled: !!sdocId,
+      staleTime: Infinity,
     },
   );
 

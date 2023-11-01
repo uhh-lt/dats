@@ -21,7 +21,7 @@ export type AnnotationOccurrence = {
    */
   sdoc: SourceDocumentRead;
   /**
-   * The Tet of the Annotation
+   * The Text of the Annotation
    */
   text: string;
 };

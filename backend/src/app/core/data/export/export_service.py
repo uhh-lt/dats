@@ -201,6 +201,8 @@ class ExportService(metaclass=SingletonMeta):
                 **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
                 code=CodeRead.from_orm(span_orm.current_code.code),
                 span_text=span_orm.span_text.text,
+                user_id=span_orm.annotation_document.user_id,
+                sdoc_id=span_orm.annotation_document.source_document_id,
             )
             for span_orm, span_dto in zip(spans, span_read_dtos)
         ]
@@ -367,6 +369,8 @@ class ExportService(metaclass=SingletonMeta):
                 **span_read_dto.dict(exclude={"current_code_id", "span_text_id"}),
                 code=CodeRead.from_orm(attached_to.current_code.code),
                 span_text=attached_to.span_text.text,
+                user_id=attached_to.annotation_document.user_id,
+                sdoc_id=attached_to.annotation_document.source_document_id,
             )
 
             data["span_anno_id"] = [span_read_dto.id]

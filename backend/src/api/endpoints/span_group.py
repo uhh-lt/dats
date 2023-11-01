@@ -99,7 +99,9 @@ async def get_all_annotations(
             SpanAnnotationReadResolved(
                 **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
                 code=CodeRead.from_orm(span_orm.current_code.code),
-                span_text=span_orm.span_text.text
+                span_text=span_orm.span_text.text,
+                user_id=span_orm.annotation_document.user_id,
+                sdoc_id=span_orm.annotation_document.source_document_id
             )
             for span_orm, span_dto in zip(spans, span_read_dtos)
         ]

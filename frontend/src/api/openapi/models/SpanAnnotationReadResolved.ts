@@ -38,6 +38,14 @@ export type SpanAnnotationReadResolved = {
    */
   annotation_document_id: number;
   /**
+   * User the SpanAnnotation belongs to
+   */
+  user_id: number;
+  /**
+   * SourceDocument the SpanAnnotation refers to
+   */
+  sdoc_id: number;
+  /**
    * Created timestamp of the SpanAnnotation
    */
   created: string;

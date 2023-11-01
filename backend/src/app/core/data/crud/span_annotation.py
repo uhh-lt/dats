@@ -235,6 +235,8 @@ class CRUDSpanAnnotation(
                 ),
                 code=CodeRead.from_orm(db_obj.current_code.code),
                 span_text=db_obj.span_text.text,
+                user_id=db_obj.annotation_document.user_id,
+                sdoc_id=db_obj.annotation_document.source_document_id
             ).dict()
         )
 

@@ -9,8 +9,8 @@ import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationR
 import CodeSelector from "../../../components/Selectors/CodeSelector";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 
-export const openSpanAnnotationEditDialog = (annotation: SpanAnnotationReadResolved) => {
-  eventBus.dispatch("open-edit-spanAnnotation", annotation);
+export const openSpanAnnotationEditDialog = (annotations: SpanAnnotationReadResolved[]) => {
+  eventBus.dispatch("open-edit-spanAnnotation", annotations);
 };
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {
@@ -21,16 +21,16 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
   // local state
   const [open, setOpen] = useState(false);
   const [selectedCode, setSelectedCode] = useState<CodeRead | undefined>(undefined);
-  const [annotation, setAnnotation] = useState<SpanAnnotationReadResolved | undefined>(undefined);
+  const [annotations, setAnnotations] = useState<SpanAnnotationReadResolved[]>([]);
 
   // listen to event
   // create a (memoized) function that stays the same across re-renders
-  const onOpenEditAnnotation = useCallback((event: CustomEventInit<SpanAnnotationReadResolved>) => {
-    if (!event.detail) return;
+  const onOpenEditAnnotation = useCallback((event: CustomEventInit<SpanAnnotationReadResolved[]>) => {
+    if (!event.detail || event.detail.length === 0) return;
 
     setOpen(true);
-    setAnnotation(event.detail);
-    setSelectedCode(event.detail.code);
+    setAnnotations(event.detail);
+    setSelectedCode(event.detail[0].code);
   }, []);
 
   useEffect(() => {
@@ -46,29 +46,32 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
   const handleClose = () => {
     setOpen(false);
     setSelectedCode(undefined);
-    setAnnotation(undefined);
+    setAnnotations([]);
   };
 
-  const handleUpdateAnnotation = () => {
-    if (!selectedCode || !annotation) return;
+  const handleUpdateAnnotations = () => {
+    if (!selectedCode || annotations.length === 0) return;
 
-    updateAnnotationMutation.mutate(
-      {
-        spanAnnotationToUpdate: annotation,
-        requestBody: {
-          code_id: selectedCode.id,
+    // TODO: We need bulk update for annotations
+    annotations.forEach((annotation) => {
+      updateAnnotationMutation.mutate(
+        {
+          spanAnnotationToUpdate: annotation,
+          requestBody: {
+            code_id: selectedCode.id,
+          },
         },
-      },
-      {
-        onSuccess: (data) => {
-          handleClose();
-          SnackbarAPI.openSnackbar({
-            text: `Updated annotation!`,
-            severity: "success",
-          });
+        {
+          onSuccess: (data) => {
+            handleClose();
+            SnackbarAPI.openSnackbar({
+              text: `Updated annotation!`,
+              severity: "success",
+            });
+          },
         },
-      },
-    );
+      );
+    });
   };
 
   return (
@@ -80,16 +83,16 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
         allowMultiselect={false}
         height="400px"
       />
-      {!!annotation && (
+      {annotations.length > 0 && (
         <>
           <Divider />
           <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
           <Box px={3} mb={2}>
             Before:
-            <SpanAnnotationRenderer spanAnnotation={annotation} />
+            <SpanAnnotationRenderer spanAnnotation={annotations[0]} />
             After:
             <SpanAnnotationRenderer
-              spanAnnotation={selectedCode ? { ...annotation, code: selectedCode } : annotation}
+              spanAnnotation={selectedCode ? { ...annotations[0], code: selectedCode } : annotations[0]}
             />
           </Box>
         </>
@@ -102,8 +105,8 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
           color="success"
           startIcon={<SaveIcon />}
           fullWidth
-          onClick={handleUpdateAnnotation}
-          disabled={!selectedCode || selectedCode?.id === annotation?.code.id}
+          onClick={handleUpdateAnnotations}
+          disabled={!selectedCode || selectedCode?.id === annotations[0].code.id}
           loading={updateAnnotationMutation.isLoading}
           loadingPosition="start"
         >

@@ -2802,7 +2802,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/spangroup": {
@@ -3258,7 +3259,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/code": {
@@ -4314,8 +4316,8 @@
     "/analysis/annotation_occurrences": {
       "post": {
         "tags": ["analysis"],
-        "summary": "Returns all SourceDocument IDs that match the query parameters.",
-        "description": "Returns all SourceDocument Ids that match the query parameters.",
+        "summary": "Returns AnnotationOccurrences.",
+        "description": "Returns AnnotationOccurrences.",
         "operationId": "annotation_occurrences",
         "parameters": [
           {
@@ -4341,6 +4343,42 @@
                   "title": "Response Analysis-Annotation Occurrences",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/AnnotationOccurrence" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/analysis/annotated_segments": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns AnnotationSegments.",
+        "description": "Returns AnnotationSegments.",
+        "operationId": "annotated_segments",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "query" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Annotated Segments",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AnnotatedSegment" }
                 }
               }
             }
@@ -4933,7 +4971,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/whiteboard/project/{project_id}/user/{user_id}": {
@@ -5140,6 +5179,34 @@
           }
         }
       },
+      "AnnotatedSegment": {
+        "title": "AnnotatedSegment",
+        "required": ["annotation", "sdoc", "tags"],
+        "type": "object",
+        "properties": {
+          "annotation": {
+            "title": "Annotation",
+            "allOf": [{ "$ref": "#/components/schemas/SpanAnnotationReadResolved" }],
+            "description": "The Annotation"
+          },
+          "sdoc": {
+            "title": "Sdoc",
+            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "description": "The SourceDocument where the Code occurs."
+          },
+          "memo": {
+            "title": "Memo",
+            "allOf": [{ "$ref": "#/components/schemas/MemoRead" }],
+            "description": "The Memo of the Annotation"
+          },
+          "tags": {
+            "title": "Tags",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "description": "The Tags of the Document"
+          }
+        }
+      },
       "AnnotationDocumentCreate": {
         "title": "AnnotationDocumentCreate",
         "required": ["source_document_id", "user_id"],
@@ -5202,7 +5269,7 @@
             "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
             "description": "The SourceDocument where the Code occurs."
           },
-          "text": { "title": "Text", "type": "string", "description": "The Tet of the Annotation" }
+          "text": { "title": "Text", "type": "string", "description": "The Text of the Annotation" }
         }
       },
       "AttachedObjectType": {
@@ -6281,8 +6348,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "max": 1,
-            "min": 0
+            "min": 0,
+            "max": 1
           }
         }
       },
@@ -6811,6 +6878,8 @@
           "span_text",
           "code",
           "annotation_document_id",
+          "user_id",
+          "sdoc_id",
           "created",
           "updated"
         ],
@@ -6843,6 +6912,12 @@
             "title": "Annotation Document Id",
             "type": "integer",
             "description": "AnnotationDocument the SpanAnnotation refers to"
+          },
+          "user_id": { "title": "User Id", "type": "integer", "description": "User the SpanAnnotation belongs to" },
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "SourceDocument the SpanAnnotation refers to"
           },
           "created": {
             "title": "Created",
