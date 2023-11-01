@@ -26,13 +26,13 @@ from app.preprocessing.preprocessing_service import PreprocessingService
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/project", dependencies=[Depends(get_current_user)])
-tags = ["project"]
+router = APIRouter(
+    prefix="/project", dependencies=[Depends(get_current_user)], tags=["project"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=ProjectRead,
     summary="Creates a new Project",
     description="Creates a new Project.",
@@ -56,7 +56,6 @@ async def create_new_project(
 
 @router.get(
     "",
-    tags=tags,
     response_model=List[ProjectRead],
     summary="Returns all Projects of the current user",
     description="Returns all Projects of the current user",
@@ -73,7 +72,6 @@ async def read_all(
 
 @router.get(
     "/{proj_id}",
-    tags=tags,
     response_model=Optional[ProjectRead],
     summary="Returns the Project with the given ID",
     description="Returns the Project with the given ID if it exists",
@@ -88,7 +86,6 @@ async def read_project(
 
 @router.patch(
     "/{proj_id}",
-    tags=tags,
     response_model=ProjectRead,
     summary="Updates the Project",
     description="Updates the Project with the given ID.",
@@ -103,7 +100,6 @@ async def update_project(
 
 @router.delete(
     "/{proj_id}",
-    tags=tags,
     response_model=ProjectRead,
     summary="Removes the Project",
     description="Removes the Project with the given ID.",
@@ -129,7 +125,6 @@ async def delete_project(
 
 @router.get(
     "/{proj_id}/sdoc",
-    tags=tags,
     response_model=PaginatedSourceDocumentReads,
     summary="Returns all SourceDocuments of the Project.",
     description="Returns all SourceDocuments of the Project with the given ID.",
@@ -167,7 +162,6 @@ async def get_project_sdocs(
 
 @router.put(
     "/{proj_id}/sdoc",
-    tags=tags,
     response_model=Optional[PreprocessingJobRead],
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
@@ -193,7 +187,6 @@ async def upload_project_sdoc(
 
 @router.delete(
     "/{proj_id}/sdoc",
-    tags=tags,
     response_model=List[int],
     summary="Removes all SourceDocuments of the Project",
     description="Removes all SourceDocuments of the Project with the given ID if it exists",
@@ -207,7 +200,6 @@ async def delete_project_sdocs(
 
 @router.patch(
     "/{proj_id}/user/{user_id}",
-    tags=tags,
     response_model=Optional[UserRead],
     summary="Associates the User with the Project",
     description="Associates an existing User to the Project with the given ID if it exists",
@@ -222,7 +214,6 @@ async def associate_user_to_project(
 
 @router.delete(
     "/{proj_id}/user/{user_id}",
-    tags=tags,
     response_model=Optional[UserRead],
     summary="Dissociates the Users with the Project",
     description="Dissociates the Users with the Project with the given ID if it exists",
@@ -237,7 +228,6 @@ async def dissociate_user_from_project(
 
 @router.get(
     "/{proj_id}/user",
-    tags=tags,
     response_model=List[UserRead],
     summary="Returns all Users of the Project",
     description="Returns all Users of the Project with the given ID",
@@ -252,7 +242,6 @@ async def get_project_users(
 
 @router.get(
     "/{proj_id}/code",
-    tags=tags,
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project",
     description="Returns all Codes of the Project with the given ID",
@@ -269,7 +258,6 @@ async def get_project_codes(
 
 @router.delete(
     "/{proj_id}/code",
-    tags=tags,
     response_model=List[int],
     summary="Removes all Codes of the Project",
     description="Removes all Codes of the Project with the given ID if it exists",
@@ -283,7 +271,6 @@ async def delete_project_codes(
 
 @router.get(
     "/{proj_id}/tag",
-    tags=tags,
     response_model=List[DocumentTagRead],
     summary="Returns all DocumentTags of the Project",
     description="Returns all DocumentTags of the Project with the given ID",
@@ -298,7 +285,6 @@ async def get_project_tags(
 
 @router.delete(
     "/{proj_id}/tag",
-    tags=tags,
     response_model=List[int],
     summary="Removes all DocumentTags of the Project",
     description="Removes all DocumentTags of the Project with the given ID if it exists",
@@ -312,7 +298,6 @@ async def delete_project_tags(
 
 @router.get(
     "/{proj_id}/user/{user_id}/code",
-    tags=tags,
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project from a User",
     description="Returns all Codes of the Project from a User",
@@ -331,7 +316,6 @@ async def get_user_codes_of_project(
 
 @router.delete(
     "/{proj_id}/user/{user_id}/code",
-    tags=tags,
     response_model=int,
     summary="Removes all Codes of the Project from a User",
     description="Removes all Codes of the Project from a User. Returns the number of removed Codes.",
@@ -345,7 +329,6 @@ async def remove_user_codes_of_project(
 
 @router.get(
     "/{proj_id}/user/{user_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns all Memos of the Project from a User",
     description="Returns all Memos of the Project from a User",
@@ -372,7 +355,6 @@ async def get_user_memos_of_project(
 
 @router.get(
     "/{proj_id}/user/{user_id}/action",
-    tags=tags,
     response_model=List[ActionRead],
     summary="Returns all Actions of the Project from a User",
     description="Returns all Actions of the Project from a User",
@@ -386,7 +368,6 @@ async def get_user_actions_of_project(
 
 @router.post(
     "/{proj_id}/actions",
-    tags=tags,
     response_model=List[ActionRead],
     summary="Returns all Actions",
     description="Returns all Actions of the Project",
@@ -413,7 +394,6 @@ async def query_actions_of_project(
 
 @router.delete(
     "/{proj_id}/user/{user_id}/memo",
-    tags=tags,
     response_model=List[int],
     summary="Removes all Memos of the Project from a User",
     description="Removes all Memos of the Project from a User. Returns the number of removed Memos.",
@@ -427,7 +407,6 @@ async def remove_user_memos_of_project(
 
 @router.put(
     "/{proj_id}/memo",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Adds a Memo of the current User to the Project.",
     description="Adds a Memo of the current User to the Project with the given ID if it exists",
@@ -446,7 +425,6 @@ async def add_memo(
 
 @router.get(
     "/{proj_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns the Memo of the current User for the Project.",
     description="Returns the Memo of the current User for the Project with the given ID.",
@@ -460,7 +438,6 @@ async def get_memos(
 
 @router.get(
     "/{proj_id}/memo/{user_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Returns the Memo attached to the Project of the User with the given ID",
     description=(
@@ -477,7 +454,6 @@ async def get_user_memo(
 
 @router.get(
     "/{proj_id}/resolve_filename/{filename}",
-    tags=tags,
     response_model=Optional[int],
     summary="Returns the Id of the SourceDocument identified by project_id and filename if it exists",
     description=(
@@ -501,7 +477,6 @@ async def resolve_filename(
 
 @router.get(
     "/{proj_id}/metadata/{metadata_key}",
-    tags=tags,
     response_model=List[SourceDocumentMetadataRead],
     summary="Returns all SourceDocumentMetadata of the project that have the specified metadata_key",
     description=(

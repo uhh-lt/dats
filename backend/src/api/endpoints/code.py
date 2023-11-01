@@ -10,13 +10,13 @@ from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, Mem
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/code", dependencies=[Depends(get_current_user)])
-tags = ["code"]
+router = APIRouter(
+    prefix="/code", dependencies=[Depends(get_current_user)], tags=["code"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[CodeRead],
     summary="Creates a new Code",
     description="Creates a new Code and returns it with the generated ID.",
@@ -30,7 +30,6 @@ async def create_new_code(
 
 @router.get(
     "/current/{current_code_id}",
-    tags=tags,
     response_model=Optional[CodeRead],
     summary="Returns the Code linked by the CurrentCode",
     description="Returns the Code linked by the CurrentCode with the given ID.",
@@ -45,7 +44,6 @@ async def get_code_by_current_code_id(
 
 @router.get(
     "/{code_id}",
-    tags=tags,
     response_model=Optional[CodeRead],
     summary="Returns the Code",
     description="Returns the Code with the given ID.",
@@ -60,7 +58,6 @@ async def get_by_id(
 
 @router.patch(
     "/{code_id}",
-    tags=tags,
     response_model=CodeRead,
     summary="Updates the Code",
     description="Updates the Code with the given ID.",
@@ -75,7 +72,6 @@ async def update_by_id(
 
 @router.delete(
     "/{code_id}",
-    tags=tags,
     response_model=Optional[CodeRead],
     summary="Deletes the Code",
     description="Deletes the Code with the given ID.",
@@ -90,7 +86,6 @@ async def delete_by_id(
 
 @router.put(
     "/{code_id}/memo",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Adds a Memo to the Code",
     description="Adds a Memo to the Code with the given ID if it exists",
@@ -104,13 +99,12 @@ async def add_memo(
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),
         attached_object_id=code_id,
-        attached_object_type=AttachedObjectType.code
+        attached_object_type=AttachedObjectType.code,
     )
 
 
 @router.get(
     "/{code_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns the Memo attached to the Code",
     description="Returns the Memo attached to the Code with the given ID if it exists.",
@@ -124,7 +118,6 @@ async def get_memos(
 
 @router.get(
     "/{code_id}/memo/{user_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
     description=(

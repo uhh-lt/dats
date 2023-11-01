@@ -15,13 +15,11 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/authentication")
-tags = ["authentication"]
+router = APIRouter(prefix="/authentication", tags=["authentication"])
 
 
 @router.post(
     "/register",
-    tags=tags,
     response_model=UserRead,
     summary="Registers a new User",
     description="Registers a new User and returns it with the generated ID.",
@@ -43,7 +41,6 @@ async def register(
 
 @router.post(
     "/login",
-    tags=tags,
     response_model=UserAuthorizationHeaderData,
     summary="Returns the JWT access token for the provided user login data",
     description=(
@@ -54,7 +51,7 @@ async def register(
 async def login(
     *,
     db: Session = Depends(get_db_session),
-    user_login_form_data: OAuth2PasswordRequestForm = Depends()
+    user_login_form_data: OAuth2PasswordRequestForm = Depends(),
 ) -> UserAuthorizationHeaderData:
     user_login = UserLogin(
         username=user_login_form_data.username,

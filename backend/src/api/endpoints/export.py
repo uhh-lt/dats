@@ -4,15 +4,15 @@ from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
 from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/export", dependencies=[Depends(get_current_user)])
-tags = ["export"]
+router = APIRouter(
+    prefix="/export", dependencies=[Depends(get_current_user)], tags=["export"]
+)
 
 exs: ExportService = ExportService()
 
 
 @router.post(
     "",
-    tags=tags,
     response_model=ExportJobRead,
     summary="Returns the ExportJob for the given Parameters",
     description="Returns the ExportJob for the given Parameters",
@@ -27,7 +27,6 @@ async def start_export_job(
 
 @router.get(
     "/{export_job_id}",
-    tags=tags,
     response_model=ExportJobRead,
     summary="Returns the ExportJob for the given ID",
     description="Returns the ExportJob for the given ID if it exists",

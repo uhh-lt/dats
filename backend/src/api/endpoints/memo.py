@@ -6,13 +6,13 @@ from app.core.data.dto.memo import MemoRead, MemoUpdate
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/memo", dependencies=[Depends(get_current_user)])
-tags = ["memo"]
+router = APIRouter(
+    prefix="/memo", dependencies=[Depends(get_current_user)], tags=["memo"]
+)
 
 
 @router.get(
     "/{memo_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Returns the Memo",
     description="Returns the Memo with the given ID if it exists",
@@ -27,7 +27,6 @@ async def get_by_id(
 
 @router.patch(
     "/{memo_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Updates the Memo",
     description="Updates the Memo with the given ID if it exists",
@@ -42,7 +41,6 @@ async def update_by_id(
 
 @router.delete(
     "/{memo_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Removes the Memo",
     description="Removes the Memo with the given ID if it exists",

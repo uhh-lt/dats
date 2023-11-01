@@ -6,15 +6,15 @@ from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/crawler", dependencies=[Depends(get_current_user)])
-tags = ["crawler"]
+router = APIRouter(
+    prefix="/crawler", dependencies=[Depends(get_current_user)], tags=["crawler"]
+)
 
 cs: CrawlerService = CrawlerService()
 
 
 @router.post(
     "",
-    tags=tags,
     response_model=CrawlerJobRead,
     summary="Returns the CrawlerJob for the given Parameters",
     description="Returns the CrawlerJob for the given Parameters",
@@ -29,7 +29,6 @@ async def start_crawler_job(
 
 @router.get(
     "/{crawler_job_id}",
-    tags=tags,
     response_model=CrawlerJobRead,
     summary="Returns the CrawlerJob for the given ID",
     description="Returns the CrawlerJob for the given ID if it exists",
@@ -44,7 +43,6 @@ async def get_crawler_job(
 
 @router.get(
     "/project/{project_id}",
-    tags=tags,
     response_model=List[CrawlerJobRead],
     summary="Returns all CrawlerJobs for the given project ID",
     description="Returns all CrawlerJobs for the given project ID if it exists",

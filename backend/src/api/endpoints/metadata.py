@@ -10,13 +10,13 @@ from app.core.data.dto.source_document_metadata import (
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/metadata", dependencies=[Depends(get_current_user)])
-tags = ["metadata"]
+router = APIRouter(
+    prefix="/metadata", dependencies=[Depends(get_current_user)], tags=["metadata"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[SourceDocumentMetadataRead],
     summary="Creates new Metadata",
     description="Creates a new Metadata and returns it with the generated ID.",
@@ -30,7 +30,6 @@ async def create_new_metadata(
 
 @router.get(
     "/{metadata_id}",
-    tags=tags,
     response_model=Optional[SourceDocumentMetadataRead],
     summary="Returns the Metadata",
     description="Returns the Metadata with the given ID.",
@@ -45,7 +44,6 @@ async def get_by_id(
 
 @router.patch(
     "/{metadata_id}",
-    tags=tags,
     response_model=SourceDocumentMetadataRead,
     summary="Updates the Metadata",
     description="Updates the Metadata with the given ID.",
@@ -54,7 +52,7 @@ async def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     metadata_id: int,
-    metadata: SourceDocumentMetadataUpdate
+    metadata: SourceDocumentMetadataUpdate,
 ) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc_meta.update(db=db, metadata_id=metadata_id, update_dto=metadata)
@@ -63,7 +61,6 @@ async def update_by_id(
 
 @router.delete(
     "/{metadata_id}",
-    tags=tags,
     response_model=Optional[SourceDocumentMetadataRead],
     summary="Deletes the Metadata",
     description="Deletes the Metadata with the given ID.",

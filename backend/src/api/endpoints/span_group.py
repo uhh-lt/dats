@@ -11,13 +11,13 @@ from app.core.data.dto.span_group import SpanGroupCreate, SpanGroupRead, SpanGro
 from fastapi import APIRouter, Depends
 from requests import Session
 
-router = APIRouter(prefix="/spangroup", dependencies=[Depends(get_current_user)])
-tags = ["spanGroup"]
+router = APIRouter(
+    prefix="/spangroup", dependencies=[Depends(get_current_user)], tags=["spanGroup"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[SpanGroupRead],
     summary="Creates a new SpanGroup",
     description="Creates a new SpanGroup and returns it with the generated ID.",
@@ -31,7 +31,6 @@ async def create_new_span_group(
 
 @router.get(
     "/{span_group_id}",
-    tags=tags,
     response_model=Optional[SpanGroupRead],
     summary="Returns the SpanGroup",
     description="Returns the SpanGroup with the given ID.",
@@ -46,7 +45,6 @@ async def get_by_id(
 
 @router.patch(
     "/{span_group_id}",
-    tags=tags,
     response_model=Optional[SpanGroupRead],
     summary="Updates the SpanGroup",
     description="Updates the SpanGroup with the given ID.",
@@ -55,7 +53,7 @@ async def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_group_id: int,
-    span_anno: SpanGroupUpdate
+    span_anno: SpanGroupUpdate,
 ) -> Optional[SpanGroupRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_group.update(db=db, id=span_group_id, update_dto=span_anno)
@@ -64,7 +62,6 @@ async def update_by_id(
 
 @router.delete(
     "/{span_group_id}",
-    tags=tags,
     response_model=Optional[SpanGroupRead],
     summary="Deletes the SpanGroup",
     description="Deletes the SpanGroup with the given ID.",
@@ -79,7 +76,6 @@ async def delete_by_id(
 
 @router.get(
     "/{span_group_id}/span_annotations",
-    tags=tags,
     response_model=List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
     summary="Returns all SpanAnnotations in the SpanGroup",
     description="Returns all SpanAnnotations in the SpanGroup with the given ID if it exists",
@@ -88,7 +84,7 @@ async def get_all_annotations(
     *,
     db: Session = Depends(get_db_session),
     span_group_id: int,
-    resolve_code: bool = Depends(resolve_code_param)
+    resolve_code: bool = Depends(resolve_code_param),
 ) -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
@@ -101,7 +97,7 @@ async def get_all_annotations(
                 code=CodeRead.from_orm(span_orm.current_code.code),
                 span_text=span_orm.span_text.text,
                 user_id=span_orm.annotation_document.user_id,
-                sdoc_id=span_orm.annotation_document.source_document_id
+                sdoc_id=span_orm.annotation_document.source_document_id,
             )
             for span_orm, span_dto in zip(spans, span_read_dtos)
         ]
