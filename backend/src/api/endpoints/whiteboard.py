@@ -10,13 +10,13 @@ from app.core.data.dto.whiteboard import (
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/whiteboard", dependencies=[Depends(get_current_user)])
-tags = ["whiteboard"]
+router = APIRouter(
+    prefix="/whiteboard", dependencies=[Depends(get_current_user)], tags=["whiteboard"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[WhiteboardRead],
     summary="Creates an Whiteboard",
     description="Creates an Whiteboard",
@@ -29,7 +29,6 @@ async def create(
 
 @router.get(
     "/{whiteboard_id}",
-    tags=tags,
     response_model=Optional[WhiteboardRead],
     summary="Returns the Whiteboard",
     description="Returns the Whiteboard with the given ID if it exists",
@@ -43,7 +42,6 @@ async def get_by_id(
 
 @router.get(
     "/project/{project_id}",
-    tags=tags,
     response_model=List[WhiteboardRead],
     summary="Returns Whiteboards of the Project ",
     description="Returns the Whiteboards of the Project with the given ID",
@@ -61,7 +59,6 @@ async def get_by_project(
 
 @router.get(
     "/project/{project_id}/user/{user_id}",
-    tags=tags,
     response_model=List[WhiteboardRead],
     summary="Returns Whiteboards of the Project of the User",
     description="Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
@@ -77,7 +74,6 @@ async def get_by_project_and_user(
 
 @router.patch(
     "/{whiteboard_id}",
-    tags=tags,
     response_model=Optional[WhiteboardRead],
     summary="Updates the Whiteboard",
     description="Updates the Whiteboard with the given ID if it exists",
@@ -94,7 +90,6 @@ async def update_by_id(
 
 @router.delete(
     "/{whiteboard_id}",
-    tags=tags,
     response_model=Optional[WhiteboardRead],
     summary="Removes the Whiteboard",
     description="Removes the Whiteboard with the given ID if it exists",

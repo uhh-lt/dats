@@ -12,13 +12,13 @@ from app.core.data.dto.user import UserRead, UserUpdate
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/user", dependencies=[Depends(get_current_user)])
-tags = ["user"]
+router = APIRouter(
+    prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
+)
 
 
 @router.get(
     "/me",
-    tags=tags,
     response_model=Optional[UserRead],
     summary="Returns the current user",
     description="Returns the current (logged in) user",
@@ -29,7 +29,6 @@ async def get_me(*, user: UserRead = Depends(get_current_user)) -> Optional[User
 
 @router.get(
     "/{user_id}",
-    tags=tags,
     response_model=Optional[UserRead],
     summary="Returns the User",
     description="Returns the User with the given ID if it exists",
@@ -43,7 +42,6 @@ async def get_by_id(
 
 @router.get(
     "",
-    tags=tags,
     response_model=List[UserRead],
     summary="Returns all Users",
     description="Returns all Users that exist in the system",
@@ -51,7 +49,7 @@ async def get_by_id(
 async def get_all(
     *,
     db: Session = Depends(get_db_session),
-    skip_limit: Dict[str, str] = Depends(skip_limit_params)
+    skip_limit: Dict[str, str] = Depends(skip_limit_params),
 ) -> List[UserRead]:
     db_objs = crud_user.read_multi(db=db, **skip_limit)
     return [UserRead.from_orm(proj) for proj in db_objs]
@@ -59,7 +57,6 @@ async def get_all(
 
 @router.patch(
     "/{user_id}",
-    tags=tags,
     response_model=Optional[UserRead],
     summary="Updates the User",
     description="Updates the User with the given ID if it exists",
@@ -73,7 +70,6 @@ async def update_by_id(
 
 @router.delete(
     "/{user_id}",
-    tags=tags,
     response_model=Optional[UserRead],
     summary="Removes the User",
     description="Removes the User with the given ID if it exists",
@@ -87,7 +83,6 @@ async def delete_by_id(
 
 @router.get(
     "/{user_id}/project",
-    tags=tags,
     response_model=List[ProjectRead],
     summary="Returns all Projects of the User",
     description="Returns all Projects of the User with the given ID",
@@ -102,7 +97,6 @@ async def get_user_projects(
 
 @router.get(
     "/{user_id}/code",
-    tags=tags,
     response_model=List[CodeRead],
     summary="Returns all Codes of the User",
     description="Returns all Codes of the User with the given ID",
@@ -117,7 +111,6 @@ async def get_user_codes(
 
 @router.get(
     "/{user_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns all Memos of the User",
     description="Returns all Memos of the User with the given ID",
@@ -135,7 +128,6 @@ async def get_user_memos(
 
 @router.get(
     "/{user_id}/adocs",
-    tags=tags,
     response_model=List[AnnotationDocumentRead],
     summary="Returns all Adocs of the User",
     description="Returns all Adocs of the User with the given ID",
@@ -152,7 +144,6 @@ async def get_user_adocs(
 
 @router.get(
     "/{user_id}/recent_activity",
-    tags=tags,
     response_model=List[AnnotationDocumentRead],
     summary="Returns sdoc ids of sdocs the User recently modified (annotated)",
     description="Returns the top k sdoc ids that the User recently modified (annotated)",

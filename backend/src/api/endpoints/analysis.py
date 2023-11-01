@@ -17,13 +17,13 @@ from app.core.search.search_service import SearchService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/analysis", dependencies=[Depends(get_current_user)])
-tags = ["analysis"]
+router = APIRouter(
+    prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]
+)
 
 
 @router.post(
     "/code_frequencies",
-    tags=tags,
     response_model=List[CodeFrequency],
     summary="Returns all SourceDocument IDs that match the query parameters.",
     description="Returns all SourceDocument Ids that match the query parameters.",
@@ -38,7 +38,6 @@ async def code_frequencies(
 
 @router.post(
     "/code_occurrences",
-    tags=tags,
     response_model=List[CodeOccurrence],
     summary="Returns all SourceDocument IDs that match the query parameters.",
     description="Returns all SourceDocument Ids that match the query parameters.",
@@ -53,7 +52,6 @@ async def code_occurrences(
 
 @router.post(
     "/annotation_occurrences",
-    tags=tags,
     response_model=List[AnnotationOccurrence],
     summary="Returns AnnotationOccurrences.",
     description="Returns AnnotationOccurrences.",
@@ -83,7 +81,6 @@ async def annotated_segments(
 
 @router.post(
     "/timeline_analysis",
-    tags=tags,
     response_model=List[TimelineAnalysisResult],
     summary="Perform timeline analysis.",
     description="Perform timeline analysis.",
@@ -94,7 +91,7 @@ async def timeline_analysis(
     project_id: int,
     concepts: List[AnalysisConcept],
     threshold: float,
-    metadata_key: str
+    metadata_key: str,
 ) -> List[TimelineAnalysisResult]:
     # FIXME move this to AnalysisService!
     # ensure that metadata key is valid

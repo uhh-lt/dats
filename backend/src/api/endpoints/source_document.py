@@ -27,13 +27,13 @@ from app.core.search.elasticsearch_service import ElasticSearchService
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/sdoc", dependencies=[Depends(get_current_user)])
-tags = ["sourceDocument"]
+router = APIRouter(
+    prefix="/sdoc", dependencies=[Depends(get_current_user)], tags=["sourceDocument"]
+)
 
 
 @router.get(
     "/{sdoc_id}",
-    tags=tags,
     response_model=Optional[SourceDocumentRead],
     summary="Returns the SourceDocument",
     description="Returns the SourceDocument with the given ID if it exists",
@@ -54,7 +54,6 @@ async def get_by_id(
 
 @router.delete(
     "/{sdoc_id}",
-    tags=tags,
     response_model=Optional[SourceDocumentRead],
     summary="Removes the SourceDocument",
     description="Removes the SourceDocument with the given ID if it exists",
@@ -69,7 +68,6 @@ async def delete_by_id(
 
 @router.get(
     "/{sdoc_id}/content",
-    tags=tags,
     response_model=Optional[SourceDocumentContent],
     summary="Returns the (textual) content of the SourceDocument",
     description=(
@@ -98,7 +96,6 @@ async def get_content(
 
 @router.get(
     "/{sdoc_id}/html",
-    tags=tags,
     response_model=Optional[SourceDocumentHTML],
     summary="Returns the (html) content of the SourceDocument",
     description=(
@@ -126,7 +123,6 @@ async def get_html(
 
 @router.get(
     "/{sdoc_id}/tokens",
-    tags=tags,
     response_model=Optional[SourceDocumentTokens],
     summary="Returns the textual tokens of the SourceDocument if it is a text document.",
     description="Returns the textual tokens of the SourceDocument if it is a text document.",
@@ -155,7 +151,6 @@ async def get_tokens(
 
 @router.get(
     "/{sdoc_id}/sentences",
-    tags=tags,
     response_model=Optional[SourceDocumentSentences],
     summary="Returns the sentences of the SourceDocument if it is a text document.",
     description="Returns the sentences of the SourceDocument if it is a text document.",
@@ -184,7 +179,6 @@ async def get_sentences(
 
 @router.get(
     "/{sdoc_id}/keywords",
-    tags=tags,
     response_model=Optional[SourceDocumentKeywords],
     summary="Returns the keywords of the SourceDocument if it is a text document.",
     description="Returns the keywords of the SourceDocument if it is a text document.",
@@ -223,7 +217,6 @@ async def get_keywords(
 
 @router.get(
     "/{sdoc_id}/linked_sdocs",
-    tags=tags,
     response_model=List[int],
     summary="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
     description="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
@@ -236,7 +229,6 @@ async def get_linked_sdocs(
 
 @router.patch(
     "/{sdoc_id}/keywords",
-    tags=tags,
     response_model=Optional[SourceDocumentKeywords],
     summary="Updates the keywords of the SourceDocument.",
     description="Updates the keywords of the SourceDocument.",
@@ -253,7 +245,6 @@ async def update_keywords(
 
 @router.get(
     "/{sdoc_id}/url",
-    tags=tags,
     response_model=Optional[str],
     summary="Returns the URL to the original file of the SourceDocument",
     description="Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
@@ -278,7 +269,6 @@ async def get_file_url(
 
 @router.get(
     "/{sdoc_id}/metadata",
-    tags=tags,
     response_model=List[SourceDocumentMetadataRead],
     summary="Returns all SourceDocumentMetadata",
     description="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
@@ -302,7 +292,6 @@ async def get_all_metadata(
 
 @router.get(
     "/{sdoc_id}/metadata/{metadata_key}",
-    tags=tags,
     response_model=Optional[SourceDocumentMetadataRead],
     summary="Returns the SourceDocumentMetadata with the given Key",
     description="Returns the SourceDocumentMetadata with the given Key if it exists.",
@@ -320,7 +309,6 @@ async def read_metadata_by_key(
 
 @router.patch(
     "/{sdoc_id}/metadata/{metadata_id}",
-    tags=tags,
     response_model=Optional[SourceDocumentMetadataRead],
     summary="Updates the SourceDocumentMetadata",
     description="Updates the SourceDocumentMetadata with the given ID if it exists.",
@@ -342,7 +330,6 @@ async def update_metadata_by_id(
 
 @router.get(
     "/{sdoc_id}/adoc/{user_id}",
-    tags=tags,
     response_model=Optional[AnnotationDocumentRead],
     summary="Returns the AnnotationDocument for the SourceDocument of the User",
     description="Returns the AnnotationDocument for the SourceDocument of the User.",
@@ -358,7 +345,6 @@ async def get_adoc_of_user(
 
 @router.get(
     "/{sdoc_id}/adoc",
-    tags=tags,
     response_model=List[AnnotationDocumentRead],
     summary="Returns all AnnotationDocuments for the SourceDocument",
     description="Returns all AnnotationDocuments for the SourceDocument.",
@@ -375,7 +361,6 @@ async def get_all_adocs(
 
 @router.delete(
     "/{sdoc_id}/adoc",
-    tags=tags,
     response_model=List[int],
     summary="Removes all AnnotationDocuments for the SourceDocument",
     description="Removes all AnnotationDocuments for the SourceDocument.",
@@ -389,7 +374,6 @@ async def remove_all_adocs(
 
 @router.get(
     "/{sdoc_id}/tags",
-    tags=tags,
     response_model=List[DocumentTagRead],
     summary="Returns all DocumentTags linked with the SourceDocument",
     description="Returns all DocumentTags linked with the SourceDocument.",
@@ -407,7 +391,6 @@ async def get_all_tags(
 
 @router.delete(
     "/{sdoc_id}/tags",
-    tags=tags,
     response_model=Optional[SourceDocumentRead],
     summary="Unlinks all DocumentTags with the SourceDocument",
     description="Unlinks all DocumentTags of the SourceDocument.",
@@ -422,7 +405,6 @@ async def unlinks_all_tags(
 
 @router.patch(
     "/{sdoc_id}/tag/{tag_id}",
-    tags=tags,
     response_model=Optional[SourceDocumentRead],
     summary="Links a DocumentTag with the SourceDocument",
     description="Links a DocumentTag with the SourceDocument with the given ID if it exists",
@@ -437,7 +419,6 @@ async def link_tag(
 
 @router.delete(
     "/{sdoc_id}/tag/{tag_id}",
-    tags=tags,
     response_model=Optional[SourceDocumentRead],
     summary="Unlinks the DocumentTag from the SourceDocument",
     description="Unlinks the DocumentTags from the SourceDocument.",
@@ -452,7 +433,6 @@ async def unlink_tag(
 
 @router.put(
     "/{sdoc_id}/memo",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Adds a Memo to the SourceDocument",
     description="Adds a Memo to the SourceDocument with the given ID if it exists",
@@ -472,7 +452,6 @@ async def add_memo(
 
 @router.get(
     "/{sdoc_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns all Memo attached to the SourceDocument",
     description="Returns all Memo attached to the SourceDocument with the given ID if it exists.",
@@ -486,7 +465,6 @@ async def get_memos(
 
 @router.get(
     "/{sdoc_id}/memo/{user_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Returns the Memo attached to the SourceDocument of the User with the given ID",
     description=(
@@ -503,7 +481,6 @@ async def get_user_memo(
 
 @router.get(
     "/{sdoc_id}/relatedmemos/{user_id}",
-    tags=tags,
     response_model=List[MemoRead],
     summary=(
         "Returns the Memo attached to the SourceDocument of the User with the given ID and all memos "

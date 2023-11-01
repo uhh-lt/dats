@@ -14,8 +14,9 @@ from app.preprocessing.preprocessing_service import PreprocessingService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/prepro", dependencies=[Depends(get_current_user)])
-tags = ["prepro"]
+router = APIRouter(
+    prefix="/prepro", dependencies=[Depends(get_current_user)], tags=["prepro"]
+)
 
 redis: RedisService = RedisService()
 pps: PreprocessingService = PreprocessingService()
@@ -23,7 +24,6 @@ pps: PreprocessingService = PreprocessingService()
 
 @router.get(
     "/{prepro_job_id}",
-    tags=tags,
     response_model=Optional[PreprocessingJobRead],
     summary="Returns the PreprocessingJob for the given ID",
     description="Returns the PreprocessingJob for the given ID if it exists",
@@ -40,7 +40,6 @@ async def get_prepro_job(
 
 @router.patch(
     "/{prepro_job_id}/abort",
-    tags=tags,
     response_model=Optional[PreprocessingJobRead],
     summary="Aborts the PreprocessingJob for the given ID",
     description="Aborts the PreprocessingJob for the given ID if it exists",
@@ -55,7 +54,6 @@ async def abort_prepro_job(
 
 @router.get(
     "/project/{project_id}",
-    tags=tags,
     response_model=List[PreprocessingJobRead],
     summary="Returns all PreprocessingJobs for the given project ID",
     description="Returns all PreprocessingJobs for the given project ID if it exists",
@@ -74,7 +72,6 @@ async def get_all_prepro_jobs(
 
 @router.get(
     "/project/{proj_id}/status",
-    tags=tags,
     response_model=PreProProjectStatus,
     summary="Returns the PreProProjectStatus of the Project with the given ID.",
     description="Returns the PreProProjectStatus of the Project with the given ID.",

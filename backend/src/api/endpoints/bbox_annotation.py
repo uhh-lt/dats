@@ -15,13 +15,13 @@ from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, Mem
 from fastapi import APIRouter, Depends
 from requests import Session
 
-router = APIRouter(prefix="/bbox", dependencies=[Depends(get_current_user)])
-tags = ["bboxAnnotation"]
+router = APIRouter(
+    prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]],
     summary="Creates a BBoxAnnotation",
     description="Creates a BBoxAnnotation",
@@ -30,7 +30,7 @@ async def add_bbox_annotation(
     *,
     db: Session = Depends(get_db_session),
     bbox: BBoxAnnotationCreateWithCodeId,
-    resolve_code: bool = Depends(resolve_code_param)
+    resolve_code: bool = Depends(resolve_code_param),
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.create_with_code_id(db=db, create_dto=bbox)
@@ -38,7 +38,7 @@ async def add_bbox_annotation(
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
             **bbox_dto.dict(exclude={"current_code_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code)
+            code=CodeRead.from_orm(db_obj.current_code.code),
         )
     else:
         return bbox_dto
@@ -46,7 +46,6 @@ async def add_bbox_annotation(
 
 @router.get(
     "/{bbox_id}",
-    tags=tags,
     response_model=Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]],
     summary="Returns the BBoxAnnotation",
     description="Returns the BBoxAnnotation with the given ID.",
@@ -55,7 +54,7 @@ async def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
-    resolve_code: bool = Depends(resolve_code_param)
+    resolve_code: bool = Depends(resolve_code_param),
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
@@ -63,7 +62,7 @@ async def get_by_id(
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
             **bbox_dto.dict(exclude={"current_code_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code)
+            code=CodeRead.from_orm(db_obj.current_code.code),
         )
     else:
         return bbox_dto
@@ -71,7 +70,6 @@ async def get_by_id(
 
 @router.patch(
     "/{bbox_id}",
-    tags=tags,
     response_model=Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]],
     summary="Updates the BBoxAnnotation",
     description="Updates the BBoxAnnotation with the given ID.",
@@ -81,7 +79,7 @@ async def update_by_id(
     db: Session = Depends(get_db_session),
     bbox_id: int,
     bbox_anno: BBoxAnnotationUpdateWithCodeId,
-    resolve_code: bool = Depends(resolve_code_param)
+    resolve_code: bool = Depends(resolve_code_param),
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.update_with_code_id(db=db, id=bbox_id, update_dto=bbox_anno)
@@ -89,7 +87,7 @@ async def update_by_id(
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
             **bbox_dto.dict(exclude={"current_code_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code)
+            code=CodeRead.from_orm(db_obj.current_code.code),
         )
     else:
         return bbox_dto
@@ -97,7 +95,6 @@ async def update_by_id(
 
 @router.delete(
     "/{bbox_id}",
-    tags=tags,
     response_model=Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]],
     summary="Deletes the BBoxAnnotation",
     description="Deletes the BBoxAnnotation with the given ID.",
@@ -112,7 +109,6 @@ async def delete_by_id(
 
 @router.get(
     "/{bbox_id}/code",
-    tags=tags,
     response_model=Optional[CodeRead],
     summary="Returns the Code of the BBoxAnnotation",
     description="Returns the Code of the BBoxAnnotation with the given ID if it exists.",
@@ -127,7 +123,6 @@ async def get_code(
 
 @router.put(
     "/{bbox_id}/memo",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Adds a Memo to the BBoxAnnotation",
     description="Adds a Memo to the BBoxAnnotation with the given ID if it exists",
@@ -143,13 +138,12 @@ async def add_memo(
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),
         attached_object_id=bbox_id,
-        attached_object_type=AttachedObjectType.bbox_annotation
+        attached_object_type=AttachedObjectType.bbox_annotation,
     )
 
 
 @router.get(
     "/{bbox_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns the Memo attached to the BBoxAnnotation",
     description="Returns the Memo attached to the BBoxAnnotation with the given ID if it exists.",
@@ -164,7 +158,6 @@ async def get_memos(
 
 @router.get(
     "/{bbox_id}/memo/{user_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Returns the Memo attached to the BBoxAnnotation of the User with the given ID",
     description=(
@@ -181,7 +174,6 @@ async def get_user_memo(
 
 @router.get(
     "/code/{code_id}/user/{user_id}",
-    tags=tags,
     response_model=List[BBoxAnnotationRead],
     summary="Returns BBoxAnnotation with the given Code of the User with the given ID",
     description=(

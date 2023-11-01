@@ -9,13 +9,13 @@ from app.core.mail.mail_service import MailService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-router = APIRouter(prefix="/feedback", dependencies=[Depends(get_current_user)])
-tags = ["feedback"]
+router = APIRouter(
+    prefix="/feedback", dependencies=[Depends(get_current_user)], tags=["feedback"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[FeedbackRead],
     summary="Creates new Feedback",
     description="Creates a new Feedback and returns it with the generated ID.",
@@ -35,7 +35,6 @@ async def create_feedback(
 
 @router.get(
     "/{feedback_id}",
-    tags=tags,
     response_model=Optional[FeedbackRead],
     summary="Returns the Feedback",
     description="Returns the Feedback with the given ID.",
@@ -46,7 +45,6 @@ async def get_by_id(*, feedback_id: str) -> Optional[FeedbackRead]:
 
 @router.get(
     "",
-    tags=tags,
     response_model=Optional[List[FeedbackRead]],
     summary="Returns all Feedback",
     description="Returns the Metadata with the given ID.",
@@ -57,7 +55,6 @@ async def get_all() -> Optional[List[FeedbackRead]]:
 
 @router.get(
     "/user/{user_id}",
-    tags=tags,
     response_model=Optional[List[FeedbackRead]],
     summary="Returns all Feedback of a User",
     description="Returns the Metadata of the User with the given ID.",
@@ -68,7 +65,6 @@ async def get_all_by_user(*, user_id: int) -> Optional[List[FeedbackRead]]:
 
 @router.post(
     "/reply_to/{feedback_id}",
-    tags=tags,
     response_model=str,
     summary="Reply to the Feedback",
     description="Sends an e-mail to the User that created the Feedback with the given message.",

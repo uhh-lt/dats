@@ -16,13 +16,13 @@ from app.core.data.dto.span_group import SpanGroupRead
 from fastapi import APIRouter, Depends
 from requests import Session
 
-router = APIRouter(prefix="/span", dependencies=[Depends(get_current_user)])
-tags = ["spanAnnotation"]
+router = APIRouter(
+    prefix="/span", dependencies=[Depends(get_current_user)], tags=["spanAnnotation"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
     summary="Creates a SpanAnnotation",
     description="Creates a SpanAnnotation",
@@ -31,7 +31,7 @@ async def add_span_annotation(
     *,
     db: Session = Depends(get_db_session),
     span: SpanAnnotationCreateWithCodeId,
-    resolve_code: bool = Depends(resolve_code_param)
+    resolve_code: bool = Depends(resolve_code_param),
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.create_with_code_id(db=db, create_dto=span)
@@ -42,7 +42,7 @@ async def add_span_annotation(
             code=CodeRead.from_orm(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id
+            sdoc_id=db_obj.annotation_document.source_document_id,
         )
     else:
         return span_dto
@@ -50,7 +50,6 @@ async def add_span_annotation(
 
 @router.get(
     "/{span_id}",
-    tags=tags,
     response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
     summary="Returns the SpanAnnotation",
     description="Returns the SpanAnnotation with the given ID.",
@@ -59,7 +58,7 @@ async def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
-    resolve_code: bool = Depends(resolve_code_param)
+    resolve_code: bool = Depends(resolve_code_param),
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.read(db=db, id=span_id)
@@ -70,7 +69,7 @@ async def get_by_id(
             code=CodeRead.from_orm(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id
+            sdoc_id=db_obj.annotation_document.source_document_id,
         )
     else:
         return span_dto
@@ -78,7 +77,6 @@ async def get_by_id(
 
 @router.patch(
     "/{span_id}",
-    tags=tags,
     response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
     summary="Updates the SpanAnnotation",
     description="Updates the SpanAnnotation with the given ID.",
@@ -88,7 +86,7 @@ async def update_by_id(
     db: Session = Depends(get_db_session),
     span_id: int,
     span_anno: SpanAnnotationUpdateWithCodeId,
-    resolve_code: bool = Depends(resolve_code_param)
+    resolve_code: bool = Depends(resolve_code_param),
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.update_with_code_id(db=db, id=span_id, update_dto=span_anno)
@@ -99,7 +97,7 @@ async def update_by_id(
             code=CodeRead.from_orm(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id
+            sdoc_id=db_obj.annotation_document.source_document_id,
         )
     else:
         return span_dto
@@ -107,7 +105,6 @@ async def update_by_id(
 
 @router.delete(
     "/{span_id}",
-    tags=tags,
     response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
     summary="Deletes the SpanAnnotation",
     description="Deletes the SpanAnnotation with the given ID.",
@@ -122,7 +119,6 @@ async def delete_by_id(
 
 @router.get(
     "/{span_id}/code",
-    tags=tags,
     response_model=Optional[CodeRead],
     summary="Returns the Code of the SpanAnnotation",
     description="Returns the Code of the SpanAnnotation with the given ID if it exists.",
@@ -137,7 +133,6 @@ async def get_code(
 
 @router.get(
     "/{span_id}/groups",
-    tags=tags,
     response_model=List[SpanGroupRead],
     summary="Returns all SpanGroups that contain the the SpanAnnotation",
     description="Returns all SpanGroups that contain the the SpanAnnotation.",
@@ -155,7 +150,6 @@ async def get_all_groups(
 
 @router.delete(
     "/{span_id}/groups",
-    tags=tags,
     response_model=Optional[SpanAnnotationRead],
     summary="Removes the SpanAnnotation from all SpanGroups",
     description="Removes the SpanAnnotation from all SpanGroups",
@@ -170,7 +164,6 @@ async def remove_from_all_groups(
 
 @router.patch(
     "/{span_id}/group/{group_id}",
-    tags=tags,
     response_model=Optional[SpanAnnotationRead],
     summary="Adds the SpanAnnotation to the SpanGroup",
     description="Adds the SpanAnnotation to the SpanGroup",
@@ -187,7 +180,6 @@ async def add_to_group(
 
 @router.delete(
     "/{span_id}/group/{group_id}",
-    tags=tags,
     response_model=Optional[SpanAnnotationRead],
     summary="Removes the SpanAnnotation from the SpanGroup",
     description="Removes the SpanAnnotation from the SpanGroup",
@@ -204,7 +196,6 @@ async def remove_from_group(
 
 @router.put(
     "/{span_id}/memo",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Adds a Memo to the SpanAnnotation",
     description="Adds a Memo to the SpanAnnotation with the given ID if it exists",
@@ -220,13 +211,12 @@ async def add_memo(
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),
         attached_object_id=span_id,
-        attached_object_type=AttachedObjectType.span_annotation
+        attached_object_type=AttachedObjectType.span_annotation,
     )
 
 
 @router.get(
     "/{span_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns the Memo attached to the SpanAnnotation",
     description="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
@@ -241,7 +231,6 @@ async def get_memos(
 
 @router.get(
     "/{span_id}/memo/{user_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
     description=(
@@ -258,7 +247,6 @@ async def get_user_memo(
 
 @router.get(
     "/code/{code_id}/user/{user_id}",
-    tags=tags,
     response_model=List[SpanAnnotationReadResolved],
     summary="Returns SpanAnnotations with the given Code of the User with the given ID",
     description=(
@@ -279,7 +267,7 @@ async def get_by_user_code(
             code=CodeRead.from_orm(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
-            sdoc_id=db_obj.annotation_document.source_document_id
+            sdoc_id=db_obj.annotation_document.source_document_id,
         )
         for db_obj in db_objs
     ]

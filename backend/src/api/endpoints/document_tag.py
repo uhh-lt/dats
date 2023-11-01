@@ -15,13 +15,13 @@ from app.core.data.dto.source_document import SourceDocumentRead
 from fastapi import APIRouter, Depends
 from requests import Session
 
-router = APIRouter(prefix="/doctag", dependencies=[Depends(get_current_user)])
-tags = ["documentTag"]
+router = APIRouter(
+    prefix="/doctag", dependencies=[Depends(get_current_user)], tags=["documentTag"]
+)
 
 
 @router.put(
     "",
-    tags=tags,
     response_model=Optional[DocumentTagRead],
     summary="Creates a new DocumentTag",
     description="Creates a new DocumentTag and returns it with the generated ID.",
@@ -35,7 +35,6 @@ async def create_new_doc_tag(
 
 @router.patch(
     "/bulk/link",
-    tags=tags,
     response_model=int,
     summary="Links multiple DocumentTags with the SourceDocuments",
     description="Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
@@ -43,7 +42,7 @@ async def create_new_doc_tag(
 async def link_multiple_tags(
     *,
     db: Session = Depends(get_db_session),
-    multi_link: SourceDocumentDocumentTagMultiLink
+    multi_link: SourceDocumentDocumentTagMultiLink,
 ) -> int:
     # TODO Flo: only if the user has access?
     return crud_document_tag.link_multiple_document_tags(
@@ -55,7 +54,6 @@ async def link_multiple_tags(
 
 @router.delete(
     "/bulk/unlink",
-    tags=tags,
     response_model=int,
     summary="Unlinks all DocumentTags with the SourceDocuments",
     description="Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
@@ -63,7 +61,7 @@ async def link_multiple_tags(
 async def unlink_multiple_tags(
     *,
     db: Session = Depends(get_db_session),
-    multi_link: SourceDocumentDocumentTagMultiLink
+    multi_link: SourceDocumentDocumentTagMultiLink,
 ) -> int:
     # TODO Flo: only if the user has access?
     return crud_document_tag.unlink_multiple_document_tags(
@@ -75,7 +73,6 @@ async def unlink_multiple_tags(
 
 @router.get(
     "/{tag_id}",
-    tags=tags,
     response_model=Optional[DocumentTagRead],
     summary="Returns the DocumentTag",
     description="Returns the DocumentTag with the given ID.",
@@ -90,7 +87,6 @@ async def get_by_id(
 
 @router.patch(
     "/{tag_id}",
-    tags=tags,
     response_model=Optional[DocumentTagRead],
     summary="Updates the DocumentTag",
     description="Updates the DocumentTag with the given ID.",
@@ -105,7 +101,6 @@ async def update_by_id(
 
 @router.delete(
     "/{tag_id}",
-    tags=tags,
     response_model=Optional[DocumentTagRead],
     summary="Deletes the DocumentTag",
     description="Deletes the DocumentTag with the given ID.",
@@ -120,7 +115,6 @@ async def delete_by_id(
 
 @router.put(
     "/{tag_id}/memo",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Adds a Memo to the DocumentTag",
     description="Adds a Memo to the DocumentTag with the given ID if it exists",
@@ -136,13 +130,12 @@ async def add_memo(
     return MemoRead(
         **memo_as_in_db_dto.dict(exclude={"attached_to"}),
         attached_object_id=tag_id,
-        attached_object_type=AttachedObjectType.document_tag
+        attached_object_type=AttachedObjectType.document_tag,
     )
 
 
 @router.get(
     "/{tag_id}/memo",
-    tags=tags,
     response_model=List[MemoRead],
     summary="Returns the Memo attached to the DocumentTag",
     description="Returns the Memo attached to the DocumentTag with the given ID if it exists.",
@@ -157,7 +150,6 @@ async def get_memos(
 
 @router.get(
     "/{tag_id}/memo/{user_id}",
-    tags=tags,
     response_model=Optional[MemoRead],
     summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
     description=(
@@ -174,7 +166,6 @@ async def get_user_memo(
 
 @router.get(
     "/{tag_id}/sdocs",
-    tags=tags,
     response_model=List[SourceDocumentRead],
     summary="Returns all SourceDocuments attached to the Tag with the given ID",
     description=(
