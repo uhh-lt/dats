@@ -32,8 +32,9 @@ import SpanAnnotationEditDialog, {
 } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import SpanAnnotationCard from "./SpanAnnotationCard";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import AnnotatedSegmentsList from "./AnnotatedSegmentsList";
+import SpanAnnotationCard from "./SpanAnnotationCard";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
 
 const columns: GridColDef[] = [
@@ -228,19 +229,7 @@ function AnnotatedSegments() {
             </CardContent>
           </Card>
         </Grid>
-        {isSplitView && (
-          <Grid item md={6} className="h100WithScroll">
-            {selectedSegments.length > 0 ? (
-              selectedSegments.map((segment) => (
-                <SpanAnnotationCard key={segment.annotation.id} annotationId={segment.annotation.id} sx={{ mb: 1 }} />
-              ))
-            ) : (
-              <Typography variant="body1" color="inherit" component="div">
-                No segment selected. Click on a row to view a segment.
-              </Typography>
-            )}
-          </Grid>
-        )}
+        {isSplitView && <AnnotatedSegmentsList annotatedSegments={selectedSegments} />}
       </Grid>
       <SpanAnnotationEditDialog projectId={projectId} />
       <GenericPositionMenu ref={contextMenuRef}>
