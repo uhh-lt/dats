@@ -318,6 +318,7 @@ class AnalysisService(metaclass=SingletonMeta):
                     SourceDocumentORM,
                     CodeORM,
                     SpanTextORM.text,
+                    AnnotationDocumentORM,
                 )
                 .join(
                     AnnotationDocumentORM,
@@ -351,6 +352,8 @@ class AnalysisService(metaclass=SingletonMeta):
                         ),
                         code=CodeRead.from_orm(x[2]),
                         span_text=x[3],
+                        user_id=x[4].user_id,
+                        sdoc_id=x[4].source_document_id
                     ),
                     sdoc=SourceDocumentRead.from_orm(x[1]),
                     memo=get_object_memos(db_obj=x[0], user_id=user_id),

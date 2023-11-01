@@ -63,5 +63,7 @@ class SpanAnnotationReadResolved(SpanAnnotationBaseDTO):
     annotation_document_id: int = Field(
         description="AnnotationDocument the SpanAnnotation refers to"
     )
+    user_id: int = Field(description="User the SpanAnnotation belongs to")
+    sdoc_id: int = Field(description="SourceDocument the SpanAnnotation refers to")
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")

@@ -40,7 +40,9 @@ async def add_span_annotation(
         return SpanAnnotationReadResolved(
             **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
             code=CodeRead.from_orm(db_obj.current_code.code),
-            span_text=db_obj.span_text.text
+            span_text=db_obj.span_text.text,
+            user_id=db_obj.annotation_document.user_id,
+            sdoc_id=db_obj.annotation_document.source_document_id
         )
     else:
         return span_dto
@@ -66,7 +68,9 @@ async def get_by_id(
         return SpanAnnotationReadResolved(
             **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
             code=CodeRead.from_orm(db_obj.current_code.code),
-            span_text=db_obj.span_text.text
+            span_text=db_obj.span_text.text,
+            user_id=db_obj.annotation_document.user_id,
+            sdoc_id=db_obj.annotation_document.source_document_id
         )
     else:
         return span_dto
@@ -93,7 +97,9 @@ async def update_by_id(
         return SpanAnnotationReadResolved(
             **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
             code=CodeRead.from_orm(db_obj.current_code.code),
-            span_text=db_obj.span_text.text
+            span_text=db_obj.span_text.text,
+            user_id=db_obj.annotation_document.user_id,
+            sdoc_id=db_obj.annotation_document.source_document_id
         )
     else:
         return span_dto
@@ -271,7 +277,9 @@ async def get_by_user_code(
                 exclude={"current_code_id", "span_text_id"}
             ),
             code=CodeRead.from_orm(db_obj.current_code.code),
-            span_text=db_obj.span_text.text
+            span_text=db_obj.span_text.text,
+            user_id=db_obj.annotation_document.user_id,
+            sdoc_id=db_obj.annotation_document.source_document_id
         )
         for db_obj in db_objs
     ]
