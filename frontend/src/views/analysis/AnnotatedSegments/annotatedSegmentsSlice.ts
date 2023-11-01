@@ -7,7 +7,7 @@ export interface AnnotatedSegmentsState {
 
 const initialState: AnnotatedSegmentsState = {
   isSplitView: false,
-  contextSize: 10,
+  contextSize: 100,
 };
 
 export const AnnotatedSegmentsSlice = createSlice({

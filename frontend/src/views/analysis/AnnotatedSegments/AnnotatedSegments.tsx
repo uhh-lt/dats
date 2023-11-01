@@ -12,6 +12,7 @@ import {
   MenuItem,
   Portal,
   Stack,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -32,6 +33,8 @@ import SpanAnnotationEditDialog, {
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import SpanAnnotationCard from "./SpanAnnotationCard";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
 
 const columns: GridColDef[] = [
   {
@@ -92,6 +95,10 @@ function AnnotatedSegments() {
       {} as Record<number, AnnotatedSegment>,
     );
   }, [annotatedSegments.data]);
+
+  // global client state
+  const dispatch = useAppDispatch();
+  const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
 
   // local state
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
@@ -164,6 +171,13 @@ function AnnotatedSegments() {
                   </Button>
                 )}
                 <Box sx={{ flexGrow: 1 }} />
+                <TextField
+                  label="Context Size"
+                  type="number"
+                  size="small"
+                  value={contextSize}
+                  onChange={(event) => dispatch(AnnotatedSegmentsActions.setContextSize(parseInt(event.target.value)))}
+                />
                 <Button>Export segments</Button>
                 <Tooltip title="Split/not split view">
                   <IconButton onClick={handleClickSplitView}>

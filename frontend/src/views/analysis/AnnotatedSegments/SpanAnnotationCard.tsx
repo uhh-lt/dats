@@ -15,13 +15,20 @@ import { AttachedObjectType } from "../../../api/openapi";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import { openSpanAnnotationEditDialog } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import MemoButton from "../../../features/Memo/MemoButton";
+import SdocHooks from "../../../api/SdocHooks";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 
 interface SpanAnnotationCardProps {
   annotationId: number;
 }
 
 function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps & Omit<CardProps, "elevation">) {
+  // global server state (react-query)
   const spanAnnotation = SpanAnnotationHooks.useGetAnnotation(annotationId);
+  const sdocContent = SdocHooks.useGetDocumentContent(spanAnnotation.data?.sdoc_id);
+
+  // global client state (redux)
+  const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
 
   const handleChangeCodeClick = () => {
     if (!spanAnnotation.data) return;
@@ -31,7 +38,7 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
 
   return (
     <Card elevation={2} {...props}>
-      {spanAnnotation.isSuccess ? (
+      {spanAnnotation.isSuccess && sdocContent.isSuccess ? (
         <>
           <CardContent sx={{ pb: "8px !important" }}>
             <Stack direction="row">
@@ -41,7 +48,9 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
               Document: Coming soon... {/*<SdocRenderer sdoc={spanAnnotation.sdoc.id} link /> */}
             </Stack>
             <Typography variant="body1" color="inherit" component="div" sx={{ mt: 2 }}>
-              {spanAnnotation.data.span_text}
+              {sdocContent.data.content.substring(spanAnnotation.data.begin - contextSize, spanAnnotation.data.begin)}
+              <b>{sdocContent.data.content.substring(spanAnnotation.data.begin, spanAnnotation.data.end)}</b>
+              {sdocContent.data.content.substring(spanAnnotation.data.end, spanAnnotation.data.end + contextSize)}
             </Typography>
           </CardContent>
           <CardActions>
@@ -58,11 +67,12 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
             </Tooltip>
           </CardActions>
         </>
-      ) : spanAnnotation.isLoading ? (
+      ) : spanAnnotation.isLoading || sdocContent.isLoading ? (
         <CircularProgress />
       ) : (
         <Typography variant="body1" color="inherit" component="div">
           {spanAnnotation.error?.message}
+          {sdocContent.error?.message}
         </Typography>
       )}
     </Card>
