@@ -1,4 +1,4 @@
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.analysis_service import AnalysisService
@@ -11,7 +11,7 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     TimelineAnalysisResult,
 )
-from app.core.data.dto.filter import AnnotationDocumentOwnerExpression, Filter
+from app.core.data.dto.filter import Filter
 from app.core.data.dto.search import SimSearchQuery, SimSearchSentenceHit
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
@@ -21,13 +21,6 @@ from sqlalchemy.orm import Session
 router = APIRouter(
     prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]
 )
-
-
-class CodeFrequencyFilter(Filter):
-    items: List[Union[AnnotationDocumentOwnerExpression, "CodeFrequencyFilter"]]
-
-
-CodeFrequencyFilter.update_forward_refs()
 
 
 @router.post(
@@ -40,7 +33,7 @@ async def code_frequencies(
     *,
     project_id: int,
     code_ids: List[int],
-    filter: CodeFrequencyFilter,
+    filter: Filter,
 ) -> List[CodeFrequency]:
     return AnalysisService().compute_code_frequency(
         project_id=project_id, code_ids=code_ids, filter=filter
@@ -85,10 +78,10 @@ async def annotation_occurrences(
     description="Returns AnnotationSegments.",
 )
 async def annotated_segments(
-    *, project_id: int, user_id: int
+    *, project_id: int, user_id: int, filter: Filter
 ) -> List[AnnotatedSegment]:
     return AnalysisService().find_annotated_segments(
-        project_id=project_id, user_id=user_id
+        project_id=project_id, user_id=user_id, filter=filter
     )
 
 

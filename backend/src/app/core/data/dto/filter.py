@@ -1,64 +1,121 @@
-import abc
 from enum import Enum
-from typing import List, Literal, Union
+from typing import List, Union
 
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.code import CodeORM
+from app.core.data.orm.document_tag import DocumentTagORM
+from app.core.data.orm.memo import MemoORM
+from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.span_text import SpanTextORM
 from pydantic import BaseModel
 from sqlalchemy import Column, and_, or_
 
 # --- Operators: These define how we can compare values in filters.
 
 
-class BaseOperator(abc.ABC, BaseModel):
-    @abc.abstractmethod
-    def apply(self, column: Column):
-        pass
+class StringOperator(Enum):
+    CONTAINS = "STRING_CONTAINS"
+    EQUALS = "STRING_EQUALS"
+    NOT_EQUALS = "STRING_NOT_EQUALS"
+    STARTS_WITH = "STRING_STARTS_WITH"
+    ENDS_WITH = "STRING_ENDS_WITH"
+
+    def apply(self, column: Column, value: str):
+        match self:
+            case StringOperator.EQUALS:
+                return column == value
+            case StringOperator.NOT_EQUALS:
+                return column != value
+            case StringOperator.STARTS_WITH:
+                return column.startswith(value)
+            case StringOperator.ENDS_WITH:
+                return column.endswith(value)
+            case StringOperator.CONTAINS:
+                return column.contains(value)
 
 
-class IdEquals(BaseOperator):
-    discriminator: Literal["id_equals"]
-    value: int
+class IDOperator(Enum):
+    EQUALS = "ID_EQUALS"
+    NOT_EQUALS = "ID_NOT_EQUALS"
 
-    def apply(self, column: Column):
-        return column == self.value
-
-
-class IdIsOneOf(BaseOperator):
-    discriminator: Literal["id_is_one_of"]
-    value: List[int]
-
-    def apply(self, column: Column):
-        return column.in_(self.value)
+    def apply(self, column: Column, value: int):
+        match self:
+            case IDOperator.EQUALS:
+                return column == value
+            case IDOperator.NOT_EQUALS:
+                return column != value
 
 
-# --- Column Expressions: These define which operators can be used for which column
-# types.
+class NumberOperator(Enum):
+    EQUALS = "NUMBER_EQUALS"
+    NOT_EQUALS = "NUMBER_NOT_EQUALS"
+    GT = "NUMBER_GT"
+    LT = "NUMBER_LT"
+    GTE = "NUMBER_GTE"
+    LTE = "NUMBER_LTE"
+
+    def apply(self, column: Column, value: int):
+        match self:
+            case NumberOperator.EQUALS:
+                return column == value
+            case NumberOperator.NOT_EQUALS:
+                return column != value
+            case NumberOperator.GT:
+                return column > value
+            case NumberOperator.LT:
+                return column < value
+            case NumberOperator.GTE:
+                return column >= value
+            case NumberOperator.LTE:
+                return column <= value
 
 
-class ColumnExpression(BaseModel, abc.ABC):
-    operator: BaseOperator
+class DBColumns(Enum):
+    SPAN_TEXT = "SPAN_TEXT"
 
-    @staticmethod
-    @abc.abstractmethod
-    def get_column() -> Column:
-        pass
+    SOURCE_DOCUMENT_ID = "SOURCE_DOCUMENT_ID"
+    SOURCE_DOCUMENT_FILENAME = "SOURCE_DOCUMENT_FILENAME"
+
+    CODE_ID = "CODE_ID"
+    CODE_NAME = "CODE_NAME"
+
+    DOCUMENT_TAG_ID = "DOCUMENT_TAG_ID"
+    DOCUMENT_TAG_TITLE = "DOCUMENT_TAG_TITLE"
+
+    MEMO_ID = "MEMO_ID"
+    MEMO_CONTENT = "MEMO_CONTENT"
+    MEMO_TITLE = "MEMO_TITLE"
+
+    def get_column(self) -> Column:
+        match self:
+            case DBColumns.SPAN_TEXT:
+                return SpanTextORM.text
+            case DBColumns.SOURCE_DOCUMENT_ID:
+                return SourceDocumentORM.id
+            case DBColumns.SOURCE_DOCUMENT_FILENAME:
+                return SourceDocumentORM.filename
+            case DBColumns.CODE_ID:
+                return CodeORM.id
+            case DBColumns.CODE_NAME:
+                return CodeORM.name
+            case DBColumns.DOCUMENT_TAG_ID:
+                return DocumentTagORM.id
+            case DBColumns.DOCUMENT_TAG_TITLE:
+                return DocumentTagORM.title
+            case DBColumns.MEMO_ID:
+                return MemoORM.id
+            case DBColumns.MEMO_CONTENT:
+                return MemoORM.content
+            case DBColumns.MEMO_TITLE:
+                return MemoORM.title
+
+
+class FilterExpression(BaseModel):
+    column: DBColumns
+    operator: Union[IDOperator, NumberOperator, StringOperator]
+    value: Union[str, int]
 
     def get_sqlalchemy_expression(self):
-        return self.operator.apply(self.get_column())
-
-
-class IdColumnExpression(ColumnExpression):
-    operator: Union[IdEquals, IdIsOneOf]
-
-
-# --- Column-specific expression definitions: these define which specific columns
-# can be filtered on.
-
-
-class AnnotationDocumentOwnerExpression(IdColumnExpression):
-    @staticmethod
-    def get_column():
-        return AnnotationDocumentORM.user_id
+        return self.operator.apply(self.column.get_column(), value=self.value)
 
 
 class LogicalOperator(str, Enum):
@@ -79,7 +136,7 @@ class Filter(BaseModel):
     """A tree of column expressions for filtering on many database columns using various
     comparisons."""
 
-    items: List["Filter"]
+    items: List[Union[FilterExpression, "Filter"]]
     logic_operator: LogicalOperator
 
     def get_sqlalchemy_expression(self):
