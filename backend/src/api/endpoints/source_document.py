@@ -115,10 +115,9 @@ async def get_html(
 
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
-        return ElasticSearchService().get_sdoc_html_by_sdoc_id(
-            sdoc_id=sdoc_db_obj.id, proj_id=sdoc_db_obj.project_id
-        )
-    return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+        return SourceDocumentHTML.from_orm(sdoc_db_obj)
+    else:
+        return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
 
 
 @router.get(
@@ -142,11 +141,7 @@ async def get_tokens(
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return ElasticSearchService().get_sdoc_tokens_by_sdoc_id(
-        sdoc_id=sdoc_db_obj.id,
-        proj_id=sdoc_db_obj.project_id,
-        character_offsets=character_offsets,
-    )
+    return SourceDocumentTokens.from_orm(sdoc_db_obj)
 
 
 @router.get(
@@ -170,11 +165,7 @@ async def get_sentences(
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return ElasticSearchService().get_sdoc_sentences_by_sdoc_id(
-        sdoc_id=sdoc_db_obj.id,
-        proj_id=sdoc_db_obj.project_id,
-        sentence_offsets=sentence_offsets,
-    )
+    return SourceDocumentSentences.from_orm(sdoc_db_obj)
 
 
 @router.get(

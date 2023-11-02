@@ -10,6 +10,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 if TYPE_CHECKING:
@@ -24,9 +25,13 @@ if TYPE_CHECKING:
 class SourceDocumentORM(ORMBase):
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, nullable=False, index=True)
-    content = Column(
-        String, nullable=False, index=False
-    )  # TODO Flo: This will go to ES soon!
+    name = Column(String, nullable=False, index=True)
+    content = Column(String, nullable=False, index=False)
+    html = Column(String, nullable=False, index=False)
+    token_starts = Column(ARRAY(Integer), nullable=False, index=False)
+    token_ends = Column(ARRAY(Integer), nullable=False, index=False)
+    sentence_starts = Column(ARRAY(Integer), nullable=False, index=False)
+    sentence_ends = Column(ARRAY(Integer), nullable=False, index=False)
     doctype = Column(String, nullable=False, index=True)
     status = Column(String, nullable=False, index=True)
     created = Column(DateTime, server_default=func.now(), index=True)
@@ -83,3 +88,21 @@ class SourceDocumentORM(ORMBase):
             "project_id", "filename", name="UC_unique_filename_in_project"
         ),
     )
+
+    @property
+    def tokens(self):
+        return [self.content[s:e] for s, e in zip(self.token_starts, self.token_ends)]
+
+    @property
+    def token_character_offsets(self):
+        return [(s, e) for s, e in zip(self.token_starts, self.token_ends)]
+
+    @property
+    def sentences(self):
+        return [
+            self.content[s:e] for s, e in zip(self.sentence_starts, self.sentence_ends)
+        ]
+
+    @property
+    def sentence_character_offsets(self):
+        return [(s, e) for s, e in zip(self.sentence_starts, self.sentence_ends)]

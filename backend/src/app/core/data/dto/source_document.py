@@ -17,29 +17,28 @@ class SDocStatus(str, Enum):
     finished = "finished"  # preprocessing has finished
 
 
-"""
- TODO Flo:
- Because we"re not storing the content in the SQL DB but only in the ES instance
-  we handle this differently than in other DTOs.
-"""
-
-
 # Properties shared across all DTOs
 class SourceDocumentBaseDTO(BaseModel):
     filename: str = Field(
         description="Filename of the SourceDocument",
         max_length=SDOC_FILENAME_MAX_LENGTH + SDOC_SUFFIX_MAX_LENGTH,
     )
-    content: str = Field(description="Content of the SourceDocument")
+    name: str = Field(
+        description="User-defined name of the document (default is the filename)"
+    )
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
     status: SDocStatus = Field(description="Status of the SourceDocument")
     project_id: int = Field(description="Project the SourceDocument belongs to")
 
 
 # Properties for creation
-# Flo: Since we"re uploading a file we have to use multipart/form-data directily in the router method
 class SourceDocumentCreate(SourceDocumentBaseDTO):
-    pass
+    content: str = Field()
+    html: str = Field()
+    token_starts: List[int] = Field()
+    token_ends: List[int] = Field()
+    sentence_starts: List[int] = Field()
+    sentence_ends: List[int] = Field()
 
 
 # Properties for updating
@@ -71,26 +70,17 @@ class PaginatedSourceDocumentReads(PaginatedResults):
     )
 
 
-class SourceDocumentContent(BaseModel):
-    source_document_id: int = Field(
-        description="ID of the SourceDocument the content belongs to."
-    )
+class SourceDocumentContent(SourceDocumentBaseDTO):
     content: str = Field(
         description="The (textual) content of the SourceDocument the content belongs to."
     )
 
 
-class SourceDocumentHTML(BaseModel):
-    source_document_id: int = Field(
-        description="ID of the SourceDocument the content belongs to."
-    )
+class SourceDocumentHTML(SourceDocumentRead):
     html: str = Field(description="The (html) content of the SourceDocument.")
 
 
-class SourceDocumentTokens(BaseModel):
-    source_document_id: int = Field(
-        description="ID of the SourceDocument the Tokens belong to."
-    )
+class SourceDocumentTokens(SourceDocumentRead):
     tokens: List[str] = Field(
         description="The (textual) list Tokens of the SourceDocument the Tokens belong to."
     )
@@ -100,10 +90,7 @@ class SourceDocumentTokens(BaseModel):
     )
 
 
-class SourceDocumentSentences(BaseModel):
-    source_document_id: int = Field(
-        description="ID of the SourceDocument the Sentences belong to."
-    )
+class SourceDocumentSentences(SourceDocumentRead):
     sentences: List[str] = Field(
         description="The Sentences of the SourceDocument the Sentences belong to."
     )
