@@ -50,6 +50,24 @@ async def get_by_id(
     return SourceDocumentRead.model_validate(db_obj)
 
 
+@router.patch(
+    "/{sdoc_id}",
+    response_model=Optional[SourceDocumentRead],
+    summary="Updates the SourceDocument",
+    description="Updates the SourceDocument with the given ID.",
+)
+async def update_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    sdoc_update: SourceDocumentUpdate,
+) -> Optional[SourceDocumentRead]:
+    # TODO Flo: only if the user has access?
+    db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc_update)
+    sdoc_dto = SourceDocumentRead.from_orm(db_obj)
+    return sdoc_dto
+
+
 @router.delete(
     "/{sdoc_id}",
     response_model=Optional[SourceDocumentRead],
