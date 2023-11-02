@@ -2,9 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { CodeFrequencyFilter } from "./CodeFrequencyFilter";
+import type { Filter } from "./Filter";
 
 export type Body_analysis_code_frequencies = {
   code_ids: Array<number>;
-  filter: CodeFrequencyFilter;
+  filter: Filter;
 };

@@ -7,6 +7,7 @@ import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
+import type { Filter } from "../models/Filter";
 import type { TimelineAnalysisResult } from "../models/TimelineAnalysisResult";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -110,9 +111,11 @@ export class AnalysisService {
   public static annotatedSegments({
     projectId,
     userId,
+    requestBody,
   }: {
     projectId: number;
     userId: number;
+    requestBody: Filter;
   }): CancelablePromise<Array<AnnotatedSegment>> {
     return __request(OpenAPI, {
       method: "POST",
@@ -121,6 +124,8 @@ export class AnalysisService {
         project_id: projectId,
         user_id: userId,
       },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

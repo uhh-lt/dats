@@ -2,14 +2,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { AnnotationDocumentOwnerExpression } from "./AnnotationDocumentOwnerExpression";
+import type { FilterExpression } from "./FilterExpression";
 import type { LogicalOperator } from "./LogicalOperator";
 
 /**
  * A tree of column expressions for filtering on many database columns using various
  * comparisons.
  */
-export type CodeFrequencyFilter = {
-  items: Array<AnnotationDocumentOwnerExpression | CodeFrequencyFilter>;
+export type Filter = {
+  items: Array<FilterExpression | Filter>;
   logic_operator: LogicalOperator;
 };
