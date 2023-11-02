@@ -83,24 +83,34 @@ const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: 
   );
 
 const useAnnotatedSegments = (projectId: number | undefined, userId: number | undefined, filter: Filter) =>
-  useQuery<AnnotatedSegment[], Error>(
+  useQuery<Record<number, AnnotatedSegment>, Error>(
     [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userId, filter],
-    () =>
-      AnalysisService.annotatedSegments({
+    async () => {
+      const annotatedSegments = await AnalysisService.annotatedSegments({
         projectId: projectId!,
         userId: userId!,
         requestBody: filter,
-      }),
+      });
+
+      return annotatedSegments.reduce((previousValue, currentValue) => {
+        return {
+          ...previousValue,
+          [currentValue.annotation.id]: currentValue,
+        };
+      }, {});
+    },
     {
       enabled: !!projectId && !!userId,
       onSuccess(data) {
+        const annotatedSegments = Object.values(data);
+
         // convert to SpanAnnotationReadResolved
         const spanAnnotations: SpanAnnotationReadResolved[] = [];
         const codes: CodeRead[] = [];
         let tags: DocumentTagRead[] = [];
         const memos: MemoRead[] = [];
 
-        data.forEach((segment) => {
+        annotatedSegments.forEach((segment) => {
           spanAnnotations.push(segment.annotation);
           codes.push(segment.annotation.code);
           tags = tags.concat(segment.tags);

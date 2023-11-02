@@ -50,43 +50,27 @@ import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
 
-  // global client state (react router)
-  const { user } = useAuth();
-  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
-
   // local client state
   const [filter, setFilter] = useState<MyFilter>({
     id: "0",
     items: [],
     logic_operator: LogicalOperator.AND,
   });
+  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
+  const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
+  const [rowSelectionModel, setRowSelectionModel] = useState<number[]>([]);
+
+  // global client state (react router)
+  const { user } = useAuth();
+  const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   // global server state (react query)
-  const annotatedSegments = AnalysisHooks.useAnnotatedSegments(projectId, user.data?.id, filter);
-  const annotatedSegmentsMap = React.useMemo(() => {
-    // we have to transform the data, better do this elsewhere?
-    if (!annotatedSegments.data) return [];
-
-    return annotatedSegments.data.reduce(
-      (previousValue, currentValue) => {
-        return {
-          ...previousValue,
-          [currentValue.annotation.id]: currentValue,
-        };
-      },
-      {} as Record<number, AnnotatedSegment>,
-    );
-  }, [annotatedSegments.data]);
+  const annotatedSegmentsMap = AnalysisHooks.useAnnotatedSegments(projectId, user.data?.id, filter);
 
   // global client state (redux)
   const dispatch = useAppDispatch();
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
   const isSplitView = useAppSelector((state) => state.annotatedSegments.isSplitView);
-
-  // local state
-  const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
-  const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
-  const [rowSelectionModel, setRowSelectionModel] = useState<number[]>([]);
 
   const columns: GridColDef[] = useMemo(
     () => [
@@ -164,7 +148,9 @@ function AnnotatedSegments() {
 
   // events
   const handleChangeCodeClick = () => {
-    openSpanAnnotation(rowSelectionModel.map((id) => annotatedSegmentsMap[id]));
+    if (!annotatedSegmentsMap.data) return;
+
+    openSpanAnnotation(rowSelectionModel.map((id) => annotatedSegmentsMap.data[id]));
   };
 
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -179,17 +165,17 @@ function AnnotatedSegments() {
   };
 
   const handleContextMenuOpenMemo = () => {
-    if (rowSelectionModel.length !== 1) return;
+    if (rowSelectionModel.length !== 1 || !annotatedSegmentsMap.data) return;
 
     contextMenuRef.current?.close();
-    openMemo(annotatedSegmentsMap[rowSelectionModel[0]]);
+    openMemo(annotatedSegmentsMap.data[rowSelectionModel[0]]);
   };
 
   const handleContextMenuChangeCode = () => {
-    if (rowSelectionModel.length !== 1) return;
+    if (rowSelectionModel.length !== 1 || !annotatedSegmentsMap.data) return;
 
     contextMenuRef.current?.close();
-    openSpanAnnotation([annotatedSegmentsMap[rowSelectionModel[0]]]);
+    openSpanAnnotation([annotatedSegmentsMap.data[rowSelectionModel[0]]]);
   };
 
   return (
@@ -250,10 +236,10 @@ function AnnotatedSegments() {
             </CardContent>
           </Card>
 
-          {!isSplitView && rowSelectionModel.length > 0 && (
+          {!isSplitView && rowSelectionModel.length > 0 && annotatedSegmentsMap.data && (
             <SpanAnnotationCard
-              key={annotatedSegmentsMap[rowSelectionModel[rowSelectionModel.length - 1]].annotation.id}
-              annotationId={annotatedSegmentsMap[rowSelectionModel[rowSelectionModel.length - 1]].annotation.id}
+              key={annotatedSegmentsMap.data[rowSelectionModel[rowSelectionModel.length - 1]].annotation.id}
+              annotationId={annotatedSegmentsMap.data[rowSelectionModel[rowSelectionModel.length - 1]].annotation.id}
               sx={{ mb: 2, flexShrink: 0 }}
             />
           )}
@@ -262,9 +248,9 @@ function AnnotatedSegments() {
             <CardHeader title="Annotated Segments" />
             <CardContent className="myFlexFillAllContainer h100" style={{ padding: 0 }}>
               <div className="h100" style={{ width: "100%" }} ref={filterDialogAnchorRef}>
-                {annotatedSegments.isSuccess ? (
+                {annotatedSegmentsMap.isSuccess ? (
                   <DataGrid
-                    rows={annotatedSegments.data}
+                    rows={Object.values(annotatedSegmentsMap.data)}
                     columns={columns}
                     autoPageSize
                     getRowId={(row: AnnotatedSegment) => row.annotation.id}
@@ -279,11 +265,11 @@ function AnnotatedSegments() {
                     }}
                     disableColumnFilter
                   />
-                ) : annotatedSegments.isLoading ? (
+                ) : annotatedSegmentsMap.isLoading ? (
                   <CircularProgress />
                 ) : (
                   <Typography variant="body1" color="inherit" component="div">
-                    {annotatedSegments.error?.message}
+                    {annotatedSegmentsMap.error?.message}
                   </Typography>
                 )}
               </div>
@@ -295,7 +281,9 @@ function AnnotatedSegments() {
       <SpanAnnotationEditDialog projectId={projectId} />
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuChangeCode}>Change code</MenuItem>
-        {rowSelectionModel.length > 0 && annotatedSegmentsMap[rowSelectionModel[0]].memo ? (
+        {rowSelectionModel.length > 0 &&
+        annotatedSegmentsMap.data &&
+        annotatedSegmentsMap.data[rowSelectionModel[0]].memo ? (
           <MenuItem onClick={handleContextMenuOpenMemo}>Edit memo</MenuItem>
         ) : (
           <MenuItem onClick={handleContextMenuOpenMemo}>Create memo</MenuItem>
