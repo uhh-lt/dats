@@ -15,13 +15,8 @@ from app.core.data.dto.search import (
     PaginatedElasticSearchDocumentHits,
     PaginatedMemoSearchResults,
 )
-from app.core.data.dto.source_document import (
-    SourceDocumentContent,
-    SourceDocumentHTML,
-    SourceDocumentKeywords,
-    SourceDocumentSentences,
-    SourceDocumentTokens,
-)
+from app.core.data.dto.source_document import SourceDocumentKeywords
+
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from elasticsearch import Elasticsearch, helpers
@@ -301,87 +296,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 proj_id=proj_id, sdoc_id=sdoc_id
             )
         return ElasticSearchDocumentRead(**res["_source"])
-
-    def get_sdoc_content_by_sdoc_id(
-        self, *, proj_id: int, sdoc_id: int
-    ) -> Optional[SourceDocumentContent]:
-        esdoc = self.get_esdoc_by_sdoc_id(
-            proj_id=proj_id, sdoc_id=sdoc_id, fields={"content"}
-        )
-        return SourceDocumentContent(source_document_id=sdoc_id, content=esdoc.content)
-
-    def get_sdoc_html_by_sdoc_id(
-        self, *, proj_id: int, sdoc_id: int
-    ) -> Optional[SourceDocumentHTML]:
-        esdoc = self.get_esdoc_by_sdoc_id(
-            proj_id=proj_id, sdoc_id=sdoc_id, fields={"html"}
-        )
-        return SourceDocumentHTML(source_document_id=sdoc_id, html=esdoc.html)
-
-    def update_sdoc_html_by_sdoc_id(
-        self, *, proj_id: int, sdoc_html: SourceDocumentHTML
-    ) -> SourceDocumentHTML:
-        self.__client.update(
-            index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
-            id=str(sdoc_html.source_document_id),
-            body={"doc": {"html": sdoc_html.html}},
-        )
-
-        logger.debug(
-            (
-                f"Updated HTML of Document '{sdoc_html.source_document_id}' in Index "
-                f"'{self.__get_index_name(proj_id=proj_id, index_type='doc')}'!"
-            )
-        )
-        return sdoc_html
-
-    def get_sdoc_tokens_by_sdoc_id(
-        self,
-        *,
-        proj_id: int,
-        sdoc_id: int,
-        character_offsets: Optional[bool] = False,
-    ) -> Optional[SourceDocumentTokens]:
-        fields = {"tokens"}
-        if character_offsets:
-            fields.add("token_character_offsets")
-        esdoc = self.get_esdoc_by_sdoc_id(
-            proj_id=proj_id, sdoc_id=sdoc_id, fields=fields
-        )
-        if character_offsets:
-            return SourceDocumentTokens(
-                source_document_id=sdoc_id,
-                tokens=esdoc.tokens,
-                token_character_offsets=[
-                    (o.gte, o.lt) for o in esdoc.token_character_offsets
-                ],
-            )
-        return SourceDocumentTokens(source_document_id=sdoc_id, tokens=esdoc.tokens)
-
-    def get_sdoc_sentences_by_sdoc_id(
-        self,
-        *,
-        proj_id: int,
-        sdoc_id: int,
-        sentence_offsets: Optional[bool] = False,
-    ) -> Optional[SourceDocumentSentences]:
-        fields = {"sentences"}
-        if sentence_offsets:
-            fields.add("sentence_character_offsets")
-        esdoc = self.get_esdoc_by_sdoc_id(
-            proj_id=proj_id, sdoc_id=sdoc_id, fields=fields
-        )
-        if sentence_offsets:
-            return SourceDocumentSentences(
-                source_document_id=sdoc_id,
-                sentences=esdoc.sentences,
-                sentences_character_offsets=[
-                    (o.gte, o.lt) for o in esdoc.sentence_character_offsets
-                ],
-            )
-        return SourceDocumentSentences(
-            source_document_id=sdoc_id, sentences=esdoc.sentences
-        )
 
     def get_sdoc_keywords_by_sdoc_id(
         self,

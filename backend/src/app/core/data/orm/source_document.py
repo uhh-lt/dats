@@ -78,3 +78,21 @@ class SourceDocumentORM(ORMBase):
             "project_id", "filename", name="UC_unique_filename_in_project"
         ),
     )
+
+    @property
+    def tokens(self):
+        return [self.content[s:e] for s, e in zip(self.token_starts, self.token_ends)]
+
+    @property
+    def token_character_offsets(self):
+        return [(s, e) for s, e in zip(self.token_starts, self.token_ends)]
+
+    @property
+    def sentences(self):
+        return [
+            self.content[s:e] for s, e in zip(self.sentence_starts, self.sentence_ends)
+        ]
+
+    @property
+    def sentence_character_offsets(self):
+        return [(s, e) for s, e in zip(self.sentence_starts, self.sentence_ends)]

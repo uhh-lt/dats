@@ -31,7 +31,15 @@ def _create_and_persist_sdoc(db: Session, pptd: PreProTextDoc) -> SourceDocument
     logger.info(f"Persisting SourceDocument for {pptd.filename}...")
     # generate the create_dto
     _, create_dto = repo.build_source_document_create_dto_from_file(
-        proj_id=pptd.project_id, filename=pptd.filename
+        proj_id=pptd.project_id,
+        filename=pptd.filename,
+        content=pptd.text,
+        html=pptd.html,
+        name=pptd.filename,
+        token_starts=[s for s, _ in pptd.token_character_offsets],
+        token_ends=[e for _, e in pptd.token_character_offsets],
+        sentence_starts=[s.start for s in pptd.sentences],
+        sentence_ends=[s.end for s in pptd.sentences],
     )
     # persist SourceDocument
     sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
