@@ -1,10 +1,9 @@
 import React, { useRef } from "react";
 import { AnnotationDocumentRead, SourceDocumentRead } from "../../../api/openapi";
-import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
-import SentenceContextMenu, { SentenceContextMenuHandle } from "../../../components/ContextMenu/SentenceContextMenu";
-import SdocHooks from "../../../api/SdocHooks";
-import TextAnnotatorRendererNew from "../../../features/DocumentRenderer/DocumentRenderer";
 import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
+import SentenceContextMenu, { SentenceContextMenuHandle } from "../../../components/ContextMenu/SentenceContextMenu";
+import TextAnnotatorRendererNew from "../../../features/DocumentRenderer/DocumentRenderer";
+import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentRead;
@@ -21,7 +20,7 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
   const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
 
   // global server state (react-query)
-  const sentences = SdocHooks.useGetDocumentSentences(sdoc.id).data?.sentences;
+  const sentences = sdoc.sentences;
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocId: sdoc.id,
     annotationDocumentIds: showEntities ? [adoc.id] : [],

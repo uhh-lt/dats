@@ -178,7 +178,7 @@ function DocumentExplorerListItem({
   selectedSdocId,
   ...props
 }: { sdocId: number; selectedSdocId: number } & ListItemProps) {
-  const sdoc = SdocHooks.useGetDocumentNoContent(sdocId);
+  const sdoc = SdocHooks.useGetDocument(sdocId);
 
   const title = sdoc.isSuccess ? sdoc.data.filename : sdoc.isError ? sdoc.error.message : "Loading...";
 

@@ -115,29 +115,9 @@ function WordCloudContent({ sdoc }: { sdoc: SourceDocumentRead }) {
 }
 
 function TextContent({ sdoc }: { sdoc: SourceDocumentRead }) {
-  // global server state (react-query)
-  const content = SdocHooks.useGetDocumentContent(sdoc.id);
-
-  // rendering
-  if (content.isSuccess) {
-    return (
-      <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
-        {content.data.content}
-      </Typography>
-    );
-  }
-
-  if (content.isError) {
-    return (
-      <Typography sx={{ mb: 1.5 }} variant="body2">
-        {content.error.message}
-      </Typography>
-    );
-  }
-
   return (
-    <Typography sx={{ mb: 1.5 }} variant="body2">
-      Loading ...
+    <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
+      {sdoc.content}
     </Typography>
   );
 }

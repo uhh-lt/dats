@@ -6,17 +6,17 @@ import { IToken } from "./IToken";
 
 function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number; annotationDocumentIds: number[] }) {
   // global server state (react query)
-  const tokens = SdocHooks.useGetDocumentTokens(sdocId);
+  const sdoc = SdocHooks.useGetDocument(sdocId);
   const annotations = AdocHooks.useGetAllSpanAnnotationsBatch(annotationDocumentIds);
 
   // computed
   // todo: maybe implement with selector?
   const tokenData: IToken[] | undefined = useMemo(() => {
-    if (!tokens.data) return undefined;
-    if (!tokens.data.token_character_offsets) return undefined;
+    if (!sdoc.data) return undefined;
+    if (!sdoc.data.token_character_offsets) return undefined;
 
-    const offsets = tokens.data.token_character_offsets;
-    const texts = tokens.data.tokens;
+    const offsets = sdoc.data.token_character_offsets;
+    const texts = sdoc.data.tokens;
     console.time("tokenData");
     const result = texts.map((text, index) => ({
       beginChar: offsets[index][0],
@@ -28,7 +28,7 @@ function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number
     }));
     console.timeEnd("tokenData");
     return result;
-  }, [tokens.data]);
+  }, [sdoc.data]);
 
   // todo: maybe implement with selector?
   // this map stores annotationId -> SpanAnnotationReadResolved

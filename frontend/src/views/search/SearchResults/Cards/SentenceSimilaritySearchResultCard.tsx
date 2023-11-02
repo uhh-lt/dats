@@ -22,11 +22,11 @@ function SentenceSimilaritySearchResultCard({
   ...props
 }: SentenceSimilaritySearchResultCardProps & CardProps) {
   // query (global server state)
-  const sentences = SdocHooks.useGetDocumentSentences(sdocId);
+  const sdoc = SdocHooks.useGetDocument(sdocId);
 
   // computed
   const contextSentences: ContextSentence[] = useMemo(() => {
-    if (sentences.data) {
+    if (sdoc.data) {
       // mapping of sentence array index to SimSearchSentenceHit
       const myMap = new Map<number, SimSearchSentenceHit>();
       hits.forEach((hit) => {
@@ -37,11 +37,11 @@ function SentenceSimilaritySearchResultCard({
       Array.from(myMap.keys()).forEach((index) => {
         contextSentenceIds.add(index);
         if (index - 1 >= 0) contextSentenceIds.add(index - 1);
-        if (index + 1 < sentences.data.sentences.length) contextSentenceIds.add(index + 1);
+        if (index + 1 < sdoc.data.sentences.length) contextSentenceIds.add(index + 1);
       });
 
       const result: ContextSentence[] = [];
-      sentences.data.sentences.forEach((sentence, index) => {
+      sdoc.data.sentences.forEach((sentence, index) => {
         // check if sentence is a highlighted sentence
         if (myMap.has(index)) {
           result.push({
@@ -68,7 +68,7 @@ function SentenceSimilaritySearchResultCard({
       return result;
     }
     return [];
-  }, [sentences.data, hits]);
+  }, [sdoc.data, hits]);
 
   return (
     <SearchResultCardBase

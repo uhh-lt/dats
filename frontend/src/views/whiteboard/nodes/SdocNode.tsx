@@ -173,19 +173,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
 }
 
 function TextPreview({ sdoc }: { sdoc: SourceDocumentRead }) {
-  // global server state (react-query)
-  const content = SdocHooks.useGetDocumentContent(sdoc.id);
-
-  // rendering
-  if (content.isSuccess) {
-    return <Typography>{content.data.content.substring(0, 500)}...</Typography>;
-  }
-
-  if (content.isError) {
-    return <Typography>{content.error.message}</Typography>;
-  }
-
-  return <Typography>Loading ...</Typography>;
+  return <Typography>{sdoc.content}</Typography>;
 }
 
 export default SdocNode;

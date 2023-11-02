@@ -8,14 +8,14 @@ interface SdocBlockProps {
 }
 
 function SdocBlock({ sdocId }: SdocBlockProps) {
-  const sdocName = SdocHooks.useGetName(sdocId);
+  const sdoc = SdocHooks.useGetDocument(sdocId);
 
-  if (sdocName.isSuccess) {
+  if (sdoc.isSuccess) {
     return (
       <Link to={`../search/doc/${sdocId}`}>
         <Stack direction="row" alignItems="baseline" component="span" display="inline-flex">
           <DescriptionIcon sx={{ mr: 0.5, alignSelf: "center" }} />
-          {sdocName.data.value}
+          {sdoc.data.name}
         </Stack>
       </Link>
     );

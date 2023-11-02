@@ -23,7 +23,7 @@ interface SpanAnnotationCardProps {
 function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps & Omit<CardProps, "elevation">) {
   // global server state (react-query)
   const spanAnnotation = SpanAnnotationHooks.useGetAnnotation(annotationId);
-  const sdocContent = SdocHooks.useGetDocumentContent(spanAnnotation.data?.sdoc_id);
+  const sdoc = SdocHooks.useGetDocument(spanAnnotation.data?.sdoc_id);
 
   // global client state (redux)
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
@@ -36,13 +36,13 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
 
   return (
     <Card elevation={2} {...props}>
-      {spanAnnotation.isSuccess && sdocContent.isSuccess ? (
+      {spanAnnotation.isSuccess && sdoc.isSuccess ? (
         <>
           <CardContent sx={{ pb: "8px !important" }}>
             <Typography variant="body1" color="inherit" component="div" sx={{ mt: 2 }}>
-              {sdocContent.data.content.substring(spanAnnotation.data.begin - contextSize, spanAnnotation.data.begin)}
-              <b>{sdocContent.data.content.substring(spanAnnotation.data.begin, spanAnnotation.data.end)}</b>
-              {sdocContent.data.content.substring(spanAnnotation.data.end, spanAnnotation.data.end + contextSize)}
+              {sdoc.data.content.substring(spanAnnotation.data.begin - contextSize, spanAnnotation.data.begin)}
+              <b>{sdoc.data.content.substring(spanAnnotation.data.begin, spanAnnotation.data.end)}</b>
+              {sdoc.data.content.substring(spanAnnotation.data.end, spanAnnotation.data.end + contextSize)}
             </Typography>
           </CardContent>
           <CardActions>
@@ -59,12 +59,12 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
             </Tooltip>
           </CardActions>
         </>
-      ) : spanAnnotation.isLoading || sdocContent.isLoading ? (
+      ) : spanAnnotation.isLoading || sdoc.isLoading ? (
         <CircularProgress />
       ) : (
         <Typography variant="body1" color="inherit" component="div">
           {spanAnnotation.error?.message}
-          {sdocContent.error?.message}
+          {sdoc.error?.message}
         </Typography>
       )}
     </Card>
