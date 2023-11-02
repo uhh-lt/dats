@@ -2,5 +2,6 @@ from enum import Enum
 
 
 class IndexType(str, Enum):
-    TEXT = "text"
+    SENTENCE = "sentence"
     IMAGE = "image"
+    NAMED_ENTITY = "named-entity"

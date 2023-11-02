@@ -28,10 +28,12 @@ class SimSearchService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls._sentence_class_name = "Sentence"
         cls._image_class_name = "Image"
+        cls._named_entity_class_name = "NamedEntity"
 
         cls.class_names = {
-            IndexType.TEXT: cls._sentence_class_name,
+            IndexType.SENTENCE: cls._sentence_class_name,
             IndexType.IMAGE: cls._image_class_name,
+            IndexType.NAMED_ENTITY: cls._named_entity_class_name,
         }
 
         cls._common_properties = [
@@ -55,6 +57,19 @@ class SimSearchService(metaclass=SingletonMeta):
                 {
                     "name": "sentence_id",
                     "description": "The id of this sentence",
+                    "dataType": ["int"],
+                },
+            ],
+        }
+
+        cls._named_entity_class_obj = {
+            "class": cls._named_entity_class_name,
+            "vectorizer": "none",
+            "properties": [
+                *cls._common_properties,
+                {
+                    "name": "span_id",
+                    "description": "The id of this span annotation",
                     "dataType": ["int"],
                 },
             ],
@@ -91,6 +106,8 @@ class SimSearchService(metaclass=SingletonMeta):
                     cls._client.schema.delete_class(cls._sentence_class_name)
                 if cls._client.schema.exists(cls._image_class_name):
                     cls._client.schema.delete_class(cls._image_class_name)
+                if cls._client.schema.exists(cls._named_entity_class_name):
+                    cls._client.schema.delete_class(cls._named_entity_class_name)
 
             # create classes
             if not cls._client.schema.exists(cls._sentence_class_name):
@@ -99,12 +116,18 @@ class SimSearchService(metaclass=SingletonMeta):
             if not cls._client.schema.exists(cls._image_class_name):
                 logger.debug(f"Creating class {cls._image_class_obj}!")
                 cls._client.schema.create_class(cls._image_class_obj)
+            if not cls._client.schema.exists(cls._named_entity_class_name):
+                logger.debug(f"Creating class {cls._named_entity_class_obj}!")
+                cls._client.schema.create_class(cls._named_entity_class_obj)
 
             cls._sentence_props = list(
                 map(lambda p: p["name"], cls._sentence_class_obj["properties"])
             )
             cls._image_props = list(
                 map(lambda p: p["name"], cls._image_class_obj["properties"])
+            )
+            cls._named_entity_props = list(
+                map(lambda p: p["name"], cls._named_entity_class_obj["properties"])
             )
         except Exception as e:
             msg = f"Cannot connect or initialize to Weaviate DB - Error '{e}'"
@@ -222,14 +245,21 @@ class SimSearchService(metaclass=SingletonMeta):
         sdoc_id: int,
     ) -> None:
         obj_ids = self._get_sentence_object_ids_by_sdoc_id(sdoc_id=sdoc_id)
+        ne_obj_ids = self._get_named_entity_object_ids_by_sdoc_id(sdoc_id=sdoc_id)
         logger.debug(
-            f"Removing text SDoc {sdoc_id} with {len(obj_ids)} sentences from Index!"
+            f"Removing text SDoc {sdoc_id} with {len(obj_ids)} sentences, {len(ne_obj_ids)} named entities from Index!"
         )
         for obj_id in obj_ids:
             self._client.data_object.delete(
                 uuid=obj_id,
                 class_name=self._sentence_class_name,
             )
+        for obj_id in ne_obj_ids:
+            self._client.data_object.delete(
+                uuid=obj_id,
+                class_name=self._named_entity_class_name,
+            )
+    
 
     def remove_all_project_embeddings(
         self,
@@ -305,6 +335,33 @@ class SimSearchService(metaclass=SingletonMeta):
             )
         )
 
+    def _get_named_entity_object_ids_by_sdoc_id(
+        self,
+        sdoc_id: int,
+    ) -> List[str]:
+        id_filter = {
+            "path": ["sdoc_id"],
+            "operator": "Equal",
+            "valueInt": sdoc_id,
+        }
+        response = (
+            self._client.query.get(self._named_entity_class_name, ["span_id"])
+            .with_where(id_filter)
+            .with_additional("id")
+            .do()
+        )
+        if len(response["data"]["Get"][self._named_entity_class_name]) == 0:
+            msg = f"No span annotation for SDoc {sdoc_id} found!"
+            logger.error(msg)
+            raise KeyError(msg)
+
+        return list(
+            map(
+                lambda r: r["_additional"]["id"],
+                response["data"]["Get"][self._named_entity_class_name],
+            )
+        )
+
     def __search_index(
         self,
         proj_id: int,
@@ -319,7 +376,7 @@ class SimSearchService(metaclass=SingletonMeta):
             "operator": "Equal",
             "valueInt": proj_id,
         }
-        if index_type == IndexType.TEXT:
+        if index_type == IndexType.SENTENCE:
             query = self._client.query.get(
                 self._sentence_class_name,
                 self._sentence_props,
@@ -328,6 +385,11 @@ class SimSearchService(metaclass=SingletonMeta):
             query = self._client.query.get(
                 self._image_class_name,
                 self._image_props,
+            )
+        elif index_type == IndexType.NAMED_ENTITY:
+            query = self._client.query.get(
+                self._named_entity_class_name,
+                self._named_entity_props,
             )
         else:
             msg = f"Unknown IndexType '{index_type}'!"
@@ -413,7 +475,7 @@ class SimSearchService(metaclass=SingletonMeta):
         )
         results = self.__search_index(
             proj_id=proj_id,
-            index_type=IndexType.TEXT,
+            index_type=IndexType.SENTENCE,
             query_emb=query_emb,
             top_k=top_k,
             threshold=threshold,
@@ -454,6 +516,105 @@ class SimSearchService(metaclass=SingletonMeta):
             )
             for r in results
         ]
+
+    def suggest_similar_sentences(self, proj_id: int, sdoc_ids: List[int], sent_ids: List[int]) -> List[SimSearchSentenceHit]:
+        return self.__suggest_index(proj_id, sdoc_ids, sent_ids)
+
+
+    def _get_sentence_object_ids_by_sdoc_id_sentence_id(
+        self,
+        proj_id: int,
+        sdoc_id: int,
+        sentence_id: int,
+    ) -> str:
+        id_filter = {
+            "operator": "And",
+            "operands": [
+                {
+                    "path": ["project_id"],
+                    "operator": "Equal",
+                    "valueInt": proj_id,
+                },
+                {
+                    "path": ["sdoc_id"],
+                    "operator": "Equal",
+                    "valueInt": sdoc_id,
+                },
+                {
+                    "path": ["sentence_id"],
+                    "operator": "Equal",
+                    "valueInt": sentence_id,
+                }
+            ]
+
+        }
+        response = (
+            self._client.query.get(self._sentence_class_name, ["sentence_id"])
+            .with_where(id_filter)
+            .with_additional("id")
+            .do()
+        )
+        if len(response["data"]["Get"][self._sentence_class_name]) == 0:
+            msg = f"No Sentences for SDoc {sdoc_id} found!"
+            logger.error(msg)
+            raise KeyError(msg)
+
+        return response["data"]["Get"][self._sentence_class_name][0]["_additional"]["id"]
+        
+
+    def __suggest_index(
+        self,
+        proj_id: int,
+        sdoc_ids: List[int],
+        sent_ids: List[int],
+        top_k: int = 10,
+        threshold: float = 0.0,
+    ) -> List[SimSearchSentenceHit]:
+
+        obj_ids = [self._get_sentence_object_ids_by_sdoc_id_sentence_id(proj_id, sdoc, sent) for sdoc, sent in zip(sdoc_ids, sent_ids)]
+
+        project_filter = {
+            "path": ["project_id"],
+            "operator": "Equal",
+            "valueInt": proj_id,
+        }
+
+        hits = []
+
+        for obj in obj_ids: 
+            query = self._client.query.get(
+                self._sentence_class_name,
+                self._sentence_props,
+            )
+
+            query = (
+                query.with_near_object(
+                    {"id": obj, "certainty": threshold}
+                )
+                .with_additional(["certainty"])
+                .with_where(project_filter)
+                .with_limit(1)
+            )
+            
+            r = query.do()["data"]["Get"][self._sentence_class_name][0]
+            hits.append(SimSearchSentenceHit(
+                sdoc_id=r["sdoc_id"],
+                sentence_id=r["sentence_id"],
+                score=r["_additional"]["certainty"],
+            ))
+        hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
+        hits = self.__unique_consecutive(hits)
+        hits.sort(key=lambda x: x.score, reverse=True)
+        return hits[0 : min(len(hits), top_k)]
+
+    def __unique_consecutive(self, hits: List[SimSearchSentenceHit]):
+        result = []
+        current = SimSearchSentenceHit(sdic_ids=-1, sentence_ids=-1)
+        for hit in hits:
+            if hit.sdoc_id != current.sdoc_id or hit.sentence_id != current.sentence_id:
+                current = hit
+                result.append(hit)
+        return result
 
     def _get_num_of_objects_in_index(self, index_type: IndexType) -> int:
         return (
