@@ -7,6 +7,7 @@ on:
       - mwp_v1
     paths:
       - "backend/**"
+      - ".github/**"
   pull_request:
     branches:
       - main
