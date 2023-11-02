@@ -9,18 +9,33 @@ import {
   CodeFrequency,
   CodeOccurrence,
   CodeRead,
+  DBColumns,
   DocumentTagRead,
+  Filter,
+  IDOperator,
+  LogicalOperator,
   MemoRead,
   SpanAnnotationReadResolved,
   TimelineAnalysisResult,
 } from "./openapi";
+import { useDebounce } from "../utils/useDebounce";
+import { useEffect } from "react";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
   useQuery<CodeFrequency[], Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds], () =>
     AnalysisService.codeFrequencies({
       projectId,
       requestBody: {
-        user_ids: userIds,
+        filter: {
+          items: [
+            {
+              column: DBColumns.CODE_ID,
+              operator: IDOperator.ID_EQUALS,
+              value: 1,
+            },
+          ],
+          logic_operator: LogicalOperator.AND,
+        },
         code_ids: codeIds,
       },
     }),
@@ -69,24 +84,36 @@ const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: 
     },
   );
 
-const useAnnotatedSegments = (projectId: number | undefined, userId: number | undefined) =>
-  useQuery<AnnotatedSegment[], Error>(
-    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userId],
-    () =>
-      AnalysisService.annotatedSegments({
+const useAnnotatedSegments = (projectId: number | undefined, userId: number | undefined, filter: Filter) => {
+  const debouncedFilter = useDebounce(filter, 1000);
+  return useQuery<Record<number, AnnotatedSegment>, Error>(
+    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userId, debouncedFilter],
+    async () => {
+      const annotatedSegments = await AnalysisService.annotatedSegments({
         projectId: projectId!,
         userId: userId!,
-      }),
+        requestBody: debouncedFilter,
+      });
+
+      return annotatedSegments.reduce((previousValue, currentValue) => {
+        return {
+          ...previousValue,
+          [currentValue.annotation.id]: currentValue,
+        };
+      }, {});
+    },
     {
       enabled: !!projectId && !!userId,
       onSuccess(data) {
+        const annotatedSegments = Object.values(data);
+
         // convert to SpanAnnotationReadResolved
         const spanAnnotations: SpanAnnotationReadResolved[] = [];
         const codes: CodeRead[] = [];
         let tags: DocumentTagRead[] = [];
         const memos: MemoRead[] = [];
 
-        data.forEach((segment) => {
+        annotatedSegments.forEach((segment) => {
           spanAnnotations.push(segment.annotation);
           codes.push(segment.annotation.code);
           tags = tags.concat(segment.tags);
@@ -110,6 +137,7 @@ const useAnnotatedSegments = (projectId: number | undefined, userId: number | un
       },
     },
   );
+};
 
 const AnalysisHooks = {
   useCodeFrequencies,

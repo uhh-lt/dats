@@ -248,7 +248,6 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
     userIds,
     data.children.map((node) => node.model.code.id) || [],
   );
-  console.log(chartData.data);
 
   // computed
   const codeId2Code = useMemo(() => {

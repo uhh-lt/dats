@@ -13,6 +13,8 @@ from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationReadResolvedCode,
 )
 from app.core.data.dto.code import CodeRead
+from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.filter import Filter
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
@@ -21,9 +23,13 @@ from app.core.data.dto.span_annotation import (
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.document_tag import DocumentTagORM
+from app.core.data.orm.memo import MemoORM
+from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
 from sqlalchemy import and_, func
@@ -35,7 +41,7 @@ class AnalysisService(metaclass=SingletonMeta):
         return super(AnalysisService, cls).__new__(cls)
 
     def compute_code_frequency(
-        self, project_id: int, user_ids: List[int], code_ids: List[int]
+        self, project_id: int, code_ids: List[int], filter: Filter
     ) -> List[CodeFrequency]:
         with self.sqls.db_session() as db:
             # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
@@ -81,7 +87,7 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
-                AnnotationDocumentORM.user_id.in_(user_ids),
+                filter.get_sqlalchemy_expression(),
                 CurrentCodeORM.code_id.in_(codes_of_interest),
             )
             span_res = query.all()
@@ -104,7 +110,6 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
-                AnnotationDocumentORM.user_id.in_(user_ids),
                 CurrentCodeORM.code_id.in_(codes_of_interest),
             )
             bbox_res = query.all()
@@ -308,7 +313,7 @@ class AnalysisService(metaclass=SingletonMeta):
             return span_code_occurrences + bbox_code_occurrences
 
     def find_annotated_segments(
-        self, project_id: int, user_id: int
+        self, project_id: int, user_id: int, filter: Filter
     ) -> List[AnnotatedSegment]:
         with self.sqls.db_session() as db:
             # 1. query all span annotation occurrences of the code
@@ -334,32 +339,44 @@ class AnalysisService(metaclass=SingletonMeta):
                     CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
                 )
                 .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(SourceDocumentORM.document_tags)
                 .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
+                .join(
+                    ObjectHandleORM,
+                    ObjectHandleORM.span_annotation_id == SpanAnnotationORM.id,
+                    isouter=True,
+                )
+                .join(
+                    MemoORM, MemoORM.attached_to_id == ObjectHandleORM.id, isouter=True
+                )
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
+                filter.get_sqlalchemy_expression(),
                 and_(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id == user_id,
-                )
+                ),
             )
-            res = query.all()
+            result = query.all()
             annotated_segments = [
                 AnnotatedSegment(
                     annotation=SpanAnnotationReadResolved(
-                        **SpanAnnotationRead.from_orm(x[0]).dict(
+                        **SpanAnnotationRead.from_orm(row[0]).dict(
                             exclude={"current_code_id", "span_text_id"}
                         ),
-                        code=CodeRead.from_orm(x[2]),
-                        span_text=x[3],
-                        user_id=x[4].user_id,
-                        sdoc_id=x[4].source_document_id
+                        code=CodeRead.from_orm(row[2]),
+                        span_text=row[3],
+                        user_id=row[4].user_id,
+                        sdoc_id=row[4].source_document_id
                     ),
-                    sdoc=SourceDocumentRead.from_orm(x[1]),
-                    memo=get_object_memos(db_obj=x[0], user_id=user_id),
-                    tags=[],
+                    sdoc=SourceDocumentRead.from_orm(row[1]),
+                    memo=get_object_memos(db_obj=row[0], user_id=user_id),
+                    tags=[
+                        DocumentTagRead.from_orm(tag) for tag in row[1].document_tags
+                    ],
                 )
-                for x in res
+                for row in result
             ]
 
             return annotated_segments

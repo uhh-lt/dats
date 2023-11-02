@@ -1,5 +1,5 @@
 import { Dialog } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus";
 import {
   AttachedObjectType,
@@ -9,37 +9,15 @@ import {
   SourceDocumentRead,
   SpanAnnotationReadResolved,
 } from "../../api/openapi";
-import TagHooks from "../../api/TagHooks";
-import CodeHooks from "../../api/CodeHooks";
-import SdocHooks from "../../api/SdocHooks";
-import MemoHooks from "../../api/MemoHooks";
-import { MemoContentTag } from "./MemoContentTag";
-import { MemoContentSourceDocument } from "./MemoContentSourceDocument";
-import { MemoContentCode } from "./MemoContentCode";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation";
-import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
-import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoEvent } from "./MemoAPI";
-
-const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
-  switch (type) {
-    case AttachedObjectType.DOCUMENT_TAG:
-      return TagHooks.useGetMemo;
-    case AttachedObjectType.CODE:
-      return CodeHooks.useGetMemo;
-    case AttachedObjectType.SOURCE_DOCUMENT:
-      return SdocHooks.useGetMemo;
-    case AttachedObjectType.SPAN_ANNOTATION:
-      return SpanAnnotationHooks.useGetMemo;
-    case AttachedObjectType.BBOX_ANNOTATION:
-      return BboxAnnotationHooks.useGetMemo;
-    default:
-      return MemoHooks.useGetMemo;
-  }
-};
+import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation";
+import { MemoContentCode } from "./MemoContentCode";
+import { MemoContentSourceDocument } from "./MemoContentSourceDocument";
+import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation";
+import { MemoContentTag } from "./MemoContentTag";
+import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
+import { useGetMemoQuery } from "./useGetMemoQuery";
 
 export default function MemoDialog() {
   const { user } = useAuth();

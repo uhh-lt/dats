@@ -11,6 +11,7 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     TimelineAnalysisResult,
 )
+from app.core.data.dto.filter import Filter
 from app.core.data.dto.search import SimSearchQuery, SimSearchSentenceHit
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
@@ -29,10 +30,13 @@ router = APIRouter(
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
 async def code_frequencies(
-    *, project_id: int, user_ids: List[int], code_ids: List[int]
+    *,
+    project_id: int,
+    code_ids: List[int],
+    filter: Filter,
 ) -> List[CodeFrequency]:
     return AnalysisService().compute_code_frequency(
-        project_id=project_id, user_ids=user_ids, code_ids=code_ids
+        project_id=project_id, code_ids=code_ids, filter=filter
     )
 
 
@@ -43,7 +47,10 @@ async def code_frequencies(
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
 async def code_occurrences(
-    *, project_id: int, user_ids: List[int], code_id: int
+    *,
+    project_id: int,
+    user_ids: List[int],
+    code_id: int,
 ) -> List[CodeOccurrence]:
     return AnalysisService().find_code_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
@@ -71,10 +78,10 @@ async def annotation_occurrences(
     description="Returns AnnotationSegments.",
 )
 async def annotated_segments(
-    *, project_id: int, user_id: int
+    *, project_id: int, user_id: int, filter: Filter
 ) -> List[AnnotatedSegment]:
     return AnalysisService().find_annotated_segments(
-        project_id=project_id, user_id=user_id
+        project_id=project_id, user_id=user_id, filter=filter
     )
 
 

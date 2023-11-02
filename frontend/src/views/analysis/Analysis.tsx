@@ -47,8 +47,8 @@ function Analysis() {
 
             <Grid item>
               <AnalysisCard
-                to={"code-segments"}
-                title={"Code Segments"}
+                to={"annotated-segments"}
+                title={"Annotated Segments"}
                 description={"View, search, edit all coded segments."}
                 color={"#77dd77"}
               />

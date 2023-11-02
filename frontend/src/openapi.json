@@ -4370,6 +4370,10 @@
           },
           { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "query" }
         ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Filter" } } },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5446,11 +5450,11 @@
       },
       "Body_analysis-code_frequencies": {
         "title": "Body_analysis-code_frequencies",
-        "required": ["user_ids", "code_ids"],
+        "required": ["code_ids", "filter"],
         "type": "object",
         "properties": {
-          "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } },
-          "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } }
+          "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } },
+          "filter": { "$ref": "#/components/schemas/Filter" }
         }
       },
       "Body_authentication-login": {
@@ -5639,6 +5643,22 @@
           }
         }
       },
+      "DBColumns": {
+        "title": "DBColumns",
+        "enum": [
+          "SPAN_TEXT",
+          "SOURCE_DOCUMENT_ID",
+          "SOURCE_DOCUMENT_FILENAME",
+          "CODE_ID",
+          "CODE_NAME",
+          "DOCUMENT_TAG_ID",
+          "DOCUMENT_TAG_TITLE",
+          "MEMO_ID",
+          "MEMO_CONTENT",
+          "MEMO_TITLE"
+        ],
+        "description": "An enumeration."
+      },
       "DocType": {
         "title": "DocType",
         "enum": ["text", "image", "video", "audio"],
@@ -5819,6 +5839,39 @@
           }
         }
       },
+      "Filter": {
+        "title": "Filter",
+        "required": ["items", "logic_operator"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "anyOf": [{ "$ref": "#/components/schemas/FilterExpression" }, { "$ref": "#/components/schemas/Filter" }]
+            }
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "description": "A tree of column expressions for filtering on many database columns using various\ncomparisons."
+      },
+      "FilterExpression": {
+        "title": "FilterExpression",
+        "required": ["column", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "column": { "$ref": "#/components/schemas/DBColumns" },
+          "operator": {
+            "title": "Operator",
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" }
+            ]
+          },
+          "value": { "title": "Value", "anyOf": [{ "type": "string" }, { "type": "integer" }] }
+        }
+      },
       "HTTPValidationError": {
         "title": "HTTPValidationError",
         "type": "object",
@@ -5826,6 +5879,7 @@
           "detail": { "title": "Detail", "type": "array", "items": { "$ref": "#/components/schemas/ValidationError" } }
         }
       },
+      "IDOperator": { "title": "IDOperator", "enum": ["ID_EQUALS", "ID_NOT_EQUALS"], "description": "An enumeration." },
       "KeyValue": {
         "title": "KeyValue",
         "required": ["key", "value"],
@@ -5852,6 +5906,12 @@
             "description": "Number of occurrences of the keyword in the entire collection"
           }
         }
+      },
+      "LogicalOperator": {
+        "title": "LogicalOperator",
+        "enum": ["or", "and"],
+        "type": "string",
+        "description": "This tells our filter how to combine multiple column expressions."
       },
       "MemoContentQuery": {
         "title": "MemoContentQuery",
@@ -5984,6 +6044,11 @@
           "content": { "title": "Content", "type": "string", "description": "Content of the Memo" },
           "starred": { "title": "Starred", "type": "boolean", "description": "Starred flag of the Memo" }
         }
+      },
+      "NumberOperator": {
+        "title": "NumberOperator",
+        "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
+        "description": "An enumeration."
       },
       "PaginatedElasticSearchDocumentHits": {
         "title": "PaginatedElasticSearchDocumentHits",
@@ -6348,8 +6413,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "min": 0,
-            "max": 1
+            "max": 1,
+            "min": 0
           }
         }
       },
@@ -7067,6 +7132,11 @@
         "title": "SpanGroupUpdate",
         "type": "object",
         "properties": { "name": { "title": "Name", "type": "string", "description": "Name of the SpanGroup" } }
+      },
+      "StringOperator": {
+        "title": "StringOperator",
+        "enum": ["STRING_CONTAINS", "STRING_EQUALS", "STRING_NOT_EQUALS", "STRING_STARTS_WITH", "STRING_ENDS_WITH"],
+        "description": "An enumeration."
       },
       "TableType": {
         "title": "TableType",
