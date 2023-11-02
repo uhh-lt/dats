@@ -3,23 +3,50 @@ import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import { SpanAnnotationReadResolved } from "../../api/openapi";
 import CodeRenderer from "./CodeRenderer";
 
+interface SpanAnnotationRendererSharedProps {
+  showCode?: boolean;
+  showSpanText?: boolean;
+}
+
 interface SpanAnnotationRendererProps {
   spanAnnotation: number | SpanAnnotationReadResolved;
 }
 
-function SpanAnnotationRenderer({ spanAnnotation }: SpanAnnotationRendererProps) {
+function SpanAnnotationRenderer({
+  spanAnnotation,
+  showCode = true,
+  showSpanText = true,
+}: SpanAnnotationRendererProps & SpanAnnotationRendererSharedProps) {
   if (typeof spanAnnotation === "number") {
-    return <SpanAnnotationRendererWithoutData spanAnnotationId={spanAnnotation} />;
+    return (
+      <SpanAnnotationRendererWithoutData
+        spanAnnotationId={spanAnnotation}
+        showCode={showCode}
+        showSpanText={showSpanText}
+      />
+    );
   } else {
-    return <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation} />;
+    return (
+      <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation} showCode={showCode} showSpanText={showSpanText} />
+    );
   }
 }
 
-function SpanAnnotationRendererWithoutData({ spanAnnotationId }: { spanAnnotationId: number }) {
+function SpanAnnotationRendererWithoutData({
+  spanAnnotationId,
+  showCode,
+  showSpanText,
+}: { spanAnnotationId: number } & SpanAnnotationRendererSharedProps) {
   const spanAnnotation = SpanAnnotationHooks.useGetAnnotation(spanAnnotationId);
 
   if (spanAnnotation.isSuccess) {
-    return <SpanAnnotationRendererWithData spanAnnotation={spanAnnotation.data} />;
+    return (
+      <SpanAnnotationRendererWithData
+        spanAnnotation={spanAnnotation.data}
+        showCode={showCode}
+        showSpanText={showSpanText}
+      />
+    );
   } else if (spanAnnotation.isError) {
     return <div>{spanAnnotation.error.message}</div>;
   } else {
@@ -27,12 +54,16 @@ function SpanAnnotationRendererWithoutData({ spanAnnotationId }: { spanAnnotatio
   }
 }
 
-function SpanAnnotationRendererWithData({ spanAnnotation }: { spanAnnotation: SpanAnnotationReadResolved }) {
+function SpanAnnotationRendererWithData({
+  spanAnnotation,
+  showCode,
+  showSpanText,
+}: { spanAnnotation: SpanAnnotationReadResolved } & SpanAnnotationRendererSharedProps) {
   return (
     <Stack direction="row" alignItems="center">
-      <CodeRenderer code={spanAnnotation.code} />
-      {": "}
-      {spanAnnotation.span_text}
+      {showCode && <CodeRenderer code={spanAnnotation.code} />}
+      {showCode && showSpanText && ": "}
+      {showSpanText && spanAnnotation.span_text}
     </Stack>
   );
 }
