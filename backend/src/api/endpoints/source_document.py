@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
@@ -14,12 +14,8 @@ from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.source_document import (
-    SourceDocumentContent,
-    SourceDocumentHTML,
     SourceDocumentKeywords,
     SourceDocumentRead,
-    SourceDocumentSentences,
-    SourceDocumentTokens,
     SourceDocumentUpdate,
 )
 from app.core.data.dto.source_document_metadata import (
@@ -66,110 +62,6 @@ async def delete_by_id(
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
     return SourceDocumentRead.model_validate(db_obj)
-
-
-@router.get(
-    "/{sdoc_id}/content",
-    response_model=Optional[SourceDocumentContent],
-    summary="Returns the (textual) content of the SourceDocument",
-    description=(
-        "Returns the (textual) content of the SourceDocument if it exists. If the SourceDocument is "
-        "not a text file, there is no content but an URL to the file content."
-    ),
-)
-async def get_content(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-) -> Optional[SourceDocumentContent]:
-    # TODO Flo: only if the user has access?
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    if sdoc_db_obj.doctype == DocType.text:
-        return SourceDocumentContent.model_validate(sdoc_db_obj)
-    url = RepoService().get_sdoc_url(
-        sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
-    )
-    return SourceDocumentContent(source_document_id=sdoc_id, content=url)
-
-
-@router.get(
-    "/{sdoc_id}/html",
-    response_model=Optional[SourceDocumentHTML],
-    summary="Returns the (html) content of the SourceDocument",
-    description=(
-        "Returns the (html) content of the SourceDocument if it exists. If the SourceDocument is "
-        "not a text file, there is no content but an URL to the file content."
-    ),
-)
-async def get_html(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-) -> Optional[SourceDocumentHTML]:
-    # TODO Flo: only if the user has access?
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    if sdoc_db_obj.doctype == DocType.text:
-        return SourceDocumentHTML.model_validate(sdoc_db_obj)
-    else:
-        return RepoService().get_sdoc_url(
-            sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
-        )
-
-
-@router.get(
-    "/{sdoc_id}/tokens",
-    response_model=Optional[SourceDocumentTokens],
-    summary="Returns the textual tokens of the SourceDocument if it is a text document.",
-    description="Returns the textual tokens of the SourceDocument if it is a text document.",
-)
-async def get_tokens(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-    character_offsets: Optional[bool] = Query(
-        title="Include Character Offsets",
-        description="If True include the character offsets.",
-        default=False,
-    ),
-) -> Optional[SourceDocumentTokens]:
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-    # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    return SourceDocumentTokens.model_validate(sdoc_db_obj)
-
-
-@router.get(
-    "/{sdoc_id}/sentences",
-    response_model=Optional[SourceDocumentSentences],
-    summary="Returns the sentences of the SourceDocument if it is a text document.",
-    description="Returns the sentences of the SourceDocument if it is a text document.",
-)
-async def get_sentences(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-    sentence_offsets: Optional[bool] = Query(
-        title="Include Sentence Offsets",
-        description="If True include the character offsets.",
-        default=False,
-    ),
-) -> Optional[SourceDocumentSentences]:
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-    # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    return SourceDocumentSentences.model_validate(sdoc_db_obj)
 
 
 @router.patch(
