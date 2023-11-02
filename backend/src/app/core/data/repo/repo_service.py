@@ -100,7 +100,9 @@ class RepoService(metaclass=SingletonMeta):
                 # remove the suffixes to only truncate the true name / stem
                 # and then truncate to max length
                 filename.name.removesuffix(suffix)[:SDOC_FILENAME_MAX_LENGTH]
-            ).with_suffix(suffix)  # and add suffix again
+            ).with_suffix(
+                suffix
+            )  # and add suffix again
         return str(filename)
 
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
