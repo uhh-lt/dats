@@ -18,6 +18,8 @@ import {
   SpanAnnotationReadResolved,
   TimelineAnalysisResult,
 } from "./openapi";
+import { useDebounce } from "../utils/useDebounce";
+import { useEffect } from "react";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
   useQuery<CodeFrequency[], Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds], () =>
@@ -82,14 +84,15 @@ const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: 
     },
   );
 
-const useAnnotatedSegments = (projectId: number | undefined, userId: number | undefined, filter: Filter) =>
-  useQuery<Record<number, AnnotatedSegment>, Error>(
-    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userId, filter],
+const useAnnotatedSegments = (projectId: number | undefined, userId: number | undefined, filter: Filter) => {
+  const debouncedFilter = useDebounce(filter, 1000);
+  return useQuery<Record<number, AnnotatedSegment>, Error>(
+    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userId, debouncedFilter],
     async () => {
       const annotatedSegments = await AnalysisService.annotatedSegments({
         projectId: projectId!,
         userId: userId!,
-        requestBody: filter,
+        requestBody: debouncedFilter,
       });
 
       return annotatedSegments.reduce((previousValue, currentValue) => {
@@ -134,6 +137,7 @@ const useAnnotatedSegments = (projectId: number | undefined, userId: number | un
       },
     },
   );
+};
 
 const AnalysisHooks = {
   useCodeFrequencies,

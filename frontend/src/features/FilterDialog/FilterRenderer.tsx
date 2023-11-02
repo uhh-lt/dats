@@ -143,7 +143,7 @@ export interface FilterRendererProps {
 function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpression }: FilterRendererProps) {
   // actions
   const handleAddFilter = (id: string) => {
-    const newFilter = { ...filter };
+    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(newFilter, id);
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
@@ -159,7 +159,7 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
   };
 
   const handleAddFilterExpression = (id: string) => {
-    const newFilter = { ...filter };
+    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(newFilter, id);
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
@@ -178,7 +178,7 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
   };
 
   const handleLogicalOperatorChange = (id: string, operator: LogicalOperator) => {
-    const newFilter = { ...filter };
+    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(newFilter, id);
     if (filterItem && isFilter(filterItem)) {
       filterItem.logic_operator = operator;
@@ -187,7 +187,7 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
   };
 
   const handleColumnChange = (id: string, column: DBColumns) => {
-    const newFilter = { ...filter };
+    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(newFilter, id);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.column = column;
@@ -198,7 +198,7 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
   };
 
   const handleOperatorChange = (id: string, operator: IDOperator | NumberOperator | StringOperator) => {
-    const newFilter = { ...filter };
+    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(newFilter, id);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.operator = operator;
@@ -207,7 +207,7 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
   };
 
   const handleValueChange = (id: string, value: string | number) => {
-    const newFilter = { ...filter };
+    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(newFilter, id);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.value = value;
