@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.orm.orm_base import ORMBase
@@ -19,8 +19,8 @@ class PreprocessingJobPayloadORM(ORMBase):
     status = mapped_column(
         String, nullable=False, index=True, default=BackgroundJobStatus.WAITING
     )
-    current_pipeline_step = mapped_column(String, nullable=True, default=None)
-    error_message: Mapped[str] = mapped_column(String, nullable=True, default=None)
+    current_pipeline_step: Mapped[Optional[str]] = mapped_column(String, default=None)
+    error_message: Mapped[Optional[str]] = mapped_column(String, default=None)
 
     # many to one
     project_id: Mapped[int] = mapped_column(
@@ -42,9 +42,8 @@ class PreprocessingJobPayloadORM(ORMBase):
         "PreprocessingJobORM", back_populates="payloads"
     )
 
-    source_document_id: Mapped[int] = mapped_column(
+    source_document_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        nullable=True,
         default=None,
     )

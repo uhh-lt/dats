@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -19,10 +19,10 @@ class MemoORM(ORMBase):
         String, nullable=False, index=False
     )  # TODO Flo: This will go to ES soon!
     starred: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
-    created: Mapped[int] = mapped_column(
+    created: Mapped[Optional[int]] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
-    updated: Mapped[datetime] = mapped_column(
+    updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
@@ -41,7 +41,7 @@ class MemoORM(ORMBase):
         nullable=False,
         index=True,
     )
-    attached_to: Mapped["ObjectHandleORM"] = relationship(
+    attached_to: Mapped[Optional["ObjectHandleORM"]] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="attached_memos",

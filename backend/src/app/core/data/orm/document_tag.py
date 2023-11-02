@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
@@ -14,12 +14,12 @@ if TYPE_CHECKING:
 class DocumentTagORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    description: Mapped[str] = mapped_column(String, nullable=True, index=True)
-    color: Mapped[str] = mapped_column(String, nullable=True)
-    created: Mapped[datetime] = mapped_column(
+    description: Mapped[Optional[str]] = mapped_column(String, index=True)
+    color: Mapped[Optional[str]]
+    created: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
-    updated: Mapped[datetime] = mapped_column(
+    updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 

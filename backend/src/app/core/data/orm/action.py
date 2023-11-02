@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, func
@@ -19,8 +19,8 @@ class ActionORM(ORMBase):
     action_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
     target_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     target_type: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    before_state: Mapped[str] = mapped_column(String, nullable=True)
-    after_state: Mapped[str] = mapped_column(String, nullable=True)
+    before_state: Mapped[Optional[str]]
+    after_state: Mapped[Optional[str]]
 
     # one to one
     object_handle: Mapped["ObjectHandleORM"] = relationship(
@@ -32,7 +32,7 @@ class ActionORM(ORMBase):
     )
 
     # many to one
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True
     )
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="actions")

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 
 from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
@@ -16,12 +16,12 @@ if TYPE_CHECKING:
 class CodeORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    description: Mapped[str] = mapped_column(String, index=True)
-    color: Mapped[str] = mapped_column(String, index=True)
-    created: Mapped[datetime] = mapped_column(
+    description: Mapped[Optional[str]] = mapped_column(String, index=True)
+    color: Mapped[Optional[str]] = mapped_column(String, index=True)
+    created: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
-    updated: Mapped[datetime] = mapped_column(
+    updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
@@ -35,7 +35,7 @@ class CodeORM(ORMBase):
     )
 
     # many to one
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True
     )
     user: Mapped["UserORM"] = relationship("UserORM", back_populates="codes")
@@ -49,7 +49,7 @@ class CodeORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="codes")
 
     # hierarchy reference
-    parent_code_id: Mapped[int] = mapped_column(
+    parent_code_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("code.id", ondelete="CASCADE")
     )
     parent_code: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
