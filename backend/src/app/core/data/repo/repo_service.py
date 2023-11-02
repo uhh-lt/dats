@@ -437,7 +437,7 @@ class RepoService(metaclass=SingletonMeta):
             raise e
 
     def build_source_document_create_dto_from_file(
-        self, proj_id: int, filename: Union[str, Path]
+        self, proj_id: int, filename: Union[str, Path], **extra_data
     ) -> Tuple[Path, SourceDocumentCreate]:
         filename = self.truncate_filename(filename)
         dst_path = self._get_dst_path_for_project_sdoc_file(
@@ -465,5 +465,6 @@ class RepoService(metaclass=SingletonMeta):
             doctype=doctype,
             project_id=proj_id,
             status=SDocStatus.unfinished_or_erroneous,
+            **extra_data,
         )
         return dst_path, create_dto
