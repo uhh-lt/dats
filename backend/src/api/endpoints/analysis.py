@@ -66,7 +66,6 @@ async def annotation_occurrences(
 
 @router.post(
     "/annotated_segments",
-    tags=tags,
     response_model=List[AnnotatedSegment],
     summary="Returns AnnotationSegments.",
     description="Returns AnnotationSegments.",
