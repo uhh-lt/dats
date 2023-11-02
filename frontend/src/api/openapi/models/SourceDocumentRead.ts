@@ -11,9 +11,9 @@ export type SourceDocumentRead = {
    */
   filename: string;
   /**
-   * Content of the SourceDocument
+   * User-defined name of the document (default is the filename)
    */
-  content: string;
+  name: string;
   /**
    * DOCTYPE of the SourceDocument
    */
@@ -38,4 +38,28 @@ export type SourceDocumentRead = {
    * Updated timestamp of the Memo
    */
   updated: string;
+  /**
+   * The (textual) content of the SourceDocument the content belongs to.
+   */
+  content: string;
+  /**
+   * The (html) content of the SourceDocument.
+   */
+  html: string;
+  /**
+   * The (textual) list Tokens of the SourceDocument the Tokens belong to.
+   */
+  tokens: Array<string>;
+  /**
+   * The list of character offsets of the Tokens
+   */
+  token_character_offsets?: Array<Array<any>>;
+  /**
+   * The Sentences of the SourceDocument the Sentences belong to.
+   */
+  sentences: Array<string>;
+  /**
+   * The list of character offsets of the Sentences
+   */
+  sentence_character_offsets?: Array<Array<any>>;
 };

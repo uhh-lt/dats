@@ -1096,135 +1096,23 @@
           }
         },
         "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/sdoc/{sdoc_id}/content": {
-      "get": {
+      },
+      "patch": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the (textual) content of the SourceDocument",
-        "description": "Returns the (textual) content of the SourceDocument if it exists. If the SourceDocument is not a text file, there is no content but an URL to the file content.",
-        "operationId": "get_content",
+        "summary": "Updates the SourceDocument",
+        "description": "Updates the SourceDocument with the given ID.",
+        "operationId": "update_by_id",
         "parameters": [
-          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
-          {
-            "required": false,
-            "schema": { "title": "Only Finished", "type": "boolean", "default": true },
-            "name": "only_finished",
-            "in": "query"
-          }
+          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentContent" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentUpdate" } } },
+          "required": true
         },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/sdoc/{sdoc_id}/html": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the (html) content of the SourceDocument",
-        "description": "Returns the (html) content of the SourceDocument if it exists. If the SourceDocument is not a text file, there is no content but an URL to the file content.",
-        "operationId": "get_html",
-        "parameters": [
-          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
-          {
-            "required": false,
-            "schema": { "title": "Only Finished", "type": "boolean", "default": true },
-            "name": "only_finished",
-            "in": "query"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentHTML" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/sdoc/{sdoc_id}/tokens": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the textual tokens of the SourceDocument if it is a text document.",
-        "description": "Returns the textual tokens of the SourceDocument if it is a text document.",
-        "operationId": "get_tokens",
-        "parameters": [
-          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
-          {
-            "required": false,
-            "schema": { "title": "Only Finished", "type": "boolean", "default": true },
-            "name": "only_finished",
-            "in": "query"
-          },
-          {
-            "description": "If True include the character offsets.",
-            "required": false,
-            "schema": {
-              "title": "Include Character Offsets",
-              "type": "boolean",
-              "description": "If True include the character offsets.",
-              "default": false
-            },
-            "name": "character_offsets",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentTokens" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/sdoc/{sdoc_id}/sentences": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the sentences of the SourceDocument if it is a text document.",
-        "description": "Returns the sentences of the SourceDocument if it is a text document.",
-        "operationId": "get_sentences",
-        "parameters": [
-          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
-          {
-            "required": false,
-            "schema": { "title": "Only Finished", "type": "boolean", "default": true },
-            "name": "only_finished",
-            "in": "query"
-          },
-          {
-            "description": "If True include the character offsets.",
-            "required": false,
-            "schema": {
-              "title": "Include Sentence Offsets",
-              "type": "boolean",
-              "description": "If True include the character offsets.",
-              "default": false
-            },
-            "name": "sentence_offsets",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentSentences" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -6520,23 +6408,6 @@
           }
         }
       },
-      "SourceDocumentContent": {
-        "title": "SourceDocumentContent",
-        "required": ["source_document_id", "content"],
-        "type": "object",
-        "properties": {
-          "source_document_id": {
-            "title": "Source Document Id",
-            "type": "integer",
-            "description": "ID of the SourceDocument the content belongs to."
-          },
-          "content": {
-            "title": "Content",
-            "type": "string",
-            "description": "The (textual) content of the SourceDocument the content belongs to."
-          }
-        }
-      },
       "SourceDocumentContentQuery": {
         "title": "SourceDocumentContentQuery",
         "required": ["proj_id", "content_query"],
@@ -6595,19 +6466,6 @@
             "type": "boolean",
             "description": "If true, filename prefix search is done. If false exact filename is searched."
           }
-        }
-      },
-      "SourceDocumentHTML": {
-        "title": "SourceDocumentHTML",
-        "required": ["source_document_id", "html"],
-        "type": "object",
-        "properties": {
-          "source_document_id": {
-            "title": "Source Document Id",
-            "type": "integer",
-            "description": "ID of the SourceDocument the content belongs to."
-          },
-          "html": { "title": "Html", "type": "string", "description": "The (html) content of the SourceDocument." }
         }
       },
       "SourceDocumentKeywords": {
@@ -6679,7 +6537,20 @@
       },
       "SourceDocumentRead": {
         "title": "SourceDocumentRead",
-        "required": ["filename", "content", "doctype", "status", "project_id", "id", "created", "updated"],
+        "required": [
+          "filename",
+          "name",
+          "doctype",
+          "status",
+          "project_id",
+          "id",
+          "created",
+          "updated",
+          "content",
+          "html",
+          "tokens",
+          "sentences"
+        ],
         "type": "object",
         "properties": {
           "filename": {
@@ -6688,7 +6559,11 @@
             "type": "string",
             "description": "Filename of the SourceDocument"
           },
-          "content": { "title": "Content", "type": "string", "description": "Content of the SourceDocument" },
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "description": "User-defined name of the document (default is the filename)"
+          },
           "doctype": {
             "allOf": [{ "$ref": "#/components/schemas/DocType" }],
             "description": "DOCTYPE of the SourceDocument"
@@ -6714,18 +6589,24 @@
             "type": "string",
             "description": "Updated timestamp of the Memo",
             "format": "date-time"
-          }
-        }
-      },
-      "SourceDocumentSentences": {
-        "title": "SourceDocumentSentences",
-        "required": ["source_document_id", "sentences"],
-        "type": "object",
-        "properties": {
-          "source_document_id": {
-            "title": "Source Document Id",
-            "type": "integer",
-            "description": "ID of the SourceDocument the Sentences belong to."
+          },
+          "content": {
+            "title": "Content",
+            "type": "string",
+            "description": "The (textual) content of the SourceDocument the content belongs to."
+          },
+          "html": { "title": "Html", "type": "string", "description": "The (html) content of the SourceDocument." },
+          "tokens": {
+            "title": "Tokens",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The (textual) list Tokens of the SourceDocument the Tokens belong to."
+          },
+          "token_character_offsets": {
+            "title": "Token Character Offsets",
+            "type": "array",
+            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] },
+            "description": "The list of character offsets of the Tokens"
           },
           "sentences": {
             "title": "Sentences",
@@ -6741,27 +6622,15 @@
           }
         }
       },
-      "SourceDocumentTokens": {
-        "title": "SourceDocumentTokens",
-        "required": ["source_document_id", "tokens"],
+      "SourceDocumentUpdate": {
+        "title": "SourceDocumentUpdate",
+        "required": ["name"],
         "type": "object",
         "properties": {
-          "source_document_id": {
-            "title": "Source Document Id",
-            "type": "integer",
-            "description": "ID of the SourceDocument the Tokens belong to."
-          },
-          "tokens": {
-            "title": "Tokens",
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "The (textual) list Tokens of the SourceDocument the Tokens belong to."
-          },
-          "token_character_offsets": {
-            "title": "Token Character Offsets",
-            "type": "array",
-            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] },
-            "description": "The list of character offsets of the Tokens"
+          "name": {
+            "title": "Name",
+            "type": "string",
+            "description": "User-defined name of the document (default is the filename)"
           }
         }
       },
@@ -7234,7 +7103,11 @@
             "maxLength": 230,
             "type": "string"
           },
-          "content": { "title": "Content", "description": "Content of the SourceDocument", "type": "string" },
+          "name": {
+            "title": "Name",
+            "description": "User-defined name of the document (default is the filename)",
+            "type": "string"
+          },
           "doctype": {
             "description": "DOCTYPE of the SourceDocument",
             "allOf": [{ "$ref": "#/components/schemas/DocType" }]
@@ -7261,6 +7134,36 @@
             "type": "string",
             "format": "date-time"
           },
+          "content": {
+            "title": "Content",
+            "description": "The (textual) content of the SourceDocument the content belongs to.",
+            "type": "string"
+          },
+          "html": { "title": "Html", "description": "The (html) content of the SourceDocument.", "type": "string" },
+          "tokens": {
+            "title": "Tokens",
+            "description": "The (textual) list Tokens of the SourceDocument the Tokens belong to.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "token_character_offsets": {
+            "title": "Token Character Offsets",
+            "description": "The list of character offsets of the Tokens",
+            "type": "array",
+            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] }
+          },
+          "sentences": {
+            "title": "Sentences",
+            "description": "The Sentences of the SourceDocument the Sentences belong to.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "sentence_character_offsets": {
+            "title": "Sentence Character Offsets",
+            "description": "The list of character offsets of the Sentences",
+            "type": "array",
+            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] }
+          },
           "tags": {
             "title": "Tags",
             "description": "Tags of the SourceDocument",
@@ -7276,13 +7179,17 @@
         },
         "required": [
           "filename",
-          "content",
+          "name",
           "doctype",
           "status",
           "project_id",
           "id",
           "created",
           "updated",
+          "content",
+          "html",
+          "tokens",
+          "sentences",
           "tags",
           "metadata"
         ],

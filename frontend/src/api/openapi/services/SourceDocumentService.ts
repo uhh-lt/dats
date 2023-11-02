@@ -5,14 +5,11 @@ import type { AnnotationDocumentRead } from "../models/AnnotationDocumentRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
-import type { SourceDocumentContent } from "../models/SourceDocumentContent";
-import type { SourceDocumentHTML } from "../models/SourceDocumentHTML";
 import type { SourceDocumentKeywords } from "../models/SourceDocumentKeywords";
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
-import type { SourceDocumentSentences } from "../models/SourceDocumentSentences";
-import type { SourceDocumentTokens } from "../models/SourceDocumentTokens";
+import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -67,123 +64,26 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the (textual) content of the SourceDocument
-   * Returns the (textual) content of the SourceDocument if it exists. If the SourceDocument is not a text file, there is no content but an URL to the file content.
-   * @returns SourceDocumentContent Successful Response
+   * Updates the SourceDocument
+   * Updates the SourceDocument with the given ID.
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getContent({
+  public static updateById({
     sdocId,
-    onlyFinished = true,
+    requestBody,
   }: {
     sdocId: number;
-    onlyFinished?: boolean;
-  }): CancelablePromise<SourceDocumentContent> {
+    requestBody: SourceDocumentUpdate;
+  }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/content",
+      method: "PATCH",
+      url: "/sdoc/{sdoc_id}",
       path: {
         sdoc_id: sdocId,
       },
-      query: {
-        only_finished: onlyFinished,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns the (html) content of the SourceDocument
-   * Returns the (html) content of the SourceDocument if it exists. If the SourceDocument is not a text file, there is no content but an URL to the file content.
-   * @returns SourceDocumentHTML Successful Response
-   * @throws ApiError
-   */
-  public static getHtml({
-    sdocId,
-    onlyFinished = true,
-  }: {
-    sdocId: number;
-    onlyFinished?: boolean;
-  }): CancelablePromise<SourceDocumentHTML> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/html",
-      path: {
-        sdoc_id: sdocId,
-      },
-      query: {
-        only_finished: onlyFinished,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns the textual tokens of the SourceDocument if it is a text document.
-   * Returns the textual tokens of the SourceDocument if it is a text document.
-   * @returns SourceDocumentTokens Successful Response
-   * @throws ApiError
-   */
-  public static getTokens({
-    sdocId,
-    onlyFinished = true,
-    characterOffsets = false,
-  }: {
-    sdocId: number;
-    onlyFinished?: boolean;
-    /**
-     * If True include the character offsets.
-     */
-    characterOffsets?: boolean;
-  }): CancelablePromise<SourceDocumentTokens> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/tokens",
-      path: {
-        sdoc_id: sdocId,
-      },
-      query: {
-        only_finished: onlyFinished,
-        character_offsets: characterOffsets,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns the sentences of the SourceDocument if it is a text document.
-   * Returns the sentences of the SourceDocument if it is a text document.
-   * @returns SourceDocumentSentences Successful Response
-   * @throws ApiError
-   */
-  public static getSentences({
-    sdocId,
-    onlyFinished = true,
-    sentenceOffsets = false,
-  }: {
-    sdocId: number;
-    onlyFinished?: boolean;
-    /**
-     * If True include the character offsets.
-     */
-    sentenceOffsets?: boolean;
-  }): CancelablePromise<SourceDocumentSentences> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/sentences",
-      path: {
-        sdoc_id: sdocId,
-      },
-      query: {
-        only_finished: onlyFinished,
-        sentence_offsets: sentenceOffsets,
-      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },

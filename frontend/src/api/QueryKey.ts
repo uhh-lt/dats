@@ -63,10 +63,6 @@ export const QueryKey = {
 
   // a single document (by document id)
   SDOC: "sdoc",
-  // the name of a single document (by document id)
-  SDOC_NAME: "sdocName",
-  // a single document without content (by document id)
-  SDOC_NO_CONTENT: "sdocNoContent",
   // a single document (by adoc id)
   SDOC_BY_ADOC: "sdocByAdoc",
   // all tags of a document (by document id)
@@ -75,18 +71,12 @@ export const QueryKey = {
   SDOC_ADOCS: "sdocAdocs",
   // all metadata of a document (by document id)
   SDOC_METADATAS: "sdocMetadatas",
-  // tokens of a document (by document id)
-  SDOC_TOKENS: "sdocTokens",
   // keywords of a document (by document id)
   SDOC_KEYWORDS: "sdocKeywords",
   // word frequencies of a document (by document id)
   SDOC_WORD_FREQUENCIES: "sdocFrequencies",
   // word frequencies of a document (by document id)
   SDOC_WORD_LEVEL_TRANSCRIPTIONS: "sdocTranscriptions",
-  // sentences of a document (by document id)
-  SDOC_SENTENCES: "sdocSentences",
-  // content of a document (by document id)
-  SDOC_CONTENT: "sdocContent",
   // url of a document (by document id)
   SDOC_URL: "sdocURL",
   // thumbnail url of a document (by document id)
