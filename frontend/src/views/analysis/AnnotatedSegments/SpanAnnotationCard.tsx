@@ -41,12 +41,6 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
       {spanAnnotation.isSuccess && sdocContent.isSuccess ? (
         <>
           <CardContent sx={{ pb: "8px !important" }}>
-            <Stack direction="row">
-              Code: <CodeRenderer code={spanAnnotation.data.code} />
-            </Stack>
-            <Stack direction="row">
-              Document: Coming soon... {/*<SdocRenderer sdoc={spanAnnotation.sdoc.id} link /> */}
-            </Stack>
             <Typography variant="body1" color="inherit" component="div" sx={{ mt: 2 }}>
               {sdocContent.data.content.substring(spanAnnotation.data.begin - contextSize, spanAnnotation.data.begin)}
               <b>{sdocContent.data.content.substring(spanAnnotation.data.begin, spanAnnotation.data.end)}</b>
