@@ -156,7 +156,7 @@ const router = createBrowserRouter([
         element: <TimelineAnalysis />,
       },
       {
-        path: "/project/:projectId/analysis/code-segments",
+        path: "/project/:projectId/analysis/annotated-segments",
         element: <AnnotatedSegments />,
       },
       {
