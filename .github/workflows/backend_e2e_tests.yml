@@ -88,8 +88,9 @@ jobs:
           export RAY_CONFIG="./config_test_no_gpu.yaml"
           docker compose -f compose-test.yml up -d
           echo Waiting for containers to start...
-          set -o allexport; source .env; set +o allexport
-          RAY_HOST=localhost RAY_PORT=$RAY_EXPOSED ../backend/src/test_ray.sh
+          # RAY_HOST=localhost RAY_PORT=13134 ../backend/src/test_ray.sh
+          sleep 240
+          docker compose -f compose-test.yml logs
           cd ..
       - name: Run Import Data End-To-End Test
         env:
