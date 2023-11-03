@@ -22,6 +22,7 @@ from app.core.data.dto.search import (
 from app.core.data.dto.source_document import (
     SDocStatus,
     SourceDocumentCreate,
+    SourceDocumentUpdate,
     SourceDocumentRead,
     SourceDocumentReadAction,
     SourceDocumentUpdate,
