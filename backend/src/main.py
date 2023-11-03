@@ -10,6 +10,8 @@ from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
+from alembic.command import upgrade
+from alembic.config import Config
 
 from app.core.startup import startup  # isort: skip
 
@@ -263,6 +265,8 @@ def main() -> None:
         port is not None and isinstance(port, int) and port > 0
     ), "The API port has to be a positive integer! E.g. 8081"
 
+    migrate_database()
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
@@ -272,6 +276,9 @@ def main() -> None:
         reload=False,
     )
 
+def migrate_database() -> None:
+    config = Config("alembic.ini")
+    upgrade(config, "head")
 
 if __name__ == "__main__":
     main()
