@@ -8,6 +8,7 @@ on:
     paths:
       - "backend/**"
       - ".github/**"
+      - "docker/**"
   pull_request:
     branches:
       - main
