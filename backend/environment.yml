@@ -37,5 +37,6 @@ dependencies:
   - git=2.34.1
   - httpx=0.23.0
   - anyio=3.5.0
+  - debugpy=1.8.0
   - pip:
       - -r requirements.txt

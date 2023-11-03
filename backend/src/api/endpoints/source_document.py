@@ -17,6 +17,7 @@ from app.core.data.dto.source_document import (
     SourceDocumentRead,
     SourceDocumentSentences,
     SourceDocumentTokens,
+    SourceDocumentUpdate,
 )
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataRead,
@@ -166,6 +167,20 @@ async def get_sentences(
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return SourceDocumentSentences.from_orm(sdoc_db_obj)
+
+
+@router.patch(
+    "/{sdoc_id}",
+    response_model=SourceDocumentRead,
+    summary="Updates the SourceDocument",
+    description="Updates the SourceDocument with the given ID.",
+)
+async def update_sdoc(
+    *, db: Session = Depends(get_db_session), sdoc_id: int, sdoc: SourceDocumentUpdate
+) -> SourceDocumentRead:
+    # TODO Flo: only if the user has access?
+    db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
+    return SourceDocumentRead.from_orm(db_obj)
 
 
 @router.get(

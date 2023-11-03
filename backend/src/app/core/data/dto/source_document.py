@@ -8,6 +8,8 @@ from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRea
 from app.core.data.dto.util import PaginatedResults
 from pydantic import BaseModel, Field
 
+from .dto_base import UpdateDTOBase
+
 SDOC_FILENAME_MAX_LENGTH = 200
 SDOC_SUFFIX_MAX_LENGTH = 30
 
@@ -33,18 +35,32 @@ class SourceDocumentBaseDTO(BaseModel):
 
 # Properties for creation
 class SourceDocumentCreate(SourceDocumentBaseDTO):
-    content: str = Field()
-    html: str = Field()
-    token_starts: List[int] = Field()
-    token_ends: List[int] = Field()
-    sentence_starts: List[int] = Field()
-    sentence_ends: List[int] = Field()
+    content: Optional[str] = Field(
+        description="Raw,original content of the SourceDocument", default=None
+    )
+    html: Optional[str] = Field(
+        description="Processed HTML of the SourceDocument", default=None
+    )
+    token_starts: Optional[List[int]] = Field(
+        description="Start of each token in character offsets in content", default=None
+    )
+    token_ends: Optional[List[int]] = Field(
+        description="End of each token in character offsets in content", default=None
+    )
+    sentence_starts: Optional[List[int]] = Field(
+        description="Start of each sentence in character offsets in content",
+        default=None,
+    )
+    sentence_ends: Optional[List[int]] = Field(
+        description="End of each sentence in character offsets in content", default=None
+    )
 
 
 # Properties for updating
-# Flo: We do not want to update SourceDocuments
-# class SourceDocumentUpdate(SourceDocumentBaseDTO):
-#     pass
+class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
+    name: Optional[str] = Field(
+        description="User-defined name of the document", default=None
+    )
 
 
 # Properties for reading (as in ORM)

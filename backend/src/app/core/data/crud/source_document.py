@@ -19,6 +19,7 @@ from app.core.data.dto.search import (
 from app.core.data.dto.source_document import (
     SDocStatus,
     SourceDocumentCreate,
+    SourceDocumentUpdate,
     SourceDocumentRead,
     SourceDocumentReadAction,
 )
@@ -46,13 +47,7 @@ class SourceDocumentPreprocessingUnfinishedError(Exception):
         super().__init__(f"SourceDocument {sdoc_id} is still getting preprocessed!")
 
 
-class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]):
-    def update(
-        self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> SourceDocumentORM:
-        # Flo: We no not want to update SourceDocument
-        raise NotImplementedError()
-
+class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, SourceDocumentUpdate]):
     def update_status(
         self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus
     ) -> SourceDocumentORM:
@@ -62,7 +57,7 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         db.commit()
         db.refresh(sdoc_db_obj)
         return sdoc_db_obj
-
+    
     def get_status(
         self, db: Session, *, sdoc_id: int, raise_error_on_unfinished: bool = False
     ) -> SDocStatus:
