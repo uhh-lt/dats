@@ -6,22 +6,24 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
-    from app.core.data.orm.object_handle import ObjectHandleORM
+    from app.core.data.orm.project_metadata import ProjectMetadataORM
     from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class SourceDocumentMetadataORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    key: Mapped[str] = mapped_column(String, nullable=False, index=True)
     value: Mapped[str] = mapped_column(String, index=False)
     read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
 
-    # one to one
-    object_handle: Mapped["ObjectHandleORM"] = relationship(
-        "ObjectHandleORM",
-        uselist=False,
-        back_populates="source_document_metadata",
-        passive_deletes=True,
+    # many to one
+    project_metadata_id = Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("projectmetadata.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    project_metadata: Mapped["ProjectMetadataORM"] = relationship(
+        "ProjectMetadataORM", back_populates="sdoc_metadata"
     )
 
     # many to one
@@ -37,6 +39,8 @@ class SourceDocumentMetadataORM(ORMBase):
 
     __table_args__ = (
         UniqueConstraint(
-            "source_document_id", "key", name="UC_unique_metadata_key_per_sdoc"
+            "source_document_id",
+            "project_metadata_id",
+            name="UC_unique_metadata_sdoc_id_project_metadata_id",
         ),
     )

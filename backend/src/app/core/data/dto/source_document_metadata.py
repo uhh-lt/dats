@@ -3,11 +3,11 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 
 
 # Properties shared across all DTOs
 class SourceDocumentMetadataBaseDTO(BaseModel):
-    key: str = Field(description="Key of the SourceDocumentMetadata")
     value: str = Field(description="Value of the SourceDocumentMetadata")
 
 
@@ -16,20 +16,11 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
     source_document_id: int = Field(
         description="SourceDocument the SourceDocumentMetadata belongs to"
     )
-    read_only: Optional[bool] = Field(
-        description=(
-            "Flag that tells if the SourceDocumentMetadata cannot be changed."
-            " Used for system generated metadata! Use False for user metadata."
-        ),
-        default=False,
-    )
+    project_metadata_id: int = Field(description="ID of the ProjectMetadata")
 
 
 # Properties for updating
-class SourceDocumentMetadataUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase):
-    key: Optional[str] = Field(
-        description="Key of the SourceDocumentMetadata", default=None
-    )
+class SourceDocumentMetadataUpdate(BaseModel, UpdateDTOBase):
     value: Optional[str] = Field(
         description="Value of the SourceDocumentMetadata", default=None
     )
@@ -38,16 +29,18 @@ class SourceDocumentMetadataUpdate(SourceDocumentMetadataBaseDTO, UpdateDTOBase)
 # Properties for reading (as in ORM)
 class SourceDocumentMetadataRead(SourceDocumentMetadataBaseDTO):
     id: int = Field(description="ID of the SourceDocumentMetadata")
-    key: str = Field(description="Key of the SourceDocumentMetadata")
-    value: str = Field(description="Value of the SourceDocumentMetadata")
-    read_only: bool = Field(
-        description=(
-            "Flag that tells if the SourceDocumentMetadata cannot be changed."
-            " Used for system generated metadata! Use False for user metadata."
-        ),
-        default=False,
-    )
+    project_metadata_id: int = Field(description="ID of the ProjectMetadata")
     source_document_id: int = Field(
         description="SourceDocument the SourceDocumentMetadata belongs to"
     )
     model_config = ConfigDict(from_attributes=True)
+
+
+class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
+    id: int = Field(description="ID of the SourceDocumentMetadata")
+    source_document_id: int = Field(
+        description="SourceDocument the SourceDocumentMetadata belongs to"
+    )
+    project_metadata: ProjectMetadataRead = Field(
+        description="ProjectMetadata of the SourceDocumentMetadata"
+    )

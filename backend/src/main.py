@@ -24,7 +24,7 @@ from app.core.startup import startup  # isort: skip
 #  unvicorn will import this file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
-    startup(reset_data=False, sql_echo=True)
+    startup(reset_data=False, sql_echo=False)
     os.environ["STARTUP_DONE"] = "1"
 
 from api.endpoints import (
@@ -40,11 +40,12 @@ from api.endpoints import (
     feedback,
     general,
     memo,
-    metadata,
     prepro,
     project,
+    project_metadata,
     search,
     source_document,
+    source_document_metadata,
     span_annotation,
     span_group,
     user,
@@ -260,7 +261,7 @@ app.include_router(bbox_annotation.router)
 app.include_router(code.router)
 app.include_router(memo.router)
 app.include_router(search.router)
-app.include_router(metadata.router)
+app.include_router(source_document_metadata.router)
 app.include_router(feedback.router)
 app.include_router(analysis.router)
 app.include_router(prepro.router)
@@ -268,6 +269,7 @@ app.include_router(export.router)
 app.include_router(crawler.router)
 app.include_router(analysis_table.router)
 app.include_router(whiteboard.router)
+app.include_router(project_metadata.router)
 
 
 def main() -> None:

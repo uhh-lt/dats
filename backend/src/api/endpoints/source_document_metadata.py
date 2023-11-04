@@ -12,7 +12,7 @@ from app.core.data.dto.source_document_metadata import (
 )
 
 router = APIRouter(
-    prefix="/metadata", dependencies=[Depends(get_current_user)], tags=["metadata"]
+    prefix="/sdocmeta", dependencies=[Depends(get_current_user)], tags=["sdocMetadata"]
 )
 
 

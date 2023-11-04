@@ -15,6 +15,7 @@ from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import crud_user
@@ -24,6 +25,10 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
+from app.core.data.dto.project_metadata import (
+    ProjectMetadataRead,
+    ProjectMetadataUpdate,
+)
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
     SourceDocumentRead,
@@ -580,3 +585,20 @@ async def get_project_metadata_by_metadata_key(
             db=db, project_id=proj_id, key=metadata_key
         )
     ]
+
+
+@router.get(
+    "/{proj_id}/metadata",
+    response_model=List[ProjectMetadataRead],
+    summary="Returns all ProjectMetadata",
+    description="Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+)
+async def get_all_metadata(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+) -> List[ProjectMetadataRead]:
+    # TODO Flo: only if the user has access?
+    db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
+    metadata = [ProjectMetadataRead.from_orm(meta) for meta in db_objs]
+    return metadata

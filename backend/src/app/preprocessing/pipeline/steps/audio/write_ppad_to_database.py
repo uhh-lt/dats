@@ -4,10 +4,12 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
@@ -38,47 +40,37 @@ def _persist_sdoc_metadata(
 ) -> None:
     logger.info(f"Persisting SourceDocumentMetadata for {ppad.filename}...")
     sdoc_id = sdoc_db_obj.id
-    filename = sdoc_db_obj.filename
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     ppad.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
-
-    metadata_create_dtos = [
-        # persist original filename
-        SourceDocumentMetadataCreate(
-            key="file_name",
-            value=str(filename),
-            source_document_id=sdoc_id,
-            read_only=True,
-        ),
-        # persist name
-        SourceDocumentMetadataCreate(
-            key="name",
-            value=str(filename),
-            source_document_id=sdoc_id,
-            read_only=False,
-        ),
-    ]
-
-    # store word level transcriptions as metadata
     wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
-    metadata_create_dtos.append(
-        SourceDocumentMetadataCreate(
-            key="word_level_transcriptions",
-            value=json.dumps(wlt),
-            source_document_id=sdoc_id,
-            read_only=True,
-        )
-    )
+    ppad.metadata["word_level_transcriptions"] = json.dumps(wlt)
 
-    for key, value in ppad.metadata.items():
-        metadata_create_dtos.append(
-            SourceDocumentMetadataCreate(
-                key=str(key),
-                value=str(value),
-                source_document_id=sdoc_id,
-                read_only=True,
+    project_metadata = [
+        pm
+        for pm in crud_project.read(db=db, id=ppad.project_id).metadata_
+        if pm.doctype == DocType.audio
+    ]
+    project_metadata_map = {str(m.key): int(m.id) for m in project_metadata}
+
+    # we create SourceDocumentMetadata for every project metadata
+    metadata_create_dtos = []
+    for project_metadata_key, project_metadata_id in project_metadata_map.items():
+        if project_metadata_key in ppad.metadata.keys():
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate(
+                    value=ppad.metadata[project_metadata_key],
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata_id,
+                )
             )
-        )
+        else:
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate(
+                    value="",
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata_id,
+                )
+            )
 
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 

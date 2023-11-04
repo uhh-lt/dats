@@ -9,7 +9,7 @@ from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataCreate,
     SourceDocumentMetadataUpdate,
 )
-from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 
 
@@ -50,10 +50,10 @@ class CRUDSourceDocumentMetadata(
         self, db: Session, *, metadata_id: int, update_dto: SourceDocumentMetadataUpdate
     ) -> Optional[SourceDocumentMetadataORM]:
         db_obj = self.read(db=db, id=metadata_id)
-        if db_obj.read_only:
+        if db_obj.project_metadata.read_only:
             logger.warning(
                 (
-                    f"Cannot update read-only SourceDocumentMetadata {db_obj.key} from"
+                    f"Cannot update read-only SourceDocumentMetadata {db_obj.project_metadata.key} from"
                     f" SourceDocument {db_obj.source_document_id}!"
                 )
             )
@@ -83,31 +83,6 @@ class CRUDSourceDocumentMetadata(
 
             return metadata_orm
 
-    def read_by_sdoc_and_key(
-        self, db: Session, sdoc_id: int, key: str
-    ) -> Optional[SourceDocumentMetadataORM]:
-        db_obj = (
-            db.query(self.model)
-            .filter(self.model.source_document_id == sdoc_id, self.model.key == key)
-            .first()
-        )
-        if not db_obj:
-            raise NoSuchElementError(self.model, key=key, source_document_id=sdoc_id)
-        return db_obj
-
-    def read_by_project_and_key(
-        self, db: Session, project_id: int, key: str
-    ) -> List[SourceDocumentMetadataORM]:
-        db_objs = (
-            db.query(self.model)
-            .join(
-                SourceDocumentORM, SourceDocumentORM.id == self.model.source_document_id
-            )
-            .filter(SourceDocumentORM.project_id == project_id, self.model.key == key)
-            .all()
-        )
-        return db_objs
-
     def read_by_project(
         self,
         db: Session,
@@ -117,22 +92,50 @@ class CRUDSourceDocumentMetadata(
         limit: Optional[int] = None,
     ) -> List[SourceDocumentMetadataORM]:
         query = (
-            db.query(self.model, SourceDocumentORM.project_id)
-            .join(SourceDocumentORM)
-            .filter(SourceDocumentORM.project_id == proj_id)
+            db.query(self.model)
+            .join(SourceDocumentMetadataORM.project_metadata)
+            .filter(ProjectMetadataORM.project_id == proj_id)
         )
         if skip is not None:
             query = query.offset(skip)
         if limit is not None:
             query = query.limit(limit)
 
-        return list(map(lambda t: t[0], query.all()))
+        db_objs = query.all()
+        return db_objs
+
+    def read_by_sdoc_and_key(
+        self,
+        db: Session,
+        *,
+        key: str,
+        sdoc_id: int,
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> Optional[SourceDocumentMetadataORM]:
+        query = (
+            db.query(self.model)
+            .join(SourceDocumentMetadataORM.project_metadata)
+            .filter(
+                ProjectMetadataORM.key == key,
+                SourceDocumentMetadataORM.source_document_id == sdoc_id,
+            )
+        )
+        if skip is not None:
+            query = query.offset(skip)
+        if limit is not None:
+            query = query.limit(limit)
+
+        db_obj = query.first()
+        return db_obj
 
     def read_by_sdoc(
         self, db: Session, sdoc_id: int
     ) -> List[SourceDocumentMetadataORM]:
         db_objs = (
-            db.query(self.model).filter(self.model.source_document_id == sdoc_id).all()
+            db.query(self.model)
+            .filter(SourceDocumentMetadataORM.source_document_id == sdoc_id)
+            .all()
         )
         return db_objs
 

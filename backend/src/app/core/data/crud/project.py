@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.action import ActionType
@@ -53,7 +54,10 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 5) create system codes
         crud_code.create_system_codes_for_project(db=db, proj_id=project_id)
 
-        # 6) create repo directory structure
+        # 6) create project metadata
+        crud_project_meta.create_project_metadata_for_project(db=db, proj_id=project_id)
+
+        # 7) create repo directory structure
         RepoService().create_directory_structure_for_project(proj_id=project_id)
 
         return db_obj

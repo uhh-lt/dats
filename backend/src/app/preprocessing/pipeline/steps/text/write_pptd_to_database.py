@@ -6,12 +6,14 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.source_document import SourceDocumentRead
@@ -63,43 +65,36 @@ def _persist_sdoc_metadata(
 ) -> None:
     logger.info(f"Persisting SourceDocument Metadata for {pptd.filename}...")
     sdoc_id = sdoc_db_obj.id
-    filename = sdoc_db_obj.filename
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     pptd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
+    pptd.metadata["word_frequencies"] = json.dumps(pptd.word_freqs)
 
-    metadata_create_dtos = [
-        # persist original filename
-        SourceDocumentMetadataCreate(
-            key="file_name",
-            value=filename,
-            source_document_id=sdoc_id,
-            read_only=True,
-        ),
-        # persist name
-        SourceDocumentMetadataCreate(
-            key="name",
-            value=filename,
-            source_document_id=sdoc_id,
-            read_only=False,
-        ),
-        # persist word frequencies
-        SourceDocumentMetadataCreate(
-            key="word_frequencies",
-            value=json.dumps(pptd.word_freqs),
-            source_document_id=sdoc_id,
-            read_only=True,
-        ),
+    project_metadata = [
+        pm
+        for pm in crud_project.read(db=db, id=pptd.project_id).metadata_
+        if pm.doctype == DocType.text
     ]
+    project_metadata_map = {str(m.key): int(m.id) for m in project_metadata}
 
-    for key, value in pptd.metadata.items():
-        metadata_create_dtos.append(
-            SourceDocumentMetadataCreate(
-                key=key,
-                value=value,
-                source_document_id=sdoc_id,
-                read_only=True,
+    # we create SourceDocumentMetadata for every project metadata
+    metadata_create_dtos = []
+    for project_metadata_key, project_metadata_id in project_metadata_map.items():
+        if project_metadata_key in pptd.metadata.keys():
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate(
+                    value=pptd.metadata[project_metadata_key],
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata_id,
+                )
             )
-        )
+        else:
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate(
+                    value="",
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata_id,
+                )
+            )
 
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 

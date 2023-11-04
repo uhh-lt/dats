@@ -7,9 +7,11 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
 from app.core.data.dto.code import CodeCreate
@@ -42,36 +44,35 @@ def _persist_sdoc_metadata(
     db: Session, sdoc_db_obj: SourceDocumentORM, ppid: PreProImageDoc
 ) -> None:
     sdoc_id = sdoc_db_obj.id
-    filename = sdoc_db_obj.filename
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     ppid.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
 
-    metadata_create_dtos = [
-        # mutable filename
-        SourceDocumentMetadataCreate(
-            key="file_name",
-            value=str(filename),
-            source_document_id=sdoc_id,
-            read_only=True,
-        ),
-        # immutable filename
-        SourceDocumentMetadataCreate(
-            key="name",
-            value=str(filename),
-            source_document_id=sdoc_id,
-            read_only=False,
-        ),
+    project_metadata = [
+        pm
+        for pm in crud_project.read(db=db, id=ppid.project_id).metadata_
+        if pm.doctype == DocType.image
     ]
+    project_metadata_map = {str(m.key): int(m.id) for m in project_metadata}
 
-    for key, value in ppid.metadata.items():
-        metadata_create_dtos.append(
-            SourceDocumentMetadataCreate(
-                key=str(key),
-                value=str(value),
-                source_document_id=sdoc_id,
-                read_only=True,
+    # we create SourceDocumentMetadata for every project metadata
+    metadata_create_dtos = []
+    for project_metadata_key, project_metadata_id in project_metadata_map.items():
+        if project_metadata_key in ppid.metadata.keys():
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate(
+                    value=ppid.metadata[project_metadata_key],
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata_id,
+                )
             )
-        )
+        else:
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate(
+                    value="",
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata_id,
+                )
+            )
 
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 

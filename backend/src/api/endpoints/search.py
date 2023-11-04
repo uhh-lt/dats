@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.dto.filter import Filter
 from app.core.data.dto.search import (
     KeywordStat,
     MemoContentQuery,
@@ -42,6 +43,21 @@ async def search_sdocs(*, query_params: SearchSDocsQueryParameters) -> List[int]
     # TODO Flo: only if the user has access?
     return SearchService().search_sdoc_ids_by_sdoc_query_parameters(
         query_params=query_params
+    )
+
+
+@router.post(
+    "/sdoc_new",
+    response_model=List[int],
+    summary="Returns all SourceDocument IDs that match the query parameters.",
+    description="Returns all SourceDocument Ids that match the query parameters.",
+)
+async def search_sdocs_new(
+    *, project_id: int, user_id: int, filter: Filter
+) -> List[int]:
+    # TODO Flo: only if the user has access?
+    return SearchService().search_new(
+        project_id=project_id, user_id=user_id, filter=filter
     )
 
 
