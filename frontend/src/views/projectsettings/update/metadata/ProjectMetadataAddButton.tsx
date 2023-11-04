@@ -1,33 +1,38 @@
-import MetadataHooks from "../../../../api/MetadataHooks";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
-import React, { useCallback } from "react";
-import { Grid } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
 import { Add } from "@mui/icons-material";
+import { LoadingButton } from "@mui/lab";
+import { Grid } from "@mui/material";
+import { useCallback } from "react";
+import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks";
+import { DocType, MetaType } from "../../../../api/openapi";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 
-interface DocumentMetadataAddButtonProps {
-  sdocId: number;
+interface ProjectMetadataAddButtonProps {
+  projectId: number;
+  key: string;
+  docType: DocType;
+  metaType: MetaType;
 }
 
-function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
+function ProjectMetadataAddButton({ projectId, key, docType, metaType }: ProjectMetadataAddButtonProps) {
   // mutations
-  const createMutation = MetadataHooks.useCreateMetadata();
+  const createMutation = ProjectMetadataHooks.useCreateMetadata();
 
   const handleAddMetadata = useCallback(() => {
     const mutation = createMutation.mutate;
     mutation(
       {
         requestBody: {
-          source_document_id: sdocId,
+          project_id: projectId,
           read_only: false,
-          key: "Key",
-          value: "Value",
+          key: key,
+          doctype: docType,
+          metatype: metaType,
         },
       },
       {
         onSuccess: (data) => {
           SnackbarAPI.openSnackbar({
-            text: `Added metadata to SourceDocument ${data.source_document_id}`,
+            text: `Added metadata to Project ${data.project_id}`,
             severity: "success",
           });
         },
@@ -39,7 +44,7 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
         },
       },
     );
-  }, [createMutation.mutate, sdocId]);
+  }, [createMutation.mutate, projectId, key, docType, metaType]);
 
   return (
     <Grid item md={2}>
@@ -57,4 +62,4 @@ function DocumentMetadataAddButton({ sdocId }: DocumentMetadataAddButtonProps) {
     </Grid>
   );
 }
-export default DocumentMetadataAddButton;
+export default ProjectMetadataAddButton;

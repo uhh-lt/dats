@@ -20,13 +20,9 @@ function DocumentKeywordsRow({ sdocId }: DocumentKeywordsProps) {
       {sdocId && keywords.isSuccess ? (
         <DocumentKeywordsContent sdocId={sdocId} keywords={keywords.data} />
       ) : keywords.isError ? (
-        <Grid item md={12}>
-          {keywords.error.message}
-        </Grid>
+        <div>{keywords.error.message}</div>
       ) : (
-        <Grid item md={12}>
-          Loading...
-        </Grid>
+        <div>Loading...</div>
       )}
     </>
   );
@@ -94,50 +90,36 @@ function DocumentKeywordsContent({ keywords, sdocId }: { keywords: SourceDocumen
   }, [keywords.keywords.length, sdocId, updateMutation.mutate]);
 
   return (
-    <>
-      <Grid item md={2}>
-        <Stack direction="row" sx={{ alignItems: "center", mt: "10px" }}>
-          <InfoOutlinedIcon fontSize="medium" sx={{ mr: 1 }} />
-          <TextField value={"keywords"} fullWidth size="small" variant="standard" disabled />
-        </Stack>
-      </Grid>
-      <Grid item md={10}>
-        <Stack direction="row" sx={{ alignItems: "center" }}>
-          <Autocomplete
-            multiple
-            options={[]}
-            value={keywordInput}
-            onChange={(event, newValue) => {
-              setKeywordInput(newValue);
-            }}
-            freeSolo
-            disableClearable
-            fullWidth
-            limitTags={3}
-            renderTags={(value: readonly string[], getTagProps) =>
-              value.map((option: string, index: number) => (
-                <Chip style={{ borderRadius: "4px" }} variant="filled" label={option} {...getTagProps({ index })} />
-              ))
-            }
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                fullWidth
-                variant="standard"
-                placeholder="keywords"
-                onBlur={() => handleUpdate()}
-              />
-            )}
-          />
-          <Tooltip title="Clear">
-            <span>
-              <IconButton size="small" onClick={() => handleClear()} disabled={updateMutation.isLoading}>
-                <ClearIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Stack>
-      </Grid>
-    </>
+    <Stack direction="row" alignItems="flex-end" mb={1.5}>
+      <InfoOutlinedIcon fontSize="medium" sx={{ mr: 1 }} />
+      <TextField value={"keywords"} fullWidth size="small" variant="standard" disabled />
+      <Autocomplete
+        multiple
+        options={[]}
+        value={keywordInput}
+        onChange={(event, newValue) => {
+          setKeywordInput(newValue);
+        }}
+        freeSolo
+        disableClearable
+        fullWidth
+        limitTags={3}
+        renderTags={(value: readonly string[], getTagProps) =>
+          value.map((option: string, index: number) => (
+            <Chip style={{ borderRadius: "4px" }} variant="filled" label={option} {...getTagProps({ index })} />
+          ))
+        }
+        renderInput={(params) => (
+          <TextField {...params} fullWidth variant="standard" placeholder="keywords" onBlur={() => handleUpdate()} />
+        )}
+      />
+      <Tooltip title="Clear">
+        <span>
+          <IconButton size="small" onClick={() => handleClear()} disabled={updateMutation.isLoading}>
+            <ClearIcon />
+          </IconButton>
+        </span>
+      </Tooltip>
+    </Stack>
   );
 }

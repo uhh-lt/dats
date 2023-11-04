@@ -1,18 +1,18 @@
-import { IconButtonProps } from "@mui/material";
-import MetadataHooks from "../../../../api/MetadataHooks";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
-import React, { useCallback } from "react";
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { IconButtonProps } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import { useCallback } from "react";
+import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 
-interface DocumentMetadataDeleteButtonProps {
+interface ProjectMetadataDeleteButtonProps {
   metadataId: number;
 }
 
-function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadataDeleteButtonProps & IconButtonProps) {
+function ProjectMetadataDeleteButton({ metadataId, ...props }: ProjectMetadataDeleteButtonProps & IconButtonProps) {
   // mutations
-  const deleteMutation = MetadataHooks.useDeleteMetadata();
+  const deleteMutation = ProjectMetadataHooks.useDeleteMetadata();
 
   const handleDeleteMetadata = useCallback(() => {
     const mutation = deleteMutation.mutate;
@@ -23,7 +23,7 @@ function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadata
       {
         onSuccess: (data) => {
           SnackbarAPI.openSnackbar({
-            text: `Deleted Metadata ${data.id} from SourceDocument ${data.source_document_id}`,
+            text: `Deleted Metadata ${data.id} from Project ${data.project_id}`,
             severity: "success",
           });
         },
@@ -42,4 +42,4 @@ function DocumentMetadataDeleteButton({ metadataId, ...props }: DocumentMetadata
   );
 }
 
-export default DocumentMetadataDeleteButton;
+export default ProjectMetadataDeleteButton;

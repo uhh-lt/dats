@@ -101,14 +101,15 @@ function Annotation() {
                               ))}
                           </div>
                           <Box>
-                            <DocumentMetadata sdocId={sourceDocumentId} metadata={metadata} />
+                            <DocumentMetadata sdocId={sourceDocumentId} />
                             <AnnotationDocumentSelector sdocId={sourceDocumentId} />
                           </Box>
                           {sourceDocument.data.doctype === DocType.IMAGE ? (
                             <ImageAnnotator
                               sdoc={sourceDocument.data}
                               adoc={annotationDocument}
-                              height={parseInt(metadata.data.get("height")!.value)}
+                              // height={parseInt(metadata.data.get("height")!.value)}
+                              height={600}
                             />
                           ) : sourceDocument.data.doctype === DocType.TEXT ? (
                             <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />

@@ -43,7 +43,6 @@ function DocumentViewer({
   const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sdocId);
   const { annotationDocuments, selectedAdoc, handleSelectAnnotationDocument } =
     useSelectableAnnotationDocuments(sdocId);
-  const metadata = SdocHooks.useGetMetadata(sdocId);
 
   // the queries are disabled if sdocId is undefined => show the idle content
   const dispatch = useAppDispatch();
@@ -83,7 +82,7 @@ function DocumentViewer({
               ))}
           </Stack>
           <div>
-            <DocumentMetadata sdocId={sdocId} metadata={metadata} />
+            <DocumentMetadata sdocId={sdocId} />
             {annotationDocuments.isLoading && <span>Loading annotation documents...</span>}
             {annotationDocuments.isError && <span>{annotationDocuments.error.message}</span>}
             {annotationDocuments.isSuccess && selectedAdoc && (
@@ -99,13 +98,15 @@ function DocumentViewer({
               {sdoc.data.doctype === DocType.TEXT && (
                 <TextViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
               )}
-              {sdoc.data.doctype === DocType.IMAGE && metadata.isSuccess && (
+              {sdoc.data.doctype === DocType.IMAGE && (
                 <ImageViewer
                   sdoc={sdoc.data}
                   adoc={selectedAdoc}
                   showEntities={showEntities}
-                  width={parseInt(metadata.data.get("width")!.value)}
-                  height={parseInt(metadata.data.get("height")!.value)}
+                  // width={parseInt(metadata.data.get("width")!.value)}
+                  // height={parseInt(metadata.data.get("height")!.value)}
+                  width={800}
+                  height={600}
                 />
               )}
               {sdoc.data.doctype === DocType.AUDIO && (

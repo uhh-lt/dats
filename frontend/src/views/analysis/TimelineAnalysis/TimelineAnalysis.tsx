@@ -9,7 +9,6 @@ import AnalysisHooks from "../../../api/AnalysisHooks";
 import { TimelineAnalysisResult } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { useParams } from "react-router-dom";
-import TimelineAnalysisMetadataChecker from "./TimeAnalysisMetadataChecker";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 
 function TimelineAnalysis() {
@@ -118,7 +117,7 @@ function TimelineAnalysis() {
         </Grid>
       </Grid>
       <TimelineAnalysisConceptEditor />
-      <TimelineAnalysisMetadataChecker projectId={parseInt(projectId!)} />
+      {/* <TimelineAnalysisMetadataChecker projectId={parseInt(projectId!)} /> */}
     </>
   );
 }
