@@ -11,6 +11,7 @@ import type { MemoRead } from "../models/MemoRead";
 import type { PaginatedSourceDocumentReads } from "../models/PaginatedSourceDocumentReads";
 import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
 import type { ProjectCreate } from "../models/ProjectCreate";
+import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
@@ -645,6 +646,25 @@ export class ProjectService {
       path: {
         proj_id: projId,
         metadata_key: metadataKey,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all ProjectMetadata
+   * Returns all ProjectMetadata of the SourceDocument with the given ID if it exists
+   * @returns ProjectMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllMetadata({ projId }: { projId: number }): CancelablePromise<Array<ProjectMetadataRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/metadata",
+      path: {
+        proj_id: projId,
       },
       errors: {
         422: `Validation Error`,

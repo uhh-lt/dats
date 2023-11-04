@@ -1,29 +1,29 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SourceDocumentMetadataCreate } from "../models/SourceDocumentMetadataCreate";
-import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
-import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
+import type { ProjectMetadataCreate } from "../models/ProjectMetadataCreate";
+import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
+import type { ProjectMetadataUpdate } from "../models/ProjectMetadataUpdate";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 
-export class MetadataService {
+export class ProjectMetadataService {
   /**
    * Creates new Metadata
    * Creates a new Metadata and returns it with the generated ID.
-   * @returns SourceDocumentMetadataRead Successful Response
+   * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
   public static createNewMetadata({
     requestBody,
   }: {
-    requestBody: SourceDocumentMetadataCreate;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
+    requestBody: ProjectMetadataCreate;
+  }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "PUT",
-      url: "/metadata",
+      url: "/projmeta",
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -35,13 +35,13 @@ export class MetadataService {
   /**
    * Returns the Metadata
    * Returns the Metadata with the given ID.
-   * @returns SourceDocumentMetadataRead Successful Response
+   * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static getById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
+  public static getById({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/metadata/{metadata_id}",
+      url: "/projmeta/{metadata_id}",
       path: {
         metadata_id: metadataId,
       },
@@ -54,13 +54,13 @@ export class MetadataService {
   /**
    * Deletes the Metadata
    * Deletes the Metadata with the given ID.
-   * @returns SourceDocumentMetadataRead Successful Response
+   * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
-  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
+  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "DELETE",
-      url: "/metadata/{metadata_id}",
+      url: "/projmeta/{metadata_id}",
       path: {
         metadata_id: metadataId,
       },
@@ -73,7 +73,7 @@ export class MetadataService {
   /**
    * Updates the Metadata
    * Updates the Metadata with the given ID.
-   * @returns SourceDocumentMetadataRead Successful Response
+   * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
    */
   public static updateById({
@@ -81,11 +81,11 @@ export class MetadataService {
     requestBody,
   }: {
     metadataId: number;
-    requestBody: SourceDocumentMetadataUpdate;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
+    requestBody: ProjectMetadataUpdate;
+  }): CancelablePromise<ProjectMetadataRead> {
     return __request(OpenAPI, {
       method: "PATCH",
-      url: "/metadata/{metadata_id}",
+      url: "/projmeta/{metadata_id}",
       path: {
         metadata_id: metadataId,
       },

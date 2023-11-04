@@ -4,10 +4,6 @@
 
 export type SourceDocumentMetadataCreate = {
   /**
-   * Key of the SourceDocumentMetadata
-   */
-  key: string;
-  /**
    * Value of the SourceDocumentMetadata
    */
   value: string;
@@ -16,7 +12,7 @@ export type SourceDocumentMetadataCreate = {
    */
   source_document_id: number;
   /**
-   * Flag that tells if the SourceDocumentMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.
+   * ID of the ProjectMetadata
    */
-  read_only?: boolean;
+  project_metadata_id: number;
 };

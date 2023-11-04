@@ -273,19 +273,12 @@ const useGetThumbnailURL = (sdocId: number | undefined) =>
   );
 
 const useGetMetadata = (sdocId: number | undefined) =>
-  useQuery<Map<string, SourceDocumentMetadataRead>, Error>(
+  useQuery<SourceDocumentMetadataRead[], Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
-    async () => {
-      const metadatas = await SourceDocumentService.getAllMetadata({
+    async () =>
+      SourceDocumentService.getAllMetadata({
         sdocId: sdocId!,
-        excludeCsv: "word_level_transcriptions,word_frequencies,name",
-      });
-      const result = new Map<string, SourceDocumentMetadataRead>();
-      metadatas.forEach((metadata) => {
-        result.set(metadata.key, metadata);
-      });
-      return result;
-    },
+      }),
     {
       enabled: !!sdocId,
     },

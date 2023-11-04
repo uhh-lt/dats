@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   DocType,
+  Filter,
   KeywordStat,
   MemoContentQuery,
   MemoRead,
@@ -19,6 +20,7 @@ import queryClient from "../plugins/ReactQueryClient";
 import { useAppSelector } from "../plugins/ReduxHooks";
 import { useAuth } from "../auth/AuthProvider";
 import { useMemo } from "react";
+import { useDebounce } from "../utils/useDebounce";
 
 export abstract class SearchResults<T extends Iterable<any>> {
   constructor(protected results: T) {
@@ -152,6 +154,22 @@ const imageSimilaritySearchQueryFn = async (
   });
 
   return new ImageSimilaritySearchResults(results);
+};
+
+const useSearchDocumentsNew = (projectId: number | undefined, userId: number | undefined, filter: Filter) => {
+  const debouncedFilter = useDebounce(filter, 1000);
+  return useQuery<number[], Error>(
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, userId, debouncedFilter],
+    () =>
+      SearchService.searchSdocsNew({
+        projectId: projectId!,
+        userId: userId!,
+        requestBody: filter,
+      }),
+    {
+      enabled: !!projectId && !!userId,
+    },
+  );
 };
 
 const useSearchDocumentsByProjectIdAndFilters = (projectId: number, filters: SearchFilter[]) => {
@@ -334,6 +352,7 @@ const SearchHooks = {
   useSearchMemoContent,
   useSearchDocumentsByProjectIdAndTagId,
   useSearchDocumentsByProjectIdAndFilters,
+  useSearchDocumentsNew,
 };
 
 export default SearchHooks;

@@ -1,46 +1,46 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { MetadataService, SourceDocumentMetadataRead } from "./openapi";
+import { SdocMetadataService, SourceDocumentMetadataRead } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
 
 const useCreateMetadata = () =>
-  useMutation(MetadataService.createNewMetadata, {
+  useMutation(SdocMetadataService.createNewMetadata, {
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
+      queryClient.invalidateQueries([QueryKey.SDOC_METADATA, data.id]);
       queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
     },
   });
 
 const useGetMetadata = (metadataId: number | undefined) =>
   useQuery<SourceDocumentMetadataRead, Error>(
-    [QueryKey.METADATA, metadataId],
-    () => MetadataService.getById({ metadataId: metadataId! }),
+    [QueryKey.SDOC_METADATA, metadataId],
+    () => SdocMetadataService.getById({ metadataId: metadataId! }),
     {
       enabled: !!metadataId,
     },
   );
 
 const useUpdateMetadata = () =>
-  useMutation(MetadataService.updateById, {
+  useMutation(SdocMetadataService.updateById, {
     onSuccess: (metadata) => {
-      queryClient.invalidateQueries([QueryKey.METADATA, metadata.id]);
+      queryClient.invalidateQueries([QueryKey.SDOC_METADATA, metadata.id]);
       queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, metadata.source_document_id]);
     },
   });
 
 const useDeleteMetadata = () =>
-  useMutation(MetadataService.deleteById, {
+  useMutation(SdocMetadataService.deleteById, {
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.METADATA, data.id]);
+      queryClient.invalidateQueries([QueryKey.SDOC_METADATA, data.id]);
       queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
     },
   });
 
-const MetadataHooks = {
+const SdocMetadataHooks = {
   useCreateMetadata,
   useGetMetadata,
   useUpdateMetadata,
   useDeleteMetadata,
 };
 
-export default MetadataHooks;
+export default SdocMetadataHooks;

@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Filter } from "../models/Filter";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
 import type { MemoTitleQuery } from "../models/MemoTitleQuery";
@@ -35,6 +36,36 @@ export class SearchService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/sdoc",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all SourceDocument IDs that match the query parameters.
+   * Returns all SourceDocument Ids that match the query parameters.
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static searchSdocsNew({
+    projectId,
+    userId,
+    requestBody,
+  }: {
+    projectId: number;
+    userId: number;
+    requestBody: Filter;
+  }): CancelablePromise<Array<number>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/sdoc_new",
+      query: {
+        project_id: projectId,
+        user_id: userId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {

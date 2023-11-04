@@ -117,7 +117,11 @@ export const QueryKey = {
   BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
 
   // a single metadata (by metadata id)
-  METADATA: "metadata",
+  SDOC_METADATA: "sdocMetadata",
+  // a single metadata (by metadata id)
+  PROJECT_METADATA: "projectMetadata",
+  // project metadata (by project id)
+  PROJECT_METADATAS: "projectMetadatas",
 
   // a single feedback (by feedback id)
   FEEDBACK: "feedback",

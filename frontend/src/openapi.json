@@ -1050,6 +1050,36 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/project/{proj_id}/metadata": {
+      "get": {
+        "tags": ["project"],
+        "summary": "Returns all ProjectMetadata",
+        "description": "Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+        "operationId": "get_all_metadata",
+        "parameters": [
+          { "required": true, "schema": { "title": "Proj Id", "type": "integer" }, "name": "proj_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Project-Get All Metadata",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ProjectMetadataRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["sourceDocument"],
@@ -1250,17 +1280,7 @@
         "description": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
         "operationId": "get_all_metadata",
         "parameters": [
-          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
-          {
-            "required": false,
-            "schema": {
-              "title": "Exclude Csv",
-              "type": "string",
-              "default": "word_level_transcriptions,word_frequencies"
-            },
-            "name": "exclude_csv",
-            "in": "query"
-          }
+          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" }
         ],
         "responses": {
           "200": {
@@ -3349,6 +3369,46 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/search/sdoc_new": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns all SourceDocument IDs that match the query parameters.",
+        "description": "Returns all SourceDocument Ids that match the query parameters.",
+        "operationId": "search_sdocs_new",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "query" }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Filter" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Search-Search Sdocs New",
+                  "type": "array",
+                  "items": { "type": "integer" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/search/entity_stats": {
       "post": {
         "tags": ["search"],
@@ -3783,9 +3843,9 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/metadata": {
+    "/sdocmeta": {
       "put": {
-        "tags": ["metadata"],
+        "tags": ["sdocMetadata"],
         "summary": "Creates new Metadata",
         "description": "Creates a new Metadata and returns it with the generated ID.",
         "operationId": "create_new_metadata",
@@ -3810,9 +3870,9 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/metadata/{metadata_id}": {
+    "/sdocmeta/{metadata_id}": {
       "get": {
-        "tags": ["metadata"],
+        "tags": ["sdocMetadata"],
         "summary": "Returns the Metadata",
         "description": "Returns the Metadata with the given ID.",
         "operationId": "get_by_id",
@@ -3839,7 +3899,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       },
       "delete": {
-        "tags": ["metadata"],
+        "tags": ["sdocMetadata"],
         "summary": "Deletes the Metadata",
         "description": "Deletes the Metadata with the given ID.",
         "operationId": "delete_by_id",
@@ -3866,7 +3926,7 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       },
       "patch": {
-        "tags": ["metadata"],
+        "tags": ["sdocMetadata"],
         "summary": "Updates the Metadata",
         "description": "Updates the Metadata with the given ID.",
         "operationId": "update_by_id",
@@ -4804,6 +4864,110 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/projmeta": {
+      "put": {
+        "tags": ["projectMetadata"],
+        "summary": "Creates new Metadata",
+        "description": "Creates a new Metadata and returns it with the generated ID.",
+        "operationId": "create_new_metadata",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/projmeta/{metadata_id}": {
+      "get": {
+        "tags": ["projectMetadata"],
+        "summary": "Returns the Metadata",
+        "description": "Returns the Metadata with the given ID.",
+        "operationId": "get_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Metadata Id", "type": "integer" },
+            "name": "metadata_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      },
+      "delete": {
+        "tags": ["projectMetadata"],
+        "summary": "Deletes the Metadata",
+        "description": "Deletes the Metadata with the given ID.",
+        "operationId": "delete_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Metadata Id", "type": "integer" },
+            "name": "metadata_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      },
+      "patch": {
+        "tags": ["projectMetadata"],
+        "summary": "Updates the Metadata",
+        "description": "Updates the Metadata with the given ID.",
+        "operationId": "update_by_id",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Metadata Id", "type": "integer" },
+            "name": "metadata_id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataUpdate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -5843,6 +6007,12 @@
           "starred": { "title": "Starred", "type": "boolean", "description": "Starred flag of the Memo" }
         }
       },
+      "MetaType": {
+        "title": "MetaType",
+        "enum": ["string", "number", "date", "list"],
+        "type": "string",
+        "description": "An enumeration."
+      },
       "NumberOperator": {
         "title": "NumberOperator",
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
@@ -6067,6 +6237,72 @@
         "properties": {
           "title": { "title": "Title", "type": "string", "description": "Title of the Project" },
           "description": { "title": "Description", "type": "string", "description": "Description of the Project" }
+        }
+      },
+      "ProjectMetadataCreate": {
+        "title": "ProjectMetadataCreate",
+        "required": ["key", "metatype", "doctype", "project_id"],
+        "type": "object",
+        "properties": {
+          "key": { "title": "Key", "type": "string", "description": "Key of the ProjectMetadata" },
+          "metatype": {
+            "allOf": [{ "$ref": "#/components/schemas/MetaType" }],
+            "description": "Type of the ProjectMetadata"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean",
+            "description": "Flag that tells if the ProjectMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.",
+            "default": false
+          },
+          "doctype": {
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "description": "DOCTYPE of the SourceDocument this metadata refers to"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the ProjectMetadata belongs to"
+          }
+        }
+      },
+      "ProjectMetadataRead": {
+        "title": "ProjectMetadataRead",
+        "required": ["key", "metatype", "doctype", "id", "project_id"],
+        "type": "object",
+        "properties": {
+          "key": { "title": "Key", "type": "string", "description": "Key of the ProjectMetadata" },
+          "metatype": {
+            "allOf": [{ "$ref": "#/components/schemas/MetaType" }],
+            "description": "Type of the ProjectMetadata"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean",
+            "description": "Flag that tells if the ProjectMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.",
+            "default": false
+          },
+          "doctype": {
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "description": "DOCTYPE of the SourceDocument this metadata refers to"
+          },
+          "id": { "title": "Id", "type": "integer", "description": "ID of the ProjectMetadata" },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the ProjectMetadata belongs to"
+          }
+        }
+      },
+      "ProjectMetadataUpdate": {
+        "title": "ProjectMetadataUpdate",
+        "type": "object",
+        "properties": {
+          "key": { "title": "Key", "type": "string", "description": "Key of the ProjectMetadata" },
+          "metatype": {
+            "allOf": [{ "$ref": "#/components/schemas/MetaType" }],
+            "description": "Type of the ProjectMetadata"
+          }
         }
       },
       "ProjectRead": {
@@ -6488,37 +6724,33 @@
       },
       "SourceDocumentMetadataCreate": {
         "title": "SourceDocumentMetadataCreate",
-        "required": ["key", "value", "source_document_id"],
+        "required": ["value", "source_document_id", "project_metadata_id"],
         "type": "object",
         "properties": {
-          "key": { "title": "Key", "type": "string", "description": "Key of the SourceDocumentMetadata" },
           "value": { "title": "Value", "type": "string", "description": "Value of the SourceDocumentMetadata" },
           "source_document_id": {
             "title": "Source Document Id",
             "type": "integer",
             "description": "SourceDocument the SourceDocumentMetadata belongs to"
           },
-          "read_only": {
-            "title": "Read Only",
-            "type": "boolean",
-            "description": "Flag that tells if the SourceDocumentMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.",
-            "default": false
+          "project_metadata_id": {
+            "title": "Project Metadata Id",
+            "type": "integer",
+            "description": "ID of the ProjectMetadata"
           }
         }
       },
       "SourceDocumentMetadataRead": {
         "title": "SourceDocumentMetadataRead",
-        "required": ["key", "value", "id", "source_document_id"],
+        "required": ["value", "id", "project_metadata_id", "source_document_id"],
         "type": "object",
         "properties": {
-          "key": { "title": "Key", "type": "string", "description": "Key of the SourceDocumentMetadata" },
           "value": { "title": "Value", "type": "string", "description": "Value of the SourceDocumentMetadata" },
           "id": { "title": "Id", "type": "integer", "description": "ID of the SourceDocumentMetadata" },
-          "read_only": {
-            "title": "Read Only",
-            "type": "boolean",
-            "description": "Flag that tells if the SourceDocumentMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.",
-            "default": false
+          "project_metadata_id": {
+            "title": "Project Metadata Id",
+            "type": "integer",
+            "description": "ID of the ProjectMetadata"
           },
           "source_document_id": {
             "title": "Source Document Id",
@@ -6531,7 +6763,6 @@
         "title": "SourceDocumentMetadataUpdate",
         "type": "object",
         "properties": {
-          "key": { "title": "Key", "type": "string", "description": "Key of the SourceDocumentMetadata" },
           "value": { "title": "Value", "type": "string", "description": "Value of the SourceDocumentMetadata" }
         }
       },
@@ -7242,14 +7473,12 @@
             "title": "SourceDocumentMetadataRead",
             "type": "object",
             "properties": {
-              "key": { "title": "Key", "description": "Key of the SourceDocumentMetadata", "type": "string" },
               "value": { "title": "Value", "description": "Value of the SourceDocumentMetadata", "type": "string" },
               "id": { "title": "Id", "description": "ID of the SourceDocumentMetadata", "type": "integer" },
-              "read_only": {
-                "title": "Read Only",
-                "description": "Flag that tells if the SourceDocumentMetadata cannot be changed. Used for system generated metadata! Use False for user metadata.",
-                "default": false,
-                "type": "boolean"
+              "project_metadata_id": {
+                "title": "Project Metadata Id",
+                "description": "ID of the ProjectMetadata",
+                "type": "integer"
               },
               "source_document_id": {
                 "title": "Source Document Id",
@@ -7257,7 +7486,7 @@
                 "type": "integer"
               }
             },
-            "required": ["key", "value", "id", "source_document_id"]
+            "required": ["value", "id", "project_metadata_id", "source_document_id"]
           }
         }
       },

@@ -9,6 +9,7 @@ import {
   MemoRead,
   PaginatedSourceDocumentReads,
   ProjectCreate,
+  ProjectMetadataRead,
   ProjectRead,
   ProjectService,
   ProjectUpdate,
@@ -234,6 +235,13 @@ const useGetMetadataByKey = (projectId: number, metadataKey: string) =>
       }),
   );
 
+const useGetMetadata = (projectId: number) =>
+  useQuery<ProjectMetadataRead[], Error>([QueryKey.PROJECT_METADATAS, projectId], () =>
+    ProjectService.getAllMetadata({
+      projId: projectId,
+    }),
+  );
+
 const ProjectHooks = {
   // tags
   useGetAllTags,
@@ -263,6 +271,7 @@ const ProjectHooks = {
   useQueryActions,
   // metadata
   useGetMetadataByKey,
+  useGetMetadata,
 };
 
 export default ProjectHooks;
