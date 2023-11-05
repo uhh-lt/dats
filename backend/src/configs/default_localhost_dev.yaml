@@ -100,6 +100,156 @@ elasticsearch:
     docs: configs/default_sdoc_index_settings.json
     memos: configs/default_memo_index_settings.json
 
+project_metadata:
+  text_url:
+    key: "url"
+    metatype: "string"
+    read_only: True
+    doctype: "text"
+  text_language:
+    key: "language"
+    metatype: "string"
+    read_only: True
+    doctype: "text"
+  text_word_frequencies:
+    key: "word_frequencies"
+    metatype: "string"
+    read_only: True
+    doctype: "text"
+  text_keywords:
+    key: "keywords"
+    metatype: "list"
+    read_only: True
+    doctype: "text"
+
+  image_url:
+    key: "url"
+    metatype: "string"
+    read_only: True
+    doctype: "image"
+  image_keywords:
+    key: "keywords"
+    metatype: "list"
+    read_only: True
+    doctype: "image"
+  image_caption:
+    key: "caption"
+    metatype: "string"
+    read_only: True
+    doctype: "image"
+  image_width:
+    key: "width"
+    metatype: "number"
+    read_only: True
+    doctype: "image"
+  image_height:
+    key: "height"
+    metatype: "number"
+    read_only: True
+    doctype: "image"
+  image_format:
+    key: "format"
+    metatype: "string"
+    read_only: True
+    doctype: "image"
+  image_mode:
+    key: "mode"
+    metatype: "string"
+    read_only: True
+    doctype: "image"
+
+  audio_url:
+    key: "url"
+    metatype: "string"
+    read_only: True
+    doctype: "audio"
+  audio_word_level_transcriptions:
+    key: "word_level_transcriptions"
+    metatype: "string"
+    read_only: True
+    doctype: "audio"
+  audio_duration:
+    key: "duration"
+    metatype: "number"
+    read_only: True
+    doctype: "audio"
+  audio_format_name:
+    key: "format_name"
+    metatype: "list"
+    read_only: True
+    doctype: "audio"
+  audio_format_long_name:
+    key: "format_long_name"
+    metatype: "string"
+    read_only: True
+    doctype: "audio"
+  audio_size:
+    key: "size"
+    metatype: "number"
+    read_only: True
+    doctype: "audio"
+  audio_bit_rate:
+    key: "bit_rate"
+    metatype: "number"
+    read_only: True
+    doctype: "audio"
+  audio_tags:
+    key: "tags"
+    metatype: "string"
+    read_only: True
+    doctype: "audio"
+
+  video_url:
+    key: "url"
+    metatype: "string"
+    read_only: True
+    doctype: "video"
+  video_word_level_transcriptions:
+    key: "word_level_transcriptions"
+    metatype: "string"
+    read_only: True
+    doctype: "video"
+  video_width:
+    key: "width"
+    metatype: "number"
+    read_only: True
+    doctype: "video"
+  video_height:
+    key: "height"
+    metatype: "number"
+    read_only: True
+    doctype: "video"
+  video_duration:
+    key: "duration"
+    metatype: "number"
+    read_only: True
+    doctype: "video"
+  video_format_name:
+    key: "format_name"
+    metatype: "list"
+    read_only: True
+    doctype: "video"
+  video_format_long_name:
+    key: "format_long_name"
+    metatype: "string"
+    read_only: True
+    doctype: "video"
+  video_size:
+    key: "size"
+    metatype: "number"
+    read_only: True
+    doctype: "video"
+  video_bit_rate:
+    key: "bit_rate"
+    metatype: "number"
+    read_only: True
+    doctype: "video"
+  video_tags:
+    key: "tags"
+    metatype: "string"
+    read_only: True
+    doctype: "video"
+
 system_codes:
   SYSTEM_CODE:
     desc: "A system code"

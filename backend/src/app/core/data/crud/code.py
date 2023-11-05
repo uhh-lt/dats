@@ -159,6 +159,11 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
             is not None
         )
 
+    def update(self, db: Session, *, id: int, update_dto: CodeUpdate) -> CodeORM | None:
+        if update_dto.parent_code_id == -1:
+            update_dto.parent_code_id = None
+        return super().update(db, id=id, update_dto=update_dto)
+
     def remove_by_user_and_project(
         self, db: Session, user_id: int, proj_id: int
     ) -> List[int]:

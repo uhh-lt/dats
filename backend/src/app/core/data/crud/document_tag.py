@@ -18,6 +18,13 @@ from app.core.data.orm.document_tag import (
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):
+    def update(
+        self, db: Session, *, id: int, update_dto: DocumentTagUpdate
+    ) -> DocumentTagORM | None:
+        if update_dto.parent_tag_id == -1:
+            update_dto.parent_tag_id = None
+        return super().update(db, id=id, update_dto=update_dto)
+
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
         # find all document tags to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)

@@ -51,6 +51,14 @@ class DocumentTagORM(ORMBase):
         passive_deletes=True,
     )
 
+    # hierarchy reference
+    parent_tag_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("documenttag.id", ondelete="CASCADE")
+    )
+    parent_tag: Mapped["DocumentTagORM"] = relationship(
+        "DocumentTagORM", remote_side=[id]
+    )
+
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):
     source_document_id: Mapped[int] = mapped_column(
