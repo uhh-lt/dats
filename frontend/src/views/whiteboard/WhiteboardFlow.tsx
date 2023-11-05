@@ -159,6 +159,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
+  const projectTags = ProjectHooks.useGetAllTags(projectId);
 
   // mutations
   const bulkLinkDocumentTagsMutation = TagHooks.useBulkLinkDocumentTags();
@@ -549,10 +550,10 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
           </ReactFlow>
         </Box>
       </Box>
-      <TagEditDialog />
       <SpanAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />
       <CodeCreateDialog />
+      {projectTags.isSuccess && <TagEditDialog tags={projectTags.data} />}
       {projectCodes.isSuccess && <CodeEditDialog codes={projectCodes.data} />}
     </>
   );

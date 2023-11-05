@@ -18,14 +18,13 @@ import LabelIcon from "@mui/icons-material/Label";
 import SearchIcon from "@mui/icons-material/Search";
 import { useParams } from "react-router-dom";
 import { flatMap, isEqual } from "lodash";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
-import TagCreationButton from "../TagCreate/TagCreationButton";
-import TagManageButton from "../TagManage/TagManageButton";
-import { DocumentTagRead } from "../../../../api/openapi";
-import ProjectHooks from "../../../../api/ProjectHooks";
-import SdocHooks from "../../../../api/SdocHooks";
-import { useAppSelector } from "../../../../plugins/ReduxHooks";
-import TagHooks from "../../../../api/TagHooks";
+import ProjectHooks from "../../../../../api/ProjectHooks";
+import SdocHooks from "../../../../../api/SdocHooks";
+import TagHooks from "../../../../../api/TagHooks";
+import { DocumentTagRead } from "../../../../../api/openapi";
+import SnackbarAPI from "../../../../../features/Snackbar/SnackbarAPI";
+import { useAppSelector } from "../../../../../plugins/ReduxHooks";
+import TagCreationButton from "./TagMenuCreateButton";
 
 export enum CheckboxState {
   NOT_CHECKED,
@@ -214,7 +213,6 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
   if (search.trim().length === 0 && !hasChanged) {
     actionMenu.push(<TagCreationButton tagName={search} dense key={"create-new"} />);
-    actionMenu.push(<TagManageButton dense key={"manage"} />);
   } else if (
     search.trim().length > 0 &&
     !hasChanged &&

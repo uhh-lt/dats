@@ -1,8 +1,8 @@
 import { ListItemIcon, ListItemText, MenuItem, PopoverOrigin, Typography } from "@mui/material";
 import React, { useState } from "react";
-import TagMenu from "../../Tags/TagMenu/TagMenu";
 import LabelIcon from "@mui/icons-material/Label";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import TagMenu from "./TagMenu";
 
 interface TagMenuAsListProps {
   popoverOrigin: PopoverOrigin | undefined;

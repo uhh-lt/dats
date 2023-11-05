@@ -22,10 +22,10 @@ import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenu
 import TagCreateDialog from "../../../features/CrudDialog/Tag/TagCreateDialog";
 import TagEditDialog from "../../../features/CrudDialog/Tag/TagEditDialog";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import TagCreationButton from "../../search/Tags/TagCreate/TagCreationButton";
-import TagEditButton from "../../search/Tags/TagEdit/TagEditButton";
 import { ProjectProps } from "./ProjectProps";
 import ProjectTagsContextMenu from "./ProjectTagsContextMenu";
+import TagEditButton from "../../../features/TagExplorer/TagEditButton";
+import TagCreationButton from "../../search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton";
 
 function ProjectTags({ project }: ProjectProps) {
   // global server state (react query)
@@ -98,37 +98,39 @@ function ProjectTags({ project }: ProjectProps) {
         <TagCreationButton tagName={""} />
       </List>
       {projectTags.isSuccess && (
-        <List disablePadding className="myFlexFillAllContainer">
-          {projectTagsFiltered.map((tag) => (
-            <ListItem
-              disablePadding
-              key={tag.id}
-              onContextMenu={onContextMenu(tag.id)}
-              secondaryAction={
-                <>
-                  <Tooltip title={"Remove tag from project"}>
-                    <span>
-                      <IconButton onClick={() => handleRemoveTag(tag.id)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  <TagEditButton tagId={tag.id} />
-                </>
-              }
-            >
-              <ListItemButton>
-                <ListItemIcon sx={{ minWidth: "32px" }}>
-                  <LabelIcon style={{ color: tag.color }} />
-                </ListItemIcon>
-                <ListItemText primary={tag.title} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        <>
+          <List disablePadding className="myFlexFillAllContainer">
+            {projectTagsFiltered.map((tag) => (
+              <ListItem
+                disablePadding
+                key={tag.id}
+                onContextMenu={onContextMenu(tag.id)}
+                secondaryAction={
+                  <>
+                    <Tooltip title={"Remove tag from project"}>
+                      <span>
+                        <IconButton onClick={() => handleRemoveTag(tag.id)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </span>
+                    </Tooltip>
+                    <TagEditButton tag={tag} />
+                  </>
+                }
+              >
+                <ListItemButton>
+                  <ListItemIcon sx={{ minWidth: "32px" }}>
+                    <LabelIcon style={{ color: tag.color }} />
+                  </ListItemIcon>
+                  <ListItemText primary={tag.title} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+          <TagEditDialog tags={projectTags.data} />
+        </>
       )}
       <TagCreateDialog />
-      <TagEditDialog />
       <ProjectTagsContextMenu
         position={contextMenuPosition}
         tagId={contextMenuData}

@@ -14,6 +14,7 @@ import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import ColorUtils from "../../../utils/ColorUtils";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import { AnnoActions } from "../../../views/annotation/annoSlice";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 
 export const openCodeEditDialog = (code: CodeRead) => {
   eventBus.dispatch("open-edit-code", code);
@@ -102,7 +103,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           ...requestBody,
           name: data.name,
           description: data.description,
-          parent_code_id: data.parentCodeId === -1 ? undefined : data.parentCodeId,
+          parent_code_id: data.parentCodeId,
         };
       }
 
@@ -163,7 +164,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       .filter((c) => c.id !== code?.id)
       .map((code) => (
         <MenuItem key={code.id} value={code.id}>
-          {code.name}
+          <CodeRenderer code={code} />
         </MenuItem>
       ));
   } else {
@@ -171,7 +172,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
       .filter((c) => c.id !== code?.id)
       .map((code) => (
         <MenuItem key={code.id} value={code.id}>
-          {code.name}
+          <CodeRenderer code={code} />
         </MenuItem>
       ));
   }

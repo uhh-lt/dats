@@ -87,8 +87,7 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdge
           {
             codeId: sourceNode.data.codeId,
             requestBody: {
-              // @ts-ignore
-              parent_code_id: null,
+              parent_code_id: -1,
             },
           },
           {

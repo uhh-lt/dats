@@ -2,12 +2,18 @@ import { Container, Divider, Grid, Stack, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
 import { isNumber } from "lodash";
-import { useCallback, useContext, useEffect, useMemo } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
-import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
+import {
+  DBColumns,
+  LogicalOperator,
+  SourceDocumentRead,
+  SpanEntityDocumentFrequency,
+  StringOperator,
+} from "../../api/openapi";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { SettingsActions } from "../settings/settingsSlice";
@@ -25,11 +31,13 @@ import {
 import SearchFilterChip from "./SearchFilterChip";
 import SearchResultsView from "./SearchResults/SearchResultsView";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import TagExplorer from "./Tags/TagExplorer/TagExplorer";
 import SearchToolbar from "./ToolBar/SearchToolbar";
 import { useAddTagFilter } from "./hooks/useAddTagFilter";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
 import { SearchActions } from "./searchSlice";
+import { MyFilter } from "../../features/FilterDialog/filterUtils";
+import FilterDialog from "../../features/FilterDialog/FilterDialog";
+import TagExplorer from "../../features/TagExplorer/TagExplorer";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -55,6 +63,18 @@ function Search() {
   const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
 
+  // new stuff
+  const [newFilters, setNewFilters] = useState<MyFilter>({
+    id: "1",
+    logic_operator: LogicalOperator.AND,
+    items: [],
+  });
+  const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
+  const newSearchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId), 1, newFilters);
+  if (newSearchResults.data) {
+    console.log("newSearchResults", newSearchResults.data);
+  }
+
   // query (global server state)
   const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
 
@@ -70,13 +90,6 @@ function Search() {
   }, [searchResults.data]);
 
   const viewDocument = Boolean(sdocId);
-
-  const selectedTag = useMemo(() => {
-    if (filters.length === 1 && isNumber(filters[0].data)) {
-      return filters[0].data;
-    }
-    return undefined;
-  }, [filters]);
 
   // handle navigation
   const navigateIfNecessary = useNavigateIfNecessary();
@@ -196,13 +209,7 @@ function Search() {
             boxShadow: 4,
           }}
         >
-          <TagExplorer
-            sx={{ height: "50%", pt: 0 }}
-            selectedTag={selectedTag}
-            handleAllDocumentsClick={handleClearSearch}
-            handleNewDocumentsClick={handleClearSearch}
-            handleTagClick={handleAddTagFilter}
-          />
+          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} showButtons />
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
@@ -217,6 +224,7 @@ function Search() {
           md={10}
           className="h100"
           sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
+          ref={filterDialogAnchorRef}
         >
           <SearchToolbar
             sdocId={sdocId ? parseInt(sdocId) : undefined}
@@ -226,6 +234,22 @@ function Search() {
             viewDocument={viewDocument}
           />
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
+            <FilterDialog
+              anchorEl={filterDialogAnchorRef.current}
+              filter={newFilters}
+              onFilterChange={(filter) => setNewFilters(filter)}
+              defaultFilterExpression={{
+                column: DBColumns.SOURCE_DOCUMENT_FILENAME,
+                operator: StringOperator.STRING_CONTAINS,
+                value: "",
+              }}
+              columns={[
+                DBColumns.SOURCE_DOCUMENT_FILENAME,
+                DBColumns.CODE_NAME,
+                DBColumns.DOCUMENT_TAG_TITLE,
+                DBColumns.SPAN_TEXT,
+              ]}
+            />
             {filters.length > 0 && (
               <Stack direction="row" sx={{ p: 2 }} style={{ flexWrap: "wrap", gap: "8px" }}>
                 {filters.map((filter) => (

@@ -27,6 +27,7 @@ import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import { AnnoActions } from "../../../views/annotation/annoSlice";
 import { contrastiveColors } from "../../../views/annotation/colors";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 
 type CodeCreateSuccessHandler = ((code: CodeRead) => void) | undefined;
 
@@ -62,7 +63,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
   const codes = ProjectHooks.useGetAllCodes(parseInt(projectId));
 
   // computed
-  const parentCodes = useMemo(() => codes.data?.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes.data]);
+  const parentCodes = useMemo(() => codes.data?.filter((code) => code.user_id !== SYSTEM_USER_ID) || [], [codes.data]);
 
   // local state
   const onSuccessHandler = useRef<CodeCreateSuccessHandler>(undefined);
@@ -100,16 +101,17 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
 
       // reset
       const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
+      const isParentCodeIdInParentCodes = parentCodes.find((c) => c.id === event.detail?.parentCodeId);
       reset({
         name: event.detail.name ? event.detail.name : "",
         color: randomHexColor,
-        parentCodeId: event.detail.parentCodeId ? event.detail.parentCodeId : -1,
+        parentCodeId: isParentCodeIdInParentCodes ? event.detail.parentCodeId || -1 : -1,
       });
       onSuccessHandler.current = event.detail.onSuccess;
       setColor(randomHexColor);
       setIsCodeCreateDialogOpen(true);
     },
-    [reset],
+    [parentCodes, reset],
   );
 
   useEffect(() => {
@@ -146,7 +148,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
             color: data.color,
             project_id: parseInt(projectId),
             user_id: user.data.id,
-            parent_code_id: pcid === -1 ? undefined : pcid,
+            parent_code_id: pcid,
           },
         },
         {
@@ -197,7 +199,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
               {parentCodes &&
                 parentCodes.map((code) => (
                   <MenuItem key={code.id} value={code.id}>
-                    {code.name}
+                    <CodeRenderer code={code} />
                   </MenuItem>
                 ))}
             </TextField>

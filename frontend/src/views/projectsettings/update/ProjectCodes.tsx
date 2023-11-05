@@ -147,11 +147,11 @@ function ProjectCodes({ project }: ProjectProps) {
       )}
       <List disablePadding>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => openCodeCreateDialog({ name: "Tim" })}>
+          <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({})}>
             <ListItemIcon>
               <AddIcon />
             </ListItemIcon>
-            <ListItemText primary="Add new code" />
+            <ListItemText primary="Create new code" />
           </ListItemButton>
         </ListItem>
       </List>

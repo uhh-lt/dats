@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import LabelIcon from "@mui/icons-material/Label";
-import TagMenu from "../../Tags/TagMenu/TagMenu";
+import TagMenu from "./TagMenu";
 
 interface TagMenuButtonProps {
   popoverOrigin: PopoverOrigin | undefined;

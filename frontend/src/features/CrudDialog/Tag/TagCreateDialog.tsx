@@ -1,7 +1,18 @@
 import React, { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../EventBus";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
-import { useForm } from "react-hook-form";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  MenuItem,
+  Stack,
+  TextField,
+  rgbToHex,
+} from "@mui/material";
+import { SubmitHandler, useForm } from "react-hook-form";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 import { useParams } from "react-router-dom";
 import { HexColorPicker } from "react-colorful";
@@ -9,9 +20,14 @@ import TagHooks from "../../../api/TagHooks";
 import { ErrorMessage } from "@hookform/error-message";
 import { LoadingButton } from "@mui/lab";
 import SaveIcon from "@mui/icons-material/Save";
+import { DocumentTagCreate } from "../../../api/openapi";
+import { contrastiveColors } from "../../../views/annotation/colors";
+import ProjectHooks from "../../../api/ProjectHooks";
+import TagRenderer from "../../../components/DataGrid/TagRenderer";
 
 type TagCreateDialogPayload = {
   tagName?: string;
+  parentTagId?: number;
 };
 
 export const openTagCreateDialog = (payload: TagCreateDialogPayload) => {
@@ -27,6 +43,9 @@ export const openTagCreateDialog = (payload: TagCreateDialogPayload) => {
 function TagCreateDialog() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
+  // global state (redux)
+  const tags = ProjectHooks.useGetAllTags(projectId);
+
   // use react hook form
   const {
     register,
@@ -34,57 +53,74 @@ function TagCreateDialog() {
     formState: { errors },
     reset,
     setValue,
-  } = useForm();
+    getValues,
+  } = useForm<DocumentTagCreate>({
+    defaultValues: {
+      parent_tag_id: -1,
+      title: "",
+      color: "#000000",
+      description: "",
+      project_id: projectId,
+    },
+  });
 
   // state
-  const [open, setOpen] = useState(false);
+  const [isTagCreateDialogOpen, setIsTagCreateDialogOpen] = useState(false);
   const [color, setColor] = useState("#000000");
 
   // create a (memoized) function that stays the same across re-renders
-  const openModal = useCallback(
+  const onOpenCreateTag = useCallback(
     (data: CustomEventInit<TagCreateDialogPayload>) => {
       if (!data.detail) return;
 
-      setOpen(true);
-      setValue("title", data.detail.tagName ? data.detail.tagName : "");
+      // reset
+      const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
+      reset({
+        title: data.detail.tagName ? data.detail.tagName : "",
+        color: randomHexColor,
+        parent_tag_id: data.detail.parentTagId ? data.detail.parentTagId : -1,
+      });
+      setColor(randomHexColor);
+      setIsTagCreateDialogOpen(true);
     },
-    [setValue],
+    [reset],
   );
 
   useEffect(() => {
-    eventBus.on("open-create-tag", openModal);
+    eventBus.on("open-create-tag", onOpenCreateTag);
     return () => {
-      eventBus.remove("open-create-tag", openModal);
+      eventBus.remove("open-create-tag", onOpenCreateTag);
     };
-  }, [openModal]);
+  }, [onOpenCreateTag]);
 
   // actions
   const handleClose = () => {
-    setOpen(false);
+    setIsTagCreateDialogOpen(false);
   };
 
   // mutations
   const createTagMutation = TagHooks.useCreateTag();
 
   // form actions
-  const handleTagCreation = (data: any) => {
+  const handleTagCreation: SubmitHandler<DocumentTagCreate> = (data) => {
     createTagMutation.mutate(
       {
         requestBody: {
           title: data.title,
           description: data.description || "",
           color: data.color,
+          parent_tag_id: data.parent_tag_id,
           project_id: projectId,
         },
       },
       {
         onSuccess: (data) => {
-          setOpen(false); // close dialog
           SnackbarAPI.openSnackbar({
             text: `Added tag ${data.title}`,
             severity: "success",
           });
-          reset(); // reset form
+
+          setIsTagCreateDialogOpen(false); // close dialog
         },
       },
     );
@@ -92,11 +128,29 @@ function TagCreateDialog() {
   const handleError = (data: any) => console.error(data);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={isTagCreateDialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleTagCreation, handleError)}>
         <DialogTitle>New tag</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
+            <TextField
+              fullWidth
+              select
+              label="Parent Tag"
+              variant="filled"
+              defaultValue={getValues("parent_tag_id")}
+              {...register("parent_tag_id")}
+              error={Boolean(errors.parent_tag_id)}
+              helperText={<ErrorMessage errors={errors} name="parent_tag_id" />}
+              InputLabelProps={{ shrink: true }}
+            >
+              <MenuItem value={-1}>No parent</MenuItem>
+              {tags.data?.map((tag) => (
+                <MenuItem key={tag.id} value={tag.id}>
+                  <TagRenderer tag={tag} />
+                </MenuItem>
+              ))}
+            </TextField>
             <TextField
               label="Please enter a name for the new tag"
               autoFocus
@@ -105,6 +159,7 @@ function TagCreateDialog() {
               {...register("title", { required: "Tag title is required" })}
               error={Boolean(errors?.title)}
               helperText={<ErrorMessage errors={errors} name="color" />}
+              InputLabelProps={{ shrink: true }}
             />
             <Stack direction="row">
               <TextField
@@ -138,6 +193,7 @@ function TagCreateDialog() {
               {...register("description")}
               error={Boolean(errors.description)}
               helperText={<ErrorMessage errors={errors} name="description" />}
+              InputLabelProps={{ shrink: true }}
             />
           </Stack>
         </DialogContent>
