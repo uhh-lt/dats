@@ -5633,8 +5633,9 @@
         "type": "object",
         "properties": {
           "title": { "title": "Title", "type": "string", "description": "Title of the DocumentTag" },
-          "description": { "title": "Description", "type": "string", "description": "Description of the DocumentTag" },
           "color": { "title": "Color", "type": "string", "description": "Color of the Code" },
+          "description": { "title": "Description", "type": "string", "description": "Description of the DocumentTag" },
+          "parent_tag_id": { "title": "Parent Tag Id", "type": "integer", "description": "Parent of the DocumentTag" },
           "project_id": {
             "title": "Project Id",
             "type": "integer",
@@ -5648,8 +5649,9 @@
         "type": "object",
         "properties": {
           "title": { "title": "Title", "type": "string", "description": "Title of the DocumentTag" },
+          "color": { "title": "Color", "type": "string", "description": "Color of the DocumentTag" },
           "description": { "title": "Description", "type": "string", "description": "Description of the DocumentTag" },
-          "color": { "title": "Color", "type": "string", "description": "Color of the Code" },
+          "parent_tag_id": { "title": "Parent Tag Id", "type": "integer", "description": "Parent of the DocumentTag" },
           "id": { "title": "Id", "type": "integer", "description": "ID of the DocumentTag" },
           "project_id": {
             "title": "Project Id",
@@ -5675,8 +5677,9 @@
         "type": "object",
         "properties": {
           "title": { "title": "Title", "type": "string", "description": "Title of the DocumentTag" },
+          "color": { "title": "Color", "type": "string", "description": "Color of the DocumentTag" },
           "description": { "title": "Description", "type": "string", "description": "Description of the DocumentTag" },
-          "color": { "title": "Color", "type": "string", "description": "Color of the Code" }
+          "parent_tag_id": { "title": "Parent Tag Id", "type": "integer", "description": "Parent of the DocumentTag" }
         }
       },
       "ElasticSearchDocumentHit": {
@@ -7442,12 +7445,17 @@
             "type": "object",
             "properties": {
               "title": { "title": "Title", "description": "Title of the DocumentTag", "type": "string" },
+              "color": { "title": "Color", "description": "Color of the DocumentTag", "type": "string" },
               "description": {
                 "title": "Description",
                 "description": "Description of the DocumentTag",
                 "type": "string"
               },
-              "color": { "title": "Color", "description": "Color of the Code", "type": "string" },
+              "parent_tag_id": {
+                "title": "Parent Tag Id",
+                "description": "Parent of the DocumentTag",
+                "type": "integer"
+              },
               "id": { "title": "Id", "description": "ID of the DocumentTag", "type": "integer" },
               "project_id": {
                 "title": "Project Id",

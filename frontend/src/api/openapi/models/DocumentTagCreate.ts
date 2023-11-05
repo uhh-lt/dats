@@ -8,13 +8,17 @@ export type DocumentTagCreate = {
    */
   title: string;
   /**
+   * Color of the Code
+   */
+  color?: string;
+  /**
    * Description of the DocumentTag
    */
   description?: string;
   /**
-   * Color of the Code
+   * Parent of the DocumentTag
    */
-  color?: string;
+  parent_tag_id?: number;
   /**
    * Project the DocumentTag belongs to
    */
