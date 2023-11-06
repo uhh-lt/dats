@@ -19,7 +19,7 @@ spacy:
 
 whisper:
   model: large-v2
-  device: cuda
+  device: ${oc.env:RAY_PROCESSING_DEVICE, cuda}
   options:
     word_timestamps: True
     beam_size: 5
@@ -35,7 +35,7 @@ whisper:
 
 detr:
   model: "facebook/detr-resnet-101"
-  device: cuda
+  device: ${oc.env:RAY_PROCESSING_DEVICE, cuda}
   deployment:
     ray_actor_options:
       num_gpus: .19
@@ -141,7 +141,7 @@ detr:
 
 vit_gpt2:
   model: "nlpconnect/vit-gpt2-image-captioning"
-  device: cuda
+  device: ${oc.env:RAY_PROCESSING_DEVICE, cuda}
   image_captioning:
     max_caption_length: 16
     num_beams: 4
@@ -155,7 +155,7 @@ vit_gpt2:
 
 blip2:
   model: "salesforce/blip2-opt-2.7b"
-  device: cuda
+  device: ${oc.env:RAY_PROCESSING_DEVICE, cuda}
   precision_bit: 8 # 8/16/32
   image_captioning:
     max_caption_length: 16
@@ -172,11 +172,11 @@ clip:
   text_encoder:
     model: "sentence-transformers/clip-ViT-B-32-multilingual-v1"
     batch_size: 32
-    device: cuda
+    device: ${oc.env:RAY_PROCESSING_DEVICE, cuda}
   image_encoder:
     model: "clip-ViT-B-32"
     batch_size: 32
-    device: cuda
+    device: ${oc.env:RAY_PROCESSING_DEVICE, cuda}
   deployment:
     ray_actor_options:
       num_gpus: .19
