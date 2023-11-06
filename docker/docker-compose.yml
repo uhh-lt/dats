@@ -250,7 +250,7 @@ services:
       - dwts_demo_network
 
   dwts-frontend:
-    image: uhhlt/dwts_frontend:latest
+    image: uhhlt/dwts_frontend:${DWTS_FRONTEND_DOCKER_VERSION:-latest}
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
