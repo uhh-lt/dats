@@ -2,7 +2,7 @@ ci:
   skip: [eslint]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+    rev: v4.5.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -13,12 +13,12 @@ repos:
       - id: isort
         entry: python -m isort --profile black
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 23.10.1
     hooks:
       - id: black
         entry: python -m black -q backend/src
   - repo: https://github.com/pre-commit/mirrors-eslint
-    rev: v8.47.0
+    rev: v8.53.0
     hooks:
       - id: eslint
         files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
