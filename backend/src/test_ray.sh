@@ -1,7 +1,7 @@
 #!/bin/bash
 
-RAY_HOST=${RAY_HOST:-elasticsearch}
-RAY_PORT=${RAY_PORT:-9200}
+RAY_HOST=${RAY_HOST:-ray}
+RAY_PORT=${RAY_PORT:-8000}
 RAY="${RAY_HOST}:${RAY_PORT}/-/routes"
 
 echo "Trying to reach Ray Serve via: ${RAY}"
