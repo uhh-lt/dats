@@ -52,11 +52,9 @@ export class SearchService {
    */
   public static searchSdocsNew({
     projectId,
-    userId,
     requestBody,
   }: {
     projectId: number;
-    userId: number;
     requestBody: Filter;
   }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
@@ -64,7 +62,6 @@ export class SearchService {
       url: "/search/sdoc_new",
       query: {
         project_id: projectId,
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",

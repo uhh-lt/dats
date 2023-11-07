@@ -3381,8 +3381,7 @@
             "schema": { "title": "Project Id", "type": "integer" },
             "name": "project_id",
             "in": "query"
-          },
-          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "query" }
+          }
         ],
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Filter" } } },
@@ -5238,6 +5237,7 @@
           "text": { "title": "Text", "type": "string", "description": "The Text of the Annotation" }
         }
       },
+      "ArrayOperator": { "title": "ArrayOperator", "enum": ["ARRAY_CONTAINS"], "description": "An enumeration." },
       "AttachedObjectType": {
         "title": "AttachedObjectType",
         "enum": [
@@ -5611,13 +5611,20 @@
           "SPAN_TEXT",
           "SOURCE_DOCUMENT_ID",
           "SOURCE_DOCUMENT_FILENAME",
+          "METADATA",
           "CODE_ID",
+          "CODE_ID_LIST",
           "CODE_NAME",
           "DOCUMENT_TAG_ID",
+          "DOCUMENT_TAG_ID_LIST",
           "DOCUMENT_TAG_TITLE",
           "MEMO_ID",
           "MEMO_CONTENT",
-          "MEMO_TITLE"
+          "MEMO_TITLE",
+          "USER_ID",
+          "USER_ID_LIST",
+          "SPAN_ANNOTATION_ID",
+          "SPAN_ANNOTATION_ID_LIST"
         ],
         "description": "An enumeration."
       },
@@ -5826,12 +5833,14 @@
         "type": "object",
         "properties": {
           "column": { "$ref": "#/components/schemas/DBColumns" },
+          "metadata_key": { "title": "Metadata Key", "type": "string" },
           "operator": {
             "title": "Operator",
             "anyOf": [
               { "$ref": "#/components/schemas/IDOperator" },
               { "$ref": "#/components/schemas/NumberOperator" },
-              { "$ref": "#/components/schemas/StringOperator" }
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/ArrayOperator" }
             ]
           },
           "value": { "title": "Value", "anyOf": [{ "type": "string" }, { "type": "integer" }] }

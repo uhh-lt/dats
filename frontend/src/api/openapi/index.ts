@@ -18,6 +18,7 @@ export type { AnnotatedSegment } from "./models/AnnotatedSegment";
 export type { AnnotationDocumentCreate } from "./models/AnnotationDocumentCreate";
 export type { AnnotationDocumentRead } from "./models/AnnotationDocumentRead";
 export type { AnnotationOccurrence } from "./models/AnnotationOccurrence";
+export { ArrayOperator } from "./models/ArrayOperator";
 export { AttachedObjectType } from "./models/AttachedObjectType";
 export { BackgroundJobStatus } from "./models/BackgroundJobStatus";
 export type { BBoxAnnotationCreateWithCodeId } from "./models/BBoxAnnotationCreateWithCodeId";

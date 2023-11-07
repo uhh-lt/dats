@@ -156,18 +156,19 @@ const imageSimilaritySearchQueryFn = async (
   return new ImageSimilaritySearchResults(results);
 };
 
-const useSearchDocumentsNew = (projectId: number | undefined, userId: number | undefined, filter: Filter) => {
+const useSearchDocumentsNew = (projectId: number | undefined, filter: Filter) => {
   const debouncedFilter = useDebounce(filter, 1000);
-  return useQuery<number[], Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, userId, debouncedFilter],
-    () =>
-      SearchService.searchSdocsNew({
+  return useQuery<LexicalSearchResults, Error>(
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, debouncedFilter],
+    async () => {
+      const sdocIds = await SearchService.searchSdocsNew({
         projectId: projectId!,
-        userId: userId!,
         requestBody: filter,
-      }),
+      });
+      return new LexicalSearchResults(sdocIds);
+    },
     {
-      enabled: !!projectId && !!userId,
+      enabled: !!projectId,
     },
   );
 };
