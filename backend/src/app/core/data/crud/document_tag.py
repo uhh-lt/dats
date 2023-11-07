@@ -18,6 +18,19 @@ from app.core.data.orm.document_tag import (
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):
+    def create(self, db: Session, *, create_dto: DocumentTagCreate) -> DocumentTagORM:
+        if create_dto.parent_tag_id == -1:
+            create_dto.parent_tag_id = None
+        return super().create(db, create_dto=create_dto)
+
+    def create_multi(
+        self, db: Session, *, create_dtos: List[DocumentTagCreate]
+    ) -> List[DocumentTagORM]:
+        for create_dto in create_dtos:
+            if create_dto.parent_tag_id == -1:
+                create_dto.parent_tag_id = None
+        return super().create_multi(db, create_dtos=create_dtos)
+
     def update(
         self, db: Session, *, id: int, update_dto: DocumentTagUpdate
     ) -> DocumentTagORM | None:
