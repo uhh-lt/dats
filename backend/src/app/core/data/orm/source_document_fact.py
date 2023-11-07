@@ -2,16 +2,15 @@ from __future__ import unicode_literals
 
 from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import (
+    ARRAY,
     Boolean,
     Column,
+    DateTime,
     ForeignKey,
     Integer,
     String,
     Unicode,
-    DateTime,
-    ARRAY,
 )
-
 
 # class PolymorphicVerticalProperty(object):
 #     """A key/value pair with polymorphic value storage.

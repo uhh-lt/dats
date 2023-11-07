@@ -19,8 +19,7 @@ from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.simsearch_service import SimSearchService
 from app.util.singleton_meta import SingletonMeta
-
-from sqlalchemy import Integer, Column, func, and_
+from sqlalchemy import Column, Integer, and_, func
 from sqlalchemy.dialects.postgresql import ARRAY, array_agg
 
 
