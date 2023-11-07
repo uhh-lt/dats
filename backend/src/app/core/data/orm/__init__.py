@@ -7,12 +7,13 @@ from .document_tag import DocumentTagORM
 from .memo import MemoORM
 from .object_handle import ObjectHandleORM
 from .orm_base import ORMBase
-from .preprocessing_job_payload import PreprocessingJobPayloadORM
 from .preprocessing_job import PreprocessingJobORM
+from .preprocessing_job_payload import PreprocessingJobPayloadORM
 from .project import ProjectORM
+from .source_document import SourceDocumentORM
+from .source_document_data import SourceDocumentDataORM
 from .source_document_link import SourceDocumentLinkORM
 from .source_document_metadata import SourceDocumentMetadataORM
-from .source_document import SourceDocumentORM
 from .span_annotation import SpanAnnotationORM
 from .span_group import SpanGroupORM
 from .span_text import SpanTextORM

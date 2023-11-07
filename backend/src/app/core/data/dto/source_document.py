@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.util import PaginatedResults
 from pydantic import BaseModel, Field
@@ -25,35 +26,12 @@ class SourceDocumentBaseDTO(BaseModel):
         description="Filename of the SourceDocument",
         max_length=SDOC_FILENAME_MAX_LENGTH + SDOC_SUFFIX_MAX_LENGTH,
     )
-    name: str = Field(
-        description="User-defined name of the document (default is the filename)"
+    name: Optional[str] = Field(
+        description="User-defined name of the document", default=None
     )
     doctype: DocType = Field(description="DOCTYPE of the SourceDocument")
     status: SDocStatus = Field(description="Status of the SourceDocument")
     project_id: int = Field(description="Project the SourceDocument belongs to")
-
-
-# Properties for creation
-class SourceDocumentCreate(SourceDocumentBaseDTO):
-    content: Optional[str] = Field(
-        description="Raw,original content of the SourceDocument", default=None
-    )
-    html: Optional[str] = Field(
-        description="Processed HTML of the SourceDocument", default=None
-    )
-    token_starts: Optional[List[int]] = Field(
-        description="Start of each token in character offsets in content", default=None
-    )
-    token_ends: Optional[List[int]] = Field(
-        description="End of each token in character offsets in content", default=None
-    )
-    sentence_starts: Optional[List[int]] = Field(
-        description="Start of each sentence in character offsets in content",
-        default=None,
-    )
-    sentence_ends: Optional[List[int]] = Field(
-        description="End of each sentence in character offsets in content", default=None
-    )
 
 
 # Properties for updating
@@ -123,3 +101,27 @@ class SourceDocumentKeywords(BaseModel):
     keywords: List[str] = Field(
         description="The list of Keywords of the SourceDocument the Keywords belong to."
     )
+
+
+class SourceDocumentCreate(SourceDocumentBaseDTO):
+    pass
+
+
+class SourceDocumentWithData(SourceDocumentRead, SourceDocumentDataCreate):
+    @property
+    def tokens(self):
+        return [self.content[s:e] for s, e in zip(self.token_starts, self.token_ends)]
+
+    @property
+    def token_character_offsets(self):
+        return [(s, e) for s, e in zip(self.token_starts, self.token_ends)]
+
+    @property
+    def sentences(self):
+        return [
+            self.content[s:e] for s, e in zip(self.sentence_starts, self.sentence_ends)
+        ]
+
+    @property
+    def sentence_character_offsets(self):
+        return [(s, e) for s, e in zip(self.sentence_starts, self.sentence_ends)]

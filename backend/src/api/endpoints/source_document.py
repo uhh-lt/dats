@@ -86,11 +86,9 @@ async def get_content(
     if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
-        return ElasticSearchService().get_sdoc_content_by_sdoc_id(
-            sdoc_id=sdoc_db_obj.id, proj_id=sdoc_db_obj.project_id
-        )
+        return SourceDocumentContent.from_orm(sdoc_db_obj)
     url = RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
     return SourceDocumentContent(source_document_id=sdoc_id, content=url)
 
@@ -114,7 +112,7 @@ async def get_html(
     if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
         return SourceDocumentHTML.from_orm(sdoc_db_obj)
     else:
@@ -141,7 +139,7 @@ async def get_tokens(
     if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
     return SourceDocumentTokens.from_orm(sdoc_db_obj)
 
 
@@ -165,7 +163,7 @@ async def get_sentences(
     if only_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
     return SourceDocumentSentences.from_orm(sdoc_db_obj)
 
 

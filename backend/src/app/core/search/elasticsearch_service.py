@@ -16,7 +16,6 @@ from app.core.data.dto.search import (
     PaginatedMemoSearchResults,
 )
 from app.core.data.dto.source_document import SourceDocumentKeywords
-
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 from elasticsearch import Elasticsearch, helpers
