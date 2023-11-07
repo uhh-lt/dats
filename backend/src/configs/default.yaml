@@ -103,150 +103,150 @@ elasticsearch:
 project_metadata:
   text_url:
     key: "url"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "text"
   text_language:
     key: "language"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "text"
   text_word_frequencies:
     key: "word_frequencies"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "text"
   text_keywords:
     key: "keywords"
-    metatype: "list"
+    metatype: "LIST"
     read_only: True
     doctype: "text"
 
   image_url:
     key: "url"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "image"
   image_keywords:
     key: "keywords"
-    metatype: "list"
+    metatype: "LIST"
     read_only: True
     doctype: "image"
   image_caption:
     key: "caption"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "image"
   image_width:
     key: "width"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "image"
   image_height:
     key: "height"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "image"
   image_format:
     key: "format"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "image"
   image_mode:
     key: "mode"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "image"
 
   audio_url:
     key: "url"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "audio"
   audio_word_level_transcriptions:
     key: "word_level_transcriptions"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "audio"
   audio_duration:
     key: "duration"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "audio"
   audio_format_name:
     key: "format_name"
-    metatype: "list"
+    metatype: "LIST"
     read_only: True
     doctype: "audio"
   audio_format_long_name:
     key: "format_long_name"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "audio"
   audio_size:
     key: "size"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "audio"
   audio_bit_rate:
     key: "bit_rate"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "audio"
   audio_tags:
     key: "tags"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "audio"
 
   video_url:
     key: "url"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "video"
   video_word_level_transcriptions:
     key: "word_level_transcriptions"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "video"
   video_width:
     key: "width"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "video"
   video_height:
     key: "height"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "video"
   video_duration:
     key: "duration"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "video"
   video_format_name:
     key: "format_name"
-    metatype: "list"
+    metatype: "LIST"
     read_only: True
     doctype: "video"
   video_format_long_name:
     key: "format_long_name"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "video"
   video_size:
     key: "size"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "video"
   video_bit_rate:
     key: "bit_rate"
-    metatype: "number"
+    metatype: "NUMBER"
     read_only: True
     doctype: "video"
   video_tags:
     key: "tags"
-    metatype: "string"
+    metatype: "STRING"
     read_only: True
     doctype: "video"
 

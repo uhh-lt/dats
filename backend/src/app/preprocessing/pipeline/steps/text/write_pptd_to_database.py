@@ -22,6 +22,7 @@ from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCre
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_fact import SourceDocumentFactORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -87,6 +88,16 @@ def _persist_sdoc_metadata(
                     project_metadata_id=project_metadata_id,
                 )
             )
+
+            db.add(
+                SourceDocumentFactORM(
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata_id,
+                    string_value=pptd.metadata[project_metadata_key],
+                )
+            )
+            db.commit()
+
         else:
             metadata_create_dtos.append(
                 SourceDocumentMetadataCreate(

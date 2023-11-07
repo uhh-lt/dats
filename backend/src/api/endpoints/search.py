@@ -52,13 +52,9 @@ async def search_sdocs(*, query_params: SearchSDocsQueryParameters) -> List[int]
     summary="Returns all SourceDocument IDs that match the query parameters.",
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
-async def search_sdocs_new(
-    *, project_id: int, user_id: int, filter: Filter
-) -> List[int]:
+async def search_sdocs_new(*, project_id: int, filter: Filter) -> List[int]:
     # TODO Flo: only if the user has access?
-    return SearchService().search_new(
-        project_id=project_id, user_id=user_id, filter=filter
-    )
+    return SearchService().search_new(project_id=project_id, filter=filter)
 
 
 @router.post(
