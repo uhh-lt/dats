@@ -1,10 +1,9 @@
-from turtle import back
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.preprocessing_job import PreprocessingJobORM
@@ -12,40 +11,39 @@ if TYPE_CHECKING:
 
 
 class PreprocessingJobPayloadORM(ORMBase):
-    id = Column(String, primary_key=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
 
-    filename = Column(String, nullable=False)
-    mime_type = Column(String, nullable=False)
-    doc_type = Column(String, nullable=False)
-    status = Column(
+    filename: Mapped[str] = mapped_column(String, nullable=False)
+    mime_type: Mapped[str] = mapped_column(String, nullable=False)
+    doc_type: Mapped[str] = mapped_column(String, nullable=False)
+    status = mapped_column(
         String, nullable=False, index=True, default=BackgroundJobStatus.WAITING
     )
-    current_pipeline_step = Column(String, nullable=True, default=None)
-    error_message = Column(String, nullable=True, default=None)
+    current_pipeline_step: Mapped[Optional[str]] = mapped_column(String, default=None)
+    error_message: Mapped[Optional[str]] = mapped_column(String, default=None)
 
     # many to one
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
     )
-    project: "ProjectORM" = relationship(
+    project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="preprocessing_payloads"
     )
 
-    prepro_job_id = Column(
+    prepro_job_id: Mapped[str] = mapped_column(
         String,
         ForeignKey("preprocessingjob.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    prepro_job: "PreprocessingJobORM" = relationship(
+    prepro_job: Mapped["PreprocessingJobORM"] = relationship(
         "PreprocessingJobORM", back_populates="payloads"
     )
 
-    source_document_id = Column(
+    source_document_id: Mapped[Optional[int]] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),
-        nullable=True,
         default=None,
     )

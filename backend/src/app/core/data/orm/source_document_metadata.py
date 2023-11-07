@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 
 
 class SourceDocumentMetadataORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, nullable=False, index=True)
-    value = Column(String, index=False)
-    read_only = Column(Boolean, nullable=False, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    key: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    value: Mapped[str] = mapped_column(String, index=False)
+    read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="source_document_metadata",
@@ -24,13 +24,13 @@ class SourceDocumentMetadataORM(ORMBase):
     )
 
     # many to one
-    source_document_id = Column(
+    source_document_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("sourcedocument.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    source_document: "SourceDocumentORM" = relationship(
+    source_document: Mapped["SourceDocumentORM"] = relationship(
         "SourceDocumentORM", back_populates="metadata_"
     )
 

@@ -91,9 +91,7 @@ class SQLService(metaclass=SingletonMeta):
             )
             logger.info("Successfully established connection to PostgresSQL!")
             cls.__engine: Engine = engine
-            cls.session_maker = sessionmaker(
-                autocommit=False, autoflush=False, bind=engine
-            )
+            cls.session_maker = sessionmaker(autoflush=False, bind=engine)
 
             return super(SQLService, cls).__new__(cls)
 

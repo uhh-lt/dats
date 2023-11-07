@@ -1,9 +1,10 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
@@ -11,28 +12,28 @@ if TYPE_CHECKING:
 
 
 class PreprocessingJobORM(ORMBase):
-    id = Column(String, primary_key=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
 
-    status = Column(
+    status: Mapped[str] = mapped_column(
         String, nullable=False, index=True, default=BackgroundJobStatus.WAITING
     )
-    created = Column(DateTime, server_default=func.now())
-    updated = Column(
+    created: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
     # one to many
-    payloads: List["PreprocessingJobPayloadORM"] = relationship(
+    payloads: Mapped[List["PreprocessingJobPayloadORM"]] = relationship(
         "PreprocessingJobPayloadORM", back_populates="prepro_job", passive_deletes=True
     )
 
     # many to one
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    project: "ProjectORM" = relationship(
+    project: Mapped["ProjectORM"] = relationship(
         "ProjectORM", back_populates="preprocessing_jobs"
     )

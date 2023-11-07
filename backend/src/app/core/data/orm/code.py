@@ -1,16 +1,9 @@
-from typing import TYPE_CHECKING, List
+from datetime import datetime
+from typing import TYPE_CHECKING, List, Optional
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import (
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    UniqueConstraint,
-    func,
-)
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
@@ -21,39 +14,45 @@ if TYPE_CHECKING:
 
 
 class CodeORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False, index=True)
-    description = Column(String, index=True)
-    color = Column(String, index=True)
-    created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    description: Mapped[Optional[str]] = mapped_column(String, index=True)
+    color: Mapped[Optional[str]] = mapped_column(String, index=True)
+    created: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
     # one to one
-    current_code: "CurrentCodeORM" = relationship(
+    current_code: Mapped["CurrentCodeORM"] = relationship(
         "CurrentCodeORM", uselist=False, back_populates="code", passive_deletes=True
     )
 
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM", uselist=False, back_populates="code", passive_deletes=True
     )
 
     # many to one
-    user_id = Column(Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True)
-    user: "UserORM" = relationship("UserORM", back_populates="codes")
+    user_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("user.id", ondelete="CASCADE"), index=True
+    )
+    user: Mapped["UserORM"] = relationship("UserORM", back_populates="codes")
 
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    project: "ProjectORM" = relationship("ProjectORM", back_populates="codes")
+    project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="codes")
 
     # hierarchy reference
-    parent_code_id = Column(Integer, ForeignKey("code.id", ondelete="CASCADE"))
-    parent_code: "CodeORM" = relationship("CodeORM", remote_side=[id])
+    parent_code_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("code.id", ondelete="CASCADE")
+    )
+    parent_code: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
 
     __table_args__ = (
         UniqueConstraint(
@@ -67,27 +66,27 @@ class CodeORM(ORMBase):
 
 
 class CurrentCodeORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="current_code",
         passive_deletes=True,
     )
 
-    code_id = Column(
+    code_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("code.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    code: "CodeORM" = relationship("CodeORM", back_populates="current_code")
+    code: Mapped["CodeORM"] = relationship("CodeORM", back_populates="current_code")
 
     # one to many
-    span_annotations: List["SpanAnnotationORM"] = relationship(
+    span_annotations: Mapped[List["SpanAnnotationORM"]] = relationship(
         "SpanAnnotationORM", back_populates="current_code", passive_deletes=True
     )
 
     # one to many
-    bbox_annotations: List["BBoxAnnotationORM"] = relationship(
+    bbox_annotations: Mapped[List["BBoxAnnotationORM"]] = relationship(
         "BBoxAnnotationORM", back_populates="current_code", passive_deletes=True
     )

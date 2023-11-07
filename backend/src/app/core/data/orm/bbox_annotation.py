@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, ForeignKey, Integer, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -11,18 +12,20 @@ if TYPE_CHECKING:
 
 
 class BBoxAnnotationORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    x_min = Column(Integer, nullable=False, index=True)
-    x_max = Column(Integer, nullable=False, index=True)
-    y_min = Column(Integer, nullable=False, index=True)
-    y_max = Column(Integer, nullable=False, index=True)
-    created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    x_min: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    x_max: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    y_min: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    y_max = mapped_column(Integer, nullable=False, index=True)
+    created: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="bbox_annotation",
@@ -30,22 +33,22 @@ class BBoxAnnotationORM(ORMBase):
     )
 
     # many to one
-    current_code_id = Column(
+    current_code_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("currentcode.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    current_code: "CurrentCodeORM" = relationship(
+    current_code: Mapped["CurrentCodeORM"] = relationship(
         "CurrentCodeORM", back_populates="bbox_annotations"
     )
 
-    annotation_document_id = Column(
+    annotation_document_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("annotationdocument.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    annotation_document: "AnnotationDocumentORM" = relationship(
+    annotation_document: Mapped["AnnotationDocumentORM"] = relationship(
         "AnnotationDocumentORM", back_populates="bbox_annotations"
     )

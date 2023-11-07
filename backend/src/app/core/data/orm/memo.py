@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM
@@ -12,19 +13,21 @@ from app.core.data.orm.orm_base import ORMBase
 
 
 class MemoORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False, index=True)
-    content = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    content: Mapped[str] = mapped_column(
         String, nullable=False, index=False
     )  # TODO Flo: This will go to ES soon!
-    starred = Column(Boolean, nullable=False, index=True)
-    created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(
+    starred: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
+    created: Mapped[Optional[int]] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    updated: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="memo",
@@ -32,13 +35,13 @@ class MemoORM(ORMBase):
         foreign_keys="objecthandle.c.memo_id",
     )
 
-    attached_to_id = Column(
+    attached_to_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("objecthandle.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    attached_to: "ObjectHandleORM" = relationship(
+    attached_to: Mapped[Optional["ObjectHandleORM"]] = relationship(
         "ObjectHandleORM",
         uselist=False,
         back_populates="attached_memos",
@@ -46,15 +49,15 @@ class MemoORM(ORMBase):
     )
 
     # many to one
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    project: "ProjectORM" = relationship("ProjectORM", back_populates="memos")
+    project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="memos")
 
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    user: "UserORM" = relationship("UserORM", back_populates="memos")
+    user: Mapped["UserORM"] = relationship("UserORM", back_populates="memos")

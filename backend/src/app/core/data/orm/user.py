@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import TYPE_CHECKING, List
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Column, DateTime, Integer, String, func
-from sqlalchemy.orm import relationship
+from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
@@ -16,47 +17,49 @@ if TYPE_CHECKING:
 
 
 class UserORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True, nullable=False)
-    first_name = Column(String, nullable=False, index=True)
-    last_name = Column(String, nullable=False, index=True)
-    password = Column(String, nullable=False)
-    created = Column(DateTime, server_default=func.now(), index=True)
-    updated = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    first_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    last_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    password: Mapped[str] = mapped_column(String, nullable=False)
+    created: Mapped[datetime] = mapped_column(
+        DateTime, server_default=func.now(), index=True
+    )
+    updated: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.current_timestamp()
     )
 
     # one to one
-    object_handle: "ObjectHandleORM" = relationship(
+    object_handle: Mapped["ObjectHandleORM"] = relationship(
         "ObjectHandleORM", uselist=False, back_populates="user", passive_deletes=True
     )
 
     # one to many
-    codes: List["CodeORM"] = relationship(
+    codes: Mapped[List["CodeORM"]] = relationship(
         "CodeORM", back_populates="user", passive_deletes=True
     )
 
-    annotation_documents: List["AnnotationDocumentORM"] = relationship(
+    annotation_documents: Mapped[List["AnnotationDocumentORM"]] = relationship(
         "AnnotationDocumentORM", back_populates="user", passive_deletes=True
     )
 
-    memos: List["MemoORM"] = relationship(
+    memos: Mapped[List["MemoORM"]] = relationship(
         "MemoORM", back_populates="user", passive_deletes=True
     )
 
-    analysis_tables: List["AnalysisTableORM"] = relationship(
+    analysis_tables: Mapped[List["AnalysisTableORM"]] = relationship(
         "AnalysisTableORM", back_populates="user", passive_deletes=True
     )
 
-    whiteboards: List["WhiteboardORM"] = relationship(
+    whiteboards: Mapped[List["WhiteboardORM"]] = relationship(
         "WhiteboardORM", back_populates="user", passive_deletes=True
     )
 
-    actions: List["ActionORM"] = relationship(
+    actions: Mapped[List["ActionORM"]] = relationship(
         "ActionORM", back_populates="user", passive_deletes=True
     )
 
     # many to many
-    projects: List["ProjectORM"] = relationship(
+    projects: Mapped[List["ProjectORM"]] = relationship(
         "ProjectORM", secondary="ProjectUserLinkTable".lower(), back_populates="users"
     )
