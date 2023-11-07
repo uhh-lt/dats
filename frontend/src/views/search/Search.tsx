@@ -1,7 +1,6 @@
 import { Container, Divider, Grid, Stack, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
-import { isNumber } from "lodash";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -14,6 +13,9 @@ import {
   SpanEntityDocumentFrequency,
   StringOperator,
 } from "../../api/openapi";
+import FilterDialog from "../../features/FilterDialog/FilterDialog";
+import { MyFilter } from "../../features/FilterDialog/filterUtils";
+import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { SettingsActions } from "../settings/settingsSlice";
@@ -35,9 +37,6 @@ import SearchToolbar from "./ToolBar/SearchToolbar";
 import { useAddTagFilter } from "./hooks/useAddTagFilter";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
 import { SearchActions } from "./searchSlice";
-import { MyFilter } from "../../features/FilterDialog/filterUtils";
-import FilterDialog from "../../features/FilterDialog/FilterDialog";
-import TagExplorer from "../../features/TagExplorer/TagExplorer";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -70,13 +69,14 @@ function Search() {
     items: [],
   });
   const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
-  const newSearchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId), 1, newFilters);
-  if (newSearchResults.data) {
-    console.log("newSearchResults", newSearchResults.data);
+  const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId), newFilters);
+  console.log(newFilters);
+  if (searchResults.data) {
+    console.log("newSearchResults", searchResults.data);
   }
 
   // query (global server state)
-  const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
+  // const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
 
   // computed (local client state)
   const searchResultDocumentIds = useMemo(() => {
@@ -245,9 +245,10 @@ function Search() {
               }}
               columns={[
                 DBColumns.SOURCE_DOCUMENT_FILENAME,
-                DBColumns.CODE_NAME,
-                DBColumns.DOCUMENT_TAG_TITLE,
-                DBColumns.SPAN_TEXT,
+                DBColumns.DOCUMENT_TAG_ID_LIST,
+                DBColumns.USER_ID_LIST,
+                DBColumns.CODE_ID_LIST,
+                DBColumns.METADATA,
               ]}
             />
             {filters.length > 0 && (
