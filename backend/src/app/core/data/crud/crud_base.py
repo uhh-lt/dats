@@ -33,7 +33,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
     def read(self, db: Session, id: int) -> ORMModelType:
         db_obj = db.query(self.model).filter(self.model.id == id).first()
-        if not db_obj:
+        if db_obj is None:
             raise NoSuchElementError(self.model, id=id)
         return db_obj
 

@@ -98,7 +98,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
             .filter(getattr(self.model, obj_id_key) == obj_id_val)
             .first()
         )
-        if not db_obj:
+        if db_obj is None:
             raise NoSuchElementError(obj_type, id=obj_id_val)
         return db_obj
 
