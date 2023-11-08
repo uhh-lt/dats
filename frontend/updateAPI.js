@@ -23,7 +23,7 @@ if (fs.existsSync(openapiFilePath)) {
 
 // 2. download new openapi json file
 http
-  .get(`http://localhost:${port}/openapi.json`, (res) => {
+  .get(`http://0.0.0.0:${port}/openapi.json`, (res) => {
     const { statusCode } = res;
     const contentType = res.headers["content-type"];
 
