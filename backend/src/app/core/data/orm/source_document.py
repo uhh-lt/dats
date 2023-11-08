@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 class SourceDocumentORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     filename: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     doctype: Mapped[str] = mapped_column(String, nullable=False, index=True)
     status: Mapped[str] = mapped_column(String, nullable=False, index=True)
     created: Mapped[datetime] = mapped_column(

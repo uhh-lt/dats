@@ -76,29 +76,16 @@ class CRUDSourceDocument(
 
     def read_with_data(self, db: Session, *, id: int) -> SourceDocumentWithData:
         db_obj = (
-            db.query(
-                SourceDocumentORM.id,
-                SourceDocumentORM.filename,
-                SourceDocumentORM.name,
-                SourceDocumentORM.doctype,
-                SourceDocumentORM.status,
-                SourceDocumentORM.created,
-                SourceDocumentORM.updated,
-                SourceDocumentORM.project_id,
-                SourceDocumentDataORM.content.label("content"),
-                SourceDocumentDataORM.html.label("html"),
-                SourceDocumentDataORM.sentence_starts.label("sentence_starts"),
-                SourceDocumentDataORM.sentence_ends.label("sentence_ends"),
-                SourceDocumentDataORM.token_starts.label("token_starts"),
-                SourceDocumentDataORM.token_ends.label("token_ends"),
-            )
+            db.query(self.model, SourceDocumentDataORM)
             .join(SourceDocumentDataORM)
             .filter(self.model.id == id)
-            .one()
+            .first()
         )
         if not db_obj:
             raise NoSuchElementError(self.model, id=id)
-        result = SourceDocumentWithData.from_orm(db_obj)
+        sdoc, data = db_obj.tuple()
+        joined = sdoc.as_dict() | data.as_dict()
+        result = SourceDocumentWithData(**joined)
         return result
 
     def link_document_tag(

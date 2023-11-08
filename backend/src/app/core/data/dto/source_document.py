@@ -4,7 +4,7 @@ from typing import List, Optional, Tuple
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.source_document_data import SourceDocumentDataCreate
+from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.util import PaginatedResults
 from pydantic import BaseModel, Field
@@ -107,21 +107,5 @@ class SourceDocumentCreate(SourceDocumentBaseDTO):
     pass
 
 
-class SourceDocumentWithData(SourceDocumentRead, SourceDocumentDataCreate):
-    @property
-    def tokens(self):
-        return [self.content[s:e] for s, e in zip(self.token_starts, self.token_ends)]
-
-    @property
-    def token_character_offsets(self):
-        return [(s, e) for s, e in zip(self.token_starts, self.token_ends)]
-
-    @property
-    def sentences(self):
-        return [
-            self.content[s:e] for s, e in zip(self.sentence_starts, self.sentence_ends)
-        ]
-
-    @property
-    def sentence_character_offsets(self):
-        return [(s, e) for s, e in zip(self.sentence_starts, self.sentence_ends)]
+class SourceDocumentWithData(SourceDocumentRead, SourceDocumentDataRead):
+    pass
