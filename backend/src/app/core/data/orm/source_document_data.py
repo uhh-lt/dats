@@ -1,4 +1,5 @@
 from typing import List
+
 from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ARRAY
