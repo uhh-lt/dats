@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "webRoot": "${workspaceFolder}",
+            "url": "http://localhost:3000"
+        },
+        {
+            "name": "Python: main.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/backend/src/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/backend/src",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/backend/src",
+                "HUGGINGFACE_HUB_CACHE": "${workspaceFolder}/docker/models_cache",
+                "TRANSFORMERS_CACHE": "${workspaceFolder}/docker/models_cache",
+                "TORCH_HOME": "${workspaceFolder}/docker/models_cache"
+            }
+        }
+    ]
+}
