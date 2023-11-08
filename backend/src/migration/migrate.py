@@ -82,7 +82,7 @@ def __migrate_project_docs(
 
 
 def __es_doc_to_sdoc_data(
-    es_doc: ElasticSearchDocumentRead
+    es_doc: ElasticSearchDocumentRead,
 ) -> SourceDocumentDataCreate:
     data = SourceDocumentDataCreate(
         id=es_doc.sdoc_id,
