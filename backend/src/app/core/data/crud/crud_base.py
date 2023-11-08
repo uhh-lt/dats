@@ -2,7 +2,6 @@ from typing import Generic, List, Optional, Type, TypeVar
 
 import srsly
 from app.core.data.dto.action import ActionCreate, ActionType
-from app.core.data.dto.user import UserRead
 from app.core.data.orm.orm_base import ORMBase
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
@@ -20,13 +19,6 @@ class NoSuchElementError(Exception):
         super().__init__(f"There exists no {self.model_name} with: {kwargs} !")
 
 
-class UnauthorizedError(Exception):
-    def __init__(self, action: str, model: Type[ORMModelType]):
-        self.model = model
-        self.model_name = model.__name__.replace("ORM", "")
-        super().__init__(f"User is not authorized to {action} {self.model_name}")
-
-
 class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     def __init__(self, model: Type[ORMModelType]):
         """
@@ -38,9 +30,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         """
         self.model = model
 
-    def read(
-        self, db: Session, id: int, subject: UserRead | None = None
-    ) -> ORMModelType:
+    def read(self, db: Session, id: int) -> ORMModelType:
         db_obj = db.query(self.model).filter(self.model.id == id).first()
         if not db_obj:
             raise NoSuchElementError(self.model, id=id)
@@ -94,14 +84,9 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         return db_objs
 
     def update(
-        self,
-        db: Session,
-        *,
-        id: int,
-        update_dto: UpdateDTOType,
-        subject: UserRead | None = None,
+        self, db: Session, *, id: int, update_dto: UpdateDTOType
     ) -> Optional[ORMModelType]:
-        db_obj = self.read(db=db, id=id, subject=subject)
+        db_obj = self.read(db=db, id=id)
         before_state = self._get_action_state_from_orm(db_obj=db_obj)
 
         obj_data = jsonable_encoder(db_obj)
@@ -124,10 +109,8 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
         return db_obj
 
-    def remove(
-        self, db: Session, *, id: int, subject: UserRead | None = None
-    ) -> Optional[ORMModelType]:
-        db_obj = self.read(db=db, id=id, subject=subject)
+    def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
+        db_obj = self.read(db=db, id=id)
         before_state = self._get_action_state_from_orm(db_obj=db_obj)
 
         self._create_action(

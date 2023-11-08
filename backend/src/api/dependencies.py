@@ -1,12 +1,18 @@
-from typing import Annotated, Dict, Generator, Optional
+from typing import Annotated, Any, Callable, Dict, Generator, List, Optional, Tuple
 
 from api.util import credentials_exception
+from app.core.authorization.authorization_service import (
+    AuthorizationCheck,
+    AuthorizationService,
+)
+from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import crud_user
+from app.core.data.dto.action import ActionType
 from app.core.data.dto.user import UserRead
 from app.core.db.sql_service import SQLService
 from app.core.security import decode_jwt
 from config import conf
-from fastapi import Depends, Query
+from fastapi import Depends, Query, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
@@ -47,15 +53,15 @@ async def resolve_code_param(
     return resolve
 
 
-async def get_db_session() -> Generator:
+def get_db_session() -> Generator:
+    session = SQLService().session_maker()
     try:
-        session = SQLService().session_maker()
         yield session
     finally:
         session.close()
 
 
-async def get_current_user(
+def get_current_user(
     db: Session = Depends(get_db_session), token: str = Depends(reusable_oauth2_scheme)
 ) -> UserRead:
     try:
@@ -75,3 +81,19 @@ async def get_current_user(
 
 # A convenience type alias for depending `get_current_user` in endpoints
 AuthenticatedUser = Annotated[UserRead, Depends(get_current_user)]
+
+
+def is_authorized(
+    action: ActionType,
+    crud_object: CRUDBase,
+    param_key: str,
+) -> Any:
+    def f(request: Request, user: UserRead = Depends(get_current_user)):
+        AuthorizationService().check_authorization(
+            subject=user,
+            check=AuthorizationCheck(
+                action, crud_object, request.path_params[param_key]
+            ),
+        )
+
+    return Depends(f)

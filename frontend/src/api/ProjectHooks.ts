@@ -88,7 +88,12 @@ const useResolveSdocIdByFilename = (projectId: number, filename: string) =>
 const useCreateProject = () =>
   useMutation(
     async ({ userId, requestBody }: { userId: number; requestBody: ProjectCreate }) => {
-      return await ProjectService.createNewProject({ requestBody });
+      const project = await ProjectService.createNewProject({ requestBody });
+      await ProjectService.associateUserToProject({
+        projId: project.id,
+        userId,
+      });
+      return project;
     },
     {
       onSuccess: (project, variables) => {

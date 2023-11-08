@@ -1,9 +1,9 @@
-from typing import Annotated, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from api.dependencies import (
-    AuthenticatedUser,
     get_current_user,
     get_db_session,
+    is_authorized,
     skip_limit_params,
 )
 from api.util import get_object_memos
@@ -14,7 +14,7 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.action import ActionQueryParameters, ActionRead
+from app.core.data.dto.action import ActionQueryParameters, ActionRead, ActionType
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
@@ -32,7 +32,9 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
 router = APIRouter(
-    prefix="/project", dependencies=[Depends(get_current_user)], tags=["project"]
+    prefix="/project",
+    dependencies=[Depends(get_current_user)],
+    tags=["project"],
 )
 
 
@@ -43,18 +45,15 @@ router = APIRouter(
     description="Creates a new Project.",
 )
 async def create_new_project(
-    *,
-    db: Session = Depends(get_db_session),
-    proj: ProjectCreate,
-    subject: AuthenticatedUser,
+    *, db: Session = Depends(get_db_session), proj: ProjectCreate
 ) -> ProjectRead:
-    db_obj = crud_project.create(db=db, create_dto=proj, subject=subject)
+    db_obj = crud_project.create(db=db, create_dto=proj)
 
     try:
         # create the ES Indices
         ElasticSearchService().create_project_indices(proj_id=db_obj.id)
     except Exception:
-        crud_project.remove(db=db, id=db_obj.id, subject=subject)
+        crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,
             detail="Cannot create ElasticSearch Indices for the Project!",
@@ -74,7 +73,6 @@ async def read_all(
     skip_limit: Dict[str, str] = Depends(skip_limit_params),
 ) -> List[ProjectRead]:
     # TODO Flo: only return the projects of the current user
-    # TODO how to manage authorization for methods in the base class?
     db_objs = crud_project.read_multi(db=db, **skip_limit)
     return [ProjectRead.from_orm(proj) for proj in db_objs]
 
@@ -84,11 +82,15 @@ async def read_all(
     response_model=Optional[ProjectRead],
     summary="Returns the Project with the given ID",
     description="Returns the Project with the given ID if it exists",
+    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
-async def read_project(
-    *, db: Session = Depends(get_db_session), proj_id: int, subject: AuthenticatedUser
+def read_project(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
 ) -> Optional[ProjectRead]:
-    db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
+    # TODO Flo: only if the user has access?
+    db_obj = crud_project.read(db=db, id=proj_id)
     return ProjectRead.from_orm(db_obj)
 
 
@@ -113,20 +115,19 @@ async def update_project(
     description="Removes the Project with the given ID.",
 )
 async def delete_project(
-    *, db: Session = Depends(get_db_session), proj_id: int, subject: AuthenticatedUser
+    *, db: Session = Depends(get_db_session), proj_id: int
 ) -> ProjectRead:
     # TODO Flo: only if the user has access?
-    db_obj = crud_project.remove(db=db, id=proj_id, subject=subject)
+    db_obj = crud_project.remove(db=db, id=proj_id)
 
     try:
         # remove the ES Indices # Flo Do we want this?!
         ElasticSearchService().remove_project_indices(proj_id=db_obj.id)
     except Exception:
-        # TODO why remove the project again? We already did it above
-        crud_project.remove(db=db, id=db_obj.id, subject=subject)
+        crud_project.remove(db=db, id=db_obj.id)
         raise HTTPException(
             status_code=500,
-            detail="Cannot remove ElasticSearch Indices for the Project!",
+            detail="Cannot create ElasticSearch Indices for the Project!",
         )
 
     return ProjectRead.from_orm(db_obj)
@@ -174,6 +175,13 @@ async def get_project_sdocs(
     response_model=Optional[PreprocessingJobRead],
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
+    dependencies=[
+        is_authorized(
+            ActionType.UPDATE,
+            crud_project,
+            "proj_id",
+        )
+    ],
 )
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
@@ -214,15 +222,10 @@ async def delete_project_sdocs(
     description="Associates an existing User to the Project with the given ID if it exists",
 )
 async def associate_user_to_project(
-    *,
-    proj_id: int,
-    user_id: int,
-    db: Session = Depends(get_db_session),
-    user=Depends(get_current_user),
+    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> Optional[UserRead]:
-    user_db_obj = crud_project.associate_user(
-        db=db, proj_id=proj_id, user_id=user_id, subject=user
-    )
+    # TODO Flo: only if the user has access?
+    user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
@@ -233,15 +236,10 @@ async def associate_user_to_project(
     description="Dissociates the Users with the Project with the given ID if it exists",
 )
 async def dissociate_user_from_project(
-    *,
-    proj_id: int,
-    user_id: int,
-    db: Session = Depends(get_db_session),
-    subject: AuthenticatedUser,
+    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> Optional[UserRead]:
-    user_db_obj = crud_project.dissociate_user(
-        db=db, proj_id=proj_id, user_id=user_id, subject=subject
-    )
+    # TODO Flo: only if the user has access?
+    user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.from_orm(user_db_obj)
 
 
@@ -252,13 +250,10 @@ async def dissociate_user_from_project(
     description="Returns all Users of the Project with the given ID",
 )
 async def get_project_users(
-    *,
-    proj_id: int,
-    db: Session = Depends(get_db_session),
-    subject: AuthenticatedUser,
+    *, proj_id: int, db: Session = Depends(get_db_session)
 ) -> List[UserRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [UserRead.from_orm(user) for user in proj_db_obj.users]
 
 
@@ -269,10 +264,10 @@ async def get_project_users(
     description="Returns all Codes of the Project with the given ID",
 )
 async def get_project_codes(
-    *, proj_id: int, db: Session = Depends(get_db_session), subject: AuthenticatedUser
+    *, proj_id: int, db: Session = Depends(get_db_session)
 ) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
     result = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
     result.sort(key=lambda c: c.id)
     return result
@@ -298,10 +293,10 @@ async def delete_project_codes(
     description="Returns all DocumentTags of the Project with the given ID",
 )
 async def get_project_tags(
-    *, proj_id: int, db: Session = Depends(get_db_session), subject: AuthenticatedUser
+    *, proj_id: int, db: Session = Depends(get_db_session)
 ) -> List[DocumentTagRead]:
     # TODO Flo: only if the user has access?
-    proj_db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
+    proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [DocumentTagRead.from_orm(tag) for tag in proj_db_obj.document_tags]
 
 
@@ -452,9 +447,9 @@ async def add_memo(
     description="Returns the Memo of the current User for the Project with the given ID.",
 )
 async def get_memos(
-    *, db: Session = Depends(get_db_session), proj_id: int, subject: AuthenticatedUser
+    *, db: Session = Depends(get_db_session), proj_id: int
 ) -> List[MemoRead]:
-    db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
+    db_obj = crud_project.read(db=db, id=proj_id)
     return get_object_memos(db_obj=db_obj)
 
 
@@ -468,13 +463,10 @@ async def get_memos(
     ),
 )
 async def get_user_memo(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    user_id: int,
-    subject: AuthenticatedUser,
+    *, db: Session = Depends(get_db_session), proj_id: int, user_id: int
 ) -> Optional[MemoRead]:
-    db_obj = crud_project.read(db=db, id=proj_id, subject=subject)
+    # TODO Who has access to memos of other users?
+    db_obj = crud_project.read(db=db, id=proj_id)
     return get_object_memos(db_obj=db_obj, user_id=user_id)
 
 

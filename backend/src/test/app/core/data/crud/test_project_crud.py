@@ -40,23 +40,12 @@ def test_update_project(session: SQLService, project: int) -> None:
     title2 = "".join(random.choices(string.ascii_letters, k=15))
     description2 = "Meow"
 
-    user = None
-
     # update project title
     with session.db_session() as sess:
-        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
-        user = UserRead.from_orm(
-            crud_project.read(db=sess, id=project, subject=system_user).users[0]
-        )
-        crud_project.update(
-            db=sess,
-            id=project,
-            update_dto=ProjectUpdate(title=title2),
-            subject=user,
-        )
+        crud_project.update(db=sess, id=project, update_dto=ProjectUpdate(title=title2))
 
     with session.db_session() as sess:
-        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project, subject=user))
+        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
 
     assert p.id == project
     assert p.title == title2
@@ -64,14 +53,11 @@ def test_update_project(session: SQLService, project: int) -> None:
     # update project description
     with session.db_session() as sess:
         crud_project.update(
-            db=sess,
-            id=project,
-            update_dto=ProjectUpdate(description=description2),
-            subject=user,
+            db=sess, id=project, update_dto=ProjectUpdate(description=description2)
         )
 
     with session.db_session() as sess:
-        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project, subject=user))
+        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
 
     assert p.id == project
     assert p.title == title2
@@ -81,25 +67,19 @@ def test_update_project(session: SQLService, project: int) -> None:
     with pytest.raises(IntegrityError):
         with session.db_session() as sess:
             crud_project.update(
-                db=sess,
-                id=project,
-                update_dto=ProjectUpdate(title=None),
-                subject=user,
+                db=sess, id=project, update_dto=ProjectUpdate(title=None)
             )
 
     # try update description to None
     with pytest.raises(IntegrityError):
         with session.db_session() as sess:
             crud_project.update(
-                db=sess,
-                id=project,
-                update_dto=ProjectUpdate(description=None),
-                subject=user,
+                db=sess, id=project, update_dto=ProjectUpdate(description=None)
             )
 
     # check if nothing has changed
     with session.db_session() as sess:
-        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project, subject=user))
+        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
 
     assert p.id == project
     assert p.title == title2

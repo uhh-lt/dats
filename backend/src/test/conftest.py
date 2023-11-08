@@ -67,21 +67,23 @@ def project(session: SQLService, user: int) -> Generator[int, None, None]:
     description = "Test description"
 
     with session.db_session() as sess:
-        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
         id = crud_project.create(
             db=sess,
             create_dto=ProjectCreate(title=title, description=description),
-            subject=system_user,
         ).id
         crud_project.associate_user(
-            db=sess, proj_id=id, user_id=user, subject=system_user
+            db=sess,
+            proj_id=id,
+            user_id=user,
         )
 
     yield id
 
     with session.db_session() as sess:
-        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
-        crud_project.remove(db=sess, id=id, subject=system_user)
+        crud_project.remove(
+            db=sess,
+            id=id,
+        )
 
 
 @pytest.fixture
