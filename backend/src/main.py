@@ -1,5 +1,7 @@
 import os
 
+from alembic.command import upgrade
+from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -10,8 +12,6 @@ from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
-from alembic.command import upgrade
-from alembic.config import Config
 
 from app.core.startup import startup  # isort: skip
 
@@ -276,9 +276,11 @@ def main() -> None:
         reload=False,
     )
 
+
 def migrate_database() -> None:
     config = Config("alembic.ini")
     upgrade(config, "head")
+
 
 if __name__ == "__main__":
     main()
