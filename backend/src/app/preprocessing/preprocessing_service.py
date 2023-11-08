@@ -89,7 +89,6 @@ class PreprocessingService(metaclass=SingletonMeta):
         unimported_project_files: List[Path],
         project_id: int,
     ) -> List[PreprocessingJobPayloadCreateWithoutPreproJobId]:
-
         payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId] = []
 
         for file_path in tqdm(
