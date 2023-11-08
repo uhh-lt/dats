@@ -1,7 +1,6 @@
 import os
 
-from alembic.command import upgrade
-from alembic.config import Config
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -73,6 +72,7 @@ from app.core.search.elasticsearch_service import (
     NoSuchSourceDocumentInElasticSearchError,
 )
 from config import conf
+from migration.migrate import run_required_migrations
 
 
 # custom method to generate OpenApi function names
@@ -265,7 +265,7 @@ def main() -> None:
         port is not None and isinstance(port, int) and port > 0
     ), "The API port has to be a positive integer! E.g. 8081"
 
-    migrate_database()
+    run_required_migrations()
 
     uvicorn.run(
         "main:app",
@@ -275,11 +275,6 @@ def main() -> None:
         # debug=True,
         reload=False,
     )
-
-
-def migrate_database() -> None:
-    config = Config("alembic.ini")
-    upgrade(config, "head")
 
 
 if __name__ == "__main__":

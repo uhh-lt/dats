@@ -18,4 +18,5 @@ from .span_annotation import SpanAnnotationORM
 from .span_group import SpanGroupORM
 from .span_text import SpanTextORM
 from .user import UserORM
+from .version import VersionORM
 from .whiteboard import WhiteboardORM
