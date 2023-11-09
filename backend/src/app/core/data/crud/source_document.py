@@ -1,7 +1,7 @@
 from typing import List, Optional, Set, Tuple
 
 import srsly
-from app.core.data.crud.crud_base import CRUDBase, UpdateDTOType
+from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError, UpdateDTOType
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
@@ -21,6 +21,8 @@ from app.core.data.dto.source_document import (
     SourceDocumentCreate,
     SourceDocumentRead,
     SourceDocumentReadAction,
+    SourceDocumentUpdate,
+    SourceDocumentWithData,
 )
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -30,6 +32,7 @@ from app.core.data.orm.document_tag import (
     SourceDocumentDocumentTagLinkTable,
 )
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
@@ -46,13 +49,9 @@ class SourceDocumentPreprocessingUnfinishedError(Exception):
         super().__init__(f"SourceDocument {sdoc_id} is still getting preprocessed!")
 
 
-class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]):
-    def update(
-        self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> SourceDocumentORM:
-        # Flo: We no not want to update SourceDocument
-        raise NotImplementedError()
-
+class CRUDSourceDocument(
+    CRUDBase[SourceDocumentORM, SourceDocumentCreate, SourceDocumentUpdate]
+):
     def update_status(
         self, db: Session, *, sdoc_id: int, sdoc_status: SDocStatus
     ) -> SourceDocumentORM:
@@ -74,6 +73,20 @@ class CRUDSourceDocument(CRUDBase[SourceDocumentORM, SourceDocumentCreate, None]
         if not status == SDocStatus.finished and raise_error_on_unfinished:
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
         return status
+
+    def read_with_data(self, db: Session, *, id: int) -> SourceDocumentWithData:
+        db_obj = (
+            db.query(self.model, SourceDocumentDataORM)
+            .join(SourceDocumentDataORM)
+            .filter(self.model.id == id)
+            .first()
+        )
+        if not db_obj:
+            raise NoSuchElementError(self.model, id=id)
+        sdoc, data = db_obj.tuple()
+        joined = sdoc.as_dict() | data.as_dict()
+        result = SourceDocumentWithData(**joined)
+        return result
 
     def link_document_tag(
         self, db: Session, *, sdoc_id: int, tag_id: int

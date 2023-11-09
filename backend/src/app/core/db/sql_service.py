@@ -46,6 +46,9 @@ from app.core.data.orm.project import ProjectORM, ProjectUserLinkTable
 from app.core.data.orm.source_document import SourceDocumentORM
 
 # noinspection PyUnresolvedReferences
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
+
+# noinspection PyUnresolvedReferences
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
 
 # noinspection PyUnresolvedReferences

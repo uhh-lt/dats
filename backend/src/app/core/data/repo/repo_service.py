@@ -462,7 +462,6 @@ class RepoService(metaclass=SingletonMeta):
             raise UnsupportedDocTypeForSourceDocument(dst_path=dst_path)
 
         create_dto = SourceDocumentCreate(
-            content="CONTENT IS NOW IN ElasticSearch!!!",
             filename=filename,
             doctype=doctype,
             project_id=proj_id,

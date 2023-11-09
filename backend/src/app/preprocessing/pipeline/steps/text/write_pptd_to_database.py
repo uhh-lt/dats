@@ -3,6 +3,7 @@ import json
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -10,6 +11,7 @@ from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.source_document import SourceDocumentRead
+from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -31,12 +33,28 @@ def _create_and_persist_sdoc(db: Session, pptd: PreProTextDoc) -> SourceDocument
     logger.info(f"Persisting SourceDocument for {pptd.filename}...")
     # generate the create_dto
     _, create_dto = repo.build_source_document_create_dto_from_file(
-        proj_id=pptd.project_id, filename=pptd.filename
+        proj_id=pptd.project_id,
+        filename=pptd.filename,
     )
     # persist SourceDocument
     sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)
 
     return sdoc_db_obj
+
+
+def _persist_sdoc_data(
+    db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
+) -> None:
+    sdoc_data = SourceDocumentDataCreate(
+        id=sdoc_db_obj.id,
+        content=pptd.text,
+        html=pptd.html,
+        token_starts=[s for s, _ in pptd.token_character_offsets],
+        token_ends=[e for _, e in pptd.token_character_offsets],
+        sentence_starts=[s.start for s in pptd.sentences],
+        sentence_ends=[s.end for s in pptd.sentences],
+    )
+    crud_sdoc_data.create(db=db, create_dto=sdoc_data)
 
 
 def _persist_sdoc_metadata(
@@ -172,6 +190,9 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
         try:
             # create and persist SourceDocument
             sdoc_db_obj = _create_and_persist_sdoc(db=db, pptd=pptd)
+
+            # persists SourceDocument Data
+            _persist_sdoc_data(db, sdoc_db_obj, pptd)
 
             # persist SourceDocument Metadata
             _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)

@@ -71,6 +71,7 @@ from app.core.search.elasticsearch_service import (
     NoSuchSourceDocumentInElasticSearchError,
 )
 from config import conf
+from migration.migrate import run_required_migrations
 
 
 # custom method to generate OpenApi function names
@@ -262,6 +263,8 @@ def main() -> None:
     assert (
         port is not None and isinstance(port, int) and port > 0
     ), "The API port has to be a positive integer! E.g. 8081"
+
+    run_required_migrations()
 
     uvicorn.run(
         "main:app",
