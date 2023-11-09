@@ -1,5 +1,4 @@
-import { UseQueryResult } from "@tanstack/react-query";
-import { SimSearchSentenceHit, SourceDocumentSentences } from "../../../../api/openapi";
+import { SimSearchSentenceHit } from "../../../../api/openapi";
 import SdocHooks from "../../../../api/SdocHooks";
 import { useMemo } from "react";
 import { ContextSentence } from "../../../../utils/GlobalConstants";
@@ -10,6 +9,7 @@ interface ContextSentenceProps {
 }
 
 export function ContextSentences({ sdocId, hits }: ContextSentenceProps) {
+  //TODO - turn it into proper component to use in sentence similarity table view
   const sentences = SdocHooks.useGetDocumentSentences(sdocId);
   // computed
   return useMemo(() => {
@@ -52,8 +52,8 @@ export function ContextSentences({ sdocId, hits }: ContextSentenceProps) {
           });
         }
       });
-      return result;
+      return <>{result}</>;
     }
-    return [];
+    return <>No context sentences found</>;
   }, [sentences.data, hits]);
 }
