@@ -29,11 +29,13 @@ def run_required_migrations():
             __migrate_es_docs_to_database(db)
             db_version.version = 1
             db.commit()
+            print("MIGRATED ES DOCS!")
 
 
 def __migrate_database_schema() -> None:
     config = Config("alembic.ini")
     upgrade(config, "head")
+    print("MIGRATED DB SCHEMA!")
 
 
 def __migrate_es_docs_to_database(db: Session):
