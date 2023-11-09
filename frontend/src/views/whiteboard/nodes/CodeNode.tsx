@@ -223,7 +223,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
                 });
               }
         }
-        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
+        backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       >
         {code.isSuccess ? (
           <>

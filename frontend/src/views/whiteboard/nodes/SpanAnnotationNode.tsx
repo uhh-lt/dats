@@ -182,7 +182,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
                 });
               }
         }
-        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
+        backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       >
         {annotation.isSuccess ? (
           <>

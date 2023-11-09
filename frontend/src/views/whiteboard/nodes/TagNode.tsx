@@ -137,7 +137,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
                 });
               }
         }
-        backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
+        backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       >
         {tag.isSuccess ? (
           <>

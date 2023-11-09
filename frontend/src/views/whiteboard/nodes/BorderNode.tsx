@@ -51,7 +51,7 @@ function BorderNode(props: NodeProps<BorderNodeData>) {
         borderColor: props.data.borderColor,
         borderWidth: props.data.borderWidth,
         borderStyle: props.data.borderStyle,
-        backgroundColor: props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0"),
+        backgroundColor: props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0"),
       }}
     >
       {isEditing ? (

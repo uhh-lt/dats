@@ -45,7 +45,7 @@ function NoteNode(props: NodeProps<NoteNodeData>) {
       allowDrawConnection={false}
       nodeProps={props}
       onClick={handleClick}
-      backgroundColor={props.data.bgcolor + props.data.bgalpha.toString(16).padStart(2, "0")}
+      backgroundColor={props.data.bgcolor + props.data.bgalpha?.toString(16).padStart(2, "0")}
       alignment={props.data.verticalAlign}
     >
       {isEditing ? (
