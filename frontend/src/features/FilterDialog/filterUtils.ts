@@ -1,10 +1,13 @@
 import {
-  ArrayOperator,
+  BooleanOperator,
   DBColumns,
+  DateOperator,
   DocType,
   Filter,
   FilterExpression,
+  IDListOperator,
   IDOperator,
+  ListOperator,
   MetaType,
   NumberOperator,
   StringOperator,
@@ -28,9 +31,9 @@ export const isFilterExpression = (filter: Filter | FilterExpression): filter is
   return (filter as Filter).items === undefined;
 };
 
-export const getFilterExpressionColumn = (filter: MyFilterExpression): string => {
+export const getFilterExpressionColumnValue = (filter: MyFilterExpression): string => {
   if (filter.column === DBColumns.METADATA) {
-    return `META-${filter.docType}-${filter.metadata_key}`;
+    return filter.project_metadata_id!.toString();
   }
   return filter.column;
 };
@@ -39,14 +42,18 @@ export type FilterOperatorType =
   | typeof IDOperator
   | typeof NumberOperator
   | typeof StringOperator
-  | typeof ArrayOperator;
+  | typeof IDListOperator
+  | typeof ListOperator
+  | typeof DateOperator
+  | typeof BooleanOperator;
 export type FilterOperator = FilterExpression["operator"];
 
 export const metaType2operator: Record<MetaType, FilterOperatorType> = {
   [MetaType.STRING]: StringOperator,
   [MetaType.NUMBER]: NumberOperator,
-  [MetaType.DATE]: IDOperator,
-  [MetaType.LIST]: ArrayOperator,
+  [MetaType.DATE]: DateOperator,
+  [MetaType.LIST]: ListOperator,
+  [MetaType.BOOLEAN]: BooleanOperator,
 };
 
 export const getDefaultOperator = (operator: FilterOperatorType): FilterOperator => {
@@ -65,12 +72,12 @@ export const column2operator: Record<DBColumns, FilterOperatorType> = {
   [DBColumns.MEMO_CONTENT]: StringOperator,
   [DBColumns.MEMO_TITLE]: StringOperator,
   [DBColumns.METADATA]: StringOperator,
-  [DBColumns.CODE_ID_LIST]: ArrayOperator,
-  [DBColumns.DOCUMENT_TAG_ID_LIST]: ArrayOperator,
+  [DBColumns.CODE_ID_LIST]: IDListOperator,
+  [DBColumns.DOCUMENT_TAG_ID_LIST]: IDListOperator,
   [DBColumns.USER_ID]: IDOperator,
-  [DBColumns.USER_ID_LIST]: ArrayOperator,
+  [DBColumns.USER_ID_LIST]: IDListOperator,
   [DBColumns.SPAN_ANNOTATION_ID]: IDOperator,
-  [DBColumns.SPAN_ANNOTATION_ID_LIST]: ArrayOperator,
+  [DBColumns.SPAN_ANNOTATION_ID_LIST]: IDListOperator,
 };
 
 export const column2InputType: Record<DBColumns, string> = {
@@ -91,6 +98,29 @@ export const column2InputType: Record<DBColumns, string> = {
   [DBColumns.USER_ID_LIST]: "number",
   [DBColumns.SPAN_ANNOTATION_ID]: "number",
   [DBColumns.SPAN_ANNOTATION_ID_LIST]: "number",
+};
+
+export const operator2HumanReadable: Record<FilterOperator, string> = {
+  [IDOperator.ID_EQUALS]: "=",
+  [IDOperator.ID_NOT_EQUALS]: "!=",
+  [NumberOperator.NUMBER_EQUALS]: "=",
+  [NumberOperator.NUMBER_NOT_EQUALS]: "!=",
+  [NumberOperator.NUMBER_GT]: ">",
+  [NumberOperator.NUMBER_LT]: "<",
+  [NumberOperator.NUMBER_GTE]: ">=",
+  [NumberOperator.NUMBER_LTE]: "<=",
+  [StringOperator.STRING_CONTAINS]: "contains",
+  [StringOperator.STRING_EQUALS]: "equals",
+  [StringOperator.STRING_NOT_EQUALS]: "not equals",
+  [StringOperator.STRING_STARTS_WITH]: "starts with",
+  [StringOperator.STRING_ENDS_WITH]: "ends with",
+  [IDListOperator.ID_LIST_CONTAINS]: "contains",
+  [ListOperator.LIST_CONTAINS]: "contains",
+  [DateOperator.DATE_GT]: ">",
+  [DateOperator.DATE_LT]: "<",
+  [DateOperator.DATE_GTE]: ">=",
+  [DateOperator.DATE_LTE]: "<+",
+  [BooleanOperator.BOOLEAN_EQUALS]: "is",
 };
 
 export const findInFilter = (filter: MyFilter, filterId: string): MyFilter | MyFilterExpression | undefined => {
@@ -138,4 +168,12 @@ export const countFilterExpressiosn = (filter: MyFilter): number => {
     }
   }
   return count;
+};
+
+export const isValidDate = (d: any) => {
+  return !isNaN(d) && d instanceof Date;
+};
+
+export const isValidDateString = (dateString: string): boolean => {
+  return isValidDate(new Date(dateString));
 };

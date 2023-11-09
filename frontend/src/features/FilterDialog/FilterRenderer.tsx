@@ -4,15 +4,18 @@ import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { TreeItem, TreeView } from "@mui/lab";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
+import { useMemo } from "react";
+import { useParams } from "react-router-dom";
+import ProjectHooks from "../../api/ProjectHooks";
 import {
   DBColumns,
-  DocType,
   FilterExpression,
   IDOperator,
   LogicalOperator,
   NumberOperator,
   StringOperator,
 } from "../../api/openapi";
+import FilterExpressionRenderer from "./FilterExpressionRenderer";
 import "./filter.css";
 import {
   FilterOperatorType,
@@ -21,15 +24,11 @@ import {
   column2operator,
   deleteInFilter,
   findInFilter,
+  getDefaultOperator,
   isFilter,
   isFilterExpression,
   metaType2operator,
-  getDefaultOperator,
 } from "./filterUtils";
-import FilterExpressionRenderer from "./FilterExpressionRenderer";
-import ProjectHooks from "../../api/ProjectHooks";
-import { useParams } from "react-router-dom";
-import { useMemo } from "react";
 
 export interface FilterRendererProps {
   columns: DBColumns[];
@@ -45,26 +44,31 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
   // global server state (react-query)
   const projectMetadata = ProjectHooks.useGetMetadata(projectId);
 
-  const dynamicColumns: string[] = useMemo(() => {
+  const dynamicColumns: { label: string; value: string }[] = useMemo(() => {
+    let result = Object.values(columns).map((column) => ({ label: column as string, value: column as string }));
     if (!projectMetadata.data || !columns.includes(DBColumns.METADATA)) {
-      return Object.keys(columns);
+      return result;
     }
 
-    const dynamicColumns = Object.values(columns) as string[];
-    projectMetadata.data.forEach((metadata) => {
-      dynamicColumns.push(`META-${metadata.doctype}-${metadata.key}`);
-    });
-    return dynamicColumns;
+    if (columns.includes(DBColumns.METADATA)) {
+      // remove metadata column
+      result = result.filter((column) => column.label !== DBColumns.METADATA);
+      projectMetadata.data.forEach((metadata) => {
+        result.push({ label: `${metadata.doctype}-${metadata.key}`, value: metadata.id.toString() });
+      });
+    }
+
+    return result;
   }, [columns, projectMetadata.data]);
 
-  const dynamicColumn2Operator: Record<string, FilterOperatorType> = useMemo(() => {
+  const dynamicColumnValue2Operator: Record<string, FilterOperatorType> = useMemo(() => {
     if (!projectMetadata.data) {
       return {};
     }
 
     return projectMetadata.data.reduce(
       (acc, metadata) => {
-        acc[`META-${metadata.doctype}-${metadata.key}`] = metaType2operator[metadata.metatype];
+        acc[`${metadata.id}`] = metaType2operator[metadata.metatype];
         return acc;
       },
       { ...(column2operator as Record<string, FilterOperatorType>) },
@@ -116,18 +120,19 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
     onFilterChange(newFilter);
   };
 
-  const handleColumnChange = (id: string, column: string, metadataKey?: string, docType?: DocType) => {
+  const handleColumnChange = (id: string, columnValue: string) => {
     const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(newFilter, id);
     if (filterItem && isFilterExpression(filterItem)) {
-      if (column.startsWith("META-")) {
-        filterItem.column = DBColumns.METADATA;
-        filterItem.metadata_key = metadataKey;
-        filterItem.docType = docType;
+      if (Object.values<string>(DBColumns).includes(columnValue)) {
+        // it is a DBColumn
+        filterItem.column = columnValue as DBColumns;
       } else {
-        filterItem.column = column as DBColumns;
+        // it is a Metadata column
+        filterItem.column = DBColumns.METADATA;
+        filterItem.project_metadata_id = parseInt(columnValue);
       }
-      filterItem.operator = getDefaultOperator(dynamicColumn2Operator[column]);
+      filterItem.operator = getDefaultOperator(dynamicColumnValue2Operator[columnValue]);
       filterItem.value = "";
     }
     onFilterChange(newFilter);
@@ -218,7 +223,7 @@ function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpressi
                 key={item.id}
                 filterExpression={item}
                 columns={dynamicColumns}
-                columns2operator={dynamicColumn2Operator}
+                columnValue2operator={dynamicColumnValue2Operator}
                 onDeleteFilter={handleDeleteFilter}
                 onChangeColumn={handleColumnChange}
                 onChangeOperator={handleOperatorChange}

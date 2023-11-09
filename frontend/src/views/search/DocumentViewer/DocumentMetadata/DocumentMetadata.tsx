@@ -5,12 +5,10 @@ import {
   AccordionProps,
   AccordionSummary,
   AccordionSummaryProps,
-  Grid,
   styled,
   Typography,
 } from "@mui/material";
 import SdocHooks from "../../../../api/SdocHooks";
-import DocumentKeywordsRow from "./DocumentKeywordsRow";
 import DocumentMetadataRow from "./DocumentMetadataRow";
 
 const MyAccordion = styled((props: AccordionProps) => <Accordion disableGutters elevation={0} square {...props} />)(
@@ -50,14 +48,10 @@ function DocumentMetadata({ sdocId }: DocumentMetadataProps) {
       <AccordionDetails>
         {metadata.isLoading && <h1>Loading...</h1>}
         {metadata.isError && <h1>{metadata.error.message}</h1>}
-        {metadata.isSuccess && (
-          <>
-            <DocumentKeywordsRow sdocId={sdocId} />
-            {metadata.data.map((data) => (
-              <DocumentMetadataRow key={data.id} metadata={data} />
-            ))}
-          </>
-        )}
+        {metadata.isSuccess &&
+          metadata.data
+            .sort((a, b) => a.id - b.id)
+            .map((data) => <DocumentMetadataRow key={data.id} metadata={data} />)}
       </AccordionDetails>
     </MyAccordion>
   );

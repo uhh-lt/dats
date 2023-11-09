@@ -10,15 +10,15 @@ import { FilterOperator, FilterOperatorType, MyFilterExpression } from "./filter
 function FilterExpressionRenderer({
   filterExpression,
   columns,
-  columns2operator,
+  columnValue2operator,
   onDeleteFilter,
   onChangeColumn,
   onChangeOperator,
   onChangeValue,
 }: {
   filterExpression: MyFilterExpression;
-  columns: string[];
-  columns2operator: Record<string, FilterOperatorType>;
+  columns: { label: string; value: string }[];
+  columnValue2operator: Record<string, FilterOperatorType>;
   onDeleteFilter(id: string): void;
   onChangeColumn(id: string, column: string, metadataKey?: string, docType?: DocType): void;
   onChangeOperator(id: string, operator: FilterOperator): void;
@@ -50,9 +50,13 @@ function FilterExpressionRenderer({
           <FilterOperatorSelector
             filterExpression={filterExpression}
             onChangeOperator={onChangeOperator}
-            column2operator={columns2operator}
+            columnValue2operator={columnValue2operator}
           />
-          <FilterValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />
+          <FilterValueSelector
+            filterExpression={filterExpression}
+            onChangeValue={onChangeValue}
+            columnValue2Operator={columnValue2operator}
+          />
         </Stack>
       }
     />

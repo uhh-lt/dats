@@ -245,6 +245,7 @@ function Search() {
               }}
               columns={[
                 DBColumns.SOURCE_DOCUMENT_FILENAME,
+                DBColumns.SOURCE_DOCUMENT_ID,
                 DBColumns.DOCUMENT_TAG_ID_LIST,
                 DBColumns.USER_ID_LIST,
                 DBColumns.CODE_ID_LIST,
