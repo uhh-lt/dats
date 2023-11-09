@@ -1,51 +1,90 @@
-from typing import List, Tuple
-from app.core.analysis.analysis_service import AnalysisService
-from app.core.data.repo.repo_service import RepoService
+from typing import Dict, List, Tuple
+
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
-from app.core.data.dto.analysis import AnnotationOccurrence
-from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.simsearch_service import SimSearchService
 import numpy as np
+
+from app.core.data.orm import (
+    SpanAnnotationORM,
+    SourceDocumentORM,
+    AnnotationDocumentORM,
+    CurrentCodeORM,
+    SourceDocumentDataORM,
+)
 
 
 class AnnoScalingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        cls.repo = RepoService()
         cls.sqls = SQLService()
-        cls.analysis = AnalysisService()
-        cls.es = ElasticSearchService()
         cls.sim = SimSearchService()
 
         return super(AnnoScalingService, cls).__new__(cls)
-    
-    def suggest(
-        self, project_id: int, user_ids: List[int], code_id: int
-    ) -> List[str]:
-        occurrences: List[AnnotationOccurrence] = self.analysis.find_annotation_occurrences(project_id, user_ids, code_id)
-        sdoc_sentences = {o.sdoc.id: None for o in occurrences}
-        for sid in sdoc_sentences.keys():
-            sents = self.es.get_sdoc_sentences_by_sdoc_id(proj_id=project_id, sdoc_id=sid, sentence_offsets=True)
-            sdoc_sentences[sid] = (sents.sentences, sents.sentence_character_offsets)
-        
+
+    def suggest(self, project_id: int, user_ids: List[int], code_id: int) -> List[str]:
+        occurrences = self.__get_annotations(project_id, user_ids, code_id)
+        sdoc_sentences = self.__get_sentences({id for _,_, id in occurrences})
+
         sdoc_ids = []
         sent_ids = []
         for o in occurrences:
-            offsets = sdoc_sentences[o.sdoc.id][1]
-            sent_match = self.__best_match(offsets, o.annotation.begin, o.annotation.end)
+            # TODO loops are bad, need a much faster way to link annotations to sentences
+            # best: do everything in DB and only return sentence ID per annotation
+            # alternative: load all from DB (in chunks?) and compute via numpy 
+            starts, ends, _ = sdoc_sentences[o.sdoc.id]
+            sent_match = self.__best_match(
+                starts, ends, o.annotation.begin, o.annotation.end
+            )
             sdoc_ids.append(o.sdoc.id)
             sent_ids.append(sent_match)
         hits = self.sim.suggest_similar_sentences(project_id, sdoc_ids, sent_ids)
+        sim_doc_sentences = self.__get_sentences({hit.sdoc_id for hit in hits})
+
         texts = []
         for hit in hits:
-            sds = self.es.get_sdoc_sentences_by_sdoc_id(proj_id=project_id, sdoc_id=hit.sdoc_id)
-            texts.append(sds.sentences[hit.sentence_id])
+            starts, ends, content = sim_doc_sentences[hit.sdoc_id]
+            texts.append(content[starts[hit.sentence_id] : ends[hit.sentence_id]])
         return texts
+
+    def __get_annotations(self, project_id: int, user_ids: List[int], code_id: int):
+        with self.sqls.db_session() as db:
+            query = (
+                db.query(
+                    SpanAnnotationORM,
+                    SourceDocumentORM.id,
+                )
+                .join(
+                    AnnotationDocumentORM,
+                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
+                )
+                .join(
+                    SpanAnnotationORM,
+                    SpanAnnotationORM.annotation_document_id
+                    == AnnotationDocumentORM.id,
+                )
+                .join(
+                    CurrentCodeORM,
+                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
+                )
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                    AnnotationDocumentORM.user_id.in_(user_ids),
+                    CurrentCodeORM.code_id == code_id,
+                )
+            )
+            res = query.all()
+            return [(r[0].begin, r[0].end, r[1]) for r in res]
     
-    def __best_match(self, offsets: List[Tuple[int, int]], begin: int, end: int):
-        overlap = [self.__overlap(*o, begin, end) for o in offsets]
+    def __get_sentences(self, sdoc_ids : List[int]) -> Dict[int, Tuple[List[int], List[int]]]:
+        with self.sqls.db_session() as db:
+            query = db.query(SourceDocumentDataORM.id, SourceDocumentDataORM.sentence_starts, SourceDocumentDataORM.sentence_ends, SourceDocumentDataORM.content).filter(SourceDocumentDataORM.id.in_(sdoc_ids))
+            res = query.all()
+            return {r[0]: (r[1], r[2], r[3]) for r in res}
+
+
+    def __best_match(self, starts: List[int], ends: List[int], begin: int, end: int):
+        overlap = [self.__overlap(s,e , begin, end) for s,e in zip(starts, ends)]
         return np.asarray(overlap).argmax()
 
     def __overlap(self, s1: int, e1: int, s2: int, e2: int):
-        return max(min(e1,e2) - max(s1,s2),0)
-
+        return max(min(e1, e2) - max(s1, s2), 0)
