@@ -82,7 +82,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
             style={{
               position: "absolute",
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-              backgroundColor: props.data.label.bgcolor + props.data.label.bgalpha.toString(16).padStart(2, "0"),
+              backgroundColor: props.data.label.bgcolor + props.data.label.bgalpha?.toString(16).padStart(2, "0"),
               padding: 10,
               borderRadius: 5,
               fontWeight: 700,
