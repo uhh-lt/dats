@@ -100,9 +100,7 @@ class RepoService(metaclass=SingletonMeta):
                 # remove the suffixes to only truncate the true name / stem
                 # and then truncate to max length
                 filename.name.removesuffix(suffix)[:SDOC_FILENAME_MAX_LENGTH]
-            ).with_suffix(
-                suffix
-            )  # and add suffix again
+            ).with_suffix(suffix)  # and add suffix again
         return str(filename)
 
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):
@@ -438,7 +436,7 @@ class RepoService(metaclass=SingletonMeta):
             raise e
 
     def build_source_document_create_dto_from_file(
-        self, proj_id: int, filename: Union[str, Path], **extra_data
+        self, proj_id: int, filename: Union[str, Path]
     ) -> Tuple[Path, SourceDocumentCreate]:
         filename = self.truncate_filename(filename)
         dst_path = self._get_dst_path_for_project_sdoc_file(
@@ -466,6 +464,5 @@ class RepoService(metaclass=SingletonMeta):
             doctype=doctype,
             project_id=proj_id,
             status=SDocStatus.unfinished_or_erroneous,
-            **extra_data,
         )
         return dst_path, create_dto

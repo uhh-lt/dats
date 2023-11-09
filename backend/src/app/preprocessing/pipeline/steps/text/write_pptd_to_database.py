@@ -35,7 +35,6 @@ def _create_and_persist_sdoc(db: Session, pptd: PreProTextDoc) -> SourceDocument
     _, create_dto = repo.build_source_document_create_dto_from_file(
         proj_id=pptd.project_id,
         filename=pptd.filename,
-        name=pptd.filename,
     )
     # persist SourceDocument
     sdoc_db_obj = crud_sdoc.create(db=db, create_dto=create_dto)

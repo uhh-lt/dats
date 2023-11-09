@@ -43,7 +43,7 @@ def __migrate_es_docs_to_database(db: Session):
         "token_character_offsets",
         "sentence_character_offsets",
     }
-    limit = 2
+    limit = 100
     project_ids = [id[0] for id in db.query(ProjectORM.id).all()]
     for project_id in project_ids:
         while True:
