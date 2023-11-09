@@ -6,8 +6,9 @@
  * An enumeration.
  */
 export enum MetaType {
-  STRING = "string",
-  NUMBER = "number",
-  DATE = "date",
-  LIST = "list",
+  STRING = "STRING",
+  NUMBER = "NUMBER",
+  DATE = "DATE",
+  BOOLEAN = "BOOLEAN",
+  LIST = "LIST",
 }

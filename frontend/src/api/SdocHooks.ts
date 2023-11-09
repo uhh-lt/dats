@@ -9,13 +9,14 @@ import {
   MemoRead,
   ProjectService,
   SourceDocumentKeywords,
-  SourceDocumentMetadataRead,
+  SourceDocumentMetadataReadResolved,
   SourceDocumentRead,
   SourceDocumentService,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import useStableQueries from "../utils/useStableQueries";
 import queryClient from "../plugins/ReactQueryClient";
+import { Word } from "react-wordcloud";
 
 // sdoc
 const fetchSdoc = async (sdocId: number) => {
@@ -273,7 +274,7 @@ const useGetThumbnailURL = (sdocId: number | undefined) =>
   );
 
 const useGetMetadata = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentMetadataRead[], Error>(
+  useQuery<SourceDocumentMetadataReadResolved[], Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
     async () =>
       SourceDocumentService.getAllMetadata({
@@ -285,9 +286,19 @@ const useGetMetadata = (sdocId: number | undefined) =>
   );
 
 const useGetWordFrequencies = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentMetadataRead, Error>(
+  useQuery<Word[], Error>(
     [QueryKey.SDOC_WORD_FREQUENCIES, sdocId],
-    () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_frequencies" }),
+    async () => {
+      const wordFrequencies = (
+        await SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_frequencies" })
+      ).str_value!;
+
+      let entries: [string, number][] = Object.entries(JSON.parse(wordFrequencies));
+      entries.sort((a, b) => b[1] - a[1]); // sort array descending
+      return entries.slice(0, 20).map((e) => {
+        return { text: e[0], value: e[1] } as Word;
+      });
+    },
     {
       enabled: !!sdocId,
     },
@@ -307,7 +318,7 @@ const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
         sdocId: sdocId!,
         metadataKey: "word_level_transcriptions",
       });
-      return JSON.parse(metadata.value) as WordLevelTranscription[];
+      return JSON.parse(metadata.str_value!) as WordLevelTranscription[];
     },
     {
       enabled: !!sdocId,

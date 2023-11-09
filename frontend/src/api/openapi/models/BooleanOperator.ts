@@ -5,6 +5,6 @@
 /**
  * An enumeration.
  */
-export enum ArrayOperator {
-  ARRAY_CONTAINS = "ARRAY_CONTAINS",
+export enum BooleanOperator {
+  BOOLEAN_EQUALS = "BOOLEAN_EQUALS",
 }

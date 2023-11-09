@@ -17,8 +17,6 @@ export const QueryKey = {
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
   // all crawler jobs of a project (by project id)
   PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
-  // all metadata of a project (by project id and metadata key)
-  PROJECT_METADATA_BY_METADATA_KEY: "projectMetadataByMetadataKey",
 
   // all users
   USERS: "users",

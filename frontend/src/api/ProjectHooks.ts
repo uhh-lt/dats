@@ -225,16 +225,6 @@ const useQueryActions = (requestBody: ActionQueryParameters) =>
   );
 
 // metadata
-const useGetMetadataByKey = (projectId: number, metadataKey: string) =>
-  useQuery<SourceDocumentMetadataRead[], Error>(
-    [QueryKey.PROJECT_METADATA_BY_METADATA_KEY, projectId, metadataKey],
-    () =>
-      ProjectService.getProjectMetadataByMetadataKey({
-        projId: projectId,
-        metadataKey: metadataKey,
-      }),
-  );
-
 const useGetMetadata = (projectId: number) =>
   useQuery<ProjectMetadataRead[], Error>([QueryKey.PROJECT_METADATAS, projectId], () =>
     ProjectService.getAllMetadata({
@@ -270,7 +260,6 @@ const ProjectHooks = {
   useGetActions,
   useQueryActions,
   // metadata
-  useGetMetadataByKey,
   useGetMetadata,
 };
 

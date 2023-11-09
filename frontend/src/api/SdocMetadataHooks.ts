@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { SdocMetadataService, SourceDocumentMetadataRead } from "./openapi";
+import { SdocMetadataService, SourceDocumentMetadataReadResolved } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
 
@@ -12,7 +12,7 @@ const useCreateMetadata = () =>
   });
 
 const useGetMetadata = (metadataId: number | undefined) =>
-  useQuery<SourceDocumentMetadataRead, Error>(
+  useQuery<SourceDocumentMetadataReadResolved, Error>(
     [QueryKey.SDOC_METADATA, metadataId],
     () => SdocMetadataService.getById({ metadataId: metadataId! }),
     {

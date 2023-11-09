@@ -2,7 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type SourceDocumentMetadataRead = {
+import type { ProjectMetadataRead } from "./ProjectMetadataRead";
+
+export type SourceDocumentMetadataReadResolved = {
   /**
    * Int Value of the SourceDocumentMetadata
    */
@@ -28,11 +30,11 @@ export type SourceDocumentMetadataRead = {
    */
   id: number;
   /**
-   * ID of the ProjectMetadata
-   */
-  project_metadata_id: number;
-  /**
    * SourceDocument the SourceDocumentMetadata belongs to
    */
   source_document_id: number;
+  /**
+   * ProjectMetadata of the SourceDocumentMetadata
+   */
+  project_metadata: ProjectMetadataRead;
 };

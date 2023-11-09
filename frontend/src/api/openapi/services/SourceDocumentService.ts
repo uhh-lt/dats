@@ -6,7 +6,7 @@ import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentKeywords } from "../models/SourceDocumentKeywords";
-import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
+import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
@@ -196,10 +196,14 @@ export class SourceDocumentService {
   /**
    * Returns all SourceDocumentMetadata
    * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentMetadataRead Successful Response
+   * @returns SourceDocumentMetadataReadResolved Successful Response
    * @throws ApiError
    */
-  public static getAllMetadata({ sdocId }: { sdocId: number }): CancelablePromise<Array<SourceDocumentMetadataRead>> {
+  public static getAllMetadata({
+    sdocId,
+  }: {
+    sdocId: number;
+  }): CancelablePromise<Array<SourceDocumentMetadataReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata",
@@ -215,7 +219,7 @@ export class SourceDocumentService {
   /**
    * Returns the SourceDocumentMetadata with the given Key
    * Returns the SourceDocumentMetadata with the given Key if it exists.
-   * @returns SourceDocumentMetadataRead Successful Response
+   * @returns SourceDocumentMetadataReadResolved Successful Response
    * @throws ApiError
    */
   public static readMetadataByKey({
@@ -224,7 +228,7 @@ export class SourceDocumentService {
   }: {
     sdocId: number;
     metadataKey: string;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
+  }): CancelablePromise<SourceDocumentMetadataReadResolved> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}/metadata/{metadata_key}",
@@ -241,7 +245,7 @@ export class SourceDocumentService {
   /**
    * Updates the SourceDocumentMetadata
    * Updates the SourceDocumentMetadata with the given ID if it exists.
-   * @returns SourceDocumentMetadataRead Successful Response
+   * @returns SourceDocumentMetadataReadResolved Successful Response
    * @throws ApiError
    */
   public static updateMetadataById({
@@ -252,7 +256,7 @@ export class SourceDocumentService {
     sdocId: number;
     metadataId: number;
     requestBody: SourceDocumentMetadataUpdate;
-  }): CancelablePromise<SourceDocumentMetadataRead> {
+  }): CancelablePromise<SourceDocumentMetadataReadResolved> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/sdoc/{sdoc_id}/metadata/{metadata_id}",
