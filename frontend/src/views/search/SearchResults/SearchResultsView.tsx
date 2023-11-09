@@ -19,6 +19,7 @@ import SentenceSimilaritySearchResultCard from "./Cards/SentenceSimilaritySearch
 import SearchResultContextMenu from "./SearchResultContextMenu";
 import "./SearchResults.css";
 import SearchResultsTableView from "./SearchResultsTableView";
+import { result } from "lodash";
 
 interface SearchResultsViewProps {
   searchResults: SearchResults<any>;
@@ -57,12 +58,12 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
   }, []);
 
   React.useLayoutEffect(() => {
-    if (searchResults instanceof SentenceSimilaritySearchResults) {
-      dispatch(SearchActions.setRowsPerPage(searchResults.getAggregatedNumberOfHits()));
-      return;
-    }
     if (width && height) {
       if (!isTableView) {
+        if (searchResults instanceof SentenceSimilaritySearchResults) {
+          dispatch(SearchActions.setRowsPerPage(searchResults.getAggregatedNumberOfHits()));
+          return;
+        }
         let numCardsX = Math.floor(width / 300);
         numCardsX = width - numCardsX * 300 - (numCardsX - 1) * 15 > 0 ? numCardsX : numCardsX - 1;
 
@@ -105,9 +106,8 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
 
   let resultsView = null;
   const isSentenceSimilaritySearchResult = searchResults instanceof SentenceSimilaritySearchResults;
-
-  if (searchResults instanceof LexicalSearchResults) {
-    if (!isTableView) {
+  if (!isTableView) {
+    if (searchResults instanceof LexicalSearchResults) {
       resultsView = (
         <>
           {searchResults
@@ -124,18 +124,7 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
             ))}
         </>
       );
-    } else {
-      resultsView = (
-        <SearchResultsTableView
-          searchResults={searchResults}
-          handleResultClick={handleResultClick}
-          handleOnContextMenu={openContextMenu}
-          handleOnCheckboxChange={handleChange}
-        />
-      );
-    }
-  } else if (searchResults instanceof SentenceSimilaritySearchResults) {
-    if (!isTableView) {
+    } else if (searchResults instanceof SentenceSimilaritySearchResults) {
       resultsView = (
         <>
           {Array.from(searchResults.getResults().entries())
@@ -152,18 +141,7 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
             ))}
         </>
       );
-    } else {
-      resultsView = (
-        <SearchResultsTableView
-          searchResults={searchResults}
-          handleResultClick={handleResultClick}
-          handleOnContextMenu={openContextMenu}
-          handleOnCheckboxChange={handleChange}
-        />
-      );
-    }
-  } else if (searchResults instanceof ImageSimilaritySearchResults) {
-    if (!isTableView) {
+    } else if (searchResults instanceof ImageSimilaritySearchResults) {
       resultsView = (
         <>
           {searchResults
@@ -182,17 +160,17 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
         </>
       );
     } else {
-      resultsView = (
-        <SearchResultsTableView
-          searchResults={searchResults}
-          handleResultClick={handleResultClick}
-          handleOnContextMenu={openContextMenu}
-          handleOnCheckboxChange={handleChange}
-        />
-      );
+      resultsView = <>Search Result Type is not supported :(</>;
     }
   } else {
-    resultsView = <>Search Result Type is not supported :(</>;
+    resultsView = (
+      <SearchResultsTableView
+        searchResults={searchResults}
+        handleResultClick={handleResultClick}
+        handleOnContextMenu={openContextMenu}
+        handleOnCheckboxChange={handleChange}
+      />
+    );
   }
 
   return (
@@ -206,7 +184,7 @@ export default function SearchResultsView({ searchResults, handleResultClick, cl
         overflowY: "auto",
         p: 2,
         width: "100%",
-        maxWidth: isSentenceSimilaritySearchResult ? undefined : "100% !important",
+        maxWidth: !isTableView ? (isSentenceSimilaritySearchResult ? undefined : "100% !important") : "100% !important",
       }}
       className={className}
     >

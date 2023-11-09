@@ -5,13 +5,15 @@ import { DocType, SimSearchImageHit } from "../../../../api/openapi";
 import { simSearchColorScale } from "../../utils";
 import SdocHooks from "../../../../api/SdocHooks";
 import SearchResultCardBase from "./SearchResultCardBase";
+import { ThumbnailURL } from "../Common/ThumbnailURL";
 
 export interface ImageSimilaritySearchResultCardProps extends SearchResultProps {
   hit: SimSearchImageHit;
 }
 
 function ImageSimilaritySearchResultCard({ hit, ...props }: ImageSimilaritySearchResultCardProps & CardProps) {
-  const thumbnailUrl = SdocHooks.useGetThumbnailURL(props.sdocId).data ?? '';
+  // const thumbnailUrl = SdocHooks.useGetThumbnailURL(props.sdocId).data ?? '';
+  const thumbnailUrl = ThumbnailURL(props.sdocId);
 
   return (
     <SearchResultCardBase

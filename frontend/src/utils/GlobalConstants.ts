@@ -35,3 +35,8 @@ export const USER_GUIDE_ROUTE_MAP = {
   settings: { route: "settings", description: "This page provides tools for modifying your project settings" },
 };
 export const EMPTY_TOKEN = "-";
+export interface ContextSentence {
+  id: number;
+  score: number;
+  text: string;
+}

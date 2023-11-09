@@ -3,13 +3,35 @@ import { DataGrid, GridColDef, GridToolbar, GridValueGetterParams } from "@mui/x
 import { Checkbox } from "@mui/material";
 import * as React from "react";
 import { useMemo } from "react";
-import { SearchResults } from "../../../api/SearchHooks";
-import { SourceDocumentRead } from "../../../api/openapi";
+import {
+  ImageSimilaritySearchResults,
+  LexicalSearchResults,
+  SearchResults,
+  SentenceSimilaritySearchResults,
+} from "../../../api/SearchHooks";
+import { SourceDocumentRead, SourceDocumentReadAll } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import "./SearchResults.css";
 import SdocHooks from "../../../api/SdocHooks";
 
-import { tableViewColDef } from "./Table/ColumnDefinition";
+import { defaultTableViewColDef } from "./Table/DefaultColumnDefinition";
+import { lexicalTableViewColDef } from "./Table/LexicalSearchTableData";
+import {
+  SentenceSimilaritySearchTableData,
+  sentenceSimResult,
+  sentenceSimTableViewColDef,
+} from "./Table/SentenceSimSearchTableData";
+import {
+  ImageSimilaritySearchTableData,
+  imageSimResult,
+  imageSimTableViewColDef,
+} from "./Table/ImageSimSearchTableData";
+import { ContextSentences } from "./Common/ContextSentences";
+import { ContextSentence } from "../../../utils/GlobalConstants";
+import { ThumbnailURL } from "./Common/ThumbnailURL";
+import { UseQueryResult } from "@tanstack/react-query";
+import { image } from "d3";
+import { result } from "lodash";
 
 declare module "@mui/x-data-grid" {
   interface FooterPropsOverrides {
@@ -35,34 +57,55 @@ export default function SearchResultsTableView({
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const paginationModel = useAppSelector((state) => state.search.tableViewPaginationModel);
 
+  let tableViewColDef: GridColDef[] = defaultTableViewColDef;
+  let resultType = "";
+
+  let rowData: SourceDocumentReadAll[] | sentenceSimResult[] | imageSimResult[] = sdocs!;
+  if (searchResults instanceof LexicalSearchResults) {
+    resultType = "lexical";
+    tableViewColDef = lexicalTableViewColDef;
+  } else if (searchResults instanceof SentenceSimilaritySearchResults) {
+    resultType = "sentenceSim";
+    const sentenceSimTableData = SentenceSimilaritySearchTableData(searchResults, sdocs!);
+    rowData = sentenceSimTableData;
+    tableViewColDef = sentenceSimTableViewColDef;
+  } else if (searchResults instanceof ImageSimilaritySearchResults) {
+    resultType = "imageSim";
+    const imageSimTableData = ImageSimilaritySearchTableData(searchResults, sdocs!);
+    rowData = imageSimTableData;
+    tableViewColDef = imageSimTableViewColDef;
+  }
+
   const columns: GridColDef[] = useMemo(() => {
-    return [
-      {
-        field: "select",
-        headerName: "",
-        minWidth: 25,
-        editable: false,
-        sortable: false,
-        filterable: false,
-        renderCell: (params: GridValueGetterParams) =>
-          handleOnCheckboxChange ? (
-            <Checkbox
-              checked={selectedDocumentIds.indexOf(params.row.id) !== -1}
-              color="primary"
-              onClick={(e) => e.stopPropagation()}
-              onChange={(event) => handleOnCheckboxChange(event, params.row.id)}
-              sx={{ flexShrink: 0 }}
-            />
-          ) : undefined,
-      },
-      ...tableViewColDef,
-    ] as GridColDef[];
-  }, [selectedDocumentIds, handleOnCheckboxChange]);
+    return resultType !== "lexical"
+      ? [...tableViewColDef]
+      : ([
+          {
+            field: "select",
+            headerName: "",
+            minWidth: 25,
+            editable: false,
+            sortable: false,
+            filterable: false,
+            renderCell: (params: GridValueGetterParams) =>
+              handleOnCheckboxChange ? (
+                <Checkbox
+                  checked={selectedDocumentIds.indexOf(params.row.id) !== -1}
+                  color="primary"
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(event) => handleOnCheckboxChange(event, params.row.id)}
+                  sx={{ flexShrink: 0 }}
+                />
+              ) : undefined,
+          },
+          ...tableViewColDef,
+        ] as GridColDef[]);
+  }, [selectedDocumentIds, resultType, tableViewColDef, handleOnCheckboxChange]);
 
   return useMemo(() => {
-    return (
+    return resultType !== "" ? (
       <DataGrid
-        rows={sdocs ? sdocs : []}
+        rows={rowData ? rowData : []}
         columns={columns}
         getRowHeight={() => 100}
         // getRowHeight={() => "auto"}
@@ -76,7 +119,7 @@ export default function SearchResultsTableView({
           },
         }}
         paginationModel={paginationModel}
-        onRowClick={(data) => handleResultClick(data.row)}
+        onRowClick={(data) => handleResultClick(resultType !== "lexical" ? data.row.sdoc : data.row)}
         disableRowSelectionOnClick
         checkboxSelection={false}
         hideFooter
@@ -108,6 +151,8 @@ export default function SearchResultsTableView({
           },
         }}
       />
+    ) : (
+      <>Search Result Type is not supported :(</>
     );
-  }, [sdocs, columns, paginationModel, handleOnContextMenu, handleResultClick]);
+  }, [columns, paginationModel, rowData, resultType, handleOnContextMenu, handleResultClick]);
 }

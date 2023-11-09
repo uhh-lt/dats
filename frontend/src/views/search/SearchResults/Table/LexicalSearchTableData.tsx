@@ -1,4 +1,4 @@
-import { ListItem, Stack, Tab, Tabs, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { GridValueGetterParams } from "@mui/x-data-grid";
 import { DocType, DocumentTagRead } from "../../../../api/openapi";
 import SearchResultTag from "../SearchResultTag";
@@ -6,7 +6,7 @@ import { docTypeToIcon } from "../../../../features/DocumentExplorer/docTypeToIc
 import DocStatusToIcon from "./DocStatusToIcon";
 
 const EMPTY_TOKEN = "-";
-export const tableViewColDef = [
+export const lexicalTableViewColDef = [
   {
     field: "name",
     headerName: "Document Name",
@@ -50,14 +50,18 @@ export const tableViewColDef = [
     sortable: false,
     filterable: false,
     renderCell: (data: any) =>
-      data.row.tags.length > 0 ? (
-        <Stack direction={"row"} spacing={0.2} overflow={"auto"}>
-          {data.row.tags.map((tag: DocumentTagRead) => {
-            return <SearchResultTag key={tag.id} tagId={tag.id} />;
-          })}
-        </Stack>
+      data.row.tags ? (
+        data.row.tags.length > 0 ? (
+          <Stack direction={"row"} spacing={0.2} overflow={"auto"}>
+            {data.row.tags.map((tag: DocumentTagRead) => {
+              return <SearchResultTag key={tag.id} tagId={tag.id} />;
+            })}
+          </Stack>
+        ) : (
+          <Typography align="center">{EMPTY_TOKEN}</Typography>
+        )
       ) : (
-        <Typography align="center">{EMPTY_TOKEN}</Typography>
+        EMPTY_TOKEN
       ),
   },
   {
@@ -67,7 +71,7 @@ export const tableViewColDef = [
     flex: 1,
     editable: false,
     valueGetter: (data: GridValueGetterParams) => {
-      return data.row.memos.length;
+      return data.row.memos ? data.row.memos.length : EMPTY_TOKEN;
     },
   },
   {
@@ -113,7 +117,7 @@ export const tableViewColDef = [
     flex: 1,
     editable: false,
     valueGetter: (data: GridValueGetterParams) => {
-      return data.row.links.length;
+      return data.row.links ? data.row.links.length : EMPTY_TOKEN;
     },
   },
   {
