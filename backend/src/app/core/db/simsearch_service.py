@@ -29,6 +29,7 @@ class SimSearchService(metaclass=SingletonMeta):
         cls._sentence_class_name = "Sentence"
         cls._image_class_name = "Image"
         cls._named_entity_class_name = "NamedEntity"
+        cls._document_class_name = "Document"
 
         cls.class_names = {
             IndexType.SENTENCE: cls._sentence_class_name,
@@ -75,6 +76,14 @@ class SimSearchService(metaclass=SingletonMeta):
             ],
         }
 
+        cls._document_class_obj = {
+            "class": cls._document_class_name,
+            "vectorizer": "none",
+            "properties": [
+                *cls._common_properties,
+            ],
+        }
+
         cls._image_class_obj = {
             "class": cls._image_class_name,
             "vectorizer": "none",
@@ -108,6 +117,8 @@ class SimSearchService(metaclass=SingletonMeta):
                     cls._client.schema.delete_class(cls._image_class_name)
                 if cls._client.schema.exists(cls._named_entity_class_name):
                     cls._client.schema.delete_class(cls._named_entity_class_name)
+                if cls._client.schema.exists(cls._document_class_name):
+                    cls._client.schema.delete_class(cls._document_class_name)
 
             # create classes
             if not cls._client.schema.exists(cls._sentence_class_name):
@@ -119,6 +130,9 @@ class SimSearchService(metaclass=SingletonMeta):
             if not cls._client.schema.exists(cls._named_entity_class_name):
                 logger.debug(f"Creating class {cls._named_entity_class_obj}!")
                 cls._client.schema.create_class(cls._named_entity_class_obj)
+            if not cls._client.schema.exists(cls._document_class_name):
+                logger.debug(f"Creating class {cls._document_class_obj}!")
+                cls._client.schema.create_class(cls._document_class_obj)
 
             cls._sentence_props = list(
                 map(lambda p: p["name"], cls._sentence_class_obj["properties"])
@@ -179,11 +193,14 @@ class SimSearchService(metaclass=SingletonMeta):
         sdoc_id: int,
         sentences: List[str],
     ) -> None:
-        sentence_embs = (
-            self.rms.clip_text_embedding(ClipTextEmbeddingInput(text=sentences))
-            .numpy()
-            .tolist()
-        )
+        sentence_embs = self.rms.clip_text_embedding(
+            ClipTextEmbeddingInput(text=sentences)
+        ).numpy()
+
+        # create cheap&easy (but suboptimal) document embeddings for now
+        doc_emb = sentence_embs.sum(axis=0)
+        doc_emb /= np.linalg.norm(doc_emb)
+
         logger.debug(
             f"Adding {len(sentence_embs)} sentences "
             f"from SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
@@ -199,12 +216,16 @@ class SimSearchService(metaclass=SingletonMeta):
                     class_name=self._sentence_class_name,
                     vector=sent_emb,
                 )
+            batch.add_data_object(
+                data_object={
+                    "project_id": proj_id,
+                    "sdoc_id": sdoc_id,
+                },
+                class_name=self._document_class_name,
+                vector=doc_emb,
+            )
 
-    def add_image_sdoc_to_index(
-        self,
-        proj_id: int,
-        sdoc_id: int,
-    ) -> None:
+    def add_image_sdoc_to_index(self, proj_id: int, sdoc_id: int) -> None:
         image_emb = self._encode_image(image_sdoc_id=sdoc_id)
         logger.debug(
             f"Adding image SDoc {sdoc_id} in Project {proj_id} to Weaviate ..."
@@ -229,10 +250,7 @@ class SimSearchService(metaclass=SingletonMeta):
                 # Other doctypes are not used for simsearch
                 pass
 
-    def remove_image_sdoc_from_index(
-        self,
-        sdoc_id: int,
-    ) -> None:
+    def remove_image_sdoc_from_index(self, sdoc_id: int) -> None:
         logger.debug(f"Removing image SDoc {sdoc_id} from Index!")
         obj_id = self._get_image_object_id_by_sdoc_id(sdoc_id=sdoc_id)
         self._client.data_object.delete(
@@ -240,26 +258,25 @@ class SimSearchService(metaclass=SingletonMeta):
             class_name=self._image_class_name,
         )
 
-    def remove_text_sdoc_from_index(
-        self,
-        sdoc_id: int,
-    ) -> None:
-        obj_ids = self._get_sentence_object_ids_by_sdoc_id(sdoc_id=sdoc_id)
-        ne_obj_ids = self._get_named_entity_object_ids_by_sdoc_id(sdoc_id=sdoc_id)
-        logger.debug(
-            f"Removing text SDoc {sdoc_id} with {len(obj_ids)} sentences, {len(ne_obj_ids)} named entities from Index!"
+    def remove_text_sdoc_from_index(self, sdoc_id: int) -> None:
+        logger.debug(f"Removing text SDoc {sdoc_id} from Index!")
+        id_filter = {
+            "path": ["sdoc_id"],
+            "operator": "Equal",
+            "valueInt": sdoc_id,
+        }
+        self._client.batch.delete_objects(
+            class_name=self._sentence_class_name,
+            where=id_filter,
         )
-        for obj_id in obj_ids:
-            self._client.data_object.delete(
-                uuid=obj_id,
-                class_name=self._sentence_class_name,
-            )
-        for obj_id in ne_obj_ids:
-            self._client.data_object.delete(
-                uuid=obj_id,
-                class_name=self._named_entity_class_name,
-            )
-    
+        self._client.batch.delete_objects(
+            class_name=self._named_entity_class_name,
+            where=id_filter,
+        )
+        self._client.batch.delete_objects(
+            class_name=self._document_class_name,
+            where=id_filter,
+        )
 
     def remove_all_project_embeddings(
         self,
@@ -391,6 +408,7 @@ class SimSearchService(metaclass=SingletonMeta):
                 self._named_entity_class_name,
                 self._named_entity_props,
             )
+
         else:
             msg = f"Unknown IndexType '{index_type}'!"
             logger.error(msg)
@@ -517,9 +535,10 @@ class SimSearchService(metaclass=SingletonMeta):
             for r in results
         ]
 
-    def suggest_similar_sentences(self, proj_id: int, sdoc_ids: List[int], sent_ids: List[int]) -> List[SimSearchSentenceHit]:
+    def suggest_similar_sentences(
+        self, proj_id: int, sdoc_ids: List[int], sent_ids: List[int]
+    ) -> List[SimSearchSentenceHit]:
         return self.__suggest_index(proj_id, sdoc_ids, sent_ids)
-
 
     def _get_sentence_object_ids_by_sdoc_id_sentence_id(
         self,
@@ -544,9 +563,8 @@ class SimSearchService(metaclass=SingletonMeta):
                     "path": ["sentence_id"],
                     "operator": "Equal",
                     "valueInt": sentence_id,
-                }
-            ]
-
+                },
+            ],
         }
         response = (
             self._client.query.get(self._sentence_class_name, ["sentence_id"])
@@ -559,8 +577,9 @@ class SimSearchService(metaclass=SingletonMeta):
             logger.error(msg)
             raise KeyError(msg)
 
-        return response["data"]["Get"][self._sentence_class_name][0]["_additional"]["id"]
-        
+        return response["data"]["Get"][self._sentence_class_name][0]["_additional"][
+            "id"
+        ]
 
     def __suggest_index(
         self,
@@ -570,8 +589,10 @@ class SimSearchService(metaclass=SingletonMeta):
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit]:
-
-        obj_ids = [self._get_sentence_object_ids_by_sdoc_id_sentence_id(proj_id, sdoc, sent) for sdoc, sent in zip(sdoc_ids, sent_ids)]
+        obj_ids = [
+            self._get_sentence_object_ids_by_sdoc_id_sentence_id(proj_id, sdoc, sent)
+            for sdoc, sent in zip(sdoc_ids, sent_ids)
+        ]
 
         project_filter = {
             "path": ["project_id"],
@@ -581,27 +602,27 @@ class SimSearchService(metaclass=SingletonMeta):
 
         hits = []
 
-        for obj in obj_ids: 
+        for obj in obj_ids:
             query = self._client.query.get(
                 self._sentence_class_name,
                 self._sentence_props,
             )
 
             query = (
-                query.with_near_object(
-                    {"id": obj, "certainty": threshold}
-                )
+                query.with_near_object({"id": obj, "certainty": threshold})
                 .with_additional(["certainty"])
                 .with_where(project_filter)
                 .with_limit(1)
             )
-            
+
             r = query.do()["data"]["Get"][self._sentence_class_name][0]
-            hits.append(SimSearchSentenceHit(
-                sdoc_id=r["sdoc_id"],
-                sentence_id=r["sentence_id"],
-                score=r["_additional"]["certainty"],
-            ))
+            hits.append(
+                SimSearchSentenceHit(
+                    sdoc_id=r["sdoc_id"],
+                    sentence_id=r["sentence_id"],
+                    score=r["_additional"]["certainty"],
+                )
+            )
         hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
         hits = self.__unique_consecutive(hits)
         hits.sort(key=lambda x: x.score, reverse=True)
