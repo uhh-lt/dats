@@ -19,7 +19,7 @@ from app.core.data.dto.source_document import (
     SourceDocumentUpdate,
 )
 from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataRead,
+    SourceDocumentMetadataReadResolved,
     SourceDocumentMetadataUpdate,
 )
 from app.core.data.repo.repo_service import RepoService
@@ -188,7 +188,7 @@ async def get_file_url(
 
 @router.get(
     "/{sdoc_id}/metadata",
-    response_model=List[SourceDocumentMetadataRead],
+    response_model=List[SourceDocumentMetadataReadResolved],
     summary="Returns all SourceDocumentMetadata",
     description="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
 )
@@ -196,35 +196,35 @@ async def get_all_metadata(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-) -> List[SourceDocumentMetadataRead]:
+) -> List[SourceDocumentMetadataReadResolved]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return [
-        SourceDocumentMetadataRead.model_validate(meta)
+        SourceDocumentMetadataReadResolved.model_validate(meta)
         for meta in sdoc_db_obj.metadata_
     ]
 
 
 @router.get(
     "/{sdoc_id}/metadata/{metadata_key}",
-    response_model=Optional[SourceDocumentMetadataRead],
+    response_model=Optional[SourceDocumentMetadataReadResolved],
     summary="Returns the SourceDocumentMetadata with the given Key",
     description="Returns the SourceDocumentMetadata with the given Key if it exists.",
 )
 async def read_metadata_by_key(
     *, db: Session = Depends(get_db_session), sdoc_id: int, metadata_key: str
-) -> Optional[SourceDocumentMetadataRead]:
+) -> Optional[SourceDocumentMetadataReadResolved]:
     # TODO Flo: only if the user has access?
     crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
     metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
         db=db, sdoc_id=sdoc_id, key=metadata_key
     )
-    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
+    return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
 
 
 @router.patch(
     "/{sdoc_id}/metadata/{metadata_id}",
-    response_model=Optional[SourceDocumentMetadataRead],
+    response_model=Optional[SourceDocumentMetadataReadResolved],
     summary="Updates the SourceDocumentMetadata",
     description="Updates the SourceDocumentMetadata with the given ID if it exists.",
 )
@@ -234,13 +234,13 @@ async def update_metadata_by_id(
     sdoc_id: int,
     metadata_id: int,
     metadata: SourceDocumentMetadataUpdate,
-) -> Optional[SourceDocumentMetadataRead]:
+) -> Optional[SourceDocumentMetadataReadResolved]:
     # TODO Flo: only if the user has access?
     crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
     metadata_db_obj = crud_sdoc_meta.update(
         db=db, metadata_id=metadata_id, update_dto=metadata
     )
-    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
+    return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
 
 
 @router.get(

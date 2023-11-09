@@ -28,7 +28,6 @@ from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.user import UserORM
@@ -43,7 +42,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "document_tag_id": crud_document_tag,
         "project_id": crud_project,
         "source_document_id": crud_sdoc,
-        "source_document_metadata_id": crud_sdoc_meta,
         "span_annotation_id": crud_span_anno,
         "bbox_annotation_id": crud_bbox_anno,
         "span_group_id": crud_span_group,
@@ -59,7 +57,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         "document_tag_id": DocumentTagORM,
         "project_id": ProjectORM,
         "source_document_id": SourceDocumentORM,
-        "source_document_metadata_id": SourceDocumentMetadataORM,
         "span_annotation_id": SpanAnnotationORM,
         "bbox_annotation_id": BBoxAnnotationORM,
         "span_group_id": SpanGroupORM,
@@ -111,7 +108,6 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
         DocumentTagORM,
         ProjectORM,
         SourceDocumentORM,
-        SourceDocumentMetadataORM,
         SpanAnnotationORM,
         BBoxAnnotationORM,
         SpanGroupORM,

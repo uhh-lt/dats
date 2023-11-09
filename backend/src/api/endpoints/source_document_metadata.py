@@ -8,6 +8,7 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataCreate,
     SourceDocumentMetadataRead,
+    SourceDocumentMetadataReadResolved,
     SourceDocumentMetadataUpdate,
 )
 
@@ -31,16 +32,16 @@ async def create_new_metadata(
 
 @router.get(
     "/{metadata_id}",
-    response_model=Optional[SourceDocumentMetadataRead],
+    response_model=Optional[SourceDocumentMetadataReadResolved],
     summary="Returns the Metadata",
     description="Returns the Metadata with the given ID.",
 )
 async def get_by_id(
     *, db: Session = Depends(get_db_session), metadata_id: int
-) -> Optional[SourceDocumentMetadataRead]:
+) -> Optional[SourceDocumentMetadataReadResolved]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc_meta.read(db=db, id=metadata_id)
-    return SourceDocumentMetadataRead.model_validate(db_obj)
+    return SourceDocumentMetadataReadResolved.model_validate(db_obj)
 
 
 @router.patch(

@@ -50,25 +50,26 @@ def _persist_sdoc_metadata(
         for pm in crud_project.read(db=db, id=ppad.project_id).metadata_
         if pm.doctype == DocType.audio
     ]
-    project_metadata_map = {str(m.key): int(m.id) for m in project_metadata}
+    project_metadata_map = {str(m.key): m for m in project_metadata}
 
     # we create SourceDocumentMetadata for every project metadata
     metadata_create_dtos = []
-    for project_metadata_key, project_metadata_id in project_metadata_map.items():
+    for project_metadata_key, project_metadata in project_metadata_map.items():
         if project_metadata_key in ppad.metadata.keys():
             metadata_create_dtos.append(
-                SourceDocumentMetadataCreate(
+                SourceDocumentMetadataCreate.with_metatype(
                     value=ppad.metadata[project_metadata_key],
                     source_document_id=sdoc_id,
-                    project_metadata_id=project_metadata_id,
+                    project_metadata_id=project_metadata.id,
+                    metatype=project_metadata.metatype,
                 )
             )
         else:
             metadata_create_dtos.append(
-                SourceDocumentMetadataCreate(
-                    value="",
+                SourceDocumentMetadataCreate.with_metatype(
                     source_document_id=sdoc_id,
-                    project_metadata_id=project_metadata_id,
+                    project_metadata_id=project_metadata.id,
+                    metatype=project_metadata.metatype,
                 )
             )
 

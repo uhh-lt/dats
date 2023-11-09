@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Union
 
 from pydantic import BaseModel, Field
 
@@ -27,7 +27,7 @@ class PreProDocBase(BaseModel):
         )
     )
 
-    metadata: Dict[str, str] = Field(
+    metadata: Dict[str, Union[str, List[str]]] = Field(
         description=(
             "A container to store all metadata generated during the preprocessing "
             "that will be persisted in the database."

@@ -22,7 +22,6 @@ from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCre
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.source_document_fact import SourceDocumentFactORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
@@ -69,41 +68,33 @@ def _persist_sdoc_metadata(
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     pptd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
     pptd.metadata["word_frequencies"] = json.dumps(pptd.word_freqs)
+    pptd.metadata["keywords"] = pptd.keywords
 
     project_metadata = [
         pm
         for pm in crud_project.read(db=db, id=pptd.project_id).metadata_
         if pm.doctype == DocType.text
     ]
-    project_metadata_map = {str(m.key): int(m.id) for m in project_metadata}
+    project_metadata_map = {str(m.key): m for m in project_metadata}
 
     # we create SourceDocumentMetadata for every project metadata
     metadata_create_dtos = []
-    for project_metadata_key, project_metadata_id in project_metadata_map.items():
+    for project_metadata_key, project_metadata in project_metadata_map.items():
         if project_metadata_key in pptd.metadata.keys():
             metadata_create_dtos.append(
-                SourceDocumentMetadataCreate(
+                SourceDocumentMetadataCreate.with_metatype(
                     value=pptd.metadata[project_metadata_key],
                     source_document_id=sdoc_id,
-                    project_metadata_id=project_metadata_id,
+                    project_metadata_id=project_metadata.id,
+                    metatype=project_metadata.metatype,
                 )
             )
-
-            db.add(
-                SourceDocumentFactORM(
-                    source_document_id=sdoc_id,
-                    project_metadata_id=project_metadata_id,
-                    string_value=pptd.metadata[project_metadata_key],
-                )
-            )
-            db.commit()
-
         else:
             metadata_create_dtos.append(
-                SourceDocumentMetadataCreate(
-                    value="",
+                SourceDocumentMetadataCreate.with_metatype(
                     source_document_id=sdoc_id,
-                    project_metadata_id=project_metadata_id,
+                    project_metadata_id=project_metadata.id,
+                    metatype=project_metadata.metatype,
                 )
             )
 

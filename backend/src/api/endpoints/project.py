@@ -17,7 +17,6 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.action import ActionQueryParameters, ActionRead, ActionType
 from app.core.data.dto.code import CodeRead
@@ -25,15 +24,11 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
-from app.core.data.dto.project_metadata import (
-    ProjectMetadataRead,
-    ProjectMetadataUpdate,
-)
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
     SourceDocumentRead,
 )
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.user import UserRead
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.preprocessing.preprocessing_service import PreprocessingService
@@ -564,27 +559,6 @@ async def resolve_filename(
     if sdoc is not None:
         return sdoc.id
     return None
-
-
-@router.get(
-    "/{proj_id}/metadata/{metadata_key}",
-    response_model=List[SourceDocumentMetadataRead],
-    summary="Returns all SourceDocumentMetadata of the project that have the specified metadata_key",
-    description=(
-        "Returns all SourceDocumentMetadata of the project that have the specified metadata_key"
-    ),
-    # TODO add authorization for the given source document?
-    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
-)
-async def get_project_metadata_by_metadata_key(
-    *, db: Session = Depends(get_db_session), proj_id: int, metadata_key: str
-) -> List[SourceDocumentMetadataRead]:
-    return [
-        SourceDocumentMetadataRead.model_validate(db_obj)
-        for db_obj in crud_sdoc_meta.read_by_project_and_key(
-            db=db, project_id=proj_id, key=metadata_key
-        )
-    ]
 
 
 @router.get(

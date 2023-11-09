@@ -12,7 +12,7 @@ from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.source_document_fact import SourceDocumentFactORM
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
@@ -77,13 +77,7 @@ class SearchService(metaclass=SingletonMeta):
                 )
                 .join(subquery, SourceDocumentORM.id == subquery.c.id)
                 .filter(
-                    filter.get_sqlalchemy_expression(subquery.c),
-                    SourceDocumentORM.facts.any(
-                        and_(
-                            SourceDocumentFactORM.key == "language",
-                            SourceDocumentFactORM.value == "de",
-                        )
-                    ),
+                    filter.get_sqlalchemy_expression(db=db, subquery_dict=subquery.c),
                 )
             )
 

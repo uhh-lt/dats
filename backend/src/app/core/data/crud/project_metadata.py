@@ -27,10 +27,10 @@ class CRUDProjectMetadata(
 
         # we have to create sdoc metadata for all existing sdocs
         metadata_create_dtos = [
-            SourceDocumentMetadataCreate(
-                value="",
+            SourceDocumentMetadataCreate.with_metatype(
                 source_document_id=sdoc.id,
                 project_metadata_id=db_obj.id,
+                metatype=create_dto.metatype,
             )
             for sdoc in db_obj.project.source_documents
             if sdoc.doctype == create_dto.doctype
