@@ -4,32 +4,19 @@ import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { TreeItem, TreeView } from "@mui/lab";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
-import { useParams } from "react-router-dom";
-import { DBColumns, FilterExpression, LogicalOperator } from "../../api/openapi";
+import { LogicalOperator } from "../../api/openapi";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import FilterExpressionRenderer from "./FilterExpressionRenderer";
 import "./filter.css";
 import { FilterActions } from "./filterSlice";
 import { FilterOperator, MyFilter, isFilter, isFilterExpression } from "./filterUtils";
-import { useInitFilterDialog } from "./useInitFilterDialog";
 
-export interface FilterRendererProps {
-  columns: DBColumns[];
-  defaultFilterExpression: FilterExpression;
-}
+export interface FilterRendererProps {}
 
-function FilterRenderer({ columns, defaultFilterExpression }: FilterRendererProps) {
-  // global client state
-  const projectId = parseInt((useParams() as { projectId: string }).projectId);
-
+function FilterRenderer(_: FilterRendererProps) {
   // global client state (redux)
   const filter = useAppSelector((state) => state.filter.filter);
-  const dynamicColumns = useAppSelector((state) => state.filter.columns);
-  const dynamicColumnValue2Operator = useAppSelector((state) => state.filter.columnValue2Operator);
   const dispatch = useAppDispatch();
-
-  // custom hooks: initialize the filterSlice
-  useInitFilterDialog({ projectId, columns, defaultFilterExpression });
 
   // actions
   const handleAddFilter = (filterId: string) => {
@@ -126,8 +113,6 @@ function FilterRenderer({ columns, defaultFilterExpression }: FilterRendererProp
               <FilterExpressionRenderer
                 key={item.id}
                 filterExpression={item}
-                columns={dynamicColumns}
-                columnValue2operator={dynamicColumnValue2Operator}
                 onDeleteFilter={handleDeleteFilter}
                 onChangeColumn={handleColumnChange}
                 onChangeOperator={handleOperatorChange}

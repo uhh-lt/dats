@@ -2,28 +2,29 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { TreeItem } from "@mui/lab";
 import { IconButton, Stack, Tooltip } from "@mui/material";
 import { DocType } from "../../api/openapi";
+import { useAppSelector } from "../../plugins/ReduxHooks";
 import FilterColumnSelector from "./FilterColumnSelector";
 import FilterOperatorSelector from "./FilterOperatorSelector";
 import FilterValueSelector from "./FilterValueSelector";
-import { FilterOperator, FilterOperatorType, MyFilterExpression } from "./filterUtils";
+import { FilterOperator, MyFilterExpression } from "./filterUtils";
 
 function FilterExpressionRenderer({
   filterExpression,
-  columns,
-  columnValue2operator,
   onDeleteFilter,
   onChangeColumn,
   onChangeOperator,
   onChangeValue,
 }: {
   filterExpression: MyFilterExpression;
-  columns: { label: string; value: string }[];
-  columnValue2operator: Record<string, FilterOperatorType>;
   onDeleteFilter(id: string): void;
   onChangeColumn(id: string, column: string, metadataKey?: string, docType?: DocType): void;
   onChangeOperator(id: string, operator: FilterOperator): void;
   onChangeValue(id: string, value: string | number): void;
 }) {
+  // global client state (redux)
+  const columns = useAppSelector((state) => state.filter.columns);
+  const columnValue2operator = useAppSelector((state) => state.filter.columnValue2Operator);
+
   return (
     <TreeItem
       key={filterExpression.id}

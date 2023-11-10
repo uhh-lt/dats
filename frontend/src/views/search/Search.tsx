@@ -25,6 +25,22 @@ import { useAddTagFilter } from "./hooks/useAddTagFilter";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
 import { SearchActions } from "./searchSlice";
 
+const columns = [
+  DBColumns.SOURCE_DOCUMENT_FILENAME,
+  DBColumns.SOURCE_DOCUMENT_CONTENT,
+  DBColumns.DOCUMENT_TAG_ID_LIST,
+  DBColumns.USER_ID_LIST,
+  DBColumns.CODE_ID_LIST,
+  DBColumns.SPAN_ANNOTATIONS,
+  DBColumns.METADATA,
+];
+
+const defaultFilterExpression = {
+  column: DBColumns.SOURCE_DOCUMENT_CONTENT,
+  operator: StringOperator.STRING_CONTAINS,
+  value: "",
+};
+
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
 }
@@ -211,20 +227,8 @@ function Search() {
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
             <FilterDialog
               anchorEl={filterDialogAnchorRef.current}
-              defaultFilterExpression={{
-                column: DBColumns.SOURCE_DOCUMENT_CONTENT,
-                operator: StringOperator.STRING_CONTAINS,
-                value: "",
-              }}
-              columns={[
-                DBColumns.SOURCE_DOCUMENT_FILENAME,
-                DBColumns.SOURCE_DOCUMENT_CONTENT,
-                DBColumns.DOCUMENT_TAG_ID_LIST,
-                DBColumns.USER_ID_LIST,
-                DBColumns.CODE_ID_LIST,
-                DBColumns.SPAN_ANNOTATIONS,
-                DBColumns.METADATA,
-              ]}
+              defaultFilterExpression={defaultFilterExpression}
+              columns={columns}
             />
             {filters.length > 0 && (
               <Stack direction="row" sx={{ p: 2 }} style={{ flexWrap: "wrap", gap: "8px" }}>

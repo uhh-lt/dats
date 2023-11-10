@@ -157,7 +157,6 @@ const imageSimilaritySearchQueryFn = async (
 
 const useSearchDocumentsNew = (projectId: number | undefined) => {
   const filter = useAppSelector((state) => state.filter.filter);
-  console.log(filter);
   const debouncedFilter = useDebounce(filter, 1000);
   return useQuery<LexicalSearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, debouncedFilter],
