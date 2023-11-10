@@ -112,8 +112,6 @@ function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
         isViewer={true}
         html={sdoc.content}
         projectId={sdoc.project_id}
-        sentences={sentences}
-        doHighlighting={true}
         style={{ zIndex: 1, overflowY: "auto" }}
         className="h100"
       />

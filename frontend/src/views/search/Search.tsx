@@ -1,4 +1,4 @@
-import { Container, Divider, Grid, Stack, Typography } from "@mui/material";
+import { Container, Divider, Grid, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
 import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
@@ -16,8 +16,6 @@ import { SettingsActions } from "../settings/settingsSlice";
 import DocumentViewer from "./DocumentViewer/DocumentViewer";
 import { QueryType } from "./QueryType";
 import SearchBar from "./SearchBar/SearchBar";
-import { SearchFilter } from "./SearchFilter";
-import SearchFilterChip from "./SearchFilterChip";
 import SearchResultsView from "./SearchResults/SearchResultsView";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
 import SearchToolbar from "./ToolBar/SearchToolbar";
@@ -62,7 +60,6 @@ function Search() {
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
   const searchType = useAppSelector((state) => state.search.searchType);
-  const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
 
   const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
@@ -159,13 +156,6 @@ function Search() {
     [navigateIfNecessary, projectId],
   );
 
-  const handleRemoveFilter = useCallback(
-    (filter: SearchFilter) => {
-      dispatch(SearchActions.removeFilter(filter));
-    },
-    [dispatch],
-  );
-
   // hack to disable sentences
   const projectCodes = ProjectHooks.useGetAllCodes(parseInt(projectId), true);
   useEffect(() => {
@@ -204,7 +194,7 @@ function Search() {
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
-            filter={filters}
+            sdocIds={searchResultDocumentIds}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
@@ -230,13 +220,6 @@ function Search() {
               defaultFilterExpression={defaultFilterExpression}
               columns={columns}
             />
-            {filters.length > 0 && (
-              <Stack direction="row" sx={{ p: 2 }} style={{ flexWrap: "wrap", gap: "8px" }}>
-                {filters.map((filter) => (
-                  <SearchFilterChip key={filter.id} filter={filter} handleDelete={handleRemoveFilter} />
-                ))}
-              </Stack>
-            )}
             <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
               <Grid
                 item

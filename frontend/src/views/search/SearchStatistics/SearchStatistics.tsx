@@ -7,7 +7,6 @@ import ProjectHooks from "../../../api/ProjectHooks";
 import SearchHooks from "../../../api/SearchHooks";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { SearchFilter } from "../SearchFilter";
 import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";
 import KeywordStats from "./KeywordStats";
@@ -15,14 +14,14 @@ import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
 import StatsSearchBar from "./StatsSearchBar";
 
 interface SearchStatisticsProps {
-  filter: SearchFilter[];
+  sdocIds: number[];
   handleKeywordClick: (keyword: string) => void;
   handleTagClick: (tagId: number) => void;
   handleCodeClick: (stat: SpanEntityDocumentFrequency) => void;
 }
 
 function SearchStatistics({
-  filter,
+  sdocIds,
   handleCodeClick,
   handleKeywordClick,
   handleTagClick,
@@ -54,9 +53,9 @@ function SearchStatistics({
   // stats
   const [validEntityStats, setValidEntityStats] = useState<Map<number, SpanEntityDocumentFrequency[]>>(new Map());
   const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
-  const codeStats = SearchHooks.useSearchEntityDocumentStats(projectId, filter, sortStatsByGlobal);
-  const keywordStats = SearchHooks.useSearchKeywordStats(projectId, filter, sortStatsByGlobal);
-  const tagStats = SearchHooks.useSearchTagStats(projectId, filter, sortStatsByGlobal);
+  const codeStats = SearchHooks.useSearchEntityDocumentStats(projectId, sdocIds, sortStatsByGlobal);
+  const keywordStats = SearchHooks.useSearchKeywordStats(projectId, sdocIds, sortStatsByGlobal);
+  const tagStats = SearchHooks.useSearchTagStats(projectId, sdocIds, sortStatsByGlobal);
 
   // computed
   const filteredProjectCodes = useMemo(() => {

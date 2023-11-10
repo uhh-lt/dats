@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useState } from "react";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   List,
@@ -9,13 +9,12 @@ import {
   Popover,
   PopoverPosition,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { SearchActions } from "../../views/search/searchSlice";
-import { createCodeFilter, createSentenceFilter } from "../../views/search/SearchFilter";
+import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AttachedObjectType, DocType, SpanAnnotationReadResolved } from "../../api/openapi";
+import { AttachedObjectType, SpanAnnotationReadResolved } from "../../api/openapi";
+import { FilterActions } from "../../features/FilterDialog/filterSlice";
 import MemoListItemButton from "../../features/Memo/MemoListItemButton";
+import { useAppDispatch } from "../../plugins/ReduxHooks";
 
 interface SentenceContextMenuProps {}
 
@@ -70,21 +69,21 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleSentenceSimilaritySearch = () => {
-    dispatch(SearchActions.setResultModalites([DocType.TEXT]));
-    dispatch(SearchActions.addFilter(createSentenceFilter(sentence!)));
+    alert("Not implemented yet");
+    // dispatch(SearchActions.setResultModalites([DocType.TEXT]));
     closeContextMenu();
-    navigate("../search");
+    // navigate("../search");
   };
 
   const handleImageSimilaritySearch = () => {
-    dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
-    dispatch(SearchActions.addFilter(createSentenceFilter(sentence!)));
+    alert("Not implemented yet");
+    // dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
     closeContextMenu();
-    navigate("../search");
+    // navigate("../search");
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
-    dispatch(SearchActions.addFilter(createCodeFilter(anno.code.id, anno.span_text)));
+    dispatch(FilterActions.addSpanAnnotationFilterExpression({ codeId: anno.code.id, spanText: anno.span_text }));
     closeContextMenu();
     navigate("../search");
   };

@@ -302,8 +302,6 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         annotationMap={annotationMap}
         isViewer={false}
         projectId={sdoc.project_id}
-        sentences={undefined}
-        doHighlighting={false}
         style={{ zIndex: 1, overflowY: "auto" }}
       />
     </>

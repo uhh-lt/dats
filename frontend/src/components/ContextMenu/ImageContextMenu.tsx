@@ -1,11 +1,6 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { SearchActions } from "../../views/search/searchSlice";
-import { createImageFilter } from "../../views/search/SearchFilter";
-import { useNavigate } from "react-router-dom";
-import { DocType } from "../../api/openapi";
+import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
+import { forwardRef, useImperativeHandle, useState } from "react";
 
 interface ImageContextMenuProps {}
 
@@ -16,7 +11,7 @@ export interface ImageContextMenuHandle {
 
 // eslint-disable-next-line no-empty-pattern
 const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProps>(({}, ref) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -24,7 +19,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
   const [image, setImage] = useState<number>();
 
   // global client state (redux)
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -50,17 +45,17 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
   };
 
   const handleSentenceSimilaritySearch = () => {
-    dispatch(SearchActions.setResultModalites([DocType.TEXT]));
-    dispatch(SearchActions.addFilter(createImageFilter(image!)));
+    alert("Not implemented yet");
+    // dispatch(SearchActions.setResultModalites([DocType.TEXT]));
     closeContextMenu();
-    navigate("../search");
+    // navigate("../search");
   };
 
   const handleImageSimilaritySearch = () => {
-    dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
-    dispatch(SearchActions.addFilter(createImageFilter(image!)));
+    alert("Not implemented yet");
+    // dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
     closeContextMenu();
-    navigate("../search");
+    // navigate("../search");
   };
 
   return (

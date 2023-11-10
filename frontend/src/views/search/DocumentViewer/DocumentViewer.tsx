@@ -3,21 +3,19 @@ import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../../api/SdocHooks";
 import { DocType, DocumentTagRead } from "../../../api/openapi";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
-import { SearchActions } from "../searchSlice";
-import { DocumentAdocSelector } from "./DocumentAdocSelector";
-import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import EditableDocumentName, {
   EditableDocumentNameHandle,
 } from "../../../components/EditableDocumentName/EditableDocumentName";
+import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
+import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
+import AudioVideoViewer from "./AudioVideoViewer";
+import { DocumentAdocSelector } from "./DocumentAdocSelector";
+import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
 import DocumentTagChip from "./DocumentTagChip";
 import ImageViewer from "./ImageViewer";
 import TextViewer from "./TextViewer";
 import { useDeletableDocumentTags } from "./useDeletableDocumentTags";
 import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments";
-import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
-import AudioVideoViewer from "./AudioVideoViewer";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;
@@ -45,9 +43,7 @@ function DocumentViewer({
     useSelectableAnnotationDocuments(sdocId);
 
   // the queries are disabled if sdocId is undefined => show the idle content
-  const dispatch = useAppDispatch();
   if (sdocId === undefined || sdocId === null) {
-    dispatch(SearchActions.resetFilterInfos());
     return <Box {...props}>{isIdleContent}</Box>;
   }
 
