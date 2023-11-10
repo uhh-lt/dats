@@ -6,6 +6,7 @@ from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
@@ -20,13 +21,16 @@ class AggregatedColumn(str, Enum):
     CODE_IDS_LIST = "code_ids"
     USER_IDS_LIST = "user_ids"
     SPAN_ANNOTATION_IDS_LIST = "span_annotation_ids"
+    SPAN_ANNOTATIONS = "span_annotation_tuples"
 
 
+# I believe it is important that key and value are identical!
 class DBColumns(Enum):
     SPAN_TEXT = "SPAN_TEXT"
 
     SOURCE_DOCUMENT_ID = "SOURCE_DOCUMENT_ID"
     SOURCE_DOCUMENT_FILENAME = "SOURCE_DOCUMENT_FILENAME"
+    SOURCE_DOCUMENT_CONTENT = "SOURCE_DOCUMENT_CONTENT"
 
     METADATA = "METADATA"
 
@@ -45,6 +49,7 @@ class DBColumns(Enum):
     USER_ID = "USER_ID"
     USER_ID_LIST = "USER_ID_LIST"
 
+    SPAN_ANNOTATIONS = "SPAN_ANNOTATIONS"
     SPAN_ANNOTATION_ID = "SPAN_ANNOTATION_ID"
     SPAN_ANNOTATION_ID_LIST = "SPAN_ANNOTATION_ID_LIST"
 
@@ -56,6 +61,8 @@ class DBColumns(Enum):
                 return SourceDocumentORM.id
             case DBColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
+            case DBColumns.SOURCE_DOCUMENT_CONTENT:
+                return SourceDocumentDataORM.content
             case DBColumns.CODE_ID:
                 return CodeORM.id
             case DBColumns.CODE_ID_LIST:
@@ -84,6 +91,8 @@ class DBColumns(Enum):
                 return SpanAnnotationORM.id
             case DBColumns.SPAN_ANNOTATION_ID_LIST:
                 return subquery_dict[AggregatedColumn.SPAN_ANNOTATION_IDS_LIST]
+            case DBColumns.SPAN_ANNOTATIONS:
+                return subquery_dict[AggregatedColumn.SPAN_ANNOTATIONS]
 
 
 # --- Operators: These define how we can compare values in filters.
@@ -167,13 +176,14 @@ class IDListOperator(Enum):
 class ListOperator(Enum):
     CONTAINS = "LIST_CONTAINS"
 
-    def apply(self, column, value: str):
+    def apply(self, column, value: Union[List[List[str]], List[str]]):
         match self:
             case ListOperator.CONTAINS:
                 return column.contains([value])
 
 
 class DateOperator(Enum):
+    EQUALS = "DATE_EQUALS"
     GT = "DATE_GT"
     LT = "DATE_LT"
     GTE = "DATE_GTE"
@@ -181,6 +191,8 @@ class DateOperator(Enum):
 
     def apply(self, column: Column, value: str):
         match self:
+            case DateOperator.EQUALS:
+                return column == value
             case DateOperator.GT:
                 return column > value
             case DateOperator.LT:
@@ -203,7 +215,7 @@ class FilterExpression(BaseModel):
         DateOperator,
         BooleanOperator,
     ]
-    value: Union[str, int]
+    value: Union[str, int, bool, List[str], List[List[str]]]
 
     # todo: eigentlich müsste project_metadata_id mitgesendet werden
     # dann muss metadata_key und metadata_type nicht übermittelt werden
