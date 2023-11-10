@@ -249,6 +249,8 @@ services:
       - ray
     networks:
       - dwts_demo_network
+    profiles:
+      - backend
 
   dwts-frontend:
     image: uhhlt/dwts_frontend:${DWTS_FRONTEND_DOCKER_VERSION:-latest}
@@ -260,6 +262,8 @@ services:
       - "${FRONTEND_EXPOSED:-3000}:3000"
     networks:
       - dwts_demo_network
+    profiles:
+      - frontend
 
 volumes:
   rabbitmq_data_demo:
