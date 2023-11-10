@@ -261,6 +261,7 @@ const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
     {
       enabled: !!sdocId,
       select: (url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + url),
+      staleTime: Infinity,
     },
   );
 
@@ -271,6 +272,7 @@ const useGetThumbnailURL = (sdocId: number | undefined) =>
     {
       enabled: !!sdocId,
       select: (thumbnail_url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + thumbnail_url),
+      staleTime: Infinity,
     },
   );
 
