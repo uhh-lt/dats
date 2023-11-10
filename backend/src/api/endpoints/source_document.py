@@ -17,6 +17,7 @@ from app.core.data.dto.source_document import (
     SourceDocumentKeywords,
     SourceDocumentRead,
     SourceDocumentUpdate,
+    SourceDocumentWithDataRead,
 )
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
@@ -32,7 +33,7 @@ router = APIRouter(
 
 @router.get(
     "/{sdoc_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=Optional[SourceDocumentWithDataRead],
     summary="Returns the SourceDocument",
     description="Returns the SourceDocument with the given ID if it exists",
 )
@@ -41,13 +42,12 @@ async def get_by_id(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     only_if_finished: bool = True,
-) -> Optional[SourceDocumentRead]:
+) -> Optional[SourceDocumentWithDataRead]:
     # TODO Flo: only if the user has access?
     if not only_if_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
-    db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return SourceDocumentRead.model_validate(db_obj)
+    return crud_sdoc.read_with_data(db=db, id=sdoc_id)
 
 
 @router.patch(

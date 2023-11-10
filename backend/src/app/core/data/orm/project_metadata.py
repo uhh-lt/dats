@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, List
 
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 if TYPE_CHECKING:
     from app.core.data.orm.project import ProjectORM
@@ -10,27 +10,29 @@ if TYPE_CHECKING:
 
 
 class ProjectMetadataORM(ORMBase):
-    id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, nullable=False, index=False)
-    metatype = Column(String, nullable=False, index=False)
-    read_only = Column(Boolean, nullable=False, index=False)
-    doctype = Column(String, nullable=False, index=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    key: Mapped[str] = mapped_column(String, nullable=False, index=False)
+    metatype: Mapped[str] = mapped_column(String, nullable=False, index=False)
+    read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, index=False)
+    doctype: Mapped[str] = mapped_column(String, nullable=False, index=False)
 
     # one to many
-    sdoc_metadata: List["SourceDocumentMetadataORM"] = relationship(
+    sdoc_metadata: Mapped[List["SourceDocumentMetadataORM"]] = relationship(
         "SourceDocumentMetadataORM",
         back_populates="project_metadata",
         passive_deletes=True,
     )
 
     # many to one
-    project_id = Column(
+    project_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("project.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
-    project: "ProjectORM" = relationship("ProjectORM", back_populates="metadata_")
+    project: Mapped["ProjectORM"] = relationship(
+        "ProjectORM", back_populates="metadata_"
+    )
 
     __table_args__ = (
         UniqueConstraint(

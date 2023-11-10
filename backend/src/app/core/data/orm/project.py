@@ -73,7 +73,7 @@ class ProjectORM(ORMBase):
         "ActionORM", back_populates="project", passive_deletes=True
     )
 
-    metadata_: List["ProjectMetadataORM"] = relationship(
+    metadata_: Mapped[List["ProjectMetadataORM"]] = relationship(
         "ProjectMetadataORM",
         back_populates="project",
         passive_deletes=True,

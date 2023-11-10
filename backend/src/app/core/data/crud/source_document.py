@@ -22,12 +22,12 @@ from app.core.data.dto.search import (
 from app.core.data.dto.source_document import (
     SDocStatus,
     SourceDocumentCreate,
-    SourceDocumentUpdate,
     SourceDocumentRead,
     SourceDocumentReadAction,
     SourceDocumentUpdate,
-    SourceDocumentWithData,
+    SourceDocumentWithDataRead,
 )
+from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
@@ -76,7 +76,7 @@ class CRUDSourceDocument(
             raise SourceDocumentPreprocessingUnfinishedError(sdoc_id=sdoc_id)
         return status
 
-    def read_with_data(self, db: Session, *, id: int) -> SourceDocumentWithData:
+    def read_with_data(self, db: Session, *, id: int) -> SourceDocumentWithDataRead:
         db_obj = (
             db.query(self.model, SourceDocumentDataORM)
             .join(SourceDocumentDataORM)
@@ -86,9 +86,9 @@ class CRUDSourceDocument(
         if not db_obj:
             raise NoSuchElementError(self.model, id=id)
         sdoc, data = db_obj.tuple()
-        joined = sdoc.as_dict() | data.as_dict()
-        result = SourceDocumentWithData(**joined)
-        return result
+        sdoc_read = SourceDocumentRead.from_orm(sdoc)
+        sdoc_data_read = SourceDocumentDataRead.from_orm(data)
+        return SourceDocumentWithDataRead(**(sdoc_read.dict() | sdoc_data_read.dict()))
 
     def link_document_tag(
         self, db: Session, *, sdoc_id: int, tag_id: int

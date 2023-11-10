@@ -1,6 +1,9 @@
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
+from app.core.data.orm.orm_base import ORMBase
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
@@ -13,16 +16,14 @@ if TYPE_CHECKING:
 class SourceDocumentMetadataORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    int_value: Mapped[int] = mapped_column(Integer)
-    str_value: Mapped[str] = mapped_column(String)
-    boolean_value: Mapped[bool] = mapped_column(Boolean)
-    date_value: Mapped[datetime] = mapped_column(DateTime)
-    list_value: Mapped[List[str]] = mapped_column(ARRAY(String))
-
-    read_only: Mapped[bool] = mapped_column(Boolean, nullable=False, index=True)
+    int_value: Mapped[Optional[int]] = mapped_column(Integer)
+    str_value: Mapped[Optional[str]] = mapped_column(String)
+    boolean_value: Mapped[Optional[bool]] = mapped_column(Boolean)
+    date_value: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    list_value: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String))
 
     # many to one
-    project_metadata_id = Mapped[int] = mapped_column(
+    project_metadata_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("projectmetadata.id", ondelete="CASCADE"),
         nullable=False,
