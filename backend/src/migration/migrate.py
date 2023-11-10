@@ -1,7 +1,9 @@
+import io
 from typing import Set
 
-from alembic.command import upgrade
+from alembic.command import current, ensure_version, stamp, upgrade
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import ElasticSearchDocumentRead
@@ -21,21 +23,39 @@ def run_required_migrations():
     with SQLService().db_session() as db:
         db_version = db.query(VersionORM).first()
         if db_version is None:
-            db_version = VersionORM(version=0)
+            db_version = VersionORM(version=1)
             db.add(db_version)
             db.commit()
             db.refresh(db_version)
         if db_version.version < 1:
+            logger.info(
+                "ES docs need to be migrated to SQL database. This can take some time..."
+            )
             __migrate_es_docs_to_database(db)
             db_version.version = 1
             db.commit()
-            print("MIGRATED ES DOCS!")
+            logger.info("ES docs migrated!")
 
 
 def __migrate_database_schema() -> None:
     config = Config("alembic.ini")
-    upgrade(config, "head")
-    print("MIGRATED DB SCHEMA!")
+    ensure_version(config)
+    output_buffer = io.StringIO()
+    config.stdout = output_buffer
+    current(config)
+    current_revision = output_buffer.getvalue()
+    script = ScriptDirectory.from_config(config)
+    head_revision = script.get_current_head()
+    if not current_revision:
+        logger.info("Alembic revision not set! Assuming an up-to-date, clean DB.")
+        stamp(config, head_revision)
+        logger.info("Set Alembic revision to latest: {}", head_revision)
+    elif not current_revision.startswith(head_revision):
+        logger.info("Running DB schema migration!")
+        upgrade(config, "head")
+        logger.info("Migrated DB schema!")
+    else:
+        logger.info("DB schema is up-to-date. No migrations are run.")
 
 
 def __migrate_es_docs_to_database(db: Session):
