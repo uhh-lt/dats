@@ -78,13 +78,18 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchSpanEntityStats({
+    projectId,
     requestBody,
   }: {
-    requestBody: SearchSDocsQueryParameters;
+    projectId: number;
+    requestBody: Array<number>;
   }): CancelablePromise<Array<SpanEntityFrequency>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/entity_stats",
+      query: {
+        project_id: projectId,
+      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -100,16 +105,19 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchCodeStats({
+    projectId,
     requestBody,
     sortByGlobal = false,
   }: {
-    requestBody: SearchSDocsQueryParameters;
+    projectId: number;
+    requestBody: Array<number>;
     sortByGlobal?: boolean;
   }): CancelablePromise<SpanEntityDocumentFrequencyResult> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/code_stats",
       query: {
+        project_id: projectId,
         sort_by_global: sortByGlobal,
       },
       body: requestBody,
@@ -127,11 +135,13 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchKeywordStats({
+    projectId,
     requestBody,
     sortByGlobal = false,
     topK = 50,
   }: {
-    requestBody: SearchSDocsQueryParameters;
+    projectId: number;
+    requestBody: Array<number>;
     sortByGlobal?: boolean;
     topK?: number;
   }): CancelablePromise<Array<KeywordStat>> {
@@ -139,6 +149,7 @@ export class SearchService {
       method: "POST",
       url: "/search/keyword_stats",
       query: {
+        project_id: projectId,
         sort_by_global: sortByGlobal,
         top_k: topK,
       },
@@ -157,16 +168,19 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchTagStats({
+    projectId,
     requestBody,
     sortByGlobal = false,
   }: {
-    requestBody: SearchSDocsQueryParameters;
+    projectId: number;
+    requestBody: Array<number>;
     sortByGlobal?: boolean;
   }): CancelablePromise<Array<TagStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/tag_stats",
       query: {
+        project_id: projectId,
         sort_by_global: sortByGlobal,
       },
       body: requestBody,

@@ -3380,9 +3380,17 @@
         "summary": "Returns SpanEntityStats for the given SourceDocuments.",
         "description": "Returns SpanEntityStats for the given SourceDocuments.",
         "operationId": "search_span_entity_stats",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          }
+        ],
         "requestBody": {
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }
+            "application/json": { "schema": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } } }
           },
           "required": true
         },
@@ -3415,6 +3423,12 @@
         "operationId": "search_code_stats",
         "parameters": [
           {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          {
             "required": false,
             "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
             "name": "sort_by_global",
@@ -3423,7 +3437,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }
+            "application/json": { "schema": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } } }
           },
           "required": true
         },
@@ -3450,6 +3464,12 @@
         "operationId": "search_keyword_stats",
         "parameters": [
           {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          {
             "required": false,
             "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
             "name": "sort_by_global",
@@ -3464,7 +3484,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }
+            "application/json": { "schema": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } } }
           },
           "required": true
         },
@@ -3497,6 +3517,12 @@
         "operationId": "search_tag_stats",
         "parameters": [
           {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          {
             "required": false,
             "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
             "name": "sort_by_global",
@@ -3505,7 +3531,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }
+            "application/json": { "schema": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } } }
           },
           "required": true
         },
@@ -6457,8 +6483,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "min": 0,
-            "max": 1
+            "max": 1,
+            "min": 0
           }
         }
       },
