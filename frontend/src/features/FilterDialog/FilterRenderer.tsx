@@ -4,156 +4,60 @@ import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { TreeItem, TreeView } from "@mui/lab";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
-import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
-import {
-  DBColumns,
-  FilterExpression,
-  IDOperator,
-  LogicalOperator,
-  NumberOperator,
-  StringOperator,
-} from "../../api/openapi";
+import { DBColumns, FilterExpression, LogicalOperator } from "../../api/openapi";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import FilterExpressionRenderer from "./FilterExpressionRenderer";
 import "./filter.css";
-import {
-  FilterOperatorType,
-  MyFilter,
-  MyFilterExpression,
-  column2operator,
-  deleteInFilter,
-  findInFilter,
-  getDefaultOperator,
-  isFilter,
-  isFilterExpression,
-  metaType2operator,
-} from "./filterUtils";
+import { FilterActions } from "./filterSlice";
+import { FilterOperator, MyFilter, isFilter, isFilterExpression } from "./filterUtils";
+import { useInitFilterDialog } from "./useInitFilterDialog";
 
 export interface FilterRendererProps {
   columns: DBColumns[];
-  filter: MyFilter;
-  onFilterChange: (newFilter: MyFilter) => void;
   defaultFilterExpression: FilterExpression;
 }
 
-function FilterRenderer({ columns, filter, onFilterChange, defaultFilterExpression }: FilterRendererProps) {
+function FilterRenderer({ columns, defaultFilterExpression }: FilterRendererProps) {
   // global client state
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  // global server state (react-query)
-  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
+  // global client state (redux)
+  const filter = useAppSelector((state) => state.filter.filter);
+  const dynamicColumns = useAppSelector((state) => state.filter.columns);
+  const dynamicColumnValue2Operator = useAppSelector((state) => state.filter.columnValue2Operator);
+  const dispatch = useAppDispatch();
 
-  const dynamicColumns: { label: string; value: string }[] = useMemo(() => {
-    let result = Object.values(columns).map((column) => ({ label: column as string, value: column as string }));
-    if (!projectMetadata.data || !columns.includes(DBColumns.METADATA)) {
-      return result;
-    }
-
-    if (columns.includes(DBColumns.METADATA)) {
-      // remove metadata column
-      result = result.filter((column) => column.label !== DBColumns.METADATA);
-      projectMetadata.data.forEach((metadata) => {
-        result.push({ label: `${metadata.doctype}-${metadata.key}`, value: metadata.id.toString() });
-      });
-    }
-
-    return result;
-  }, [columns, projectMetadata.data]);
-
-  const dynamicColumnValue2Operator: Record<string, FilterOperatorType> = useMemo(() => {
-    if (!projectMetadata.data) {
-      return {};
-    }
-
-    return projectMetadata.data.reduce(
-      (acc, metadata) => {
-        acc[`${metadata.id}`] = metaType2operator[metadata.metatype];
-        return acc;
-      },
-      { ...(column2operator as Record<string, FilterOperatorType>) },
-    );
-  }, [projectMetadata.data]);
+  // custom hooks: initialize the filterSlice
+  useInitFilterDialog({ projectId, columns, defaultFilterExpression });
 
   // actions
-  const handleAddFilter = (id: string) => {
-    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(newFilter, id);
-    if (filterItem && isFilter(filterItem)) {
-      filterItem.items = [
-        {
-          id: `${Date.now()}`,
-          items: [],
-          logic_operator: LogicalOperator.AND,
-        } as MyFilter,
-        ...filterItem.items,
-      ];
-    }
-    onFilterChange(newFilter);
+  const handleAddFilter = (filterId: string) => {
+    dispatch(FilterActions.addDefaultFilter({ filterId }));
   };
 
-  const handleAddFilterExpression = (id: string) => {
-    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(newFilter, id);
-    if (filterItem && isFilter(filterItem)) {
-      filterItem.items = [
-        {
-          ...defaultFilterExpression,
-          id: `${Date.now()}`,
-        } as MyFilterExpression,
-        ...filterItem.items,
-      ];
-    }
-    onFilterChange(newFilter);
+  const handleAddFilterExpression = (filterId: string) => {
+    dispatch(FilterActions.addDefaultFilterExpression({ filterId }));
   };
 
-  const handleDeleteFilter = (id: string) => {
-    onFilterChange(deleteInFilter(filter, id));
+  const handleDeleteFilter = (filterId: string) => {
+    dispatch(FilterActions.deleteFilter({ filterId }));
   };
 
-  const handleLogicalOperatorChange = (id: string, operator: LogicalOperator) => {
-    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(newFilter, id);
-    if (filterItem && isFilter(filterItem)) {
-      filterItem.logic_operator = operator;
-    }
-    onFilterChange(newFilter);
+  const handleLogicalOperatorChange = (filterId: string, operator: LogicalOperator) => {
+    dispatch(FilterActions.changeLogicalOperator({ filterId, operator }));
   };
 
-  const handleColumnChange = (id: string, columnValue: string) => {
-    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(newFilter, id);
-    if (filterItem && isFilterExpression(filterItem)) {
-      if (Object.values<string>(DBColumns).includes(columnValue)) {
-        // it is a DBColumn
-        filterItem.column = columnValue as DBColumns;
-      } else {
-        // it is a Metadata column
-        filterItem.column = DBColumns.METADATA;
-        filterItem.project_metadata_id = parseInt(columnValue);
-      }
-      filterItem.operator = getDefaultOperator(dynamicColumnValue2Operator[columnValue]);
-      filterItem.value = "";
-    }
-    onFilterChange(newFilter);
+  const handleColumnChange = (filterId: string, columnValue: string) => {
+    dispatch(FilterActions.changeColumn({ filterId, columnValue }));
   };
 
-  const handleOperatorChange = (id: string, operator: IDOperator | NumberOperator | StringOperator) => {
-    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(newFilter, id);
-    if (filterItem && isFilterExpression(filterItem)) {
-      filterItem.operator = operator;
-    }
-    onFilterChange(newFilter);
+  const handleOperatorChange = (filterId: string, operator: FilterOperator) => {
+    dispatch(FilterActions.changeOperator({ filterId, operator }));
   };
 
-  const handleValueChange = (id: string, value: string | number) => {
-    const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(newFilter, id);
-    if (filterItem && isFilterExpression(filterItem)) {
-      filterItem.value = value;
-    }
-    onFilterChange(newFilter);
+  const handleValueChange = (filterId: string, value: any) => {
+    dispatch(FilterActions.changeValue({ filterId, value }));
   };
 
   // rendering

@@ -14,16 +14,13 @@ import {
 import CodeRenderer from "../../components/DataGrid/CodeRenderer";
 import TagRenderer from "../../components/DataGrid/TagRenderer";
 import UserRenderer from "../../components/DataGrid/UserRenderer";
-import {
-  FilterOperatorType,
-  MyFilterExpression,
-  getFilterExpressionColumnValue,
-  isValidDateString,
-} from "./filterUtils";
+import { FilterOperatorType, MyFilterExpression, getFilterExpressionColumnValue } from "./filterUtils";
+import { isValidDateString } from "../../utils/DateUtils";
+import { useState } from "react";
 
 interface SharedFilterValueSelectorProps {
   filterExpression: MyFilterExpression;
-  onChangeValue(id: string, value: string | number | boolean | string[]): void;
+  onChangeValue(id: string, value: string | number | boolean | string[] | string[][]): void;
 }
 
 interface FilterValueSelectorProps extends SharedFilterValueSelectorProps {
@@ -38,6 +35,8 @@ function FilterValueSelector({ filterExpression, onChangeValue, columnValue2Oper
       return <CodeIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
     case DBColumns.USER_ID_LIST:
       return <UserIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
+    case DBColumns.SPAN_ANNOTATIONS:
+      return <SpanAnnotationValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
   }
 
   const filterExpressionOperator = columnValue2Operator[getFilterExpressionColumnValue(filterExpression)];
@@ -71,14 +70,11 @@ function FilterValueSelector({ filterExpression, onChangeValue, columnValue2Oper
     case ListOperator:
       return (
         <Autocomplete
-          value={Array.isArray(filterExpression.value) ? filterExpression.value : []}
+          value={Array.isArray(filterExpression.value) ? (filterExpression.value as string[]) : []}
           onChange={(event, newValue) => {
             onChangeValue(filterExpression.id, newValue);
           }}
-          sx={{
-            flexGrow: 1,
-            flexBasis: 1,
-          }}
+          fullWidth
           multiple
           options={[]}
           freeSolo
@@ -213,6 +209,66 @@ function UserIdValueSelector({ filterExpression, onChangeValue }: SharedFilterVa
         </MenuItem>
       ))}
     </TextField>
+  );
+}
+
+function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
+  // global client state
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
+
+  // global server state (react-query)
+  const projectCodes = ProjectHooks.useGetAllCodes(projectId);
+
+  const [value, setValue] = useState<string[][]>(
+    Array.isArray(filterExpression.value) &&
+      filterExpression.value.length === 1 &&
+      Array.isArray(filterExpression.value[0])
+      ? (filterExpression.value as string[][])
+      : [["-1", ""]],
+  );
+
+  const handleCodeValueChange = (codeId: string) => {
+    const newValue = [[codeId, value[0][1]]];
+    setValue(newValue);
+    onChangeValue(filterExpression.id, newValue);
+  };
+
+  const handleTextValueChange = (text: string) => {
+    const newValue = [[value[0][0], text]];
+    setValue(newValue);
+    onChangeValue(filterExpression.id, newValue);
+  };
+
+  return (
+    <>
+      <TextField
+        key={filterExpression.id}
+        fullWidth
+        select
+        label="Code"
+        variant="filled"
+        value={value[0][0]}
+        onChange={(event) => handleCodeValueChange(event.target.value)}
+        InputLabelProps={{ shrink: true }}
+      >
+        <MenuItem key={"-1"} value={"-1"}>
+          <i>None</i>
+        </MenuItem>
+        {projectCodes.data?.map((code) => (
+          <MenuItem key={code.id} value={code.id.toString()}>
+            <CodeRenderer code={code} />
+          </MenuItem>
+        ))}
+      </TextField>
+      <TextField
+        type="text"
+        value={value[0][1]}
+        onChange={(event) => handleTextValueChange(event.target.value)}
+        label="Text"
+        variant="standard"
+        fullWidth
+      />
+    </>
   );
 }
 

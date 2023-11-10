@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks";
+import { FilterActions } from "../../../../features/FilterDialog/filterSlice";
 
 interface DocumentMetadataAddFilterButtonProps {
   metadata: SourceDocumentMetadataReadResolved;
@@ -21,10 +22,9 @@ function DocumentMetadataAddFilterButton({
   const dispatch = useAppDispatch();
 
   const handleAddMetadataFilter = useCallback(() => {
-    console.log("add metadata filter");
-    // dispatch(SearchActions.addFilter(createMetadataFilter(projectMetadata.key, metadata.value)));
-    // navigate("../search");
-  }, []);
+    dispatch(FilterActions.addMetadataFilterExpression({ metadata }));
+    navigate("../search");
+  }, [dispatch, metadata, navigate]);
 
   return (
     <Tooltip title="Add as filter">

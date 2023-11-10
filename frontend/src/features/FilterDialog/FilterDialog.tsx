@@ -2,8 +2,9 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, Popover } from "@mui/material";
 import { useState } from "react";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import FilterRenderer, { FilterRendererProps } from "./FilterRenderer";
-import { countFilterExpressiosn } from "./filterUtils";
+import { FilterActions, getFilterExpressionCount } from "./filterSlice";
 
 interface FilterDialogProps extends FilterRendererProps {
   anchorEl: HTMLElement | null;
@@ -12,14 +13,18 @@ interface FilterDialogProps extends FilterRendererProps {
 function FilterDialog({ anchorEl, ...props }: FilterDialogProps) {
   const [open, setOpen] = useState(false);
 
+  // global client state (redux)
+  const numFilterExpressions = useAppSelector(getFilterExpressionCount);
+  const dispatch = useAppDispatch();
+
   const handleRemoveAll = () => {
-    props.onFilterChange({ ...props.filter, items: [] });
+    dispatch(FilterActions.resetFilter());
   };
 
   return (
     <>
       <Button startIcon={<FilterListIcon />} onClick={() => setOpen(true)}>
-        <b>Filter ({countFilterExpressiosn(props.filter)})</b>
+        <b>Filter ({numFilterExpressions})</b>
       </Button>
       <Popover
         open={open}

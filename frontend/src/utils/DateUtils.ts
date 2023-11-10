@@ -22,3 +22,11 @@ export const dateToLocaleTimeString = (date: string | Date): string => {
 export const dateToLocaleDateString = (date: string | Date): string => {
   return dateToLocaleDate(date).toLocaleDateString(LOCALE, { timeZone: TIMEZONE });
 };
+
+export const isValidDate = (d: any) => {
+  return !isNaN(d) && d instanceof Date;
+};
+
+export const isValidDateString = (dateString: string): boolean => {
+  return isValidDate(new Date(dateString));
+};

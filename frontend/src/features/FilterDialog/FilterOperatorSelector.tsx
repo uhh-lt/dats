@@ -16,9 +16,9 @@ function FilterOperatorSelector({
   onChangeOperator(id: string, operator: FilterOperator): void;
   columnValue2operator: Record<string, FilterOperatorType>;
 }) {
-  const operator = columnValue2operator[getFilterExpressionColumnValue(filterExpression)];
+  const operatorType = columnValue2operator[getFilterExpressionColumnValue(filterExpression)];
 
-  if (operator === undefined || operator === null) {
+  if (operatorType === undefined || operatorType === null) {
     return null;
   }
   return (
@@ -30,7 +30,7 @@ function FilterOperatorSelector({
       variant="standard"
       fullWidth
     >
-      {Object.keys(operator).map((op) => (
+      {Object.values(operatorType).map((op) => (
         <MenuItem key={op} value={op}>
           {operator2HumanReadable[op as FilterOperator]}
         </MenuItem>

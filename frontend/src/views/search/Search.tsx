@@ -1,20 +1,14 @@
 import { Container, Divider, Grid, Stack, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
-import {
-  DBColumns,
-  LogicalOperator,
-  SourceDocumentRead,
-  SpanEntityDocumentFrequency,
-  StringOperator,
-} from "../../api/openapi";
+import { DBColumns, SourceDocumentRead, SpanEntityDocumentFrequency, StringOperator } from "../../api/openapi";
 import FilterDialog from "../../features/FilterDialog/FilterDialog";
-import { MyFilter } from "../../features/FilterDialog/filterUtils";
+import { FilterActions } from "../../features/FilterDialog/filterSlice";
 import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
@@ -22,14 +16,7 @@ import { SettingsActions } from "../settings/settingsSlice";
 import DocumentViewer from "./DocumentViewer/DocumentViewer";
 import { QueryType } from "./QueryType";
 import SearchBar from "./SearchBar/SearchBar";
-import {
-  SearchFilter,
-  createCodeFilter,
-  createFilenameFilter,
-  createKeywordFilter,
-  createSentenceFilter,
-  createTermFilter,
-} from "./SearchFilter";
+import { SearchFilter } from "./SearchFilter";
 import SearchFilterChip from "./SearchFilterChip";
 import SearchResultsView from "./SearchResults/SearchResultsView";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
@@ -62,18 +49,8 @@ function Search() {
   const filters = useAppSelector((state) => state.search.filters);
   const dispatch = useAppDispatch();
 
-  // new stuff
-  const [newFilters, setNewFilters] = useState<MyFilter>({
-    id: "1",
-    logic_operator: LogicalOperator.AND,
-    items: [],
-  });
   const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
-  const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId), newFilters);
-  console.log(newFilters);
-  if (searchResults.data) {
-    console.log("newSearchResults", searchResults.data);
-  }
+  const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId));
 
   // query (global server state)
   // const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
@@ -120,23 +97,21 @@ function Search() {
   const handleClearSearch = () => {
     reset();
     dispatch(SearchActions.clearSelectedDocuments());
-    dispatch(SearchActions.clearFilters());
+    dispatch(FilterActions.resetFilter());
     navigateIfNecessary(`/project/${projectId}/search/`);
   };
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityDocumentFrequency) => {
-      dispatch(SearchActions.addFilter(createCodeFilter(stat.code_id, stat.span_text)));
-      dispatch(SearchActions.clearSelectedDocuments());
+      dispatch(FilterActions.addSpanAnnotationFilterExpression({ codeId: stat.code_id, spanText: stat.span_text }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(SearchActions.addFilter(createKeywordFilter(keyword)));
-      dispatch(SearchActions.clearSelectedDocuments());
+      dispatch(FilterActions.addKeywordFilterExpression({ keyword }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId],
@@ -144,7 +119,7 @@ function Search() {
   const handleAddTagFilter = useAddTagFilter();
   const handleAddTextFilter = useCallback(
     (text: string) => {
-      dispatch(SearchActions.addFilter(createTermFilter(text)));
+      dispatch(FilterActions.addContentFilterExpression({ text }));
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
@@ -152,8 +127,7 @@ function Search() {
   );
   const handleAddFileFilter = useCallback(
     (filename: string) => {
-      dispatch(SearchActions.addFilter(createFilenameFilter(filename)));
-      dispatch(SearchActions.clearSelectedDocuments());
+      dispatch(FilterActions.addFilenameFilterExpression({ filename }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId],
@@ -161,11 +135,12 @@ function Search() {
 
   const handleAddSentenceFilter = useCallback(
     (sentence: string) => {
-      dispatch(SearchActions.addFilter(createSentenceFilter(sentence)));
-      dispatch(SearchActions.clearSelectedDocuments());
+      alert("Not implemented!");
+      // dispatch(SearchActions.addFilter(createSentenceFilter(sentence)));
+      // dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId],
+    [navigateIfNecessary, projectId],
   );
 
   const handleRemoveFilter = useCallback(
@@ -236,19 +211,18 @@ function Search() {
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
             <FilterDialog
               anchorEl={filterDialogAnchorRef.current}
-              filter={newFilters}
-              onFilterChange={(filter) => setNewFilters(filter)}
               defaultFilterExpression={{
-                column: DBColumns.SOURCE_DOCUMENT_FILENAME,
+                column: DBColumns.SOURCE_DOCUMENT_CONTENT,
                 operator: StringOperator.STRING_CONTAINS,
                 value: "",
               }}
               columns={[
                 DBColumns.SOURCE_DOCUMENT_FILENAME,
-                DBColumns.SOURCE_DOCUMENT_ID,
+                DBColumns.SOURCE_DOCUMENT_CONTENT,
                 DBColumns.DOCUMENT_TAG_ID_LIST,
                 DBColumns.USER_ID_LIST,
                 DBColumns.CODE_ID_LIST,
+                DBColumns.SPAN_ANNOTATIONS,
                 DBColumns.METADATA,
               ]}
             />
