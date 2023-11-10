@@ -302,6 +302,7 @@ const useGetWordFrequencies = (sdocId: number | undefined) =>
     },
     {
       enabled: !!sdocId,
+      staleTime: Infinity,
     },
   );
 
