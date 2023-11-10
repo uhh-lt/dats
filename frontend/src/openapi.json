@@ -1062,7 +1062,9 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentWithDataRead" } }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -1095,7 +1097,7 @@
         "tags": ["sourceDocument"],
         "summary": "Updates the SourceDocument",
         "description": "Updates the SourceDocument with the given ID.",
-        "operationId": "update_by_id",
+        "operationId": "update_sdoc",
         "parameters": [
           { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" }
         ],
@@ -6444,8 +6446,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "min": 0,
-            "max": 1
+            "max": 1,
+            "min": 0
           }
         }
       },
@@ -6479,7 +6481,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_DOC_ALL_USER_ANNOTATIONS"
           },
           "sdoc_id": {
             "title": "Sdoc Id",
@@ -6500,7 +6503,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS"
           },
           "sdoc_id": {
             "title": "Sdoc Id",
@@ -6526,7 +6530,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_PROJECT_ALL_DATA"
           }
         }
       },
@@ -6542,7 +6547,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_PROJECT_ALL_TAGS"
           }
         }
       },
@@ -6558,7 +6564,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_USER_ALL_CODES"
           },
           "user_id": {
             "title": "User Id",
@@ -6579,7 +6586,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_USER_ALL_DATA"
           },
           "user_id": {
             "title": "User Id",
@@ -6600,7 +6608,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_USER_ALL_MEMOS"
           },
           "user_id": {
             "title": "User Id",
@@ -6621,7 +6630,8 @@
           },
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
+            "description": "The type of the export job (what to export)",
+            "default": "SINGLE_USER_LOGBOOK"
           },
           "user_id": {
             "title": "User Id",
@@ -6731,7 +6741,8 @@
           "date_value": {
             "title": "Date Value",
             "type": "string",
-            "description": "Date Value of the SourceDocumentMetadata"
+            "description": "Date Value of the SourceDocumentMetadata",
+            "format": "date-time"
           },
           "list_value": {
             "title": "List Value",
@@ -6774,7 +6785,8 @@
           "date_value": {
             "title": "Date Value",
             "type": "string",
-            "description": "Date Value of the SourceDocumentMetadata"
+            "description": "Date Value of the SourceDocumentMetadata",
+            "format": "date-time"
           },
           "list_value": {
             "title": "List Value",
@@ -6818,7 +6830,8 @@
           "date_value": {
             "title": "Date Value",
             "type": "string",
-            "description": "Date Value of the SourceDocumentMetadata"
+            "description": "Date Value of the SourceDocumentMetadata",
+            "format": "date-time"
           },
           "list_value": {
             "title": "List Value",
@@ -6861,7 +6874,8 @@
           "date_value": {
             "title": "Date Value",
             "type": "string",
-            "description": "Date Value of the SourceDocumentMetadata"
+            "description": "Date Value of the SourceDocumentMetadata",
+            "format": "date-time"
           },
           "list_value": {
             "title": "List Value",
@@ -6873,20 +6887,7 @@
       },
       "SourceDocumentRead": {
         "title": "SourceDocumentRead",
-        "required": [
-          "filename",
-          "name",
-          "doctype",
-          "status",
-          "project_id",
-          "id",
-          "created",
-          "updated",
-          "content",
-          "html",
-          "tokens",
-          "sentences"
-        ],
+        "required": ["filename", "doctype", "status", "project_id", "id", "created", "updated"],
         "type": "object",
         "properties": {
           "filename": {
@@ -6895,11 +6896,7 @@
             "type": "string",
             "description": "Filename of the SourceDocument"
           },
-          "name": {
-            "title": "Name",
-            "type": "string",
-            "description": "User-defined name of the document (default is the filename)"
-          },
+          "name": { "title": "Name", "type": "string", "description": "User-defined name of the document" },
           "doctype": {
             "allOf": [{ "$ref": "#/components/schemas/DocType" }],
             "description": "DOCTYPE of the SourceDocument"
@@ -6925,36 +6922,6 @@
             "type": "string",
             "description": "Updated timestamp of the Memo",
             "format": "date-time"
-          },
-          "content": {
-            "title": "Content",
-            "type": "string",
-            "description": "The (textual) content of the SourceDocument the content belongs to."
-          },
-          "html": { "title": "Html", "type": "string", "description": "The (html) content of the SourceDocument." },
-          "tokens": {
-            "title": "Tokens",
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "The (textual) list Tokens of the SourceDocument the Tokens belong to."
-          },
-          "token_character_offsets": {
-            "title": "Token Character Offsets",
-            "type": "array",
-            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] },
-            "description": "The list of character offsets of the Tokens"
-          },
-          "sentences": {
-            "title": "Sentences",
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "The Sentences of the SourceDocument the Sentences belong to."
-          },
-          "sentence_character_offsets": {
-            "title": "Sentence Character Offsets",
-            "type": "array",
-            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] },
-            "description": "The list of character offsets of the Sentences"
           }
         }
       },
@@ -6967,6 +6934,128 @@
             "title": "Name",
             "type": "string",
             "description": "User-defined name of the document (default is the filename)"
+          }
+        }
+      },
+      "SourceDocumentWithDataRead": {
+        "title": "SourceDocumentWithDataRead",
+        "required": [
+          "id",
+          "content",
+          "html",
+          "token_starts",
+          "token_ends",
+          "sentence_starts",
+          "sentence_ends",
+          "tokens",
+          "token_character_offsets",
+          "sentences",
+          "sentence_character_offsets",
+          "filename",
+          "doctype",
+          "status",
+          "project_id",
+          "created",
+          "updated"
+        ],
+        "type": "object",
+        "properties": {
+          "id": { "title": "Id", "type": "integer", "description": "ID of the SourceDocument" },
+          "content": {
+            "title": "Content",
+            "type": "string",
+            "description": "Raw,original content of the SourceDocument"
+          },
+          "html": { "title": "Html", "type": "string", "description": "Processed HTML of the SourceDocument" },
+          "token_starts": {
+            "title": "Token Starts",
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "Start of each token in character offsets in content"
+          },
+          "token_ends": {
+            "title": "Token Ends",
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "End of each token in character offsets in content"
+          },
+          "sentence_starts": {
+            "title": "Sentence Starts",
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "Start of each sentence in character offsets in content"
+          },
+          "sentence_ends": {
+            "title": "Sentence Ends",
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "End of each sentence in character offsets in content"
+          },
+          "tokens": {
+            "title": "Tokens",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of tokens in the SourceDocument"
+          },
+          "token_character_offsets": {
+            "title": "Token Character Offsets",
+            "type": "array",
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array",
+              "items": [{ "type": "integer" }, { "type": "integer" }]
+            },
+            "description": "List of character offsets of each token"
+          },
+          "sentences": {
+            "title": "Sentences",
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "List of sentences in the SourceDocument"
+          },
+          "sentence_character_offsets": {
+            "title": "Sentence Character Offsets",
+            "type": "array",
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array",
+              "items": [{ "type": "integer" }, { "type": "integer" }]
+            },
+            "description": "List of character offsets of each sentence"
+          },
+          "filename": {
+            "title": "Filename",
+            "maxLength": 230,
+            "type": "string",
+            "description": "Filename of the SourceDocument"
+          },
+          "name": { "title": "Name", "type": "string", "description": "User-defined name of the document" },
+          "doctype": {
+            "allOf": [{ "$ref": "#/components/schemas/DocType" }],
+            "description": "DOCTYPE of the SourceDocument"
+          },
+          "status": {
+            "allOf": [{ "$ref": "#/components/schemas/SDocStatus" }],
+            "description": "Status of the SourceDocument"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "integer",
+            "description": "Project the SourceDocument belongs to"
+          },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "description": "The created timestamp of the SourceDocument",
+            "format": "date-time"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "string",
+            "description": "Updated timestamp of the Memo",
+            "format": "date-time"
           }
         }
       },
@@ -7439,11 +7528,7 @@
             "maxLength": 230,
             "type": "string"
           },
-          "name": {
-            "title": "Name",
-            "description": "User-defined name of the document (default is the filename)",
-            "type": "string"
-          },
+          "name": { "title": "Name", "description": "User-defined name of the document", "type": "string" },
           "doctype": {
             "description": "DOCTYPE of the SourceDocument",
             "allOf": [{ "$ref": "#/components/schemas/DocType" }]
@@ -7470,36 +7555,6 @@
             "type": "string",
             "format": "date-time"
           },
-          "content": {
-            "title": "Content",
-            "description": "The (textual) content of the SourceDocument the content belongs to.",
-            "type": "string"
-          },
-          "html": { "title": "Html", "description": "The (html) content of the SourceDocument.", "type": "string" },
-          "tokens": {
-            "title": "Tokens",
-            "description": "The (textual) list Tokens of the SourceDocument the Tokens belong to.",
-            "type": "array",
-            "items": { "type": "string" }
-          },
-          "token_character_offsets": {
-            "title": "Token Character Offsets",
-            "description": "The list of character offsets of the Tokens",
-            "type": "array",
-            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] }
-          },
-          "sentences": {
-            "title": "Sentences",
-            "description": "The Sentences of the SourceDocument the Sentences belong to.",
-            "type": "array",
-            "items": { "type": "string" }
-          },
-          "sentence_character_offsets": {
-            "title": "Sentence Character Offsets",
-            "description": "The list of character offsets of the Sentences",
-            "type": "array",
-            "items": { "type": "array", "items": [{ "type": "integer" }, { "type": "integer" }] }
-          },
           "tags": {
             "title": "Tags",
             "description": "Tags of the SourceDocument",
@@ -7513,22 +7568,7 @@
             "items": { "$ref": "#/components/schemas/SourceDocumentMetadataRead" }
           }
         },
-        "required": [
-          "filename",
-          "name",
-          "doctype",
-          "status",
-          "project_id",
-          "id",
-          "created",
-          "updated",
-          "content",
-          "html",
-          "tokens",
-          "sentences",
-          "tags",
-          "metadata"
-        ],
+        "required": ["filename", "doctype", "status", "project_id", "id", "created", "updated", "tags", "metadata"],
         "definitions": {
           "DocType": {
             "title": "DocType",
@@ -7601,7 +7641,8 @@
               "date_value": {
                 "title": "Date Value",
                 "description": "Date Value of the SourceDocumentMetadata",
-                "type": "string"
+                "type": "string",
+                "format": "date-time"
               },
               "list_value": {
                 "title": "List Value",

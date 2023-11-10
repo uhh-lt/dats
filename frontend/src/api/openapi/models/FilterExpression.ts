@@ -22,5 +22,5 @@ export type FilterExpression = {
     | ListOperator
     | DateOperator
     | BooleanOperator;
-  value: string | number | boolean | string[];
+  value: string | number;
 };

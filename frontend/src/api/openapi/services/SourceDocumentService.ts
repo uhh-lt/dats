@@ -10,6 +10,7 @@ import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumen
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
+import type { SourceDocumentWithDataRead } from "../models/SourceDocumentWithDataRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -19,7 +20,7 @@ export class SourceDocumentService {
   /**
    * Returns the SourceDocument
    * Returns the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentRead Successful Response
+   * @returns SourceDocumentWithDataRead Successful Response
    * @throws ApiError
    */
   public static getById({
@@ -28,7 +29,7 @@ export class SourceDocumentService {
   }: {
     sdocId: number;
     onlyIfFinished?: boolean;
-  }): CancelablePromise<SourceDocumentRead> {
+  }): CancelablePromise<SourceDocumentWithDataRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/sdoc/{sdoc_id}",
@@ -69,7 +70,7 @@ export class SourceDocumentService {
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static updateById({
+  public static updateSdoc({
     sdocId,
     requestBody,
   }: {

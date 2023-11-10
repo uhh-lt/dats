@@ -12,6 +12,7 @@ import {
   SourceDocumentMetadataReadResolved,
   SourceDocumentRead,
   SourceDocumentService,
+  SourceDocumentWithDataRead,
 } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import useStableQueries from "../utils/useStableQueries";
@@ -43,7 +44,7 @@ const fetchSdoc = async (sdocId: number) => {
 };
 
 const useGetDocument = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
+  useQuery<SourceDocumentWithDataRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
     enabled: !!sdocId,
     staleTime: Infinity,
   });
@@ -64,7 +65,7 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
   );
 
 const useGetDocumentByAdocId = (adocId: number | undefined) =>
-  useQuery<SourceDocumentRead, Error>(
+  useQuery<SourceDocumentWithDataRead, Error>(
     [QueryKey.SDOC_BY_ADOC, adocId],
     async () => {
       const adoc = await AnnotationDocumentService.getByAdocId({ adocId: adocId! });
@@ -246,7 +247,7 @@ const useCreateMemo = () =>
   });
 
 const useUpdateName = () =>
-  useMutation(SourceDocumentService.updateById, {
+  useMutation(SourceDocumentService.updateSdoc, {
     onSuccess: (sdoc) => {
       queryClient.invalidateQueries([QueryKey.SDOC, sdoc.id]);
     },

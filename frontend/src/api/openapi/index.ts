@@ -102,6 +102,7 @@ export type { SourceDocumentMetadataUpdate } from "./models/SourceDocumentMetada
 export type { SourceDocumentRead } from "./models/SourceDocumentRead";
 export type { SourceDocumentReadAction } from "./models/SourceDocumentReadAction";
 export type { SourceDocumentUpdate } from "./models/SourceDocumentUpdate";
+export type { SourceDocumentWithDataRead } from "./models/SourceDocumentWithDataRead";
 export type { SpanAnnotationCreateWithCodeId } from "./models/SpanAnnotationCreateWithCodeId";
 export type { SpanAnnotationRead } from "./models/SpanAnnotationRead";
 export type { SpanAnnotationReadResolved } from "./models/SpanAnnotationReadResolved";
