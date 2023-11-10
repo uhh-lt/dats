@@ -1,7 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useAuth } from "../auth/AuthProvider";
+import queryClient from "../plugins/ReactQueryClient";
+import { useAppSelector } from "../plugins/ReduxHooks";
+import { useDebounce } from "../utils/useDebounce";
+import { SearchFilter, orderFilters } from "../views/search/SearchFilter";
+import { QueryKey } from "./QueryKey";
 import {
   DocType,
-  Filter,
   KeywordStat,
   MemoContentQuery,
   MemoRead,
@@ -14,13 +20,6 @@ import {
   SpanEntityDocumentFrequency,
   TagStat,
 } from "./openapi";
-import { QueryKey } from "./QueryKey";
-import { orderFilters, SearchFilter } from "../views/search/SearchFilter";
-import queryClient from "../plugins/ReactQueryClient";
-import { useAppSelector } from "../plugins/ReduxHooks";
-import { useAuth } from "../auth/AuthProvider";
-import { useMemo } from "react";
-import { useDebounce } from "../utils/useDebounce";
 
 export abstract class SearchResults<T extends Iterable<any>> {
   constructor(protected results: T) {
@@ -156,7 +155,9 @@ const imageSimilaritySearchQueryFn = async (
   return new ImageSimilaritySearchResults(results);
 };
 
-const useSearchDocumentsNew = (projectId: number | undefined, filter: Filter) => {
+const useSearchDocumentsNew = (projectId: number | undefined) => {
+  const filter = useAppSelector((state) => state.filter.filter);
+  console.log(filter);
   const debouncedFilter = useDebounce(filter, 1000);
   return useQuery<LexicalSearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, debouncedFilter],

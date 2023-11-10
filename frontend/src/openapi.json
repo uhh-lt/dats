@@ -5577,6 +5577,7 @@
           "SPAN_TEXT",
           "SOURCE_DOCUMENT_ID",
           "SOURCE_DOCUMENT_FILENAME",
+          "SOURCE_DOCUMENT_CONTENT",
           "METADATA",
           "CODE_ID",
           "CODE_ID_LIST",
@@ -5589,6 +5590,7 @@
           "MEMO_TITLE",
           "USER_ID",
           "USER_ID_LIST",
+          "SPAN_ANNOTATIONS",
           "SPAN_ANNOTATION_ID",
           "SPAN_ANNOTATION_ID_LIST"
         ],
@@ -5596,7 +5598,7 @@
       },
       "DateOperator": {
         "title": "DateOperator",
-        "enum": ["DATE_GT", "DATE_LT", "DATE_GTE", "DATE_LTE"],
+        "enum": ["DATE_EQUALS", "DATE_GT", "DATE_LT", "DATE_GTE", "DATE_LTE"],
         "description": "An enumeration."
       },
       "DocType": {
@@ -5817,7 +5819,16 @@
               { "$ref": "#/components/schemas/BooleanOperator" }
             ]
           },
-          "value": { "title": "Value", "anyOf": [{ "type": "string" }, { "type": "integer" }] }
+          "value": {
+            "title": "Value",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "integer" },
+              { "type": "boolean" },
+              { "type": "array", "items": { "type": "string" } },
+              { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+            ]
+          }
         }
       },
       "HTTPValidationError": {
@@ -6446,8 +6457,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "max": 1,
-            "min": 0
+            "min": 0,
+            "max": 1
           }
         }
       },
