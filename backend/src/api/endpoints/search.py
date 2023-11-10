@@ -64,13 +64,10 @@ async def search_sdocs_new(*, project_id: int, filter: Filter) -> List[int]:
     description="Returns SpanEntityStats for the given SourceDocuments.",
 )
 async def search_span_entity_stats(
-    *, db: Session = Depends(get_db_session), query_params: SearchSDocsQueryParameters
+    *, db: Session = Depends(get_db_session), project_id: int, sdoc_ids: List[int]
 ) -> List[SpanEntityFrequency]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
     return crud_sdoc.collect_entity_stats(
-        db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id
+        db=db, sdoc_ids=set(sdoc_ids), proj_id=project_id
     )
 
 
@@ -83,16 +80,14 @@ async def search_span_entity_stats(
 async def search_code_stats(
     *,
     db: Session = Depends(get_db_session),
-    query_params: SearchSDocsQueryParameters,
+    project_id: int,
+    sdoc_ids: List[int],
     sort_by_global: bool = False,
 ) -> SpanEntityDocumentFrequencyResult:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
     # TODO Flo for large corpora this gets very slow. Hence we have to set a limit and in future implement some lazy
     #  loading or scrolling in the frontend with skip and limit.
     code_stats = crud_sdoc.collect_code_stats(
-        db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id, skip=0, limit=1000
+        db=db, sdoc_ids=set(sdoc_ids), proj_id=project_id, skip=0, limit=1000
     )
     for v in code_stats.stats.values():
         v.sort(
@@ -112,17 +107,15 @@ async def search_code_stats(
 )
 async def search_keyword_stats(
     *,
-    query_params: SearchSDocsQueryParameters,
+    project_id: int,
+    sdoc_ids: List[int],
     sort_by_global: bool = False,
     top_k: int = 50,
 ) -> List[KeywordStat]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
     if len(sdoc_ids) == 0:
         return []
     keyword_stats = es.get_sdoc_keyword_counts_by_sdoc_ids(
-        proj_id=query_params.proj_id, sdoc_ids=set(sdoc_ids), top_k=top_k
+        proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
         keyword_stats.sort(key=lambda x: x.global_count, reverse=True)
@@ -138,13 +131,11 @@ async def search_keyword_stats(
 async def search_tag_stats(
     *,
     db: Session = Depends(get_db_session),
-    query_params: SearchSDocsQueryParameters,
+    project_id: int,
+    sdoc_ids: List[int],
     sort_by_global: bool = False,
 ) -> List[TagStat]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
-    tag_stats = crud_sdoc.collect_tag_stats(db=db, sdoc_ids=sdoc_ids)
+    tag_stats = crud_sdoc.collect_tag_stats(db=db, sdoc_ids=set(sdoc_ids))
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats
