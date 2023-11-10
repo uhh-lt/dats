@@ -1,26 +1,26 @@
+import { useQueryClient } from "@tanstack/react-query";
+import React, { MouseEvent, useRef, useState } from "react";
+import { QueryKey } from "../../../api/QueryKey";
+import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
 import {
   AnnotationDocumentRead,
   BBoxAnnotationReadResolvedCode,
   CodeRead,
-  SourceDocumentRead,
+  SourceDocumentWithDataRead,
   SpanAnnotationCreateWithCodeId,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
-import React, { MouseEvent, useRef, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { useQueryClient } from "@tanstack/react-query";
-import { selectionIsEmpty } from "./utils";
-import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { QueryKey } from "../../../api/QueryKey";
-import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
-import { ICode } from "./ICode";
-import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
-import { AnnoActions } from "../annoSlice";
 import TextAnnotatorRendererNew from "../../../features/DocumentRenderer/DocumentRenderer";
+import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
+import { AnnoActions } from "../annoSlice";
+import { ICode } from "./ICode";
+import { selectionIsEmpty } from "./utils";
 
 interface AnnotatorRemasteredProps {
-  sdoc: SourceDocumentRead;
+  sdoc: SourceDocumentWithDataRead;
   adoc: AnnotationDocumentRead;
 }
 

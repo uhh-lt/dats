@@ -3,10 +3,13 @@ import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
 import SdocHooks from "../../../api/SdocHooks";
-import { AttachedObjectType, DocType, SourceDocumentRead } from "../../../api/openapi";
+import { AttachedObjectType, DocType, SourceDocumentWithDataRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
+import MemoAPI from "../../../features/Memo/MemoAPI";
+import { useReactFlowService } from "../hooks/ReactFlowService";
+import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
 import {
   createMemoNodes,
   createMemoSdocEdge,
@@ -15,10 +18,7 @@ import {
   isMemoSdocEdge,
   isTagSdocEdge,
 } from "../whiteboardUtils";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
 import BaseCardNode from "./BaseCardNode";
-import MemoAPI from "../../../features/Memo/MemoAPI";
 
 function SdocNode(props: NodeProps<SdocNodeData>) {
   // global client state
@@ -172,7 +172,7 @@ function SdocNode(props: NodeProps<SdocNodeData>) {
   );
 }
 
-function TextPreview({ sdoc }: { sdoc: SourceDocumentRead }) {
+function TextPreview({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
   return <Typography>{sdoc.content}</Typography>;
 }
 

@@ -2,11 +2,15 @@ import { Box } from "@mui/material";
 import * as d3 from "d3";
 import React, { useEffect, useMemo, useRef } from "react";
 import AdocHooks from "../../../api/AdocHooks";
-import { AnnotationDocumentRead, BBoxAnnotationReadResolvedCode, SourceDocumentRead } from "../../../api/openapi";
+import {
+  AnnotationDocumentRead,
+  BBoxAnnotationReadResolvedCode,
+  SourceDocumentWithDataRead,
+} from "../../../api/openapi";
 import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
 
 interface ImageViewerProps {
-  sdoc: SourceDocumentRead;
+  sdoc: SourceDocumentWithDataRead;
   adoc: AnnotationDocumentRead | null;
   showEntities: boolean;
   width: number;

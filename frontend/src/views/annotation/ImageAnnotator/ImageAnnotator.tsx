@@ -1,23 +1,23 @@
+import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
+import * as d3 from "d3";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import AdocHooks from "../../../api/AdocHooks";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
 import {
   AnnotationDocumentRead,
   BBoxAnnotationReadResolvedCode,
-  SourceDocumentRead,
+  SourceDocumentWithDataRead,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as d3 from "d3";
-import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
 import { ICode } from "../TextAnnotator/ICode";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
 import SVGBBox from "./SVGBBox";
 import SVGBBoxText from "./SVGBBoxText";
-import AdocHooks from "../../../api/AdocHooks";
 
 interface ImageAnnotatorProps {
-  sdoc: SourceDocumentRead;
+  sdoc: SourceDocumentWithDataRead;
   adoc: AnnotationDocumentRead | null;
   height: number;
 }

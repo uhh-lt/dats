@@ -91,7 +91,7 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
     useEffect(() => {
       if (isEditing) {
         if (sdoc.isSuccess) {
-          setValue("name", sdoc.data.name);
+          setValue("name", sdoc.data.name ? sdoc.data.name : sdoc.data.filename);
         }
       } else {
         reset();
@@ -132,7 +132,13 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
       return (
         <DocumentLinkToOriginal sdocId={sdocId}>
           <Typography {...props}>
-            {sdoc.isSuccess ? <>{sdoc.data.name}</> : sdoc.isError ? <>{sdoc.error.message}</> : <>Loading...</>}
+            {sdoc.isSuccess ? (
+              <>{sdoc.data.name ? sdoc.data.name : sdoc.data.filename}</>
+            ) : sdoc.isError ? (
+              <>{sdoc.error.message}</>
+            ) : (
+              <>Loading...</>
+            )}
           </Typography>
         </DocumentLinkToOriginal>
       );

@@ -3,7 +3,7 @@ import { Box, CardMedia, CardProps, CircularProgress, Typography } from "@mui/ma
 import { useMemo } from "react";
 import ReactWordcloud, { OptionsProp } from "react-wordcloud";
 import SdocHooks from "../../../../api/SdocHooks";
-import { DocType, SourceDocumentRead } from "../../../../api/openapi";
+import { DocType, SourceDocumentWithDataRead } from "../../../../api/openapi";
 import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import { SearchResultProps } from "../SearchResultProps";
 import SearchResultCardBase from "./SearchResultCardBase";
@@ -78,7 +78,7 @@ const wordCloudOptions: OptionsProp = {
   rotationAngles: [-90, 0],
 };
 
-function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentRead }) {
+function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
   // global client state (redux)
   const searchResStyle = useAppSelector((state) => state.settings.search.searchResStyle);
 
@@ -91,7 +91,7 @@ function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentRead
   }, [searchResStyle, sdoc]);
 }
 
-function WordCloudContent({ sdoc }: { sdoc: SourceDocumentRead }) {
+function WordCloudContent({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
   // global server state (react-query)
   const wordFrequencies = SdocHooks.useGetWordFrequencies(sdoc.id);
 
@@ -110,7 +110,7 @@ function WordCloudContent({ sdoc }: { sdoc: SourceDocumentRead }) {
   }
 }
 
-function TextContent({ sdoc }: { sdoc: SourceDocumentRead }) {
+function TextContent({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
   return (
     <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
       {sdoc.content}
