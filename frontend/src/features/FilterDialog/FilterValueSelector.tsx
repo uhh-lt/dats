@@ -33,6 +33,8 @@ function FilterValueSelector({ filterExpression, onChangeValue, columnValue2Oper
       return <TagIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
     case DBColumns.CODE_ID_LIST:
       return <CodeIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
+    case DBColumns.CODE_ID:
+      return <CodeIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
     case DBColumns.USER_ID_LIST:
       return <UserIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
     case DBColumns.SPAN_ANNOTATIONS:

@@ -2,6 +2,7 @@ import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
 import {
   DBColumns,
+  DocType,
   FilterExpression,
   IDListOperator,
   ListOperator,
@@ -12,6 +13,7 @@ import {
 } from "../../api/openapi";
 import { getValue } from "../../views/search/DocumentViewer/DocumentMetadata/metadataUtils";
 import {
+  column2operator,
   deleteInFilter,
   FilterOperator,
   FilterOperatorType,
@@ -19,6 +21,7 @@ import {
   getDefaultOperator,
   isFilter,
   isFilterExpression,
+  metaType2operator,
   MyFilter,
   MyFilterExpression,
 } from "./filterUtils";
@@ -29,6 +32,7 @@ export interface FilterState {
   columns: { label: string; value: string }[];
   columnValue2Operator: Record<string, FilterOperatorType>;
   projectMetadata: ProjectMetadataRead[];
+  metadataModalities: DocType[];
 }
 
 const filterReducer = {
@@ -194,27 +198,37 @@ const filterReducer = {
   ) => {
     state.defaultFilterExpression = action.payload.defaultFilterExpression;
   },
-  setColumns: (state: Draft<FilterState>, action: PayloadAction<{ columns: { label: string; value: string }[] }>) => {
-    state.columns = action.payload.columns;
-  },
-  setColumnValue2Operator: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ columnValue2Operator: Record<string, FilterOperatorType> }>,
-  ) => {
-    state.columnValue2Operator = action.payload.columnValue2Operator;
-  },
-  setProjectMetadata: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ projectMetadata: ProjectMetadataRead[] }>,
-  ) => {
-    state.projectMetadata = action.payload.projectMetadata;
-  },
   resetFilter: (state: Draft<FilterState>) => {
     state.filter = {
       id: "root",
       logic_operator: LogicalOperator.AND,
       items: [],
     };
+  },
+  init: (state: Draft<FilterState>, action: PayloadAction<{ projectMetadata: ProjectMetadataRead[] }>) => {
+    // 1. set project metadata
+    state.projectMetadata = action.payload.projectMetadata;
+
+    // 2. compute & set columns (the provided columns + metadata columns if metadata in the provided column)
+    if (state.columns.map((column) => column.value).includes(DBColumns.METADATA)) {
+      // remove metadata column
+      state.columns = state.columns.filter((column) => column.value !== DBColumns.METADATA);
+      // add project metadata columns (filtered by metadataModalities)
+      state.projectMetadata
+        .filter((metadata) => state.metadataModalities.includes(metadata.doctype))
+        .forEach((metadata) => {
+          state.columns.push({ label: `${metadata.doctype}-${metadata.key}`, value: metadata.id.toString() });
+        });
+    }
+
+    // 3. compute & set column value 2 operator map (the default column2operator + operator based on metadata type)
+    state.columnValue2Operator = state.projectMetadata.reduce(
+      (acc, metadata) => {
+        acc[`${metadata.id}`] = metaType2operator[metadata.metatype];
+        return acc;
+      },
+      { ...(column2operator as Record<string, FilterOperatorType>) },
+    );
   },
 };
 
@@ -240,14 +254,23 @@ export const searchFilterSlice = createFilterSlice({
       operator: StringOperator.STRING_CONTAINS,
       value: "",
     },
-    columns: [],
+    columns: [
+      { label: "Document name", value: DBColumns.SOURCE_DOCUMENT_FILENAME },
+      { label: "Document content", value: DBColumns.SOURCE_DOCUMENT_CONTENT },
+      { label: "Tags", value: DBColumns.DOCUMENT_TAG_ID_LIST },
+      { label: "User", value: DBColumns.USER_ID_LIST },
+      { label: "Code", value: DBColumns.CODE_ID_LIST },
+      { label: "Span Annotation", value: DBColumns.SPAN_ANNOTATIONS },
+      { label: "Metadata", value: DBColumns.METADATA },
+    ],
     columnValue2Operator: {},
     projectMetadata: [],
+    metadataModalities: [DocType.TEXT, DocType.IMAGE, DocType.AUDIO, DocType.VIDEO],
   },
 });
 
 export const annotatedSegmentsFilterSlice = createFilterSlice({
-  name: "annotatedSegments",
+  name: "annotatedSegmentsFilter",
   initialState: {
     filter: {
       id: "root",
@@ -259,8 +282,16 @@ export const annotatedSegmentsFilterSlice = createFilterSlice({
       operator: StringOperator.STRING_CONTAINS,
       value: "",
     },
-    columns: [],
+    columns: [
+      { label: "Document name", value: DBColumns.SOURCE_DOCUMENT_FILENAME },
+      { label: "Tags", value: DBColumns.DOCUMENT_TAG_ID_LIST },
+      { label: "Code", value: DBColumns.CODE_ID },
+      { label: "Annotated text", value: DBColumns.SPAN_TEXT },
+      { label: "Memo content", value: DBColumns.MEMO_CONTENT },
+      { label: "Metadata", value: DBColumns.METADATA },
+    ],
     columnValue2Operator: {},
     projectMetadata: [],
+    metadataModalities: [DocType.TEXT],
   },
 });

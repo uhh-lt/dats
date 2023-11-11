@@ -17,11 +17,11 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AnalysisHooks from "../../../api/AnalysisHooks";
-import { AnnotatedSegment, AttachedObjectType, DBColumns, DocumentTagRead } from "../../../api/openapi";
+import { AnnotatedSegment, AttachedObjectType, DBColumns } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2";
 import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
@@ -32,21 +32,13 @@ import SpanAnnotationEditDialog, {
   openSpanAnnotationEditDialog,
 } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import FilterDialog from "../../../features/FilterDialog/FilterDialog";
+import { useFilterSliceSelector } from "../../../features/FilterDialog/FilterProvider";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import SpanAnnotationCard from "./SpanAnnotationCard";
 import SpanAnnotationCardList from "./SpanAnnotationCardList";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
-import { useFilterSliceSelector } from "../../../features/FilterDialog/FilterProvider";
-
-const filterColumns = [
-  DBColumns.MEMO_CONTENT,
-  DBColumns.SOURCE_DOCUMENT_FILENAME,
-  DBColumns.DOCUMENT_TAG_TITLE,
-  DBColumns.CODE_NAME,
-  DBColumns.SPAN_TEXT,
-];
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -70,19 +62,18 @@ function AnnotatedSegments() {
   const annotatedSegmentsMap = AnalysisHooks.useAnnotatedSegments(projectId, user.data?.id, filter);
 
   // computed
-  const columns: GridColDef[] = useMemo(
+  const columns: GridColDef<AnnotatedSegment>[] = useMemo(
     () => [
       {
-        field: "memo",
+        field: "memo_id",
         headerName: "Memo",
         flex: 3,
         description: "Your comments on the annotation",
-        valueGetter: (params: GridValueGetterParams) => params.row.memo?.content || "",
         renderCell: (params) =>
           user.data ? (
             <MemoRenderer2
               attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
-              attachedObjectId={params.row.annotation.id}
+              attachedObjectId={params.row.span_annotation_id}
               userId={user.data.id}
               showTitle={false}
               showContent
@@ -91,20 +82,19 @@ function AnnotatedSegments() {
           ) : null,
       },
       {
-        field: "sdoc",
+        field: "sdoc_id",
         headerName: "Document",
         flex: 2,
-        valueGetter: (params: GridValueGetterParams) => params.row.sdoc.filename,
-        renderCell: (params) => <SdocRenderer sdoc={params.row.sdoc.id} link />,
+        renderCell: (params) => <SdocRenderer sdoc={params.row.sdoc_id} link />,
       },
       {
-        field: "tags",
+        field: "tag_ids",
         headerName: "Tags",
         flex: 2,
         renderCell: (params) => (
           <Stack direction="row" alignItems="center" overflow="auto">
-            {params.row.tags.map((tag: DocumentTagRead) => (
-              <TagRenderer key={tag.id} tag={tag.id} mr={0.5} />
+            {params.row.tag_ids.map((tagId) => (
+              <TagRenderer key={tagId} tag={tagId} mr={0.5} />
             ))}
           </Stack>
         ),
@@ -114,14 +104,16 @@ function AnnotatedSegments() {
         headerName: "Code",
         flex: 1,
         renderCell: (params) => (
-          <SpanAnnotationRenderer spanAnnotation={params.row.annotation.id} showSpanText={false} />
+          <SpanAnnotationRenderer spanAnnotation={params.row.span_annotation_id} showSpanText={false} />
         ),
       },
       {
         field: "annotation",
         headerName: "Annotated text",
         flex: 3,
-        renderCell: (params) => <SpanAnnotationRenderer spanAnnotation={params.row.annotation.id} showCode={false} />,
+        renderCell: (params) => (
+          <SpanAnnotationRenderer spanAnnotation={params.row.span_annotation_id} showCode={false} />
+        ),
       },
     ],
     [user.data],
@@ -134,14 +126,14 @@ function AnnotatedSegments() {
 
   const openMemo = (annotatedSegment: AnnotatedSegment) => {
     MemoAPI.openMemo({
-      memoId: annotatedSegment.memo?.id,
-      attachedObjectType: annotatedSegment.memo?.attached_object_type || AttachedObjectType.SPAN_ANNOTATION,
-      attachedObjectId: annotatedSegment.memo?.attached_object_id || annotatedSegment.annotation.id,
+      memoId: annotatedSegment.memo_id,
+      attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
+      attachedObjectId: annotatedSegment.span_annotation_id,
     });
   };
 
   const openSpanAnnotation = (segments: AnnotatedSegment[]) => {
-    openSpanAnnotationEditDialog(segments.map((segment) => segment.annotation));
+    openSpanAnnotationEditDialog(segments.map((segment) => segment.span_annotation_id));
   };
 
   // events
@@ -193,7 +185,7 @@ function AnnotatedSegments() {
                     Change code of {rowSelectionModel.length} annotated segments
                   </Button>
                 )}
-                <FilterDialog anchorEl={filterDialogAnchorRef.current} columns={filterColumns} />
+                <FilterDialog anchorEl={filterDialogAnchorRef.current} />
                 <Box sx={{ flexGrow: 1 }} />
                 <TextField
                   label="Context Size"
@@ -220,8 +212,10 @@ function AnnotatedSegments() {
 
           {!isSplitView && rowSelectionModel.length > 0 && annotatedSegmentsMap.data && (
             <SpanAnnotationCard
-              key={annotatedSegmentsMap.data[rowSelectionModel[rowSelectionModel.length - 1]].annotation.id}
-              annotationId={annotatedSegmentsMap.data[rowSelectionModel[rowSelectionModel.length - 1]].annotation.id}
+              key={annotatedSegmentsMap.data[rowSelectionModel[rowSelectionModel.length - 1]].span_annotation_id}
+              annotationId={
+                annotatedSegmentsMap.data[rowSelectionModel[rowSelectionModel.length - 1]].span_annotation_id
+              }
               sx={{ mb: 2, flexShrink: 0 }}
             />
           )}
@@ -235,7 +229,7 @@ function AnnotatedSegments() {
                     rows={Object.values(annotatedSegmentsMap.data)}
                     columns={columns}
                     autoPageSize
-                    getRowId={(row: AnnotatedSegment) => row.annotation.id}
+                    getRowId={(row) => row.span_annotation_id}
                     style={{ border: "none" }}
                     checkboxSelection
                     rowSelectionModel={rowSelectionModel}
@@ -263,13 +257,7 @@ function AnnotatedSegments() {
       <SpanAnnotationEditDialog projectId={projectId} />
       <GenericPositionMenu ref={contextMenuRef}>
         <MenuItem onClick={handleContextMenuChangeCode}>Change code</MenuItem>
-        {rowSelectionModel.length > 0 &&
-        annotatedSegmentsMap.data &&
-        annotatedSegmentsMap.data[rowSelectionModel[0]].memo ? (
-          <MenuItem onClick={handleContextMenuOpenMemo}>Edit memo</MenuItem>
-        ) : (
-          <MenuItem onClick={handleContextMenuOpenMemo}>Create memo</MenuItem>
-        )}
+        <MenuItem onClick={handleContextMenuOpenMemo}>Edit memo</MenuItem>
       </GenericPositionMenu>
     </Box>
   );

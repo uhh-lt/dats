@@ -6,8 +6,9 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
-import { DBColumns, SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
+import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
 import FilterDialog from "../../features/FilterDialog/FilterDialog";
+import { useFilterSliceActions } from "../../features/FilterDialog/FilterProvider";
 import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
@@ -21,17 +22,6 @@ import SearchToolbar from "./ToolBar/SearchToolbar";
 import { useAddTagFilter } from "./hooks/useAddTagFilter";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
 import { SearchActions } from "./searchSlice";
-import { useFilterSliceActions } from "../../features/FilterDialog/FilterProvider";
-
-const columns = [
-  DBColumns.SOURCE_DOCUMENT_FILENAME,
-  DBColumns.SOURCE_DOCUMENT_CONTENT,
-  DBColumns.DOCUMENT_TAG_ID_LIST,
-  DBColumns.USER_ID_LIST,
-  DBColumns.CODE_ID_LIST,
-  DBColumns.SPAN_ANNOTATIONS,
-  DBColumns.METADATA,
-];
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -211,7 +201,7 @@ function Search() {
             viewDocument={viewDocument}
           />
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
-            <FilterDialog anchorEl={filterDialogAnchorRef.current} columns={columns} />
+            <FilterDialog anchorEl={filterDialogAnchorRef.current} />
             <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
               <Grid
                 item

@@ -1,16 +1,17 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider, Stack } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../EventBus";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 import { CodeRead, SpanAnnotationReadResolved } from "../../../api/openapi";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationRenderer";
 import CodeSelector from "../../../components/Selectors/CodeSelector";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 
-export const openSpanAnnotationEditDialog = (annotations: SpanAnnotationReadResolved[]) => {
-  eventBus.dispatch("open-edit-spanAnnotation", annotations);
+export const openSpanAnnotationEditDialog = (spanAnnotationIds: number[]) => {
+  eventBus.dispatch("open-edit-spanAnnotation", spanAnnotationIds);
 };
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {
@@ -21,16 +22,16 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
   // local state
   const [open, setOpen] = useState(false);
   const [selectedCode, setSelectedCode] = useState<CodeRead | undefined>(undefined);
-  const [annotations, setAnnotations] = useState<SpanAnnotationReadResolved[]>([]);
+  const [annotationIds, setAnnotationIds] = useState<number[]>([]);
 
   // listen to event
   // create a (memoized) function that stays the same across re-renders
-  const onOpenEditAnnotation = useCallback((event: CustomEventInit<SpanAnnotationReadResolved[]>) => {
+  const onOpenEditAnnotation = useCallback((event: CustomEventInit<number[]>) => {
     if (!event.detail || event.detail.length === 0) return;
 
     setOpen(true);
-    setAnnotations(event.detail);
-    setSelectedCode(event.detail[0].code);
+    setAnnotationIds(event.detail);
+    // setSelectedCode(event.detail[0].code);
   }, []);
 
   useEffect(() => {
@@ -46,17 +47,17 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
   const handleClose = () => {
     setOpen(false);
     setSelectedCode(undefined);
-    setAnnotations([]);
+    setAnnotationIds([]);
   };
 
   const handleUpdateAnnotations = () => {
-    if (!selectedCode || annotations.length === 0) return;
+    if (!selectedCode || annotationIds.length === 0) return;
 
     // TODO: We need bulk update for annotations
-    annotations.forEach((annotation) => {
+    annotationIds.forEach((annotation) => {
       updateAnnotationMutation.mutate(
         {
-          spanAnnotationToUpdate: annotation,
+          spanAnnotationId: annotation,
           requestBody: {
             code_id: selectedCode.id,
           },
@@ -83,17 +84,23 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
         allowMultiselect={false}
         height="400px"
       />
-      {annotations.length > 0 && (
+      {annotationIds.length > 0 && (
         <>
           <Divider />
           <DialogTitle style={{ paddingBottom: 0 }}>Preview</DialogTitle>
           <Box px={3} mb={2}>
             Before:
-            <SpanAnnotationRenderer spanAnnotation={annotations[0]} />
+            <SpanAnnotationRenderer spanAnnotation={annotationIds[0]} />
             After:
-            <SpanAnnotationRenderer
-              spanAnnotation={selectedCode ? { ...annotations[0], code: selectedCode } : annotations[0]}
-            />
+            {selectedCode ? (
+              <Stack direction="row" alignItems="center">
+                <CodeRenderer code={selectedCode} />
+                {": "}
+                <SpanAnnotationRenderer spanAnnotation={annotationIds[0]} showCode={false} />
+              </Stack>
+            ) : (
+              <>Select a code to preview the change.</>
+            )}
           </Box>
         </>
       )}
@@ -106,7 +113,7 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
           startIcon={<SaveIcon />}
           fullWidth
           onClick={handleUpdateAnnotations}
-          disabled={!selectedCode || selectedCode?.id === annotations[0].code.id}
+          disabled={!selectedCode}
           loading={updateAnnotationMutation.isLoading}
           loadingPosition="start"
         >

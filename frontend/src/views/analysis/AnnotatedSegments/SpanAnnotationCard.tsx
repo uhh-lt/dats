@@ -29,9 +29,7 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
 
   const handleChangeCodeClick = () => {
-    if (!spanAnnotation.data) return;
-
-    openSpanAnnotationEditDialog([spanAnnotation.data]);
+    openSpanAnnotationEditDialog([annotationId]);
   };
 
   return (

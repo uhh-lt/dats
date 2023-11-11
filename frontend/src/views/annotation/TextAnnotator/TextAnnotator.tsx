@@ -43,7 +43,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   // mutations for create, update, delete
   const queryClient = useQueryClient();
   const createMutation = SpanAnnotationHooks.useCreateAnnotation();
-  const updateMutation = SpanAnnotationHooks.useUpdateSpan();
+  const updateMutation = SpanAnnotationHooks.useOptimisticUpdateSpan();
   const deleteMutation = SpanAnnotationHooks.useDeleteSpan();
 
   // handle ui events

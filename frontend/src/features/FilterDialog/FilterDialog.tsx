@@ -3,7 +3,6 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, Popover } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { DBColumns } from "../../api/openapi";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
 import { useFilterSliceActions, useFilterSliceSelector } from "./FilterProvider";
 import FilterRenderer from "./FilterRenderer";
@@ -12,10 +11,9 @@ import { useInitFilterDialog } from "./useInitFilterDialog";
 
 interface FilterDialogProps {
   anchorEl: HTMLElement | null;
-  columns: DBColumns[];
 }
 
-function FilterDialog({ anchorEl, columns }: FilterDialogProps) {
+function FilterDialog({ anchorEl }: FilterDialogProps) {
   // global client state
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
@@ -28,7 +26,7 @@ function FilterDialog({ anchorEl, columns }: FilterDialogProps) {
   const dispatch = useAppDispatch();
 
   // custom hooks: initialize the filterSlice
-  useInitFilterDialog({ projectId, columns });
+  useInitFilterDialog({ projectId });
 
   // actions
   const handleRemoveAll = () => {
