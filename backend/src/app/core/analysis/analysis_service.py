@@ -15,7 +15,7 @@ from app.core.data.dto.bbox_annotation import (
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.filter import Filter
+from app.core.data.dto.filter import AggregatedColumn, Filter
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
@@ -30,6 +30,7 @@ from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
+from app.core.search.search_service import aggregate_ids
 from app.util.singleton_meta import SingletonMeta
 
 
@@ -314,15 +315,33 @@ class AnalysisService(metaclass=SingletonMeta):
         self, project_id: int, user_id: int, filter: Filter
     ) -> List[AnnotatedSegment]:
         with self.sqls.db_session() as db:
-            # 1. query all span annotation occurrences of the code
+            tag_ids_agg = aggregate_ids(
+                DocumentTagORM.id, label=AggregatedColumn.DOCUMENT_TAG_IDS_LIST
+            )
+
+            subquery = (
+                db.query(
+                    SourceDocumentORM.id,
+                    tag_ids_agg,
+                )
+                .join(SourceDocumentORM.document_tags, isouter=True)
+                .join(SourceDocumentORM.annotation_documents, isouter=True)
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                    AnnotationDocumentORM.user_id == user_id,
+                )
+                .group_by(SourceDocumentORM.id)
+                .subquery()
+            )
+
             query = (
                 db.query(
-                    SpanAnnotationORM,
-                    SourceDocumentORM,
-                    CodeORM,
-                    SpanTextORM.text,
-                    AnnotationDocumentORM,
+                    SourceDocumentORM.id,
+                    subquery.c[AggregatedColumn.DOCUMENT_TAG_IDS_LIST],
+                    SpanAnnotationORM.id,
+                    MemoORM.id,
                 )
+                .join(subquery, SourceDocumentORM.id == subquery.c.id)
                 .join(
                     AnnotationDocumentORM,
                     AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
@@ -332,13 +351,15 @@ class AnalysisService(metaclass=SingletonMeta):
                     SpanAnnotationORM.annotation_document_id
                     == AnnotationDocumentORM.id,
                 )
+                # join Span Annotation with Code
                 .join(
                     CurrentCodeORM,
                     CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
                 )
                 .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
-                .join(SourceDocumentORM.document_tags)
+                # join Span Annotation with Text
                 .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
+                # join Span Annotation with Memo
                 .join(
                     ObjectHandleORM,
                     ObjectHandleORM.span_annotation_id == SpanAnnotationORM.id,
@@ -350,30 +371,17 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
-                filter.get_sqlalchemy_expression(db=db),
-                and_(
-                    SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id == user_id,
-                ),
+                SourceDocumentORM.project_id == project_id,
+                AnnotationDocumentORM.user_id == user_id,
+                filter.get_sqlalchemy_expression(db=db, subquery_dict=subquery.c),
             )
             result = query.all()
             annotated_segments = [
                 AnnotatedSegment(
-                    annotation=SpanAnnotationReadResolved(
-                        **SpanAnnotationRead.model_validate(row[0]).model_dump(
-                            exclude={"current_code_id", "span_text_id"}
-                        ),
-                        code=CodeRead.model_validate(row[2]),
-                        span_text=row[3],
-                        user_id=row[4].user_id,
-                        sdoc_id=row[4].source_document_id,
-                    ),
-                    sdoc=SourceDocumentRead.model_validate(row[1]),
-                    memo=get_object_memos(db_obj=row[0], user_id=user_id),
-                    tags=[
-                        DocumentTagRead.model_validate(tag)
-                        for tag in row[1].document_tags
-                    ],
+                    sdoc_id=row[0],
+                    tag_ids=row[1],
+                    span_annotation_id=row[2],
+                    memo_id=row[3],
                 )
                 for row in result
             ]

@@ -63,9 +63,9 @@ class AnnotationOccurrence(BaseModel):
 
 
 class AnnotatedSegment(BaseModel):
-    annotation: SpanAnnotationReadResolved = Field(description="The Annotation")
-    sdoc: SourceDocumentRead = Field(
-        description="The SourceDocument where the Code occurs."
+    sdoc_id: int = Field(
+        description="The SourceDocument where the SpanAnnotation occurs."
     )
-    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation")
-    tags: List[DocumentTagRead] = Field(description="The Tags of the Document")
+    tag_ids: List[int] = Field(description="The Tags of the Document")
+    span_annotation_id: int = Field(description="The Span Annotation")
+    memo_id: Optional[int] = Field(description="The Memo of the Annotation")
