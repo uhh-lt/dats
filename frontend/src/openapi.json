@@ -4216,11 +4216,12 @@
             "schema": { "title": "Project Id", "type": "integer" },
             "name": "project_id",
             "in": "query"
-          },
-          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "query" }
+          }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Filter" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-annotated_segments" } }
+          },
           "required": true
         },
         "responses": {
@@ -5396,6 +5397,15 @@
         "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
         "type": "string",
         "description": "An enumeration."
+      },
+      "Body_analysis-annotated_segments": {
+        "title": "Body_analysis-annotated_segments",
+        "required": ["user_ids", "filter"],
+        "type": "object",
+        "properties": {
+          "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } },
+          "filter": { "$ref": "#/components/schemas/Filter" }
+        }
       },
       "Body_analysis-code_frequencies": {
         "title": "Body_analysis-code_frequencies",

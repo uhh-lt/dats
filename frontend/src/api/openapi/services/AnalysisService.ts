@@ -4,10 +4,10 @@
 import type { AnalysisConcept } from "../models/AnalysisConcept";
 import type { AnnotatedSegment } from "../models/AnnotatedSegment";
 import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
+import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
-import type { Filter } from "../models/Filter";
 import type { TimelineAnalysisResult } from "../models/TimelineAnalysisResult";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -110,19 +110,16 @@ export class AnalysisService {
    */
   public static annotatedSegments({
     projectId,
-    userId,
     requestBody,
   }: {
     projectId: number;
-    userId: number;
-    requestBody: Filter;
+    requestBody: Body_analysis_annotated_segments;
   }): CancelablePromise<Array<AnnotatedSegment>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_segments",
       query: {
         project_id: projectId,
-        user_id: userId,
       },
       body: requestBody,
       mediaType: "application/json",

@@ -41,7 +41,7 @@ import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree";
-import { UserSelector } from "../UserSelector";
+import CodeFrequencyUserSelector from "./CodeFrequencyUserSelector";
 
 const columns: GridColDef[] = [
   { field: "id", headerName: "ID" },
@@ -109,7 +109,7 @@ function CodeFrequencyAnalysis() {
           </Portal>
           <Grid item xs={6} className="h100" sx={{ overflowY: "auto", pr: 1, py: 1 }}>
             <Stack spacing={2}>
-              <UserSelector projectId={projectId} />
+              <CodeFrequencyUserSelector projectId={projectId} />
               <CodeFrequencyView
                 key={selectedUserIds?.join(",")} // re-render when selectedUserIds change
                 projectId={projectId}

@@ -3,11 +3,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 export interface AnnotatedSegmentsState {
   isSplitView: boolean;
   contextSize: number;
+  selectedUserIds: number[];
 }
 
 const initialState: AnnotatedSegmentsState = {
   isSplitView: false,
   contextSize: 100,
+  selectedUserIds: [],
 };
 
 export const AnnotatedSegmentsSlice = createSlice({
@@ -19,6 +21,9 @@ export const AnnotatedSegmentsSlice = createSlice({
     },
     setContextSize: (state, action: PayloadAction<number>) => {
       state.contextSize = action.payload;
+    },
+    setSelectedUserIds: (state, action: PayloadAction<number[]>) => {
+      state.selectedUserIds = action.payload;
     },
   },
 });

@@ -78,15 +78,17 @@ const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: 
     },
   );
 
-const useAnnotatedSegments = (projectId: number | undefined, userId: number | undefined, filter: Filter) => {
+const useAnnotatedSegments = (projectId: number | undefined, userIds: number[], filter: Filter) => {
   const debouncedFilter = useDebounce(filter, 1000);
   return useQuery<Record<number, AnnotatedSegment>, Error>(
-    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userId, debouncedFilter],
+    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userIds, debouncedFilter],
     async () => {
       const annotatedSegments = await AnalysisService.annotatedSegments({
         projectId: projectId!,
-        userId: userId!,
-        requestBody: debouncedFilter,
+        requestBody: {
+          filter: debouncedFilter,
+          user_ids: userIds,
+        },
       });
 
       return annotatedSegments.reduce((previousValue, currentValue) => {
@@ -97,7 +99,7 @@ const useAnnotatedSegments = (projectId: number | undefined, userId: number | un
       }, {});
     },
     {
-      enabled: !!projectId && !!userId,
+      enabled: !!projectId && userIds.length > 0,
     },
   );
 };

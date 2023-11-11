@@ -24,6 +24,7 @@ export type { BBoxAnnotationCreateWithCodeId } from "./models/BBoxAnnotationCrea
 export type { BBoxAnnotationRead } from "./models/BBoxAnnotationRead";
 export type { BBoxAnnotationReadResolvedCode } from "./models/BBoxAnnotationReadResolvedCode";
 export type { BBoxAnnotationUpdateWithCodeId } from "./models/BBoxAnnotationUpdateWithCodeId";
+export type { Body_analysis_annotated_segments } from "./models/Body_analysis_annotated_segments";
 export type { Body_analysis_code_frequencies } from "./models/Body_analysis_code_frequencies";
 export type { Body_authentication_login } from "./models/Body_authentication_login";
 export type { Body_project_upload_project_sdoc } from "./models/Body_project_upload_project_sdoc";

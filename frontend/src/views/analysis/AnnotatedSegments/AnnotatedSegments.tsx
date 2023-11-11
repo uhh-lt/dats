@@ -39,6 +39,7 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import SpanAnnotationCard from "./SpanAnnotationCard";
 import SpanAnnotationCardList from "./SpanAnnotationCardList";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
+import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector";
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -55,11 +56,12 @@ function AnnotatedSegments() {
   // global client state (redux)
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
   const isSplitView = useAppSelector((state) => state.annotatedSegments.isSplitView);
+  const userIds = useAppSelector((state) => state.annotatedSegments.selectedUserIds);
   const filter = useFilterSliceSelector().filter;
   const dispatch = useAppDispatch();
 
   // global server state (react query)
-  const annotatedSegmentsMap = AnalysisHooks.useAnnotatedSegments(projectId, user.data?.id, filter);
+  const annotatedSegmentsMap = AnalysisHooks.useAnnotatedSegments(projectId, userIds, filter);
 
   // computed
   const columns: GridColDef<AnnotatedSegment>[] = useMemo(
@@ -187,6 +189,7 @@ function AnnotatedSegments() {
                 )}
                 <FilterDialog anchorEl={filterDialogAnchorRef.current} />
                 <Box sx={{ flexGrow: 1 }} />
+                <AnnotatedSegmentsUserSelector projectId={projectId} mr={1} />
                 <TextField
                   label="Context Size"
                   type="number"
