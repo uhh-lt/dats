@@ -2,26 +2,21 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { DocumentTagRead } from "./DocumentTagRead";
-import type { MemoRead } from "./MemoRead";
-import type { SourceDocumentRead } from "./SourceDocumentRead";
-import type { SpanAnnotationReadResolved } from "./SpanAnnotationReadResolved";
-
 export type AnnotatedSegment = {
   /**
-   * The Annotation
+   * The SourceDocument where the SpanAnnotation occurs.
    */
-  annotation: SpanAnnotationReadResolved;
-  /**
-   * The SourceDocument where the Code occurs.
-   */
-  sdoc: SourceDocumentRead;
-  /**
-   * The Memo of the Annotation
-   */
-  memo?: MemoRead;
+  sdoc_id: number;
   /**
    * The Tags of the Document
    */
-  tags: Array<DocumentTagRead>;
+  tag_ids: Array<number>;
+  /**
+   * The Span Annotation
+   */
+  span_annotation_id: number;
+  /**
+   * The Memo of the Annotation
+   */
+  memo_id?: number;
 };

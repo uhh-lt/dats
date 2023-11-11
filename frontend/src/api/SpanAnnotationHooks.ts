@@ -110,7 +110,7 @@ const useUpdate = () =>
     },
   });
 
-const useUpdateSpan = () =>
+const useOptimisticUpdateSpan = () =>
   useMutation(
     (variables: {
       spanAnnotationToUpdate: SpanAnnotationRead | SpanAnnotationReadResolved;
@@ -174,6 +174,26 @@ const useUpdateSpan = () =>
           queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, updatedSpanAnnotation.id]);
         }
         queryClient.invalidateQueries(context.myCustomQueryKey);
+      },
+    },
+  );
+
+const useUpdateSpan = () =>
+  useMutation(
+    (variables: {
+      spanAnnotationId: number;
+      requestBody: SpanAnnotationUpdateWithCodeId;
+      resolve?: boolean | undefined;
+    }) =>
+      SpanAnnotationService.updateById({
+        spanId: variables.spanAnnotationId,
+        requestBody: variables.requestBody,
+        resolve: variables.resolve,
+      }),
+    {
+      onSuccess(data, variables, context) {
+        queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, data.id]);
+        queryClient.invalidateQueries([QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id]);
       },
     },
   );
@@ -248,6 +268,7 @@ const SpanAnnotationHooks = {
   useGetAnnotation,
   useGetByCodeAndUser,
   useUpdateSpan,
+  useOptimisticUpdateSpan,
   useUpdate,
   useDeleteSpan,
   // memo

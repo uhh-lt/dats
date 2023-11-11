@@ -5138,30 +5138,26 @@
       },
       "AnnotatedSegment": {
         "title": "AnnotatedSegment",
-        "required": ["annotation", "sdoc", "tags"],
+        "required": ["sdoc_id", "tag_ids", "span_annotation_id"],
         "type": "object",
         "properties": {
-          "annotation": {
-            "title": "Annotation",
-            "allOf": [{ "$ref": "#/components/schemas/SpanAnnotationReadResolved" }],
-            "description": "The Annotation"
+          "sdoc_id": {
+            "title": "Sdoc Id",
+            "type": "integer",
+            "description": "The SourceDocument where the SpanAnnotation occurs."
           },
-          "sdoc": {
-            "title": "Sdoc",
-            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
-            "description": "The SourceDocument where the Code occurs."
-          },
-          "memo": {
-            "title": "Memo",
-            "allOf": [{ "$ref": "#/components/schemas/MemoRead" }],
-            "description": "The Memo of the Annotation"
-          },
-          "tags": {
-            "title": "Tags",
+          "tag_ids": {
+            "title": "Tag Ids",
             "type": "array",
-            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "items": { "type": "integer" },
             "description": "The Tags of the Document"
-          }
+          },
+          "span_annotation_id": {
+            "title": "Span Annotation Id",
+            "type": "integer",
+            "description": "The Span Annotation"
+          },
+          "memo_id": { "title": "Memo Id", "type": "integer", "description": "The Memo of the Annotation" }
         }
       },
       "AnnotationDocumentCreate": {
@@ -6483,8 +6479,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "max": 1,
-            "min": 0
+            "min": 0,
+            "max": 1
           }
         }
       },

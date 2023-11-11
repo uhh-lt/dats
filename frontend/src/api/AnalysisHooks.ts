@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient";
+import { useDebounce } from "../utils/useDebounce";
 import { QueryKey } from "./QueryKey";
 import {
   AnalysisConcept,
@@ -8,17 +8,12 @@ import {
   AnnotationOccurrence,
   CodeFrequency,
   CodeOccurrence,
-  CodeRead,
   DBColumns,
-  DocumentTagRead,
   Filter,
   IDOperator,
   LogicalOperator,
-  MemoRead,
-  SpanAnnotationReadResolved,
   TimelineAnalysisResult,
 } from "./openapi";
-import { useDebounce } from "../utils/useDebounce";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
   useQuery<CodeFrequency[], Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds], () =>
@@ -97,43 +92,12 @@ const useAnnotatedSegments = (projectId: number | undefined, userId: number | un
       return annotatedSegments.reduce((previousValue, currentValue) => {
         return {
           ...previousValue,
-          [currentValue.annotation.id]: currentValue,
+          [currentValue.span_annotation_id]: currentValue,
         };
       }, {});
     },
     {
       enabled: !!projectId && !!userId,
-      onSuccess(data) {
-        const annotatedSegments = Object.values(data);
-
-        // convert to SpanAnnotationReadResolved
-        const spanAnnotations: SpanAnnotationReadResolved[] = [];
-        const codes: CodeRead[] = [];
-        let tags: DocumentTagRead[] = [];
-        const memos: MemoRead[] = [];
-
-        annotatedSegments.forEach((segment) => {
-          spanAnnotations.push(segment.annotation);
-          codes.push(segment.annotation.code);
-          tags = tags.concat(segment.tags);
-          if (segment.memo) {
-            memos.push(segment.memo);
-          }
-        });
-
-        spanAnnotations.forEach((annotation) => {
-          queryClient.setQueryData([QueryKey.SPAN_ANNOTATION, annotation.id], annotation);
-        });
-        codes.forEach((code) => {
-          queryClient.setQueryData([QueryKey.CODE, code.id], code);
-        });
-        tags.forEach((tag) => {
-          queryClient.setQueryData([QueryKey.TAG, tag.id], tag);
-        });
-        memos.forEach((memo) => {
-          queryClient.setQueryData([QueryKey.MEMO, memo.id], memo);
-        });
-      },
     },
   );
 };
