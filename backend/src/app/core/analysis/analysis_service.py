@@ -350,7 +350,7 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
-                filter.get_sqlalchemy_expression(),
+                filter.get_sqlalchemy_expression(db=db),
                 and_(
                     SourceDocumentORM.project_id == project_id,
                     AnnotationDocumentORM.user_id == user_id,
