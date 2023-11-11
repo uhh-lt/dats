@@ -79,10 +79,10 @@ async def annotation_occurrences(
     description="Returns AnnotationSegments.",
 )
 async def annotated_segments(
-    *, project_id: int, user_id: int, filter: Filter
+    *, project_id: int, user_ids: List[int], filter: Filter
 ) -> List[AnnotatedSegment]:
     return AnalysisService().find_annotated_segments(
-        project_id=project_id, user_id=user_id, filter=filter
+        project_id=project_id, user_ids=user_ids, filter=filter
     )
 
 

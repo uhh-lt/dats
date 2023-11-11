@@ -312,7 +312,7 @@ class AnalysisService(metaclass=SingletonMeta):
             return span_code_occurrences + bbox_code_occurrences
 
     def find_annotated_segments(
-        self, project_id: int, user_id: int, filter: Filter
+        self, project_id: int, user_ids: List[int], filter: Filter
     ) -> List[AnnotatedSegment]:
         with self.sqls.db_session() as db:
             tag_ids_agg = aggregate_ids(
@@ -328,7 +328,7 @@ class AnalysisService(metaclass=SingletonMeta):
                 .join(SourceDocumentORM.annotation_documents, isouter=True)
                 .filter(
                     SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id == user_id,
+                    AnnotationDocumentORM.user_id.in_(user_ids),
                 )
                 .group_by(SourceDocumentORM.id)
                 .subquery()
@@ -372,7 +372,7 @@ class AnalysisService(metaclass=SingletonMeta):
             # noinspection PyUnresolvedReferences
             query = query.filter(
                 SourceDocumentORM.project_id == project_id,
-                AnnotationDocumentORM.user_id == user_id,
+                AnnotationDocumentORM.user_id.in_(user_ids),
                 filter.get_sqlalchemy_expression(db=db, subquery_dict=subquery.c),
             )
             result = query.all()
