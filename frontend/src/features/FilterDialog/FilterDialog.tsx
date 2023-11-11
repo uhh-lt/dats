@@ -3,19 +3,19 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, Popover } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { DBColumns, FilterExpression } from "../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
+import { DBColumns } from "../../api/openapi";
+import { useAppDispatch } from "../../plugins/ReduxHooks";
+import { useFilterSliceActions, useFilterSliceSelector } from "./FilterProvider";
 import FilterRenderer from "./FilterRenderer";
-import { FilterActions, getFilterExpressionCount } from "./filterSlice";
+import { countFilterExpressions } from "./filterUtils";
 import { useInitFilterDialog } from "./useInitFilterDialog";
 
 interface FilterDialogProps {
   anchorEl: HTMLElement | null;
   columns: DBColumns[];
-  defaultFilterExpression: FilterExpression;
 }
 
-function FilterDialog({ anchorEl, columns, defaultFilterExpression }: FilterDialogProps) {
+function FilterDialog({ anchorEl, columns }: FilterDialogProps) {
   // global client state
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
@@ -23,15 +23,16 @@ function FilterDialog({ anchorEl, columns, defaultFilterExpression }: FilterDial
   const [open, setOpen] = useState(false);
 
   // global client state (redux)
-  const numFilterExpressions = useAppSelector(getFilterExpressionCount);
+  const numFilterExpressions = countFilterExpressions(useFilterSliceSelector().filter);
+  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   // custom hooks: initialize the filterSlice
-  useInitFilterDialog({ projectId, columns, defaultFilterExpression });
+  useInitFilterDialog({ projectId, columns });
 
   // actions
   const handleRemoveAll = () => {
-    dispatch(FilterActions.resetFilter());
+    dispatch(filterActions.resetFilter());
   };
 
   return (

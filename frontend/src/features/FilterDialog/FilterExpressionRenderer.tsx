@@ -2,9 +2,9 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { TreeItem } from "@mui/lab";
 import { IconButton, Stack, Tooltip } from "@mui/material";
 import { DocType } from "../../api/openapi";
-import { useAppSelector } from "../../plugins/ReduxHooks";
 import FilterColumnSelector from "./FilterColumnSelector";
 import FilterOperatorSelector from "./FilterOperatorSelector";
+import { useFilterSliceSelector } from "./FilterProvider";
 import FilterValueSelector from "./FilterValueSelector";
 import { FilterOperator, MyFilterExpression } from "./filterUtils";
 
@@ -22,8 +22,8 @@ function FilterExpressionRenderer({
   onChangeValue(id: string, value: string | number): void;
 }) {
   // global client state (redux)
-  const columns = useAppSelector((state) => state.filter.columns);
-  const columnValue2operator = useAppSelector((state) => state.filter.columnValue2Operator);
+  const columns = useFilterSliceSelector().columns;
+  const columnValue2operator = useFilterSliceSelector().columnValue2Operator;
 
   return (
     <TreeItem

@@ -30,6 +30,8 @@ import TableView from "../views/analysis/Table/TableView";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
 import Profile from "../views/profile/Profile";
 import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments";
+import FilterSliceProvider from "../features/FilterDialog/FilterProvider";
+import { annotatedSegmentsFilterSlice, searchFilterSlice } from "../features/FilterDialog/filterSlice";
 
 const router = createBrowserRouter([
   {
@@ -133,11 +135,19 @@ const router = createBrowserRouter([
       },
       {
         path: "/project/:projectId/search",
-        element: <Search />,
+        element: (
+          <FilterSliceProvider slice={searchFilterSlice}>
+            <Search />
+          </FilterSliceProvider>
+        ),
       },
       {
         path: "/project/:projectId/search/doc/:sdocId",
-        element: <Search />,
+        element: (
+          <FilterSliceProvider slice={searchFilterSlice}>
+            <Search />
+          </FilterSliceProvider>
+        ),
       },
       {
         path: "/project/:projectId/analysis",
@@ -157,7 +167,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/project/:projectId/analysis/annotated-segments",
-        element: <AnnotatedSegments />,
+        element: (
+          <FilterSliceProvider slice={annotatedSegmentsFilterSlice}>
+            <AnnotatedSegments />
+          </FilterSliceProvider>
+        ),
       },
       {
         path: "/project/:projectId/analysis/table",

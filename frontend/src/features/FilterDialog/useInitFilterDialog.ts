@@ -1,20 +1,13 @@
 import { useEffect } from "react";
 import ProjectHooks from "../../api/ProjectHooks";
-import { DBColumns, FilterExpression } from "../../api/openapi";
+import { DBColumns } from "../../api/openapi";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { FilterActions } from "./filterSlice";
-import { metaType2operator, column2operator, FilterOperatorType } from "./filterUtils";
+import { useFilterSliceActions } from "./FilterProvider";
+import { FilterOperatorType, column2operator, metaType2operator } from "./filterUtils";
 
-export const useInitFilterDialog = ({
-  projectId,
-  columns,
-  defaultFilterExpression,
-}: {
-  projectId: number;
-  columns: DBColumns[];
-  defaultFilterExpression: FilterExpression;
-}) => {
+export const useInitFilterDialog = ({ projectId, columns }: { projectId: number; columns: DBColumns[] }) => {
   // global client state (redux)
+  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
@@ -47,20 +40,15 @@ export const useInitFilterDialog = ({
     );
 
     // update the store
-    dispatch(FilterActions.setColumns({ columns: dynamicColumns }));
-    dispatch(FilterActions.setColumnValue2Operator({ columnValue2Operator: dynamicColumnValue2Operator }));
+    dispatch(filterActions.setColumns({ columns: dynamicColumns }));
+    dispatch(filterActions.setColumnValue2Operator({ columnValue2Operator: dynamicColumnValue2Operator }));
 
     console.log("initialized columns and columnValue2Operator!");
-  }, [dispatch, columns, projectMetadata.data]);
-
-  useEffect(() => {
-    dispatch(FilterActions.setDefaultFilterExpression({ defaultFilterExpression }));
-    console.log("initialized defaultFilterExpression!");
-  }, [dispatch, defaultFilterExpression]);
+  }, [dispatch, columns, projectMetadata.data, filterActions]);
 
   useEffect(() => {
     if (!projectMetadata.data) return;
-    dispatch(FilterActions.setProjectMetadata({ projectMetadata: projectMetadata.data }));
+    dispatch(filterActions.setProjectMetadata({ projectMetadata: projectMetadata.data }));
     console.log("initialized projectMetadata!");
-  }, [dispatch, projectMetadata.data]);
+  }, [dispatch, filterActions, projectMetadata.data]);
 };

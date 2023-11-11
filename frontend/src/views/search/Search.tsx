@@ -6,9 +6,8 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
-import { DBColumns, SourceDocumentRead, SpanEntityDocumentFrequency, StringOperator } from "../../api/openapi";
+import { DBColumns, SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
 import FilterDialog from "../../features/FilterDialog/FilterDialog";
-import { FilterActions } from "../../features/FilterDialog/filterSlice";
 import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
@@ -22,6 +21,7 @@ import SearchToolbar from "./ToolBar/SearchToolbar";
 import { useAddTagFilter } from "./hooks/useAddTagFilter";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
 import { SearchActions } from "./searchSlice";
+import { useFilterSliceActions } from "../../features/FilterDialog/FilterProvider";
 
 const columns = [
   DBColumns.SOURCE_DOCUMENT_FILENAME,
@@ -32,12 +32,6 @@ const columns = [
   DBColumns.SPAN_ANNOTATIONS,
   DBColumns.METADATA,
 ];
-
-const defaultFilterExpression = {
-  column: DBColumns.SOURCE_DOCUMENT_CONTENT,
-  operator: StringOperator.STRING_CONTAINS,
-  value: "",
-};
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -60,6 +54,7 @@ function Search() {
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
   const searchType = useAppSelector((state) => state.search.searchType);
+  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
@@ -109,41 +104,42 @@ function Search() {
   const handleSearchError = (data: any) => console.error(data);
   const handleClearSearch = () => {
     reset();
+    // TODO: Combine actions into one: https://redux.js.org/style-guide/#avoid-dispatching-many-actions-sequentially
     dispatch(SearchActions.clearSelectedDocuments());
-    dispatch(FilterActions.resetFilter());
+    dispatch(filterActions.resetFilter());
     navigateIfNecessary(`/project/${projectId}/search/`);
   };
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityDocumentFrequency) => {
-      dispatch(FilterActions.addSpanAnnotationFilterExpression({ codeId: stat.code_id, spanText: stat.span_text }));
+      dispatch(filterActions.addSpanAnnotationFilterExpression({ codeId: stat.code_id, spanText: stat.span_text }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId],
+    [dispatch, navigateIfNecessary, projectId, filterActions],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(FilterActions.addKeywordFilterExpression({ keyword }));
+      dispatch(filterActions.addKeywordFilterExpression({ keyword }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId],
+    [dispatch, navigateIfNecessary, projectId, filterActions],
   );
   const handleAddTagFilter = useAddTagFilter();
   const handleAddTextFilter = useCallback(
     (text: string) => {
-      dispatch(FilterActions.addContentFilterExpression({ text }));
+      dispatch(filterActions.addContentFilterExpression({ text }));
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId],
+    [dispatch, navigateIfNecessary, projectId, filterActions],
   );
   const handleAddFileFilter = useCallback(
     (filename: string) => {
-      dispatch(FilterActions.addFilenameFilterExpression({ filename }));
+      dispatch(filterActions.addFilenameFilterExpression({ filename }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId],
+    [dispatch, navigateIfNecessary, projectId, filterActions],
   );
 
   const handleAddSentenceFilter = useCallback(
@@ -215,11 +211,7 @@ function Search() {
             viewDocument={viewDocument}
           />
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
-            <FilterDialog
-              anchorEl={filterDialogAnchorRef.current}
-              defaultFilterExpression={defaultFilterExpression}
-              columns={columns}
-            />
+            <FilterDialog anchorEl={filterDialogAnchorRef.current} columns={columns} />
             <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
               <Grid
                 item

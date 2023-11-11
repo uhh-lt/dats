@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import { useFilterSliceSelector } from "../features/FilterDialog/FilterProvider";
 import queryClient from "../plugins/ReactQueryClient";
-import { useAppSelector } from "../plugins/ReduxHooks";
 import { useDebounce } from "../utils/useDebounce";
 import { QueryKey } from "./QueryKey";
 import {
@@ -119,7 +119,7 @@ export enum SearchResultsType {
 // };
 
 const useSearchDocumentsNew = (projectId: number | undefined) => {
-  const filter = useAppSelector((state) => state.filter.filter);
+  const filter = useFilterSliceSelector().filter;
   const debouncedFilter = useDebounce(filter, 1000);
   return useQuery<LexicalSearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, debouncedFilter],

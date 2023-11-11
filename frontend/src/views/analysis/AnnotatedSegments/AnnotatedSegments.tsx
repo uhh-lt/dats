@@ -21,14 +21,7 @@ import { DataGrid, GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AnalysisHooks from "../../../api/AnalysisHooks";
-import {
-  AnnotatedSegment,
-  AttachedObjectType,
-  DBColumns,
-  DocumentTagRead,
-  LogicalOperator,
-  StringOperator,
-} from "../../../api/openapi";
+import { AnnotatedSegment, AttachedObjectType, DBColumns, DocumentTagRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2";
 import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
@@ -39,23 +32,26 @@ import SpanAnnotationEditDialog, {
   openSpanAnnotationEditDialog,
 } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import FilterDialog from "../../../features/FilterDialog/FilterDialog";
-import { MyFilter } from "../../../features/FilterDialog/filterUtils";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import SpanAnnotationCard from "./SpanAnnotationCard";
 import SpanAnnotationCardList from "./SpanAnnotationCardList";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
+import { useFilterSliceSelector } from "../../../features/FilterDialog/FilterProvider";
+
+const filterColumns = [
+  DBColumns.MEMO_CONTENT,
+  DBColumns.SOURCE_DOCUMENT_FILENAME,
+  DBColumns.DOCUMENT_TAG_TITLE,
+  DBColumns.CODE_NAME,
+  DBColumns.SPAN_TEXT,
+];
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
 
   // local client state
-  const [filter, setFilter] = useState<MyFilter>({
-    id: "0",
-    items: [],
-    logic_operator: LogicalOperator.AND,
-  });
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
   const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
   const [rowSelectionModel, setRowSelectionModel] = useState<number[]>([]);
@@ -64,14 +60,16 @@ function AnnotatedSegments() {
   const { user } = useAuth();
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
+  // global client state (redux)
+  const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
+  const isSplitView = useAppSelector((state) => state.annotatedSegments.isSplitView);
+  const filter = useFilterSliceSelector().filter;
+  const dispatch = useAppDispatch();
+
   // global server state (react query)
   const annotatedSegmentsMap = AnalysisHooks.useAnnotatedSegments(projectId, user.data?.id, filter);
 
-  // global client state (redux)
-  const dispatch = useAppDispatch();
-  const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
-  const isSplitView = useAppSelector((state) => state.annotatedSegments.isSplitView);
-
+  // computed
   const columns: GridColDef[] = useMemo(
     () => [
       {
@@ -195,23 +193,7 @@ function AnnotatedSegments() {
                     Change code of {rowSelectionModel.length} annotated segments
                   </Button>
                 )}
-                <FilterDialog
-                  anchorEl={filterDialogAnchorRef.current}
-                  filter={filter}
-                  onFilterChange={(newFilter) => setFilter(newFilter)}
-                  defaultFilterExpression={{
-                    column: DBColumns.SPAN_TEXT,
-                    operator: StringOperator.STRING_CONTAINS,
-                    value: "",
-                  }}
-                  columns={[
-                    DBColumns.MEMO_CONTENT,
-                    DBColumns.SOURCE_DOCUMENT_FILENAME,
-                    DBColumns.DOCUMENT_TAG_TITLE,
-                    DBColumns.CODE_NAME,
-                    DBColumns.SPAN_TEXT,
-                  ]}
-                />
+                <FilterDialog anchorEl={filterDialogAnchorRef.current} columns={filterColumns} />
                 <Box sx={{ flexGrow: 1 }} />
                 <TextField
                   label="Context Size"

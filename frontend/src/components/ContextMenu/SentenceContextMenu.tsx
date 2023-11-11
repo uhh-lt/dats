@@ -12,9 +12,9 @@ import {
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AttachedObjectType, SpanAnnotationReadResolved } from "../../api/openapi";
-import { FilterActions } from "../../features/FilterDialog/filterSlice";
 import MemoListItemButton from "../../features/Memo/MemoListItemButton";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
+import { useFilterSliceActions } from "../../features/FilterDialog/FilterProvider";
 
 interface SentenceContextMenuProps {}
 
@@ -38,6 +38,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   const [annotations, setAnnotations] = useState<SpanAnnotationReadResolved[]>();
 
   // global client state (redux)
+  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   // exposed methods (via ref)
@@ -83,7 +84,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
-    dispatch(FilterActions.addSpanAnnotationFilterExpression({ codeId: anno.code.id, spanText: anno.span_text }));
+    dispatch(filterActions.addSpanAnnotationFilterExpression({ codeId: anno.code.id, spanText: anno.span_text }));
     closeContextMenu();
     navigate("../search");
   };

@@ -5,8 +5,8 @@ import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi";
+import { useFilterSliceActions } from "../../../../features/FilterDialog/FilterProvider";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks";
-import { FilterActions } from "../../../../features/FilterDialog/filterSlice";
 
 interface DocumentMetadataAddFilterButtonProps {
   metadata: SourceDocumentMetadataReadResolved;
@@ -19,12 +19,13 @@ function DocumentMetadataAddFilterButton({
   const navigate = useNavigate();
 
   // global client state (redux)
+  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   const handleAddMetadataFilter = useCallback(() => {
-    dispatch(FilterActions.addMetadataFilterExpression({ metadata }));
+    dispatch(filterActions.addMetadataFilterExpression({ metadata }));
     navigate("../search");
-  }, [dispatch, metadata, navigate]);
+  }, [dispatch, metadata, navigate, filterActions]);
 
   return (
     <Tooltip title="Add as filter">
