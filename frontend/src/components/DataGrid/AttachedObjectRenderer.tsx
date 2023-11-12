@@ -21,7 +21,7 @@ function AttachedObjectRenderer({ attachedObjectId, attachedObjectType }: Attach
     case AttachedObjectType.CODE:
       return <CodeRenderer code={attachedObjectId} />;
     case AttachedObjectType.SOURCE_DOCUMENT:
-      return <SdocRenderer sdoc={attachedObjectId} link={false} />;
+      return <SdocRenderer sdoc={attachedObjectId} renderFilename renderDoctypeIcon />;
     default:
       return <>{attachedObjectType}</>;
   }

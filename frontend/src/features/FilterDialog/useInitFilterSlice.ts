@@ -3,7 +3,7 @@ import ProjectHooks from "../../api/ProjectHooks";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
 import { useFilterSliceActions } from "./FilterProvider";
 
-export const useInitFilterDialog = ({ projectId }: { projectId: number }) => {
+export const useInitFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)
   const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();

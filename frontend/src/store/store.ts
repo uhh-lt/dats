@@ -5,8 +5,13 @@ import logbookReducer from "../views/logbook/logbookSlice";
 import autologbookReducer from "../views/autologbook/autologbookSlice";
 import settingsReducer from "../views/settings/settingsSlice";
 import analysisReducer from "../views/analysis/analysisSlice";
-import { searchFilterSlice, annotatedSegmentsFilterSlice } from "../features/FilterDialog/filterSlice";
+import {
+  searchFilterSlice,
+  annotatedSegmentsFilterSlice,
+  timelineAnalysisFilterSlice,
+} from "../features/FilterDialog/filterSlice";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice";
+import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis2/timelineAnalysisSlice";
 import storage from "redux-persist/lib/storage";
 import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 
@@ -27,8 +32,10 @@ const reducers = combineReducers({
   autologbook: autologbookReducer,
   settings: persistedSettingsReducer,
   annotatedSegments: annotatedSegmentsReducer,
+  timelineAnalysis: timelineAnalysisReducer,
   [searchFilterSlice.name]: searchFilterSlice.reducer,
   [annotatedSegmentsFilterSlice.name]: annotatedSegmentsFilterSlice.reducer,
+  [timelineAnalysisFilterSlice.name]: timelineAnalysisFilterSlice.reducer,
 });
 
 export const store = configureStore({

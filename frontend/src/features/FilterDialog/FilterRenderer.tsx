@@ -7,45 +7,48 @@ import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@m
 import { LogicalOperator } from "../../api/openapi";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
 import FilterExpressionRenderer from "./FilterExpressionRenderer";
-import { useFilterSliceActions, useFilterSliceSelector } from "./FilterProvider";
+import { useFilterSliceActions } from "./FilterProvider";
 import "./filter.css";
 import { FilterOperator, MyFilter, isFilter, isFilterExpression } from "./filterUtils";
 
-export interface FilterRendererProps {}
+export interface FilterRendererProps {
+  filter: MyFilter;
+}
 
-function FilterRenderer(_: FilterRendererProps) {
+function FilterRenderer({ filter }: FilterRendererProps) {
   // global client state (redux)
-  const filter = useFilterSliceSelector().filter;
   const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
+  const rootFilterId = filter.id;
+
   // actions
   const handleAddFilter = (filterId: string) => {
-    dispatch(filterActions.addDefaultFilter({ filterId }));
+    dispatch(filterActions.addDefaultFilter({ filterId, rootFilterId }));
   };
 
   const handleAddFilterExpression = (filterId: string) => {
-    dispatch(filterActions.addDefaultFilterExpression({ filterId }));
+    dispatch(filterActions.addDefaultFilterExpression({ filterId, rootFilterId }));
   };
 
   const handleDeleteFilter = (filterId: string) => {
-    dispatch(filterActions.deleteFilter({ filterId }));
+    dispatch(filterActions.deleteFilter({ filterId, rootFilterId }));
   };
 
   const handleLogicalOperatorChange = (filterId: string, operator: LogicalOperator) => {
-    dispatch(filterActions.changeLogicalOperator({ filterId, operator }));
+    dispatch(filterActions.changeLogicalOperator({ filterId, operator, rootFilterId }));
   };
 
   const handleColumnChange = (filterId: string, columnValue: string) => {
-    dispatch(filterActions.changeColumn({ filterId, columnValue }));
+    dispatch(filterActions.changeColumn({ filterId, columnValue, rootFilterId }));
   };
 
   const handleOperatorChange = (filterId: string, operator: FilterOperator) => {
-    dispatch(filterActions.changeOperator({ filterId, operator }));
+    dispatch(filterActions.changeOperator({ filterId, operator, rootFilterId }));
   };
 
   const handleValueChange = (filterId: string, value: any) => {
-    dispatch(filterActions.changeValue({ filterId, value }));
+    dispatch(filterActions.changeValue({ filterId, value, rootFilterId }));
   };
 
   // rendering

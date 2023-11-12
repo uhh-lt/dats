@@ -96,7 +96,7 @@ function Search() {
     reset();
     // TODO: Combine actions into one: https://redux.js.org/style-guide/#avoid-dispatching-many-actions-sequentially
     dispatch(SearchActions.clearSelectedDocuments());
-    dispatch(filterActions.resetFilter());
+    dispatch(filterActions.resetFilter({ rootFilterId: "root" }));
     navigateIfNecessary(`/project/${projectId}/search/`);
   };
 

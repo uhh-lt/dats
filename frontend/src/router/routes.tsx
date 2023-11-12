@@ -10,7 +10,7 @@ import NotFound from "../views/NotFound";
 import Analysis from "../views/analysis/Analysis";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
-import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis";
+import TimelineAnalysis from "../views/analysis/TimelineAnalysis2/TimelineAnalysis";
 import Annotation from "../views/annotation/Annotation";
 import Autologbook from "../views/autologbook/Autologbook";
 import FeedbackAll from "../views/feedback/FeedbackAll";
@@ -31,7 +31,11 @@ import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
 import Profile from "../views/profile/Profile";
 import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments";
 import FilterSliceProvider from "../features/FilterDialog/FilterProvider";
-import { annotatedSegmentsFilterSlice, searchFilterSlice } from "../features/FilterDialog/filterSlice";
+import {
+  annotatedSegmentsFilterSlice,
+  searchFilterSlice,
+  timelineAnalysisFilterSlice,
+} from "../features/FilterDialog/filterSlice";
 
 const router = createBrowserRouter([
   {
@@ -163,7 +167,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/project/:projectId/analysis/timeline",
-        element: <TimelineAnalysis />,
+        element: (
+          <FilterSliceProvider slice={timelineAnalysisFilterSlice}>
+            <TimelineAnalysis />
+          </FilterSliceProvider>
+        ),
       },
       {
         path: "/project/:projectId/analysis/annotated-segments",

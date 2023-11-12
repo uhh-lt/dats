@@ -7,7 +7,7 @@ import { useAppDispatch } from "../../plugins/ReduxHooks";
 import { useFilterSliceActions, useFilterSliceSelector } from "./FilterProvider";
 import FilterRenderer from "./FilterRenderer";
 import { countFilterExpressions } from "./filterUtils";
-import { useInitFilterDialog } from "./useInitFilterDialog";
+import { useInitFilterSlice } from "./useInitFilterSlice";
 
 interface FilterDialogProps {
   anchorEl: HTMLElement | null;
@@ -21,16 +21,17 @@ function FilterDialog({ anchorEl }: FilterDialogProps) {
   const [open, setOpen] = useState(false);
 
   // global client state (redux)
-  const numFilterExpressions = countFilterExpressions(useFilterSliceSelector().filter);
+  const filter = useFilterSliceSelector().filter["root"];
+  const numFilterExpressions = countFilterExpressions(filter);
   const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   // custom hooks: initialize the filterSlice
-  useInitFilterDialog({ projectId });
+  useInitFilterSlice({ projectId });
 
   // actions
   const handleRemoveAll = () => {
-    dispatch(filterActions.resetFilter());
+    dispatch(filterActions.resetFilter({ rootFilterId: "root" }));
   };
 
   return (
@@ -58,7 +59,7 @@ function FilterDialog({ anchorEl }: FilterDialogProps) {
         }}
         sx={{ mt: "56px" }}
       >
-        <FilterRenderer />
+        <FilterRenderer filter={filter} />
         <Box display="flex" justifyContent="flex-end" width="100%">
           <Button startIcon={<DeleteForeverIcon />} onClick={handleRemoveAll}>
             Remove All

@@ -27,7 +27,7 @@ import {
 } from "./filterUtils";
 
 export interface FilterState {
-  filter: MyFilter;
+  filter: Record<string, MyFilter>;
   defaultFilterExpression: FilterExpression;
   columns: { label: string; value: string }[];
   columnValue2Operator: Record<string, FilterOperatorType>;
@@ -36,9 +36,19 @@ export interface FilterState {
 }
 
 const filterReducer = {
-  addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
+  addRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
+    state.filter[action.payload.rootFilterId] = {
+      id: action.payload.rootFilterId,
+      items: [],
+      logic_operator: LogicalOperator.AND,
+    };
+  },
+  deleteRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
+    delete state.filter[action.payload.rootFilterId];
+  },
+  addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; rootFilterId?: string }>) => {
     // const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(state.filter, action.payload.filterId);
+    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
         {
@@ -50,9 +60,12 @@ const filterReducer = {
       ];
     }
   },
-  addDefaultFilterExpression: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
+  addDefaultFilterExpression: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ filterId: string; rootFilterId?: string }>,
+  ) => {
     // const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(state.filter, action.payload.filterId);
+    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
         {
@@ -63,7 +76,10 @@ const filterReducer = {
       ];
     }
   },
-  addKeywordFilterExpression: (state: Draft<FilterState>, action: PayloadAction<{ keyword: string }>) => {
+  addKeywordFilterExpression: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ keyword: string; rootFilterId?: string }>,
+  ) => {
     const keywordProjectMetadatas = state.projectMetadata.filter((metadata) => metadata.key === "keywords");
 
     const filterItems: MyFilterExpression[] = keywordProjectMetadatas?.map((projectMetadata) => {
@@ -76,8 +92,8 @@ const filterReducer = {
       };
     });
 
-    state.filter.items = [
-      ...state.filter.items,
+    state.filter[action.payload.rootFilterId || "root"].items = [
+      ...state.filter[action.payload.rootFilterId || "root"].items,
       {
         id: uuidv4(),
         logic_operator: LogicalOperator.OR,
@@ -85,9 +101,12 @@ const filterReducer = {
       },
     ];
   },
-  addTagFilterExpression: (state: Draft<FilterState>, action: PayloadAction<{ tagId: number | string }>) => {
-    state.filter.items = [
-      ...state.filter.items,
+  addTagFilterExpression: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ tagId: number | string; rootFilterId?: string }>,
+  ) => {
+    state.filter[action.payload.rootFilterId || "root"].items = [
+      ...state.filter[action.payload.rootFilterId || "root"].items,
       {
         id: uuidv4(),
         column: DBColumns.DOCUMENT_TAG_ID_LIST,
@@ -96,9 +115,12 @@ const filterReducer = {
       },
     ];
   },
-  addFilenameFilterExpression: (state: Draft<FilterState>, action: PayloadAction<{ filename: string }>) => {
-    state.filter.items = [
-      ...state.filter.items,
+  addFilenameFilterExpression: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ filename: string; rootFilterId?: string }>,
+  ) => {
+    state.filter[action.payload.rootFilterId || "root"].items = [
+      ...state.filter[action.payload.rootFilterId || "root"].items,
       {
         id: uuidv4(),
         column: DBColumns.SOURCE_DOCUMENT_FILENAME,
@@ -107,9 +129,12 @@ const filterReducer = {
       },
     ];
   },
-  addContentFilterExpression: (state: Draft<FilterState>, action: PayloadAction<{ text: string }>) => {
-    state.filter.items = [
-      ...state.filter.items,
+  addContentFilterExpression: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ text: string; rootFilterId?: string }>,
+  ) => {
+    state.filter[action.payload.rootFilterId || "root"].items = [
+      ...state.filter[action.payload.rootFilterId || "root"].items,
       {
         id: uuidv4(),
         column: DBColumns.SOURCE_DOCUMENT_CONTENT,
@@ -120,10 +145,10 @@ const filterReducer = {
   },
   addSpanAnnotationFilterExpression: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ codeId: number; spanText: string }>,
+    action: PayloadAction<{ codeId: number; spanText: string; rootFilterId?: string }>,
   ) => {
-    state.filter.items = [
-      ...state.filter.items,
+    state.filter[action.payload.rootFilterId || "root"].items = [
+      ...state.filter[action.payload.rootFilterId || "root"].items,
       {
         id: uuidv4(),
         column: DBColumns.SPAN_ANNOTATIONS,
@@ -134,13 +159,13 @@ const filterReducer = {
   },
   addMetadataFilterExpression: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved }>,
+    action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved; rootFilterId?: string }>,
   ) => {
     // the column value of a metadata filter is the project_metadata.id
     const operatorType = state.columnValue2Operator[action.payload.metadata.project_metadata.id.toString()];
 
-    state.filter.items = [
-      ...state.filter.items,
+    state.filter[action.payload.rootFilterId || "root"].items = [
+      ...state.filter[action.payload.rootFilterId || "root"].items,
       {
         id: uuidv4(),
         column: DBColumns.METADATA,
@@ -150,20 +175,26 @@ const filterReducer = {
       },
     ];
   },
-  deleteFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
-    state.filter = deleteInFilter(state.filter, action.payload.filterId);
+  deleteFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; rootFilterId?: string }>) => {
+    state.filter[action.payload.rootFilterId || "root"] = deleteInFilter(
+      state.filter[action.payload.rootFilterId || "root"],
+      action.payload.filterId,
+    );
   },
   changeLogicalOperator: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; operator: LogicalOperator }>,
+    action: PayloadAction<{ filterId: string; operator: LogicalOperator; rootFilterId?: string }>,
   ) => {
-    const filterItem = findInFilter(state.filter, action.payload.filterId);
+    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       filterItem.logic_operator = action.payload.operator;
     }
   },
-  changeColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
-    const filterItem = findInFilter(state.filter, action.payload.filterId);
+  changeColumn: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ filterId: string; columnValue: string; rootFilterId?: string }>,
+  ) => {
+    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       if (Object.values<string>(DBColumns).includes(action.payload.columnValue)) {
         // it is a DBColumn
@@ -179,15 +210,18 @@ const filterReducer = {
   },
   changeOperator: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; operator: FilterOperator }>,
+    action: PayloadAction<{ filterId: string; operator: FilterOperator; rootFilterId?: string }>,
   ) => {
-    const filterItem = findInFilter(state.filter, action.payload.filterId);
+    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.operator = action.payload.operator;
     }
   },
-  changeValue: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; value: any }>) => {
-    const filterItem = findInFilter(state.filter, action.payload.filterId);
+  changeValue: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ filterId: string; value: any; rootFilterId?: string }>,
+  ) => {
+    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.value = action.payload.value;
     }
@@ -198,9 +232,9 @@ const filterReducer = {
   ) => {
     state.defaultFilterExpression = action.payload.defaultFilterExpression;
   },
-  resetFilter: (state: Draft<FilterState>) => {
-    state.filter = {
-      id: "root",
+  resetFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId?: string }>) => {
+    state.filter[action.payload.rootFilterId || "root"] = {
+      id: action.payload.rootFilterId || "root",
       logic_operator: LogicalOperator.AND,
       items: [],
     };
@@ -245,9 +279,11 @@ export const searchFilterSlice = createFilterSlice({
   name: "searchFilter",
   initialState: {
     filter: {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
+      root: {
+        id: "root",
+        logic_operator: LogicalOperator.AND,
+        items: [],
+      },
     },
     defaultFilterExpression: {
       column: DBColumns.SOURCE_DOCUMENT_FILENAME,
@@ -273,9 +309,11 @@ export const annotatedSegmentsFilterSlice = createFilterSlice({
   name: "annotatedSegmentsFilter",
   initialState: {
     filter: {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
+      root: {
+        id: "root",
+        logic_operator: LogicalOperator.AND,
+        items: [],
+      },
     },
     defaultFilterExpression: {
       column: DBColumns.SOURCE_DOCUMENT_FILENAME,
@@ -288,6 +326,30 @@ export const annotatedSegmentsFilterSlice = createFilterSlice({
       { label: "Code", value: DBColumns.CODE_ID },
       { label: "Annotated text", value: DBColumns.SPAN_TEXT },
       { label: "Memo content", value: DBColumns.MEMO_CONTENT },
+      { label: "Metadata", value: DBColumns.METADATA },
+    ],
+    columnValue2Operator: {},
+    projectMetadata: [],
+    metadataModalities: [DocType.TEXT],
+  },
+});
+
+export const timelineAnalysisFilterSlice = createFilterSlice({
+  name: "timelineAnalysisFilter",
+  initialState: {
+    filter: {},
+    defaultFilterExpression: {
+      column: DBColumns.SOURCE_DOCUMENT_FILENAME,
+      operator: StringOperator.STRING_CONTAINS,
+      value: "",
+    },
+    columns: [
+      { label: "Document name", value: DBColumns.SOURCE_DOCUMENT_FILENAME },
+      { label: "Document content", value: DBColumns.SOURCE_DOCUMENT_CONTENT },
+      { label: "Tags", value: DBColumns.DOCUMENT_TAG_ID_LIST },
+      { label: "User", value: DBColumns.USER_ID_LIST },
+      { label: "Code", value: DBColumns.CODE_ID_LIST },
+      { label: "Span Annotation", value: DBColumns.SPAN_ANNOTATIONS },
       { label: "Metadata", value: DBColumns.METADATA },
     ],
     columnValue2Operator: {},

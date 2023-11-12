@@ -21,7 +21,7 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import React, { useContext, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import AnalysisHooks from "../../../api/AnalysisHooks";
-import { AnnotatedSegment, AttachedObjectType, DBColumns } from "../../../api/openapi";
+import { AnnotatedSegment, AttachedObjectType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2";
 import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
@@ -36,10 +36,10 @@ import { useFilterSliceSelector } from "../../../features/FilterDialog/FilterPro
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector";
 import SpanAnnotationCard from "./SpanAnnotationCard";
 import SpanAnnotationCardList from "./SpanAnnotationCardList";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
-import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector";
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -61,7 +61,7 @@ function AnnotatedSegments() {
   const dispatch = useAppDispatch();
 
   // global server state (react query)
-  const annotatedSegmentsMap = AnalysisHooks.useAnnotatedSegments(projectId, userIds, filter);
+  const annotatedSegmentsMap = AnalysisHooks.useAnnotatedSegments(projectId, userIds, filter["root"]);
 
   // computed
   const columns: GridColDef<AnnotatedSegment>[] = useMemo(
@@ -87,7 +87,7 @@ function AnnotatedSegments() {
         field: "sdoc_id",
         headerName: "Document",
         flex: 2,
-        renderCell: (params) => <SdocRenderer sdoc={params.row.sdoc_id} link />,
+        renderCell: (params) => <SdocRenderer sdoc={params.row.sdoc_id} link renderDoctypeIcon renderFilename />,
       },
       {
         field: "tag_ids",
