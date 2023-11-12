@@ -10,7 +10,7 @@ import {
   SpanAnnotationCreateWithCodeId,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
-import TextAnnotatorRendererNew from "../../../features/DocumentRenderer/DocumentRenderer";
+import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer";
 import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
@@ -292,11 +292,11 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
         onEdit={handleCodeSelectorEditCode}
         onDelete={handleCodeSelectorDeleteAnnotation}
       />
-      <TextAnnotatorRendererNew
+      <DocumentRenderer
         className="myFlexFillAllContainer"
         onContextMenu={handleContextMenu}
         onMouseUp={handleMouseUp}
-        html={sdoc.content}
+        html={sdoc.html}
         tokenData={tokenData}
         annotationsPerToken={annotationsPerToken}
         annotationMap={annotationMap}

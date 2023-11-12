@@ -27,7 +27,7 @@ const fetchSdoc = async (sdocId: number) => {
 
   switch (sdoc.doctype) {
     case DocType.TEXT:
-      sdoc.content = sdoc.html;
+      // dont do anything
       break;
     case DocType.IMAGE:
       let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
