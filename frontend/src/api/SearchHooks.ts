@@ -119,7 +119,7 @@ export enum SearchResultsType {
 // };
 
 const useSearchDocumentsNew = (projectId: number | undefined) => {
-  const filter = useFilterSliceSelector().filter;
+  const filter = useFilterSliceSelector().filter["root"];
   const debouncedFilter = useDebounce(filter, 1000);
   return useQuery<LexicalSearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, debouncedFilter],

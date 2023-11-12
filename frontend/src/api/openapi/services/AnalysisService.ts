@@ -8,7 +8,10 @@ import type { Body_analysis_annotated_segments } from "../models/Body_analysis_a
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
+import type { DateGroupBy } from "../models/DateGroupBy";
+import type { Filter } from "../models/Filter";
 import type { TimelineAnalysisResult } from "../models/TimelineAnalysisResult";
+import type { TimelineAnalysisResultNew } from "../models/TimelineAnalysisResultNew";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -153,6 +156,39 @@ export class AnalysisService {
         project_id: projectId,
         threshold: threshold,
         metadata_key: metadataKey,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Perform new timeline analysis.
+   * Perform new timeline analysis.
+   * @returns TimelineAnalysisResultNew Successful Response
+   * @throws ApiError
+   */
+  public static timelineAnalysis2({
+    projectId,
+    groupBy,
+    projectMetadataId,
+    requestBody,
+  }: {
+    projectId: number;
+    groupBy: DateGroupBy;
+    projectMetadataId: number;
+    requestBody: Filter;
+  }): CancelablePromise<Array<TimelineAnalysisResultNew>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/timeline_analysis2",
+      query: {
+        project_id: projectId,
+        group_by: groupBy,
+        project_metadata_id: projectMetadataId,
       },
       body: requestBody,
       mediaType: "application/json",

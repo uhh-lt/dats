@@ -4304,6 +4304,57 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/analysis/timeline_analysis2": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Perform new timeline analysis.",
+        "description": "Perform new timeline analysis.",
+        "operationId": "timeline_analysis2",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/DateGroupBy" },
+            "name": "group_by",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": { "title": "Project Metadata Id", "type": "integer" },
+            "name": "project_metadata_id",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Filter" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Timeline Analysis2",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TimelineAnalysisResultNew" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/prepro/{prepro_job_id}": {
       "get": {
         "tags": ["prepro"],
@@ -5628,6 +5679,7 @@
         ],
         "description": "An enumeration."
       },
+      "DateGroupBy": { "title": "DateGroupBy", "enum": ["YEAR", "MONTH", "DAY"], "description": "An enumeration." },
       "DateOperator": {
         "title": "DateOperator",
         "enum": ["DATE_EQUALS", "DATE_GT", "DATE_LT", "DATE_GTE", "DATE_LTE"],
@@ -6489,8 +6541,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "max": 1,
-            "min": 0
+            "min": 0,
+            "max": 1
           }
         }
       },
@@ -7439,6 +7491,20 @@
             "description": "The id of the SourceDocument the similar sentence belongs to."
           },
           "context": { "title": "Context", "type": "string", "description": "The context of the similar sentence." }
+        }
+      },
+      "TimelineAnalysisResultNew": {
+        "title": "TimelineAnalysisResultNew",
+        "required": ["date", "sdoc_ids"],
+        "type": "object",
+        "properties": {
+          "date": { "title": "Date", "type": "string", "description": "The date." },
+          "sdoc_ids": {
+            "title": "Sdoc Ids",
+            "type": "array",
+            "items": { "type": "integer" },
+            "description": "The SourceDoument IDs."
+          }
         }
       },
       "UserAuthorizationHeaderData": {
