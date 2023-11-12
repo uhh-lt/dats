@@ -8,6 +8,8 @@ from app.core.data.dto.analysis import (
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
+    DateGroupBy,
+    TimelineAnalysisResultNew,
 )
 from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
@@ -19,12 +21,18 @@ from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
+from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
+from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.search.search_service import aggregate_ids
 from app.util.singleton_meta import SingletonMeta
+from sqlalchemy import String, and_, cast, func
+from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
 
 class AnalysisService(metaclass=SingletonMeta):
@@ -381,3 +389,82 @@ class AnalysisService(metaclass=SingletonMeta):
             ]
 
             return annotated_segments
+
+    def timeline_analysis(
+        self,
+        project_id: int,
+        group_by: DateGroupBy,
+        project_metadata_id: int,
+        filter: Filter,
+    ) -> List[TimelineAnalysisResultNew]:
+        # project_metadata_id has to refer to a DATE metadata
+
+        with self.sqls.db_session() as db:
+            tag_ids_agg = aggregate_ids(
+                DocumentTagORM.id, label=AggregatedColumn.DOCUMENT_TAG_IDS_LIST
+            )
+            code_ids_agg = aggregate_ids(CodeORM.id, AggregatedColumn.CODE_IDS_LIST)
+            user_ids_agg = aggregate_ids(UserORM.id, AggregatedColumn.USER_IDS_LIST)
+            # span_annotation_ids_agg = aggregate_ids(
+            #     SpanAnnotationORM.id, AggregatedColumn.SPAN_ANNOTATION_IDS_LIST
+            # )
+            span_annotation_tuples_agg = cast(
+                array_agg(
+                    func.distinct(array([cast(CodeORM.id, String), SpanTextORM.text])),
+                ),
+                ARRAY(String, dimensions=2),
+            ).label(AggregatedColumn.SPAN_ANNOTATIONS)
+
+            subquery = (
+                db.query(
+                    SourceDocumentORM.id,
+                    SourceDocumentMetadataORM.date_value.label("date"),
+                    tag_ids_agg,
+                    code_ids_agg,
+                    user_ids_agg,
+                    span_annotation_tuples_agg,
+                )
+                .join(SourceDocumentORM.document_tags, isouter=True)
+                .join(SourceDocumentORM.annotation_documents, isouter=True)
+                .join(AnnotationDocumentORM.user)
+                .join(AnnotationDocumentORM.span_annotations)
+                .join(SpanAnnotationORM.span_text)
+                .join(SpanAnnotationORM.current_code)
+                .join(CurrentCodeORM.code)
+                .join(SourceDocumentORM.metadata_)
+                .join(SourceDocumentMetadataORM.project_metadata)
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                    ProjectMetadataORM.id == project_metadata_id,
+                )
+                .group_by(SourceDocumentORM.id, SourceDocumentMetadataORM.date_value)
+                .subquery()
+            )
+
+            sdoc_ids_agg = aggregate_ids(SourceDocumentORM.id, label="sdoc_ids")
+
+            query = (
+                db.query(
+                    sdoc_ids_agg,
+                    *group_by.apply(
+                        subquery.c["date"]
+                    ),  # EXTRACT (WEEK FROM TIMESTAMP ...)
+                )
+                .join(subquery, SourceDocumentORM.id == subquery.c.id)
+                .join(
+                    SourceDocumentDataORM,
+                    SourceDocumentDataORM.id == SourceDocumentORM.id,
+                )
+                .filter(
+                    filter.get_sqlalchemy_expression(db=db, subquery_dict=subquery.c)
+                )
+                .group_by(*group_by.apply(column=subquery.c["date"]))
+            )
+
+            result_rows = query.all()
+            return [
+                TimelineAnalysisResultNew(
+                    sdoc_ids=row[0], date="-".join(map(lambda x: str(x), row[1:]))
+                )
+                for row in result_rows
+            ]

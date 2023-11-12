@@ -12,7 +12,9 @@ from app.core.data.dto.analysis import (
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
+    DateGroupBy,
     TimelineAnalysisResult,
+    TimelineAnalysisResultNew,
 )
 from app.core.data.dto.filter import Filter
 from app.core.data.dto.search import SimSearchQuery, SimSearchSentenceHit
@@ -171,3 +173,25 @@ async def timeline_analysis(
                 )
             )
     return result
+
+
+@router.post(
+    "/timeline_analysis2",
+    response_model=List[TimelineAnalysisResultNew],
+    summary="Perform new timeline analysis.",
+    description="Perform new timeline analysis.",
+)
+async def timeline_analysis2(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    group_by: DateGroupBy,
+    project_metadata_id: int,
+    filter: Filter,
+) -> List[TimelineAnalysisResultNew]:
+    return AnalysisService().timeline_analysis(
+        project_id=project_id,
+        group_by=group_by,
+        project_metadata_id=project_metadata_id,
+        filter=filter,
+    )

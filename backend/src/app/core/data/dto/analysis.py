@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
@@ -13,6 +14,8 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
 )
+from pydantic import BaseModel, Field
+from sqlalchemy import Column, func
 
 
 class CodeOccurrence(BaseModel):
@@ -69,3 +72,27 @@ class AnnotatedSegment(BaseModel):
     tag_ids: List[int] = Field(description="The Tags of the Document")
     span_annotation_id: int = Field(description="The Span Annotation")
     memo_id: Optional[int] = Field(description="The Memo of the Annotation")
+
+
+class TimelineAnalysisResultNew(BaseModel):
+    date: str = Field(description="The date.")
+    sdoc_ids: List[int] = Field(description="The SourceDoument IDs.")
+
+
+class DateGroupBy(Enum):
+    YEAR = "YEAR"
+    MONTH = "MONTH"
+    DAY = "DAY"
+
+    def apply(self, column: Column) -> List:
+        match self:
+            case DateGroupBy.YEAR:
+                return [func.extract("year", column)]
+            case DateGroupBy.MONTH:
+                return [func.extract("month", column), func.extract("year", column)]
+            case DateGroupBy.DAY:
+                return [
+                    func.extract("day", column),
+                    func.extract("month", column),
+                    func.extract("year", column),
+                ]
