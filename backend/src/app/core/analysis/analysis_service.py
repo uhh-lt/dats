@@ -2,7 +2,6 @@ from typing import List
 
 from sqlalchemy import and_, func
 
-from api.util import get_object_memos
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
     AnnotatedSegment,
@@ -10,17 +9,11 @@ from app.core.data.dto.analysis import (
     CodeFrequency,
     CodeOccurrence,
 )
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationRead,
-)
+from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.filter import AggregatedColumn, Filter
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.span_annotation import (
-    SpanAnnotationRead,
-    SpanAnnotationReadResolved,
-)
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
@@ -40,7 +33,7 @@ class AnalysisService(metaclass=SingletonMeta):
         return super(AnalysisService, cls).__new__(cls)
 
     def compute_code_frequency(
-        self, project_id: int, code_ids: List[int], filter: Filter
+        self, project_id: int, user_ids: List[int], code_ids: List[int]
     ) -> List[CodeFrequency]:
         with self.sqls.db_session() as db:
             # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
@@ -86,7 +79,7 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
-                filter.get_sqlalchemy_expression(),
+                AnnotationDocumentORM.user_id.in_(user_ids),
                 CurrentCodeORM.code_id.in_(codes_of_interest),
             )
             span_res = query.all()
@@ -109,6 +102,7 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
+                AnnotationDocumentORM.user_id.in_(user_ids),
                 CurrentCodeORM.code_id.in_(codes_of_interest),
             )
             bbox_res = query.all()

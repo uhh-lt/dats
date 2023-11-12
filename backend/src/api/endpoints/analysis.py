@@ -34,10 +34,10 @@ async def code_frequencies(
     *,
     project_id: int,
     code_ids: List[int],
-    filter: Filter,
+    user_ids: List[int],
 ) -> List[CodeFrequency]:
     return AnalysisService().compute_code_frequency(
-        project_id=project_id, code_ids=code_ids, filter=filter
+        project_id=project_id, code_ids=code_ids, user_ids=user_ids
     )
 
 
