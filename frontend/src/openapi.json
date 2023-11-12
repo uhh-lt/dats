@@ -5409,11 +5409,11 @@
       },
       "Body_analysis-code_frequencies": {
         "title": "Body_analysis-code_frequencies",
-        "required": ["code_ids", "filter"],
+        "required": ["code_ids", "user_ids"],
         "type": "object",
         "properties": {
           "code_ids": { "title": "Code Ids", "type": "array", "items": { "type": "integer" } },
-          "filter": { "$ref": "#/components/schemas/Filter" }
+          "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } }
         }
       },
       "Body_authentication-login": {
@@ -6489,8 +6489,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "min": 0,
-            "max": 1
+            "max": 1,
+            "min": 0
           }
         }
       },

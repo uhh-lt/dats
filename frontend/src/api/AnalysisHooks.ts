@@ -8,10 +8,7 @@ import {
   AnnotationOccurrence,
   CodeFrequency,
   CodeOccurrence,
-  DBColumns,
   Filter,
-  IDOperator,
-  LogicalOperator,
   TimelineAnalysisResult,
 } from "./openapi";
 
@@ -20,16 +17,7 @@ const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: numbe
     AnalysisService.codeFrequencies({
       projectId,
       requestBody: {
-        filter: {
-          items: [
-            {
-              column: DBColumns.CODE_ID,
-              operator: IDOperator.ID_EQUALS,
-              value: 1,
-            },
-          ],
-          logic_operator: LogicalOperator.AND,
-        },
+        user_ids: userIds,
         code_ids: codeIds,
       },
     }),
