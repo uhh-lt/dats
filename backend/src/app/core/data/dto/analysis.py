@@ -89,10 +89,10 @@ class DateGroupBy(Enum):
             case DateGroupBy.YEAR:
                 return [func.extract("year", column)]
             case DateGroupBy.MONTH:
-                return [func.extract("month", column), func.extract("year", column)]
+                return [func.extract("year", column), func.extract("month", column)]
             case DateGroupBy.DAY:
                 return [
-                    func.extract("day", column),
-                    func.extract("month", column),
                     func.extract("year", column),
+                    func.extract("month", column),
+                    func.extract("day", column),
                 ]

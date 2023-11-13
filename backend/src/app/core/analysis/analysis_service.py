@@ -462,9 +462,16 @@ class AnalysisService(metaclass=SingletonMeta):
             )
 
             result_rows = query.all()
-            return [
+
+            def preprend_zero(x: int):
+                return "0" + str(x) if x < 10 else str(x)
+
+            result = [
                 TimelineAnalysisResultNew(
-                    sdoc_ids=row[0], date="-".join(map(lambda x: str(x), row[1:]))
+                    sdoc_ids=row[0],
+                    date="-".join(map(lambda x: preprend_zero(x), row[1:])),
                 )
                 for row in result_rows
             ]
+            result.sort(key=lambda x: x.date)
+            return result
