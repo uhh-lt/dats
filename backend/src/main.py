@@ -266,13 +266,14 @@ def main() -> None:
 
     run_required_migrations()
 
+    is_debug = conf.api.production_mode == "0"
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
         log_level=conf.logging.level.lower(),
-        # debug=True,
-        reload=False,
+        reload=is_debug,
     )
 
 

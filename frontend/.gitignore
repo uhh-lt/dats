@@ -4,4 +4,7 @@
 /build
 /node_modules
 
+.env.development
+.env.production
+# Deprecated: use .env.development instead.
 .env

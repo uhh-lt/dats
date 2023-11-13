@@ -1,6 +1,7 @@
 api:
   port: ${oc.env:API_PORT, 5000}
   max_upload_file_size: 104857600 # 100 MB in bytes
+  production_mode: ${oc.env:API_PRODUCTION_MODE, 0}
   auth:
     jwt:
       token_url: /authentication/login
@@ -24,7 +25,7 @@ repo:
   content_server:
     https: False
     host: ${oc.env:CONTENT_SERVER_HOST, 127.0.0.1}
-    port: ${oc.env:CONTENT_SERVER_EXPOSED, 13134}
+    port: ${oc.env:CONTENT_SERVER_PORT, 13121}
     context_path: /
 
 celery:
