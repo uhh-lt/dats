@@ -3,17 +3,17 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, 
 import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 import ColorUtils from "../../../utils/ColorUtils";
 import ConceptFilterEditor from "./ConceptFilterEditor";
-import { TimelineAnalysisActions, TimelineAnalysisConcept } from "./timelineAnalysisSlice";
+import { TimelineAnalysisConcept } from "./timelineAnalysisSlice";
 
 interface ConceptEditorProps {
-  onSave?: (concept: TimelineAnalysisConcept) => void;
-  onCancel?: (concept: TimelineAnalysisConcept) => void;
+  onUpdate: (concept: TimelineAnalysisConcept) => void;
+  onCancel: (concept: TimelineAnalysisConcept) => void;
 }
 
-function ConceptEditor({ onSave, onCancel }: ConceptEditorProps) {
+function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
   // local state
   const [color, setColor] = useState("#000000");
 
@@ -29,7 +29,6 @@ function ConceptEditor({ onSave, onCancel }: ConceptEditorProps) {
   // redux
   const currentConcept = useAppSelector((state) => state.timelineAnalysis.currentConcept);
   const conceptEditorOpen = useAppSelector((state) => state.timelineAnalysis.conceptEditorOpen);
-  const dispatch = useAppDispatch();
 
   // reset the form when the current concept changes
   useEffect(() => {
@@ -43,16 +42,12 @@ function ConceptEditor({ onSave, onCancel }: ConceptEditorProps) {
 
   // event handling
   const handleClose = () => {
-    if (onCancel) onCancel(currentConcept);
-    dispatch(TimelineAnalysisActions.setConceptEditorOpen(false));
+    onCancel(currentConcept);
   };
 
   // form handling
-  const handleAddOrUpdate: SubmitHandler<TimelineAnalysisConcept> = (data) => {
-    if (onSave) onSave(currentConcept);
-
-    dispatch(TimelineAnalysisActions.addOrUpdateConcept(data));
-    dispatch(TimelineAnalysisActions.closeConceptEditor());
+  const handleUpdate: SubmitHandler<TimelineAnalysisConcept> = (data) => {
+    onUpdate(data);
   };
   const handleError: SubmitErrorHandler<TimelineAnalysisConcept> = (data) => console.error(data);
 
@@ -63,7 +58,7 @@ function ConceptEditor({ onSave, onCancel }: ConceptEditorProps) {
 
   return (
     <Dialog open={conceptEditorOpen} onClose={handleClose} fullWidth maxWidth="md">
-      <form onSubmit={handleSubmit(handleAddOrUpdate, handleError)}>
+      <form onSubmit={handleSubmit(handleUpdate, handleError)}>
         <DialogTitle>Add / edit concept</DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ mt: 1 }}>

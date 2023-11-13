@@ -8,6 +8,7 @@ import { useFilterSliceActions, useFilterSliceSelector } from "./FilterProvider"
 import FilterRenderer from "./FilterRenderer";
 import { countFilterExpressions } from "./filterUtils";
 import { useInitFilterSlice } from "./useInitFilterSlice";
+import DoneIcon from "@mui/icons-material/Done";
 
 interface FilterDialogProps {
   anchorEl: HTMLElement | null;
@@ -30,13 +31,23 @@ function FilterDialog({ anchorEl }: FilterDialogProps) {
   useInitFilterSlice({ projectId });
 
   // actions
+  const handleOpenEditDialog = () => {
+    setOpen(true);
+    dispatch(filterActions.onStartFilterEdit({ rootFilterId: "root" }));
+  };
+
+  const handleApplyChanges = () => {
+    setOpen(false);
+    dispatch(filterActions.onFinishFilterEdit());
+  };
+
   const handleRemoveAll = () => {
-    dispatch(filterActions.resetFilter({ rootFilterId: "root" }));
+    dispatch(filterActions.resetEditFilter());
   };
 
   return (
     <>
-      <Button startIcon={<FilterListIcon />} onClick={() => setOpen(true)}>
+      <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog}>
         <b>Filter ({numFilterExpressions})</b>
       </Button>
       <Popover
@@ -59,10 +70,14 @@ function FilterDialog({ anchorEl }: FilterDialogProps) {
         }}
         sx={{ mt: "56px" }}
       >
-        <FilterRenderer filter={filter} />
-        <Box display="flex" justifyContent="flex-end" width="100%">
-          <Button startIcon={<DeleteForeverIcon />} onClick={handleRemoveAll}>
+        <FilterRenderer />
+        <Box display="flex" width="100%">
+          <Box flexGrow={1} />
+          <Button startIcon={<DeleteForeverIcon />} onClick={handleRemoveAll} sx={{ mr: 3 }}>
             Remove All
+          </Button>
+          <Button startIcon={<DoneIcon />} onClick={handleApplyChanges} variant="contained" color="success">
+            Apply filter
           </Button>
         </Box>
       </Popover>

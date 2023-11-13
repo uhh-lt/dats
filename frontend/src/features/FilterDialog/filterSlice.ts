@@ -28,6 +28,7 @@ import {
 
 export interface FilterState {
   filter: Record<string, MyFilter>;
+  editableFilter: MyFilter;
   defaultFilterExpression: FilterExpression;
   columns: { label: string; value: string }[];
   columnValue2Operator: Record<string, FilterOperatorType>;
@@ -36,6 +37,20 @@ export interface FilterState {
 }
 
 const filterReducer = {
+  onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
+    state.editableFilter = state.filter[action.payload.rootFilterId];
+  },
+  onFinishFilterEdit: (state: Draft<FilterState>) => {
+    state.filter = {
+      ...state.filter,
+      [state.editableFilter.id]: state.editableFilter,
+    };
+    state.editableFilter = {
+      id: "root",
+      logic_operator: LogicalOperator.AND,
+      items: [],
+    };
+  },
   addRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
     state.filter[action.payload.rootFilterId] = {
       id: action.payload.rootFilterId,
@@ -46,9 +61,9 @@ const filterReducer = {
   deleteRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
     delete state.filter[action.payload.rootFilterId];
   },
-  addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; rootFilterId?: string }>) => {
+  addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
     // const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
+    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
         {
@@ -60,12 +75,9 @@ const filterReducer = {
       ];
     }
   },
-  addDefaultFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; rootFilterId?: string }>,
-  ) => {
+  addDefaultFilterExpression: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
     // const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
-    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
+    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
         {
@@ -175,26 +187,20 @@ const filterReducer = {
       },
     ];
   },
-  deleteFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; rootFilterId?: string }>) => {
-    state.filter[action.payload.rootFilterId || "root"] = deleteInFilter(
-      state.filter[action.payload.rootFilterId || "root"],
-      action.payload.filterId,
-    );
+  deleteFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
+    state.editableFilter = deleteInFilter(state.editableFilter, action.payload.filterId);
   },
   changeLogicalOperator: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; operator: LogicalOperator; rootFilterId?: string }>,
+    action: PayloadAction<{ filterId: string; operator: LogicalOperator }>,
   ) => {
-    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
+    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       filterItem.logic_operator = action.payload.operator;
     }
   },
-  changeColumn: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; columnValue: string; rootFilterId?: string }>,
-  ) => {
-    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
+  changeColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
+    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       if (Object.values<string>(DBColumns).includes(action.payload.columnValue)) {
         // it is a DBColumn
@@ -210,18 +216,15 @@ const filterReducer = {
   },
   changeOperator: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; operator: FilterOperator; rootFilterId?: string }>,
+    action: PayloadAction<{ filterId: string; operator: FilterOperator }>,
   ) => {
-    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
+    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.operator = action.payload.operator;
     }
   },
-  changeValue: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; value: any; rootFilterId?: string }>,
-  ) => {
-    const filterItem = findInFilter(state.filter[action.payload.rootFilterId || "root"], action.payload.filterId);
+  changeValue: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; value: any }>) => {
+    const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.value = action.payload.value;
     }
@@ -231,6 +234,13 @@ const filterReducer = {
     action: PayloadAction<{ defaultFilterExpression: FilterExpression }>,
   ) => {
     state.defaultFilterExpression = action.payload.defaultFilterExpression;
+  },
+  resetEditFilter: (state: Draft<FilterState>) => {
+    state.editableFilter = {
+      id: state.editableFilter.id,
+      logic_operator: LogicalOperator.AND,
+      items: [],
+    };
   },
   resetFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId?: string }>) => {
     state.filter[action.payload.rootFilterId || "root"] = {
@@ -285,6 +295,11 @@ export const searchFilterSlice = createFilterSlice({
         items: [],
       },
     },
+    editableFilter: {
+      id: "root",
+      logic_operator: LogicalOperator.AND,
+      items: [],
+    },
     defaultFilterExpression: {
       column: DBColumns.SOURCE_DOCUMENT_FILENAME,
       operator: StringOperator.STRING_CONTAINS,
@@ -315,6 +330,11 @@ export const annotatedSegmentsFilterSlice = createFilterSlice({
         items: [],
       },
     },
+    editableFilter: {
+      id: "root",
+      logic_operator: LogicalOperator.AND,
+      items: [],
+    },
     defaultFilterExpression: {
       column: DBColumns.SOURCE_DOCUMENT_FILENAME,
       operator: StringOperator.STRING_CONTAINS,
@@ -338,6 +358,11 @@ export const timelineAnalysisFilterSlice = createFilterSlice({
   name: "timelineAnalysisFilter",
   initialState: {
     filter: {},
+    editableFilter: {
+      id: "root",
+      logic_operator: LogicalOperator.AND,
+      items: [],
+    },
     defaultFilterExpression: {
       column: DBColumns.SOURCE_DOCUMENT_FILENAME,
       operator: StringOperator.STRING_CONTAINS,

@@ -9,7 +9,7 @@ function ConceptFilterEditor({ rootFilterId }: { rootFilterId: string }) {
     return (
       <Box>
         <Typography>Filter:</Typography>
-        <FilterRenderer filter={filter} />
+        <FilterRenderer />
       </Box>
     );
   } else {

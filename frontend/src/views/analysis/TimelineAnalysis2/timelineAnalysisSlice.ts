@@ -1,7 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { v4 as uuidv4 } from "uuid";
 import { DateGroupBy } from "../../../api/openapi";
 
 export interface TimelineAnalysisConcept {
+  id: string;
   name: string;
   color: string;
   visible: boolean;
@@ -29,6 +31,7 @@ const initialState: TimelineAnalysisState = {
   metadataCheckerOpen: false,
   conceptEditorOpen: false,
   currentConcept: {
+    id: "1",
     name: "",
     color: "#ff0000",
     visible: true,
@@ -73,15 +76,6 @@ export const timelineAnalysisSlice = createSlice({
       }
       state.concepts = state.concepts.slice();
     },
-    addOrUpdateConcept: (state, action: PayloadAction<TimelineAnalysisConcept>) => {
-      const index = state.concepts.findIndex((c) => c.name === action.payload.name);
-      if (index === -1) {
-        state.concepts.push(action.payload);
-      } else {
-        state.concepts[index] = action.payload;
-        state.concepts = state.concepts.slice();
-      }
-    },
     deleteConcept: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
       const index = state.concepts.findIndex((c) => c.name === action.payload.concept.name);
       if (index !== -1) {
@@ -94,25 +88,44 @@ export const timelineAnalysisSlice = createSlice({
     setProvenanceConcept: (state, action: PayloadAction<string | undefined>) => {
       state.provenanceConcept = action.payload;
     },
-    setConceptEditorOpen: (state, action: PayloadAction<boolean>) => {
-      state.conceptEditorOpen = action.payload;
-    },
     setResultType: (state, action: PayloadAction<string>) => {
       state.resultType = action.payload;
     },
-    openConceptEditorCreate: (state, action: PayloadAction<{ conceptData: string }>) => {
-      state.conceptEditorOpen = true;
-      state.currentConcept = {
-        ...initialState.currentConcept,
+    onCreateNewConcept: (state, action: PayloadAction<{ conceptData: string }>) => {
+      let name = "New Concept";
+      let conceptIndex = 1;
+      while (state.concepts.find((c) => c.name === `${name} (${conceptIndex})`)) {
+        conceptIndex++;
+      }
+
+      state.concepts.push({
+        id: uuidv4(),
+        name: `${name} (${conceptIndex})`,
+        color: "#ff0000",
+        visible: true,
+        type: "filter",
         data: action.payload.conceptData,
-      };
+      });
     },
-    openConceptEditorEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
+    onStartConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
       state.conceptEditorOpen = true;
       state.currentConcept = action.payload.concept;
     },
-    closeConceptEditor: (state) => {
+    onFinishConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
+      const index = state.concepts.findIndex((c) => c.id === action.payload.concept.id);
+      if (index === -1) {
+        console.error(`Concept ${action.payload.concept.id} not found`);
+      } else {
+        state.concepts[index] = action.payload.concept;
+        state.concepts = state.concepts.slice();
+      }
+
       state.conceptEditorOpen = false;
+      state.currentConcept = initialState.currentConcept;
+    },
+    onCancelConceptEdit: (state) => {
+      state.conceptEditorOpen = false;
+      state.currentConcept = initialState.currentConcept;
     },
   },
 });

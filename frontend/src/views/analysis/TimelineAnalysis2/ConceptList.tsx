@@ -32,11 +32,21 @@ function ConceptList() {
   const handleAddConcept = () => {
     const rootFilterId = uuidv4();
     dispatch(filterActions.addRootFilter({ rootFilterId }));
-    dispatch(TimelineAnalysisActions.openConceptEditorCreate({ conceptData: rootFilterId }));
+    dispatch(TimelineAnalysisActions.onCreateNewConcept({ conceptData: rootFilterId }));
   };
 
   const handleEditConcept = (concept: TimelineAnalysisConcept) => {
-    dispatch(TimelineAnalysisActions.openConceptEditorEdit({ concept }));
+    dispatch(filterActions.onStartFilterEdit({ rootFilterId: concept.data }));
+    dispatch(TimelineAnalysisActions.onStartConceptEdit({ concept }));
+  };
+
+  const handleApplyConceptChanges = (concept: TimelineAnalysisConcept) => {
+    dispatch(filterActions.onFinishFilterEdit());
+    dispatch(TimelineAnalysisActions.onFinishConceptEdit({ concept }));
+  };
+
+  const handleCancelConceptChanges = (concept: TimelineAnalysisConcept) => {
+    dispatch(TimelineAnalysisActions.onCancelConceptEdit());
   };
 
   const handleDeleteConcept = (concept: TimelineAnalysisConcept) => {
@@ -46,10 +56,6 @@ function ConceptList() {
 
   const handleToggleVisibilityConcept = (concept: TimelineAnalysisConcept) => {
     dispatch(TimelineAnalysisActions.toggleConceptVisibility(concept));
-  };
-
-  const handleCancelConceptCreation = (concept: TimelineAnalysisConcept) => {
-    dispatch(filterActions.deleteRootFilter({ rootFilterId: concept.data }));
   };
 
   return (
@@ -87,7 +93,7 @@ function ConceptList() {
           </List>
         </CardContent>
       </Card>
-      <ConceptEditor onCancel={handleCancelConceptCreation} />
+      <ConceptEditor onUpdate={handleApplyConceptChanges} onCancel={handleCancelConceptChanges} />
     </>
   );
 }
