@@ -1,19 +1,10 @@
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Union
 
-from pydantic import BaseModel, Field
-
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationRead,
-)
+from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.span_annotation import (
-    SpanAnnotationRead,
-    SpanAnnotationReadResolved,
-)
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 from pydantic import BaseModel, Field
 from sqlalchemy import Column, func
 
@@ -65,13 +56,9 @@ class AnnotationOccurrence(BaseModel):
     text: str = Field(description="The Text of the Annotation")
 
 
-class AnnotatedSegment(BaseModel):
-    sdoc_id: int = Field(
-        description="The SourceDocument where the SpanAnnotation occurs."
-    )
-    tag_ids: List[int] = Field(description="The Tags of the Document")
-    span_annotation_id: int = Field(description="The Span Annotation")
-    memo_id: Optional[int] = Field(description="The Memo of the Annotation")
+class AnnotatedSegmentResult(BaseModel):
+    total_results: int = Field(description="The total number of results.")
+    span_annotation_ids: List[int] = Field(description="The SpanAnnotation IDs.")
 
 
 class TimelineAnalysisResultNew(BaseModel):

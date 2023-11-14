@@ -8,7 +8,7 @@ from app.core.analysis.analysis_service import AnalysisService
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.analysis import (
     AnalysisConcept,
-    AnnotatedSegment,
+    AnnotatedSegmentResult,
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
@@ -76,15 +76,19 @@ async def annotation_occurrences(
 
 @router.post(
     "/annotated_segments",
-    response_model=List[AnnotatedSegment],
+    response_model=AnnotatedSegmentResult,
     summary="Returns AnnotationSegments.",
     description="Returns AnnotationSegments.",
 )
 async def annotated_segments(
-    *, project_id: int, user_ids: List[int], filter: Filter
-) -> List[AnnotatedSegment]:
+    *, project_id: int, user_ids: List[int], filter: Filter, page: int, page_size: int
+) -> AnnotatedSegmentResult:
     return AnalysisService().find_annotated_segments(
-        project_id=project_id, user_ids=user_ids, filter=filter
+        project_id=project_id,
+        user_ids=user_ids,
+        filter=filter,
+        page=page,
+        page_size=page_size,
     )
 
 

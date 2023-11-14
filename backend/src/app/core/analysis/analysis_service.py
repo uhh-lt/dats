@@ -4,7 +4,7 @@ from sqlalchemy import and_, func
 
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
-    AnnotatedSegment,
+    AnnotatedSegmentResult,
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
@@ -19,7 +19,7 @@ from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
-from app.core.data.orm.memo import MemoORM
+from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -314,23 +314,27 @@ class AnalysisService(metaclass=SingletonMeta):
             return span_code_occurrences + bbox_code_occurrences
 
     def find_annotated_segments(
-        self, project_id: int, user_ids: List[int], filter: Filter
-    ) -> List[AnnotatedSegment]:
+        self,
+        project_id: int,
+        user_ids: List[int],
+        filter: Filter,
+        page: int,
+        page_size: int,
+    ) -> AnnotatedSegmentResult:
         with self.sqls.db_session() as db:
             tag_ids_agg = aggregate_ids(
                 DocumentTagORM.id, label=AggregatedColumn.DOCUMENT_TAG_IDS_LIST
             )
 
+            # a table of all source documents and their tag ids e.g. (1, [1, 5, 7]), (2, [1]), (3, []), ...
             subquery = (
                 db.query(
                     SourceDocumentORM.id,
                     tag_ids_agg,
                 )
                 .join(SourceDocumentORM.document_tags, isouter=True)
-                .join(SourceDocumentORM.annotation_documents, isouter=True)
                 .filter(
                     SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id.in_(user_ids),
                 )
                 .group_by(SourceDocumentORM.id)
                 .subquery()
@@ -338,57 +342,37 @@ class AnalysisService(metaclass=SingletonMeta):
 
             query = (
                 db.query(
-                    SourceDocumentORM.id,
-                    subquery.c[AggregatedColumn.DOCUMENT_TAG_IDS_LIST],
+                    func.count().over().label("full_count"),
                     SpanAnnotationORM.id,
-                    MemoORM.id,
                 )
+                # join Span Annotation with Source Document
+                .join(SpanAnnotationORM.annotation_document)
+                .join(AnnotationDocumentORM.source_document)
                 .join(subquery, SourceDocumentORM.id == subquery.c.id)
-                .join(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
-                )
-                .join(
-                    SpanAnnotationORM,
-                    SpanAnnotationORM.annotation_document_id
-                    == AnnotationDocumentORM.id,
-                )
                 # join Span Annotation with Code
-                .join(
-                    CurrentCodeORM,
-                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
-                )
-                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
+                .join(SpanAnnotationORM.current_code)
+                .join(CurrentCodeORM.code)
                 # join Span Annotation with Text
-                .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
+                .join(SpanAnnotationORM.span_text)
                 # join Span Annotation with Memo
+                .join(SpanAnnotationORM.object_handle, isouter=True)
                 .join(
-                    ObjectHandleORM,
-                    ObjectHandleORM.span_annotation_id == SpanAnnotationORM.id,
-                    isouter=True,
+                    ObjectHandleORM.memo, isouter=True
+                )  # issouter true: return the row, even if no memo exists
+                .filter(
+                    SourceDocumentORM.project_id == project_id,
+                    AnnotationDocumentORM.user_id.in_(user_ids),
+                    filter.get_sqlalchemy_expression(db=db, subquery_dict=subquery.c),
                 )
-                .join(
-                    MemoORM, MemoORM.attached_to_id == ObjectHandleORM.id, isouter=True
-                )
-            )
-            # noinspection PyUnresolvedReferences
-            query = query.filter(
-                SourceDocumentORM.project_id == project_id,
-                AnnotationDocumentORM.user_id.in_(user_ids),
-                filter.get_sqlalchemy_expression(db=db, subquery_dict=subquery.c),
+                .offset(page * page_size)
+                .limit(page_size)
             )
             result = query.all()
-            annotated_segments = [
-                AnnotatedSegment(
-                    sdoc_id=row[0],
-                    tag_ids=row[1],
-                    span_annotation_id=row[2],
-                    memo_id=row[3],
-                )
-                for row in result
-            ]
-
-            return annotated_segments
+            total_results = result[0][0] if len(result) > 0 else 0
+            return AnnotatedSegmentResult(
+                total_results=total_results,
+                span_annotation_ids=[row[1] for row in result],
+            )
 
     def timeline_analysis(
         self,
