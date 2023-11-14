@@ -3,13 +3,13 @@ import SdocHooks from "../../api/SdocHooks";
 import { SourceDocumentRead } from "../../api/openapi";
 import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon";
 
-interface SharedProps {
+export interface SdocRendererSharedProps {
   link?: boolean;
   renderFilename?: boolean;
   renderDoctypeIcon?: boolean;
 }
 
-interface SdocRendererProps extends SharedProps {
+interface SdocRendererProps extends SdocRendererSharedProps {
   sdoc: number | SourceDocumentRead;
 }
 
@@ -21,7 +21,7 @@ function SdocRenderer({ sdoc, ...props }: SdocRendererProps) {
   }
 }
 
-function SdocRendererWithoutData({ sdocId, ...props }: { sdocId: number } & SharedProps) {
+function SdocRendererWithoutData({ sdocId, ...props }: { sdocId: number } & SdocRendererSharedProps) {
   const sdoc = SdocHooks.useGetDocument(sdocId);
 
   if (sdoc.isSuccess) {
@@ -38,7 +38,7 @@ function SdocRendererWithData({
   link,
   renderFilename,
   renderDoctypeIcon,
-}: { sdoc: SourceDocumentRead } & SharedProps) {
+}: { sdoc: SourceDocumentRead } & SdocRendererSharedProps) {
   const content = (
     <Stack direction="row" alignItems="center">
       {renderDoctypeIcon && docTypeToIcon[sdoc.doctype]}
