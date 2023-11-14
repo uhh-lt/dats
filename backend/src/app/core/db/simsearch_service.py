@@ -536,9 +536,9 @@ class SimSearchService(metaclass=SingletonMeta):
         ]
 
     def suggest_similar_sentences(
-        self, proj_id: int, sdoc_ids: List[int], sent_ids: List[int]
+        self, proj_id: int, sdoc_sent_ids: List[Tuple[int, int]]
     ) -> List[SimSearchSentenceHit]:
-        return self.__suggest_index(proj_id, sdoc_ids, sent_ids)
+        return self.__suggest_index(proj_id, sdoc_sent_ids)
 
     def _get_sentence_object_ids_by_sdoc_id_sentence_id(
         self,
@@ -584,14 +584,13 @@ class SimSearchService(metaclass=SingletonMeta):
     def __suggest_index(
         self,
         proj_id: int,
-        sdoc_ids: List[int],
-        sent_ids: List[int],
+        sdoc_sent_ids: List[Tuple[int, int]],
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit]:
         obj_ids = [
             self._get_sentence_object_ids_by_sdoc_id_sentence_id(proj_id, sdoc, sent)
-            for sdoc, sent in zip(sdoc_ids, sent_ids)
+            for sdoc, sent in sdoc_sent_ids
         ]
 
         project_filter = {
@@ -600,9 +599,11 @@ class SimSearchService(metaclass=SingletonMeta):
             "valueInt": proj_id,
         }
 
-        hits = []
+        hits: List[SimSearchSentenceHit] = []
 
         for obj in obj_ids:
+            # TODO weaviate does not support batch/bulk queries.
+            # need some other solution as this is dead-slow for many objects
             query = self._client.query.get(
                 self._sentence_class_name,
                 self._sentence_props,
@@ -612,17 +613,19 @@ class SimSearchService(metaclass=SingletonMeta):
                 query.with_near_object({"id": obj, "certainty": threshold})
                 .with_additional(["certainty"])
                 .with_where(project_filter)
-                .with_limit(1)
+                .with_limit(10)
             )
 
-            r = query.do()["data"]["Get"][self._sentence_class_name][0]
-            hits.append(
-                SimSearchSentenceHit(
-                    sdoc_id=r["sdoc_id"],
-                    sentence_id=r["sentence_id"],
-                    score=r["_additional"]["certainty"],
+            res = query.do()["data"]["Get"][self._sentence_class_name]
+            for r in res:
+                hits.append(
+                    SimSearchSentenceHit(
+                        sdoc_id=r["sdoc_id"],
+                        sentence_id=r["sentence_id"],
+                        score=r["_additional"]["certainty"],
+                    )
                 )
-            )
+        hits = [h for h in hits if (h.sdoc_id, h.sentence_id) not in sdoc_sent_ids]
         hits.sort(key=lambda x: (x.sdoc_id, x.sentence_id))
         hits = self.__unique_consecutive(hits)
         hits.sort(key=lambda x: x.score, reverse=True)
@@ -630,7 +633,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def __unique_consecutive(self, hits: List[SimSearchSentenceHit]):
         result = []
-        current = SimSearchSentenceHit(sdic_ids=-1, sentence_ids=-1)
+        current = SimSearchSentenceHit(sdoc_id=-1, sentence_id=-1, score=0.0)
         for hit in hits:
             if hit.sdoc_id != current.sdoc_id or hit.sentence_id != current.sentence_id:
                 current = hit

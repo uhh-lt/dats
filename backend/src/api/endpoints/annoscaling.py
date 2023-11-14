@@ -4,19 +4,17 @@ from fastapi import APIRouter
 
 from app.core.annoscaling.annoscaling_service import AnnoScalingService
 
-router = APIRouter(prefix="/annoscaling")
-tags = ["annoscaling"]
+router = APIRouter(prefix="/annoscaling", tags=["annoscaling"])
 
 ass: AnnoScalingService = AnnoScalingService()
 
 
 @router.post(
-    "",
-    tags=tags,
-    summary="Returns the CrawlerJob for the given Parameters",
-    description="Returns the CrawlerJob for the given Parameters",
+    "/suggest",
+    summary="Suggest annotations",
+    description="Suggest annotations",
 )
-async def start_crawler_job(
-    *, project_id: int, user_ids: List[int], code_id: int
+async def suggest(
+    *, project_id: int, user_id: int, code_id: int
 ) -> List[str]:
-    return ass.suggest(project_id, user_ids, code_id)
+    return ass.suggest(project_id, [user_id], code_id)
