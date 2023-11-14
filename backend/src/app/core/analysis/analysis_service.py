@@ -329,7 +329,7 @@ class AnalysisService(metaclass=SingletonMeta):
             # a table of all source documents and their tag ids e.g. (1, [1, 5, 7]), (2, [1]), (3, []), ...
             subquery = (
                 db.query(
-                    SourceDocumentORM.id,
+                    SourceDocumentORM.id.label("sdoc_id"),
                     tag_ids_agg,
                 )
                 .join(SourceDocumentORM.document_tags, isouter=True)
@@ -337,6 +337,7 @@ class AnalysisService(metaclass=SingletonMeta):
                     SourceDocumentORM.project_id == project_id,
                 )
                 .group_by(SourceDocumentORM.id)
+                .order_by(SourceDocumentORM.id)
                 .subquery()
             )
 
@@ -348,7 +349,10 @@ class AnalysisService(metaclass=SingletonMeta):
                 # join Span Annotation with Source Document
                 .join(SpanAnnotationORM.annotation_document)
                 .join(AnnotationDocumentORM.source_document)
-                .join(subquery, SourceDocumentORM.id == subquery.c.id)
+                .join(
+                    subquery,
+                    AnnotationDocumentORM.source_document_id == subquery.c.sdoc_id,
+                )
                 # join Span Annotation with Code
                 .join(SpanAnnotationORM.current_code)
                 .join(CurrentCodeORM.code)
@@ -364,6 +368,7 @@ class AnalysisService(metaclass=SingletonMeta):
                     AnnotationDocumentORM.user_id.in_(user_ids),
                     filter.get_sqlalchemy_expression(db=db, subquery_dict=subquery.c),
                 )
+                .order_by(SpanAnnotationORM.id)
                 .offset(page * page_size)
                 .limit(page_size)
             )
