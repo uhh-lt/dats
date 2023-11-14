@@ -25,19 +25,17 @@ class AnnoScalingService(metaclass=SingletonMeta):
         occurrences = self.__get_annotations(project_id, user_ids, code_id)
         sdoc_sentences = self.__get_sentences({id for _,_, id in occurrences})
 
-        sdoc_ids = []
-        sent_ids = []
-        for o in occurrences:
+        sdoc_sent_ids = []
+        for start, end, sdoc_id in occurrences:
             # TODO loops are bad, need a much faster way to link annotations to sentences
             # best: do everything in DB and only return sentence ID per annotation
             # alternative: load all from DB (in chunks?) and compute via numpy 
-            starts, ends, _ = sdoc_sentences[o.sdoc.id]
+            starts, ends, _ = sdoc_sentences[sdoc_id]
             sent_match = self.__best_match(
-                starts, ends, o.annotation.begin, o.annotation.end
+                starts, ends, start, end
             )
-            sdoc_ids.append(o.sdoc.id)
-            sent_ids.append(sent_match)
-        hits = self.sim.suggest_similar_sentences(project_id, sdoc_ids, sent_ids)
+            sdoc_sent_ids.append((sdoc_id, sent_match))
+        hits = self.sim.suggest_similar_sentences(project_id, sdoc_sent_ids)
         sim_doc_sentences = self.__get_sentences({hit.sdoc_id for hit in hits})
 
         texts = []
@@ -84,7 +82,7 @@ class AnnoScalingService(metaclass=SingletonMeta):
 
     def __best_match(self, starts: List[int], ends: List[int], begin: int, end: int):
         overlap = [self.__overlap(s,e , begin, end) for s,e in zip(starts, ends)]
-        return np.asarray(overlap).argmax()
+        return np.asarray(overlap).argmax().item()
 
     def __overlap(self, s1: int, e1: int, s2: int, e2: int):
         return max(min(e1, e2) - max(s1, s2), 0)
