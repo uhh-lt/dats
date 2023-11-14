@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AnalysisConcept } from "../models/AnalysisConcept";
-import type { AnnotatedSegment } from "../models/AnnotatedSegment";
+import type { AnnotatedSegmentResult } from "../models/AnnotatedSegmentResult";
 import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
 import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
@@ -108,21 +108,27 @@ export class AnalysisService {
   /**
    * Returns AnnotationSegments.
    * Returns AnnotationSegments.
-   * @returns AnnotatedSegment Successful Response
+   * @returns AnnotatedSegmentResult Successful Response
    * @throws ApiError
    */
   public static annotatedSegments({
     projectId,
+    page,
+    pageSize,
     requestBody,
   }: {
     projectId: number;
+    page: number;
+    pageSize: number;
     requestBody: Body_analysis_annotated_segments;
-  }): CancelablePromise<Array<AnnotatedSegment>> {
+  }): CancelablePromise<AnnotatedSegmentResult> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_segments",
       query: {
         project_id: projectId,
+        page: page,
+        page_size: pageSize,
       },
       body: requestBody,
       mediaType: "application/json",

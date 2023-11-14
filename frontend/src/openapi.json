@@ -4216,6 +4216,13 @@
             "schema": { "title": "Project Id", "type": "integer" },
             "name": "project_id",
             "in": "query"
+          },
+          { "required": true, "schema": { "title": "Page", "type": "integer" }, "name": "page", "in": "query" },
+          {
+            "required": true,
+            "schema": { "title": "Page Size", "type": "integer" },
+            "name": "page_size",
+            "in": "query"
           }
         ],
         "requestBody": {
@@ -4227,15 +4234,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Analysis-Annotated Segments",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/AnnotatedSegment" }
-                }
-              }
-            }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedSegmentResult" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -5188,28 +5187,22 @@
           }
         }
       },
-      "AnnotatedSegment": {
-        "title": "AnnotatedSegment",
-        "required": ["sdoc_id", "tag_ids", "span_annotation_id"],
+      "AnnotatedSegmentResult": {
+        "title": "AnnotatedSegmentResult",
+        "required": ["total_results", "span_annotation_ids"],
         "type": "object",
         "properties": {
-          "sdoc_id": {
-            "title": "Sdoc Id",
+          "total_results": {
+            "title": "Total Results",
             "type": "integer",
-            "description": "The SourceDocument where the SpanAnnotation occurs."
+            "description": "The total number of results."
           },
-          "tag_ids": {
-            "title": "Tag Ids",
+          "span_annotation_ids": {
+            "title": "Span Annotation Ids",
             "type": "array",
             "items": { "type": "integer" },
-            "description": "The Tags of the Document"
-          },
-          "span_annotation_id": {
-            "title": "Span Annotation Id",
-            "type": "integer",
-            "description": "The Span Annotation"
-          },
-          "memo_id": { "title": "Memo Id", "type": "integer", "description": "The Memo of the Annotation" }
+            "description": "The SpanAnnotation IDs."
+          }
         }
       },
       "AnnotationDocumentCreate": {
@@ -6541,8 +6534,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "min": 0,
-            "max": 1
+            "max": 1,
+            "min": 0
           }
         }
       },

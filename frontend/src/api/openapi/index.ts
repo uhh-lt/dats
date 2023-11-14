@@ -14,7 +14,7 @@ export type { AnalysisConcept } from "./models/AnalysisConcept";
 export type { AnalysisTableCreate } from "./models/AnalysisTableCreate";
 export type { AnalysisTableRead } from "./models/AnalysisTableRead";
 export type { AnalysisTableUpdate } from "./models/AnalysisTableUpdate";
-export type { AnnotatedSegment } from "./models/AnnotatedSegment";
+export type { AnnotatedSegmentResult } from "./models/AnnotatedSegmentResult";
 export type { AnnotationDocumentCreate } from "./models/AnnotationDocumentCreate";
 export type { AnnotationDocumentRead } from "./models/AnnotationDocumentRead";
 export type { AnnotationOccurrence } from "./models/AnnotationOccurrence";

@@ -1,14 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useDebounce } from "../utils/useDebounce";
 import { QueryKey } from "./QueryKey";
 import {
   AnalysisConcept,
   AnalysisService,
-  AnnotatedSegment,
   AnnotationOccurrence,
   CodeFrequency,
   CodeOccurrence,
-  Filter,
   TimelineAnalysisResult,
 } from "./openapi";
 
@@ -66,38 +63,11 @@ const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: 
     },
   );
 
-const useAnnotatedSegments = (projectId: number | undefined, userIds: number[], filter: Filter) => {
-  const debouncedFilter = useDebounce(filter, 1000);
-  return useQuery<Record<number, AnnotatedSegment>, Error>(
-    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userIds, debouncedFilter],
-    async () => {
-      const annotatedSegments = await AnalysisService.annotatedSegments({
-        projectId: projectId!,
-        requestBody: {
-          filter: debouncedFilter,
-          user_ids: userIds,
-        },
-      });
-
-      return annotatedSegments.reduce((previousValue, currentValue) => {
-        return {
-          ...previousValue,
-          [currentValue.span_annotation_id]: currentValue,
-        };
-      }, {});
-    },
-    {
-      enabled: !!projectId && userIds.length > 0,
-    },
-  );
-};
-
 const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
   useTimelineAnalysis,
   useAnnotationOccurrences,
-  useAnnotatedSegments,
 };
 
 export default AnalysisHooks;
