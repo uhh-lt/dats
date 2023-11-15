@@ -1,6 +1,6 @@
 import scrapy
+
 from crawler.items import ENBItem
-from crawler.spiders.spider_base import SpiderBase
 
 
 class ENBSpider(scrapy.Spider):

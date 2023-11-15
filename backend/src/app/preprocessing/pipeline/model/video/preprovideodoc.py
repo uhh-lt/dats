@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from pydantic import Field
+
+from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 
 
 class PreProVideoDoc(PreProDocBase):

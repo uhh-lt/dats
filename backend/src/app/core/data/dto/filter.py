@@ -1,13 +1,14 @@
 from enum import Enum
 from typing import List, Union
 
+from pydantic import BaseModel
+from sqlalchemy import Column, and_, or_
+
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_text import SpanTextORM
-from pydantic import BaseModel
-from sqlalchemy import Column, and_, or_
 
 # --- Operators: These define how we can compare values in filters.
 

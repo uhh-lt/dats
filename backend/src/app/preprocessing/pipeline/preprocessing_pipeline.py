@@ -2,6 +2,8 @@ import os
 import time
 from typing import Callable, Dict, List, Optional
 
+from loguru import logger
+
 from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
 from app.core.data.doc_type import DocType
@@ -17,7 +19,6 @@ from app.core.data.dto.preprocessing_job_payload import (
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.pipeline_step import PipelineStep
-from loguru import logger
 
 
 class PreprocessingPipeline:

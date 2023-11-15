@@ -1,4 +1,5 @@
 import scrapy
+
 from crawler.spiders.spider_base import SpiderBase
 
 

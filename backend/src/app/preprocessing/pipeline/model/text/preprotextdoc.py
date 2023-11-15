@@ -1,11 +1,12 @@
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from pydantic import Field
+
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.ray_model_worker.dto.spacy import SpacyPipelineOutput
-from pydantic import Field
 
 
 class PreProTextDoc(PreProDocBase):

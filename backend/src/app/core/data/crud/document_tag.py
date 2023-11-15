@@ -1,6 +1,9 @@
 from typing import List, Optional
 
 import srsly
+from sqlalchemy import delete
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.document_tag import (
@@ -12,8 +15,6 @@ from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
 )
-from sqlalchemy import delete
-from sqlalchemy.orm import Session
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):

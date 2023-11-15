@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.data.dto.user import UserRead
@@ -8,6 +7,8 @@ from app.core.db.redis_service import RedisService
 from app.core.mail.mail_service import MailService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/feedback", dependencies=[Depends(get_current_user)], tags=["feedback"]

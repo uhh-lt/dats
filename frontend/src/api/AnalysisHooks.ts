@@ -19,7 +19,6 @@ import {
   TimelineAnalysisResult,
 } from "./openapi";
 import { useDebounce } from "../utils/useDebounce";
-import { useEffect } from "react";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
   useQuery<CodeFrequency[], Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds], () =>

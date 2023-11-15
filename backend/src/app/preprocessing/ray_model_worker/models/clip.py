@@ -1,7 +1,5 @@
 import logging
-from typing import List, Tuple
 
-import numpy as np
 import torch
 from config import build_ray_model_deployment_config, conf
 from dto.clip import (

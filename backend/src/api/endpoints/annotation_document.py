@@ -1,11 +1,5 @@
 from typing import Dict, List, Optional, Union
 
-from api.dependencies import (
-    get_current_user,
-    get_db_session,
-    resolve_code_param,
-    skip_limit_params,
-)
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -26,6 +20,13 @@ from app.core.data.dto.span_annotation import (
 from app.core.data.dto.span_group import SpanGroupRead
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+    resolve_code_param,
+    skip_limit_params,
+)
 
 router = APIRouter(
     prefix="/adoc",

@@ -1,10 +1,11 @@
 from typing import Dict, List
 
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.crud_base import CRUDBase, ORMModelType, UpdateDTOType
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM
-from sqlalchemy.orm import Session
 
 
 class CRUDSourceDocumentLink(

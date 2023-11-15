@@ -5,8 +5,9 @@
 
 
 # useful for handling different item types with a single interface
-from crawler.items import GenericWebsiteItem
 from readability.readability import Readability
+
+from crawler.items import GenericWebsiteItem
 
 
 class ReadabilityPipeline:

@@ -37,7 +37,7 @@ class SearchService(metaclass=SingletonMeta):
                         proj_id=query_params.proj_id,
                         user_ids=query_params.user_ids,
                         span_entities=query_params.span_entities,
-                        **skip_limit
+                        **skip_limit,
                     )
                 )
 
@@ -47,7 +47,7 @@ class SearchService(metaclass=SingletonMeta):
                         db=db,
                         tag_ids=query_params.tag_ids,
                         all_tags=query_params.all_tags,
-                        **skip_limit
+                        **skip_limit,
                     )
                 )
 
@@ -62,7 +62,7 @@ class SearchService(metaclass=SingletonMeta):
                                 # FIXME we want and not or!
                                 query_params.search_terms
                             ),
-                            **skip_limit
+                            **skip_limit,
                         )
                         .hits
                     ]
@@ -74,7 +74,7 @@ class SearchService(metaclass=SingletonMeta):
                         db=db,
                         proj_id=query_params.proj_id,
                         starts_with=query_params.filename,
-                        **skip_limit
+                        **skip_limit,
                     )
                 )
 
@@ -86,7 +86,7 @@ class SearchService(metaclass=SingletonMeta):
                         .search_sdocs_by_keywords_query(
                             proj_id=query_params.proj_id,
                             keywords=query_params.keywords,
-                            **skip_limit
+                            **skip_limit,
                         )
                         .hits
                     ]
@@ -98,7 +98,7 @@ class SearchService(metaclass=SingletonMeta):
                         db=db,
                         proj_id=query_params.proj_id,
                         metadata=query_params.metadata,
-                        **skip_limit
+                        **skip_limit,
                     )
                 )
 
@@ -108,7 +108,7 @@ class SearchService(metaclass=SingletonMeta):
                         db=db,
                         proj_id=query_params.proj_id,
                         doc_types=query_params.doc_types,
-                        **skip_limit
+                        **skip_limit,
                     )
                 )
 

@@ -7,8 +7,10 @@ from app.core.data.doc_type import DocType
 from app.core.data.dto.search import ElasticSearchDocumentRead
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
-from app.core.data.orm import ProjectORM, SourceDocumentDataORM, VersionORM
+from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
+from app.core.data.orm.version import VersionORM
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
 from loguru import logger

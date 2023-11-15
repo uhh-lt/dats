@@ -1,6 +1,9 @@
 from typing import List, Optional
 
 import srsly
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.span_group import crud_span_group
@@ -18,8 +21,6 @@ from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
 
 
 class CRUDSpanAnnotation(
@@ -236,7 +237,7 @@ class CRUDSpanAnnotation(
                 code=CodeRead.from_orm(db_obj.current_code.code),
                 span_text=db_obj.span_text.text,
                 user_id=db_obj.annotation_document.user_id,
-                sdoc_id=db_obj.annotation_document.source_document_id
+                sdoc_id=db_obj.annotation_document.source_document_id,
             ).dict()
         )
 

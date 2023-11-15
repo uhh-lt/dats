@@ -1,6 +1,8 @@
 from typing import List, Optional
 
 import srsly
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
@@ -16,7 +18,6 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
-from sqlalchemy.orm import Session
 
 
 class CRUDBBoxAnnotation(

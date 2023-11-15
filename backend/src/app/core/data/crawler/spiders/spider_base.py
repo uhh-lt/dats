@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 import scrapy
 from app.core.data.crawler.crawled_item import CrawledItem
 from app.core.data.crawler.utils import slugify
-from app.core.data.repo.repo_service import RepoService
 
 
 class SpiderBase(scrapy.Spider):

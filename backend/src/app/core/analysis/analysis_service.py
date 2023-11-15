@@ -1,6 +1,8 @@
 from typing import List
 
 from api.util import get_object_memos
+from sqlalchemy import and_, func
+
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
     AnnotatedSegment,
@@ -10,7 +12,6 @@ from app.core.data.dto.analysis import (
 )
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -23,16 +24,13 @@ from app.core.data.dto.span_annotation import (
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
-from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
 from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
-from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
-from sqlalchemy import and_, func
 
 
 class AnalysisService(metaclass=SingletonMeta):
@@ -368,7 +366,7 @@ class AnalysisService(metaclass=SingletonMeta):
                         code=CodeRead.from_orm(row[2]),
                         span_text=row[3],
                         user_id=row[4].user_id,
-                        sdoc_id=row[4].source_document_id
+                        sdoc_id=row[4].source_document_id,
                     ),
                     sdoc=SourceDocumentRead.from_orm(row[1]),
                     memo=get_object_memos(db_obj=row[0], user_id=user_id),

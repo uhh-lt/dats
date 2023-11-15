@@ -1,7 +1,10 @@
 from typing import List, Optional, Set, Tuple
 
 import srsly
-from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError, UpdateDTOType
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.orm import Session
+
+from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
@@ -40,8 +43,6 @@ from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
-from sqlalchemy import and_, desc, func, or_
-from sqlalchemy.orm import Session
 
 
 class SourceDocumentPreprocessingUnfinishedError(Exception):

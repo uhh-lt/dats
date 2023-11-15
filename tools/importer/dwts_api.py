@@ -45,7 +45,7 @@ class DWTSAPI:
         try:
             sdoc_id = r.json()
             return sdoc_id
-        except:
+        except Exception:
             return None
 
     def get_proj_by_title(self, title: str):
@@ -133,7 +133,7 @@ class DWTSAPI:
 
     def create_tag(self, title: str, description: str, color: str, project_id: int):
         r = requests.put(
-            self.BASE_PATH + f"doctag",
+            self.BASE_PATH + "doctag",
             data=json.dumps(
                 {
                     "title": title,
