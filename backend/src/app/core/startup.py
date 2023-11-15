@@ -137,7 +137,7 @@ def __create_system_user__() -> None:
         if not crud_user.exists(db=db_session, id=1):
             # TODO Flo: this is not nice.. make sure system user cannot be changed, seen from outside, login, etc
             create_dto = UserCreate(
-                email=EmailStr(str(conf.system_user.email)),
+                email=str(conf.system_user.email),
                 first_name=str(conf.system_user.first_name),
                 last_name=str(conf.system_user.last_name),
                 password=str(conf.system_user.password),
