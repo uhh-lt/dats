@@ -2,7 +2,7 @@ services:
   postgres:
     image: "postgres:15-alpine"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-datsuser}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-datsuser}" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -32,7 +32,7 @@ services:
   redis:
     image: "redis:7-alpine"
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli", "ping"]
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -44,6 +44,19 @@ services:
     networks:
       - dats_demo_network
 
+  typesense:
+    image: typesense/typesense:0.25.1
+    restart: on-failure
+    ports:
+      - "${TYPESENSE_EXPOSED:-8108}:8108"
+    volumes:
+      - typesense_data_demo:/data
+    environment:
+      - TYPESENSE_API_KEY=${TYPESENSE_API_KEY}
+      - TYPESENSE_DATA_DIR=/data
+    networks:
+      - dwts_demo_network
+
   weaviate:
     command:
       - --host
@@ -54,7 +67,7 @@ services:
       - http
     image: semitechnologies/weaviate:1.21.3
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1"]
+      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/v1/.well-known/ready || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -74,7 +87,7 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -105,7 +118,7 @@ services:
       context: ../backend/src/app/preprocessing/ray_model_worker
       dockerfile: Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "python /dats_code_ray/check_ray_health.py"]
+      test: [ "CMD-SHELL", "python /dats_code_ray/check_ray_health.py" ]
       start_period: 60s
       interval: 60s
       timeout: 60s
@@ -134,8 +147,8 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ["1"]
-              capabilities: [gpu]
+              device_ids: [ "1" ]
+              capabilities: [ gpu ]
     profiles:
       - ray
 
@@ -207,7 +220,7 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5500 || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:5500 || exit 1" ]
       start_period: 60s
       interval: 60s
       timeout: 10s
@@ -272,7 +285,7 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000 || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -300,6 +313,8 @@ volumes:
   elasticsearch_data_demo:
     driver: local
   weaviate_data_demo:
+    driver: local
+  typesense_data_demo:
     driver: local
 
 networks:

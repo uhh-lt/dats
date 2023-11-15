@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import weaviate
+import typesense
 from loguru import logger
 
 from app.core.data.crud.source_document import crud_sdoc
@@ -60,6 +61,27 @@ class SimSearchService(metaclass=SingletonMeta):
                     "description": "The id of this sentence",
                     "dataType": ["int"],
                 },
+            ],
+        }
+
+        cls._sentence_schema = {
+            "name": cls._sentence_class_name,
+            "fields": [
+                {"name": "text", "type": "string"},
+                {"name": "vec", "type": "float[]", "num_dim": 512},
+                {"name": "project_id", "type": "int32"},
+                {"name": "sdoc_id", "type": "int32"},
+                {"name": "sentence_id", "type": "int32"},
+            ],
+        }
+
+        cls._document_schema = {
+            "name": cls._document_class_name,
+            "fields": [
+                {"name": "text", "type": "string"},
+                {"name": "vec", "type": "float[]", "num_dim": 512},
+                {"name": "project_id", "type": "int32"},
+                {"name": "sdoc_id", "type": "int32"},
             ],
         }
 
@@ -148,6 +170,34 @@ class SimSearchService(metaclass=SingletonMeta):
             logger.error(msg)
             raise SystemExit(msg)
 
+        try:
+            cls._ts = typesense.Client(
+                {
+                    "api_key": conf.typesense.api_key,
+                    "nodes": [
+                        {
+                            "host": conf.typesense.host,
+                            "port": conf.typesense.port,
+                            "protocol": "http",
+                        }
+                    ],
+                    "connection_timeout_seconds": 300,
+                }
+            )
+            if kwargs["flush"] if "flush" in kwargs else False:
+                logger.warning("Flushing DWTS Typesense Data!")
+                cls._ts.collections[cls._sentence_class_name].delete()
+            collections = {c["name"] for c in cls._ts.collections.retrieve()}
+            if cls._sentence_class_name not in collections:
+                cls._ts.collections.create(cls._sentence_schema)
+            if cls._document_class_name not in collections:
+                cls._ts.collections.create(cls._document_schema)
+
+        except Exception as e:
+            msg = f"Cannot connect or initialize to Typesense DB - Error '{e}'"
+            logger.error(msg)
+            raise SystemExit(msg)
+
         cls.rms = RayModelService()
         cls.repo = RepoService()
         cls.sqls = SQLService()
@@ -224,6 +274,34 @@ class SimSearchService(metaclass=SingletonMeta):
                 class_name=self._document_class_name,
                 vector=doc_emb,
             )
+        sents = [
+            {
+                "id": f"{proj_id}-{sdoc_id}-{sent_id}",
+                "project_id": proj_id,
+                "sdoc_id": sdoc_id,
+                "sentence_id": sent_id,
+                "text": sentences[sent_id],
+                "vec": sent_emb.tolist(),
+            }
+            for sent_id, sent_emb in enumerate(sentence_embs)
+        ]
+        res = self._ts.collections[self._sentence_class_name].documents.import_(
+            sents, {"action": "create"}
+        )
+        print(res)
+        print("added sentences to TS", len(sents))
+        documents = [
+            {
+                "id": f"{proj_id}-{sdoc_id}",
+                "project_id": proj_id,
+                "sdoc_id": sdoc_id,
+                "text": " ".join(sentences),
+                "vec": doc_emb.tolist(),
+            }
+        ]
+        self._ts.collections[self._document_class_name].documents.import_(
+            documents, {"action": "create"}
+        )
 
     def add_image_sdoc_to_index(self, proj_id: int, sdoc_id: int) -> None:
         image_emb = self._encode_image(image_sdoc_id=sdoc_id)
@@ -538,7 +616,7 @@ class SimSearchService(metaclass=SingletonMeta):
     def suggest_similar_sentences(
         self, proj_id: int, sdoc_sent_ids: List[Tuple[int, int]]
     ) -> List[SimSearchSentenceHit]:
-        return self.__suggest_index(proj_id, sdoc_sent_ids)
+        return self.__suggest_ts(proj_id, sdoc_sent_ids)
 
     def _get_sentence_object_ids_by_sdoc_id_sentence_id(
         self,
@@ -589,6 +667,8 @@ class SimSearchService(metaclass=SingletonMeta):
         threshold: float = 0.0,
     ) -> List[SimSearchSentenceHit]:
         obj_ids = [
+            # TODO weaviate does not support batch/bulk queries.
+            # need some other solution as this is dead-slow for many objects
             self._get_sentence_object_ids_by_sdoc_id_sentence_id(proj_id, sdoc, sent)
             for sdoc, sent in sdoc_sent_ids
         ]
@@ -630,6 +710,57 @@ class SimSearchService(metaclass=SingletonMeta):
         hits = self.__unique_consecutive(hits)
         hits.sort(key=lambda x: x.score, reverse=True)
         return hits[0 : min(len(hits), top_k)]
+
+    def __suggest_ts(
+        self,
+        proj_id: int,
+        sdoc_sent_ids: List[Tuple[int, int]],
+        top_k: int = 10,
+        threshold: float = 0.0,
+    ) -> List[SimSearchSentenceHit]:
+        project_filter = {
+            "path": ["project_id"],
+            "operator": "Equal",
+            "valueInt": proj_id,
+        }
+
+        hits: List[SimSearchSentenceHit] = []
+
+        # queries = []
+        # for sdoc_id, sent_id in sdoc_sent_ids:
+        #     q = {
+        #         "q": "*",
+        #         "filter_by": f"project_id:{proj_id} && sdoc_id: {sdoc_id} && sentence_id: {sent_id}",
+        #     }
+        #     queries.append(q)
+
+        # res = self._ts.multi_search.perform(
+        #     {"searches": queries}, {"collection": self._sentence_class_name}
+        # )
+
+        queries = []
+        for sdoc_id, sent_id in sdoc_sent_ids:
+            q = {
+                "q": "*",
+                "vector_query": f"vec:([], id: {proj_id}-{sdoc_id}-{sent_id})",
+            }
+            queries.append(q)
+
+        res = self._ts.multi_search.perform(
+            {"searches": queries}, {"collection": self._sentence_class_name}
+        )
+
+        for r in res["results"]:
+            for hit in r["hits"]:
+                hits.append(
+                    SimSearchSentenceHit(
+                        sdoc_id=hit["document"]["sdoc_id"],
+                        score=hit["vector_distance"],
+                        sentence_id=hit["document"]["sentence_id"],
+                    )
+                )
+
+        return hits
 
     def __unique_consecutive(self, hits: List[SimSearchSentenceHit]):
         result = []
