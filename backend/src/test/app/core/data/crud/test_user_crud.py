@@ -39,7 +39,7 @@ def test_create_delete_user(session: SQLService) -> None:
         crud_user.remove(db=sess, id=user_new.id)
 
         # try to delete user second time
-        with pytest.raises(NoSuchElementError) as e:
+        with pytest.raises(NoSuchElementError):
             crud_user.read(db=sess, id=user_new.id)
 
 

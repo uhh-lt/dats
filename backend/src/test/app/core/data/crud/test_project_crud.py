@@ -128,7 +128,7 @@ def test_create_remove_project(session: SQLService) -> None:
     # try remove project second time
     with pytest.raises(NoSuchElementError):
         with session.db_session() as sess:
-            r = crud_project.remove(db=sess, id=id)
+            crud_project.remove(db=sess, id=id)
 
 
 # project user
@@ -274,7 +274,7 @@ def test_get_add_remove_memos_project(
             db=sess, project_id=project, create_dto=memo1
         )
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-        memo1_obj = MemoRead(
+        MemoRead(
             **memo_as_in_db_dto.dict(exclude={"attached_to"}),
             attached_object_id=project,
             attached_object_type=AttachedObjectType.project,
@@ -299,7 +299,7 @@ def test_get_add_remove_memos_project(
             db=sess, project_id=project, create_dto=memo2
         )
         memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
-        memo2_obj = MemoRead(
+        MemoRead(
             **memo_as_in_db_dto.dict(exclude={"attached_to"}),
             attached_object_id=project,
             attached_object_type=AttachedObjectType.project,

@@ -1,3 +1,7 @@
+# ignore unorganized imports for this file
+# ruff: noqa: E402
+
+import argparse
 import shutil
 from pathlib import Path
 
@@ -9,8 +13,6 @@ from app.core.data.dto.crawler_job import CrawlerJobRead
 from app.core.data.repo.repo_service import RepoService
 
 asyncioreactor.install()
-
-import argparse
 
 from app.core.data.crawler.crawler_service import (
     CrawlerJobAlreadyStartedOrDoneError,

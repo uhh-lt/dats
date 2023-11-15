@@ -27,7 +27,7 @@ class NoDataToCrawlError(Exception):
 
 class CrawlerJobPreparationError(Exception):
     def __init__(self, cause: Exception) -> None:
-        super().__init__(f"Cannot prepare and create the CrawlerJob! {e}")
+        super().__init__(f"Cannot prepare and create the CrawlerJob! {cause}")
 
 
 class CrawlerJobAlreadyStartedOrDoneError(Exception):
@@ -39,7 +39,9 @@ class CrawlerJobAlreadyStartedOrDoneError(Exception):
 
 class NoSuchCrawlerJobError(Exception):
     def __init__(self, crawler_job_id: str, cause: Exception) -> None:
-        super().__init__(f"There exists not CrawlerJob with ID {crawler_job_id}! {e}")
+        super().__init__(
+            f"There exists not CrawlerJob with ID {crawler_job_id}! {cause}"
+        )
 
 
 class UnknownCrawlerJobError(Exception):

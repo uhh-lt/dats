@@ -45,7 +45,7 @@ class DWTSAPI:
         try:
             sdoc_id = r.json()
             return sdoc_id
-        except:
+        except Exception:
             return None
 
     def get_proj_by_title(self, title: str):

@@ -1,3 +1,6 @@
+# ignore unorganized imports for this file
+# ruff: noqa: E402
+
 import os
 
 from fastapi import FastAPI
