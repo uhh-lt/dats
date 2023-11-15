@@ -116,10 +116,12 @@ def custom_openapi():
     )
     openapi_schema["components"]["schemas"][
         "SourceDocumentReadAction"
-    ] = SourceDocumentReadAction.schema(ref_template="#/components/schemas/{model}")
+    ] = SourceDocumentReadAction.model_json_schema(
+        ref_template="#/components/schemas/{model}"
+    )
     openapi_schema["components"]["schemas"][
         "ProjectReadAction"
-    ] = ProjectReadAction.schema(ref_template="#/components/schemas/{model}")
+    ] = ProjectReadAction.model_json_schema(ref_template="#/components/schemas/{model}")
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
