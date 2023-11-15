@@ -57,7 +57,7 @@ def get_object_memos(
 
     memos = [
         MemoRead(
-            **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+            **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
             attached_object_id=db_obj.id,
             attached_object_type=object_types[type(db_obj)],
         )
