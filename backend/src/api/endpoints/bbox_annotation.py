@@ -35,11 +35,11 @@ async def add_bbox_annotation(
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.create_with_code_id(db=db, create_dto=bbox)
-    bbox_dto = BBoxAnnotationRead.from_orm(db_obj)
+    bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
-            **bbox_dto.dict(exclude={"current_code_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code),
+            **bbox_dto.model_dump(exclude={"current_code_id"}),
+            code=CodeRead.model_validate(db_obj.current_code.code),
         )
     else:
         return bbox_dto
@@ -59,11 +59,11 @@ async def get_by_id(
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    bbox_dto = BBoxAnnotationRead.from_orm(db_obj)
+    bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
-            **bbox_dto.dict(exclude={"current_code_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code),
+            **bbox_dto.model_dump(exclude={"current_code_id"}),
+            code=CodeRead.model_validate(db_obj.current_code.code),
         )
     else:
         return bbox_dto
@@ -84,11 +84,11 @@ async def update_by_id(
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.update_with_code_id(db=db, id=bbox_id, update_dto=bbox_anno)
-    bbox_dto = BBoxAnnotationRead.from_orm(db_obj)
+    bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
         return BBoxAnnotationReadResolvedCode(
-            **bbox_dto.dict(exclude={"current_code_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code),
+            **bbox_dto.model_dump(exclude={"current_code_id"}),
+            code=CodeRead.model_validate(db_obj.current_code.code),
         )
     else:
         return bbox_dto
@@ -105,7 +105,7 @@ async def delete_by_id(
 ) -> Optional[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.remove(db=db, id=bbox_id)
-    return BBoxAnnotationRead.from_orm(db_obj)
+    return BBoxAnnotationRead.model_validate(db_obj)
 
 
 @router.get(
@@ -119,7 +119,7 @@ async def get_code(
 ) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     bbox_db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    return CodeRead.from_orm(bbox_db_obj.current_code.code)
+    return CodeRead.model_validate(bbox_db_obj.current_code.code)
 
 
 @router.put(
@@ -135,9 +135,9 @@ async def add_memo(
     db_obj = crud_memo.create_for_bbox_annotation(
         db=db, bbox_anno_id=bbox_id, create_dto=memo
     )
-    memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
-        **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
         attached_object_id=bbox_id,
         attached_object_type=AttachedObjectType.bbox_annotation,
     )
@@ -187,4 +187,4 @@ async def get_by_user_code(
     db_objs = crud_bbox_anno.read_by_code_and_user(
         db=db, code_id=code_id, user_id=user_id
     )
-    return [BBoxAnnotationRead.from_orm(db_obj) for db_obj in db_objs]
+    return [BBoxAnnotationRead.model_validate(db_obj) for db_obj in db_objs]

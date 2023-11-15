@@ -52,7 +52,7 @@ async def create_new_project(
             status_code=500,
             detail="Cannot create ElasticSearch Indices for the Project!",
         )
-    return ProjectRead.from_orm(db_obj)
+    return ProjectRead.model_validate(db_obj)
 
 
 @router.get(
@@ -68,7 +68,7 @@ async def read_all(
 ) -> List[ProjectRead]:
     # TODO Flo: only return the projects of the current user
     db_objs = crud_project.read_multi(db=db, **skip_limit)
-    return [ProjectRead.from_orm(proj) for proj in db_objs]
+    return [ProjectRead.model_validate(proj) for proj in db_objs]
 
 
 @router.get(
@@ -82,7 +82,7 @@ async def read_project(
 ) -> Optional[ProjectRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_project.read(db=db, id=proj_id)
-    return ProjectRead.from_orm(db_obj)
+    return ProjectRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -96,7 +96,7 @@ async def update_project(
 ) -> ProjectRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_project.update(db=db, id=proj_id, update_dto=proj)
-    return ProjectRead.from_orm(db_obj)
+    return ProjectRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -121,7 +121,7 @@ async def delete_project(
             detail="Cannot create ElasticSearch Indices for the Project!",
         )
 
-    return ProjectRead.from_orm(db_obj)
+    return ProjectRead.model_validate(db_obj)
 
 
 @router.get(
@@ -139,7 +139,7 @@ async def get_project_sdocs(
 ) -> PaginatedSourceDocumentReads:
     # TODO Flo: only if the user has access?
     sdocs_on_page = [
-        SourceDocumentRead.from_orm(sdoc)
+        SourceDocumentRead.model_validate(sdoc)
         for sdoc in crud_sdoc.read_by_project(
             db=db, proj_id=proj_id, only_finished=only_finished, **skip_limit
         )
@@ -210,7 +210,7 @@ async def associate_user_to_project(
 ) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
-    return UserRead.from_orm(user_db_obj)
+    return UserRead.model_validate(user_db_obj)
 
 
 @router.delete(
@@ -224,7 +224,7 @@ async def dissociate_user_from_project(
 ) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
-    return UserRead.from_orm(user_db_obj)
+    return UserRead.model_validate(user_db_obj)
 
 
 @router.get(
@@ -238,7 +238,7 @@ async def get_project_users(
 ) -> List[UserRead]:
     # TODO Flo: only if the user has access?
     proj_db_obj = crud_project.read(db=db, id=proj_id)
-    return [UserRead.from_orm(user) for user in proj_db_obj.users]
+    return [UserRead.model_validate(user) for user in proj_db_obj.users]
 
 
 @router.get(
@@ -252,7 +252,7 @@ async def get_project_codes(
 ) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     proj_db_obj = crud_project.read(db=db, id=proj_id)
-    result = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
+    result = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
     result.sort(key=lambda c: c.id)
     return result
 
@@ -281,7 +281,7 @@ async def get_project_tags(
 ) -> List[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     proj_db_obj = crud_project.read(db=db, id=proj_id)
-    return [DocumentTagRead.from_orm(tag) for tag in proj_db_obj.document_tags]
+    return [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
 
 
 @router.delete(
@@ -308,7 +308,7 @@ async def get_user_codes_of_project(
 ) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     return [
-        CodeRead.from_orm(code_db_obj)
+        CodeRead.model_validate(code_db_obj)
         for code_db_obj in crud_code.read_by_user_and_project(
             db=db, user_id=user_id, proj_id=proj_id
         )
@@ -380,7 +380,7 @@ async def query_actions_of_project(
 ) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
     return [
-        ActionRead.from_orm(action)
+        ActionRead.model_validate(action)
         for action in crud_action.read_by(
             db=db,
             proj_id=query_params.proj_id,
@@ -416,9 +416,9 @@ async def add_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, memo: MemoCreate
 ) -> Optional[MemoRead]:
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
-    memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
-        **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
         attached_object_id=proj_id,
         attached_object_type=AttachedObjectType.project,
     )
@@ -488,7 +488,7 @@ async def get_project_metadata_by_metadata_key(
     *, db: Session = Depends(get_db_session), proj_id: int, metadata_key: str
 ) -> List[SourceDocumentMetadataRead]:
     return [
-        SourceDocumentMetadataRead.from_orm(db_obj)
+        SourceDocumentMetadataRead.model_validate(db_obj)
         for db_obj in crud_sdoc_meta.read_by_project_and_key(
             db=db, project_id=proj_id, key=metadata_key
         )

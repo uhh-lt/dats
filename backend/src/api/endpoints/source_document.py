@@ -51,7 +51,7 @@ async def get_by_id(
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return SourceDocumentRead.from_orm(db_obj)
+    return SourceDocumentRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -65,7 +65,7 @@ async def delete_by_id(
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
-    return SourceDocumentRead.from_orm(db_obj)
+    return SourceDocumentRead.model_validate(db_obj)
 
 
 @router.get(
@@ -89,8 +89,10 @@ async def get_content(
 
     sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
-        return SourceDocumentContent.from_orm(sdoc_db_obj)
-    url = RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+        return SourceDocumentContent.model_validate(sdoc_db_obj)
+    url = RepoService().get_sdoc_url(
+        sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
+    )
     return SourceDocumentContent(source_document_id=sdoc_id, content=url)
 
 
@@ -115,9 +117,11 @@ async def get_html(
 
     sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
     if sdoc_db_obj.doctype == DocType.text:
-        return SourceDocumentHTML.from_orm(sdoc_db_obj)
+        return SourceDocumentHTML.model_validate(sdoc_db_obj)
     else:
-        return RepoService().get_sdoc_url(sdoc=SourceDocumentRead.from_orm(sdoc_db_obj))
+        return RepoService().get_sdoc_url(
+            sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
+        )
 
 
 @router.get(
@@ -141,7 +145,7 @@ async def get_tokens(
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    return SourceDocumentTokens.from_orm(sdoc_db_obj)
+    return SourceDocumentTokens.model_validate(sdoc_db_obj)
 
 
 @router.get(
@@ -165,7 +169,7 @@ async def get_sentences(
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    return SourceDocumentSentences.from_orm(sdoc_db_obj)
+    return SourceDocumentSentences.model_validate(sdoc_db_obj)
 
 
 @router.patch(
@@ -179,7 +183,7 @@ async def update_sdoc(
 ) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
-    return SourceDocumentRead.from_orm(db_obj)
+    return SourceDocumentRead.model_validate(db_obj)
 
 
 @router.get(
@@ -265,7 +269,7 @@ async def get_file_url(
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return RepoService().get_sdoc_url(
-        sdoc=SourceDocumentRead.from_orm(sdoc_db_obj),
+        sdoc=SourceDocumentRead.model_validate(sdoc_db_obj),
         relative=relative,
         webp=webp,
         thumbnail=thumbnail,
@@ -287,7 +291,8 @@ async def get_all_metadata(
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     metadata = [
-        SourceDocumentMetadataRead.from_orm(meta) for meta in sdoc_db_obj.metadata_
+        SourceDocumentMetadataRead.model_validate(meta)
+        for meta in sdoc_db_obj.metadata_
     ]
     if exclude_csv is not None:
         exclude = exclude_csv.split(",")
@@ -309,7 +314,7 @@ async def read_metadata_by_key(
     metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
         db=db, sdoc_id=sdoc_id, key=metadata_key
     )
-    return SourceDocumentMetadataRead.from_orm(metadata_db_obj)
+    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
 
 
 @router.patch(
@@ -330,7 +335,7 @@ async def update_metadata_by_id(
     metadata_db_obj = crud_sdoc_meta.update(
         db=db, metadata_id=metadata_id, update_dto=metadata
     )
-    return SourceDocumentMetadataRead.from_orm(metadata_db_obj)
+    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
 
 
 @router.get(
@@ -343,7 +348,7 @@ async def get_adoc_of_user(
     *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
 ) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
-    return AnnotationDocumentRead.from_orm(
+    return AnnotationDocumentRead.model_validate(
         crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id)
     )
 
@@ -359,7 +364,7 @@ async def get_all_adocs(
 ) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     return [
-        AnnotationDocumentRead.from_orm(adoc)
+        AnnotationDocumentRead.model_validate(adoc)
         for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
     ]
 
@@ -389,7 +394,7 @@ async def get_all_tags(
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return [
-        DocumentTagRead.from_orm(doc_tag_db_obj)
+        DocumentTagRead.model_validate(doc_tag_db_obj)
         for doc_tag_db_obj in sdoc_db_obj.document_tags
     ]
 
@@ -405,7 +410,7 @@ async def unlinks_all_tags(
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, id=sdoc_id)
-    return SourceDocumentRead.from_orm(sdoc_db_obj)
+    return SourceDocumentRead.model_validate(sdoc_db_obj)
 
 
 @router.patch(
@@ -419,7 +424,7 @@ async def link_tag(
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
-    return SourceDocumentRead.from_orm(sdoc_db_obj)
+    return SourceDocumentRead.model_validate(sdoc_db_obj)
 
 
 @router.delete(
@@ -433,7 +438,7 @@ async def unlink_tag(
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.unlink_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
-    return SourceDocumentRead.from_orm(sdoc_db_obj)
+    return SourceDocumentRead.model_validate(sdoc_db_obj)
 
 
 @router.put(
@@ -447,9 +452,9 @@ async def add_memo(
 ) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_sdoc(db=db, sdoc_id=sdoc_id, create_dto=memo)
-    memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
-        **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
         attached_object_id=sdoc_id,
         attached_object_type=AttachedObjectType.source_document,
     )

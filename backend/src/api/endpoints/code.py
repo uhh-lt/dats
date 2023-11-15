@@ -26,7 +26,7 @@ async def create_new_code(
     *, db: Session = Depends(get_db_session), code: CodeCreate
 ) -> Optional[CodeRead]:
     db_code = crud_code.create(db=db, create_dto=code)
-    return CodeRead.from_orm(db_code)
+    return CodeRead.model_validate(db_code)
 
 
 @router.get(
@@ -40,7 +40,7 @@ async def get_code_by_current_code_id(
 ) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     cc_db_obj = crud_current_code.read(db=db, id=current_code_id)
-    return CodeRead.from_orm(cc_db_obj.code)
+    return CodeRead.model_validate(cc_db_obj.code)
 
 
 @router.get(
@@ -54,7 +54,7 @@ async def get_by_id(
 ) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_code.read(db=db, id=code_id)
-    return CodeRead.from_orm(db_obj)
+    return CodeRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -68,7 +68,7 @@ async def update_by_id(
 ) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_code.update(db=db, id=code_id, update_dto=code)
-    return CodeRead.from_orm(db_obj)
+    return CodeRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -82,7 +82,7 @@ async def delete_by_id(
 ) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_code.remove(db=db, id=code_id)
-    return CodeRead.from_orm(db_obj)
+    return CodeRead.model_validate(db_obj)
 
 
 @router.put(
@@ -96,9 +96,9 @@ async def add_memo(
 ) -> Optional[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_code(db=db, code_id=code_id, create_dto=memo)
-    memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
-        **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
         attached_object_id=code_id,
         attached_object_type=AttachedObjectType.code,
     )
