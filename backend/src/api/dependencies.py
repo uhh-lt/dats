@@ -86,14 +86,17 @@ AuthenticatedUser = Annotated[UserRead, Depends(get_current_user)]
 def is_authorized(
     action: ActionType,
     crud_object: CRUDBase,
-    param_key: str,
+    param_key: Optional[str] = None,
 ) -> Any:
     def f(request: Request, user: UserRead = Depends(get_current_user)):
+        object_id = request.path_params[param_key] if param_key is not None else None
+        if not isinstance(object_id, int) and object_id is not None:
+            raise Exception(
+                f"Unsupported parameter value {object_id} with type {type(object_id)} for checking authorization"
+            )
         AuthorizationService().check_authorization(
             subject=user,
-            check=AuthorizationCheck(
-                action, crud_object, request.path_params[param_key]
-            ),
+            check=AuthorizationCheck(action, crud_object, object_id),
         )
 
     return Depends(f)
