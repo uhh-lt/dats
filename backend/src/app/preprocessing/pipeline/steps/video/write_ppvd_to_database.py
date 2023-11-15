@@ -35,7 +35,7 @@ def _persist_sdoc_metadata(
 ) -> None:
     sdoc_id = sdoc_db_obj.id
     filename = sdoc_db_obj.filename
-    sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
+    sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     ppvd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
 
     metadata_create_dtos = [

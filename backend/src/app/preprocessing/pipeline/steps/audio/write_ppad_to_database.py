@@ -38,7 +38,7 @@ def _persist_sdoc_metadata(
     logger.info(f"Persisting SourceDocumentMetadata for {ppad.filename}...")
     sdoc_id = sdoc_db_obj.id
     filename = sdoc_db_obj.filename
-    sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
+    sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     ppad.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
 
     metadata_create_dtos = [
@@ -59,7 +59,7 @@ def _persist_sdoc_metadata(
     ]
 
     # store word level transcriptions as metadata
-    wlt = list(map(lambda wlt: wlt.dict(), ppad.word_level_transcriptions))
+    wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
     metadata_create_dtos.append(
         SourceDocumentMetadataCreate(
             key="word_level_transcriptions",

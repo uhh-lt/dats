@@ -163,7 +163,7 @@ class PreprocessingPipeline:
     ) -> PreprocessingJobRead:
         with self.sqls.db_session() as db:
             db_obj = crud_prepro_job.read(db=db, uuid=cargo.ppj_payload.prepro_job_id)
-            ppj = PreprocessingJobRead.from_orm(db_obj)
+            ppj = PreprocessingJobRead.model_validate(db_obj)
         return ppj
 
     def _run_step(self, cargo: PipelineCargo, step: PipelineStep) -> PipelineCargo:
@@ -275,7 +275,7 @@ class PreprocessingPipeline:
                 uuid=cargo.ppj_payload.id,
                 update_dto=update_dto,
             )
-            cargo.ppj_payload = PreprocessingJobPayloadRead.from_orm(db_obj)
+            cargo.ppj_payload = PreprocessingJobPayloadRead.model_validate(db_obj)
         return cargo
 
     def freeze(self) -> None:
