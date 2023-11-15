@@ -35,7 +35,7 @@ async def get_prepro_job(
 ) -> Optional[PreprocessingJobRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_prepro_job.read(db=db, uuid=prepro_job_id)
-    return PreprocessingJobRead.from_orm(db_obj)
+    return PreprocessingJobRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -65,7 +65,7 @@ async def get_all_prepro_jobs(
 ) -> List[PreprocessingJobRead]:
     # TODO Flo: only if the user has access?
     db_objs = crud_prepro_job.read_by_proj_id(db=db, proj_id=project_id)
-    prepro_jobs = [PreprocessingJobRead.from_orm(db_obj) for db_obj in db_objs]
+    prepro_jobs = [PreprocessingJobRead.model_validate(db_obj) for db_obj in db_objs]
     prepro_jobs.sort(key=lambda x: x.created, reverse=True)
     return prepro_jobs
 
@@ -103,7 +103,7 @@ async def get_project_prepro_status(
     ppj_ids = crud_prepro_job.read_ids_by_proj_id(db=db, proj_id=proj_id)
     for ppj_id in ppj_ids:
         payloads = [
-            PreprocessingJobPayloadRead.from_orm(db_obj)
+            PreprocessingJobPayloadRead.model_validate(db_obj)
             for db_obj in crud_prepro_job_payload.read_by_ppj_id_and_status(
                 db=db, ppj_uuid=ppj_id, status=BackgroundJobStatus.ERROR
             )

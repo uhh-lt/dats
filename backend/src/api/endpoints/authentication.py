@@ -35,8 +35,8 @@ async def register(
         )
 
     db_user = crud_user.create(db=db, create_dto=user)
-    await MailService().send_welcome_mail(user=UserRead.from_orm(db_user))
-    return UserRead.from_orm(db_user)
+    await MailService().send_welcome_mail(user=UserRead.model_validate(db_user))
+    return UserRead.model_validate(db_user)
 
 
 @router.post(

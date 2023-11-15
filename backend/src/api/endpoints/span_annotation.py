@@ -35,11 +35,11 @@ async def add_span_annotation(
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.create_with_code_id(db=db, create_dto=span)
-    span_dto = SpanAnnotationRead.from_orm(db_obj)
+    span_dto = SpanAnnotationRead.model_validate(db_obj)
     if resolve_code:
         return SpanAnnotationReadResolved(
-            **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code),
+            **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+            code=CodeRead.model_validate(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
             sdoc_id=db_obj.annotation_document.source_document_id,
@@ -62,11 +62,11 @@ async def get_by_id(
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.read(db=db, id=span_id)
-    span_dto = SpanAnnotationRead.from_orm(db_obj)
+    span_dto = SpanAnnotationRead.model_validate(db_obj)
     if resolve_code:
         return SpanAnnotationReadResolved(
-            **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code),
+            **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+            code=CodeRead.model_validate(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
             sdoc_id=db_obj.annotation_document.source_document_id,
@@ -90,11 +90,11 @@ async def update_by_id(
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.update_with_code_id(db=db, id=span_id, update_dto=span_anno)
-    span_dto = SpanAnnotationRead.from_orm(db_obj)
+    span_dto = SpanAnnotationRead.model_validate(db_obj)
     if resolve_code:
         return SpanAnnotationReadResolved(
-            **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
-            code=CodeRead.from_orm(db_obj.current_code.code),
+            **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+            code=CodeRead.model_validate(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
             sdoc_id=db_obj.annotation_document.source_document_id,
@@ -114,7 +114,7 @@ async def delete_by_id(
 ) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.remove(db=db, id=span_id)
-    return SpanAnnotationRead.from_orm(db_obj)
+    return SpanAnnotationRead.model_validate(db_obj)
 
 
 @router.get(
@@ -128,7 +128,7 @@ async def get_code(
 ) -> Optional[CodeRead]:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
-    return CodeRead.from_orm(span_db_obj.current_code.code)
+    return CodeRead.model_validate(span_db_obj.current_code.code)
 
 
 @router.get(
@@ -143,7 +143,7 @@ async def get_all_groups(
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
     return [
-        SpanGroupRead.from_orm(span_group_db_obj)
+        SpanGroupRead.model_validate(span_group_db_obj)
         for span_group_db_obj in span_db_obj.span_groups
     ]
 
@@ -159,7 +159,7 @@ async def remove_from_all_groups(
 ) -> Optional[SpanAnnotationRead]:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.remove_from_all_span_groups(db=db, span_id=span_id)
-    return SpanAnnotationRead.from_orm(span_db_obj)
+    return SpanAnnotationRead.model_validate(span_db_obj)
 
 
 @router.patch(
@@ -175,7 +175,7 @@ async def add_to_group(
     sdoc_db_obj = crud_span_anno.add_to_span_group(
         db=db, span_id=span_id, group_id=group_id
     )
-    return SpanAnnotationRead.from_orm(sdoc_db_obj)
+    return SpanAnnotationRead.model_validate(sdoc_db_obj)
 
 
 @router.delete(
@@ -191,7 +191,7 @@ async def remove_from_group(
     sdoc_db_obj = crud_span_anno.remove_from_span_group(
         db=db, span_id=span_id, group_id=group_id
     )
-    return SpanAnnotationRead.from_orm(sdoc_db_obj)
+    return SpanAnnotationRead.model_validate(sdoc_db_obj)
 
 
 @router.put(
@@ -207,9 +207,9 @@ async def add_memo(
     db_obj = crud_memo.create_for_span_annotation(
         db=db, span_anno_id=span_id, create_dto=memo
     )
-    memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
-        **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
         attached_object_id=span_id,
         attached_object_type=AttachedObjectType.span_annotation,
     )
@@ -261,10 +261,10 @@ async def get_by_user_code(
     )
     return [
         SpanAnnotationReadResolved(
-            **SpanAnnotationRead.from_orm(db_obj).dict(
+            **SpanAnnotationRead.model_validate(db_obj).model_dump(
                 exclude={"current_code_id", "span_text_id"}
             ),
-            code=CodeRead.from_orm(db_obj.current_code.code),
+            code=CodeRead.model_validate(db_obj.current_code.code),
             span_text=db_obj.span_text.text,
             user_id=db_obj.annotation_document.user_id,
             sdoc_id=db_obj.annotation_document.source_document_id,

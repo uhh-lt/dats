@@ -30,7 +30,7 @@ async def create_new_doc_tag(
     *, db: Session = Depends(get_db_session), doc_tag: DocumentTagCreate
 ) -> Optional[DocumentTagRead]:
     db_obj = crud_document_tag.create(db=db, create_dto=doc_tag)
-    return DocumentTagRead.from_orm(db_obj)
+    return DocumentTagRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -82,7 +82,7 @@ async def get_by_id(
 ) -> Optional[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.read(db=db, id=tag_id)
-    return DocumentTagRead.from_orm(db_obj)
+    return DocumentTagRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -96,7 +96,7 @@ async def update_by_id(
 ) -> Optional[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.update(db=db, id=tag_id, update_dto=doc_tag)
-    return DocumentTagRead.from_orm(db_obj)
+    return DocumentTagRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -110,7 +110,7 @@ async def delete_by_id(
 ) -> Optional[DocumentTagRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.remove(db=db, id=tag_id)
-    return DocumentTagRead.from_orm(db_obj)
+    return DocumentTagRead.model_validate(db_obj)
 
 
 @router.put(
@@ -126,9 +126,9 @@ async def add_memo(
     db_obj = crud_memo.create_for_document_tag(
         db=db, doc_tag_id=tag_id, create_dto=memo
     )
-    memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
-        **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+        **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
         attached_object_id=tag_id,
         attached_object_type=AttachedObjectType.document_tag,
     )
@@ -176,4 +176,4 @@ async def get_sdocs_by_tag_id(
     *, db: Session = Depends(get_db_session), tag_id: int
 ) -> List[SourceDocumentRead]:
     db_obj = crud_document_tag.read(db=db, id=tag_id)
-    return [SourceDocumentRead.from_orm(sdoc) for sdoc in db_obj.source_documents]
+    return [SourceDocumentRead.model_validate(sdoc) for sdoc in db_obj.source_documents]

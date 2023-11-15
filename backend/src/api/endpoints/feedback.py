@@ -27,7 +27,7 @@ async def create_feedback(
 
     user = crud_user.read(db=db, id=feedback.user_id)
     await MailService().send_feedback_received_mail(
-        user=UserRead.from_orm(user),
+        user=UserRead.model_validate(user),
         feedback=feedback,
     )
     return fb
@@ -78,7 +78,7 @@ async def reply_to(
     user = crud_user.read(db=db, id=feedback.user_id)
 
     await MailService().send_feedback_response_mail(
-        user=UserRead.from_orm(user),
+        user=UserRead.model_validate(user),
         feedback=feedback,
         message=message,
     )

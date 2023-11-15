@@ -35,7 +35,7 @@ def get_object_memos(
         return None
 
     memo_as_in_db_dtos = [
-        MemoInDB.from_orm(memo_db_obj)
+        MemoInDB.model_validate(memo_db_obj)
         for memo_db_obj in db_obj.object_handle.attached_memos
         if user_id is None or memo_db_obj.user_id == user_id
     ]

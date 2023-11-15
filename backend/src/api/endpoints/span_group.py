@@ -26,7 +26,7 @@ async def create_new_span_group(
     *, db: Session = Depends(get_db_session), span_group: SpanGroupCreate
 ) -> Optional[SpanGroupRead]:
     db_obj = crud_span_group.create(db=db, create_dto=span_group)
-    return SpanGroupRead.from_orm(db_obj)
+    return SpanGroupRead.model_validate(db_obj)
 
 
 @router.get(
@@ -40,7 +40,7 @@ async def get_by_id(
 ) -> Optional[SpanGroupRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_group.read(db=db, id=span_group_id)
-    return SpanGroupRead.from_orm(db_obj)
+    return SpanGroupRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -57,7 +57,7 @@ async def update_by_id(
 ) -> Optional[SpanGroupRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_group.update(db=db, id=span_group_id, update_dto=span_anno)
-    return SpanGroupRead.from_orm(db_obj)
+    return SpanGroupRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -71,7 +71,7 @@ async def delete_by_id(
 ) -> Optional[SpanGroupRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_group.remove(db=db, id=span_group_id)
-    return SpanGroupRead.from_orm(db_obj)
+    return SpanGroupRead.model_validate(db_obj)
 
 
 @router.get(
@@ -89,12 +89,12 @@ async def get_all_annotations(
     # TODO Flo: only if the user has access?
     span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
     spans = span_group_db_obj.span_annotations
-    span_read_dtos = [SpanAnnotationRead.from_orm(span) for span in spans]
+    span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
     if resolve_code:
         return [
             SpanAnnotationReadResolved(
-                **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.from_orm(span_orm.current_code.code),
+                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+                code=CodeRead.model_validate(span_orm.current_code.code),
                 span_text=span_orm.span_text.text,
                 user_id=span_orm.annotation_document.user_id,
                 sdoc_id=span_orm.annotation_document.source_document_id,

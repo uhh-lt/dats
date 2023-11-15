@@ -24,7 +24,9 @@ router = APIRouter(
 async def create(
     *, db: Session = Depends(get_db_session), whiteboard: WhiteboardCreate
 ) -> Optional[WhiteboardRead]:
-    return WhiteboardRead.from_orm(crud_whiteboard.create(db=db, create_dto=whiteboard))
+    return WhiteboardRead.model_validate(
+        crud_whiteboard.create(db=db, create_dto=whiteboard)
+    )
 
 
 @router.get(
@@ -37,7 +39,7 @@ async def get_by_id(
     *, db: Session = Depends(get_db_session), whiteboard_id: int
 ) -> Optional[WhiteboardRead]:
     db_obj = crud_whiteboard.read(db=db, id=whiteboard_id)
-    return WhiteboardRead.from_orm(db_obj)
+    return WhiteboardRead.model_validate(db_obj)
 
 
 @router.get(
@@ -54,7 +56,7 @@ async def get_by_project(
     db_objs = crud_whiteboard.read_by_project(
         db=db, project_id=project_id, raise_error=False
     )
-    return [WhiteboardRead.from_orm(db_obj) for db_obj in db_objs]
+    return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.get(
@@ -69,7 +71,7 @@ async def get_by_project_and_user(
     db_objs = crud_whiteboard.read_by_project_and_user(
         db=db, project_id=project_id, user_id=user_id, raise_error=False
     )
-    return [WhiteboardRead.from_orm(db_obj) for db_obj in db_objs]
+    return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.patch(
@@ -85,7 +87,7 @@ async def update_by_id(
     whiteboard: WhiteboardUpdate,
 ) -> Optional[WhiteboardRead]:
     db_obj = crud_whiteboard.update(db=db, id=whiteboard_id, update_dto=whiteboard)
-    return WhiteboardRead.from_orm(db_obj)
+    return WhiteboardRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -99,4 +101,4 @@ async def delete_by_id(
 ) -> Optional[WhiteboardRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_whiteboard.remove(db=db, id=whiteboard_id)
-    return WhiteboardRead.from_orm(db_obj)
+    return WhiteboardRead.model_validate(db_obj)

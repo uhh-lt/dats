@@ -25,7 +25,7 @@ async def create_new_metadata(
     *, db: Session = Depends(get_db_session), metadata: SourceDocumentMetadataCreate
 ) -> Optional[SourceDocumentMetadataRead]:
     db_metadata = crud_sdoc_meta.create(db=db, create_dto=metadata)
-    return SourceDocumentMetadataRead.from_orm(db_metadata)
+    return SourceDocumentMetadataRead.model_validate(db_metadata)
 
 
 @router.get(
@@ -39,7 +39,7 @@ async def get_by_id(
 ) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc_meta.read(db=db, id=metadata_id)
-    return SourceDocumentMetadataRead.from_orm(db_obj)
+    return SourceDocumentMetadataRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -56,7 +56,7 @@ async def update_by_id(
 ) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc_meta.update(db=db, metadata_id=metadata_id, update_dto=metadata)
-    return SourceDocumentMetadataRead.from_orm(db_obj)
+    return SourceDocumentMetadataRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -70,4 +70,4 @@ async def delete_by_id(
 ) -> Optional[SourceDocumentMetadataRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc_meta.remove(db=db, id=metadata_id)
-    return SourceDocumentMetadataRead.from_orm(db_obj)
+    return SourceDocumentMetadataRead.model_validate(db_obj)
