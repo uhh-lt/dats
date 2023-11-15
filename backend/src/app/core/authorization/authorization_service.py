@@ -45,10 +45,14 @@ class AuthorizationService(metaclass=SingletonMeta):
                 orm_object = check.crud_object.read(db, check.object_id)
             is_authorized = self.is_authorized(db, subject, check.action, orm_object)
 
-        authorized_description = "allowing" if is_authorized else "denying"
-        logger.debug(
-            f"{authorized_description} {check.action} {orm_object} ({type(check.crud_object)}, id {check.object_id})"
-        )
+        if is_authorized:
+            logger.debug(
+                f"allowing user #{subject.id} to {check.action} ({type(check.crud_object).__name__}, id {check.object_id})"
+            )
+        else:
+            logger.info(
+                f"denying user #{subject.id} to {check.action} ({type(check.crud_object).__name__}, id {check.object_id})"
+            )
 
         if not is_authorized:
             model_name = type(orm_object).__name__.replace("ORM", "")
