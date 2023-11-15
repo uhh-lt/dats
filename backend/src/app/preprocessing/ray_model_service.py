@@ -88,36 +88,40 @@ class RayModelService(metaclass=SingletonMeta):
         return response
 
     def spacy_pipline(self, input: SpacyInput) -> SpacyPipelineOutput:
-        response = self._make_post_request("/spacy/pipeline", input.dict())
-        return SpacyPipelineOutput.parse_obj(response.json())
+        response = self._make_post_request("/spacy/pipeline", input.model_dump())
+        return SpacyPipelineOutput.model_validate(response.json())
 
     def whisper_transcribe(
         self, input: WhisperFilePathInput
     ) -> WhisperTranscriptionOutput:
-        response = self._make_post_request("/whisper/transcribe", input.dict())
-        return WhisperTranscriptionOutput.parse_obj(response.json())
+        response = self._make_post_request("/whisper/transcribe", input.model_dump())
+        return WhisperTranscriptionOutput.model_validate(response.json())
 
     def detr_object_detection(
         self, input: DETRFilePathInput
     ) -> DETRObjectDetectionOutput:
-        response = self._make_post_request("/detr/object_detection", input.dict())
-        return DETRObjectDetectionOutput.parse_obj(response.json())
+        response = self._make_post_request("/detr/object_detection", input.model_dump())
+        return DETRObjectDetectionOutput.model_validate(response.json())
 
     def vit_gpt2_image_captioning(self, input: ViTGPT2FilePathInput) -> ViTGPT2Output:
         raise NotImplementedError
-        response = self._make_post_request("/vit_gpt2/image_captioning", input.dict())
-        return ViTGPT2Output.parse_obj(response.json())
+        response = self._make_post_request(
+            "/vit_gpt2/image_captioning", input.model_dump()
+        )
+        return ViTGPT2Output.model_validate(response.json())
 
     def blip2_image_captioning(self, input: Blip2FilePathInput) -> Blip2Output:
-        response = self._make_post_request("/blip2/image_captioning", input.dict())
-        return Blip2Output.parse_obj(response.json())
+        response = self._make_post_request(
+            "/blip2/image_captioning", input.model_dump()
+        )
+        return Blip2Output.model_validate(response.json())
 
     def clip_text_embedding(self, input: ClipTextEmbeddingInput) -> ClipEmbeddingOutput:
-        response = self._make_post_request("/clip/embedding/text", input.dict())
-        return ClipEmbeddingOutput.parse_obj(response.json())
+        response = self._make_post_request("/clip/embedding/text", input.model_dump())
+        return ClipEmbeddingOutput.model_validate(response.json())
 
     def clip_image_embedding(
         self, input: ClipImageEmbeddingInput
     ) -> ClipEmbeddingOutput:
-        response = self._make_post_request("/clip/embedding/image", input.dict())
-        return ClipEmbeddingOutput.parse_obj(response.json())
+        response = self._make_post_request("/clip/embedding/image", input.model_dump())
+        return ClipEmbeddingOutput.model_validate(response.json())
