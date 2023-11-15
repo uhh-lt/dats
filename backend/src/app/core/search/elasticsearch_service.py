@@ -219,7 +219,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 doc = {
                     "_index": idx_name,
                     "_id": esdoc.sdoc_id,
-                    "_source": esdoc.dict(),
+                    "_source": esdoc.model_dump(),
                 }
                 yield doc
 
@@ -421,7 +421,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
             raise NoSuchMemoInElasticSearchError(proj_id=proj_id, memo_id=memo_id)
 
         update_data = {
-            k: v for k, v in update.dict(exclude={"memo_id"}).items() if v is not None
+            k: v
+            for k, v in update.model_dump(exclude={"memo_id"}).items()
+            if v is not None
         }
 
         self.__client.update(
