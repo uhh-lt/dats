@@ -22,7 +22,6 @@ class MailService(metaclass=SingletonMeta):
                 VALIDATE_CERTS=conf.mail.validate_certs == "True",
             )
         )
-        cls.mail = EmailStr(conf.mail.mail)
         return super(MailService, cls).__new__(cls)
 
     async def send_mail(self, email: EmailStr, subject: str, body: str):
