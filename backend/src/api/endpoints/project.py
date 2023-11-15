@@ -7,6 +7,7 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.data.crud.user import crud_user
 from app.core.data.dto.action import ActionQueryParameters, ActionRead, ActionType
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -24,7 +25,12 @@ from app.preprocessing.preprocessing_service import PreprocessingService
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session, skip_limit_params
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+    is_authorized,
+    skip_limit_params,
+)
 from api.util import get_object_memos
 
 router = APIRouter(
@@ -39,6 +45,7 @@ router = APIRouter(
     response_model=ProjectRead,
     summary="Creates a new Project",
     description="Creates a new Project.",
+    dependencies=[is_authorized(ActionType.CREATE, crud_project)],
 )
 async def create_new_project(
     *, db: Session = Depends(get_db_session), proj: ProjectCreate
@@ -62,6 +69,7 @@ async def create_new_project(
     response_model=List[ProjectRead],
     summary="Returns all Projects of the current user",
     description="Returns all Projects of the current user",
+    dependencies=[is_authorized(ActionType.READ, crud_project)],
 )
 async def read_all(
     *,
@@ -93,6 +101,7 @@ async def read_project(
     response_model=ProjectRead,
     summary="Updates the Project",
     description="Updates the Project with the given ID.",
+    dependencies=[is_authorized(ActionType.UPDATE, crud_project, "proj_id")],
 )
 async def update_project(
     *, db: Session = Depends(get_db_session), proj_id: int, proj: ProjectUpdate
@@ -107,6 +116,7 @@ async def update_project(
     response_model=ProjectRead,
     summary="Removes the Project",
     description="Removes the Project with the given ID.",
+    dependencies=[is_authorized(ActionType.DELETE, crud_project, "proj_id")],
 )
 async def delete_project(
     *, db: Session = Depends(get_db_session), proj_id: int
@@ -132,6 +142,7 @@ async def delete_project(
     response_model=PaginatedSourceDocumentReads,
     summary="Returns all SourceDocuments of the Project.",
     description="Returns all SourceDocuments of the Project with the given ID.",
+    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
 async def get_project_sdocs(
     *,
@@ -201,6 +212,7 @@ async def upload_project_sdoc(
     response_model=List[int],
     summary="Removes all SourceDocuments of the Project",
     description="Removes all SourceDocuments of the Project with the given ID if it exists",
+    dependencies=[is_authorized(ActionType.UPDATE, crud_project, "proj_id")],
 )
 async def delete_project_sdocs(
     *, proj_id: int, db: Session = Depends(get_db_session)
@@ -214,6 +226,10 @@ async def delete_project_sdocs(
     response_model=Optional[UserRead],
     summary="Associates the User with the Project",
     description="Associates an existing User to the Project with the given ID if it exists",
+    dependencies=[
+        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
+        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
+    ],
 )
 async def associate_user_to_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
@@ -228,6 +244,10 @@ async def associate_user_to_project(
     response_model=Optional[UserRead],
     summary="Dissociates the Users with the Project",
     description="Dissociates the Users with the Project with the given ID if it exists",
+    dependencies=[
+        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
+        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
+    ],
 )
 async def dissociate_user_from_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
@@ -242,6 +262,9 @@ async def dissociate_user_from_project(
     response_model=List[UserRead],
     summary="Returns all Users of the Project",
     description="Returns all Users of the Project with the given ID",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+    ],
 )
 async def get_project_users(
     *, proj_id: int, db: Session = Depends(get_db_session)
@@ -256,6 +279,9 @@ async def get_project_users(
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project",
     description="Returns all Codes of the Project with the given ID",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+    ],
 )
 async def get_project_codes(
     *, proj_id: int, db: Session = Depends(get_db_session)
@@ -272,6 +298,9 @@ async def get_project_codes(
     response_model=List[int],
     summary="Removes all Codes of the Project",
     description="Removes all Codes of the Project with the given ID if it exists",
+    dependencies=[
+        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
+    ],
 )
 async def delete_project_codes(
     *, proj_id: int, db: Session = Depends(get_db_session)
@@ -285,6 +314,9 @@ async def delete_project_codes(
     response_model=List[DocumentTagRead],
     summary="Returns all DocumentTags of the Project",
     description="Returns all DocumentTags of the Project with the given ID",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+    ],
 )
 async def get_project_tags(
     *, proj_id: int, db: Session = Depends(get_db_session)
@@ -299,6 +331,9 @@ async def get_project_tags(
     response_model=List[int],
     summary="Removes all DocumentTags of the Project",
     description="Removes all DocumentTags of the Project with the given ID if it exists",
+    dependencies=[
+        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
+    ],
 )
 async def delete_project_tags(
     *, proj_id: int, db: Session = Depends(get_db_session)
@@ -312,6 +347,10 @@ async def delete_project_tags(
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project from a User",
     description="Returns all Codes of the Project from a User",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+        is_authorized(ActionType.READ, crud_user, "user_id"),
+    ],
 )
 async def get_user_codes_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
@@ -330,6 +369,10 @@ async def get_user_codes_of_project(
     response_model=int,
     summary="Removes all Codes of the Project from a User",
     description="Removes all Codes of the Project from a User. Returns the number of removed Codes.",
+    dependencies=[
+        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
+        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
+    ],
 )
 async def remove_user_codes_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
@@ -343,6 +386,10 @@ async def remove_user_codes_of_project(
     response_model=List[MemoRead],
     summary="Returns all Memos of the Project from a User",
     description="Returns all Memos of the Project from a User",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+        is_authorized(ActionType.READ, crud_user, "user_id"),
+    ],
 )
 async def get_user_memos_of_project(
     *,
@@ -369,6 +416,10 @@ async def get_user_memos_of_project(
     response_model=List[ActionRead],
     summary="Returns all Actions of the Project from a User",
     description="Returns all Actions of the Project from a User",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+        is_authorized(ActionType.READ, crud_user, "user_id"),
+    ],
 )
 async def get_user_actions_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
@@ -382,6 +433,9 @@ async def get_user_actions_of_project(
     response_model=List[ActionRead],
     summary="Returns all Actions",
     description="Returns all Actions of the Project",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+    ],
 )
 async def query_actions_of_project(
     *,
@@ -408,6 +462,10 @@ async def query_actions_of_project(
     response_model=List[int],
     summary="Removes all Memos of the Project from a User",
     description="Removes all Memos of the Project from a User. Returns the number of removed Memos.",
+    dependencies=[
+        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
+        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
+    ],
 )
 async def remove_user_memos_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
@@ -421,6 +479,9 @@ async def remove_user_memos_of_project(
     response_model=Optional[MemoRead],
     summary="Adds a Memo of the current User to the Project.",
     description="Adds a Memo of the current User to the Project with the given ID if it exists",
+    dependencies=[
+        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
+    ],
 )
 async def add_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, memo: MemoCreate
@@ -439,6 +500,9 @@ async def add_memo(
     response_model=List[MemoRead],
     summary="Returns the Memo of the current User for the Project.",
     description="Returns the Memo of the current User for the Project with the given ID.",
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+    ],
 )
 async def get_memos(
     *, db: Session = Depends(get_db_session), proj_id: int
@@ -455,6 +519,10 @@ async def get_memos(
         "Returns the Memo attached to the Project with the given ID of the User with the"
         " given ID if it exists."
     ),
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+        is_authorized(ActionType.READ, crud_user, "user_id"),
+    ],
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, user_id: int
@@ -470,6 +538,10 @@ async def get_user_memo(
     description=(
         "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
     ),
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+        # TODO add authorization for the specific source document?
+    ],
 )
 async def resolve_filename(
     *,
@@ -493,6 +565,8 @@ async def resolve_filename(
     description=(
         "Returns all SourceDocumentMetadata of the project that have the specified metadata_key"
     ),
+    # TODO add authorization for the given source document?
+    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
 async def get_project_metadata_by_metadata_key(
     *, db: Session = Depends(get_db_session), proj_id: int, metadata_key: str
