@@ -134,7 +134,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def _get_image_path_from_sdoc_id(self, sdoc_id: int) -> Path:
         with self.sqls.db_session() as db:
-            sdoc = SourceDocumentRead.from_orm(crud_sdoc.read(db=db, id=sdoc_id))
+            sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
             assert (
                 sdoc.doctype == DocType.image
             ), f"SourceDocument with {sdoc_id=} is not an image!"
