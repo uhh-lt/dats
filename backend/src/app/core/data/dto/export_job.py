@@ -35,7 +35,7 @@ class SpecificExportJobParameters(BaseModel):
 class SingleProjectAllDataExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_PROJECT_ALL_DATA,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
 
@@ -43,7 +43,7 @@ class SingleProjectAllDataExportJobParams(SpecificExportJobParameters):
 class SingleProjectAllTagsExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_PROJECT_ALL_TAGS,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
 
@@ -51,7 +51,7 @@ class SingleProjectAllTagsExportJobParams(SpecificExportJobParameters):
 class SingleUserAllDataExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_USER_ALL_DATA,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
     user_id: int = Field(description="The ID of the User to get the data from.")
@@ -60,7 +60,7 @@ class SingleUserAllDataExportJobParams(SpecificExportJobParameters):
 class SingleUserAllCodesExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_USER_ALL_CODES,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
     user_id: int = Field(description="The ID of the User to get the data from.")
@@ -69,7 +69,7 @@ class SingleUserAllCodesExportJobParams(SpecificExportJobParameters):
 class SingleUserAllMemosExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_USER_ALL_MEMOS,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
     user_id: int = Field(description="The ID of the User to get the data from.")
@@ -78,7 +78,7 @@ class SingleUserAllMemosExportJobParams(SpecificExportJobParameters):
 class SingleUserLogbookExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_USER_LOGBOOK,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
     user_id: int = Field(description="The ID of the User to get the data from.")
@@ -87,7 +87,7 @@ class SingleUserLogbookExportJobParams(SpecificExportJobParameters):
 class SingleDocAllUserAnnotationsExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
     sdoc_id: int = Field(description="The ID of the SDocument to get the data from.")
@@ -96,7 +96,7 @@ class SingleDocAllUserAnnotationsExportJobParams(SpecificExportJobParameters):
 class SingleDocSingleUserAnnotationsExportJobParams(SpecificExportJobParameters):
     export_job_type: ExportJobType = Field(
         default=ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS,
-        const=True,
+        # Literal=True, #TODO: What else?
         description="The type of the export job (what to export)",
     )
     sdoc_id: int = Field(description="The ID of the SDocument to get the data from.")
