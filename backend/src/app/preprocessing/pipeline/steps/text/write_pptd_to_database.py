@@ -63,7 +63,7 @@ def _persist_sdoc_metadata(
     logger.info(f"Persisting SourceDocument Metadata for {pptd.filename}...")
     sdoc_id = sdoc_db_obj.id
     filename = sdoc_db_obj.filename
-    sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
+    sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     pptd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
 
     metadata_create_dtos = [
