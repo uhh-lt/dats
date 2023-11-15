@@ -26,13 +26,13 @@ def test_create_get_delete_code(session: SQLService, project: int, user: int) ->
     # create code
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
-        new_code = CodeRead.from_orm(db_code)
+        new_code = CodeRead.model_validate(db_code)
     code_id = new_code.id
 
     # get code
     with session.db_session() as sess:
         db_obj = crud_code.read(db=sess, id=code_id)
-        get_code = [CodeRead.from_orm(db_obj)]
+        get_code = [CodeRead.model_validate(db_obj)]
 
     assert len(get_code) == 1
     assert get_code[0].name == name
@@ -58,7 +58,7 @@ def test_update_code(session: SQLService, code: int) -> None:
     code_new = CodeUpdate(name=name, description=description, color=color)
     with session.db_session() as sess:
         db_obj = crud_code.update(db=sess, id=code, update_dto=code_new)
-        get_code = [CodeRead.from_orm(db_obj)]
+        get_code = [CodeRead.model_validate(db_obj)]
 
     assert len(get_code) == 1
     assert get_code[0].name == name
@@ -69,7 +69,7 @@ def test_update_code(session: SQLService, code: int) -> None:
     code_new2 = CodeUpdate()
     with session.db_session() as sess:
         db_obj = crud_code.update(db=sess, id=code, update_dto=code_new2)
-        get_code2 = [CodeRead.from_orm(db_obj)]
+        get_code2 = [CodeRead.model_validate(db_obj)]
 
     assert len(get_code2) == 1
     assert get_code2[0].name == name
@@ -87,10 +87,10 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
     )
     with session.db_session() as sess:
         db_obj = crud_memo.create_for_code(db=sess, code_id=code, create_dto=memo)
-        memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+        memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
         memo_new = [
             MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=db_obj.id,
                 attached_object_type=AttachedObjectType.code,
             )

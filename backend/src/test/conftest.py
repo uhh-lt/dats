@@ -47,7 +47,7 @@ def code(session: SQLService, project: int, user: int) -> int:
 
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
-        code_obj = CodeRead.from_orm(db_code)
+        code_obj = CodeRead.model_validate(db_code)
 
     yield code_obj.id
 
@@ -91,7 +91,7 @@ def user(session: SQLService) -> int:
     with session.db_session() as sess:
         # create user
         db_user = crud_user.create(db=sess, create_dto=user)
-        user = UserRead.from_orm(db_user)
+        user = UserRead.model_validate(db_user)
 
     yield user.id
 
