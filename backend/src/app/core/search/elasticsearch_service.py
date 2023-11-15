@@ -189,7 +189,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         res = self.__client.index(
             index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
             id=str(esdoc.sdoc_id),
-            document=esdoc.json(),
+            document=esdoc.model_dump_json(),
         )
         if not int(res["_id"]) == esdoc.sdoc_id:
             # FIXME Flo: What to do?!
@@ -368,7 +368,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         res = self.__client.index(
             index=self.__get_index_name(proj_id=proj_id, index_type="memo"),
             id=str(esmemo.memo_id),
-            document=esmemo.json(),
+            document=esmemo.model_dump_json(),
         )
         if not int(res["_id"]) == esmemo.memo_id:
             # FIXME Flo: What to do?!

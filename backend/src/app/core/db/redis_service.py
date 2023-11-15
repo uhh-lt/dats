@@ -86,7 +86,7 @@ class RedisService(metaclass=SingletonMeta):
             key = export_job.id
             exj = export_job
 
-        if client.set(key.encode("utf-8"), exj.json()) != 1:
+        if client.set(key.encode("utf-8"), exj.model_dump_json()) != 1:
             msg = "Cannot store ExportJob!"
             logger.error(msg)
             raise RuntimeError(msg)
@@ -104,7 +104,7 @@ class RedisService(metaclass=SingletonMeta):
             raise KeyError(msg)
 
         logger.debug(f"Successfully loaded ExportJob {key}")
-        return ExportJobRead.parse_raw(exj)
+        return ExportJobRead.model_validate_json(exj)
 
     def update_export_job(self, key: str, update: ExportJobUpdate) -> ExportJobRead:
         exj = self.load_export_job(key=key)
@@ -132,12 +132,14 @@ class RedisService(metaclass=SingletonMeta):
 
         if isinstance(crawler_job, CrawlerJobCreate):
             key = self._generate_random_key()
-            cj = CrawlerJobRead(id=key, created=datetime.now(), **crawler_job.dict())
+            cj = CrawlerJobRead(
+                id=key, created=datetime.now(), **crawler_job.model_dump()
+            )
         elif isinstance(crawler_job, CrawlerJobRead):
             key = crawler_job.id
             cj = crawler_job
 
-        if client.set(key.encode("utf-8"), cj.json()) != 1:
+        if client.set(key.encode("utf-8"), cj.model_dump_json()) != 1:
             msg = "Cannot store CrawlerJob!"
             logger.error(msg)
             raise RuntimeError(msg)
@@ -153,7 +155,7 @@ class RedisService(metaclass=SingletonMeta):
             logger.error(msg)
             raise KeyError(msg)
         logger.debug(f"Successfully loaded CrawlerJob {key}")
-        return CrawlerJobRead.parse_raw(cj)
+        return CrawlerJobRead.model_validate_json(cj)
 
     def update_crawler_job(self, key: str, update: CrawlerJobUpdate) -> CrawlerJobRead:
         cj = self.load_crawler_job(key=key)
@@ -199,7 +201,7 @@ class RedisService(metaclass=SingletonMeta):
             user_id=feedback.user_id,
             created=datetime.now(),
         )
-        if client.set(key.encode("utf-8"), fb.json()) != 1:
+        if client.set(key.encode("utf-8"), fb.model_dump_json()) != 1:
             msg = "Cannot store Feedback!"
             logger.error(msg)
             raise RuntimeError(msg)
@@ -217,7 +219,7 @@ class RedisService(metaclass=SingletonMeta):
             raise KeyError(msg)
 
         logger.debug(f"Successfully loaded Feedback {key}")
-        return FeedbackRead.parse_raw(fb)
+        return FeedbackRead.model_validate_json(fb)
 
     def get_all_feedbacks(self) -> List[FeedbackRead]:
         client = self._get_client("feedback")
