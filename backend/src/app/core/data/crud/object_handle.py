@@ -75,7 +75,7 @@ class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):
             if type(e.orig) == UniqueViolation:
                 db.close()  # Flo: close the session because we have to start a new transaction
                 with SQLService().db_session() as sess:
-                    for obj_id_key, obj_id_val in create_dto.dict().items():
+                    for obj_id_key, obj_id_val in create_dto.model_dump().items():
                         if obj_id_val:
                             return self.read_by_attached_object_id(
                                 db=sess, obj_id_key=obj_id_key, obj_id_val=obj_id_val

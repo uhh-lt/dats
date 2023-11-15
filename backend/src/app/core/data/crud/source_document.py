@@ -172,7 +172,7 @@ class CRUDSourceDocument(
         if sdoc_db_obj is not None:
             # remove file from repo
             RepoService().remove_sdoc_file(
-                sdoc=SourceDocumentRead.from_orm(sdoc_db_obj)
+                sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
             )
 
             # remove from elasticsearch
@@ -851,11 +851,15 @@ class CRUDSourceDocument(
 
         return srsly.json_dumps(
             SourceDocumentReadAction(
-                **SourceDocumentRead.from_orm(db_obj).dict(),
-                tags=[DocumentTagRead.from_orm(tag) for tag in db_obj.document_tags],
-                metadata=[SourceDocumentMetadataRead.from_orm(md) for md in metadata],
+                **SourceDocumentRead.model_validate(db_obj).model_dump(),
+                tags=[
+                    DocumentTagRead.model_validate(tag) for tag in db_obj.document_tags
+                ],
+                metadata=[
+                    SourceDocumentMetadataRead.model_validate(md) for md in metadata
+                ],
                 # TODO: can we get the keywords?
-            ).dict()
+            ).model_dump()
         )
 
 

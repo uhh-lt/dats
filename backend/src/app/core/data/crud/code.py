@@ -209,7 +209,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     def _get_action_state_from_orm(self, db_obj: CodeORM) -> Optional[str]:
         return srsly.json_dumps(
-            CodeRead.from_orm(db_obj).dict(),
+            CodeRead.model_validate(db_obj).model_dump(),
         )
 
 

@@ -347,52 +347,52 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         attached_to = crud_object_handle.resolve_handled_object(
             db=db, handle=db_obj.attached_to
         )
-        memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+        memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
         if isinstance(attached_to, CodeORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.code,
             )
         elif isinstance(attached_to, SpanAnnotationORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.span_annotation,
             )
         elif isinstance(attached_to, SpanGroupORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.span_group,
             )
         elif isinstance(attached_to, BBoxAnnotationORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.bbox_annotation,
             )
         elif isinstance(attached_to, AnnotationDocumentORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.annotation_document,
             )
         elif isinstance(attached_to, SourceDocumentORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.source_document,
             )
         elif isinstance(attached_to, ProjectORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.project,
             )
         elif isinstance(attached_to, DocumentTagORM):
             return MemoRead(
-                **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
                 attached_object_id=attached_to.id,
                 attached_object_type=AttachedObjectType.document_tag,
             )
@@ -442,7 +442,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
         # TODO ASK FLO: HOW do i get db obj here?
         with SQLService().db_session() as db:
             return srsly.json_dumps(
-                self.get_memo_read_dto_from_orm(db=db, db_obj=db_obj).dict()
+                self.get_memo_read_dto_from_orm(db=db, db_obj=db_obj).model_dump()
             )
 
 

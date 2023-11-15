@@ -135,7 +135,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
         return len(del_rows)
 
     def _get_action_state_from_orm(self, db_obj: DocumentTagORM) -> Optional[str]:
-        return srsly.json_dumps(DocumentTagRead.from_orm(db_obj).dict())
+        return srsly.json_dumps(DocumentTagRead.model_validate(db_obj).model_dump())
 
 
 crud_document_tag = CRUDDocumentTag(DocumentTagORM)

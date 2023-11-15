@@ -116,10 +116,10 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
             )
         return srsly.json_dumps(
             ProjectReadAction(
-                **ProjectRead.from_orm(db_obj).dict(),
-                users=[UserRead.from_orm(user) for user in db_obj.users],
+                **ProjectRead.model_validate(db_obj, from_attributes=True).model_dump(),
+                users=[UserRead.model_validate(user) for user in db_obj.users],
                 num_sdocs=num_sdocs
-            ).dict()
+            ).model_dump()
         )
 
 

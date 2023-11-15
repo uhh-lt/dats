@@ -140,9 +140,11 @@ class CRUDBBoxAnnotation(
     def _get_action_state_from_orm(self, db_obj: BBoxAnnotationORM) -> Optional[str]:
         return srsly.json_dumps(
             BBoxAnnotationReadResolvedCode(
-                **BBoxAnnotationRead.from_orm(db_obj).dict(exclude={"current_code_id"}),
-                code=CodeRead.from_orm(db_obj.current_code.code),
-            ).dict()
+                **BBoxAnnotationRead.model_validate(db_obj).model_dump(
+                    exclude={"current_code_id"}
+                ),
+                code=CodeRead.model_validate(db_obj.current_code.code),
+            ).model_dump()
         )
 
 
