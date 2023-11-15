@@ -144,7 +144,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         try:
             with self.sqls.db_session() as db:
                 db_obj = crud_prepro_job.create(db=db, create_dto=create_dto)
-                read_dto = PreprocessingJobRead.from_orm(db_obj)
+                read_dto = PreprocessingJobRead.model_validate(db_obj)
         except Exception as e:
             raise HTTPException(
                 detail=f"Could not store PreprocessingJob! {e}", status_code=500
@@ -180,7 +180,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         logger.info(f"Aborting PreprocessingJob {ppj_id}...")
         with self.sqls.db_session() as db:
             db_obj = crud_prepro_job.read(db=db, uuid=ppj_id)
-            ppj = PreprocessingJobRead.from_orm(db_obj)
+            ppj = PreprocessingJobRead.model_validate(db_obj)
         if ppj.status != BackgroundJobStatus.RUNNING:
             raise HTTPException(
                 detail=(
@@ -195,7 +195,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 uuid=ppj_id,
                 update_dto=PreprocessingJobUpdate(status=BackgroundJobStatus.ABORTED),
             )
-            ppj = PreprocessingJobRead.from_orm(db_obj)
+            ppj = PreprocessingJobRead.model_validate(db_obj)
         return ppj
 
     def _create_and_start_preprocessing_job_from_payloads_async(
@@ -241,7 +241,7 @@ class PreprocessingService(metaclass=SingletonMeta):
                 uuid=ppj.id,
                 update_dto=PreprocessingJobUpdate(status=BackgroundJobStatus.RUNNING),
             )
-            ppj = PreprocessingJobRead.from_orm(db_obj)
+            ppj = PreprocessingJobRead.model_validate(db_obj)
 
         return ppj
 
