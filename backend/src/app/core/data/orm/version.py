@@ -1,6 +1,7 @@
-from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import Integer
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.data.orm.orm_base import ORMBase
 
 
 class VersionORM(ORMBase):

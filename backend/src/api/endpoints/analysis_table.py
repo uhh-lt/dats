@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.analysis_table import crud_analysis_table
 from app.core.data.dto.analysis_table import (
     AnalysisTableCreate,
@@ -9,6 +8,8 @@ from app.core.data.dto.analysis_table import (
 )
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/analysisTable",

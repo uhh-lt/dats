@@ -1,13 +1,14 @@
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Union
 
+from pydantic import BaseModel, Field
+
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.memo import AttachedObjectType, MemoRead
 from app.core.data.dto.util import PaginatedResults
-from pydantic import BaseModel, Field
 
 
 class SpanEntity(BaseModel):

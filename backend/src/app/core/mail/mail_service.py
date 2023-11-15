@@ -1,9 +1,10 @@
-from app.core.data.dto.feedback import FeedbackRead
-from app.core.data.dto.user import UserRead
-from app.util.singleton_meta import SingletonMeta
 from config import conf
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import EmailStr
+
+from app.core.data.dto.feedback import FeedbackRead
+from app.core.data.dto.user import UserRead
+from app.util.singleton_meta import SingletonMeta
 
 
 class MailService(metaclass=SingletonMeta):

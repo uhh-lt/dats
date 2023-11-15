@@ -1,11 +1,12 @@
 from pathlib import Path
 from typing import List
 
+from pydantic import Field
+
 from app.preprocessing.pipeline.model.audio.wordleveltranscription import (
     WordLevelTranscription,
 )
 from app.preprocessing.pipeline.model.preprodoc_base import PreProDocBase
-from pydantic import Field
 
 
 class PreProAudioDoc(PreProDocBase):

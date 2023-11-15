@@ -3,6 +3,9 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import weaviate
+from config import conf
+from loguru import logger
+
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import (
@@ -20,8 +23,6 @@ from app.preprocessing.ray_model_worker.dto.clip import (
     ClipTextEmbeddingInput,
 )
 from app.util.singleton_meta import SingletonMeta
-from config import conf
-from loguru import logger
 
 
 class SimSearchService(metaclass=SingletonMeta):

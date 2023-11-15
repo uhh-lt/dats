@@ -1,6 +1,10 @@
 from typing import List, Optional
 
 import srsly
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy import and_
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.memo import (
@@ -24,9 +28,6 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
-from fastapi.encoders import jsonable_encoder
-from sqlalchemy import and_
-from sqlalchemy.orm import Session
 
 
 class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):

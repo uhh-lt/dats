@@ -3,6 +3,9 @@ from datetime import datetime
 from typing import List, Optional, Union
 
 import redis
+from config import conf
+from loguru import logger
+
 from app.core.data.dto.crawler_job import (
     CrawlerJobCreate,
     CrawlerJobRead,
@@ -11,8 +14,6 @@ from app.core.data.dto.crawler_job import (
 from app.core.data.dto.export_job import ExportJobCreate, ExportJobRead, ExportJobUpdate
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.util.singleton_meta import SingletonMeta
-from config import conf
-from loguru import logger
 
 
 class RedisService(metaclass=SingletonMeta):

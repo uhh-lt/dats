@@ -1,8 +1,9 @@
 from typing import List, Optional, Union
 
+from pydantic import BaseModel, Field
+
 from app.core.data.dto.bbox_annotation import (
     BBoxAnnotationRead,
-    BBoxAnnotationReadResolvedCode,
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -12,7 +13,6 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
 )
-from pydantic import BaseModel, Field
 
 
 class CodeOccurrence(BaseModel):

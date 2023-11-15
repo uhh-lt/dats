@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.analysis_service import AnalysisService
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.analysis import (
@@ -17,6 +16,8 @@ from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.search_service import SearchService
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]

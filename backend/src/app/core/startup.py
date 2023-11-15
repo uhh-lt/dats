@@ -86,7 +86,6 @@ def __init_services__(
 ) -> None:
     # import celery workers to configure
     # import and init RepoService
-    from app.celery.celery_worker import celery_worker
     from app.core.data.repo.repo_service import RepoService
 
     repos = RepoService()
@@ -127,11 +126,12 @@ def __init_services__(
 
 
 def __create_system_user__() -> None:
+    from config import conf
+    from pydantic import EmailStr
+
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
-    from config import conf
-    from pydantic import EmailStr
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):

@@ -2,6 +2,8 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 
+from pydantic import BaseModel, Field, validator
+
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.preprocessing_job_payload import (
@@ -9,7 +11,6 @@ from app.core.data.dto.preprocessing_job_payload import (
     PreprocessingJobPayloadCreateWithoutPreproJobId,
     PreprocessingJobPayloadRead,
 )
-from pydantic import BaseModel, Field, validator
 
 
 # Properties shared across all DTOs

@@ -8,6 +8,10 @@ from typing import List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import magic
+from config import conf
+from fastapi import HTTPException, UploadFile
+from loguru import logger
+
 from app.core.data.doc_type import DocType, get_doc_type
 from app.core.data.dto.source_document import (
     SDOC_FILENAME_MAX_LENGTH,
@@ -17,9 +21,6 @@ from app.core.data.dto.source_document import (
     SourceDocumentRead,
 )
 from app.util.singleton_meta import SingletonMeta
-from config import conf
-from fastapi import HTTPException, UploadFile
-from loguru import logger
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...
@@ -100,9 +101,7 @@ class RepoService(metaclass=SingletonMeta):
                 # remove the suffixes to only truncate the true name / stem
                 # and then truncate to max length
                 filename.name.removesuffix(suffix)[:SDOC_FILENAME_MAX_LENGTH]
-            ).with_suffix(
-                suffix
-            )  # and add suffix again
+            ).with_suffix(suffix)  # and add suffix again
         return str(filename)
 
     def _create_root_repo_directory_structure(self, remove_if_exists: bool = False):

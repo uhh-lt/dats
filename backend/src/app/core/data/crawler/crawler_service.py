@@ -4,6 +4,8 @@ import zipfile
 from pathlib import Path
 from typing import List, Optional
 
+from loguru import logger
+
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.crawler_job import (
@@ -16,7 +18,6 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
-from loguru import logger
 
 
 class NoDataToCrawlError(Exception):

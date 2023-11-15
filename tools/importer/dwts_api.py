@@ -133,7 +133,7 @@ class DWTSAPI:
 
     def create_tag(self, title: str, description: str, color: str, project_id: int):
         r = requests.put(
-            self.BASE_PATH + f"doctag",
+            self.BASE_PATH + "doctag",
             data=json.dumps(
                 {
                     "title": title,

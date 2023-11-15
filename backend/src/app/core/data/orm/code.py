@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.bbox_annotation import BBoxAnnotationORM

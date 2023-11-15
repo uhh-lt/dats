@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, List, Optional
 
-from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import CheckConstraint, ForeignKey, Index, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import coalesce
+
+from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM

@@ -1,9 +1,10 @@
 from typing import List
 
-from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.data.orm.orm_base import ORMBase
 
 
 class SourceDocumentDataORM(ORMBase):

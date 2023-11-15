@@ -1,7 +1,8 @@
 from urllib.parse import urlparse
 
-from crawler.items import GenericWebsiteItem
 from scrapy import Selector
+
+from crawler.items import GenericWebsiteItem
 
 
 class ExtractImagePipeline:

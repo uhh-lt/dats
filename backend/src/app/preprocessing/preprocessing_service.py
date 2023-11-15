@@ -2,6 +2,10 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 import magic
+from fastapi import HTTPException, UploadFile
+from loguru import logger
+from tqdm import tqdm
+
 from app.celery.background_jobs import (
     execute_audio_preprocessing_pipeline_apply_async,
     execute_image_preprocessing_pipeline_apply_async,
@@ -33,9 +37,6 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.preprocessing_pipeline import PreprocessingPipeline
 from app.util.singleton_meta import SingletonMeta
-from fastapi import HTTPException, UploadFile
-from loguru import logger
-from tqdm import tqdm
 
 
 class PreprocessingService(metaclass=SingletonMeta):

@@ -1,9 +1,10 @@
 from typing import List
 
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.whiteboard import WhiteboardCreate, WhiteboardUpdate
 from app.core.data.orm.whiteboard import WhiteboardORM
-from sqlalchemy.orm import Session
 
 
 class CRUDWhiteboard(CRUDBase[WhiteboardORM, WhiteboardCreate, WhiteboardUpdate]):

@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, Optional
 
-from app.core.data.dto.background_job_base import BackgroundJobStatus
-from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.data.dto.background_job_base import BackgroundJobStatus
+from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.preprocessing_job import PreprocessingJobORM

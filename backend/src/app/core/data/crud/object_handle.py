@@ -1,5 +1,9 @@
 from typing import Optional, Union
 
+from psycopg2.errors import UniqueViolation
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -29,9 +33,6 @@ from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_group import SpanGroupORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
-from psycopg2.errors import UniqueViolation
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 
 class CRUDObjectHandle(CRUDBase[ObjectHandleORM, ObjectHandleCreate, None]):

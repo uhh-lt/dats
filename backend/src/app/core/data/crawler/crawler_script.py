@@ -1,11 +1,12 @@
 import shutil
 from pathlib import Path
 
-from app.core.data.dto.crawler_job import CrawlerJobRead
-from app.core.data.repo.repo_service import RepoService
 from loguru import logger
 from scrapy.crawler import CrawlerProcess
 from twisted.internet import asyncioreactor
+
+from app.core.data.dto.crawler_job import CrawlerJobRead
+from app.core.data.repo.repo_service import RepoService
 
 asyncioreactor.install()
 
@@ -18,7 +19,6 @@ from app.core.data.crawler.crawler_service import (
 from app.core.data.crawler.crawler_settings import get_settings
 from app.core.data.crawler.spiders.list_of_urls_spider import ListOfURLSSpider
 from app.core.data.dto.background_job_base import BackgroundJobStatus
-from twisted.internet import reactor
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -1,10 +1,11 @@
 from typing import List
 
-from api.dependencies import get_current_user
 from app.celery.background_jobs import prepare_and_start_crawling_job_async
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from fastapi import APIRouter, Depends
+
+from api.dependencies import get_current_user
 
 router = APIRouter(
     prefix="/crawler", dependencies=[Depends(get_current_user)], tags=["crawler"]

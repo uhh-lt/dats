@@ -1,6 +1,8 @@
 import datetime
 from typing import List, Optional
 
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.annotation_document import (
@@ -8,7 +10,6 @@ from app.core.data.dto.annotation_document import (
     AnnotationDocumentUpdate,
 )
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
-from sqlalchemy.orm import Session
 
 
 class CRUDAnnotationDocument(

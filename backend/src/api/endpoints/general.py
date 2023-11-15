@@ -1,5 +1,4 @@
-from api.dependencies import get_current_user
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 
 router = APIRouter()

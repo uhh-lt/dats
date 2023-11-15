@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING, Any, Dict, List
 
-from app.core.data.dto.preprocessing_job import PreprocessingJobPayloadRead
 from pydantic import BaseModel, Field
+
+from app.core.data.dto.preprocessing_job import PreprocessingJobPayloadRead
 
 if TYPE_CHECKING:
     from app.preprocessing.pipeline.model.pipeline_step import PipelineStep

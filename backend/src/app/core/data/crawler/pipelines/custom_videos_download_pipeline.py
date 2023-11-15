@@ -3,9 +3,10 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from app.core.data.crawler.crawled_item import CrawledItem
 from scrapy.http import Request
 from scrapy.pipelines.files import FilesPipeline
+
+from app.core.data.crawler.crawled_item import CrawledItem
 
 from ..utils import slugify
 

@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING
 
-from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.core.data.orm.orm_base import ORMBase
 
 if TYPE_CHECKING:
     from app.core.data.orm.object_handle import ObjectHandleORM

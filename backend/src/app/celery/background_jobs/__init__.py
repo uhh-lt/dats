@@ -1,15 +1,14 @@
 from pathlib import Path
 from typing import Any, List
 
+# noinspection PyUnresolvedReferences,PyProtectedMember
+from celery.canvas import Signature
+
 from app.core.data.crawler.crawler_service import CrawlerService
 from app.core.data.dto.crawler_job import CrawlerJobParameters, CrawlerJobRead
 from app.core.data.dto.export_job import ExportJobParameters, ExportJobRead
 from app.core.data.export.export_service import ExportService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-
-# noinspection PyUnresolvedReferences,PyProtectedMember
-from celery.canvas import Signature
-from celery.result import AsyncResult
 
 import_uploaded_archive_task = (
     "app.celery.background_jobs.tasks.import_uploaded_archive"

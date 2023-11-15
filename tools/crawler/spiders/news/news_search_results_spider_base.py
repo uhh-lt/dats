@@ -2,6 +2,7 @@ import datetime
 from typing import List
 
 import scrapy
+
 from crawler.items import GenericWebsiteItem
 from crawler.spiders.spider_base import SpiderBase
 from crawler.spiders.utils import slugify
