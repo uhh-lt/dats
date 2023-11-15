@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SourceDocumentLinkBase(BaseModel):
@@ -27,6 +27,4 @@ class SourceDocumentLinkRead(SourceDocumentLinkBase):
     linked_source_document_id: int = Field(
         description="ID of the linked SourceDocument."
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -7,7 +7,7 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.util import PaginatedResults
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .dto_base import UpdateDTOBase
 
@@ -46,9 +46,7 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
     created: datetime = Field(description="The created timestamp of the SourceDocument")
     updated: datetime = Field(description="Updated timestamp of the Memo")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SourceDocumentReadAction(SourceDocumentRead):

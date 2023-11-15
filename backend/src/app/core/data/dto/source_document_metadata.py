@@ -1,7 +1,7 @@
 from typing import Optional
 
 from app.core.data.dto.dto_base import UpdateDTOBase
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Properties shared across all DTOs
@@ -49,6 +49,4 @@ class SourceDocumentMetadataRead(SourceDocumentMetadataBaseDTO):
     source_document_id: int = Field(
         description="SourceDocument the SourceDocumentMetadata belongs to"
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

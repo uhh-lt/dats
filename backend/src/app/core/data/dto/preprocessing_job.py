@@ -9,7 +9,7 @@ from app.core.data.dto.preprocessing_job_payload import (
     PreprocessingJobPayloadCreateWithoutPreproJobId,
     PreprocessingJobPayloadRead,
 )
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # Properties shared across all DTOs
@@ -35,7 +35,7 @@ class PreprocessingJobCreate(PreprocessingJobBaseDTO):
         )
     )
 
-    @validator("payloads", pre=True)
+    @field_validator("payloads", mode="before")
     def payload_must_contain_at_least_one_doc(
         cls, v: List[PreprocessingJobPayloadCreate]
     ) -> List[PreprocessingJobPayloadCreate]:
@@ -67,12 +67,10 @@ class PreprocessingJobRead(PreprocessingJobBaseDTO):
             "preprocessed and imported to the project within this PreprocessingJob"
         )
     )
+    model_config = ConfigDict(from_attributes=True)
 
-    @validator("payloads")
+    @field_validator("payloads")
     def payloads_always_same_order(
         cls, v: List[PreprocessingJobPayloadRead]
     ) -> List[PreprocessingJobPayloadRead]:
         return sorted(v, key=lambda payload: payload.filename)
-
-    class Config:
-        orm_mode = True

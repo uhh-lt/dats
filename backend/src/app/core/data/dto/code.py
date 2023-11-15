@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from app.util.color import get_next_color
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .dto_base import UpdateDTOBase
 
@@ -42,6 +42,4 @@ class CodeRead(CodeBaseDTO):
     user_id: int = Field(description="User the Code belongs to")
     created: datetime = Field(description="Created timestamp of the Code")
     updated: datetime = Field(description="Updated timestamp of the Code")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

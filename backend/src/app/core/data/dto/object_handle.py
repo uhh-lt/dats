@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 # Properties shared across all DTOs
@@ -19,7 +19,7 @@ class ObjectHandleBaseDTO(BaseModel):
     memo_id: Optional[int] = None
 
     # noinspection PyMethodParameters
-    @root_validator
+    @model_validator(mode="before")  # TODO: Before == root?
     def check_at_least_one_not_null(cls, values):
         for val in values:
             if val:
@@ -35,6 +35,4 @@ class ObjectHandleCreate(ObjectHandleBaseDTO):
 # Properties for reading (as in ORM)
 class ObjectHandleRead(ObjectHandleBaseDTO):
     id: int
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

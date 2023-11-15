@@ -4,7 +4,7 @@ from typing import Optional
 from app.core.data.doc_type import DocType
 from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.dto_base import UpdateDTOBase
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PreprocessingJobPayloadBaseDTO(BaseModel):
@@ -81,6 +81,4 @@ class PreprocessingJobPayloadRead(PreprocessingJobPayloadBaseDTO):
         description="The error message if the payload failed.",
         default=None,
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

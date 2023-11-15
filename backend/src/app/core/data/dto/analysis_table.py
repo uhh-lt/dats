@@ -2,7 +2,7 @@ from datetime import datetime
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.table_type import TableType
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Properties shared across all DTOs
@@ -30,6 +30,4 @@ class AnalysisTableRead(AnalysisTableBaseDTO):
     user_id: int = Field(description="User the AnalysisTable belongs to")
     created: datetime = Field(description="Created timestamp of the AnalysisTable")
     updated: datetime = Field(description="Updated timestamp of the AnalysisTable")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
