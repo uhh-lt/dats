@@ -78,15 +78,15 @@ class SQLService(metaclass=SingletonMeta):
         try:
             db_uri = PostgresDsn.build(
                 scheme="postgresql",
-                user=conf.postgres.user,
+                username=conf.postgres.user,
                 password=conf.postgres.password,
                 host=conf.postgres.host,
-                port=conf.postgres.port,
+                port=int(conf.postgres.port),
                 path=f"/{conf.postgres.db}",
             )
 
             engine = create_engine(
-                db_uri,
+                str(db_uri),
                 pool_pre_ping=True,
                 pool_size=conf.postgres.pool.pool_size,
                 max_overflow=conf.postgres.pool.max_overflow,
