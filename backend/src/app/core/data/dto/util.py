@@ -17,4 +17,6 @@ class PaginatedResults(BaseModel):
 
 
 class MultipleIdsParameter(BaseModel):
-    ids: List[int] = Field(description="List of multiple integer IDs", min_items=1)
+    ids: List[int] = Field(
+        description="List of multiple integer IDs", min_length=1
+    )  # TODO: Docs say min_items -> min_length but ml is only for Strings?

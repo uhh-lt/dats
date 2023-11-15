@@ -384,8 +384,8 @@ class SimSearchQuery(BaseModel):
     threshold: float = Field(
         description="The minimum distance to use for the sim search.",
         default=0.0,
-        min=0.0,
-        max=1.0,
+        ge=0.0,
+        le=1.0,
     )
 
 
