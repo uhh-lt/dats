@@ -1,76 +1,16 @@
 from contextlib import contextmanager
 from typing import Generator
 
+from app.core.data.orm.orm_base import ORMBase
+from app.core.db.import_all_orms import *  # noqa: F401, F403
+from app.util.singleton_meta import SingletonMeta
+from config import conf
 from loguru import logger
 from pydantic import PostgresDsn
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from sqlalchemy_utils import create_database, database_exists, drop_database
-
-"""we import all ORM here so that SQLAlchemy knows about them to generate the SQL tables"""
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.action import ActionORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.analysis_table import AnalysisTableORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.annotation_document import AnnotationDocumentORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.code import CodeORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.document_tag import DocumentTagORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.memo import MemoORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.object_handle import ObjectHandleORM
-from app.core.data.orm.orm_base import ORMBase
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.preprocessing_job import PreprocessingJobORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.project import ProjectORM, ProjectUserLinkTable
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.source_document import SourceDocumentORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.source_document_data import SourceDocumentDataORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.source_document_link import SourceDocumentLinkORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.span_annotation import SpanAnnotationORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.span_group import SpanGroupORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.span_text import SpanTextORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.user import UserORM
-
-# noinspection PyUnresolvedReferences
-from app.core.data.orm.whiteboard import WhiteboardORM
-from app.util.singleton_meta import SingletonMeta
-from config import conf
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy_utils import create_database, database_exists, drop_database
 
 
 class SQLService(metaclass=SingletonMeta):
