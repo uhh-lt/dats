@@ -2,6 +2,7 @@
 # ruff: noqa: E402
 
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -82,12 +83,23 @@ def custom_generate_unique_id(route: APIRoute):
     return f"{route.tags[0]}-{route.name}"
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting D-WISE Tool Suite FastAPI!")
+    yield
+    # Shutdown
+    logger.info("Stopping D-WISE Tool Suite FastAPI!")
+    RepoService().purge_temporary_files()
+
+
 # create the FastAPI app
 app = FastAPI(
     # title="D-WISE Tool Suite Backend API",
     # description="The REST API for the D-WISE Tool Suite Backend",
     # version="alpha_mwp_1",
     generate_unique_id_function=custom_generate_unique_id,
+    lifespan=lifespan,
 )
 
 
@@ -223,17 +235,6 @@ async def integrity_error_handler(_, exc: IntegrityError):
         return PlainTextResponse(msg, status_code=409)
     else:
         return PlainTextResponse(str(exc), status_code=500)
-
-
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Starting D-WISE Tool Suite FastAPI!")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("Stopping D-WISE Tool Suite FastAPI!")
-    RepoService().purge_temporary_files()
 
 
 # include the endpoint routers
