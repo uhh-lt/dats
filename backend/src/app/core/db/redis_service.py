@@ -82,7 +82,9 @@ class RedisService(metaclass=SingletonMeta):
 
         if isinstance(export_job, ExportJobCreate):
             key = self._generate_random_key()
-            exj = ExportJobRead(id=key, created=datetime.now(), **export_job.dict())
+            exj = ExportJobRead(
+                id=key, created=datetime.now(), **export_job.model_dump()
+            )
         elif isinstance(export_job, ExportJobRead):
             key = export_job.id
             exj = export_job
@@ -109,8 +111,8 @@ class RedisService(metaclass=SingletonMeta):
 
     def update_export_job(self, key: str, update: ExportJobUpdate) -> ExportJobRead:
         exj = self.load_export_job(key=key)
-        data = exj.dict()
-        data.update(**update.dict())
+        data = exj.model_dump()
+        data.update(**update.model_dump())
         exj = ExportJobRead(**data)
         exj = self.store_export_job(export_job=exj)
         logger.debug(f"Updated ExportJob {key}")
@@ -160,8 +162,8 @@ class RedisService(metaclass=SingletonMeta):
 
     def update_crawler_job(self, key: str, update: CrawlerJobUpdate) -> CrawlerJobRead:
         cj = self.load_crawler_job(key=key)
-        data = cj.dict()
-        data.update(**update.dict())
+        data = cj.model_dump()
+        data.update(**update.model_dump())
         cj = CrawlerJobRead(**data)
         cj = self.store_crawler_job(crawler_job=cj)
         logger.debug(f"Updated CrawlerJob {key}")
