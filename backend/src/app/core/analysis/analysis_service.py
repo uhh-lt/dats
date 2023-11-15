@@ -162,8 +162,8 @@ class AnalysisService(metaclass=SingletonMeta):
             res = query.all()
             span_code_occurrences = [
                 CodeOccurrence(
-                    sdoc=SourceDocumentRead.from_orm(x[0]),
-                    code=CodeRead.from_orm(x[1]),
+                    sdoc=SourceDocumentRead.model_validate(x[0]),
+                    code=CodeRead.model_validate(x[1]),
                     text=x[2],
                     count=x[3],
                 )
@@ -207,8 +207,8 @@ class AnalysisService(metaclass=SingletonMeta):
             res = query.all()
             bbox_code_occurrences = [
                 CodeOccurrence(
-                    sdoc=SourceDocumentRead.from_orm(x[0]),
-                    code=CodeRead.from_orm(x[1]),
+                    sdoc=SourceDocumentRead.model_validate(x[0]),
+                    code=CodeRead.model_validate(x[1]),
                     text="Image Annotation",
                     # text=f"Image Annotation ({x[2].x_min}, {x[2].y_min}, {x[2].x_max}, {x[2].y_max})",
                     count=x[3],
@@ -258,9 +258,9 @@ class AnalysisService(metaclass=SingletonMeta):
             res = query.all()
             span_code_occurrences = [
                 AnnotationOccurrence(
-                    annotation=SpanAnnotationRead.from_orm(x[0]),
-                    sdoc=SourceDocumentRead.from_orm(x[1]),
-                    code=CodeRead.from_orm(x[2]),
+                    annotation=SpanAnnotationRead.model_validate(x[0]),
+                    sdoc=SourceDocumentRead.model_validate(x[1]),
+                    code=CodeRead.model_validate(x[2]),
                     text=x[3],
                 )
                 for x in res
@@ -299,9 +299,9 @@ class AnalysisService(metaclass=SingletonMeta):
             res = query.all()
             bbox_code_occurrences = [
                 AnnotationOccurrence(
-                    annotation=BBoxAnnotationRead.from_orm(x[0]),
-                    sdoc=SourceDocumentRead.from_orm(x[1]),
-                    code=CodeRead.from_orm(x[2]),
+                    annotation=BBoxAnnotationRead.model_validate(x[0]),
+                    sdoc=SourceDocumentRead.model_validate(x[1]),
+                    code=CodeRead.model_validate(x[2]),
                     text="Image Annotation",
                 )
                 for x in res
@@ -360,18 +360,19 @@ class AnalysisService(metaclass=SingletonMeta):
             annotated_segments = [
                 AnnotatedSegment(
                     annotation=SpanAnnotationReadResolved(
-                        **SpanAnnotationRead.from_orm(row[0]).dict(
+                        **SpanAnnotationRead.model_validate(row[0]).model_dump(
                             exclude={"current_code_id", "span_text_id"}
                         ),
-                        code=CodeRead.from_orm(row[2]),
+                        code=CodeRead.model_validate(row[2]),
                         span_text=row[3],
                         user_id=row[4].user_id,
                         sdoc_id=row[4].source_document_id,
                     ),
-                    sdoc=SourceDocumentRead.from_orm(row[1]),
+                    sdoc=SourceDocumentRead.model_validate(row[1]),
                     memo=get_object_memos(db_obj=row[0], user_id=user_id),
                     tags=[
-                        DocumentTagRead.from_orm(tag) for tag in row[1].document_tags
+                        DocumentTagRead.model_validate(tag)
+                        for tag in row[1].document_tags
                     ],
                 )
                 for row in result
