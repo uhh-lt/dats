@@ -4,55 +4,60 @@ from pydantic import BaseModel, Field
 
 
 class SpacySpan(BaseModel):
-    text: str = Field(description="The surface form of the span", example="Hamburg")
+    text: str = Field(description="The surface form of the span", examples=["Hamburg"])
     start_char: int = Field(
-        description="The start character index of the span in the input text", example=7
+        description="The start character index of the span in the input text",
+        examples=[7],
     )
     end_char: int = Field(
-        description="The end character index of the span in the input text", example=14
+        description="The end character index of the span in the input text",
+        examples=[14],
     )
     start_token: int = Field(
-        description="The start token index of the span in the input text", example=1
+        description="The start token index of the span in the input text", examples=[1]
     )
     end_token: int = Field(
-        description="The end token index of the span in the input text", example=2
+        description="The end token index of the span in the input text", examples=[2]
     )
     label: Optional[str] = Field(
-        description="The optional label of the span", example="GPE", default=None
+        description="The optional label of the span", examples=["GPE"], default=None
     )
 
 
 class SpacyToken(BaseModel):
-    text: str = Field(description="The surface form of the token", example="Hamburg")
+    text: str = Field(description="The surface form of the token", examples=["Hamburg"])
     start_char: int = Field(
         description="The start character index of the token in the input text",
-        example=7,
+        examples=[7],
     )
     end_char: int = Field(
-        description="The end character index of the token in the input text", example=14
+        description="The end character index of the token in the input text",
+        examples=[14],
     )
-    pos: str = Field(description="The part-of-speech tag of the token", example="PROPN")
-    lemma: str = Field(description="The lemma of the token", example="Hamburg")
+    pos: str = Field(
+        description="The part-of-speech tag of the token", examples=["PROPN"]
+    )
+    lemma: str = Field(description="The lemma of the token", examples=["Hamburg"])
     is_stopword: bool = Field(
-        description="Whether the token is a stopword", example=False
+        description="Whether the token is a stopword", examples=[False]
     )
     is_punctuation: bool = Field(
-        description="Whether the token is a punctuation", example=False
+        description="Whether the token is a punctuation", examples=[False]
     )
     is_alpha: bool = Field(
-        description="Whether the token is an alphabetic character", example=True
+        description="Whether the token is an alphabetic character", examples=[True]
     )
-    is_digit: bool = Field(description="Whether the token is a digit", example=False)
+    is_digit: bool = Field(description="Whether the token is a digit", examples=[False])
 
 
 class SpacyInput(BaseModel):
-    text: str = Field(example="I love Hamburg!")
-    language: str = Field(example="en")
+    text: str = Field(examples=["I love Hamburg!"])
+    language: str = Field(examples=["en"])
 
 
 class SpacyPipelineOutput(BaseModel):
     tokens: List[SpacyToken] = Field(
-        example=[
+        examples=[
             SpacyToken(
                 text="I",
                 start_char=0,
@@ -102,7 +107,7 @@ class SpacyPipelineOutput(BaseModel):
     )
 
     ents: List[SpacySpan] = Field(
-        example=[
+        examples=[
             SpacySpan(
                 label="GPE",
                 text="Hamburg",
@@ -116,7 +121,7 @@ class SpacyPipelineOutput(BaseModel):
     )
 
     sents: List[SpacySpan] = Field(
-        example=[
+        examples=[
             SpacySpan(
                 text="I love Hamburg!",
                 start_char=0,
