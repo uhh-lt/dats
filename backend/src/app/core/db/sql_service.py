@@ -66,8 +66,10 @@ class SQLService(metaclass=SingletonMeta):
 
     @contextmanager
     def db_session(self) -> Generator[Session, None, None]:
+        session = None
         try:
             session = self.session_maker()
             yield session
         finally:
-            session.close()
+            if session is not None:
+                session.close()
