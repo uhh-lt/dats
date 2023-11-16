@@ -85,7 +85,7 @@ async def get_all_span_annotations(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
     resolve_code: bool = Depends(resolve_code_param),
 ) -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
@@ -129,7 +129,7 @@ async def get_all_bbox_annotations(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
     resolve_code: bool = Depends(resolve_code_param),
 ) -> List[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
@@ -170,7 +170,7 @@ async def get_all_span_groups(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> List[SpanGroupRead]:
     # TODO Flo: only if the user has access?
     return [

@@ -33,7 +33,13 @@ async def skip_limit_params(
         default=None,
     ),
 ) -> Dict[str, int]:
-    return {"skip": skip, "limit": limit}
+    result = {}
+    if skip is not None:
+        result["skip"] = skip
+    if limit is not None:
+        result["limit"] = limit
+
+    return result
 
 
 async def resolve_code_param(
