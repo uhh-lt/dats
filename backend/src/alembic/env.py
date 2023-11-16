@@ -2,7 +2,7 @@ from logging.config import fileConfig
 from os import environ
 
 from alembic import context
-from app.core.data.orm import ORMBase
+from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
