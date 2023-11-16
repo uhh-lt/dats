@@ -48,9 +48,12 @@ router = APIRouter(
     dependencies=[is_authorized(ActionType.CREATE, crud_project)],
 )
 async def create_new_project(
-    *, db: Session = Depends(get_db_session), proj: ProjectCreate
+    *,
+    db: Session = Depends(get_db_session),
+    proj: ProjectCreate,
+    current_user: UserRead = Depends(get_current_user),
 ) -> ProjectRead:
-    db_obj = crud_project.create(db=db, create_dto=proj)
+    db_obj = crud_project.create(db=db, create_dto=proj, creating_user=current_user)
 
     try:
         # create the ES Indices
