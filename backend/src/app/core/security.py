@@ -11,7 +11,8 @@ from config import conf
 __password_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 __algo = conf.api.auth.jwt.algo
-__ttl = int(conf.api.auth.jwt.ttl)
+__access_ttl = int(conf.api.auth.jwt.access_ttl)
+__refresh_ttl = int(conf.api.auth.jwt.refresh_ttl)
 __jwt_secret = conf.api.auth.jwt.secret
 
 
@@ -23,8 +24,8 @@ def generate_password_hash(password: str) -> str:
     return __password_ctx.hash(password)
 
 
-def generate_jwt(user: UserRead) -> str:
-    expire = datetime.utcnow() + timedelta(seconds=__ttl)
+def generate_access_jwt(user: UserRead) -> str:
+    expire = datetime.utcnow() + timedelta(seconds=__access_ttl)
     payload = {
         "sub": user.email,
         "type": "access_token",

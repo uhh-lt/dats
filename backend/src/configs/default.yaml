@@ -11,7 +11,8 @@ api:
   auth:
     jwt:
       token_url: /authentication/login
-      ttl: ${oc.env:JWT_TTL, 600} # seconds
+      access_ttl: ${oc.env:JWT_TTL, 3600} # 1h in seconds
+      refresh_ttl: ${oc.env:JWT_REFRESH_TTL, 2592000} # 30 days in seconds
       algo: ${oc.env:JWT_ALGO, HS256}
       secret: ${oc.env:JWT_SECRET, ""}
 

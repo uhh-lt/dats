@@ -66,5 +66,6 @@ async def login(
         raise credentials_exception
 
     return UserAuthorizationHeaderData(
-        access_token=generate_jwt(UserRead.model_validate(user)), token_type="bearer"
+        access_token=generate_jwt(user)[0],
+        token_type="bearer",
     )
