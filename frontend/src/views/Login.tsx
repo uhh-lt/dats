@@ -25,33 +25,26 @@ function Login() {
 
   // form handling
   const handleLogin = async (data: any) => {
-    login(data.user, data.password)
-      .then(() => {
-        // Send them back to the page they tried to visit when they were redirected to the login page
-        navigate(from, { replace: true });
-      })
-      .catch((e: ApiError) => {
-        let msg = "Server is not available!";
-        if (e.status === 403) {
-          msg = "User and password do not match!";
-        }
-        setError("user", {
-          message: msg,
-        });
-        setError("password", {
-          message: msg,
-        });
+    login(data.user, data.password).catch((e: ApiError) => {
+      let msg = "Server is not available!";
+      if (e.status === 403) {
+        msg = "User and password do not match!";
+      }
+      setError("user", {
+        message: msg,
       });
+      setError("password", {
+        message: msg,
+      });
+    });
   };
   const handleError = (data: any) => console.error(data);
 
   useEffect(() => {
-    if (!navigator.userAgent.includes("Chrome")) {
-      alert(
-        "Please use the Chrome browser for the best experience! We cannot guarantee that the DWTS works properly in other browsers.",
-      );
+    if (isLoggedIn) {
+      navigate(from, { replace: true });
     }
-  }, []);
+  }, [isLoggedIn]);
 
   return (
     <Box
@@ -114,6 +107,17 @@ function Login() {
               Login
             </Button>
           </CardActions>
+        </Card>
+      )}
+
+      {!navigator.userAgent.includes("Chrome") && (
+        <Card sx={{ width: "66%", mt: 4 }} variant="outlined" component={"div"}>
+          <CardContent>
+            <Typography component="div" align="justify">
+              Please use the Chrome browser for the best experience! We cannot guarantee that the DWTS works properly in
+              other browsers.
+            </Typography>
+          </CardContent>
         </Card>
       )}
       {process.env.REACT_APP_STABILITY === "UNSTABLE" && (
