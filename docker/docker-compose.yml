@@ -167,7 +167,12 @@ services:
       HUGGINGFACE_HUB_CACHE: /models_cache
       TRANSFORMERS_CACHE: /models_cache
       TORCH_HOME: /models_cache
-      RAY_PROCESSING_DEVICE: ${RAY_PROCESSING_DEVICE:-cuda}
+      RAY_PROCESSING_DEVICE_SPACY: ${RAY_PROCESSING_DEVICE_SPACY:-cpu}
+      RAY_PROCESSING_DEVICE_WHISPER: ${RAY_PROCESSING_DEVICE_WHISPER:-cuda}
+      RAY_PROCESSING_DEVICE_DETR: ${RAY_PROCESSING_DEVICE_DETR:-cuda}
+      RAY_PROCESSING_DEVICE_VIT_GPT2: ${RAY_PROCESSING_DEVICE_VIT_GPT2:-cuda}
+      RAY_PROCESSING_DEVICE_BLIP2: ${RAY_PROCESSING_DEVICE_BLIP2:-cuda}
+      RAY_PROCESSING_DEVICE_CLIP: ${RAY_PROCESSING_DEVICE_CLIP:-cuda}
     volumes:
       - ../backend/src/app/preprocessing/ray_model_worker:/dwts_code_ray
       - ./spacy_models:/spacy_models
