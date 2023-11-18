@@ -1,7 +1,7 @@
-from typing import Dict, Generator, Optional
+from typing import AsyncGenerator, Dict, Optional
 
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.user import UserRead
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.security import decode_jwt
 from config import conf
@@ -33,11 +33,17 @@ async def skip_limit_params(
         default=None,
     ),
 ) -> Dict[str, int]:
-    return {"skip": skip, "limit": limit}
+    result = {}
+    if skip is not None:
+        result["skip"] = skip
+    if limit is not None:
+        result["limit"] = limit
+
+    return result
 
 
 async def resolve_code_param(
-    resolve: Optional[bool] = Query(
+    resolve: bool = Query(
         title="Resolve Code",
         description="If true, the current_code_id of the"
         " SpanAnnotation gets resolved and replaced"
@@ -48,20 +54,22 @@ async def resolve_code_param(
     return resolve
 
 
-async def get_db_session() -> Generator:
+async def get_db_session() -> AsyncGenerator[Session, None]:
+    session = None
     try:
         session = SQLService().session_maker()
         yield session
     finally:
-        session.close()
+        if session is not None:
+            session.close()
 
 
 async def get_current_user(
     db: Session = Depends(get_db_session), token: str = Depends(reusable_oauth2_scheme)
-) -> UserRead:
+) -> UserORM:
     try:
         payload = decode_jwt(token=token)
-        email: str = payload.get("sub")
+        email: Optional[str] = payload.get("sub")
         if email is None:
             raise credentials_exception
     except (JWTError, ValidationError):

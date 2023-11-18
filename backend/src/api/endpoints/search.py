@@ -147,7 +147,7 @@ async def search_tag_stats(
 async def search_sdocs_by_content_query(
     *,
     content_query: SourceDocumentContentQuery,
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> PaginatedElasticSearchDocumentHits:
     return es.search_sdocs_by_content_query(
         proj_id=content_query.proj_id, query=content_query.content_query, **skip_limit
@@ -163,7 +163,7 @@ async def search_sdocs_by_content_query(
 async def search_sdocs_by_filename_query(
     *,
     filename_query: SourceDocumentFilenameQuery,
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> PaginatedElasticSearchDocumentHits:
     if filename_query.prefix:
         return es.search_sdocs_by_prefix_filename(
@@ -188,7 +188,7 @@ async def search_sdocs_by_filename_query(
 async def search_memos_by_content_query(
     *,
     content_query: MemoContentQuery,
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> PaginatedMemoSearchResults:
     return es.search_memos_by_content_query(
         proj_id=content_query.proj_id,
@@ -208,7 +208,7 @@ async def search_memos_by_content_query(
 async def search_memos_by_title_query(
     *,
     title_query: MemoTitleQuery,
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> PaginatedMemoSearchResults:
     if title_query.prefix:
         return es.search_memos_by_prefix_title(

@@ -64,7 +64,7 @@ async def create_new_project(
 async def read_all(
     *,
     db: Session = Depends(get_db_session),
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> List[ProjectRead]:
     # TODO Flo: only return the projects of the current user
     db_objs = crud_project.read_multi(db=db, **skip_limit)
@@ -135,7 +135,7 @@ async def get_project_sdocs(
     proj_id: int,
     only_finished: bool = True,
     db: Session = Depends(get_db_session),
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> PaginatedSourceDocumentReads:
     # TODO Flo: only if the user has access?
     sdocs_on_page = [

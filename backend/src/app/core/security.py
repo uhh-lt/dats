@@ -1,7 +1,7 @@
 import binascii
 import os
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict
 
 from config import conf
 from jose import jwt
@@ -44,12 +44,11 @@ def generate_jwt(user: UserRead) -> str:
     return token
 
 
-def decode_jwt(token: str) -> Optional[Dict]:
+def decode_jwt(token: str) -> Dict:
     try:
-        decoded = jwt.decode(
+        return jwt.decode(
             token, __jwt_secret, algorithms=__algo, options={"verify_aud": False}
         )
-        return decoded
     except Exception as e:
         logger.error(f"Cannot decode JWT! Exception: {e}")
         raise e

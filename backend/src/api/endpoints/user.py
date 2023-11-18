@@ -8,6 +8,7 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import UserRead, UserUpdate
+from app.core.data.orm.user import UserORM
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -24,8 +25,8 @@ router = APIRouter(
     summary="Returns the current user",
     description="Returns the current (logged in) user",
 )
-async def get_me(*, user: UserRead = Depends(get_current_user)) -> Optional[UserRead]:
-    return user
+async def get_me(*, user: UserORM = Depends(get_current_user)) -> Optional[UserRead]:
+    return UserRead.from_orm(user)
 
 
 @router.get(
@@ -50,7 +51,7 @@ async def get_by_id(
 async def get_all(
     *,
     db: Session = Depends(get_db_session),
-    skip_limit: Dict[str, str] = Depends(skip_limit_params),
+    skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> List[UserRead]:
     db_objs = crud_user.read_multi(db=db, **skip_limit)
     return [UserRead.from_orm(proj) for proj in db_objs]
