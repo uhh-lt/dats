@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 from jose import jwt
 from loguru import logger
@@ -24,7 +24,7 @@ def generate_password_hash(password: str) -> str:
     return __password_ctx.hash(password)
 
 
-def generate_jwt(user: UserORM) -> str:
+def generate_jwt(user: UserORM) -> Tuple[str, datetime]:
     expire = datetime.utcnow() + timedelta(seconds=__access_ttl)
 
     payload = {
@@ -35,7 +35,7 @@ def generate_jwt(user: UserORM) -> str:
     }
     logger.debug(f"Generated JWT for {user.email} that expires at {expire}!")
     token = jwt.encode(payload, __jwt_secret, algorithm=__algo)
-    return token
+    return (token, expire)
 
 
 def decode_jwt(token: str) -> Optional[Dict]:
