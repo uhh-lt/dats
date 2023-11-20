@@ -3335,6 +3335,41 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/search/sdoc_new_info": {
+      "post": {
+        "tags": ["search"],
+        "summary": "Returns Search Info.",
+        "description": "Returns Search Info.",
+        "operationId": "search_sdocs_new_info",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Search-Search Sdocs New Info",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_SearchColumns_" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/search/sdoc_new": {
       "post": {
         "tags": ["search"],
@@ -3347,10 +3382,19 @@
             "schema": { "title": "Project Id", "type": "integer" },
             "name": "project_id",
             "in": "query"
+          },
+          { "required": true, "schema": { "title": "Page", "type": "integer" }, "name": "page", "in": "query" },
+          {
+            "required": true,
+            "schema": { "title": "Page Size", "type": "integer" },
+            "name": "page_size",
+            "in": "query"
           }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Filter" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_sdocs_new" } }
+          },
           "required": true
         },
         "responses": {
@@ -4204,6 +4248,41 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/analysis/annotated_segments_info": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns AnnotationSegments Info.",
+        "description": "Returns AnnotationSegments Info.",
+        "operationId": "annotated_segments_info",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Annotated Segments Info",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_AnnotatedSegmentsColumns_" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/analysis/annotated_segments": {
       "post": {
         "tags": ["analysis"],
@@ -4244,53 +4323,72 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/analysis/timeline_analysis": {
-      "post": {
+    "/analysis/timeline_analysis_valid_docments/{project_id}/metadata/{date_metadata_id}}": {
+      "get": {
         "tags": ["analysis"],
-        "summary": "Perform timeline analysis.",
-        "description": "Perform timeline analysis.",
-        "operationId": "timeline_analysis",
+        "summary": "Returns TimelineAnalysis Info.",
+        "description": "Returns TimelineAnalysis Info.",
+        "operationId": "get_timeline_analysis_valid_documents",
         "parameters": [
           {
             "required": true,
             "schema": { "title": "Project Id", "type": "integer" },
             "name": "project_id",
-            "in": "query"
+            "in": "path"
           },
           {
             "required": true,
-            "schema": { "title": "Threshold", "type": "number" },
-            "name": "threshold",
-            "in": "query"
-          },
-          {
-            "required": true,
-            "schema": { "title": "Metadata Key", "type": "string" },
-            "name": "metadata_key",
-            "in": "query"
+            "schema": { "title": "Date Metadata Id", "type": "integer" },
+            "name": "date_metadata_id",
+            "in": "path"
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "title": "Concepts",
-                "type": "array",
-                "items": { "$ref": "#/components/schemas/AnalysisConcept" }
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Analysis-Timeline Analysis",
+                  "title": "Response Analysis-Get Timeline Analysis Valid Documents",
+                  "maxItems": 2,
+                  "minItems": 2,
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/TimelineAnalysisResult" }
+                  "items": [{ "type": "integer" }, { "type": "integer" }]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/analysis/timeline_analysis2_info/{project_id}": {
+      "get": {
+        "tags": ["analysis"],
+        "summary": "Returns TimelineAnalysis Info.",
+        "description": "Returns TimelineAnalysis Info.",
+        "operationId": "timeline_analysis2_info",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Timeline Analysis2 Info",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_TimelineAnalysisColumns_" }
                 }
               }
             }
@@ -4330,7 +4428,9 @@
           }
         ],
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Filter" } } },
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_" } }
+          },
           "required": true
         },
         "responses": {
@@ -5109,20 +5209,6 @@
         "type": "string",
         "description": "An enumeration."
       },
-      "AnalysisConcept": {
-        "title": "AnalysisConcept",
-        "required": ["name", "sentences"],
-        "type": "object",
-        "properties": {
-          "name": { "title": "Name", "type": "string", "description": "The nane of the concept." },
-          "sentences": {
-            "title": "Sentences",
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "The sentences describing the concept."
-          }
-        }
-      },
       "AnalysisTableCreate": {
         "title": "AnalysisTableCreate",
         "required": ["title", "content", "table_type", "project_id", "user_id"],
@@ -5204,6 +5290,17 @@
             "description": "The SpanAnnotation IDs."
           }
         }
+      },
+      "AnnotatedSegmentsColumns": {
+        "title": "AnnotatedSegmentsColumns",
+        "enum": [
+          "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST",
+          "ASC_CODE_ID",
+          "ASC_SPAN_TEXT",
+          "ASC_MEMO_CONTENT"
+        ],
+        "description": "An enumeration."
       },
       "AnnotationDocumentCreate": {
         "title": "AnnotationDocumentCreate",
@@ -5444,11 +5541,16 @@
       },
       "Body_analysis-annotated_segments": {
         "title": "Body_analysis-annotated_segments",
-        "required": ["user_ids", "filter"],
+        "required": ["user_ids", "filter", "sorts"],
         "type": "object",
         "properties": {
           "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } },
-          "filter": { "$ref": "#/components/schemas/Filter" }
+          "filter": { "$ref": "#/components/schemas/Filter_AnnotatedSegmentsColumns_" },
+          "sorts": {
+            "title": "Sorts",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Sort_AnnotatedSegmentsColumns_" }
+          }
         }
       },
       "Body_analysis-code_frequencies": {
@@ -5483,6 +5585,19 @@
             "type": "array",
             "items": { "type": "string", "format": "binary" },
             "description": "File(s) that get uploaded and represented by the SourceDocument(s)"
+          }
+        }
+      },
+      "Body_search-search_sdocs_new": {
+        "title": "Body_search-search_sdocs_new",
+        "required": ["filter", "sorts"],
+        "type": "object",
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
+          "sorts": {
+            "title": "Sorts",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Sort_SearchColumns_" }
           }
         }
       },
@@ -5572,6 +5687,51 @@
           "parent_code_id": { "title": "Parent Code Id", "type": "integer", "description": "Parent of the Code" }
         }
       },
+      "ColumnInfo_AnnotatedSegmentsColumns_": {
+        "title": "ColumnInfo[AnnotatedSegmentsColumns]",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "label": { "title": "Label", "type": "string" },
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedSegmentsColumns" }, { "type": "integer" }]
+          },
+          "sortable": { "title": "Sortable", "type": "boolean" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        }
+      },
+      "ColumnInfo_SearchColumns_": {
+        "title": "ColumnInfo[SearchColumns]",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "label": { "title": "Label", "type": "string" },
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/SearchColumns" }, { "type": "integer" }]
+          },
+          "sortable": { "title": "Sortable", "type": "boolean" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        }
+      },
+      "ColumnInfo_TimelineAnalysisColumns_": {
+        "title": "ColumnInfo[TimelineAnalysisColumns]",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "label": { "title": "Label", "type": "string" },
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/TimelineAnalysisColumns" }, { "type": "integer" }]
+          },
+          "sortable": { "title": "Sortable", "type": "boolean" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        }
+      },
       "CrawlerJobParameters": {
         "title": "CrawlerJobParameters",
         "required": ["project_id", "urls"],
@@ -5646,31 +5806,6 @@
             "format": "date-time"
           }
         }
-      },
-      "DBColumns": {
-        "title": "DBColumns",
-        "enum": [
-          "SPAN_TEXT",
-          "SOURCE_DOCUMENT_ID",
-          "SOURCE_DOCUMENT_FILENAME",
-          "SOURCE_DOCUMENT_CONTENT",
-          "METADATA",
-          "CODE_ID",
-          "CODE_ID_LIST",
-          "CODE_NAME",
-          "DOCUMENT_TAG_ID",
-          "DOCUMENT_TAG_ID_LIST",
-          "DOCUMENT_TAG_TITLE",
-          "MEMO_ID",
-          "MEMO_CONTENT",
-          "MEMO_TITLE",
-          "USER_ID",
-          "USER_ID_LIST",
-          "SPAN_ANNOTATIONS",
-          "SPAN_ANNOTATION_ID",
-          "SPAN_ANNOTATION_ID_LIST"
-        ],
-        "description": "An enumeration."
       },
       "DateGroupBy": { "title": "DateGroupBy", "enum": ["YEAR", "MONTH", "DAY"], "description": "An enumeration." },
       "DateOperator": {
@@ -5861,29 +5996,15 @@
           }
         }
       },
-      "Filter": {
-        "title": "Filter",
-        "required": ["items", "logic_operator"],
-        "type": "object",
-        "properties": {
-          "items": {
-            "title": "Items",
-            "type": "array",
-            "items": {
-              "anyOf": [{ "$ref": "#/components/schemas/FilterExpression" }, { "$ref": "#/components/schemas/Filter" }]
-            }
-          },
-          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
-        },
-        "description": "A tree of column expressions for filtering on many database columns using various\ncomparisons."
-      },
-      "FilterExpression": {
-        "title": "FilterExpression",
+      "FilterExpression_AnnotatedSegmentsColumns_": {
+        "title": "FilterExpression[AnnotatedSegmentsColumns]",
         "required": ["column", "operator", "value"],
         "type": "object",
         "properties": {
-          "column": { "$ref": "#/components/schemas/DBColumns" },
-          "project_metadata_id": { "title": "Project Metadata Id", "type": "integer" },
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedSegmentsColumns" }, { "type": "integer" }]
+          },
           "operator": {
             "title": "Operator",
             "anyOf": [
@@ -5907,6 +6028,139 @@
             ]
           }
         }
+      },
+      "FilterExpression_SearchColumns_": {
+        "title": "FilterExpression[SearchColumns]",
+        "required": ["column", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/SearchColumns" }, { "type": "integer" }]
+          },
+          "operator": {
+            "title": "Operator",
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ]
+          },
+          "value": {
+            "title": "Value",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "integer" },
+              { "type": "boolean" },
+              { "type": "array", "items": { "type": "string" } },
+              { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+            ]
+          }
+        }
+      },
+      "FilterExpression_TimelineAnalysisColumns_": {
+        "title": "FilterExpression[TimelineAnalysisColumns]",
+        "required": ["column", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/TimelineAnalysisColumns" }, { "type": "integer" }]
+          },
+          "operator": {
+            "title": "Operator",
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ]
+          },
+          "value": {
+            "title": "Value",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "integer" },
+              { "type": "boolean" },
+              { "type": "array", "items": { "type": "string" } },
+              { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+            ]
+          }
+        }
+      },
+      "FilterOperator": {
+        "title": "FilterOperator",
+        "enum": ["BOOLEAN", "STRING", "ID", "NUMBER", "ID_LIST", "LIST", "DATE"],
+        "description": "An enumeration."
+      },
+      "FilterValueType": {
+        "title": "FilterValueType",
+        "enum": ["SDOC_ID", "CODE_ID", "USER_ID", "TAG_ID", "SPAN_ANNOTATION", "INFER_FROM_OPERATOR"],
+        "description": "An enumeration."
+      },
+      "Filter_AnnotatedSegmentsColumns_": {
+        "title": "Filter[AnnotatedSegmentsColumns]",
+        "required": ["items", "logic_operator"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_AnnotatedSegmentsColumns_" },
+                { "$ref": "#/components/schemas/Filter_AnnotatedSegmentsColumns_" }
+              ]
+            }
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "description": "A tree of column expressions for filtering on many database columns using various\ncomparisons."
+      },
+      "Filter_SearchColumns_": {
+        "title": "Filter[SearchColumns]",
+        "required": ["items", "logic_operator"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_SearchColumns_" },
+                { "$ref": "#/components/schemas/Filter_SearchColumns_" }
+              ]
+            }
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "description": "A tree of column expressions for filtering on many database columns using various\ncomparisons."
+      },
+      "Filter_TimelineAnalysisColumns_": {
+        "title": "Filter[TimelineAnalysisColumns]",
+        "required": ["items", "logic_operator"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_TimelineAnalysisColumns_" },
+                { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_" }
+              ]
+            }
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "description": "A tree of column expressions for filtering on many database columns using various\ncomparisons."
       },
       "HTTPValidationError": {
         "title": "HTTPValidationError",
@@ -6428,6 +6682,18 @@
         "type": "string",
         "description": "An enumeration."
       },
+      "SearchColumns": {
+        "title": "SearchColumns",
+        "enum": [
+          "SC_SOURCE_DOCUMENT_FILENAME",
+          "SC_DOCUMENT_TAG_ID_LIST",
+          "SC_CODE_ID_LIST",
+          "SC_USER_ID_LIST",
+          "SC_SPAN_ANNOTATIONS"
+        ],
+        "type": "string",
+        "description": "An enumeration."
+      },
       "SearchSDocsQueryParameters": {
         "title": "SearchSDocsQueryParameters",
         "required": ["proj_id"],
@@ -6534,8 +6800,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "max": 1,
-            "min": 0
+            "min": 0,
+            "max": 1
           }
         }
       },
@@ -6727,6 +6993,32 @@
             "description": "The ID of the User to get the data from."
           }
         }
+      },
+      "SortDirection": {
+        "title": "SortDirection",
+        "enum": ["asc", "desc"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "Sort_AnnotatedSegmentsColumns_": {
+        "title": "Sort[AnnotatedSegmentsColumns]",
+        "required": ["column", "direction"],
+        "type": "object",
+        "properties": {
+          "column": { "$ref": "#/components/schemas/AnnotatedSegmentsColumns" },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "description": "A sort expressions for sorting on many database columns"
+      },
+      "Sort_SearchColumns_": {
+        "title": "Sort[SearchColumns]",
+        "required": ["column", "direction"],
+        "type": "object",
+        "properties": {
+          "column": { "$ref": "#/components/schemas/SearchColumns" },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "description": "A sort expressions for sorting on many database columns"
       },
       "SourceDocumentContentQuery": {
         "title": "SourceDocumentContentQuery",
@@ -7469,22 +7761,17 @@
           }
         }
       },
-      "TimelineAnalysisResult": {
-        "title": "TimelineAnalysisResult",
-        "required": ["concept_name", "date", "sentence", "score", "sdoc_id", "context"],
-        "type": "object",
-        "properties": {
-          "concept_name": { "title": "Concept Name", "type": "string", "description": "The name of the concept." },
-          "date": { "title": "Date", "type": "string", "description": "The date of document." },
-          "sentence": { "title": "Sentence", "type": "string", "description": "The similar sentence." },
-          "score": { "title": "Score", "type": "number", "description": "The similarity score." },
-          "sdoc_id": {
-            "title": "Sdoc Id",
-            "type": "integer",
-            "description": "The id of the SourceDocument the similar sentence belongs to."
-          },
-          "context": { "title": "Context", "type": "string", "description": "The context of the similar sentence." }
-        }
+      "TimelineAnalysisColumns": {
+        "title": "TimelineAnalysisColumns",
+        "enum": [
+          "TA_SOURCE_DOCUMENT_FILENAME",
+          "TA_DOCUMENT_TAG_ID_LIST",
+          "TA_CODE_ID_LIST",
+          "TA_USER_ID_LIST",
+          "TA_SPAN_ANNOTATIONS"
+        ],
+        "type": "string",
+        "description": "An enumeration."
       },
       "TimelineAnalysisResultNew": {
         "title": "TimelineAnalysisResultNew",

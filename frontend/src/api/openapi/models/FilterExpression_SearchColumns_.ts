@@ -4,16 +4,15 @@
 
 import type { BooleanOperator } from "./BooleanOperator";
 import type { DateOperator } from "./DateOperator";
-import type { DBColumns } from "./DBColumns";
 import type { IDListOperator } from "./IDListOperator";
 import type { IDOperator } from "./IDOperator";
 import type { ListOperator } from "./ListOperator";
 import type { NumberOperator } from "./NumberOperator";
+import type { SearchColumns } from "./SearchColumns";
 import type { StringOperator } from "./StringOperator";
 
-export type FilterExpression = {
-  column: DBColumns;
-  project_metadata_id?: number;
+export type FilterExpression_SearchColumns_ = {
+  column: SearchColumns | number;
   operator:
     | IDOperator
     | NumberOperator

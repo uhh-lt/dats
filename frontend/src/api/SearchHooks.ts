@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useFilterSliceSelector } from "../features/FilterDialog/FilterProvider";
+import { MyFilter } from "../features/FilterDialog/filterUtils";
 import queryClient from "../plugins/ReactQueryClient";
-import { useDebounce } from "../utils/useDebounce";
 import { QueryKey } from "./QueryKey";
 import {
   KeywordStat,
@@ -9,12 +8,14 @@ import {
   MemoRead,
   MemoTitleQuery,
   PaginatedMemoSearchResults,
+  SearchColumns,
   SearchService,
   SimSearchImageHit,
   SimSearchSentenceHit,
   SpanEntityDocumentFrequency,
   TagStat,
 } from "./openapi";
+import { useAppSelector } from "../plugins/ReduxHooks";
 
 export abstract class SearchResults<T extends Iterable<any>> {
   constructor(protected results: T) {
@@ -119,14 +120,18 @@ export enum SearchResultsType {
 // };
 
 const useSearchDocumentsNew = (projectId: number | undefined) => {
-  const filter = useFilterSliceSelector().filter["root"];
-  const debouncedFilter = useDebounce(filter, 1000);
+  const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
   return useQuery<LexicalSearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, debouncedFilter],
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter],
     async () => {
       const sdocIds = await SearchService.searchSdocsNew({
         projectId: projectId!,
-        requestBody: filter,
+        page: 0,
+        pageSize: 15,
+        requestBody: {
+          filter: filter as MyFilter<SearchColumns>,
+          sorts: [],
+        },
       });
       return new LexicalSearchResults(sdocIds);
     },

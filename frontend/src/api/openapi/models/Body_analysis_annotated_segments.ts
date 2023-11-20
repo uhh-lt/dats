@@ -2,9 +2,11 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { Filter } from "./Filter";
+import type { Filter_AnnotatedSegmentsColumns_ } from "./Filter_AnnotatedSegmentsColumns_";
+import type { Sort_AnnotatedSegmentsColumns_ } from "./Sort_AnnotatedSegmentsColumns_";
 
 export type Body_analysis_annotated_segments = {
   user_ids: Array<number>;
-  filter: Filter;
+  filter: Filter_AnnotatedSegmentsColumns_;
+  sorts: Array<Sort_AnnotatedSegmentsColumns_>;
 };

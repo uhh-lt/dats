@@ -1,13 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
-import {
-  AnalysisConcept,
-  AnalysisService,
-  AnnotationOccurrence,
-  CodeFrequency,
-  CodeOccurrence,
-  TimelineAnalysisResult,
-} from "./openapi";
+import { AnalysisService, AnnotationOccurrence, CodeFrequency, CodeOccurrence } from "./openapi";
 
 const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: number[]) =>
   useQuery<CodeFrequency[], Error>([QueryKey.ANALYSIS_CODE_FREQUENCIES, projectId, userIds, codeIds], () =>
@@ -48,25 +41,9 @@ const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: 
     },
   );
 
-const useTimelineAnalysis = (projectId: number, metadataKey: string, threshold: number, concepts: AnalysisConcept[]) =>
-  useQuery<TimelineAnalysisResult[], Error>(
-    [QueryKey.ANALYSIS_TIMELINE, projectId, metadataKey, threshold, concepts],
-    () =>
-      AnalysisService.timelineAnalysis({
-        projectId,
-        metadataKey,
-        threshold,
-        requestBody: concepts,
-      }),
-    {
-      enabled: concepts.length > 0 && metadataKey.length > 0,
-    },
-  );
-
 const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
-  useTimelineAnalysis,
   useAnnotationOccurrences,
 };
 

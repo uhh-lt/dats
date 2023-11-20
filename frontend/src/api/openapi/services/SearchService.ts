@@ -1,7 +1,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Filter } from "../models/Filter";
+import type { Body_search_search_sdocs_new } from "../models/Body_search_search_sdocs_new";
+import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
 import type { MemoTitleQuery } from "../models/MemoTitleQuery";
@@ -45,6 +46,29 @@ export class SearchService {
   }
 
   /**
+   * Returns Search Info.
+   * Returns Search Info.
+   * @returns ColumnInfo_SearchColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static searchSdocsNewInfo({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_SearchColumns_>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/search/sdoc_new_info",
+      query: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns all SourceDocument IDs that match the query parameters.
    * Returns all SourceDocument Ids that match the query parameters.
    * @returns number Successful Response
@@ -52,16 +76,22 @@ export class SearchService {
    */
   public static searchSdocsNew({
     projectId,
+    page,
+    pageSize,
     requestBody,
   }: {
     projectId: number;
-    requestBody: Filter;
+    page: number;
+    pageSize: number;
+    requestBody: Body_search_search_sdocs_new;
   }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/sdoc_new",
       query: {
         project_id: projectId,
+        page: page,
+        page_size: pageSize,
       },
       body: requestBody,
       mediaType: "application/json",
