@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import List, Union
 
@@ -6,7 +7,8 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.span_annotation import SpanAnnotationRead
 from pydantic import BaseModel, Field
-from sqlalchemy import Column, func
+from sqlalchemy import func
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 
 class CodeOccurrence(BaseModel):
@@ -71,7 +73,7 @@ class DateGroupBy(Enum):
     MONTH = "MONTH"
     DAY = "DAY"
 
-    def apply(self, column: Column) -> List:
+    def apply(self, column: InstrumentedAttribute[datetime]) -> List:
         match self:
             case DateGroupBy.YEAR:
                 return [func.extract("year", column)]

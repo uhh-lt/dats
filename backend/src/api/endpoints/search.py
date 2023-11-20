@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.dto.filter import Filter
 from app.core.data.dto.search import (
     KeywordStat,
     MemoContentQuery,
@@ -22,8 +21,11 @@ from app.core.data.dto.search import (
     SpanEntityFrequency,
     TagStat,
 )
+from app.core.filters.columns import ColumnInfo
+from app.core.filters.filtering import Filter
+from app.core.filters.sorting import Sort
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.search_service import SearchService
+from app.core.search.search_service import SearchColumns, SearchService
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
@@ -47,14 +49,40 @@ async def search_sdocs(*, query_params: SearchSDocsQueryParameters) -> List[int]
 
 
 @router.post(
+    "/sdoc_new_info",
+    response_model=List[ColumnInfo[SearchColumns]],
+    summary="Returns Search Info.",
+    description="Returns Search Info.",
+)
+async def search_sdocs_new_info(
+    *,
+    project_id: int,
+) -> List[ColumnInfo[SearchColumns]]:
+    return SearchService().search_new_info(project_id=project_id)
+
+
+@router.post(
     "/sdoc_new",
     response_model=List[int],
     summary="Returns all SourceDocument IDs that match the query parameters.",
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
-async def search_sdocs_new(*, project_id: int, filter: Filter) -> List[int]:
+async def search_sdocs_new(
+    *,
+    project_id: int,
+    filter: Filter[SearchColumns],
+    page: int,
+    page_size: int,
+    sorts: List[Sort[SearchColumns]],
+) -> List[int]:
     # TODO Flo: only if the user has access?
-    return SearchService().search_new(project_id=project_id, filter=filter)
+    return SearchService().search_new(
+        project_id=project_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )
 
 
 @router.post(
