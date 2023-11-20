@@ -7,16 +7,18 @@ import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@m
 import { LogicalOperator } from "../../api/openapi";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
 import FilterExpressionRenderer from "./FilterExpressionRenderer";
-import { useFilterSliceActions, useFilterSliceSelector } from "./FilterProvider";
 import "./filter.css";
-import { FilterOperator, MyFilter, isFilter, isFilterExpression } from "./filterUtils";
+import { FilterActions } from "./filterSlice";
+import { ColumnInfo, FilterOperators, MyFilter, isFilter, isFilterExpression } from "./filterUtils";
 
-export interface FilterRendererProps {}
+export interface FilterRendererProps {
+  editableFilter: MyFilter;
+  filterActions: FilterActions;
+  column2Info: Record<string, ColumnInfo>;
+}
 
-function FilterRenderer(_: FilterRendererProps) {
+function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRendererProps) {
   // global client state (redux)
-  const filter = useFilterSliceSelector().editableFilter;
-  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   // actions
@@ -40,7 +42,7 @@ function FilterRenderer(_: FilterRendererProps) {
     dispatch(filterActions.changeColumn({ filterId, columnValue }));
   };
 
-  const handleOperatorChange = (filterId: string, operator: FilterOperator) => {
+  const handleOperatorChange = (filterId: string, operator: FilterOperators) => {
     dispatch(filterActions.changeOperator({ filterId, operator }));
   };
 
@@ -118,6 +120,7 @@ function FilterRenderer(_: FilterRendererProps) {
                 onChangeColumn={handleColumnChange}
                 onChangeOperator={handleOperatorChange}
                 onChangeValue={handleValueChange}
+                column2Info={column2Info}
               />
             );
           } else {
@@ -132,11 +135,11 @@ function FilterRenderer(_: FilterRendererProps) {
     <TreeView
       className="filterTree"
       defaultCollapseIcon={<ExpandMoreIcon />}
-      defaultExpanded={[filter.id]}
+      defaultExpanded={[editableFilter.id]}
       defaultExpandIcon={<ChevronRightIcon />}
       disableSelection
     >
-      {renderFilter(filter, true)}
+      {renderFilter(editableFilter, true)}
     </TreeView>
   );
 }

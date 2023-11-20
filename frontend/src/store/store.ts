@@ -1,19 +1,17 @@
-import { configureStore, ThunkAction, Action, combineReducers } from "@reduxjs/toolkit";
-import annoReducer from "../views/annotation/annoSlice";
-import searchReducer from "../views/search/searchSlice";
-import logbookReducer from "../views/logbook/logbookSlice";
-import autologbookReducer from "../views/autologbook/autologbookSlice";
-import settingsReducer from "../views/settings/settingsSlice";
-import analysisReducer from "../views/analysis/analysisSlice";
-import {
-  searchFilterSlice,
-  annotatedSegmentsFilterSlice,
-  timelineAnalysisFilterSlice,
-} from "../features/FilterDialog/filterSlice";
-import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice";
-import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis2/timelineAnalysisSlice";
+import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
+import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
+import annotatedSegmentsFilterReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsFilterSlice";
+import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice";
+import timelineAnalysisFilterReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisFilterSlice";
+import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice";
+import analysisReducer from "../views/analysis/analysisSlice";
+import annoReducer from "../views/annotation/annoSlice";
+import autologbookReducer from "../views/autologbook/autologbookSlice";
+import logbookReducer from "../views/logbook/logbookSlice";
+import searchFilterReducer from "../views/search/searchFilterSlice";
+import searchReducer from "../views/search/searchSlice";
+import settingsReducer from "../views/settings/settingsSlice";
 
 const persistConfig = {
   key: "root",
@@ -24,22 +22,20 @@ const persistConfig = {
 const persistedSettingsReducer = persistReducer(persistConfig, settingsReducer);
 const persistedAnnoReducer = persistReducer(persistConfig, annoReducer);
 
-const reducers = combineReducers({
-  annotations: persistedAnnoReducer,
-  analysis: analysisReducer,
-  search: searchReducer,
-  logbook: logbookReducer,
-  autologbook: autologbookReducer,
-  settings: persistedSettingsReducer,
-  annotatedSegments: annotatedSegmentsReducer,
-  timelineAnalysis: timelineAnalysisReducer,
-  [searchFilterSlice.name]: searchFilterSlice.reducer,
-  [annotatedSegmentsFilterSlice.name]: annotatedSegmentsFilterSlice.reducer,
-  [timelineAnalysisFilterSlice.name]: timelineAnalysisFilterSlice.reducer,
-});
-
 export const store = configureStore({
-  reducer: reducers,
+  reducer: {
+    annotations: persistedAnnoReducer,
+    analysis: analysisReducer,
+    search: searchReducer,
+    logbook: logbookReducer,
+    autologbook: autologbookReducer,
+    settings: persistedSettingsReducer,
+    annotatedSegments: annotatedSegmentsReducer,
+    timelineAnalysis: timelineAnalysisReducer,
+    searchFilter: searchFilterReducer,
+    annotatedSegmentsFilter: annotatedSegmentsFilterReducer,
+    timelineAnalysisFilter: timelineAnalysisFilterReducer,
+  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

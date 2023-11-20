@@ -1,12 +1,10 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import { TreeItem } from "@mui/lab";
 import { IconButton, Stack, Tooltip } from "@mui/material";
-import { DocType } from "../../api/openapi";
 import FilterColumnSelector from "./FilterColumnSelector";
 import FilterOperatorSelector from "./FilterOperatorSelector";
-import { useFilterSliceSelector } from "./FilterProvider";
 import FilterValueSelector from "./FilterValueSelector";
-import { FilterOperator, MyFilterExpression } from "./filterUtils";
+import { ColumnInfo, FilterOperators, MyFilterExpression } from "./filterUtils";
 
 function FilterExpressionRenderer({
   filterExpression,
@@ -14,17 +12,15 @@ function FilterExpressionRenderer({
   onChangeColumn,
   onChangeOperator,
   onChangeValue,
+  column2Info,
 }: {
   filterExpression: MyFilterExpression;
   onDeleteFilter(id: string): void;
-  onChangeColumn(id: string, column: string, metadataKey?: string, docType?: DocType): void;
-  onChangeOperator(id: string, operator: FilterOperator): void;
+  onChangeColumn(filterId: string, columnValue: string): void;
+  onChangeOperator(id: string, operator: FilterOperators): void;
   onChangeValue(id: string, value: string | number): void;
+  column2Info: Record<string, ColumnInfo>;
 }) {
-  // global client state (redux)
-  const columns = useFilterSliceSelector().columns;
-  const columnValue2operator = useFilterSliceSelector().columnValue2Operator;
-
   return (
     <TreeItem
       key={filterExpression.id}
@@ -47,16 +43,20 @@ function FilterExpressionRenderer({
               </IconButton>
             </span>
           </Tooltip>
-          <FilterColumnSelector filterExpression={filterExpression} columns={columns} onChangeColumn={onChangeColumn} />
+          <FilterColumnSelector
+            filterExpression={filterExpression}
+            column2Info={column2Info}
+            onChangeColumn={onChangeColumn}
+          />
           <FilterOperatorSelector
             filterExpression={filterExpression}
             onChangeOperator={onChangeOperator}
-            columnValue2operator={columnValue2operator}
+            column2Info={column2Info}
           />
           <FilterValueSelector
             filterExpression={filterExpression}
             onChangeValue={onChangeValue}
-            columnValue2Operator={columnValue2operator}
+            column2Info={column2Info}
           />
         </Stack>
       }

@@ -1,27 +1,15 @@
-import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { ActionReducerMapBuilder, CaseReducerActions, createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
+import { LogicalOperator } from "../../api/openapi";
 import {
-  DBColumns,
-  DocType,
-  FilterExpression,
-  IDListOperator,
-  ListOperator,
-  LogicalOperator,
-  ProjectMetadataRead,
-  SourceDocumentMetadataReadResolved,
-  StringOperator,
-} from "../../api/openapi";
-import { getValue } from "../../views/search/DocumentViewer/DocumentMetadata/metadataUtils";
-import {
-  column2operator,
+  ColumnInfo,
   deleteInFilter,
-  FilterOperator,
-  FilterOperatorType,
+  filterOperator2FilterOperatorType,
+  FilterOperators,
   findInFilter,
   getDefaultOperator,
   isFilter,
   isFilterExpression,
-  metaType2operator,
   MyFilter,
   MyFilterExpression,
 } from "./filterUtils";
@@ -29,16 +17,24 @@ import {
 export interface FilterState {
   filter: Record<string, MyFilter>;
   editableFilter: MyFilter;
-  defaultFilterExpression: FilterExpression;
-  columns: { label: string; value: string }[];
-  columnValue2Operator: Record<string, FilterOperatorType>;
-  projectMetadata: ProjectMetadataRead[];
-  metadataModalities: DocType[];
+  defaultFilterExpression: MyFilterExpression;
+  column2Info: Record<string, ColumnInfo>;
+  expertMode: boolean;
 }
 
 const filterReducer = {
   onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
-    state.editableFilter = state.filter[action.payload.rootFilterId];
+    state.editableFilter = JSON.parse(JSON.stringify(state.filter[action.payload.rootFilterId]));
+
+    // add a default filter expression if the filter is empty
+    if (state.editableFilter.items.length === 0) {
+      state.editableFilter.items = [
+        {
+          ...state.defaultFilterExpression,
+          id: uuidv4(),
+        } as MyFilterExpression,
+      ];
+    }
   },
   onFinishFilterEdit: (state: Draft<FilterState>) => {
     state.filter = {
@@ -67,7 +63,7 @@ const filterReducer = {
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
         {
-          id: `${Date.now()}`,
+          id: uuidv4(),
           items: [],
           logic_operator: LogicalOperator.AND,
         } as MyFilter,
@@ -75,117 +71,31 @@ const filterReducer = {
       ];
     }
   },
-  addDefaultFilterExpression: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
+  addDefaultFilterExpression: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ filterId: string; addEnd?: boolean }>,
+  ) => {
     // const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
-      filterItem.items = [
-        {
-          id: `${Date.now()}`,
-          ...state.defaultFilterExpression,
-        } as MyFilterExpression,
-        ...filterItem.items,
-      ];
+      if (action.payload.addEnd) {
+        filterItem.items = [
+          ...filterItem.items,
+          {
+            ...state.defaultFilterExpression,
+            id: uuidv4(),
+          } as MyFilterExpression,
+        ];
+      } else {
+        filterItem.items = [
+          {
+            ...state.defaultFilterExpression,
+            id: uuidv4(),
+          } as MyFilterExpression,
+          ...filterItem.items,
+        ];
+      }
     }
-  },
-  addKeywordFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ keyword: string; rootFilterId?: string }>,
-  ) => {
-    const keywordProjectMetadatas = state.projectMetadata.filter((metadata) => metadata.key === "keywords");
-
-    const filterItems: MyFilterExpression[] = keywordProjectMetadatas?.map((projectMetadata) => {
-      return {
-        id: uuidv4(),
-        column: DBColumns.METADATA,
-        project_metadata_id: projectMetadata.id,
-        operator: ListOperator.LIST_CONTAINS,
-        value: [action.payload.keyword],
-      };
-    });
-
-    state.filter[action.payload.rootFilterId || "root"].items = [
-      ...state.filter[action.payload.rootFilterId || "root"].items,
-      {
-        id: uuidv4(),
-        logic_operator: LogicalOperator.OR,
-        items: filterItems,
-      },
-    ];
-  },
-  addTagFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ tagId: number | string; rootFilterId?: string }>,
-  ) => {
-    state.filter[action.payload.rootFilterId || "root"].items = [
-      ...state.filter[action.payload.rootFilterId || "root"].items,
-      {
-        id: uuidv4(),
-        column: DBColumns.DOCUMENT_TAG_ID_LIST,
-        operator: IDListOperator.ID_LIST_CONTAINS,
-        value: action.payload.tagId,
-      },
-    ];
-  },
-  addFilenameFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ filename: string; rootFilterId?: string }>,
-  ) => {
-    state.filter[action.payload.rootFilterId || "root"].items = [
-      ...state.filter[action.payload.rootFilterId || "root"].items,
-      {
-        id: uuidv4(),
-        column: DBColumns.SOURCE_DOCUMENT_FILENAME,
-        operator: StringOperator.STRING_CONTAINS,
-        value: action.payload.filename,
-      },
-    ];
-  },
-  addContentFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ text: string; rootFilterId?: string }>,
-  ) => {
-    state.filter[action.payload.rootFilterId || "root"].items = [
-      ...state.filter[action.payload.rootFilterId || "root"].items,
-      {
-        id: uuidv4(),
-        column: DBColumns.SOURCE_DOCUMENT_CONTENT,
-        operator: StringOperator.STRING_CONTAINS,
-        value: action.payload.text,
-      },
-    ];
-  },
-  addSpanAnnotationFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ codeId: number; spanText: string; rootFilterId?: string }>,
-  ) => {
-    state.filter[action.payload.rootFilterId || "root"].items = [
-      ...state.filter[action.payload.rootFilterId || "root"].items,
-      {
-        id: uuidv4(),
-        column: DBColumns.SPAN_ANNOTATIONS,
-        operator: ListOperator.LIST_CONTAINS,
-        value: [[action.payload.codeId.toString(), action.payload.spanText]],
-      },
-    ];
-  },
-  addMetadataFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved; rootFilterId?: string }>,
-  ) => {
-    // the column value of a metadata filter is the project_metadata.id
-    const operatorType = state.columnValue2Operator[action.payload.metadata.project_metadata.id.toString()];
-
-    state.filter[action.payload.rootFilterId || "root"].items = [
-      ...state.filter[action.payload.rootFilterId || "root"].items,
-      {
-        id: uuidv4(),
-        column: DBColumns.METADATA,
-        project_metadata_id: action.payload.metadata.project_metadata.id,
-        operator: getDefaultOperator(operatorType),
-        value: getValue(action.payload.metadata)!,
-      },
-    ];
   },
   deleteFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
     state.editableFilter = deleteInFilter(state.editableFilter, action.payload.filterId);
@@ -202,21 +112,24 @@ const filterReducer = {
   changeColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
-      if (Object.values<string>(DBColumns).includes(action.payload.columnValue)) {
-        // it is a DBColumn
-        filterItem.column = action.payload.columnValue as DBColumns;
+      if (!!parseInt(action.payload.columnValue)) {
+        // it is a Metadata column: metadata columns are stored as project_metadata.id
+        filterItem.column = parseInt(action.payload.columnValue);
       } else {
-        // it is a Metadata column
-        filterItem.column = DBColumns.METADATA;
-        filterItem.project_metadata_id = parseInt(action.payload.columnValue);
+        // it is a proper Column
+        filterItem.column = action.payload.columnValue;
       }
-      filterItem.operator = getDefaultOperator(state.columnValue2Operator[action.payload.columnValue]);
+
+      const filterOperator = state.column2Info[action.payload.columnValue].operator;
+      const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
+
+      filterItem.operator = getDefaultOperator(filterOperatorType);
       filterItem.value = "";
     }
   },
   changeOperator: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ filterId: string; operator: FilterOperator }>,
+    action: PayloadAction<{ filterId: string; operator: FilterOperators }>,
   ) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
@@ -231,7 +144,7 @@ const filterReducer = {
   },
   setDefaultFilterExpression: (
     state: Draft<FilterState>,
-    action: PayloadAction<{ defaultFilterExpression: FilterExpression }>,
+    action: PayloadAction<{ defaultFilterExpression: MyFilterExpression }>,
   ) => {
     state.defaultFilterExpression = action.payload.defaultFilterExpression;
   },
@@ -249,136 +162,36 @@ const filterReducer = {
       items: [],
     };
   },
-  init: (state: Draft<FilterState>, action: PayloadAction<{ projectMetadata: ProjectMetadataRead[] }>) => {
-    // 1. set project metadata
-    state.projectMetadata = action.payload.projectMetadata;
-
-    // 2. compute & set columns (the provided columns + metadata columns if metadata in the provided column)
-    if (state.columns.map((column) => column.value).includes(DBColumns.METADATA)) {
-      // remove metadata column
-      state.columns = state.columns.filter((column) => column.value !== DBColumns.METADATA);
-      // add project metadata columns (filtered by metadataModalities)
-      state.projectMetadata
-        .filter((metadata) => state.metadataModalities.includes(metadata.doctype))
-        .forEach((metadata) => {
-          state.columns.push({ label: `${metadata.doctype}-${metadata.key}`, value: metadata.id.toString() });
-        });
-    }
-
-    // 3. compute & set column value 2 operator map (the default column2operator + operator based on metadata type)
-    state.columnValue2Operator = state.projectMetadata.reduce(
-      (acc, metadata) => {
-        acc[`${metadata.id}`] = metaType2operator[metadata.metatype];
-        return acc;
-      },
-      { ...(column2operator as Record<string, FilterOperatorType>) },
-    );
+  init: (state: Draft<FilterState>, action: PayloadAction<{ columnInfo: ColumnInfo[] }>) => {
+    state.column2Info = action.payload.columnInfo.reduce((acc, columnInfo) => {
+      return {
+        ...acc,
+        [columnInfo.column]: columnInfo,
+      };
+    }, {});
+  },
+  onChangeExpertMode: (state: Draft<FilterState>, action: PayloadAction<{ expertMode: boolean }>) => {
+    state.expertMode = action.payload.expertMode;
   },
 };
 
 export type FilterReducer = typeof filterReducer;
+export type FilterActions = CaseReducerActions<FilterReducer, string>;
 
-const createFilterSlice = ({ name, initialState }: { name: string; initialState: FilterState }) =>
+export const createFilterSlice = ({
+  name,
+  initialState,
+  extraReducer,
+}: {
+  name: string;
+  initialState: FilterState;
+  extraReducer?: (builder: ActionReducerMapBuilder<FilterState>) => void;
+}) =>
   createSlice({
     name,
     initialState,
     reducers: filterReducer,
+    extraReducers(builder) {
+      extraReducer && extraReducer(builder);
+    },
   });
-
-export const searchFilterSlice = createFilterSlice({
-  name: "searchFilter",
-  initialState: {
-    filter: {
-      root: {
-        id: "root",
-        logic_operator: LogicalOperator.AND,
-        items: [],
-      },
-    },
-    editableFilter: {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    },
-    defaultFilterExpression: {
-      column: DBColumns.SOURCE_DOCUMENT_FILENAME,
-      operator: StringOperator.STRING_CONTAINS,
-      value: "",
-    },
-    columns: [
-      { label: "Document name", value: DBColumns.SOURCE_DOCUMENT_FILENAME },
-      { label: "Document content", value: DBColumns.SOURCE_DOCUMENT_CONTENT },
-      { label: "Tags", value: DBColumns.DOCUMENT_TAG_ID_LIST },
-      { label: "User", value: DBColumns.USER_ID_LIST },
-      { label: "Code", value: DBColumns.CODE_ID_LIST },
-      { label: "Span Annotation", value: DBColumns.SPAN_ANNOTATIONS },
-      { label: "Metadata", value: DBColumns.METADATA },
-    ],
-    columnValue2Operator: {},
-    projectMetadata: [],
-    metadataModalities: [DocType.TEXT, DocType.IMAGE, DocType.AUDIO, DocType.VIDEO],
-  },
-});
-
-export const annotatedSegmentsFilterSlice = createFilterSlice({
-  name: "annotatedSegmentsFilter",
-  initialState: {
-    filter: {
-      root: {
-        id: "root",
-        logic_operator: LogicalOperator.AND,
-        items: [],
-      },
-    },
-    editableFilter: {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    },
-    defaultFilterExpression: {
-      column: DBColumns.SOURCE_DOCUMENT_FILENAME,
-      operator: StringOperator.STRING_CONTAINS,
-      value: "",
-    },
-    columns: [
-      { label: "Document name", value: DBColumns.SOURCE_DOCUMENT_FILENAME },
-      { label: "Tags", value: DBColumns.DOCUMENT_TAG_ID_LIST },
-      { label: "Code", value: DBColumns.CODE_ID },
-      { label: "Annotated text", value: DBColumns.SPAN_TEXT },
-      { label: "Memo content", value: DBColumns.MEMO_CONTENT },
-      { label: "Metadata", value: DBColumns.METADATA },
-    ],
-    columnValue2Operator: {},
-    projectMetadata: [],
-    metadataModalities: [DocType.TEXT],
-  },
-});
-
-export const timelineAnalysisFilterSlice = createFilterSlice({
-  name: "timelineAnalysisFilter",
-  initialState: {
-    filter: {},
-    editableFilter: {
-      id: "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    },
-    defaultFilterExpression: {
-      column: DBColumns.SOURCE_DOCUMENT_FILENAME,
-      operator: StringOperator.STRING_CONTAINS,
-      value: "",
-    },
-    columns: [
-      { label: "Document name", value: DBColumns.SOURCE_DOCUMENT_FILENAME },
-      { label: "Document content", value: DBColumns.SOURCE_DOCUMENT_CONTENT },
-      { label: "Tags", value: DBColumns.DOCUMENT_TAG_ID_LIST },
-      { label: "User", value: DBColumns.USER_ID_LIST },
-      { label: "Code", value: DBColumns.CODE_ID_LIST },
-      { label: "Span Annotation", value: DBColumns.SPAN_ANNOTATIONS },
-      { label: "Metadata", value: DBColumns.METADATA },
-    ],
-    columnValue2Operator: {},
-    projectMetadata: [],
-    metadataModalities: [DocType.TEXT],
-  },
-});

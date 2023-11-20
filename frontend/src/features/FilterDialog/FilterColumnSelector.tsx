@@ -1,39 +1,33 @@
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent } from "react";
-import { MyFilterExpression, getFilterExpressionColumnValue } from "./filterUtils";
-import { DocType } from "../../api/openapi";
+import { ColumnInfo, MyFilterExpression } from "./filterUtils";
 
 function FilterColumnSelector({
   filterExpression,
-  columns,
+  column2Info,
   onChangeColumn,
 }: {
   filterExpression: MyFilterExpression;
-  columns: { label: string; value: string }[];
-  onChangeColumn(id: string, column: string, metadataKey?: string, docType?: DocType): void;
+  column2Info: Record<string, ColumnInfo>;
+  onChangeColumn(filterId: string, columnValue: string): void;
 }) {
   const handleChangeColumn = (event: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
     const column: string = event.target.value;
-    if (column.startsWith("META-")) {
-      const [doctype, key] = column.split("-").slice(1);
-      onChangeColumn(filterExpression.id, column, key, doctype as DocType);
-    } else {
-      onChangeColumn(filterExpression.id, column, undefined, undefined);
-    }
+    onChangeColumn(filterExpression.id, column);
   };
 
   return (
     <TextField
       select
-      value={getFilterExpressionColumnValue(filterExpression)}
+      value={filterExpression.column}
       onChange={handleChangeColumn}
       label="Column"
       variant="standard"
       fullWidth
     >
-      {columns.map((column) => (
-        <MenuItem key={column.label} value={column.value}>
-          {column.label}
+      {Object.values(column2Info).map((columnInfo) => (
+        <MenuItem key={columnInfo.label} value={columnInfo.column}>
+          {columnInfo.label}
         </MenuItem>
       ))}
     </TextField>

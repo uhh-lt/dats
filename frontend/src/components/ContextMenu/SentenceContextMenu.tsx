@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { AttachedObjectType, SpanAnnotationReadResolved } from "../../api/openapi";
 import MemoListItemButton from "../../features/Memo/MemoListItemButton";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { useFilterSliceActions } from "../../features/FilterDialog/FilterProvider";
+import { SearchActions } from "../../views/search/searchSlice";
 
 interface SentenceContextMenuProps {}
 
@@ -38,7 +38,6 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   const [annotations, setAnnotations] = useState<SpanAnnotationReadResolved[]>();
 
   // global client state (redux)
-  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
   // exposed methods (via ref)
@@ -84,7 +83,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
-    dispatch(filterActions.addSpanAnnotationFilterExpression({ codeId: anno.code.id, spanText: anno.span_text }));
+    dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: anno.code.id, spanText: anno.span_text }));
     closeContextMenu();
     navigate("../search");
   };

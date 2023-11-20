@@ -4,12 +4,14 @@ import { SpanAnnotationReadResolved } from "../../api/openapi";
 import CodeRenderer from "./CodeRenderer";
 import SdocRenderer, { SdocRendererSharedProps } from "./SdocRenderer";
 import SdocTagsRenderer from "./SdocTagRenderer";
+import SdocMetadataRenderer from "./SdocMetadataRenderer";
 
 interface SpanAnnotationRendererSharedProps {
   showCode?: boolean;
   showSpanText?: boolean;
   showSdoc?: boolean;
   showSdocTags?: boolean;
+  showSdocProjectMetadataId?: number;
   sdocRendererProps?: SdocRendererSharedProps;
 }
 
@@ -65,12 +67,16 @@ function SpanAnnotationRendererWithData({
   showSpanText,
   showSdoc,
   showSdocTags,
+  showSdocProjectMetadataId,
   sdocRendererProps,
 }: { spanAnnotation: SpanAnnotationReadResolved } & SpanAnnotationRendererSharedProps) {
   return (
     <Stack direction="row" alignItems="center">
       {showSdoc && <SdocRenderer sdoc={spanAnnotation.sdoc_id} {...sdocRendererProps} />}
       {showSdocTags && <SdocTagsRenderer sdocId={spanAnnotation.sdoc_id} />}
+      {showSdocProjectMetadataId && (
+        <SdocMetadataRenderer sdocId={spanAnnotation.sdoc_id} projectMetadataId={showSdocProjectMetadataId} />
+      )}
       {showCode && <CodeRenderer code={spanAnnotation.code} />}
       {showCode && showSpanText && ": "}
       {showSpanText && spanAnnotation.span_text}

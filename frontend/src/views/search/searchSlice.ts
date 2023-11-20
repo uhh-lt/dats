@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { DocType, SourceDocumentMetadataReadResolved } from "../../api/openapi";
 import { QueryType } from "./QueryType";
-import { DocType } from "../../api/openapi";
 
 export interface AnchorState {
   pos: number;
@@ -94,6 +94,23 @@ export const searchSlice = createSlice({
     },
     setSearchType: (state, action: PayloadAction<QueryType>) => {
       state.searchType = action.payload;
+    },
+
+    // filtering
+    onAddKeywordFilter: (state, action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string }>) => {
+      console.log("added keywod filter!");
+    },
+    onAddTagFilter: (state, action: PayloadAction<{ tagId: number | string }>) => {
+      console.log("added tag filter!");
+    },
+    onAddFilenameFilter: (state, action: PayloadAction<{ filename: string }>) => {
+      console.log("added filename filter!");
+    },
+    onAddSpanAnnotationFilter: (state, action: PayloadAction<{ codeId: number; spanText: string }>) => {
+      console.log("added span annotation filter!");
+    },
+    onAddMetadataFilter: (state, action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved }>) => {
+      console.log("added metadata filter!");
     },
   },
 });

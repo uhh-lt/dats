@@ -7,8 +7,6 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
 import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
-import FilterDialog from "../../features/FilterDialog/FilterDialog";
-import { useFilterSliceActions } from "../../features/FilterDialog/FilterProvider";
 import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
@@ -16,12 +14,14 @@ import { SettingsActions } from "../settings/settingsSlice";
 import DocumentViewer from "./DocumentViewer/DocumentViewer";
 import { QueryType } from "./QueryType";
 import SearchBar from "./SearchBar/SearchBar";
+import SearchFilterDialog from "./SearchFilterDialog";
 import SearchResultsView from "./SearchResults/SearchResultsView";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
 import SearchToolbar from "./ToolBar/SearchToolbar";
 import { useAddTagFilter } from "./hooks/useAddTagFilter";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
 import { SearchActions } from "./searchSlice";
+import { useInitSearchFilterSlice } from "./useInitSearchFilterSlice";
 
 export function removeTrailingSlash(text: string): string {
   return text.replace(/\/$/, "");
@@ -44,25 +44,21 @@ function Search() {
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
   const searchType = useAppSelector((state) => state.search.searchType);
-  const filterActions = useFilterSliceActions();
   const dispatch = useAppDispatch();
 
+  // filter
   const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
-  const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId));
+  const projectMetadata = ProjectHooks.useGetMetadata(parseInt(projectId));
+  useInitSearchFilterSlice({ projectId: parseInt(projectId) });
 
   // query (global server state)
-  // const searchResults = SearchHooks.useSearchDocumentsByProjectIdAndFilters(parseInt(projectId), filters);
+  const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId));
 
   // computed (local client state)
-  const searchResultDocumentIds = useMemo(() => {
-    if (!searchResults.data) return [];
-    return searchResults.data.getSearchResultSDocIds();
-  }, [searchResults.data]);
-
-  const numSearchResults = useMemo(() => {
-    if (!searchResults.data) return 0;
-    return searchResults.data.getAggregatedNumberOfHits();
-  }, [searchResults.data]);
+  const keywordMetadataIds = useMemo(() => {
+    if (!projectMetadata.data) return [];
+    return projectMetadata.data.filter((m) => m.key === "keywords").map((m) => m.id);
+  }, [projectMetadata.data]);
 
   const viewDocument = Boolean(sdocId);
 
@@ -94,42 +90,40 @@ function Search() {
   const handleSearchError = (data: any) => console.error(data);
   const handleClearSearch = () => {
     reset();
-    // TODO: Combine actions into one: https://redux.js.org/style-guide/#avoid-dispatching-many-actions-sequentially
     dispatch(SearchActions.clearSelectedDocuments());
-    dispatch(filterActions.resetFilter({ rootFilterId: "root" }));
     navigateIfNecessary(`/project/${projectId}/search/`);
   };
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityDocumentFrequency) => {
-      dispatch(filterActions.addSpanAnnotationFilterExpression({ codeId: stat.code_id, spanText: stat.span_text }));
+      dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId, filterActions],
+    [dispatch, navigateIfNecessary, projectId],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(filterActions.addKeywordFilterExpression({ keyword }));
+      dispatch(SearchActions.onAddKeywordFilter({ keywordMetadataIds, keyword }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId, filterActions],
+    [dispatch, navigateIfNecessary, projectId, keywordMetadataIds],
   );
   const handleAddTagFilter = useAddTagFilter();
   const handleAddTextFilter = useCallback(
     (text: string) => {
-      dispatch(filterActions.addContentFilterExpression({ text }));
+      alert("not implemented");
       dispatch(SearchActions.clearSelectedDocuments());
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId, filterActions],
+    [dispatch, navigateIfNecessary, projectId],
   );
   const handleAddFileFilter = useCallback(
     (filename: string) => {
-      dispatch(filterActions.addFilenameFilterExpression({ filename }));
+      dispatch(SearchActions.onAddFilenameFilter({ filename }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
-    [dispatch, navigateIfNecessary, projectId, filterActions],
+    [dispatch, navigateIfNecessary, projectId],
   );
 
   const handleAddSentenceFilter = useCallback(
@@ -154,6 +148,7 @@ function Search() {
   }, [dispatch, projectCodes.data]);
 
   // render
+  console.log("rendering search");
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
@@ -180,7 +175,7 @@ function Search() {
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
-            sdocIds={searchResultDocumentIds}
+            sdocIds={searchResults.data?.getSearchResultSDocIds() || []}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
@@ -195,13 +190,13 @@ function Search() {
         >
           <SearchToolbar
             sdocId={sdocId ? parseInt(sdocId) : undefined}
-            searchResultDocumentIds={searchResultDocumentIds}
-            numSearchResults={numSearchResults}
+            searchResultDocumentIds={searchResults.data?.getSearchResultSDocIds() || []}
+            numSearchResults={searchResults.data?.getAggregatedNumberOfHits() || 0}
             isSplitView={isSplitView}
             viewDocument={viewDocument}
           />
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
-            <FilterDialog anchorEl={filterDialogAnchorRef.current} />
+            <SearchFilterDialog anchorEl={filterDialogAnchorRef.current} />
             <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
               <Grid
                 item

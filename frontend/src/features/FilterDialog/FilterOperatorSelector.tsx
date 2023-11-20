@@ -1,38 +1,36 @@
 import { MenuItem, TextField } from "@mui/material";
 import {
-  FilterOperator,
-  FilterOperatorType,
+  ColumnInfo,
+  FilterOperators,
   MyFilterExpression,
-  getFilterExpressionColumnValue,
+  filterOperator2FilterOperatorType,
   operator2HumanReadable,
 } from "./filterUtils";
 
 function FilterOperatorSelector({
   filterExpression,
   onChangeOperator,
-  columnValue2operator,
+  column2Info,
 }: {
   filterExpression: MyFilterExpression;
-  onChangeOperator(id: string, operator: FilterOperator): void;
-  columnValue2operator: Record<string, FilterOperatorType>;
+  onChangeOperator(id: string, operator: FilterOperators): void;
+  column2Info: Record<string, ColumnInfo>;
 }) {
-  const operatorType = columnValue2operator[getFilterExpressionColumnValue(filterExpression)];
+  const filterOperator = column2Info[filterExpression.column].operator;
+  const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
 
-  if (operatorType === undefined || operatorType === null) {
-    return null;
-  }
   return (
     <TextField
       select
       value={filterExpression.operator}
-      onChange={(event) => onChangeOperator(filterExpression.id, event.target.value as FilterOperator)}
+      onChange={(event) => onChangeOperator(filterExpression.id, event.target.value as FilterOperators)}
       label="Operator"
       variant="standard"
       fullWidth
     >
-      {Object.values(operatorType).map((op) => (
+      {Object.values(filterOperatorType).map((op) => (
         <MenuItem key={op} value={op}>
-          {operator2HumanReadable[op as FilterOperator]}
+          {operator2HumanReadable[op as FilterOperators]}
         </MenuItem>
       ))}
     </TextField>

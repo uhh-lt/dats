@@ -9,39 +9,38 @@ import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { useFilterSliceActions } from "../../../features/FilterDialog/FilterProvider";
-import { useInitFilterSlice } from "../../../features/FilterDialog/useInitFilterSlice";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import ConceptEditor from "./ConceptEditor";
-import { TimelineAnalysisActions, TimelineAnalysisConcept } from "./timelineAnalysisSlice";
 import ConceptListItem from "./ConceptListItem";
+import { TimelineAnalysisActions, TimelineAnalysisConcept } from "./timelineAnalysisSlice";
+import { useInitTimelineAnalysisFilterSlice } from "./useInitTimelineAnalysisFilterSlice";
+import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice";
 
 function ConceptList() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global client state (redux)
-  const filterActions = useFilterSliceActions();
   const concepts = useAppSelector((state) => state.timelineAnalysis.concepts);
   const dispatch = useAppDispatch();
 
   // init filter slice
-  useInitFilterSlice({ projectId });
+  useInitTimelineAnalysisFilterSlice({ projectId });
 
   // actions
   // we need to keep both slices in sync: timelineAnalysisFilterSlice and timelineAnalysisSlice
   const handleAddConcept = () => {
     const rootFilterId = uuidv4();
-    dispatch(filterActions.addRootFilter({ rootFilterId }));
+    dispatch(TimelineAnalysisFilterActions.addRootFilter({ rootFilterId }));
     dispatch(TimelineAnalysisActions.onCreateNewConcept({ conceptData: rootFilterId }));
   };
 
   const handleEditConcept = (concept: TimelineAnalysisConcept) => {
-    dispatch(filterActions.onStartFilterEdit({ rootFilterId: concept.data }));
+    dispatch(TimelineAnalysisFilterActions.onStartFilterEdit({ rootFilterId: concept.data }));
     dispatch(TimelineAnalysisActions.onStartConceptEdit({ concept }));
   };
 
   const handleApplyConceptChanges = (concept: TimelineAnalysisConcept) => {
-    dispatch(filterActions.onFinishFilterEdit());
+    dispatch(TimelineAnalysisFilterActions.onFinishFilterEdit());
     dispatch(TimelineAnalysisActions.onFinishConceptEdit({ concept }));
   };
 
@@ -51,7 +50,7 @@ function ConceptList() {
 
   const handleDeleteConcept = (concept: TimelineAnalysisConcept) => {
     dispatch(TimelineAnalysisActions.deleteConcept({ concept }));
-    dispatch(filterActions.deleteRootFilter({ rootFilterId: concept.data }));
+    dispatch(TimelineAnalysisFilterActions.deleteRootFilter({ rootFilterId: concept.data }));
   };
 
   const handleToggleVisibilityConcept = (concept: TimelineAnalysisConcept) => {

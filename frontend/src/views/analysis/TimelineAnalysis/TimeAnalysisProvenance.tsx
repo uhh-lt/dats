@@ -1,27 +1,25 @@
-import CheckIcon from "@mui/icons-material/Check";
-import ClearIcon from "@mui/icons-material/Clear";
 import InfoIcon from "@mui/icons-material/Info";
-import LaunchIcon from "@mui/icons-material/Launch";
-import { ListItem, Tooltip, Typography } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
-import List from "@mui/material/List";
-import ListItemText from "@mui/material/ListItemText";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
-import { TimelineAnalysisResult } from "../../../api/openapi";
+import { AttachedObjectType } from "../../../api/openapi";
+import { useAuth } from "../../../auth/AuthProvider";
+import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2";
+import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
+import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 
 interface TimeAnalysisProvenanceProps {
-  provenanceData: Record<string, Record<string, TimelineAnalysisResult[]>>;
+  provenanceData: Record<string, Record<string, number[]>>;
 }
 
 function TimeAnalysisProvenance({ provenanceData }: TimeAnalysisProvenanceProps) {
   // redux
-  const date = useAppSelector((state) => state.analysis.provenanceDate);
-  const concept = useAppSelector((state) => state.analysis.provenanceConcept);
+  const date = useAppSelector((state) => state.timelineAnalysis.provenanceDate);
+  const concept = useAppSelector((state) => state.timelineAnalysis.provenanceConcept);
 
   const provenance = useMemo(() => {
     if (!date || !concept || !provenanceData[date] || !provenanceData[date][concept]) {
@@ -43,47 +41,70 @@ function TimeAnalysisProvenance({ provenanceData }: TimeAnalysisProvenanceProps)
         title={`Provenance for ${concept} in ${date}`}
         subheader="Investigate the Timeline Analysis."
       />
-      <CardContent className="myFlexFillAllContainer">
-        <List sx={{ width: "100%", bgcolor: "background.paper" }}>
-          {provenance.map((provenance, index) => (
-            <CustomListItem key={index} provenance={provenance} />
-          ))}
-        </List>
+      <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
+        <SdocTable sdocIds={provenance} />
       </CardContent>
     </Card>
   );
 }
 
-interface CustomListItemProps {
-  provenance: TimelineAnalysisResult;
-}
+function SdocTable({ sdocIds }: { sdocIds: number[] }) {
+  // global client state (react router)
+  const { user } = useAuth();
 
-function CustomListItem({ provenance }: CustomListItemProps) {
+  const data = useMemo(() => sdocIds.map((sdocId) => ({ id: sdocId })), [sdocIds]);
+
+  // computed
+  const columns: GridColDef<{ id: number }>[] = useMemo(
+    () => [
+      {
+        field: "Type",
+        headerName: "Type",
+        flex: 1,
+        renderCell: (params) => <SdocRenderer sdoc={params.row.id} renderDoctypeIcon />,
+      },
+      {
+        field: "Filename",
+        headerName: "Document",
+        flex: 2,
+        renderCell: (params) => <SdocRenderer sdoc={params.row.id} link renderFilename />,
+      },
+      {
+        field: "Tags",
+        headerName: "Tags",
+        flex: 2,
+        renderCell: (params) => <SdocTagsRenderer sdocId={params.row.id} />,
+      },
+      {
+        field: "Memo",
+        headerName: "Memo",
+        flex: 3,
+        description: "Your comments on the document",
+        renderCell: (params) =>
+          user.data ? (
+            <MemoRenderer2
+              attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
+              attachedObjectId={params.row.id}
+              userId={user.data.id}
+              showTitle={false}
+              showContent
+              showIcon={false}
+            />
+          ) : null,
+      },
+    ],
+    [user.data],
+  );
+
   return (
-    <>
-      <ListItem
-        secondaryAction={
-          <>
-            <IconButton aria-label="edit" disabled>
-              <CheckIcon />
-            </IconButton>
-            <IconButton aria-label="delete" disabled>
-              <ClearIcon />
-            </IconButton>
-            <Tooltip title={"Open document"} enterDelay={500}>
-              <Link to={`../search/doc/${provenance.sdoc_id}`}>
-                <IconButton edge="end" aria-label="goto">
-                  <LaunchIcon />
-                </IconButton>
-              </Link>
-            </Tooltip>
-          </>
-        }
-      >
-        <Typography mr={2}>{(provenance.score * 100.0).toFixed(2)}%</Typography>
-        <ListItemText sx={{ pr: 10 }} primary={provenance.sentence} secondary={provenance.context} />
-      </ListItem>
-    </>
+    <DataGrid
+      rows={data}
+      columns={columns}
+      autoPageSize
+      getRowId={(row) => row.id}
+      style={{ border: "none" }}
+      disableColumnFilter
+    />
   );
 }
 

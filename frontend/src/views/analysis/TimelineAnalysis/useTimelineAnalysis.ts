@@ -1,18 +1,13 @@
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { AnalysisService } from "../../../api/openapi";
-import { useFilterSliceSelector } from "../../../features/FilterDialog/FilterProvider";
+import { AnalysisService, TimelineAnalysisColumns } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { useParams } from "react-router-dom";
+import { MyFilter } from "../../../features/FilterDialog/filterUtils";
 
 export interface TimelineAnalysisCount {
   date: string;
   [key: string]: number | string;
-}
-
-interface TimelineAnalysisIds {
-  date: string;
-  [key: string]: number[] | string;
 }
 
 export const useTimelineAnalysis = () => {
@@ -23,18 +18,18 @@ export const useTimelineAnalysis = () => {
   const groupBy = useAppSelector((state) => state.timelineAnalysis.groupBy);
   const projectMetadatId = useAppSelector((state) => state.timelineAnalysis.projectMetadataId);
   const concepts = useAppSelector((state) => state.timelineAnalysis.concepts);
-  const filter = useFilterSliceSelector().filter;
+  const filter = useAppSelector((state) => state.timelineAnalysisFilter.filter);
 
   const timelineAnalysis = useQueries({
     queries: concepts.map((concept) => {
       return {
-        queryKey: [projectId, groupBy, projectMetadatId, filter[concept.data], concept],
+        queryKey: [projectId, groupBy, projectMetadatId, filter[concept.data]],
         queryFn: () => {
           return AnalysisService.timelineAnalysis2({
             projectId,
             groupBy,
             projectMetadataId: projectMetadatId,
-            requestBody: filter[concept.data], // if concept.type === "filter", data is the root filter id
+            requestBody: filter[concept.data] as MyFilter<TimelineAnalysisColumns>, // if concept.type === "filter", data is the root filter id
           });
         },
       };
@@ -46,13 +41,15 @@ export const useTimelineAnalysis = () => {
 
   // TODO: Is this memo stable? or is it computed every re-render?
   const { counts, date2concept2ids, isSuccess } = useMemo(() => {
+    console.log("memomemomomo");
+
     if (!timelineAnalysis.every((query) => query.isSuccess))
       return { counts: [], date2concept2ids: {}, isSuccess: false };
-    const a = timelineAnalysis.map((query) => query.data!);
+    const timelineAnalysisResults = timelineAnalysis.map((query) => query.data!);
 
     // merge results
     // the keys of the intermediate result
-    const dates = Array.from(new Set(a.flat().map((result) => result.date)));
+    const dates = Array.from(new Set(timelineAnalysisResults.flat().map((result) => result.date)));
 
     // results as maps
     const date2concept2counts: Record<string, Record<string, number>> = dates.reduce((previousValue, currentValue) => {
@@ -62,7 +59,7 @@ export const useTimelineAnalysis = () => {
       return { ...previousValue, [currentValue]: {} };
     }, {});
 
-    a.forEach((taResult, index) => {
+    timelineAnalysisResults.forEach((taResult, index) => {
       const concept = concepts[index]; //  The order returned by useQueries is the same as the input order.
 
       taResult.forEach((result) => {

@@ -22,6 +22,7 @@ export interface TimelineAnalysisState {
   provenanceDate: string | undefined;
   provenanceConcept: string | undefined;
   resultType: string;
+  isBarPlot: boolean;
 }
 
 const initialState: TimelineAnalysisState = {
@@ -42,6 +43,7 @@ const initialState: TimelineAnalysisState = {
   provenanceDate: undefined,
   provenanceConcept: undefined,
   resultType: "document",
+  isBarPlot: false,
 };
 
 export const timelineAnalysisSlice = createSlice({
@@ -126,6 +128,9 @@ export const timelineAnalysisSlice = createSlice({
     onCancelConceptEdit: (state) => {
       state.conceptEditorOpen = false;
       state.currentConcept = initialState.currentConcept;
+    },
+    onTogglePlotType: (state) => {
+      state.isBarPlot = !state.isBarPlot;
     },
   },
 });

@@ -1,12 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { annotatedSegmentsFilterSlice } from "../../../features/FilterDialog/filterSlice";
+import { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
+import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice";
 
 export interface AnnotatedSegmentsState {
   isSplitView: boolean;
   contextSize: number;
   selectedUserIds: number[];
-  paginationModel: { page: number; pageSize: number };
+  paginationModel: GridPaginationModel;
   rowSelectionModel: number[];
+  sortModel: GridSortModel;
 }
 
 const initialState: AnnotatedSegmentsState = {
@@ -15,6 +17,7 @@ const initialState: AnnotatedSegmentsState = {
   selectedUserIds: [],
   paginationModel: { page: 0, pageSize: 5 },
   rowSelectionModel: [],
+  sortModel: [],
 };
 
 export const AnnotatedSegmentsSlice = createSlice({
@@ -36,10 +39,13 @@ export const AnnotatedSegmentsSlice = createSlice({
     onSelectionModelChange: (state, action: PayloadAction<number[]>) => {
       state.rowSelectionModel = action.payload;
     },
+    onSortModelChange: (state, action: PayloadAction<GridSortModel>) => {
+      state.sortModel = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(annotatedSegmentsFilterSlice.actions.onFinishFilterEdit, (state, action) => {
+      .addCase(AnnotatedSegmentsFilterActions.onFinishFilterEdit, (state, action) => {
         // reset page when filter changes
         state.paginationModel.page = 0;
 

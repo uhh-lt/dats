@@ -36,7 +36,6 @@ function DocumentRenderer({
   // computed
   const htmlPages = useMemo(() => {
     let content = html;
-    console.log("content", content);
     if (content.startsWith("<div>")) {
       content = content.substring(5);
     }

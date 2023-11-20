@@ -1,28 +1,37 @@
 import {
   BooleanOperator,
-  DBColumns,
   DateOperator,
-  DocType,
-  Filter,
-  FilterExpression,
+  FilterOperator,
+  FilterValueType,
   IDListOperator,
   IDOperator,
   ListOperator,
-  MetaType,
+  LogicalOperator,
   NumberOperator,
   StringOperator,
 } from "../../api/openapi";
 
 // TYPES
 
-export interface MyFilterExpression extends FilterExpression {
+export type ColumnInfo = {
+  label: string;
+  column: string;
+  sortable: boolean;
+  operator: FilterOperator;
+  value: FilterValueType;
+};
+
+export interface MyFilterExpression<T = string> {
   id: string;
-  docType?: DocType;
+  column: T | number;
+  operator: FilterOperators;
+  value: string | number | boolean | Array<string>;
 }
 
-export interface MyFilter extends Filter {
+export interface MyFilter<T = string> {
   id: string;
-  items: (MyFilter | MyFilterExpression)[];
+  items: (MyFilter<T> | MyFilterExpression<T>)[];
+  logic_operator: LogicalOperator;
 }
 
 export type FilterOperatorType =
@@ -33,51 +42,39 @@ export type FilterOperatorType =
   | typeof ListOperator
   | typeof DateOperator
   | typeof BooleanOperator;
-export type FilterOperator = FilterExpression["operator"];
+
+export type FilterOperators =
+  | IDOperator
+  | NumberOperator
+  | StringOperator
+  | IDListOperator
+  | ListOperator
+  | DateOperator
+  | BooleanOperator;
 
 // TYPE GUARDS
 
-export const isFilter = (filter: Filter | FilterExpression): filter is Filter => {
-  return (filter as Filter).items !== undefined;
+export const isFilter = (filter: MyFilter | MyFilterExpression): filter is MyFilter => {
+  return (filter as MyFilter).items !== undefined;
 };
 
-export const isFilterExpression = (filter: Filter | FilterExpression): filter is FilterExpression => {
-  return (filter as Filter).items === undefined;
+export const isFilterExpression = (filter: MyFilter | MyFilterExpression): filter is MyFilterExpression => {
+  return (filter as MyFilter).items === undefined;
 };
 
 // MAPS
 
-export const metaType2operator: Record<MetaType, FilterOperatorType> = {
-  [MetaType.STRING]: StringOperator,
-  [MetaType.NUMBER]: NumberOperator,
-  [MetaType.DATE]: DateOperator,
-  [MetaType.LIST]: ListOperator,
-  [MetaType.BOOLEAN]: BooleanOperator,
+export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOperatorType> = {
+  [FilterOperator.BOOLEAN]: BooleanOperator,
+  [FilterOperator.STRING]: StringOperator,
+  [FilterOperator.ID]: IDOperator,
+  [FilterOperator.NUMBER]: NumberOperator,
+  [FilterOperator.ID_LIST]: IDListOperator,
+  [FilterOperator.LIST]: ListOperator,
+  [FilterOperator.DATE]: DateOperator,
 };
 
-export const column2operator: Record<DBColumns, FilterOperatorType> = {
-  [DBColumns.SPAN_TEXT]: StringOperator,
-  [DBColumns.SOURCE_DOCUMENT_ID]: IDOperator,
-  [DBColumns.SOURCE_DOCUMENT_FILENAME]: StringOperator,
-  [DBColumns.SOURCE_DOCUMENT_CONTENT]: StringOperator,
-  [DBColumns.CODE_ID]: IDOperator,
-  [DBColumns.CODE_NAME]: StringOperator,
-  [DBColumns.DOCUMENT_TAG_ID]: IDOperator,
-  [DBColumns.DOCUMENT_TAG_TITLE]: StringOperator,
-  [DBColumns.MEMO_ID]: IDOperator,
-  [DBColumns.MEMO_CONTENT]: StringOperator,
-  [DBColumns.MEMO_TITLE]: StringOperator,
-  [DBColumns.METADATA]: StringOperator,
-  [DBColumns.CODE_ID_LIST]: IDListOperator,
-  [DBColumns.DOCUMENT_TAG_ID_LIST]: IDListOperator,
-  [DBColumns.USER_ID]: IDOperator,
-  [DBColumns.USER_ID_LIST]: IDListOperator,
-  [DBColumns.SPAN_ANNOTATION_ID]: IDOperator,
-  [DBColumns.SPAN_ANNOTATION_ID_LIST]: IDListOperator,
-  [DBColumns.SPAN_ANNOTATIONS]: ListOperator,
-};
-
-export const operator2HumanReadable: Record<FilterOperator, string> = {
+export const operator2HumanReadable: Record<FilterOperators, string> = {
   [IDOperator.ID_EQUALS]: "=",
   [IDOperator.ID_NOT_EQUALS]: "!=",
   [NumberOperator.NUMBER_EQUALS]: "=",
@@ -103,14 +100,7 @@ export const operator2HumanReadable: Record<FilterOperator, string> = {
 
 // METHODS
 
-export const getFilterExpressionColumnValue = (filter: MyFilterExpression): string => {
-  if (filter.column === DBColumns.METADATA) {
-    return filter.project_metadata_id!.toString();
-  }
-  return filter.column;
-};
-
-export const getDefaultOperator = (operator: FilterOperatorType): FilterOperator => {
+export const getDefaultOperator = (operator: FilterOperatorType): FilterOperators => {
   return Object.values(operator)[0];
 };
 

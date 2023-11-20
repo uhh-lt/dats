@@ -1,121 +1,112 @@
 import { Autocomplete, Chip, MenuItem, Switch, TextField } from "@mui/material";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
-import {
-  BooleanOperator,
-  DBColumns,
-  DateOperator,
-  IDListOperator,
-  IDOperator,
-  ListOperator,
-  NumberOperator,
-  StringOperator,
-} from "../../api/openapi";
+import { FilterOperator, FilterValueType } from "../../api/openapi";
 import CodeRenderer from "../../components/DataGrid/CodeRenderer";
 import TagRenderer from "../../components/DataGrid/TagRenderer";
 import UserRenderer from "../../components/DataGrid/UserRenderer";
-import { FilterOperatorType, MyFilterExpression, getFilterExpressionColumnValue } from "./filterUtils";
 import { isValidDateString } from "../../utils/DateUtils";
-import { useState } from "react";
+import { ColumnInfo, MyFilterExpression } from "./filterUtils";
 
 interface SharedFilterValueSelectorProps {
   filterExpression: MyFilterExpression;
-  onChangeValue(id: string, value: string | number | boolean | string[] | string[][]): void;
+  onChangeValue(id: string, value: string | number | boolean | string[]): void;
 }
 
 interface FilterValueSelectorProps extends SharedFilterValueSelectorProps {
-  columnValue2Operator: Record<string, FilterOperatorType>;
+  column2Info: Record<string, ColumnInfo>;
 }
 
-function FilterValueSelector({ filterExpression, onChangeValue, columnValue2Operator }: FilterValueSelectorProps) {
-  switch (filterExpression.column) {
-    case DBColumns.DOCUMENT_TAG_ID_LIST:
+function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: FilterValueSelectorProps) {
+  const filterInfo = column2Info[filterExpression.column];
+
+  switch (filterInfo.value) {
+    case FilterValueType.TAG_ID:
       return <TagIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
-    case DBColumns.CODE_ID_LIST:
+    case FilterValueType.CODE_ID:
       return <CodeIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
-    case DBColumns.CODE_ID:
-      return <CodeIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
-    case DBColumns.USER_ID_LIST:
+    case FilterValueType.USER_ID:
       return <UserIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
-    case DBColumns.SPAN_ANNOTATIONS:
+    case FilterValueType.SPAN_ANNOTATION:
       return <SpanAnnotationValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
+    case FilterValueType.INFER_FROM_OPERATOR:
+      switch (filterInfo.operator) {
+        case FilterOperator.ID:
+        case FilterOperator.NUMBER:
+          return (
+            <TextField
+              type="number"
+              value={typeof filterExpression.value === "number" ? filterExpression.value : 0}
+              onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
+              label="Value"
+              variant="standard"
+              fullWidth
+            />
+          );
+        case FilterOperator.STRING:
+          return (
+            <TextField
+              type="text"
+              value={typeof filterExpression.value === "string" ? filterExpression.value : ""}
+              onChange={(event) => onChangeValue(filterExpression.id, event.target.value)}
+              label="Value"
+              variant="standard"
+              fullWidth
+            />
+          );
+        case FilterOperator.ID_LIST:
+          return <>Not Implemented!</>;
+        case FilterOperator.LIST:
+          return (
+            <Autocomplete
+              value={Array.isArray(filterExpression.value) ? (filterExpression.value as string[]) : []}
+              onChange={(event, newValue) => {
+                onChangeValue(filterExpression.id, newValue);
+              }}
+              fullWidth
+              multiple
+              options={[]}
+              freeSolo
+              disableClearable
+              renderTags={(value: readonly string[], getTagProps) =>
+                value.map((option: string, index: number) => (
+                  <Chip
+                    style={{ borderRadius: "4px", height: "100%" }}
+                    variant="filled"
+                    label={option}
+                    {...getTagProps({ index })}
+                  />
+                ))
+              }
+              renderInput={(params) => <TextField {...params} fullWidth variant="standard" />}
+            />
+          );
+        case FilterOperator.DATE:
+          return (
+            <TextField
+              variant="standard"
+              type="date"
+              value={
+                typeof filterExpression.value === "string" && isValidDateString(filterExpression.value)
+                  ? filterExpression.value
+                  : new Date()
+              }
+              onChange={(e) => onChangeValue(filterExpression.id, e.target.value)}
+            />
+          );
+        case FilterOperator.BOOLEAN:
+          return (
+            <Switch
+              checked={typeof filterExpression.value === "boolean" ? filterExpression.value : false}
+              onChange={(e) => onChangeValue(filterExpression.id, e.target.checked)}
+            />
+          );
+      }
+      break;
+    default:
+      return <>FilterValueType not supported</>;
   }
-
-  const filterExpressionOperator = columnValue2Operator[getFilterExpressionColumnValue(filterExpression)];
-
-  switch (filterExpressionOperator) {
-    case IDOperator:
-    case NumberOperator:
-      return (
-        <TextField
-          type="number"
-          value={typeof filterExpression.value === "number" ? filterExpression.value : 0}
-          onChange={(event) => onChangeValue(filterExpression.id, parseInt(event.target.value))}
-          label="Value"
-          variant="standard"
-          fullWidth
-        />
-      );
-    case StringOperator:
-      return (
-        <TextField
-          type="text"
-          value={typeof filterExpression.value === "string" ? filterExpression.value : ""}
-          onChange={(event) => onChangeValue(filterExpression.id, event.target.value)}
-          label="Value"
-          variant="standard"
-          fullWidth
-        />
-      );
-    case IDListOperator:
-      return <>Not Implemented!</>;
-    case ListOperator:
-      return (
-        <Autocomplete
-          value={Array.isArray(filterExpression.value) ? (filterExpression.value as string[]) : []}
-          onChange={(event, newValue) => {
-            onChangeValue(filterExpression.id, newValue);
-          }}
-          fullWidth
-          multiple
-          options={[]}
-          freeSolo
-          disableClearable
-          renderTags={(value: readonly string[], getTagProps) =>
-            value.map((option: string, index: number) => (
-              <Chip
-                style={{ borderRadius: "4px", height: "100%" }}
-                variant="filled"
-                label={option}
-                {...getTagProps({ index })}
-              />
-            ))
-          }
-          renderInput={(params) => <TextField {...params} fullWidth variant="standard" />}
-        />
-      );
-    case DateOperator:
-      return (
-        <TextField
-          variant="standard"
-          type="date"
-          value={
-            typeof filterExpression.value === "string" && isValidDateString(filterExpression.value)
-              ? filterExpression.value
-              : new Date()
-          }
-          onChange={(e) => onChangeValue(filterExpression.id, e.target.value)}
-        />
-      );
-    case BooleanOperator:
-      return (
-        <Switch
-          checked={typeof filterExpression.value === "boolean" ? filterExpression.value : false}
-          onChange={(e) => onChangeValue(filterExpression.id, e.target.checked)}
-        />
-      );
-  }
-  return <></>;
 }
 
 function TagIdValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
@@ -221,22 +212,18 @@ function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: Shared
   // global server state (react-query)
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
 
-  const [value, setValue] = useState<string[][]>(
-    Array.isArray(filterExpression.value) &&
-      filterExpression.value.length === 1 &&
-      Array.isArray(filterExpression.value[0])
-      ? (filterExpression.value as string[][])
-      : [["-1", ""]],
+  const [value, setValue] = useState<string[]>(
+    Array.isArray(filterExpression.value) ? filterExpression.value : ["-1", ""],
   );
 
   const handleCodeValueChange = (codeId: string) => {
-    const newValue = [[codeId, value[0][1]]];
+    const newValue = [codeId, value[1]];
     setValue(newValue);
     onChangeValue(filterExpression.id, newValue);
   };
 
   const handleTextValueChange = (text: string) => {
-    const newValue = [[value[0][0], text]];
+    const newValue = [value[0], text];
     setValue(newValue);
     onChangeValue(filterExpression.id, newValue);
   };
@@ -249,7 +236,7 @@ function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: Shared
         select
         label="Code"
         variant="filled"
-        value={value[0][0]}
+        value={value[0]}
         onChange={(event) => handleCodeValueChange(event.target.value)}
         InputLabelProps={{ shrink: true }}
       >
@@ -264,7 +251,7 @@ function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: Shared
       </TextField>
       <TextField
         type="text"
-        value={value[0][1]}
+        value={value[1]}
         onChange={(event) => handleTextValueChange(event.target.value)}
         label="Text"
         variant="standard"

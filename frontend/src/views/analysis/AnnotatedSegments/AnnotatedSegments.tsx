@@ -23,10 +23,10 @@ import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../
 import SpanAnnotationEditDialog, {
   openSpanAnnotationEditDialog,
 } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
-import FilterDialog from "../../../features/FilterDialog/FilterDialog";
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import AnnotatedSegmentsFilterDialog from "./AnnotatedSegmentsFilterDialog";
 import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable";
 import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector";
 import SpanAnnotationCard from "./SpanAnnotationCard";
@@ -105,7 +105,7 @@ function AnnotatedSegments() {
                     Change code of {rowSelectionModel.length} annotated segments
                   </Button>
                 )}
-                <FilterDialog anchorEl={filterDialogAnchorRef.current} />
+                <AnnotatedSegmentsFilterDialog anchorEl={filterDialogAnchorRef.current} />
                 <Box sx={{ flexGrow: 1 }} />
                 <AnnotatedSegmentsUserSelector projectId={projectId} mr={1} />
                 <TextField
