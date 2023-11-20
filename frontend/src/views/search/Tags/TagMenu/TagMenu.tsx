@@ -99,8 +99,8 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
           docTagCount === 0
             ? CheckboxState.NOT_CHECKED
             : docTagCount < maxTags
-            ? CheckboxState.INDETERMINATE
-            : CheckboxState.CHECKED,
+              ? CheckboxState.INDETERMINATE
+              : CheckboxState.CHECKED,
         ]),
       );
     }

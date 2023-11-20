@@ -59,8 +59,8 @@ function BaseCardNode({
               isValidDatabaseConnectionTarget
                 ? theme.palette.success.light
                 : allowDrawConnection
-                ? theme.palette.grey[300]
-                : theme.palette.grey[50],
+                  ? theme.palette.grey[300]
+                  : theme.palette.grey[50],
           }}
         >
           <Handle

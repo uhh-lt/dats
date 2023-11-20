@@ -90,8 +90,8 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
                 props.data.label.verticalAlign === "center"
                   ? "center"
                   : props.data.label.verticalAlign === "bottom"
-                  ? "flex-end"
-                  : "flex-start",
+                    ? "flex-end"
+                    : "flex-start",
               pointerEvents: "all",
             }}
             onClick={handleClick}
