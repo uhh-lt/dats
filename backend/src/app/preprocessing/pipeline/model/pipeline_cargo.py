@@ -15,12 +15,12 @@ class PipelineCargo(BaseModel):
 
     next_steps: List[
         SkipValidation
-    ] = Field(  # FIXME: "Hack" to ignore the problems with "PipelineStep"
+    ] = Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
         description="Next Tasks to be executed.", default_factory=list
     )
     finished_steps: List[
         SkipValidation
-    ] = Field(  # FIXME: "Hack" to ignore the problems with "PipelineStep"
+    ] = Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
         description="Tasks that have been executed.", default_factory=list
     )
 
