@@ -274,7 +274,7 @@ def test_get_add_remove_memos_project(
             db=sess, project_id=project, create_dto=memo1
         )
         memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-        memo1_obj = MemoRead(
+        MemoRead(
             **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
             attached_object_id=project,
             attached_object_type=AttachedObjectType.project,
@@ -299,7 +299,7 @@ def test_get_add_remove_memos_project(
             db=sess, project_id=project, create_dto=memo2
         )
         memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-        memo2_obj = MemoRead(
+        MemoRead(
             **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
             attached_object_id=project,
             attached_object_type=AttachedObjectType.project,
