@@ -15,10 +15,10 @@ from app.core.data.dto.search import (
     ElasticSearchMemoCreate,
     ElasticSearchMemoRead,
     ElasticSearchMemoUpdate,
-    KeywordStat,
     PaginatedElasticSearchDocumentHits,
     PaginatedMemoSearchResults,
 )
+from app.core.data.dto.search_stats import KeywordStat
 from app.core.data.dto.source_document import SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
 from config import conf

@@ -167,14 +167,14 @@ async def get_user_memo(
 
 @router.get(
     "/{tag_id}/sdocs",
-    response_model=List[SourceDocumentRead],
-    summary="Returns all SourceDocuments attached to the Tag with the given ID",
+    response_model=List[int],
+    summary="Returns all SourceDocument IDs attached to the Tag with the given ID",
     description=(
-        "Returns all SourceDocuments attached to the Tag with the given ID if it exists."
+        "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists."
     ),
 )
-async def get_sdocs_by_tag_id(
+async def get_sdoc_ids_by_tag_id(
     *, db: Session = Depends(get_db_session), tag_id: int
 ) -> List[SourceDocumentRead]:
     db_obj = crud_document_tag.read(db=db, id=tag_id)
-    return [SourceDocumentRead.model_validate(sdoc) for sdoc in db_obj.source_documents]
+    return [sdoc.id for sdoc in db_obj.source_documents]

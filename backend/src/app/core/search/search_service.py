@@ -1,16 +1,19 @@
-from typing import List
+from typing import List, Optional, Set
 
-from app.core.data.crud.source_document import crud_sdoc
+from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import (
-    SearchSDocsQueryParameters,
     SimSearchImageHit,
     SimSearchQuery,
     SimSearchSentenceHit,
 )
+from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
-from app.core.data.orm.document_tag import DocumentTagORM
+from app.core.data.orm.document_tag import (
+    DocumentTagORM,
+    SourceDocumentDocumentTagLinkTable,
+)
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
@@ -24,7 +27,6 @@ from app.core.filters.columns import (
 )
 from app.core.filters.filtering import Filter, apply_filtering
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
-from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.simsearch_service import SimSearchService
@@ -143,8 +145,6 @@ class SearchService(metaclass=SingletonMeta):
         self,
         project_id: int,
         filter: Filter[SearchColumns],
-        page: int,
-        page_size: int,
         sorts: List[Sort[SearchColumns]],
     ) -> List[int]:
         with self.sqls.db_session() as db:
@@ -192,120 +192,139 @@ class SearchService(metaclass=SingletonMeta):
 
             query = apply_sorting(query=query, sorts=sorts)
 
-            query = query.order_by(
-                SourceDocumentORM.id
-            )  # this is very important, otherwise pagination will not work!
-            query, pagination = apply_pagination(
-                query=query, page_number=page + 1, page_size=page_size
+            # query = query.order_by(
+            #     SourceDocumentORM.id
+            # )  # this is very important, otherwise pagination will not work!
+            # query, pagination = apply_pagination(
+            #     query=query, page_number=page + 1, page_size=page_size
+            # )
+
+            return [row[0] for row in query.all()]
+
+    def compute_tag_statistics(
+        self,
+        sdoc_ids: Set[int],
+    ) -> List[TagStat]:
+        with self.sqls.db_session() as db:
+            # tag statistics for the sdoc_ids
+            count = func.count().label("count")
+            query = (
+                db.query(DocumentTagORM, count)
+                .join(
+                    SourceDocumentDocumentTagLinkTable,
+                    SourceDocumentDocumentTagLinkTable.document_tag_id
+                    == DocumentTagORM.id,
+                )
+                .filter(
+                    SourceDocumentDocumentTagLinkTable.source_document_id.in_(
+                        list(sdoc_ids)
+                    )
+                )
+                .group_by(DocumentTagORM.id)
+                .order_by(count.desc())
+            )
+            filtered_res = query.all()
+            tag_ids = [tag.id for tag, _ in filtered_res]
+
+            # global tag statistics
+            count = func.count().label("count")
+            query = (
+                db.query(SourceDocumentDocumentTagLinkTable.document_tag_id, count)
+                .filter(SourceDocumentDocumentTagLinkTable.document_tag_id.in_(tag_ids))
+                .group_by(SourceDocumentDocumentTagLinkTable.document_tag_id)
+                .order_by(
+                    func.array_position(
+                        tag_ids, SourceDocumentDocumentTagLinkTable.document_tag_id
+                    )
+                )
+            )
+            global_res = query.all()
+
+        return [
+            TagStat(tag=tag, filtered_count=fcount, global_count=gcount)
+            for (tag, fcount), (tid, gcount) in zip(filtered_res, global_res)
+        ]
+
+    def compute_keyword_statistics(
+        self, *, proj_id: int, sdoc_ids: Set[int], top_k: int = 50
+    ) -> List[KeywordStat]:
+        return ElasticSearchService().get_sdoc_keyword_counts_by_sdoc_ids(
+            proj_id=proj_id, sdoc_ids=sdoc_ids, top_k=top_k
+        )
+
+    def compute_code_statistics(
+        self,
+        code_id: int,
+        user_ids: Set[int],
+        sdoc_ids: Set[int],
+        limit: Optional[int] = None,
+    ) -> List[SpanEntityStat]:
+        with self.sqls.db_session() as db:
+            # we always want ADocs from the SYSTEM_USER
+            if not user_ids:
+                user_ids = set()
+            user_ids.add(SYSTEM_USER_ID)
+
+            # code statistics for the sdoc_ids
+            count = func.count().label("count")
+            query = (
+                db.query(
+                    SpanTextORM.id,
+                    SpanTextORM.text,
+                    count,
+                )
+                .join(SpanTextORM.span_annotations)
+                .join(SpanAnnotationORM.annotation_document)
+                .join(SpanAnnotationORM.current_code)
+                .join(CurrentCodeORM.code)
+                .group_by(SpanTextORM.id)
+                .filter(
+                    CodeORM.id == code_id,
+                    AnnotationDocumentORM.user_id.in_(list(user_ids)),
+                    AnnotationDocumentORM.source_document_id.in_(list(sdoc_ids)),
+                )
+                .order_by(count.desc())
             )
 
-            result_rows = query.all()
-            return [row[0] for row in result_rows]
+            if limit is not None:
+                query = query.limit(limit)
 
-    def search_sdoc_ids_by_sdoc_query_parameters(
-        self, query_params: SearchSDocsQueryParameters
-    ) -> List[int]:
-        skip_limit = {"skip": None, "limit": None}
+            filtered_res = query.all()
+            span_text_ids = [row[0] for row in filtered_res]
 
-        with self.sqls.db_session() as db:
-            sdocs_ids = []
-
-            if crud_sdoc.count_by_project(db=db, proj_id=query_params.proj_id) == 0:
-                return sdocs_ids
-
-            if query_params.span_entities:
-                sdocs_ids.append(
-                    crud_sdoc.get_ids_by_span_entities(
-                        db=db,
-                        proj_id=query_params.proj_id,
-                        user_ids=query_params.user_ids,
-                        span_entities=query_params.span_entities,
-                        **skip_limit,
-                    )
+            # global code statistics
+            count = func.count().label("count")
+            query = (
+                db.query(
+                    SpanTextORM.id,
+                    SpanTextORM.text,
+                    count,
                 )
-
-            if query_params.tag_ids:
-                sdocs_ids.append(
-                    crud_sdoc.get_ids_by_document_tags(
-                        db=db,
-                        tag_ids=query_params.tag_ids,
-                        all_tags=query_params.all_tags,
-                        **skip_limit,
-                    )
+                .join(SpanTextORM.span_annotations)
+                .join(SpanAnnotationORM.annotation_document)
+                .join(SpanAnnotationORM.current_code)
+                .join(CurrentCodeORM.code)
+                .group_by(SpanTextORM.id)
+                .filter(
+                    CodeORM.id == code_id,
+                    AnnotationDocumentORM.user_id.in_(list(user_ids)),
+                    SpanTextORM.id.in_(span_text_ids),
                 )
+                .order_by(func.array_position(span_text_ids, SpanTextORM.id))
+            )
+            global_res = query.all()
 
-            if query_params.search_terms:
-                sdocs_ids.append(
-                    [
-                        hit.sdoc_id
-                        for hit in ElasticSearchService()
-                        .search_sdocs_by_content_query(
-                            proj_id=query_params.proj_id,
-                            query=" ".join(
-                                # FIXME we want and not or!
-                                query_params.search_terms
-                            ),
-                            **skip_limit,
-                        )
-                        .hits
-                    ]
-                )
-
-            if query_params.filename:
-                sdocs_ids.append(
-                    crud_sdoc.get_ids_by_starts_with_metadata_name(
-                        db=db,
-                        proj_id=query_params.proj_id,
-                        starts_with=query_params.filename,
-                        **skip_limit,
-                    )
-                )
-
-            if query_params.keywords:
-                sdocs_ids.append(
-                    [
-                        hit.sdoc_id
-                        for hit in ElasticSearchService()
-                        .search_sdocs_by_keywords_query(
-                            proj_id=query_params.proj_id,
-                            keywords=query_params.keywords,
-                            **skip_limit,
-                        )
-                        .hits
-                    ]
-                )
-
-            if query_params.metadata:
-                sdocs_ids.append(
-                    crud_sdoc.get_ids_by_metadata_and_project_id(
-                        db=db,
-                        proj_id=query_params.proj_id,
-                        metadata=query_params.metadata,
-                        **skip_limit,
-                    )
-                )
-
-            if query_params.doc_types:
-                sdocs_ids.append(
-                    crud_sdoc.get_ids_by_doc_types_and_project_id(
-                        db=db,
-                        proj_id=query_params.proj_id,
-                        doc_types=query_params.doc_types,
-                        **skip_limit,
-                    )
-                )
-
-            if len(sdocs_ids) == 0:
-                # no search results, so we return all documents!
-                return [
-                    sdoc.id
-                    for sdoc in crud_sdoc.read_by_project(
-                        db=db, proj_id=query_params.proj_id, only_finished=True
-                    )
-                ]
-            else:
-                # we have search results, now we combine!
-                return list(set.intersection(*map(set, sdocs_ids)))
+        return [
+            SpanEntityStat(
+                code_id=code_id,
+                span_text=ftext,
+                filtered_count=fcount,
+                global_count=gcount,
+            )
+            for (ftextid, ftext, fcount), (gtextid, gtext, gcount) in zip(
+                filtered_res, global_res
+            )
+        ]
 
     def find_similar_sentences(
         self, query: SimSearchQuery

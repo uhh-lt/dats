@@ -12,6 +12,7 @@ from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.prepro import PreProProjectStatus
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.preprocessing_job_payload import PreprocessingJobPayloadRead
+from app.core.data.dto.source_document import SDocStatus
 from app.core.db.redis_service import RedisService
 from app.preprocessing.preprocessing_service import PreprocessingService
 
@@ -112,11 +113,12 @@ async def get_project_prepro_status(
         erroneous_prepro_job_payloads.extend(payloads)
 
     finished_sdocs = crud_sdoc.count_by_project(
-        db=db, proj_id=proj_id, only_finished=True
+        db=db, proj_id=proj_id, status=SDocStatus.finished
     )
-    total_sdocs = crud_sdoc.count_by_project(
-        db=db, proj_id=proj_id, only_finished=False
+    unfinished_sdocs = crud_sdoc.count_by_project(
+        db=db, proj_id=proj_id, status=SDocStatus.unfinished_or_erroneous
     )
+    total_sdocs = finished_sdocs + unfinished_sdocs
 
     return PreProProjectStatus(
         project_id=proj_id,
