@@ -1845,9 +1845,9 @@
     "/doctag/{tag_id}/sdocs": {
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns all SourceDocuments attached to the Tag with the given ID",
-        "description": "Returns all SourceDocuments attached to the Tag with the given ID if it exists.",
-        "operationId": "get_sdocs_by_tag_id",
+        "summary": "Returns all SourceDocument IDs attached to the Tag with the given ID",
+        "description": "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.",
+        "operationId": "get_sdoc_ids_by_tag_id",
         "parameters": [
           { "required": true, "schema": { "title": "Tag Id", "type": "integer" }, "name": "tag_id", "in": "path" }
         ],
@@ -1857,9 +1857,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Response Documenttag-Get Sdocs By Tag Id",
+                  "title": "Response Documenttag-Get Sdoc Ids By Tag Id",
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/SourceDocumentRead" }
+                  "items": { "type": "integer" }
                 }
               }
             }
@@ -3306,35 +3306,6 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/search/sdoc": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns all SourceDocument IDs that match the query parameters.",
-        "description": "Returns all SourceDocument Ids that match the query parameters.",
-        "operationId": "search_sdocs",
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SearchSDocsQueryParameters" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": { "title": "Response Search-Search Sdocs", "type": "array", "items": { "type": "integer" } }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/search/sdoc_new_info": {
       "post": {
         "tags": ["search"],
@@ -3382,13 +3353,6 @@
             "schema": { "title": "Project Id", "type": "integer" },
             "name": "project_id",
             "in": "query"
-          },
-          { "required": true, "schema": { "title": "Page", "type": "integer" }, "name": "page", "in": "query" },
-          {
-            "required": true,
-            "schema": { "title": "Page Size", "type": "integer" },
-            "name": "page_size",
-            "in": "query"
           }
         ],
         "requestBody": {
@@ -3418,47 +3382,6 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/search/entity_stats": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns SpanEntityStats for the given SourceDocuments.",
-        "description": "Returns SpanEntityStats for the given SourceDocuments.",
-        "operationId": "search_span_entity_stats",
-        "parameters": [
-          {
-            "required": true,
-            "schema": { "title": "Project Id", "type": "integer" },
-            "name": "project_id",
-            "in": "query"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response Search-Search Span Entity Stats",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/SpanEntityFrequency" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/search/code_stats": {
       "post": {
         "tags": ["search"],
@@ -3466,12 +3389,7 @@
         "description": "Returns SpanEntityStats for the given SourceDocuments.",
         "operationId": "search_code_stats",
         "parameters": [
-          {
-            "required": true,
-            "schema": { "title": "Project Id", "type": "integer" },
-            "name": "project_id",
-            "in": "query"
-          },
+          { "required": true, "schema": { "title": "Code Id", "type": "integer" }, "name": "code_id", "in": "query" },
           {
             "required": false,
             "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
@@ -3481,7 +3399,7 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": { "schema": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_code_stats" } }
           },
           "required": true
         },
@@ -3489,7 +3407,13 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SpanEntityDocumentFrequencyResult" } }
+              "application/json": {
+                "schema": {
+                  "title": "Response Search-Search Code Stats",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SpanEntityStat" }
+                }
+              }
             }
           },
           "422": {
@@ -3561,12 +3485,6 @@
         "operationId": "search_tag_stats",
         "parameters": [
           {
-            "required": true,
-            "schema": { "title": "Project Id", "type": "integer" },
-            "name": "project_id",
-            "in": "query"
-          },
-          {
             "required": false,
             "schema": { "title": "Sort By Global", "type": "boolean", "default": false },
             "name": "sort_by_global",
@@ -3590,116 +3508,6 @@
                   "items": { "$ref": "#/components/schemas/TagStat" }
                 }
               }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/search/lexical/sdoc/content": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns all SourceDocuments where the content matches the query via lexical search",
-        "description": "Returns all SourceDocuments where the content matches the query via lexical search",
-        "operationId": "search_sdocs_by_content_query",
-        "parameters": [
-          {
-            "description": "The number of elements to skip (offset)",
-            "required": false,
-            "schema": {
-              "title": "Skip",
-              "maximum": 10000000,
-              "minimum": 0,
-              "type": "integer",
-              "description": "The number of elements to skip (offset)"
-            },
-            "name": "skip",
-            "in": "query"
-          },
-          {
-            "description": "The maximum number of returned elements",
-            "required": false,
-            "schema": {
-              "title": "Limit",
-              "maximum": 1000,
-              "minimum": 1,
-              "type": "integer",
-              "description": "The maximum number of returned elements"
-            },
-            "name": "limit",
-            "in": "query"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentContentQuery" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/search/lexical/sdoc/filename": {
-      "post": {
-        "tags": ["search"],
-        "summary": "Returns all SourceDocuments where the filename matches the query via lexical search",
-        "description": "Returns all SourceDocuments where the filename matches the query via lexical search",
-        "operationId": "search_sdocs_by_filename_query",
-        "parameters": [
-          {
-            "description": "The number of elements to skip (offset)",
-            "required": false,
-            "schema": {
-              "title": "Skip",
-              "maximum": 10000000,
-              "minimum": 0,
-              "type": "integer",
-              "description": "The number of elements to skip (offset)"
-            },
-            "name": "skip",
-            "in": "query"
-          },
-          {
-            "description": "The maximum number of returned elements",
-            "required": false,
-            "schema": {
-              "title": "Limit",
-              "maximum": 1000,
-              "minimum": 1,
-              "type": "integer",
-              "description": "The maximum number of returned elements"
-            },
-            "name": "limit",
-            "in": "query"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentFilenameQuery" } }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
             }
           },
           "422": {
@@ -5588,6 +5396,15 @@
           }
         }
       },
+      "Body_search-search_code_stats": {
+        "title": "Body_search-search_code_stats",
+        "required": ["user_ids", "sdoc_ids"],
+        "type": "object",
+        "properties": {
+          "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } },
+          "sdoc_ids": { "title": "Sdoc Ids", "type": "array", "items": { "type": "integer" } }
+        }
+      },
       "Body_search-search_sdocs_new": {
         "title": "Body_search-search_sdocs_new",
         "required": ["filter", "sorts"],
@@ -5874,23 +5691,6 @@
           "parent_tag_id": { "title": "Parent Tag Id", "type": "integer", "description": "Parent of the DocumentTag" }
         }
       },
-      "ElasticSearchDocumentHit": {
-        "title": "ElasticSearchDocumentHit",
-        "required": ["sdoc_id", "score"],
-        "type": "object",
-        "properties": {
-          "sdoc_id": {
-            "title": "Sdoc Id",
-            "type": "integer",
-            "description": "The ID of the SourceDocument as it is in the SQL DB"
-          },
-          "score": {
-            "title": "Score",
-            "type": "number",
-            "description": "The score of the SourceDocument that was found by a ES Query"
-          }
-        }
-      },
       "ExportFormat": {
         "title": "ExportFormat",
         "enum": ["CSV", "JSON"],
@@ -6171,15 +5971,6 @@
       },
       "IDListOperator": { "title": "IDListOperator", "enum": ["ID_LIST_CONTAINS"], "description": "An enumeration." },
       "IDOperator": { "title": "IDOperator", "enum": ["ID_EQUALS", "ID_NOT_EQUALS"], "description": "An enumeration." },
-      "KeyValue": {
-        "title": "KeyValue",
-        "required": ["key", "value"],
-        "type": "object",
-        "properties": {
-          "key": { "title": "Key", "type": "string", "description": "The key of the Metadata" },
-          "value": { "title": "Value", "type": "string", "description": "The value of the Metadata" }
-        }
-      },
       "KeywordStat": {
         "title": "KeywordStat",
         "required": ["keyword", "filtered_count", "global_count"],
@@ -6347,35 +6138,6 @@
         "title": "NumberOperator",
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
         "description": "An enumeration."
-      },
-      "PaginatedElasticSearchDocumentHits": {
-        "title": "PaginatedElasticSearchDocumentHits",
-        "required": ["has_more", "total", "current_page_offset", "next_page_offset", "hits"],
-        "type": "object",
-        "properties": {
-          "has_more": {
-            "title": "Has More",
-            "type": "boolean",
-            "description": "Flag that indicates whether there are more search results."
-          },
-          "total": { "title": "Total", "type": "integer", "description": "The total number of results." },
-          "current_page_offset": {
-            "title": "Current Page Offset",
-            "type": "integer",
-            "description": "The offset that returns the current results."
-          },
-          "next_page_offset": {
-            "title": "Next Page Offset",
-            "type": "integer",
-            "description": "The offset that returns the next results."
-          },
-          "hits": {
-            "title": "Hits",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ElasticSearchDocumentHit" },
-            "description": "The IDs of SourceDocument search results on the requested page."
-          }
-        }
       },
       "PaginatedMemoSearchResults": {
         "title": "PaginatedMemoSearchResults",
@@ -6694,73 +6456,6 @@
         "type": "string",
         "description": "An enumeration."
       },
-      "SearchSDocsQueryParameters": {
-        "title": "SearchSDocsQueryParameters",
-        "required": ["proj_id"],
-        "type": "object",
-        "properties": {
-          "proj_id": {
-            "title": "Proj Id",
-            "type": "integer",
-            "description": "The ID of the Project the SourceDocuments have to belong to."
-          },
-          "user_ids": {
-            "title": "User Ids",
-            "uniqueItems": true,
-            "type": "array",
-            "items": { "type": "integer" },
-            "description": "The IDs of the User the SourceDocuments have to belong to.",
-            "default": [1]
-          },
-          "keywords": {
-            "title": "Keywords",
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "List of Keywords that have to be present in the SourceDocuments keywords (via Elasticsearch)"
-          },
-          "search_terms": {
-            "title": "Search Terms",
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "List of SearchTerms that have to be present in the SourceDocuments content (via Elasticsearch)"
-          },
-          "filename": {
-            "title": "Filename",
-            "type": "string",
-            "description": "Filename that have to be present in the SourceDocuments Filename (via Elasticsearch)"
-          },
-          "span_entities": {
-            "title": "Span Entities",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/SpanEntity" },
-            "description": "List of SpanEntities that have to be present in the SourceDocuments"
-          },
-          "tag_ids": {
-            "title": "Tag Ids",
-            "type": "array",
-            "items": { "type": "integer" },
-            "description": "List of IDs of DocumentTags the SourceDocuments have to be tagged with"
-          },
-          "metadata": {
-            "title": "Metadata",
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/KeyValue" },
-            "description": "List of key value pairs that have to be present in the SourceDocuments metadata have to be"
-          },
-          "all_tags": {
-            "title": "All Tags",
-            "type": "boolean",
-            "description": "If true return SourceDocuments tagged with all DocumentTags, or anyof the DocumentTags otherwise",
-            "default": true
-          },
-          "doc_types": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/DocType" },
-            "description": "Only return SourceDocuments with the given DocTypes",
-            "default": ["text", "image", "audio", "video"]
-          }
-        }
-      },
       "SimSearchImageHit": {
         "title": "SimSearchImageHit",
         "required": ["sdoc_id", "score"],
@@ -6800,8 +6495,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "min": 0,
-            "max": 1
+            "max": 1,
+            "min": 0
           }
         }
       },
@@ -7020,24 +6715,6 @@
         },
         "description": "A sort expressions for sorting on many database columns"
       },
-      "SourceDocumentContentQuery": {
-        "title": "SourceDocumentContentQuery",
-        "required": ["proj_id", "content_query"],
-        "type": "object",
-        "properties": {
-          "proj_id": {
-            "title": "Proj Id",
-            "type": "integer",
-            "description": "The ID of the Project the SourceDocuments have to belong to."
-          },
-          "content_query": {
-            "title": "Content Query",
-            "minLength": 1,
-            "type": "string",
-            "description": "The query term to search within the content of the SourceDocuments"
-          }
-        }
-      },
       "SourceDocumentDocumentTagMultiLink": {
         "title": "SourceDocumentDocumentTagMultiLink",
         "required": ["source_document_ids", "document_tag_ids"],
@@ -7054,29 +6731,6 @@
             "type": "array",
             "items": { "type": "integer" },
             "description": "List of IDs of DocumentTags"
-          }
-        }
-      },
-      "SourceDocumentFilenameQuery": {
-        "title": "SourceDocumentFilenameQuery",
-        "required": ["proj_id", "filename_query", "prefix"],
-        "type": "object",
-        "properties": {
-          "proj_id": {
-            "title": "Proj Id",
-            "type": "integer",
-            "description": "The ID of the Project the SourceDocuments have to belong to."
-          },
-          "filename_query": {
-            "title": "Filename Query",
-            "minLength": 1,
-            "type": "string",
-            "description": "The query term to search within the filename of the SourceDocuments"
-          },
-          "prefix": {
-            "title": "Prefix",
-            "type": "boolean",
-            "description": "If true, filename prefix search is done. If false exact filename is searched."
           }
         }
       },
@@ -7601,25 +7255,8 @@
           "code_id": { "title": "Code Id", "type": "integer", "description": "Code the SpanAnnotation refers to" }
         }
       },
-      "SpanEntity": {
-        "title": "SpanEntity",
-        "required": ["code_id", "span_text"],
-        "type": "object",
-        "properties": {
-          "code_id": {
-            "title": "Code Id",
-            "type": "integer",
-            "description": "The ID of the Code related to the SpanAnnotation"
-          },
-          "span_text": {
-            "title": "Span Text",
-            "type": "string",
-            "description": "The SpanText the SpanAnnotation spans"
-          }
-        }
-      },
-      "SpanEntityDocumentFrequency": {
-        "title": "SpanEntityDocumentFrequency",
+      "SpanEntityStat": {
+        "title": "SpanEntityStat",
         "required": ["code_id", "span_text", "filtered_count", "global_count"],
         "type": "object",
         "properties": {
@@ -7642,45 +7279,6 @@
             "title": "Global Count",
             "type": "integer",
             "description": "Number of occurrences of the SpanEntity in a collection of SourceDocuments."
-          }
-        }
-      },
-      "SpanEntityDocumentFrequencyResult": {
-        "title": "SpanEntityDocumentFrequencyResult",
-        "required": ["stats"],
-        "type": "object",
-        "properties": {
-          "stats": {
-            "title": "Stats",
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": { "$ref": "#/components/schemas/SpanEntityDocumentFrequency" }
-            },
-            "description": "Map of Code ID to SpanEntityDocumentFrequency"
-          }
-        }
-      },
-      "SpanEntityFrequency": {
-        "title": "SpanEntityFrequency",
-        "required": ["code_id", "span_text", "sdoc_id", "count"],
-        "type": "object",
-        "properties": {
-          "code_id": {
-            "title": "Code Id",
-            "type": "integer",
-            "description": "The ID of the Code related to the SpanAnnotation"
-          },
-          "span_text": {
-            "title": "Span Text",
-            "type": "string",
-            "description": "The SpanText the SpanAnnotation spans"
-          },
-          "sdoc_id": { "title": "Sdoc Id", "type": "integer", "description": "The ID of the SourceDocument." },
-          "count": {
-            "title": "Count",
-            "type": "integer",
-            "description": "Number of occurrences of the SpanEntity in the SourceDocument."
           }
         }
       },

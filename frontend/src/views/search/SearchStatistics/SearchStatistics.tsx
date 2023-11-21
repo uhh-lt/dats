@@ -1,8 +1,7 @@
 import { TabContext } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { CodeRead, SpanEntityDocumentFrequency } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import SearchHooks from "../../../api/SearchHooks";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
@@ -12,12 +11,13 @@ import DocumentTagStats from "./DocumentTagStats";
 import KeywordStats from "./KeywordStats";
 import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
 import StatsSearchBar from "./StatsSearchBar";
+import { SpanEntityStat } from "../../../api/openapi";
 
 interface SearchStatisticsProps {
   sdocIds: number[];
   handleKeywordClick: (keyword: string) => void;
   handleTagClick: (tagId: number) => void;
-  handleCodeClick: (stat: SpanEntityDocumentFrequency) => void;
+  handleCodeClick: (stat: SpanEntityStat) => void;
 }
 
 function SearchStatistics({
@@ -39,43 +39,10 @@ function SearchStatistics({
   // query all codes of the current project
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
 
-  // a code map that maps codeId -> CodeRead
-  const codeMap = useMemo(() => {
-    const result = new Map<number, CodeRead>();
-    if (projectCodes.data) {
-      projectCodes.data.forEach((code) => {
-        result.set(code.id, code);
-      });
-    }
-    return result;
-  }, [projectCodes.data]);
-
   // stats
-  const [validEntityStats, setValidEntityStats] = useState<Map<number, SpanEntityDocumentFrequency[]>>(new Map());
   const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
-  const codeStats = SearchHooks.useSearchEntityDocumentStats(projectId, sdocIds, sortStatsByGlobal);
   const keywordStats = SearchHooks.useSearchKeywordStats(projectId, sdocIds, sortStatsByGlobal);
-  const tagStats = SearchHooks.useSearchTagStats(projectId, sdocIds, sortStatsByGlobal);
-
-  // computed
-  const filteredProjectCodes = useMemo(() => {
-    if (!projectCodes.data) return [];
-    return projectCodes.data.filter((code) => validEntityStats.get(code.id) !== undefined);
-  }, [projectCodes.data, validEntityStats]);
-
-  // effects
-  // make sure that a valid tab is selected, when the stats (and thus the documents) change
-  useEffect(() => {
-    if (codeStats.data) {
-      if (tab !== "keywords" && tab !== "tags") {
-        const currentCodeId = parseInt(tab);
-        if (codeStats.data.get(currentCodeId) === undefined) {
-          setTab("keywords");
-        }
-      }
-      setValidEntityStats(codeStats.data);
-    }
-  }, [tab, setValidEntityStats, codeStats.data]);
+  const tagStats = SearchHooks.useSearchTagStats(sdocIds, sortStatsByGlobal);
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
@@ -106,9 +73,7 @@ function SearchStatistics({
           <Tabs value={tab} onChange={handleTabChange} variant="scrollable" onContextMenu={openContextMenu}>
             <Tab label="Keywords" value="keywords" />
             <Tab label="Tags" value="tags" />
-            {Array.from(validEntityStats.keys()).map((codeId) => (
-              <Tab key={codeId} label={codeMap.get(codeId)?.name || "ERROR"} value={`${codeId}`} />
-            ))}
+            {projectCodes.data?.map((code) => <Tab key={code.id} label={code.name} value={`${code.id}`} />)}
           </Tabs>
         </Box>
 
@@ -130,11 +95,12 @@ function SearchStatistics({
             parentRef={parentRef}
             filterBy={filterStatsBy}
           />
-          {Array.from(validEntityStats.entries()).map(([codeId, data]) => (
+          {projectCodes.data?.map((code) => (
             <CodeStats
-              key={codeId}
-              codeId={codeId}
-              codeStats={data}
+              currentTab={tab}
+              key={code.id}
+              codeId={code.id}
+              sdocIds={sdocIds}
               handleClick={handleCodeClick}
               parentRef={parentRef}
               filterBy={filterStatsBy}
@@ -143,7 +109,7 @@ function SearchStatistics({
         </Box>
       </TabContext>
       <SearchStatisticsContextMenu
-        menuItems={filteredProjectCodes}
+        menuItems={projectCodes.data || []}
         contextMenuData={contextMenuPosition}
         handleClose={closeContextMenu}
         handleMenuItemClick={handleMenuItemClick}

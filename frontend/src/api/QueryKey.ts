@@ -88,7 +88,7 @@ export const QueryKey = {
   // all sdocs which are in the project (by project id) and suffice the given filters (by filter list)
   SDOCS_BY_PROJECT_AND_FILTERS_SEARCH: "searchResults",
   // all sdocs that are tagged with the given tag (by tag id)
-  SDOCS_BY_TAG_ID: "searchResults",
+  SDOCS_BY_TAG_ID: "sdocsByTagId",
   // the name of a single SourceDocument (by project id and filename)
   SDOC_NAME_BY_PROJECT_AND_FILENAME: "sdocNameByProjectAndFilename",
 

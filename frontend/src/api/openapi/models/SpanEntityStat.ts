@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type SpanEntityFrequency = {
+export type SpanEntityStat = {
   /**
    * The ID of the Code related to the SpanAnnotation
    */
@@ -12,11 +12,11 @@ export type SpanEntityFrequency = {
    */
   span_text: string;
   /**
-   * The ID of the SourceDocument.
+   * Number of occurrences of the SpanEntity in a collection of SourceDocuments.
    */
-  sdoc_id: number;
+  filtered_count: number;
   /**
-   * Number of occurrences of the SpanEntity in the SourceDocument.
+   * Number of occurrences of the SpanEntity in a collection of SourceDocuments.
    */
-  count: number;
+  global_count: number;
 };

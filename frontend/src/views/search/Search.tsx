@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SearchHooks from "../../api/SearchHooks";
-import { SourceDocumentRead, SpanEntityDocumentFrequency } from "../../api/openapi";
+import { SourceDocumentRead, SpanEntityStat } from "../../api/openapi";
 import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
@@ -96,7 +96,7 @@ function Search() {
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
-    (stat: SpanEntityDocumentFrequency) => {
+    (stat: SpanEntityStat) => {
       dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },

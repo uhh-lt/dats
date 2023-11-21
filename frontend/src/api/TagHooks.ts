@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DocumentTagRead, DocumentTagService, MemoRead, SourceDocumentDocumentTagMultiLink } from "./openapi";
-import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
 import { CheckboxState } from "../views/search/ToolBar/ToolBarElements/TagMenu/TagMenu";
+import { QueryKey } from "./QueryKey";
+import { DocumentTagRead, DocumentTagService, MemoRead, SourceDocumentDocumentTagMultiLink } from "./openapi";
 
 // tags
 const useGetTag = (tagId: number | undefined) =>

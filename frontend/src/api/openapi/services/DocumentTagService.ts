@@ -7,7 +7,6 @@ import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentDocumentTagMultiLink } from "../models/SourceDocumentDocumentTagMultiLink";
-import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -212,12 +211,12 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns all SourceDocuments attached to the Tag with the given ID
-   * Returns all SourceDocuments attached to the Tag with the given ID if it exists.
-   * @returns SourceDocumentRead Successful Response
+   * Returns all SourceDocument IDs attached to the Tag with the given ID
+   * Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static getSdocsByTagId({ tagId }: { tagId: number }): CancelablePromise<Array<SourceDocumentRead>> {
+  public static getSdocIdsByTagId({ tagId }: { tagId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/doctag/{tag_id}/sdocs",

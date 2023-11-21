@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { KeywordStat, SpanEntityDocumentFrequency, TagStat } from "../../../api/openapi";
+import { KeywordStat, SpanEntityStat, TagStat } from "../../../api/openapi";
 
-export function useFilterStats<T extends Array<KeywordStat | TagStat | SpanEntityDocumentFrequency>>(
+export function useFilterStats<T extends Array<KeywordStat | TagStat | SpanEntityStat>>(
   statsData: T,
   filterBy: string,
 ): T {

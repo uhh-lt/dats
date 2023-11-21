@@ -137,10 +137,10 @@ const useDeleteDocuments = () =>
 
 // tags
 const useGetByTagId = (tagId: number | undefined) =>
-  useQuery<SourceDocumentRead[], Error>(
+  useQuery<number[], Error>(
     [QueryKey.SDOCS_BY_TAG_ID, tagId],
     () =>
-      DocumentTagService.getSdocsByTagId({
+      DocumentTagService.getSdocIdsByTagId({
         tagId: tagId!,
       }),
     {

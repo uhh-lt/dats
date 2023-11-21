@@ -12,7 +12,7 @@ import {
   SearchService,
   SimSearchImageHit,
   SimSearchSentenceHit,
-  SpanEntityDocumentFrequency,
+  SpanEntityStat,
   TagStat,
 } from "./openapi";
 import { useAppSelector } from "../plugins/ReduxHooks";
@@ -126,8 +126,6 @@ const useSearchDocumentsNew = (projectId: number | undefined) => {
     async () => {
       const sdocIds = await SearchService.searchSdocsNew({
         projectId: projectId!,
-        page: 0,
-        pageSize: 15,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
           sorts: [],
@@ -141,31 +139,25 @@ const useSearchDocumentsNew = (projectId: number | undefined) => {
   );
 };
 
-const useSearchDocumentsByProjectIdAndTagId = (projectId: number | undefined, tagId: number | undefined) =>
-  useQuery<number[], Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_TAG_SEARCH, projectId, tagId],
-    () => {
-      return SearchService.searchSdocs({
+const useSearchCodeStats = (
+  codeId: number,
+  userId: number | undefined,
+  sdocIds: number[],
+  sortStatsByGlobal: boolean,
+) =>
+  useQuery<SpanEntityStat[], Error>(
+    [QueryKey.SEARCH_ENTITY_STATISTICS, codeId, userId, sdocIds, sortStatsByGlobal],
+    () =>
+      SearchService.searchCodeStats({
+        codeId: codeId,
         requestBody: {
-          proj_id: projectId!,
-          tag_ids: [tagId!],
-          all_tags: true,
+          user_ids: [userId!],
+          sdoc_ids: sdocIds,
         },
-      });
-    },
-    { enabled: !!tagId && !!projectId },
-  );
-
-const useSearchEntityDocumentStats = (projectId: number, sdocIds: number[], sortStatsByGlobal: boolean) =>
-  useQuery<Map<number, SpanEntityDocumentFrequency[]>, Error>(
-    [QueryKey.SEARCH_ENTITY_STATISTICS, projectId, sdocIds, sortStatsByGlobal],
-    async () => {
-      const data = await SearchService.searchCodeStats({
-        projectId: projectId,
-        requestBody: sdocIds,
         sortByGlobal: sortStatsByGlobal,
-      });
-      return new Map(Object.entries(data.stats).map((x) => [parseInt(x[0]), x[1]]));
+      }),
+    {
+      enabled: !!userId,
     },
   );
 
@@ -178,25 +170,13 @@ const useSearchKeywordStats = (projectId: number, sdocIds: number[], sortStatsBy
     });
   });
 
-const useSearchTagStats = (projectId: number, sdocIds: number[], sortStatsByGlobal: boolean) =>
-  useQuery<TagStat[], Error>(
-    [QueryKey.SEARCH_TAG_STATISTICS, projectId, sdocIds, sortStatsByGlobal],
-    () => {
-      return SearchService.searchTagStats({
-        projectId: projectId,
-        requestBody: sdocIds,
-        sortByGlobal: sortStatsByGlobal,
-      });
-    },
-    {
-      // todo: check if this really works
-      onSuccess: (data) => {
-        data.forEach((tagStat) => {
-          queryClient.setQueryData([QueryKey.TAG, tagStat.tag.id], tagStat.tag);
-        });
-      },
-    },
-  );
+const useSearchTagStats = (sdocIds: number[], sortStatsByGlobal: boolean) =>
+  useQuery<TagStat[], Error>([QueryKey.SEARCH_TAG_STATISTICS, sdocIds, sortStatsByGlobal], () => {
+    return SearchService.searchTagStats({
+      requestBody: sdocIds,
+      sortByGlobal: sortStatsByGlobal,
+    });
+  });
 
 const useSearchMemoContent = (params: MemoContentQuery) =>
   useQuery<MemoRead[], Error>(
@@ -226,12 +206,11 @@ const useSearchMemoTitle = (params: MemoTitleQuery) =>
   );
 
 const SearchHooks = {
-  useSearchEntityDocumentStats,
+  useSearchCodeStats,
   useSearchKeywordStats,
   useSearchTagStats,
   useSearchMemoTitle,
   useSearchMemoContent,
-  useSearchDocumentsByProjectIdAndTagId,
   useSearchDocumentsNew,
 };
 

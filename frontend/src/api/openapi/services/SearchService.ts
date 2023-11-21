@@ -1,21 +1,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { Body_search_search_code_stats } from "../models/Body_search_search_code_stats";
 import type { Body_search_search_sdocs_new } from "../models/Body_search_search_sdocs_new";
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
 import type { MemoTitleQuery } from "../models/MemoTitleQuery";
-import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
-import type { SearchSDocsQueryParameters } from "../models/SearchSDocsQueryParameters";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
 import type { SimSearchQuery } from "../models/SimSearchQuery";
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
-import type { SourceDocumentContentQuery } from "../models/SourceDocumentContentQuery";
-import type { SourceDocumentFilenameQuery } from "../models/SourceDocumentFilenameQuery";
-import type { SpanEntityDocumentFrequencyResult } from "../models/SpanEntityDocumentFrequencyResult";
-import type { SpanEntityFrequency } from "../models/SpanEntityFrequency";
+import type { SpanEntityStat } from "../models/SpanEntityStat";
 import type { TagStat } from "../models/TagStat";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -23,28 +19,6 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 
 export class SearchService {
-  /**
-   * Returns all SourceDocument IDs that match the query parameters.
-   * Returns all SourceDocument Ids that match the query parameters.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static searchSdocs({
-    requestBody,
-  }: {
-    requestBody: SearchSDocsQueryParameters;
-  }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/sdoc",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
   /**
    * Returns Search Info.
    * Returns Search Info.
@@ -76,13 +50,9 @@ export class SearchService {
    */
   public static searchSdocsNew({
     projectId,
-    page,
-    pageSize,
     requestBody,
   }: {
     projectId: number;
-    page: number;
-    pageSize: number;
     requestBody: Body_search_search_sdocs_new;
   }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
@@ -90,8 +60,6 @@ export class SearchService {
       url: "/search/sdoc_new",
       query: {
         project_id: projectId,
-        page: page,
-        page_size: pageSize,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -104,50 +72,23 @@ export class SearchService {
   /**
    * Returns SpanEntityStats for the given SourceDocuments.
    * Returns SpanEntityStats for the given SourceDocuments.
-   * @returns SpanEntityFrequency Successful Response
-   * @throws ApiError
-   */
-  public static searchSpanEntityStats({
-    projectId,
-    requestBody,
-  }: {
-    projectId: number;
-    requestBody: Array<number>;
-  }): CancelablePromise<Array<SpanEntityFrequency>> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/entity_stats",
-      query: {
-        project_id: projectId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns SpanEntityStats for the given SourceDocuments.
-   * Returns SpanEntityStats for the given SourceDocuments.
-   * @returns SpanEntityDocumentFrequencyResult Successful Response
+   * @returns SpanEntityStat Successful Response
    * @throws ApiError
    */
   public static searchCodeStats({
-    projectId,
+    codeId,
     requestBody,
     sortByGlobal = false,
   }: {
-    projectId: number;
-    requestBody: Array<number>;
+    codeId: number;
+    requestBody: Body_search_search_code_stats;
     sortByGlobal?: boolean;
-  }): CancelablePromise<SpanEntityDocumentFrequencyResult> {
+  }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/code_stats",
       query: {
-        project_id: projectId,
+        code_id: codeId,
         sort_by_global: sortByGlobal,
       },
       body: requestBody,
@@ -198,11 +139,9 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchTagStats({
-    projectId,
     requestBody,
     sortByGlobal = false,
   }: {
-    projectId: number;
     requestBody: Array<number>;
     sortByGlobal?: boolean;
   }): CancelablePromise<Array<TagStat>> {
@@ -210,80 +149,7 @@ export class SearchService {
       method: "POST",
       url: "/search/tag_stats",
       query: {
-        project_id: projectId,
         sort_by_global: sortByGlobal,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns all SourceDocuments where the content matches the query via lexical search
-   * Returns all SourceDocuments where the content matches the query via lexical search
-   * @returns PaginatedElasticSearchDocumentHits Successful Response
-   * @throws ApiError
-   */
-  public static searchSdocsByContentQuery({
-    requestBody,
-    skip,
-    limit,
-  }: {
-    requestBody: SourceDocumentContentQuery;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number;
-  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/lexical/sdoc/content",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns all SourceDocuments where the filename matches the query via lexical search
-   * Returns all SourceDocuments where the filename matches the query via lexical search
-   * @returns PaginatedElasticSearchDocumentHits Successful Response
-   * @throws ApiError
-   */
-  public static searchSdocsByFilenameQuery({
-    requestBody,
-    skip,
-    limit,
-  }: {
-    requestBody: SourceDocumentFilenameQuery;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number;
-  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/lexical/sdoc/filename",
-      query: {
-        skip: skip,
-        limit: limit,
       },
       body: requestBody,
       mediaType: "application/json",

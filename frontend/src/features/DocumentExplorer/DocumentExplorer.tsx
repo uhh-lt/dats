@@ -24,7 +24,6 @@ import { useCallback, useRef, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
 import SdocHooks from "../../api/SdocHooks";
-import SearchHooks from "../../api/SearchHooks";
 import { AttachedObjectType } from "../../api/openapi";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
 import DocumentNavigation from "../../components/DocumentNavigation";
@@ -44,7 +43,7 @@ function DocumentExplorer({ ...props }: BoxProps) {
 
   // server state (react query)
   const documentTags = ProjectHooks.useGetAllTags(parseInt(projectId));
-  const sdocs = SearchHooks.useSearchDocumentsByProjectIdAndTagId(parseInt(projectId), selectedDocumentTag);
+  const sdocs = SdocHooks.useGetByTagId(selectedDocumentTag);
 
   // ui event handler
   const handleDocumentTagChange = (event: SelectChangeEvent) => {
