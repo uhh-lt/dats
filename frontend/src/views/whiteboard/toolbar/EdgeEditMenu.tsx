@@ -214,8 +214,8 @@ const EdgeEditMenu = forwardRef<EdgeEditMenuHandle, EdgeEditMenuProps>((_, ref) 
             borderStyle === "solid"
               ? undefined
               : borderStyle === "dashed"
-              ? `${2 * (oldEdge.style!.strokeWidth! as number)} ${2 * (oldEdge.style!.strokeWidth! as number)}`
-              : `${oldEdge.style!.strokeWidth! as number} ${oldEdge.style!.strokeWidth! as number}`,
+                ? `${2 * (oldEdge.style!.strokeWidth! as number)} ${2 * (oldEdge.style!.strokeWidth! as number)}`
+                : `${oldEdge.style!.strokeWidth! as number} ${oldEdge.style!.strokeWidth! as number}`,
         },
       };
     });

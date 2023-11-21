@@ -212,8 +212,8 @@ function ProjectDocuments({ project }: ProjectProps) {
                     projectDocuments.isFetchingNextPage
                       ? "Loading more..."
                       : projectDocuments.hasNextPage
-                      ? "Load More"
-                      : "Nothing more to load"
+                        ? "Load More"
+                        : "Nothing more to load"
                   }
                 />
               </ListItemButton>
