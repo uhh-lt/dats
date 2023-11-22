@@ -1,0 +1,57 @@
+name: Update OpenAPI spec
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  pull_request:
+    branches:
+      - main
+      - mwp_v1
+    paths:
+      - "backend/**"
+      - ".github/**"
+      - "docker/**"
+
+  update-openapi-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout ${{ github.event.pull_request.number }}
+      - name: Start Docker Containers
+        run: |
+          cd docker
+          ./setup-folders.sh
+          cp .env.example .env
+          chmod -R a+rwx backend_repo/ models_cache/ spacy_models/ tika/
+          python monkey_patch_docker_compose_for_backend_tests.py --disable_ray
+          export GID=$(id -g)
+          export API_PRODUCTION_WORKERS=0
+          export RAY_CONFIG="./config_test_no_gpu.yaml"
+          docker compose -f compose-test.yml up -d --quiet-pull
+          echo Waiting for containers to start...
+          sleep 30
+          cd ..
+      - name: Setup node
+        uses: actions/setup-node@v4
+        working-directory: frontend
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: package.json
+      - name: Install npm dependencies
+        working-directory: frontend
+        run: npm install -f
+      - name: Update spec
+        run: |
+          docker exec -i demo-dwts-backend-api-1 /opt/envs/dwts/bin/python main.py &
+          cd frontend && npm run update-api && npm run generate-dev
+      - name: Stage and commit changes
+        working-directory: frontend
+        run: |
+          git add frotnend/src/api
+          git commit -m "Update OpenAPI spec and client"
+      - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git push
