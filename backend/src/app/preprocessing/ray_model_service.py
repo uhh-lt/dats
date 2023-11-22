@@ -1,4 +1,3 @@
-import sys
 from typing import Any, Dict, List
 
 import requests
@@ -30,8 +29,7 @@ from config import conf
 
 class RayModelService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
-        running_in_test = hasattr(sys, "_called_from_test")
-        if running_in_test:
+        if conf.ray.enabled != "True":
             # When running in tests, don't use the ray service at all
             return super(RayModelService, cls).__new__(cls)
 

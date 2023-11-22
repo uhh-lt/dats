@@ -16,6 +16,7 @@ api:
       secret: ${oc.env:JWT_SECRET, ""}
 
 ray:
+  enabled: ${oc.env:RAY_ENABLED, True}
   protocol: ${oc.env:RAY_PROTOCOL, http}
   host: ${oc.env:RAY_HOST, localhost}
   port: ${oc.env:RAY_PORT, 13132}

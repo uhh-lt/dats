@@ -10,7 +10,7 @@ API_PRODUCTION_WORKERS=${API_PRODUCTION_WORKERS:-10}
 ./test_es.sh
 
 # assert ray is reachable
-./test_ray.sh
+[ "${RAY_ENABLED}" = "True" ] && ./test_ray.sh
 
 python run_migrations.py
 

@@ -6,7 +6,7 @@ set -e
 ./test_es.sh
 
 # assert ray is reachable
-./test_ray.sh
+[ "${RAY_ENABLED}" = "True" ] && ./test_ray.sh
 
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
