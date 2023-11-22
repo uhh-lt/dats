@@ -65,13 +65,14 @@ jobs:
           python monkey_patch_docker_compose_for_backend_tests.py --disable_ray
           export GID=$(id -g)
           export API_PRODUCTION_WORKERS=0
-          export RAY_CONFIG="./config_test_no_gpu.yaml"
           # disable backend and frontend
           export COMPOSE_PROFILES=
+          export RAY_ENABLED=False
           docker compose -f compose-test.yml up -d --quiet-pull
           echo Waiting for containers to start...
           sleep 30
       - name: Run unit tests
         working-directory: docker
         run: |
+          export RAY_ENABLED=False
           docker compose -f compose-test.yml run -i dwts-backend-api /opt/envs/dwts/bin/python -m pytest
