@@ -1,5 +1,3 @@
-import binascii
-import os
 from datetime import datetime, timedelta
 from typing import Dict
 
@@ -15,12 +13,6 @@ __password_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 __algo = conf.api.auth.jwt.algo
 __ttl = int(conf.api.auth.jwt.ttl)
 __jwt_secret = conf.api.auth.jwt.secret
-
-if not __jwt_secret or __jwt_secret == "":
-    logger.warning("JWT Secret not provided! Generating 32 bit secret")
-    __secret = binascii.hexlify(os.urandom(32))
-else:
-    __secret = conf.api.auth.jwt.secret
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
