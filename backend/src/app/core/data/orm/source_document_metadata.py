@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from app.core.data.orm.orm_base import ORMBase
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
