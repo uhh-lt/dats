@@ -51,7 +51,6 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
     try:
         # start and init services
         __init_services__(
-            create_database_and_tables=not startup_in_progress,
             create_root_repo_directory_structure=not startup_in_progress,
             sql_echo=sql_echo,
             reset_database=reset_data,
@@ -76,7 +75,6 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
 # noinspection PyUnresolvedReferences,PyProtectedMember
 def __init_services__(
-    create_database_and_tables: bool = False,
     create_root_repo_directory_structure: bool = False,
     sql_echo: bool = False,
     reset_database: bool = False,
@@ -94,9 +92,7 @@ def __init_services__(
     # create SQL DBs and Tables # TODO Flo: Alembic
     from app.core.db.sql_service import SQLService
 
-    sqls = SQLService(echo=sql_echo)
-    if create_database_and_tables:
-        sqls._create_database_and_tables(drop_if_exists=reset_database)
+    SQLService(echo=sql_echo)
     # import and init ElasticSearch
     from app.core.search.elasticsearch_service import ElasticSearchService
 
