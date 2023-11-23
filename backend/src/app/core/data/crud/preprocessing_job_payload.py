@@ -66,7 +66,7 @@ class CRUDPreprocessingJobPayload(
     ) -> Optional[PreprocessingJobPayloadORM]:
         db_obj = self.read(db=db, uuid=uuid)
         obj_data = jsonable_encoder(db_obj)
-        update_data = update_dto.dict(exclude_unset=True)
+        update_data = update_dto.model_dump(exclude_unset=True)
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
