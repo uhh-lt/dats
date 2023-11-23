@@ -3350,6 +3350,12 @@
         "parameters": [
           {
             "required": true,
+            "schema": { "title": "Search Query", "type": "string" },
+            "name": "search_query",
+            "in": "query"
+          },
+          {
+            "required": true,
             "schema": { "title": "Project Id", "type": "integer" },
             "name": "project_id",
             "in": "query"
@@ -6038,7 +6044,7 @@
       },
       "FilterValueType": {
         "title": "FilterValueType",
-        "enum": ["SDOC_ID", "CODE_ID", "USER_ID", "TAG_ID", "SPAN_ANNOTATION", "INFER_FROM_OPERATOR"],
+        "enum": ["SDOC_ID", "CODE_ID", "USER_ID", "TAG_ID", "SPAN_ANNOTATION", "DOC_TYPE", "INFER_FROM_OPERATOR"],
         "description": "An enumeration."
       },
       "Filter_AnnotatedSegmentsColumns_": {
@@ -6603,6 +6609,7 @@
         "title": "SearchColumns",
         "enum": [
           "SC_SOURCE_DOCUMENT_FILENAME",
+          "SC_SOURCE_DOCUMENT_TYPE",
           "SC_DOCUMENT_TAG_ID_LIST",
           "SC_CODE_ID_LIST",
           "SC_USER_ID_LIST",

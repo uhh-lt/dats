@@ -49,9 +49,11 @@ export class SearchService {
    * @throws ApiError
    */
   public static searchSdocsNew({
+    searchQuery,
     projectId,
     requestBody,
   }: {
+    searchQuery: string;
     projectId: number;
     requestBody: Body_search_search_sdocs_new;
   }): CancelablePromise<Array<number>> {
@@ -59,6 +61,7 @@ export class SearchService {
       method: "POST",
       url: "/search/sdoc_new",
       query: {
+        search_query: searchQuery,
         project_id: projectId,
       },
       body: requestBody,

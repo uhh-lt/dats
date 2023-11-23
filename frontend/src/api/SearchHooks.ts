@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { MyFilter } from "../features/FilterDialog/filterUtils";
-import queryClient from "../plugins/ReactQueryClient";
 import { QueryKey } from "./QueryKey";
 import {
   KeywordStat,
@@ -121,11 +120,14 @@ export enum SearchResultsType {
 
 const useSearchDocumentsNew = (projectId: number | undefined) => {
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
+  const searchQuery = useAppSelector((state) => state.search.searchQuery);
+
   return useQuery<LexicalSearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter],
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, searchQuery],
     async () => {
       const sdocIds = await SearchService.searchSdocsNew({
         projectId: projectId!,
+        searchQuery: searchQuery,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
           sorts: [],
