@@ -650,6 +650,36 @@ class ElasticSearchService(metaclass=SingletonMeta):
             skip=skip,
         )
 
+    def search_sdocs_by_content_query2(
+        self,
+        *,
+        proj_id: int,
+        sdoc_ids: Set[int],
+        query: str,
+        limit: Optional[int] = None,
+        skip: Optional[int] = None,
+    ) -> PaginatedElasticSearchDocumentHits:
+        return self.__search_sdocs(
+            proj_id=proj_id,
+            query={
+                "bool": {
+                    "must": [
+                        {"terms": {"sdoc_id": list(sdoc_ids)}},
+                        {
+                            "match": {
+                                "content": {
+                                    "query": query,
+                                    "fuzziness": "1",  # TODO Flo: no constant here! either config or per call
+                                }
+                            }
+                        },
+                    ]
+                }
+            },
+            limit=limit,
+            skip=skip,
+        )
+
     def search_sdocs_by_content_query(
         self,
         *,

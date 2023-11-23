@@ -10,6 +10,7 @@ class FilterValueType(Enum):
     USER_ID = "USER_ID"
     TAG_ID = "TAG_ID"
     SPAN_ANNOTATION = "SPAN_ANNOTATION"
+    DOC_TYPE = "DOC_TYPE"
     INFER_FROM_OPERATOR = "INFER_FROM_OPERATOR"
 
 
@@ -66,9 +67,9 @@ class IDOperator(Enum):
     def apply(self, column: Column, value: int | str):
         match self:
             case IDOperator.EQUALS:
-                return column == int(value)
+                return column == value
             case IDOperator.NOT_EQUALS:
-                return column != int(value)
+                return column != value
 
 
 class NumberOperator(Enum):

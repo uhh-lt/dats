@@ -48,12 +48,14 @@ async def search_sdocs_new_info(
 )
 async def search_sdocs_new(
     *,
+    search_query: str,
     project_id: int,
     filter: Filter[SearchColumns],
     sorts: List[Sort[SearchColumns]],
 ) -> List[int]:
     # TODO Flo: only if the user has access?
     return SearchService().search_new(
+        search_query=search_query,
         project_id=project_id,
         filter=filter,
         sorts=sorts,

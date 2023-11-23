@@ -46,6 +46,7 @@ def aggregate_ids(column: InstrumentedAttribute, label: str):
 
 class SearchColumns(str, AbstractColumns):
     SOURCE_DOCUMENT_FILENAME = "SC_SOURCE_DOCUMENT_FILENAME"
+    SOURCE_DOCUMENT_TYPE = "SC_SOURCE_DOCUMENT_TYPE"
     DOCUMENT_TAG_ID_LIST = "SC_DOCUMENT_TAG_ID_LIST"
     CODE_ID_LIST = "SC_CODE_ID_LIST"
     USER_ID_LIST = "SC_USER_ID_LIST"
@@ -57,6 +58,8 @@ class SearchColumns(str, AbstractColumns):
         match self:
             case SearchColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
+            case SearchColumns.SOURCE_DOCUMENT_TYPE:
+                return SourceDocumentORM.doctype
             case SearchColumns.DOCUMENT_TAG_ID_LIST:
                 return subquery_dict[SearchColumns.DOCUMENT_TAG_ID_LIST]
             case SearchColumns.CODE_ID_LIST:
@@ -70,6 +73,8 @@ class SearchColumns(str, AbstractColumns):
         match self:
             case SearchColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterOperator.STRING
+            case SearchColumns.SOURCE_DOCUMENT_TYPE:
+                return FilterOperator.ID
             case SearchColumns.DOCUMENT_TAG_ID_LIST:
                 return FilterOperator.ID_LIST
             case SearchColumns.CODE_ID_LIST:
@@ -83,6 +88,8 @@ class SearchColumns(str, AbstractColumns):
         match self:
             case SearchColumns.SOURCE_DOCUMENT_FILENAME:
                 return FilterValueType.INFER_FROM_OPERATOR
+            case SearchColumns.SOURCE_DOCUMENT_TYPE:
+                return FilterValueType.DOC_TYPE
             case SearchColumns.DOCUMENT_TAG_ID_LIST:
                 return FilterValueType.TAG_ID
             case SearchColumns.CODE_ID_LIST:
@@ -96,6 +103,8 @@ class SearchColumns(str, AbstractColumns):
         match self:
             case SearchColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
+            case SearchColumns.SOURCE_DOCUMENT_TYPE:
+                return SourceDocumentORM.doctype
             case SearchColumns.DOCUMENT_TAG_ID_LIST:
                 return DocumentTagORM.title
             case SearchColumns.CODE_ID_LIST:
@@ -109,6 +118,8 @@ class SearchColumns(str, AbstractColumns):
         match self:
             case SearchColumns.SOURCE_DOCUMENT_FILENAME:
                 return "Document name"
+            case SearchColumns.SOURCE_DOCUMENT_TYPE:
+                return "Type"
             case SearchColumns.DOCUMENT_TAG_ID_LIST:
                 return "Tags"
             case SearchColumns.CODE_ID_LIST:
@@ -144,6 +155,7 @@ class SearchService(metaclass=SingletonMeta):
     def search_new(
         self,
         project_id: int,
+        search_query: str,
         filter: Filter[SearchColumns],
         sorts: List[Sort[SearchColumns]],
     ) -> List[int]:
@@ -199,7 +211,17 @@ class SearchService(metaclass=SingletonMeta):
             #     query=query, page_number=page + 1, page_size=page_size
             # )
 
-            return [row[0] for row in query.all()]
+        filtered_sdoc_ids = [row[0] for row in query.all()]
+
+        if search_query.strip() == "":
+            return filtered_sdoc_ids
+        else:
+            # use elasticseach for full text seach
+            elastic_hits = ElasticSearchService().search_sdocs_by_content_query2(
+                proj_id=project_id, query=search_query, sdoc_ids=set(filtered_sdoc_ids)
+            )
+
+            return [hit.sdoc_id for hit in elastic_hits.hits]
 
     def compute_tag_statistics(
         self,
