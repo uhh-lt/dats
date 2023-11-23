@@ -4,6 +4,8 @@ import storage from "redux-persist/lib/storage";
 import annotatedSegmentsFilterReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsFilterSlice";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice";
 import timelineAnalysisFilterReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisFilterSlice";
+import wordFrequencyFilterReducer from "../views/analysis/WordFrequency/wordFrequencyFilterSlice";
+import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice";
 import analysisReducer from "../views/analysis/analysisSlice";
 import annoReducer from "../views/annotation/annoSlice";
@@ -35,6 +37,8 @@ export const store = configureStore({
     searchFilter: searchFilterReducer,
     annotatedSegmentsFilter: annotatedSegmentsFilterReducer,
     timelineAnalysisFilter: timelineAnalysisFilterReducer,
+    wordFrequency: wordFrequencyReducer,
+    wordFrequencyFilter: wordFrequencyFilterReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

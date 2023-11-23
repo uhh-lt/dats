@@ -30,6 +30,7 @@ import Search from "../views/search/Search";
 import Settings from "../views/settings/Settings";
 import Whiteboard from "../views/whiteboard/Whiteboard";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
+import WordFrequency from "../views/analysis/WordFrequency/WordFrequency";
 
 const router = createBrowserRouter([
   {
@@ -158,6 +159,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/annotated-segments",
         element: <AnnotatedSegments />,
+      },
+      {
+        path: "/project/:projectId/analysis/word-frequency",
+        element: <WordFrequency />,
       },
       {
         path: "/project/:projectId/analysis/table",
