@@ -271,11 +271,9 @@ const useGetWordFrequencies = (sdocId: number | undefined) =>
   useQuery<Word[], Error>(
     [QueryKey.SDOC_WORD_FREQUENCIES, sdocId],
     async () => {
-      const wordFrequencies = (
-        await SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_frequencies" })
-      ).str_value!;
+      const wordFrequencies = await SourceDocumentService.getWordFrequencies({ sdocId: sdocId! });
 
-      let entries: [string, number][] = Object.entries(JSON.parse(wordFrequencies));
+      let entries: [string, number][] = wordFrequencies.map((wf) => [wf.word, wf.count]);
       entries.sort((a, b) => b[1] - a[1]); // sort array descending
       return entries.slice(0, 20).map((e) => {
         return { text: e[0], value: e[1] } as Word;

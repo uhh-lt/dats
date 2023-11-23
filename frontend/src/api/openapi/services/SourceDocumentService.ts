@@ -10,6 +10,7 @@ import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetad
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 import type { SourceDocumentWithDataRead } from "../models/SourceDocumentWithDataRead";
+import type { WordFrequencyRead } from "../models/WordFrequencyRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -449,6 +450,25 @@ export class SourceDocumentService {
       path: {
         sdoc_id: sdocId,
         user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the SourceDocument's word frequencies
+   * Returns the SourceDocument's word frequencies with the given ID if it exists
+   * @returns WordFrequencyRead Successful Response
+   * @throws ApiError
+   */
+  public static getWordFrequencies({ sdocId }: { sdocId: number }): CancelablePromise<Array<WordFrequencyRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/word_frequencies",
+      path: {
+        sdoc_id: sdocId,
       },
       errors: {
         422: `Validation Error`,

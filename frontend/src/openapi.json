@@ -1569,6 +1569,36 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/sdoc/{sdoc_id}/word_frequencies": {
+      "get": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns the SourceDocument's word frequencies",
+        "description": "Returns the SourceDocument's word frequencies with the given ID if it exists",
+        "operationId": "get_word_frequencies",
+        "parameters": [
+          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Sourcedocument-Get Word Frequencies",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WordFrequencyRead" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/doctag": {
       "put": {
         "tags": ["documentTag"],
@@ -6608,8 +6638,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "min": 0,
-            "max": 1
+            "max": 1,
+            "min": 0
           }
         }
       },
@@ -7626,6 +7656,16 @@
         ],
         "type": "string",
         "description": "An enumeration."
+      },
+      "WordFrequencyRead": {
+        "title": "WordFrequencyRead",
+        "required": ["sdoc_id", "word", "count"],
+        "type": "object",
+        "properties": {
+          "sdoc_id": { "title": "Sdoc Id", "type": "integer", "description": "ID of the SourceDocument" },
+          "word": { "title": "Word", "type": "string", "description": "Word" },
+          "count": { "title": "Count", "type": "integer", "description": "Count of the word in the SourceDocument" }
+        }
       },
       "WordFrequencyResult": {
         "title": "WordFrequencyResult",

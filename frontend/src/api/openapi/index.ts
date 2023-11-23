@@ -139,6 +139,7 @@ export type { WhiteboardCreate } from "./models/WhiteboardCreate";
 export type { WhiteboardRead } from "./models/WhiteboardRead";
 export type { WhiteboardUpdate } from "./models/WhiteboardUpdate";
 export { WordFrequencyColumns } from "./models/WordFrequencyColumns";
+export type { WordFrequencyRead } from "./models/WordFrequencyRead";
 export type { WordFrequencyResult } from "./models/WordFrequencyResult";
 export type { WordFrequencyStat } from "./models/WordFrequencyStat";
 
