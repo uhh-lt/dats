@@ -4262,6 +4262,81 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
+    "/analysis/word_frequency_analysis_info/{project_id}": {
+      "get": {
+        "tags": ["analysis"],
+        "summary": "Returns WordFrequency Info.",
+        "description": "Returns WordFrequency Info.",
+        "operationId": "word_frequency_analysis_info",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Analysis-Word Frequency Analysis Info",
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_WordFrequencyColumns_" }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/analysis/word_frequency_analysis": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Perform word frequency analysis.",
+        "description": "Perform word frequency analysis.",
+        "operationId": "word_frequency_analysis",
+        "parameters": [
+          {
+            "required": true,
+            "schema": { "title": "Project Id", "type": "integer" },
+            "name": "project_id",
+            "in": "query"
+          },
+          { "required": true, "schema": { "title": "Page", "type": "integer" }, "name": "page", "in": "query" },
+          {
+            "required": true,
+            "schema": { "title": "Page Size", "type": "integer" },
+            "name": "page_size",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-word_frequency_analysis" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WordFrequencyResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/prepro/{prepro_job_id}": {
       "get": {
         "tags": ["prepro"],
@@ -5089,7 +5164,7 @@
           "total_results": {
             "title": "Total Results",
             "type": "integer",
-            "description": "The total number of results."
+            "description": "The total number of span_annotation_ids. Used for pagination."
           },
           "span_annotation_ids": {
             "title": "Span Annotation Ids",
@@ -5370,6 +5445,19 @@
           "user_ids": { "title": "User Ids", "type": "array", "items": { "type": "integer" } }
         }
       },
+      "Body_analysis-word_frequency_analysis": {
+        "title": "Body_analysis-word_frequency_analysis",
+        "required": ["filter", "sorts"],
+        "type": "object",
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_WordFrequencyColumns_" },
+          "sorts": {
+            "title": "Sorts",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Sort_WordFrequencyColumns_" }
+          }
+        }
+      },
       "Body_authentication-login": {
         "title": "Body_authentication-login",
         "required": ["username", "password"],
@@ -5543,6 +5631,21 @@
           "column": {
             "title": "Column",
             "anyOf": [{ "$ref": "#/components/schemas/TimelineAnalysisColumns" }, { "type": "integer" }]
+          },
+          "sortable": { "title": "Sortable", "type": "boolean" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        }
+      },
+      "ColumnInfo_WordFrequencyColumns_": {
+        "title": "ColumnInfo[WordFrequencyColumns]",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "label": { "title": "Label", "type": "string" },
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/WordFrequencyColumns" }, { "type": "integer" }]
           },
           "sortable": { "title": "Sortable", "type": "boolean" },
           "operator": { "$ref": "#/components/schemas/FilterOperator" },
@@ -5895,6 +5998,39 @@
           }
         }
       },
+      "FilterExpression_WordFrequencyColumns_": {
+        "title": "FilterExpression[WordFrequencyColumns]",
+        "required": ["column", "operator", "value"],
+        "type": "object",
+        "properties": {
+          "column": {
+            "title": "Column",
+            "anyOf": [{ "$ref": "#/components/schemas/WordFrequencyColumns" }, { "type": "integer" }]
+          },
+          "operator": {
+            "title": "Operator",
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ]
+          },
+          "value": {
+            "title": "Value",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "integer" },
+              { "type": "boolean" },
+              { "type": "array", "items": { "type": "string" } },
+              { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+            ]
+          }
+        }
+      },
       "FilterOperator": {
         "title": "FilterOperator",
         "enum": ["BOOLEAN", "STRING", "ID", "NUMBER", "ID_LIST", "LIST", "DATE"],
@@ -5955,6 +6091,25 @@
               "anyOf": [
                 { "$ref": "#/components/schemas/FilterExpression_TimelineAnalysisColumns_" },
                 { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_" }
+              ]
+            }
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "description": "A tree of column expressions for filtering on many database columns using various\ncomparisons."
+      },
+      "Filter_WordFrequencyColumns_": {
+        "title": "Filter[WordFrequencyColumns]",
+        "required": ["items", "logic_operator"],
+        "type": "object",
+        "properties": {
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_WordFrequencyColumns_" },
+                { "$ref": "#/components/schemas/Filter_WordFrequencyColumns_" }
               ]
             }
           },
@@ -6711,6 +6866,16 @@
         "type": "object",
         "properties": {
           "column": { "$ref": "#/components/schemas/SearchColumns" },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "description": "A sort expressions for sorting on many database columns"
+      },
+      "Sort_WordFrequencyColumns_": {
+        "title": "Sort[WordFrequencyColumns]",
+        "required": ["column", "direction"],
+        "type": "object",
+        "properties": {
+          "column": { "$ref": "#/components/schemas/WordFrequencyColumns" },
           "direction": { "$ref": "#/components/schemas/SortDirection" }
         },
         "description": "A sort expressions for sorting on many database columns"
@@ -7503,6 +7668,63 @@
         "properties": {
           "title": { "title": "Title", "type": "string", "description": "Title of the Whiteboard" },
           "content": { "title": "Content", "type": "string", "description": "Content of the Whiteboard" }
+        }
+      },
+      "WordFrequencyColumns": {
+        "title": "WordFrequencyColumns",
+        "enum": [
+          "WF_WORD",
+          "WF_WORD_FREQUENCY",
+          "WF_WORD_PERCENT",
+          "WF_SOURCE_DOCUMENT_FREQUENCY",
+          "WF_SOURCE_DOCUMENT_PERCENT",
+          "WF_SOURCE_DOCUMENT_FILENAME",
+          "WF_DOCUMENT_TAG_ID_LIST",
+          "WF_CODE_ID_LIST",
+          "WF_USER_ID_LIST",
+          "WF_SPAN_ANNOTATIONS"
+        ],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "WordFrequencyResult": {
+        "title": "WordFrequencyResult",
+        "required": ["total_results", "sdocs_total", "words_total", "word_frequencies"],
+        "type": "object",
+        "properties": {
+          "total_results": {
+            "title": "Total Results",
+            "type": "integer",
+            "description": "The total number of word_frequencies. Used for pagination."
+          },
+          "sdocs_total": {
+            "title": "Sdocs Total",
+            "type": "integer",
+            "description": "The total number of SourceDocuments."
+          },
+          "words_total": { "title": "Words Total", "type": "integer", "description": "The total number of words." },
+          "word_frequencies": {
+            "title": "Word Frequencies",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WordFrequencyStat" },
+            "description": "The WordFrequencies."
+          }
+        }
+      },
+      "WordFrequencyStat": {
+        "title": "WordFrequencyStat",
+        "required": ["word", "word_percent", "count", "sdocs", "sdocs_percent"],
+        "type": "object",
+        "properties": {
+          "word": { "title": "Word", "type": "string", "description": "The word." },
+          "word_percent": { "title": "Word Percent", "type": "number", "description": "The percentage of the word." },
+          "count": { "title": "Count", "type": "integer", "description": "The SourceDoument IDs." },
+          "sdocs": { "title": "Sdocs", "type": "integer", "description": "The number of SourceDocuments." },
+          "sdocs_percent": {
+            "title": "Sdocs Percent",
+            "type": "number",
+            "description": "The percentage of SourceDocuments."
+          }
         }
       },
       "SourceDocumentReadAction": {

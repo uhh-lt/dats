@@ -5,13 +5,16 @@ import type { AnnotatedSegmentResult } from "../models/AnnotatedSegmentResult";
 import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
 import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
+import type { Body_analysis_word_frequency_analysis } from "../models/Body_analysis_word_frequency_analysis";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
 import type { ColumnInfo_AnnotatedSegmentsColumns_ } from "../models/ColumnInfo_AnnotatedSegmentsColumns_";
 import type { ColumnInfo_TimelineAnalysisColumns_ } from "../models/ColumnInfo_TimelineAnalysisColumns_";
+import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
 import type { DateGroupBy } from "../models/DateGroupBy";
 import type { Filter_TimelineAnalysisColumns_ } from "../models/Filter_TimelineAnalysisColumns_";
 import type { TimelineAnalysisResultNew } from "../models/TimelineAnalysisResultNew";
+import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -234,6 +237,62 @@ export class AnalysisService {
         project_id: projectId,
         group_by: groupBy,
         project_metadata_id: projectMetadataId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns WordFrequency Info.
+   * Returns WordFrequency Info.
+   * @returns ColumnInfo_WordFrequencyColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static wordFrequencyAnalysisInfo({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_WordFrequencyColumns_>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/analysis/word_frequency_analysis_info/{project_id}",
+      path: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Perform word frequency analysis.
+   * Perform word frequency analysis.
+   * @returns WordFrequencyResult Successful Response
+   * @throws ApiError
+   */
+  public static wordFrequencyAnalysis({
+    projectId,
+    page,
+    pageSize,
+    requestBody,
+  }: {
+    projectId: number;
+    page: number;
+    pageSize: number;
+    requestBody: Body_analysis_word_frequency_analysis;
+  }): CancelablePromise<WordFrequencyResult> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/word_frequency_analysis",
+      query: {
+        project_id: projectId,
+        page: page,
+        page_size: pageSize,
       },
       body: requestBody,
       mediaType: "application/json",

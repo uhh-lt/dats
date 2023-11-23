@@ -4,7 +4,7 @@
 
 export type AnnotatedSegmentResult = {
   /**
-   * The total number of results.
+   * The total number of span_annotation_ids. Used for pagination.
    */
   total_results: number;
   /**
