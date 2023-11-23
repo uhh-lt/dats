@@ -1,5 +1,9 @@
 import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 
+import { Word } from "react-wordcloud";
+import queryClient from "../plugins/ReactQueryClient";
+import useStableQueries from "../utils/useStableQueries";
+import { QueryKey } from "./QueryKey";
 import {
   AnnotationDocumentRead,
   AnnotationDocumentService,
@@ -8,16 +12,10 @@ import {
   DocumentTagService,
   MemoRead,
   ProjectService,
-  SourceDocumentKeywords,
   SourceDocumentMetadataReadResolved,
-  SourceDocumentRead,
   SourceDocumentService,
   SourceDocumentWithDataRead,
 } from "./openapi";
-import { QueryKey } from "./QueryKey";
-import useStableQueries from "../utils/useStableQueries";
-import queryClient from "../plugins/ReactQueryClient";
-import { Word } from "react-wordcloud";
 
 // sdoc
 const fetchSdoc = async (sdocId: number) => {
@@ -75,25 +73,6 @@ const useGetDocumentByAdocId = (adocId: number | undefined) =>
       enabled: !!adocId,
     },
   );
-
-const useGetDocumentKeywords = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentKeywords, Error>(
-    [QueryKey.SDOC_KEYWORDS, sdocId],
-    () =>
-      SourceDocumentService.getKeywords({
-        sdocId: sdocId!,
-      }),
-    {
-      enabled: !!sdocId,
-    },
-  );
-
-const useUpdateDocumentKeywords = () =>
-  useMutation(SourceDocumentService.updateKeywords, {
-    onSuccess: (sdoc) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_KEYWORDS, sdoc.source_document_id]);
-    },
-  });
 
 const useGetLinkedSdocIds = (sdocId: number | undefined) =>
   useQuery<number[], Error>(
@@ -333,8 +312,6 @@ const SdocHooks = {
   // sdoc
   useGetDocument,
   useGetDocumentByAdocId,
-  useGetDocumentKeywords,
-  useUpdateDocumentKeywords,
   useGetLinkedSdocIds,
   useDeleteDocument,
   useDeleteDocuments,

@@ -1118,55 +1118,6 @@
         "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
-    "/sdoc/{sdoc_id}/keywords": {
-      "get": {
-        "tags": ["sourceDocument"],
-        "summary": "Returns the keywords of the SourceDocument if it is a text document.",
-        "description": "Returns the keywords of the SourceDocument if it is a text document.",
-        "operationId": "get_keywords",
-        "parameters": [
-          { "required": true, "schema": { "title": "Sdoc Id", "type": "integer" }, "name": "sdoc_id", "in": "path" },
-          {
-            "required": false,
-            "schema": { "title": "Only Finished", "type": "boolean", "default": true },
-            "name": "only_finished",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentKeywords" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      },
-      "patch": {
-        "tags": ["sourceDocument"],
-        "summary": "Updates the keywords of the SourceDocument.",
-        "description": "Updates the keywords of the SourceDocument.",
-        "operationId": "update_keywords",
-        "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentKeywords" } } },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentKeywords" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
     "/sdoc/{sdoc_id}/linked_sdocs": {
       "get": {
         "tags": ["sourceDocument"],
@@ -6657,8 +6608,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "max": 1,
-            "min": 0
+            "min": 0,
+            "max": 1
           }
         }
       },
@@ -6903,24 +6854,6 @@
             "type": "array",
             "items": { "type": "integer" },
             "description": "List of IDs of DocumentTags"
-          }
-        }
-      },
-      "SourceDocumentKeywords": {
-        "title": "SourceDocumentKeywords",
-        "required": ["source_document_id", "keywords"],
-        "type": "object",
-        "properties": {
-          "source_document_id": {
-            "title": "Source Document Id",
-            "type": "integer",
-            "description": "ID of the SourceDocument the Keywords belong to."
-          },
-          "keywords": {
-            "title": "Keywords",
-            "type": "array",
-            "items": { "type": "string" },
-            "description": "The list of Keywords of the SourceDocument the Keywords belong to."
           }
         }
       },

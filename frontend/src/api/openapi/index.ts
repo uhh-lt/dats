@@ -109,7 +109,6 @@ export type { Sort_SearchColumns_ } from "./models/Sort_SearchColumns_";
 export type { Sort_WordFrequencyColumns_ } from "./models/Sort_WordFrequencyColumns_";
 export { SortDirection } from "./models/SortDirection";
 export type { SourceDocumentDocumentTagMultiLink } from "./models/SourceDocumentDocumentTagMultiLink";
-export type { SourceDocumentKeywords } from "./models/SourceDocumentKeywords";
 export type { SourceDocumentMetadataCreate } from "./models/SourceDocumentMetadataCreate";
 export type { SourceDocumentMetadataRead } from "./models/SourceDocumentMetadataRead";
 export type { SourceDocumentMetadataReadResolved } from "./models/SourceDocumentMetadataReadResolved";

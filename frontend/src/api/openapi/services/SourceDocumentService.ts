@@ -5,7 +5,6 @@ import type { AnnotationDocumentRead } from "../models/AnnotationDocumentRead";
 import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
-import type { SourceDocumentKeywords } from "../models/SourceDocumentKeywords";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
@@ -83,56 +82,6 @@ export class SourceDocumentService {
       path: {
         sdoc_id: sdocId,
       },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns the keywords of the SourceDocument if it is a text document.
-   * Returns the keywords of the SourceDocument if it is a text document.
-   * @returns SourceDocumentKeywords Successful Response
-   * @throws ApiError
-   */
-  public static getKeywords({
-    sdocId,
-    onlyFinished = true,
-  }: {
-    sdocId: number;
-    onlyFinished?: boolean;
-  }): CancelablePromise<SourceDocumentKeywords> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/keywords",
-      path: {
-        sdoc_id: sdocId,
-      },
-      query: {
-        only_finished: onlyFinished,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Updates the keywords of the SourceDocument.
-   * Updates the keywords of the SourceDocument.
-   * @returns SourceDocumentKeywords Successful Response
-   * @throws ApiError
-   */
-  public static updateKeywords({
-    requestBody,
-  }: {
-    requestBody: SourceDocumentKeywords;
-  }): CancelablePromise<SourceDocumentKeywords> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/sdoc/{sdoc_id}/keywords",
       body: requestBody,
       mediaType: "application/json",
       errors: {
