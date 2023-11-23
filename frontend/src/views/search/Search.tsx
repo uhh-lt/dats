@@ -37,13 +37,11 @@ function Search() {
   const location = useLocation();
 
   // searchbar
-  const { register, handleSubmit, reset } = useForm();
   const appBarContainerRef = useContext(AppBarContext);
 
   // redux (global client state)
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
-  const searchType = useAppSelector((state) => state.search.searchType);
   const dispatch = useAppDispatch();
 
   // filter
@@ -71,29 +69,6 @@ function Search() {
     dispatch(SearchActions.clearSelectedDocuments());
   };
 
-  // handle search form
-  const handleSearch = (data: any) => {
-    if (data.query.trim().length === 0) return;
-    switch (searchType) {
-      case QueryType.LEXICAL:
-        handleAddTextFilter(data.query);
-        break;
-      case QueryType.FILENAME:
-        handleAddFileFilter(data.query);
-        break;
-      case QueryType.SEMANTIC:
-        handleAddSentenceFilter(data.query);
-        break;
-    }
-    reset();
-  };
-  const handleSearchError = (data: any) => console.error(data);
-  const handleClearSearch = () => {
-    reset();
-    dispatch(SearchActions.clearSelectedDocuments());
-    navigateIfNecessary(`/project/${projectId}/search/`);
-  };
-
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
@@ -110,31 +85,6 @@ function Search() {
     [dispatch, navigateIfNecessary, projectId, keywordMetadataIds],
   );
   const handleAddTagFilter = useAddTagFilter();
-  const handleAddTextFilter = useCallback(
-    (text: string) => {
-      alert("not implemented");
-      dispatch(SearchActions.clearSelectedDocuments());
-      navigateIfNecessary(`/project/${projectId}/search/`);
-    },
-    [dispatch, navigateIfNecessary, projectId],
-  );
-  const handleAddFileFilter = useCallback(
-    (filename: string) => {
-      dispatch(SearchActions.onAddFilenameFilter({ filename }));
-      navigateIfNecessary(`/project/${projectId}/search/`);
-    },
-    [dispatch, navigateIfNecessary, projectId],
-  );
-
-  const handleAddSentenceFilter = useCallback(
-    (sentence: string) => {
-      alert("Not implemented!");
-      // dispatch(SearchActions.addFilter(createSentenceFilter(sentence)));
-      // dispatch(SearchActions.clearSelectedDocuments());
-      navigateIfNecessary(`/project/${projectId}/search/`);
-    },
-    [navigateIfNecessary, projectId],
-  );
 
   // hack to disable sentences
   const projectCodes = ProjectHooks.useGetAllCodes(parseInt(projectId), true);
@@ -152,12 +102,7 @@ function Search() {
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
-        <SearchBar
-          register={register}
-          handleSubmit={handleSubmit(handleSearch, handleSearchError)}
-          handleClearSearch={handleClearSearch}
-          placeholder="Search documents..."
-        />
+        <SearchBar placeholder="Search documents..." />{" "}
       </Portal>
       <Grid container className="h100">
         <Grid

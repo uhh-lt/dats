@@ -2,12 +2,13 @@ import { Autocomplete, Chip, MenuItem, Switch, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
-import { FilterOperator, FilterValueType } from "../../api/openapi";
+import { DocType, FilterOperator, FilterValueType } from "../../api/openapi";
 import CodeRenderer from "../../components/DataGrid/CodeRenderer";
 import TagRenderer from "../../components/DataGrid/TagRenderer";
 import UserRenderer from "../../components/DataGrid/UserRenderer";
 import { isValidDateString } from "../../utils/DateUtils";
 import { ColumnInfo, MyFilterExpression } from "./filterUtils";
+import { docTypeToIcon } from "../DocumentExplorer/docTypeToIcon";
 
 interface SharedFilterValueSelectorProps {
   filterExpression: MyFilterExpression;
@@ -30,6 +31,8 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
       return <UserIdValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
     case FilterValueType.SPAN_ANNOTATION:
       return <SpanAnnotationValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
+    case FilterValueType.DOC_TYPE:
+      return <DocTypeValueSelector filterExpression={filterExpression} onChangeValue={onChangeValue} />;
     case FilterValueType.INFER_FROM_OPERATOR:
       switch (filterInfo.operator) {
         case FilterOperator.ID:
@@ -258,6 +261,32 @@ function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: Shared
         fullWidth
       />
     </>
+  );
+}
+
+function DocTypeValueSelector({ filterExpression, onChangeValue }: SharedFilterValueSelectorProps) {
+  return (
+    <TextField
+      key={filterExpression.id}
+      fullWidth
+      select
+      label="Value"
+      variant="filled"
+      value={filterExpression.value === "" ? "none" : filterExpression.value}
+      onChange={(event) => onChangeValue(filterExpression.id, event.target.value)}
+      InputLabelProps={{ shrink: true }}
+      inputProps={{ sx: { display: "flex", flexDirection: "row", alignItems: "center" } }}
+    >
+      <MenuItem key={"none"} value={"none"}>
+        <i>None</i>
+      </MenuItem>
+      {Object.values(DocType).map((docType) => (
+        <MenuItem key={docType} value={docType}>
+          {docTypeToIcon[docType]}
+          {docType}
+        </MenuItem>
+      ))}
+    </TextField>
   );
 }
 

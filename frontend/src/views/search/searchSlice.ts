@@ -2,11 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DocType, SourceDocumentMetadataReadResolved } from "../../api/openapi";
 import { QueryType } from "./QueryType";
 
-export interface AnchorState {
-  pos: number;
-  limit: number;
-}
-
 interface SearchState {
   selectedDocumentIds: number[];
   isSplitView: boolean;
@@ -16,6 +11,7 @@ interface SearchState {
   rowsPerPage: number;
   resultModalities: DocType[];
   searchType: QueryType;
+  searchQuery: string;
 }
 
 const initialState: SearchState = {
@@ -27,6 +23,7 @@ const initialState: SearchState = {
   rowsPerPage: 10,
   resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
   searchType: QueryType.LEXICAL,
+  searchQuery: "",
 };
 
 export const searchSlice = createSlice({
@@ -111,6 +108,11 @@ export const searchSlice = createSlice({
     },
     onAddMetadataFilter: (state, action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved }>) => {
       console.log("added metadata filter!");
+    },
+
+    // search
+    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
+      state.searchQuery = action.payload;
     },
   },
 });
