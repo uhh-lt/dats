@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.background_job_base import BackgroundJobStatus
@@ -82,6 +82,4 @@ class PreprocessingJobPayloadRead(PreprocessingJobPayloadBaseDTO):
         description="The error message if the payload failed.",
         default=None,
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

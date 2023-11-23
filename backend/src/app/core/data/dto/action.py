@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ActionType(str, Enum):
@@ -50,9 +50,7 @@ class ActionRead(ActionBaseDTO):
     user_id: int = Field(description="User the Action belongs to")
     project_id: int = Field(description="Project the Action belongs to")
     executed: datetime = Field(description="Executed timestamp of the Action")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ActionQueryParameters(BaseModel):

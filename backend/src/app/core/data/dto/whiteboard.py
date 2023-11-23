@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 
@@ -29,6 +29,4 @@ class WhiteboardRead(WhiteboardBaseDTO):
     user_id: int = Field(description="User the Whiteboard belongs to")
     created: datetime = Field(description="Created timestamp of the Whiteboard")
     updated: datetime = Field(description="Updated timestamp of the Whiteboard")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
