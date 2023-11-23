@@ -21,6 +21,7 @@ from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
     SourceDocumentMetadataUpdate,
 )
+from app.core.data.dto.word_frequency import WordFrequencyRead
 from app.core.data.repo.repo_service import RepoService
 
 router = APIRouter(
@@ -357,3 +358,18 @@ async def get_related_user_memos(
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
     ]
     return memos
+
+
+@router.get(
+    "/{sdoc_id}/word_frequencies",
+    response_model=List[WordFrequencyRead],
+    summary="Returns the SourceDocument's word frequencies",
+    description="Returns the SourceDocument's word frequencies with the given ID if it exists",
+)
+async def get_word_frequencies(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+) -> List[WordFrequencyRead]:
+    sdoc = crud_sdoc.read(db=db, id=sdoc_id)
+    return [WordFrequencyRead.from_orm(wf) for wf in sdoc.word_frequencies]

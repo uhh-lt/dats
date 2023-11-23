@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.source_document_data import SourceDocumentDataORM
     from app.core.data.orm.source_document_link import SourceDocumentLinkORM
     from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+    from app.core.data.orm.word_frequency import WordFrequencyORM
 
 
 class SourceDocumentORM(ORMBase):
@@ -69,6 +70,12 @@ class SourceDocumentORM(ORMBase):
         back_populates="parent_source_document",
         passive_deletes=True,
         foreign_keys="sourcedocumentlink.c.parent_source_document_id",
+    )
+
+    word_frequencies: Mapped[List["WordFrequencyORM"]] = relationship(
+        "WordFrequencyORM",
+        back_populates="source_document",
+        passive_deletes=True,
     )
 
     # many to many
