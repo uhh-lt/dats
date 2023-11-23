@@ -63,15 +63,6 @@ class PaginatedSourceDocumentReads(PaginatedResults):
     )
 
 
-class SourceDocumentKeywords(BaseModel):
-    source_document_id: int = Field(
-        description="ID of the SourceDocument the Keywords belong to."
-    )
-    keywords: List[str] = Field(
-        description="The list of Keywords of the SourceDocument the Keywords belong to."
-    )
-
-
 class SourceDocumentCreate(SourceDocumentBaseDTO):
     pass
 

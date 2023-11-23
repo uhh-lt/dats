@@ -9,12 +9,10 @@ from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.source_document import (
-    SourceDocumentKeywords,
     SourceDocumentRead,
     SourceDocumentUpdate,
     SourceDocumentWithDataRead,
@@ -24,7 +22,6 @@ from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataUpdate,
 )
 from app.core.data.repo.repo_service import RepoService
-from app.core.search.elasticsearch_service import ElasticSearchService
 
 router = APIRouter(
     prefix="/sdoc", dependencies=[Depends(get_current_user)], tags=["sourceDocument"]
@@ -93,45 +90,7 @@ async def update_sdoc(
 ) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
-    return SourceDocumentRead.model_validate(db_obj)
-
-
-@router.get(
-    "/{sdoc_id}/keywords",
-    response_model=Optional[SourceDocumentKeywords],
-    summary="Returns the keywords of the SourceDocument if it is a text document.",
-    description="Returns the keywords of the SourceDocument if it is a text document.",
-)
-async def get_keywords(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-) -> Optional[SourceDocumentKeywords]:
-    # TODO Flo: only if the user has access?
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-
-    # if the sdoc is audio or video we return the keywords of the transcript
-    if sdoc_db_obj.doctype == DocType.audio or sdoc_db_obj.doctype == DocType.video:
-        # FIXME a video sdoc has one linked sdoc and a audi has two.
-        #   the last is always the transcrip sdoc id.
-        #   but this is very hack and error prone.
-        linked_sdocs = crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
-        if len(linked_sdocs) == 1 and len(linked_sdocs) != 2:
-            # we have to follow the link from the audio sdoc to the transcript sdoc
-            linked_sdocs = crud_sdoc.collect_linked_sdoc_ids(
-                db=db,
-                sdoc_id=linked_sdocs[0],
-            )
-        elif len(linked_sdocs) == 2:
-            raise ValueError(f"Cannot find transcript for SourceDocument {sdoc_id}")
-        sdoc_id = linked_sdocs[-1]
-
-    return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(
-        sdoc_id=sdoc_id, proj_id=sdoc_db_obj.project_id
-    )
+    return SourceDocumentRead.from_orm(db_obj)
 
 
 @router.get(
@@ -144,22 +103,6 @@ async def get_linked_sdocs(
     *, db: Session = Depends(get_db_session), sdoc_id: int
 ) -> List[int]:
     return crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
-
-
-@router.patch(
-    "/{sdoc_id}/keywords",
-    response_model=Optional[SourceDocumentKeywords],
-    summary="Updates the keywords of the SourceDocument.",
-    description="Updates the keywords of the SourceDocument.",
-)
-async def update_keywords(
-    *, db: Session = Depends(get_db_session), keywords: SourceDocumentKeywords
-) -> Optional[SourceDocumentKeywords]:
-    # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read(db=db, id=keywords.source_document_id)
-    return ElasticSearchService().update_esdoc_keywords(
-        keywords=keywords, proj_id=sdoc_db_obj.project_id
-    )
 
 
 @router.get(
