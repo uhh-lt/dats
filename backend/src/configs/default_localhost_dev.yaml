@@ -111,11 +111,6 @@ project_metadata:
     metatype: "STRING"
     read_only: True
     doctype: "text"
-  text_word_frequencies:
-    key: "word_frequencies"
-    metatype: "STRING"
-    read_only: True
-    doctype: "text"
   text_keywords:
     key: "keywords"
     metatype: "LIST"

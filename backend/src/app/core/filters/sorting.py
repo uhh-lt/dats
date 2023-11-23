@@ -3,7 +3,7 @@ from typing import Generic, List, TypeVar
 
 from app.core.filters.columns import AbstractColumns
 from pydantic.generics import GenericModel
-from sqlalchemy import Column
+from sqlalchemy import Column, asc, desc
 
 
 class SortDirection(str, Enum):
@@ -13,9 +13,9 @@ class SortDirection(str, Enum):
     def apply(self, column: Column):
         match self:
             case SortDirection.ASC:
-                return column.asc().nulls_last()
+                return asc(column).nulls_last()
             case SortDirection.DESC:
-                return column.desc().nulls_last()
+                return desc(column).nulls_last()
 
 
 T = TypeVar("T", bound=AbstractColumns)

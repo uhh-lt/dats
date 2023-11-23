@@ -16,6 +16,11 @@ from app.core.analysis.timeline import (
     timeline_analysis_info,
     timeline_analysis_valid_documents,
 )
+from app.core.analysis.word_frequency import (
+    WordFrequencyColumns,
+    word_frequency,
+    word_frequency_info,
+)
 from app.core.data.dto.analysis import (
     AnnotatedSegmentResult,
     AnnotationOccurrence,
@@ -23,6 +28,7 @@ from app.core.data.dto.analysis import (
     CodeOccurrence,
     DateGroupBy,
     TimelineAnalysisResultNew,
+    WordFrequencyResult,
 )
 from app.core.filters.columns import ColumnInfo
 from app.core.filters.filtering import Filter
@@ -172,4 +178,43 @@ async def timeline_analysis2(
         group_by=group_by,
         project_metadata_id=project_metadata_id,
         filter=filter,
+    )
+
+
+@router.get(
+    "/word_frequency_analysis_info/{project_id}",
+    response_model=List[ColumnInfo[WordFrequencyColumns]],
+    summary="Returns WordFrequency Info.",
+    description="Returns WordFrequency Info.",
+)
+async def word_frequency_analysis_info(
+    *,
+    project_id: int,
+) -> List[ColumnInfo[WordFrequencyColumns]]:
+    return word_frequency_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/word_frequency_analysis",
+    response_model=WordFrequencyResult,
+    summary="Perform word frequency analysis.",
+    description="Perform word frequency analysis.",
+)
+async def word_frequency_analysis(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    filter: Filter[WordFrequencyColumns],
+    page: int,
+    page_size: int,
+    sorts: List[Sort[WordFrequencyColumns]],
+) -> WordFrequencyResult:
+    return word_frequency(
+        project_id=project_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
     )

@@ -27,6 +27,7 @@ from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
+    SDocStatus,
     SourceDocumentRead,
 )
 from app.core.data.dto.user import UserRead
@@ -162,7 +163,11 @@ async def get_project_sdocs(
         )
     ]
     total_sdocs = crud_sdoc.count_by_project(
-        db=db, proj_id=proj_id, only_finished=only_finished
+        db=db,
+        proj_id=proj_id,
+        status=SDocStatus.finished
+        if only_finished
+        else SDocStatus.unfinished_or_erroneous,
     )
     skip, limit = skip_limit.values()
     # FIXME skip can be None

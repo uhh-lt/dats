@@ -1,5 +1,3 @@
-import json
-
 from loguru import logger
 from psycopg2 import OperationalError
 from sqlalchemy.orm import Session
@@ -13,6 +11,7 @@ from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.crud.word_frequency import crud_word_frequency
 from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.code import CodeCreate
@@ -20,6 +19,7 @@ from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
+from app.core.data.dto.word_frequency import WordFrequencyCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
@@ -67,7 +67,6 @@ def _persist_sdoc_metadata(
     sdoc_id = sdoc_db_obj.id
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     pptd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
-    pptd.metadata["word_frequencies"] = json.dumps(pptd.word_freqs)
     pptd.metadata["keywords"] = pptd.keywords
 
     project_metadata = [
@@ -181,6 +180,26 @@ def _persist_span_annotations(
             raise e
 
 
+def _persist_sdoc_word_frequencies(
+    db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
+) -> None:
+    logger.info(f"Persisting SourceDocument Word Frequencies for {pptd.filename}...")
+    sdoc_id = sdoc_db_obj.id
+    word_freqs = pptd.word_freqs
+
+    wfs_create_dtos = []
+    for word, count in word_freqs.items():
+        wfs_create_dtos.append(
+            WordFrequencyCreate(
+                sdoc_id=sdoc_id,
+                word=word,
+                count=count,
+            )
+        )
+
+    crud_word_frequency.create_multi(db=db, create_dtos=wfs_create_dtos)
+
+
 def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
 
@@ -205,6 +224,9 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
 
             # persist SpanAnnotations
             _persist_span_annotations(db=db, adoc_db_obj=adoc_db_obj, pptd=pptd)
+
+            # persist WordFrequencies
+            _persist_sdoc_word_frequencies(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
         except Exception as e:
             logger.error(
