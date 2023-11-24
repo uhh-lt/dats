@@ -50,4 +50,46 @@ export class AuthenticationService {
       },
     });
   }
+
+  /**
+   * Log out the user from the given session.
+   * Revokes the refresh token associated with the given session.
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static logout({ refreshToken }: { refreshToken: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/authentication/logout",
+      query: {
+        refresh_token: refreshToken,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Obtain a new access token.
+   * Uses the given refresh token to obtain a new access token.
+   * @returns UserAuthorizationHeaderData Successful Response
+   * @throws ApiError
+   */
+  public static refreshAccessToken({
+    refreshToken,
+  }: {
+    refreshToken: string;
+  }): CancelablePromise<UserAuthorizationHeaderData> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/authentication/refresh_access",
+      query: {
+        refresh_token: refreshToken,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
