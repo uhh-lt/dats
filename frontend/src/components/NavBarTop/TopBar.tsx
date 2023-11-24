@@ -18,8 +18,8 @@ function TopBar(props: AppBarProps) {
   // global server state (react-query)
   const project = ProjectHooks.useGetProject(projectId ? parseInt(projectId) : undefined);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 

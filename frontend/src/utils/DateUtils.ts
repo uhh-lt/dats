@@ -1,7 +1,7 @@
 export const TIMEZONE = "Europe/Berlin";
 export const LOCALE = "de-DE";
 
-const dateToLocaleDate = (date: string | Date): Date => {
+export const dateToLocaleDate = (date: string | Date): Date => {
   const d = new Date(date);
   const offset = d.getTimezoneOffset();
   return new Date(d.getTime() - offset * 60 * 1000);
