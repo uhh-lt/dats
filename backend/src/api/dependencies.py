@@ -1,11 +1,18 @@
-from typing import AsyncGenerator, Dict, Optional
+from typing import Annotated, Any, AsyncGenerator, Dict, Optional
 
+from app.core.authorization.authorization_service import (
+    AuthorizationCheck,
+    AuthorizationService,
+)
+from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import crud_user
+from app.core.data.dto.action import ActionType
+from app.core.data.dto.user import UserRead
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.security import decode_jwt
 from config import conf
-from fastapi import Depends, Query
+from fastapi import Depends, Query, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
@@ -55,16 +62,15 @@ async def resolve_code_param(
 
 
 async def get_db_session() -> AsyncGenerator[Session, None]:
-    session = None
+    session = SQLService().session_maker()
     try:
-        session = SQLService().session_maker()
         yield session
     finally:
         if session is not None:
             session.close()
 
 
-async def get_current_user(
+def get_current_user(
     db: Session = Depends(get_db_session), token: str = Depends(reusable_oauth2_scheme)
 ) -> UserORM:
     try:
@@ -80,3 +86,24 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+# A convenience type alias for depending `get_current_user` in endpoints
+AuthenticatedUser = Annotated[UserRead, Depends(get_current_user)]
+
+
+def is_authorized(
+    action: ActionType,
+    crud_object: CRUDBase,
+    param_key: Optional[str] = None,
+) -> Any:
+    def f(request: Request, user: UserRead = Depends(get_current_user)):
+        object_id = (
+            int(request.path_params[param_key]) if param_key is not None else None
+        )
+        AuthorizationService().check_authorization(
+            subject=user,
+            check=AuthorizationCheck(action, crud_object, object_id),
+        )
+
+    return Depends(f)

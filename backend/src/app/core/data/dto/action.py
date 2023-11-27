@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class ActionType(str, Enum):
     CREATE = "CREATE"
+    READ = "READ"
     UPDATE = "UPDATE"
     DELETE = "DELETE"
 

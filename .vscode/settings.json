@@ -1,3 +1,5 @@
 {
-    "python.envFile": "${workspaceFolder}/backend/.env"
+    "python.envFile": "${workspaceFolder}/backend/.env",
+    "python.analysis.extraPaths": ["./backend/src"],
+    "python.autoComplete.extraPaths": ["./backend/src"]
 }
