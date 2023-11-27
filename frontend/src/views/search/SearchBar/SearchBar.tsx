@@ -104,8 +104,7 @@ function SearchBar({ placeholder }: SearchBarProps) {
   };
 
   const handleClearSearch = (event: React.MouseEvent<HTMLButtonElement>) => {
-    dispatch(SearchActions.onChangeSearchQuery(""));
-    dispatch(SearchActions.clearSelectedDocuments());
+    dispatch(SearchActions.onClearSearch());
     navigateIfNecessary(`/project/${projectId}/search/`);
 
     handleClose();

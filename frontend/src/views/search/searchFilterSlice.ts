@@ -35,7 +35,7 @@ const searchFilterSlice = createFilterSlice({
   },
   extraReducer(builder) {
     builder
-      .addCase(SearchActions.clearSelectedDocuments, (state, action) => {
+      .addCase(SearchActions.onClearSearch, (state, action) => {
         state.filter["root"] = {
           id: "root",
           logic_operator: LogicalOperator.AND,

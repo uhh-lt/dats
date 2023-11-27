@@ -114,6 +114,11 @@ export const searchSlice = createSlice({
     onChangeSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
+    onClearSearch: (state) => {
+      state.searchQuery = "";
+      state.searchType = QueryType.LEXICAL;
+      state.selectedDocumentIds = [];
+    },
   },
 });
 
