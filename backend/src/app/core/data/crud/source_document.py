@@ -61,7 +61,7 @@ class CRUDSourceDocument(
     def read_with_data(self, db: Session, *, id: int) -> SourceDocumentWithDataRead:
         db_obj = (
             db.query(self.model, SourceDocumentDataORM)
-            .join(SourceDocumentDataORM)
+            .join(SourceDocumentDataORM, isouter=True)
             .filter(self.model.id == id)
             .first()
         )
@@ -69,7 +69,24 @@ class CRUDSourceDocument(
             raise NoSuchElementError(self.model, id=id)
         sdoc, data = db_obj.tuple()
         sdoc_read = SourceDocumentRead.from_orm(sdoc)
-        sdoc_data_read = SourceDocumentDataRead.from_orm(data)
+
+        # sdoc data is None for audio and video documents
+        if data is None:
+            sdoc_data_read = SourceDocumentDataRead(
+                id=sdoc.id,
+                content="",
+                html="",
+                token_starts=[],
+                token_ends=[],
+                sentence_starts=[],
+                sentence_ends=[],
+                tokens=[],
+                token_character_offsets=[],
+                sentences=[],
+                sentence_character_offsets=[],
+            )
+        else:
+            sdoc_data_read = SourceDocumentDataRead.from_orm(data)
         return SourceDocumentWithDataRead(**(sdoc_read.dict() | sdoc_data_read.dict()))
 
     def link_document_tag(
