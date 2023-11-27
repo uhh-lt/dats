@@ -3,6 +3,7 @@ import random
 import time
 import traceback
 
+import config
 from loguru import logger
 
 
@@ -49,6 +50,8 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
 
     # noinspection PyUnresolvedReferences
     try:
+        config.verify_config()
+
         # start and init services
         __init_services__(
             create_database_and_tables=not startup_in_progress,
