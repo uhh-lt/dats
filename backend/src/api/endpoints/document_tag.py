@@ -14,7 +14,6 @@ from app.core.data.dto.document_tag import (
     SourceDocumentDocumentTagMultiLink,
 )
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
-from app.core.data.dto.source_document import SourceDocumentRead
 
 router = APIRouter(
     prefix="/doctag", dependencies=[Depends(get_current_user)], tags=["documentTag"]
@@ -175,6 +174,6 @@ async def get_user_memo(
 )
 async def get_sdoc_ids_by_tag_id(
     *, db: Session = Depends(get_db_session), tag_id: int
-) -> List[SourceDocumentRead]:
+) -> List[int]:
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return [sdoc.id for sdoc in db_obj.source_documents]
