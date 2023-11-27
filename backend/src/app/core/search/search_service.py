@@ -183,13 +183,15 @@ class SearchService(metaclass=SingletonMeta):
                     user_ids_agg,
                     span_annotation_tuples_agg,
                 )
+                # isouter=True is important, otherwise we will only get sdocs with tags
                 .join(SourceDocumentORM.document_tags, isouter=True)
                 .join(SourceDocumentORM.annotation_documents)
                 .join(AnnotationDocumentORM.user)
-                .join(AnnotationDocumentORM.span_annotations)
-                .join(SpanAnnotationORM.span_text)
-                .join(SpanAnnotationORM.current_code)
-                .join(CurrentCodeORM.code)
+                # isouter=True is important, otherwise we will only get sdocs with annotations
+                .join(AnnotationDocumentORM.span_annotations, isouter=True)
+                .join(SpanAnnotationORM.span_text, isouter=True)
+                .join(SpanAnnotationORM.current_code, isouter=True)
+                .join(CurrentCodeORM.code, isouter=True)
                 .join(SourceDocumentORM.metadata_)
                 .join(SourceDocumentMetadataORM.project_metadata)
                 .group_by(SourceDocumentORM.id)
