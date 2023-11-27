@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { CircularProgress, Typography } from "@mui/material";
 import { GridColDef } from "@mui/x-data-grid";
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
@@ -138,31 +138,33 @@ function AnnotateSegmentsTable({ onRowContextMenu }: AnnotateSegmentsTableProps)
     return result;
   }, [tableInfo.data, user.data]);
 
-  return (
-    <>
-      {annotatedSegments.isError ? (
-        <Typography variant="body1" color="inherit" component="div">
-          {annotatedSegments.error?.message}
-        </Typography>
-      ) : (
-        <ServerDataGrid
-          rows={annotatedSegments.data?.span_annotation_ids.map((spanAnnotationId) => ({ id: spanAnnotationId })) || []}
-          columns={columns}
-          rowCount={annotatedSegments.data?.total_results || 0}
-          loading={annotatedSegments.isLoading || annotatedSegments.isPreviousData}
-          paginationModel={paginationModel}
-          onPaginationModelChange={(model) => dispatch(AnnotatedSegmentsActions.onPaginationModelChange(model))}
-          rowSelectionModel={rowSelectionModel}
-          onRowSelectionModelChange={(selectionModel) =>
-            dispatch(AnnotatedSegmentsActions.onSelectionModelChange(selectionModel as number[]))
-          }
-          sortModel={sortModel}
-          onSortModelChange={(sortModel) => dispatch(AnnotatedSegmentsActions.onSortModelChange(sortModel))}
-          onRowContextMenu={handleRowContextMenu}
-        />
-      )}
-    </>
-  );
+  if (annotatedSegments.isError) {
+    return (
+      <Typography variant="body1" color="inherit" component="div">
+        {annotatedSegments.error?.message}
+      </Typography>
+    );
+  } else if (columns.length === 0) {
+    return <CircularProgress />;
+  } else {
+    return (
+      <ServerDataGrid
+        rows={annotatedSegments.data?.span_annotation_ids.map((spanAnnotationId) => ({ id: spanAnnotationId })) || []}
+        columns={columns}
+        rowCount={annotatedSegments.data?.total_results || 0}
+        loading={annotatedSegments.isLoading || annotatedSegments.isPreviousData}
+        paginationModel={paginationModel}
+        onPaginationModelChange={(model) => dispatch(AnnotatedSegmentsActions.onPaginationModelChange(model))}
+        rowSelectionModel={rowSelectionModel}
+        onRowSelectionModelChange={(selectionModel) =>
+          dispatch(AnnotatedSegmentsActions.onSelectionModelChange(selectionModel as number[]))
+        }
+        sortModel={sortModel}
+        onSortModelChange={(sortModel) => dispatch(AnnotatedSegmentsActions.onSortModelChange(sortModel))}
+        onRowContextMenu={handleRowContextMenu}
+      />
+    );
+  }
 }
 
 export default AnnotateSegmentsTable;

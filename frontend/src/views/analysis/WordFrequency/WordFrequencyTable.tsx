@@ -93,7 +93,7 @@ function WordFrequencyTable({ onRowContextMenu, tableContainerRef }: WordFrequen
   }, [tableInfo.data, user.data]);
 
   let tableContent: JSX.Element;
-  if (wordFrequency.isError || columns.length === 0) {
+  if (wordFrequency.isError) {
     tableContent = (
       <Typography variant="body1" color="inherit" component="div">
         {wordFrequency.error?.message}
@@ -132,21 +132,6 @@ function WordFrequencyTable({ onRowContextMenu, tableContainerRef }: WordFrequen
         sortingMode="server"
         sortModel={sortModel}
         onSortModelChange={(sortModel) => dispatch(WordFrequencyActions.onSortModelChange(sortModel))}
-        // column hiding: hide metadata columns by default
-        initialState={{
-          columns: {
-            columnVisibilityModel: columns.reduce((acc, column) => {
-              if (typeof column.field === "number") {
-                return {
-                  ...acc,
-                  [column.field as number]: false,
-                };
-              } else {
-                return acc;
-              }
-            }, {}),
-          },
-        }}
       />
     );
   }
