@@ -36,10 +36,10 @@ def run_required_migrations():
             db.commit()
             db.refresh(db_version)
         if db_version.version < 1:
-            __migrate_es_docs_to_database(db)
+            __migrate_es_docs_to_database(db, doctype=DocType.text)
             db_version.version = 1
             db.commit()
-            print("MIGRATED ES DOCS!")
+            print("MIGRATED ES TEXT DOCS!")
         if db_version.version < 2:
             __migrate_es_keywords_to_database(db)
             db_version.version = 2
@@ -50,6 +50,11 @@ def run_required_migrations():
             db_version.version = 3
             db.commit()
             print("MIGRATED METADATA NAMES!")
+        if db_version.version < 4:
+            __migrate_es_docs_to_database(db, doctype=DocType.image)
+            db_version.version = 4
+            db.commit()
+            print("MIGRATED ES IMAGE DOCS!")
 
 
 def __migrate_database_schema() -> None:
@@ -58,7 +63,7 @@ def __migrate_database_schema() -> None:
     print("MIGRATED DB SCHEMA!")
 
 
-def __migrate_es_docs_to_database(db: Session):
+def __migrate_es_docs_to_database(db: Session, doctype: DocType):
     fields = {
         "content",
         "html",
@@ -69,7 +74,9 @@ def __migrate_es_docs_to_database(db: Session):
     project_ids = [id[0] for id in db.query(ProjectORM.id).all()]
     for project_id in project_ids:
         while True:
-            num_migrated = __migrate_project_docs(db, project_id, fields, limit)
+            num_migrated = __migrate_project_docs(
+                db, project_id, fields, limit, doctype
+            )
             if num_migrated != limit:
                 break
         logger.info(
@@ -78,12 +85,12 @@ def __migrate_es_docs_to_database(db: Session):
 
 
 def __migrate_project_docs(
-    db: Session, project_id: int, fields: Set[str], limit: int
+    db: Session, project_id: int, fields: Set[str], limit: int, doctype: DocType
 ) -> int:
     ids = (
         db.query(SourceDocumentORM.id)
         .filter(
-            SourceDocumentORM.doctype == DocType.text,
+            SourceDocumentORM.doctype == doctype,
             SourceDocumentORM.project_id == project_id,
             SourceDocumentORM.status == SDocStatus.finished,
             ~exists().where(SourceDocumentORM.id == SourceDocumentDataORM.id),
