@@ -3,16 +3,22 @@ from typing import Dict, List, Optional
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
+from app.core.data.dto.action import ActionType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.project import ProjectRead
-from app.core.data.dto.user import UserRead, UserUpdate
+from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
 from app.core.data.orm.user import UserORM
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session, skip_limit_params
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+    is_authorized,
+    skip_limit_params,
+)
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
@@ -31,20 +37,20 @@ async def get_me(*, user: UserORM = Depends(get_current_user)) -> Optional[UserR
 
 @router.get(
     "/{user_id}",
-    response_model=Optional[UserRead],
+    response_model=Optional[PublicUserRead],
     summary="Returns the User",
     description="Returns the User with the given ID if it exists",
 )
 async def get_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
-) -> Optional[UserRead]:
+) -> Optional[PublicUserRead]:
     db_user = crud_user.read(db=db, id=user_id)
-    return UserRead.from_orm(db_user)
+    return PublicUserRead.from_orm(db_user)
 
 
 @router.get(
     "",
-    response_model=List[UserRead],
+    response_model=List[PublicUserRead],
     summary="Returns all Users",
     description="Returns all Users that exist in the system",
 )
@@ -52,9 +58,9 @@ async def get_all(
     *,
     db: Session = Depends(get_db_session),
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
-) -> List[UserRead]:
+) -> List[PublicUserRead]:
     db_objs = crud_user.read_multi(db=db, **skip_limit)
-    return [UserRead.from_orm(proj) for proj in db_objs]
+    return [PublicUserRead.from_orm(proj) for proj in db_objs]
 
 
 @router.patch(
@@ -62,6 +68,7 @@ async def get_all(
     response_model=Optional[UserRead],
     summary="Updates the User",
     description="Updates the User with the given ID if it exists",
+    dependencies=[is_authorized(ActionType.UPDATE, crud_user, "user_id")],
 )
 async def update_by_id(
     *, db: Session = Depends(get_db_session), user_id: int, user: UserUpdate
@@ -75,6 +82,7 @@ async def update_by_id(
     response_model=Optional[UserRead],
     summary="Removes the User",
     description="Removes the User with the given ID if it exists",
+    dependencies=[is_authorized(ActionType.DELETE, crud_user, "user_id")],
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
@@ -88,11 +96,12 @@ async def delete_by_id(
     response_model=List[ProjectRead],
     summary="Returns all Projects of the User",
     description="Returns all Projects of the User with the given ID",
+    # Only users themselves can see what projects they are in
+    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
 )
 async def get_user_projects(
     *, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[ProjectRead]:
-    # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=user_id)
     return [ProjectRead.from_orm(proj) for proj in db_obj.projects]
 
@@ -102,11 +111,13 @@ async def get_user_projects(
     response_model=List[CodeRead],
     summary="Returns all Codes of the User",
     description="Returns all Codes of the User with the given ID",
+    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
 )
 async def get_user_codes(
     *, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
+    # TODO remove this
     db_obj = crud_user.read(db=db, id=user_id)
     return [CodeRead.from_orm(code) for code in db_obj.codes]
 
@@ -116,6 +127,7 @@ async def get_user_codes(
     response_model=List[MemoRead],
     summary="Returns all Memos of the User",
     description="Returns all Memos of the User with the given ID",
+    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
 )
 async def get_user_memos(
     *, user_id: int, db: Session = Depends(get_db_session)
@@ -133,11 +145,13 @@ async def get_user_memos(
     response_model=List[AnnotationDocumentRead],
     summary="Returns all Adocs of the User",
     description="Returns all Adocs of the User with the given ID",
+    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
 )
 async def get_user_adocs(
     *, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
+    # TODO scope this by project
     return [
         AnnotationDocumentRead.from_orm(db_obj)
         for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
@@ -149,12 +163,11 @@ async def get_user_adocs(
     response_model=List[AnnotationDocumentRead],
     summary="Returns sdoc ids of sdocs the User recently modified (annotated)",
     description="Returns the top k sdoc ids that the User recently modified (annotated)",
+    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
 )
 async def recent_activity(
     *, user_id: int, k: int, db: Session = Depends(get_db_session)
 ) -> List[AnnotationDocumentRead]:
-    # TODO Flo: only if the user has access?
-
     # get all adocs of a user
     user_adocs = [
         AnnotationDocumentRead.from_orm(db_obj)

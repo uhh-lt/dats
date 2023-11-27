@@ -69,6 +69,7 @@ export type { ProjectCreate } from "./models/ProjectCreate";
 export type { ProjectRead } from "./models/ProjectRead";
 export type { ProjectReadAction } from "./models/ProjectReadAction";
 export type { ProjectUpdate } from "./models/ProjectUpdate";
+export type { PublicUserRead } from "./models/PublicUserRead";
 export { SDocStatus } from "./models/SDocStatus";
 export type { SearchSDocsQueryParameters } from "./models/SearchSDocsQueryParameters";
 export type { SimSearchImageHit } from "./models/SimSearchImageHit";

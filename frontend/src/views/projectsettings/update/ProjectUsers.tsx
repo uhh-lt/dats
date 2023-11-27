@@ -21,7 +21,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { UserRead } from "../../../api/openapi";
+import { PublicUserRead } from "../../../api/openapi";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
@@ -30,7 +30,7 @@ import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenu
 import { ProjectProps } from "./ProjectProps";
 
 function ProjectUsers({ project }: ProjectProps) {
-  const [selectedUser, setSelectedUser] = useState<UserRead | null>(null);
+  const [selectedUser, setSelectedUser] = useState<PublicUserRead | null>(null);
 
   // query all users that belong to the project
   const allUsers = UserHooks.useGetAll();
@@ -87,7 +87,7 @@ function ProjectUsers({ project }: ProjectProps) {
     );
   };
 
-  const handleChangeSelectedUser = (event: React.SyntheticEvent, value: UserRead | null) => {
+  const handleChangeSelectedUser = (event: React.SyntheticEvent, value: PublicUserRead | null) => {
     setSelectedUser(value);
   };
 

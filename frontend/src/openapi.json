@@ -104,7 +104,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUserRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -200,7 +200,7 @@
                 "schema": {
                   "title": "Response User-Get All",
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserRead" }
+                  "items": { "$ref": "#/components/schemas/PublicUserRead" }
                 }
               }
             }
@@ -5101,7 +5101,7 @@
       },
       "ActionType": {
         "title": "ActionType",
-        "enum": ["CREATE", "UPDATE", "DELETE"],
+        "enum": ["CREATE", "READ", "UPDATE", "DELETE"],
         "type": "string",
         "description": "An enumeration."
       },
@@ -6300,6 +6300,17 @@
           "title": { "title": "Title", "type": "string", "description": "Title of the Project" },
           "description": { "title": "Description", "type": "string", "description": "Description of the Project" }
         }
+      },
+      "PublicUserRead": {
+        "title": "PublicUserRead",
+        "required": ["id", "first_name", "last_name"],
+        "type": "object",
+        "properties": {
+          "id": { "title": "Id", "type": "integer", "description": "ID of the User" },
+          "first_name": { "title": "First Name", "type": "string", "description": "First name of the User" },
+          "last_name": { "title": "Last Name", "type": "string", "description": "Last name of the User" }
+        },
+        "description": "A user object with information that everybody may see."
       },
       "SDocStatus": {
         "title": "SDocStatus",

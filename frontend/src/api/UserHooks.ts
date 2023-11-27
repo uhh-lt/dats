@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient";
-import { AnnotationDocumentRead, AuthenticationService, CodeRead, ProjectRead, UserRead, UserService } from "./openapi";
+import { AnnotationDocumentRead, AuthenticationService, ProjectRead, PublicUserRead, UserService } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import { useSelectEnabledCodes } from "./utils";
 
@@ -14,9 +14,8 @@ const useGetProjects = (userId: number | undefined) =>
     },
   );
 
-// user
 const useGetUser = (userId: number | undefined) =>
-  useQuery<UserRead, Error>([QueryKey.USER, userId], () => UserService.getById({ userId: userId! }), {
+  useQuery<PublicUserRead, Error>([QueryKey.USER, userId], () => UserService.getById({ userId: userId! }), {
     enabled: !!userId,
   });
 
@@ -27,7 +26,7 @@ const useRegister = () =>
     },
   });
 
-const useGetAll = () => useQuery<UserRead[], Error>([QueryKey.USERS], () => UserService.getAll({}));
+const useGetAll = () => useQuery<PublicUserRead[], Error>([QueryKey.USERS], () => UserService.getAll({}));
 
 // codes
 const useGetAllCodes = (userId: number) => {

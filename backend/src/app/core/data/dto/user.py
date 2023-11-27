@@ -43,6 +43,17 @@ class UserRead(UserBaseDTO):
         exclude = ["password"]
 
 
+class PublicUserRead(BaseModel):
+    """A user object with information that everybody may see."""
+
+    id: int = Field(description="ID of the User")
+    first_name: str = Field(description="First name of the User")
+    last_name: str = Field(description="Last name of the User")
+
+    class Config:
+        orm_mode = True
+
+
 class UserLogin(BaseModel):
     username: str = Field(description="E-Mail of the User")
     password: str = Field(description="Hashed password of the User")
