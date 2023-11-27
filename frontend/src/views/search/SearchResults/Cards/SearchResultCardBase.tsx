@@ -58,7 +58,13 @@ function SearchResultCardBase({
     return selectedDocumentIds.indexOf(sdocId) !== -1;
   }, [sdocId, selectedDocumentIds]);
 
-  const title = sdoc.isLoading ? "Loading" : sdoc.isError ? "Error: " : sdoc.isSuccess ? sdoc.data.filename : "";
+  const title = sdoc.isLoading
+    ? "Loading"
+    : sdoc.isError
+      ? "Error: "
+      : sdoc.isSuccess
+        ? sdoc.data.name || sdoc.data.filename
+        : "";
 
   return (
     <Card
