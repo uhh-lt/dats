@@ -38,6 +38,10 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
 
     with SQLService().db_session() as db:
         if inspect(orm).detached:
+            # TODO this might be dangerous to use in authorization methods
+            # which will get called for every request!
+            # OTOH, authorization logic *should* only call it for objects
+            # that are already in the db
             db.add(orm)
         if isinstance(orm, AnnotationDocumentORM) or isinstance(
             orm, SourceDocumentMetadataORM
@@ -51,6 +55,10 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
             or isinstance(orm, SpanGroupORM)
         ):
             return orm.annotation_document.source_document.project_id
+
+    # TODO missing cases:
+    # - SourceDocumentLinkORM
+    # - SourceDocumentMetadataORM
 
     raise NotImplementedError(f"Unknown ORM: {type(orm)}")
 

@@ -101,8 +101,11 @@ def test_create_remove_project(session: SQLService) -> None:
     description = "Test description"
 
     with session.db_session() as sess:
+        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
         id = crud_project.create(
-            db=sess, create_dto=ProjectCreate(title=title, description=description)
+            db=sess,
+            create_dto=ProjectCreate(title=title, description=description),
+            creating_user=system_user,
         ).id
 
     # check database again
