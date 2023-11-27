@@ -55,6 +55,11 @@ def run_required_migrations():
             db_version.version = 4
             db.commit()
             print("MIGRATED ES IMAGE DOCS!")
+        if db_version.version < 5:
+            __migrate_remove_metadata_filename(db)
+            db_version.version = 5
+            db.commit()
+            print("MIGRATED REMOVE METADATA FILENAMES!")
 
 
 def __migrate_database_schema() -> None:
@@ -274,6 +279,17 @@ def __migrate_metadata_name_to_sdoc_name(db: Session):
         )
         sdoc.name = sdoc_meta.str_value
         db.add(sdoc)
+        db.delete(sdoc_meta)
+
+    db.commit()
+
+
+def __migrate_remove_metadata_filename(db: Session):
+    project_filename_metadata = (
+        db.query(ProjectMetadataORM).filter(ProjectMetadataORM.key == "file_name").all()
+    )
+    logger.info("Deleting project metadata 'file_name'...")
+    for sdoc_meta in project_filename_metadata:
         db.delete(sdoc_meta)
 
     db.commit()
