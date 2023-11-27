@@ -1,7 +1,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List, Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -44,11 +52,21 @@ class SourceDocumentMetadataORM(ORMBase):
     )
 
     __table_args__ = (
+        # CHECK constraint that asserts that exactly one of the values is NOT NULL
+        CheckConstraint(
+            """(
+                        CASE WHEN int_value IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN str_value IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN boolean_value IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN date_value IS NULL THEN 0 ELSE 1 END
+                        + CASE WHEN list_value IS NULL THEN 0 ELSE 1 END
+                    ) = 1
+                    """,
+            name="CC_source_document_metadata_has_exactly_one_value",
+        ),
         UniqueConstraint(
             "source_document_id",
             "project_metadata_id",
             name="UC_unique_metadata_sdoc_id_project_metadata_id",
         ),
     )
-
-    # TODO: we need a constraint to ensure at lest one value is set
