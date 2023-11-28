@@ -1,7 +1,12 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from app.core.data.meta_type import MetaType
+from pydantic import BaseModel
+from sqlalchemy import Column, and_, or_
+from sqlalchemy.orm import Session
+
+from app.core.data.crud.project_metadata import crud_project_meta
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.memo import MemoORM
@@ -11,9 +16,6 @@ from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
-from pydantic import BaseModel
-from sqlalchemy import Column, and_, or_
-from sqlalchemy.orm import Session
 
 
 class AggregatedColumn(str, Enum):
