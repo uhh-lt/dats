@@ -9,6 +9,8 @@ from api.dependencies import (
     resolve_code_param,
     skip_limit_params,
 )
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -42,8 +44,14 @@ router = APIRouter(
     description="Creates an AnnotationDocument",
 )
 async def create(
-    *, db: Session = Depends(get_db_session), adoc: AnnotationDocumentCreate
+    *,
+    db: Session = Depends(get_db_session),
+    adoc: AnnotationDocumentCreate,
+    authz_user: AuthzUser = Depends(),
 ) -> AnnotationDocumentRead:
+    authz_user.assert_is_same_user(adoc.user_id)
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, adoc.source_document_id)
+
     return AnnotationDocumentRead.model_validate(
         crud_adoc.create(db=db, create_dto=adoc)
     )
@@ -56,9 +64,13 @@ async def create(
     description="Returns the AnnotationDocument with the given ID if it exists",
 )
 async def get_by_adoc_id(
-    *, db: Session = Depends(get_db_session), adoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    adoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> AnnotationDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.ANNOTATION_DOCUMENT, adoc_id)
+
     db_obj = crud_adoc.read(db=db, id=adoc_id)
     return AnnotationDocumentRead.model_validate(db_obj)
 
@@ -70,16 +82,20 @@ async def get_by_adoc_id(
     description="Removes the AnnotationDocument with the given ID if it exists",
 )
 async def delete_by_adoc_id(
-    *, db: Session = Depends(get_db_session), adoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    adoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> AnnotationDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.ANNOTATION_DOCUMENT, adoc_id)
+
     db_obj = crud_adoc.remove(db=db, id=adoc_id)
     return AnnotationDocumentRead.model_validate(db_obj)
 
 
 @router.get(
     "/{adoc_id}/span_annotations",
-    response_model=List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
+    response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
     summary="Returns all SpanAnnotations in the AnnotationDocument",
     description="Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
 )
@@ -89,8 +105,10 @@ async def get_all_span_annotations(
     adoc_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     resolve_code: bool = Depends(resolve_code_param),
-) -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
-    # TODO Flo: only if the user has access?
+    authz_user: AuthzUser = Depends(),
+) -> Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]]:
+    authz_user.assert_in_same_project_as(Crud.ANNOTATION_DOCUMENT, adoc_id)
+
     spans = crud_span_anno.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)
     span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
     if resolve_code:
@@ -115,15 +133,22 @@ async def get_all_span_annotations(
     description="Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
 )
 async def delete_all_span_annotations(
-    *, db: Session = Depends(get_db_session), adoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    adoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access? What to return?
+    authz_user.assert_in_same_project_as(Crud.ANNOTATION_DOCUMENT, adoc_id)
+
+    # TODO Flo: What to return?
     return crud_span_anno.remove_by_adoc(db=db, adoc_id=adoc_id)
 
 
 @router.get(
     "/{adoc_id}/bbox_annotations",
-    response_model=List[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]],
+    response_model=Union[
+        List[BBoxAnnotationRead], List[BBoxAnnotationReadResolvedCode]
+    ],
     summary="Returns all BBoxAnnotations in the AnnotationDocument",
     description="Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
 )
@@ -133,8 +158,10 @@ async def get_all_bbox_annotations(
     adoc_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
     resolve_code: bool = Depends(resolve_code_param),
-) -> List[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
-    # TODO Flo: only if the user has access?
+    authz_user: AuthzUser = Depends(),
+) -> Union[List[BBoxAnnotationRead], List[BBoxAnnotationReadResolvedCode]]:
+    authz_user.assert_in_same_project_as(Crud.ANNOTATION_DOCUMENT, adoc_id)
+
     bboxes = crud_bbox_anno.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)
     bbox_read_dtos = [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
     if resolve_code:
@@ -156,9 +183,14 @@ async def get_all_bbox_annotations(
     description="Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
 )
 async def delete_all_bbox_annotations(
-    *, db: Session = Depends(get_db_session), adoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    adoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access? What to return?
+    authz_user.assert_in_same_project_as(Crud.ANNOTATION_DOCUMENT, adoc_id)
+
+    # TODO Flo: What to return?
     return crud_bbox_anno.remove_by_adoc(db=db, adoc_id=adoc_id)
 
 
@@ -173,8 +205,10 @@ async def get_all_span_groups(
     db: Session = Depends(get_db_session),
     adoc_id: int,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    authz_user: AuthzUser = Depends(),
 ) -> List[SpanGroupRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.ANNOTATION_DOCUMENT, adoc_id)
+
     return [
         SpanGroupRead.model_validate(group)
         for group in crud_span_group.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)
