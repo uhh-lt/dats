@@ -3,6 +3,8 @@ import string
 from typing import Any, Dict
 
 import pytest
+from sqlalchemy.exc import IntegrityError
+
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
@@ -15,7 +17,6 @@ from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.user import UserCreate, UserRead
 from app.core.db.sql_service import SQLService
 from config import conf
-from sqlalchemy.exc import IntegrityError
 
 
 def get_number_of_system_codes() -> int:

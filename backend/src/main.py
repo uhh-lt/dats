@@ -3,7 +3,6 @@
 
 import os
 
-from app.core.authorization.authorization_service import ForbiddenError
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -14,6 +13,8 @@ from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
+
+from app.core.authorization.authorization_service import ForbiddenError
 
 from app.core.startup import startup  # isort: skip
 

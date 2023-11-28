@@ -5,11 +5,12 @@ from typing import Dict, List
 
 import lxml.html.clean as clean
 import magic
-from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from bs4 import BeautifulSoup
 from loguru import logger
 from readability import Document
+
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
 def clean_html_tags_and_attrs(

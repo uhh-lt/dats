@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
 import srsly
-from config import conf
 from elasticsearch import Elasticsearch, helpers
 from loguru import logger
 from omegaconf import OmegaConf
@@ -22,6 +21,7 @@ from app.core.data.dto.search import (
 )
 from app.core.data.dto.source_document import SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 
 class NoSuchSourceDocumentInElasticSearchError(Exception):

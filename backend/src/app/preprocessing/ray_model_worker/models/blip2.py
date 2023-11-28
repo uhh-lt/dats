@@ -1,11 +1,12 @@
 import logging
 
 import torch
-from config import build_ray_model_deployment_config, conf
 from dto.blip2 import Blip2FilePathInput, Blip2Output
 from PIL import Image
 from ray import serve
 from transformers import Blip2ForConditionalGeneration, Blip2Processor
+
+from config import build_ray_model_deployment_config, conf
 
 cc = conf.blip2
 

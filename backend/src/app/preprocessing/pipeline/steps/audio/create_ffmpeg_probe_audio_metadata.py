@@ -1,4 +1,5 @@
 import ffmpeg
+
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 

@@ -10,6 +10,7 @@ import sys
 from typing import Generator
 
 import pytest
+
 from app.core.startup import startup
 
 sys._called_from_test = True

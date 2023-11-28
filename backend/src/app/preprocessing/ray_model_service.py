@@ -2,7 +2,6 @@ import sys
 from typing import Any, Dict, List
 
 import requests
-from config import conf
 from loguru import logger
 from requests import Response
 
@@ -26,6 +25,7 @@ from app.preprocessing.ray_model_worker.dto.whisper import (
     WhisperTranscriptionOutput,
 )
 from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 
 class RayModelService(metaclass=SingletonMeta):

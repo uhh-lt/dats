@@ -1,8 +1,8 @@
 from typing import List
 
-from api.util import get_object_memos
 from sqlalchemy import and_, func
 
+from api.util import get_object_memos
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
     AnnotatedSegment,

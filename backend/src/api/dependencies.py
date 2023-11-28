@@ -1,5 +1,12 @@
 from typing import Annotated, Any, AsyncGenerator, Dict, Optional
 
+from fastapi import Depends, Query, Request
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+from pydantic import ValidationError
+from sqlalchemy.orm import Session
+
+from api.util import credentials_exception
 from app.core.authorization.authorization_service import (
     AuthorizationCheck,
     AuthorizationService,
@@ -12,13 +19,6 @@ from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.security import decode_jwt
 from config import conf
-from fastapi import Depends, Query, Request
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
-from pydantic import ValidationError
-from sqlalchemy.orm import Session
-
-from api.util import credentials_exception
 
 # instantiate here to so that it is reusable for consecutive calls
 reusable_oauth2_scheme = OAuth2PasswordBearer(tokenUrl=conf.api.auth.jwt.token_url)

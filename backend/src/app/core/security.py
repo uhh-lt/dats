@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
 from typing import Dict
 
-from config import conf
 from jose import jwt
 from loguru import logger
 from passlib.context import CryptContext
 
 from app.core.data.dto.user import UserRead
+from config import conf
 
 __password_ctx = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 

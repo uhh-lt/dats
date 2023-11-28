@@ -1,5 +1,9 @@
 from typing import Set
 
+from loguru import logger
+from sqlalchemy import exists
+from sqlalchemy.orm import Session
+
 from alembic.command import upgrade
 from alembic.config import Config
 from app.core.data.crud.source_document_data import crud_sdoc_data
@@ -13,9 +17,6 @@ from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.version import VersionORM
 from app.core.db.sql_service import SQLService
 from app.core.search.elasticsearch_service import ElasticSearchService
-from loguru import logger
-from sqlalchemy import exists
-from sqlalchemy.orm import Session
 
 
 def run_required_migrations():
