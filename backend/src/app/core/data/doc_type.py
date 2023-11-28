@@ -31,6 +31,7 @@ __doc_type_to_mime_type_map = frozendict(
             "audio/x-wav",
             "audio/x-pn-wav",
             "audio/wav",
+            "audio/x-hx-aac-adts",
         ],
         DocType.video: [
             "video/mp4",
