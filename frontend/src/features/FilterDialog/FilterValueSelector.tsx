@@ -1,4 +1,4 @@
-import { Autocomplete, Chip, MenuItem, Switch, TextField } from "@mui/material";
+import { Autocomplete, Box, Button, ButtonGroup, Chip, MenuItem, Switch, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
@@ -99,12 +99,39 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
             />
           );
         case FilterOperator.BOOLEAN:
+          let value = typeof filterExpression.value === "boolean" ? filterExpression.value : false;
           return (
-            <Switch
-              checked={typeof filterExpression.value === "boolean" ? filterExpression.value : false}
-              onChange={(e) => onChangeValue(filterExpression.id, e.target.checked)}
-            />
+            <ButtonGroup>
+              <Button
+                variant={value === false ? "contained" : undefined}
+                onClick={() => onChangeValue(filterExpression.id, false)}
+              >
+                False
+              </Button>
+              <Button
+                variant={value === true ? "contained" : undefined}
+                onClick={() => onChangeValue(filterExpression.id, true)}
+              >
+                True
+              </Button>
+            </ButtonGroup>
           );
+
+        // <Box
+        //   sx={{
+        //     flexGrow: 1,
+        //     flexBasis: 1,
+        //   }}
+        // >
+        //   <Switch
+        //     defaultChecked
+        //     // checked={typeof filterExpression.value === "boolean" ? filterExpression.value : false}
+        //     // onChange={(e) => {
+        //     //   console.log(e.target.checked);
+        //     //   onChangeValue(filterExpression.id, e.target.checked);
+        //     // }}
+        //   />
+        // </Box>
       }
       break;
     default:
