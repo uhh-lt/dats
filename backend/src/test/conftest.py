@@ -6,10 +6,14 @@ import random
 import string
 
 # Allow app to detect if it's running inside tests
-from typing import Generator
+from typing import Callable, Generator
 
 import pytest
+from fastapi import Request
+from fastapi.datastructures import Headers
 
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.orm.project import ProjectORM
 from app.core.startup import startup
 from migration.migrate import run_required_migrations
 
@@ -66,31 +70,53 @@ def session() -> SQLService:
     return SQLService()
 
 
-@pytest.fixture
-def project(session: SQLService, user: int) -> Generator[int, None, None]:
+def project_fixture_base(session: SQLService, user: int) -> ProjectORM:
     title = "".join(random.choices(string.ascii_letters, k=15))
     description = "Test description"
 
     with session.db_session() as sess:
         system_user = UserRead.model_validate(crud_user.read(sess, SYSTEM_USER_ID))
-        id = crud_project.create(
+        project = crud_project.create(
             db=sess,
             create_dto=ProjectCreate(
                 title=title,
                 description=description,
             ),
             creating_user=system_user,
-        ).id
-        crud_project.associate_user(db=sess, proj_id=id, user_id=user)
+        )
+        crud_project.associate_user(db=sess, proj_id=project.id, user_id=user)
 
-    yield id
-
-    with session.db_session() as sess:
-        crud_project.remove(db=sess, id=id)
+    return project
 
 
 @pytest.fixture
-def user(session: SQLService) -> Generator[int, None, None]:
+def project(session: SQLService, user: int) -> Generator[int, None, None]:
+    project_id = project_fixture_base(session, user).id
+    yield project_id
+
+    with session.db_session() as sess:
+        crud_project.remove(db=sess, id=project_id)
+
+
+@pytest.fixture
+def make_project(
+    session: SQLService, user: int
+) -> Generator[Callable[[], ProjectORM], None, None]:
+    created_projects = []
+
+    def factory():
+        project = project_fixture_base(session, user)
+        created_projects.append(project)
+        return project
+
+    yield factory
+
+    with session.db_session() as sess:
+        for project in created_projects:
+            crud_project.remove(db=sess, id=project.id)
+
+
+def user_fixture_base(session: SQLService) -> UserRead:
     email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
     first_name = "".join(random.choices(string.ascii_letters, k=15))
     last_name = "".join(random.choices(string.ascii_letters, k=15))
@@ -105,7 +131,56 @@ def user(session: SQLService) -> Generator[int, None, None]:
         db_user = crud_user.create(db=sess, create_dto=user)
         user = UserRead.model_validate(db_user)
 
-    yield user.id
+        return user
 
+
+@pytest.fixture
+def user(session: SQLService) -> Generator[int, None, None]:
+    user = user_fixture_base(session)
+    yield user.id
     with session.db_session() as sess:
         crud_user.remove(db=sess, id=user.id)
+
+
+# This fixture allows a single test to easily create
+# multiple users.
+@pytest.fixture
+def make_user(session: SQLService) -> Generator[Callable[[], UserRead], None, None]:
+    created_users = []
+
+    def func():
+        user = user_fixture_base(session)
+        created_users.append(user)
+        return user
+
+    yield func
+
+    with session.db_session() as db:
+        for user in created_users:
+            crud_user.remove(db=db, id=user.id)
+
+
+@pytest.fixture
+def authz_user(user: int, session: SQLService, mock_request: Request) -> AuthzUser:
+    with session.db_session() as db:
+        user_orm = crud_user.read(db, user)
+        authz_user = AuthzUser(request=mock_request, user=user_orm, db=db)
+
+        return authz_user
+
+
+@pytest.fixture
+def mock_request() -> Request:
+    request = Request(
+        {
+            "type": "http",
+            "path": "/",
+            "headers": Headers({}).raw,
+            "http_version": "1.1",
+            "method": "GET",
+            "scheme": "https",
+            "client": ("127.0.0.1", 8080),
+            "server": ("localhost", 443),
+        }
+    )
+    return request
