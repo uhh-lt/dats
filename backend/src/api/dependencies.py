@@ -1,20 +1,13 @@
-from typing import Annotated, Any, AsyncGenerator, Dict, Optional
+from typing import AsyncGenerator, Dict, Optional
 
-from fastapi import Depends, Query, Request
+from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from api.util import credentials_exception
-from app.core.authorization.authorization_service import (
-    AuthorizationCheck,
-    AuthorizationService,
-)
-from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.action import ActionType
-from app.core.data.dto.user import UserRead
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.security import decode_jwt
@@ -86,24 +79,3 @@ def get_current_user(
     if user is None:
         raise credentials_exception
     return user
-
-
-# A convenience type alias for depending `get_current_user` in endpoints
-AuthenticatedUser = Annotated[UserRead, Depends(get_current_user)]
-
-
-def is_authorized(
-    action: ActionType,
-    crud_object: CRUDBase,
-    param_key: Optional[str] = None,
-) -> Any:
-    def f(request: Request, user: UserRead = Depends(get_current_user)):
-        object_id = (
-            int(request.path_params[param_key]) if param_key is not None else None
-        )
-        AuthorizationService().check_authorization(
-            subject=user,
-            check=AuthorizationCheck(action, crud_object, object_id),
-        )
-
-    return Depends(f)
