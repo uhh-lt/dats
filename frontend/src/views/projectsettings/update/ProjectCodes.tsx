@@ -147,7 +147,7 @@ function ProjectCodes({ project }: ProjectProps) {
       )}
       <List disablePadding>
         <ListItem disablePadding>
-          <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({})}>
+          <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ onSuccess: onCreateCodeSuccess })}>
             <ListItemIcon>
               <AddIcon />
             </ListItemIcon>
@@ -155,7 +155,7 @@ function ProjectCodes({ project }: ProjectProps) {
           </ListItemButton>
         </ListItem>
       </List>
-      <CodeCreateDialog onCreateSuccess={onCreateCodeSuccess} />
+      <CodeCreateDialog />
       {projectCodes.isSuccess && codeTree && (
         <>
           <CodeTreeView

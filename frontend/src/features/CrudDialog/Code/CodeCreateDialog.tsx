@@ -29,7 +29,7 @@ import { contrastiveColors } from "../../../views/annotation/colors";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 
-type CodeCreateSuccessHandler = ((code: CodeRead) => void) | undefined;
+type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
 type CodeCreateDialogPayload = {
   name?: string;
@@ -50,11 +50,7 @@ type CodeCreateValues = {
   description: string;
 };
 
-interface CodeCreateDialogProps {
-  onCreateSuccess?: (code: CodeRead, isNewCode: boolean) => void;
-}
-
-function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
+function CodeCreateDialog() {
   // global state
   const { projectId } = useParams() as { projectId: string };
   const { user } = useAuth();
@@ -168,8 +164,7 @@ function CodeCreateDialog({ onCreateSuccess }: CodeCreateDialogProps) {
             }
             dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             closeCodeCreateDialog();
-            if (onCreateSuccess) onCreateSuccess(data, true);
-            if (onSuccessHandler.current) onSuccessHandler.current(data);
+            if (onSuccessHandler.current) onSuccessHandler.current(data, true);
           },
         },
       );

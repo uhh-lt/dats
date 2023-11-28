@@ -1,6 +1,7 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Paper, Stack, Typography } from "@mui/material";
+import { toPng } from "html-to-image";
 import { parseInt } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { unstable_useBlocker, useParams } from "react-router-dom";
@@ -11,11 +12,11 @@ import ReactFlow, {
   ControlButton,
   Controls,
   DefaultEdgeOptions,
-  Node,
   Edge,
   IsValidConnection,
   MarkerType,
   MiniMap,
+  Node,
   NodeMouseHandler,
   NodeTypes,
   OnConnect,
@@ -37,7 +38,6 @@ import TagHooks from "../../api/TagHooks";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import BBoxAnnotationEditDialog from "../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
-import CodeCreateDialog from "../../features/CrudDialog/Code/CodeCreateDialog";
 import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog";
 import SpanAnnotationEditDialog from "../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
 import TagEditDialog from "../../features/CrudDialog/Tag/TagEditDialog";
@@ -71,6 +71,7 @@ import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isT
 import { CustomEdgeData } from "./types/CustomEdgeData";
 import { DWTSNodeData } from "./types/DWTSNodeData";
 import { PendingAddNodeAction } from "./types/PendingAddNodeAction";
+import { isCustomNode } from "./types/typeGuards";
 import "./whiteboard.css";
 import {
   defaultDatabaseEdgeOptions,
@@ -79,8 +80,6 @@ import {
   isCustomEdgeArray,
   isDatabaseEdge,
 } from "./whiteboardUtils";
-import { toPng } from "html-to-image";
-import { isCustomNode } from "./types/typeGuards";
 
 const nodeTypes: NodeTypes = {
   border: BorderNode,
@@ -552,7 +551,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
       </Box>
       <SpanAnnotationEditDialog projectId={projectId} />
       <BBoxAnnotationEditDialog projectId={projectId} />
-      <CodeCreateDialog />
       {projectTags.isSuccess && <TagEditDialog tags={projectTags.data} />}
       {projectCodes.isSuccess && <CodeEditDialog codes={projectCodes.data} />}
     </>

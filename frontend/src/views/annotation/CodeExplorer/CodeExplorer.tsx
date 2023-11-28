@@ -17,7 +17,7 @@ import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
+import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
 import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
 import ExporterButton from "../../../features/Exporter/ExporterButton";
 import MemoButton from "../../../features/Memo/MemoButton";
@@ -232,7 +232,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
           </Stack>
         )}
         {content}
-        <CodeCreateDialog />
       </Box>
     );
   },
