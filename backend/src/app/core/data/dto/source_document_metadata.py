@@ -45,35 +45,59 @@ class SourceDocumentMetadataCreate(SourceDocumentMetadataBaseDTO):
             case MetaType.STRING:
                 return SourceDocumentMetadataCreate(
                     str_value=value if value is not None else "",
+                    boolean_value=None,
+                    date_value=None,
+                    int_value=None,
+                    list_value=None,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
             case MetaType.NUMBER:
                 return SourceDocumentMetadataCreate(
+                    str_value=None,
+                    boolean_value=None,
+                    date_value=None,
                     int_value=value if value is not None else 0,
+                    list_value=None,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
             case MetaType.DATE:
                 return SourceDocumentMetadataCreate(
+                    str_value=None,
+                    boolean_value=None,
                     date_value=value if value is not None else datetime.now(),
+                    int_value=None,
+                    list_value=None,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
             case MetaType.BOOLEAN:
                 return SourceDocumentMetadataCreate(
+                    str_value=None,
                     boolean_value=value if value is not None else False,
+                    date_value=None,
+                    int_value=None,
+                    list_value=None,
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
             case MetaType.LIST:
                 return SourceDocumentMetadataCreate(
+                    str_value=None,
+                    boolean_value=None,
+                    date_value=None,
+                    int_value=None,
                     list_value=value if value is not None else [],
                     source_document_id=source_document_id,
                     project_metadata_id=project_metadata_id,
                 )
         return SourceDocumentMetadataCreate(
             str_value=value,
+            boolean_value=None,
+            date_value=None,
+            int_value=None,
+            list_value=None,
             source_document_id=source_document_id,
             project_metadata_id=project_metadata_id,
         )
@@ -102,6 +126,4 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
     project_metadata: ProjectMetadataRead = Field(
         description="ProjectMetadata of the SourceDocumentMetadata"
     )
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

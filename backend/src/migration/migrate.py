@@ -1,4 +1,4 @@
-from typing import List, Set
+from typing import Dict, List, Set
 
 from loguru import logger
 from sqlalchemy import exists
@@ -60,6 +60,16 @@ def run_required_migrations():
             db_version.version = 5
             db.commit()
             print("MIGRATED REMOVE METADATA FILENAMES!")
+        if db_version.version < 6:
+            __migrate_add_default_metadata(db)
+            db_version.version = 6
+            db.commit()
+            print("MIGRATED ADD DEFAULT PROJECTMETADATA!")
+        if db_version.version < 7:
+            __migrate_add_missing_sdoc_metadata(db)
+            db_version.version = 7
+            db.commit()
+            print("MIGRATED ADD MISSING SDOC METADATA!")
 
 
 def __migrate_database_schema() -> None:
@@ -261,13 +271,14 @@ def __migrate_es_keywords_to_database(db: Session):
 
 
 def __migrate_metadata_name_to_sdoc_name(db: Session):
+    logger.info("Migrating metadata names to sdoc names...")
     sdoc_name_metadata = (
         db.query(SourceDocumentMetadataORM)
         .join(SourceDocumentMetadataORM.project_metadata)
         .filter(ProjectMetadataORM.key == "name")
         .all()
     )
-    logger.info("Migrating metadata names to sdoc names...")
+    # copy metadata name to sdoc name & remove sdoc metadata
     for sdoc_meta in sdoc_name_metadata:
         if sdoc_meta.str_value is None:
             continue
@@ -281,6 +292,12 @@ def __migrate_metadata_name_to_sdoc_name(db: Session):
         db.add(sdoc)
         db.delete(sdoc_meta)
 
+    # delete project metadata with key "name"
+    for pm in (
+        db.query(ProjectMetadataORM).filter(ProjectMetadataORM.key == "name").all()
+    ):
+        db.delete(pm)
+
     db.commit()
 
 
@@ -293,3 +310,78 @@ def __migrate_remove_metadata_filename(db: Session):
         db.delete(sdoc_meta)
 
     db.commit()
+
+
+def __create_project_metadata_if_not_exists(
+    db: Session,
+    create_dto: ProjectMetadataCreate,
+):
+    pm = (
+        db.query(ProjectMetadataORM)
+        .filter(
+            ProjectMetadataORM.project_id == create_dto.project_id,
+            ProjectMetadataORM.key == create_dto.key,
+            ProjectMetadataORM.doctype == create_dto.doctype,
+        )
+        .one_or_none()
+    )
+
+    if pm is None:
+        crud_project_meta.create(db, create_dto=create_dto)
+
+
+def __migrate_add_default_metadata(db: Session):
+    from config import conf
+
+    project_ids = [id[0] for id in db.query(ProjectORM.id).all()]
+    for project_id in project_ids:
+        logger.info(
+            "Migration: Creating default ProjectMetadata for project {}...", project_id
+        )
+
+        for project_metadata in conf.project_metadata.values():
+            create_dto = ProjectMetadataCreate(
+                project_id=project_id,
+                key=project_metadata["key"],
+                metatype=project_metadata["metatype"],
+                read_only=project_metadata["read_only"],
+                doctype=project_metadata["doctype"],
+            )
+            __create_project_metadata_if_not_exists(db, create_dto)
+
+
+def __migrate_add_missing_sdoc_metadata(db: Session):
+    projects = db.query(ProjectORM).all()
+    for project in projects:
+        logger.info(
+            "Migration: Adding missing SourceDocumentMetadata for project {}...",
+            project.id,
+        )
+        create_dtos = []
+
+        # create map of doctype -> project metadata
+        docttype_project_metadata_map: Dict[str, List[ProjectMetadataORM]] = {}
+        for project_metadata in project.metadata_:
+            if project_metadata.doctype not in docttype_project_metadata_map:
+                docttype_project_metadata_map[project_metadata.doctype] = []
+            docttype_project_metadata_map[project_metadata.doctype].append(
+                project_metadata
+            )
+
+        for sdoc in project.source_documents:
+            # identify which metadata is missing
+            current_metadata_ids = [sm.project_metadata_id for sm in sdoc.metadata_]
+            for pm in docttype_project_metadata_map[sdoc.doctype]:
+                if pm.id in current_metadata_ids:
+                    continue
+
+                # create missing metadata
+                create_dtos.append(
+                    SourceDocumentMetadataCreate.with_metatype(
+                        metatype=pm.metatype,
+                        source_document_id=sdoc.id,
+                        project_metadata_id=pm.id,
+                    )
+                )
+
+        crud_sdoc_meta.create_multi(db, create_dtos=create_dtos)
