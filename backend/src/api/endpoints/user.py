@@ -1,12 +1,9 @@
 from typing import Dict, List, Optional
 
 from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
-from app.core.data.dto.code import CodeRead
-from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
 from app.core.data.orm.user import UserORM
@@ -104,58 +101,6 @@ async def get_user_projects(
 ) -> List[ProjectRead]:
     db_obj = crud_user.read(db=db, id=user_id)
     return [ProjectRead.from_orm(proj) for proj in db_obj.projects]
-
-
-@router.get(
-    "/{user_id}/code",
-    response_model=List[CodeRead],
-    summary="Returns all Codes of the User",
-    description="Returns all Codes of the User with the given ID",
-    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
-)
-async def get_user_codes(
-    *, user_id: int, db: Session = Depends(get_db_session)
-) -> List[CodeRead]:
-    # TODO Flo: only if the user has access?
-    # TODO remove this
-    db_obj = crud_user.read(db=db, id=user_id)
-    return [CodeRead.from_orm(code) for code in db_obj.codes]
-
-
-@router.get(
-    "/{user_id}/memo",
-    response_model=List[MemoRead],
-    summary="Returns all Memos of the User",
-    description="Returns all Memos of the User with the given ID",
-    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
-)
-async def get_user_memos(
-    *, user_id: int, db: Session = Depends(get_db_session)
-) -> List[MemoRead]:
-    # TODO Flo: only if the user has access?
-    db_obj = crud_user.read(db=db, id=user_id)
-    return [
-        crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
-        for memo in db_obj.memos
-    ]
-
-
-@router.get(
-    "/{user_id}/adocs",
-    response_model=List[AnnotationDocumentRead],
-    summary="Returns all Adocs of the User",
-    description="Returns all Adocs of the User with the given ID",
-    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
-)
-async def get_user_adocs(
-    *, user_id: int, db: Session = Depends(get_db_session)
-) -> List[AnnotationDocumentRead]:
-    # TODO Flo: only if the user has access?
-    # TODO scope this by project
-    return [
-        AnnotationDocumentRead.from_orm(db_obj)
-        for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
-    ]
 
 
 @router.get(

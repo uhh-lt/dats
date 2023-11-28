@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import queryClient from "../plugins/ReactQueryClient";
 import { AnnotationDocumentRead, AuthenticationService, ProjectRead, PublicUserRead, UserService } from "./openapi";
 import { QueryKey } from "./QueryKey";
-import { useSelectEnabledCodes } from "./utils";
 
 // project
 const useGetProjects = (userId: number | undefined) =>
@@ -28,24 +27,6 @@ const useRegister = () =>
 
 const useGetAll = () => useQuery<PublicUserRead[], Error>([QueryKey.USERS], () => UserService.getAll({}));
 
-// codes
-const useGetAllCodes = (userId: number) => {
-  const selectEnabledCodes = useSelectEnabledCodes();
-  return useQuery<CodeRead[], Error>([QueryKey.USER_CODES, userId], () => UserService.getUserCodes({ userId }), {
-    select: selectEnabledCodes,
-  });
-};
-
-const useGetAllAdocs = (userId: number | undefined) => {
-  return useQuery<AnnotationDocumentRead[], Error>(
-    [QueryKey.USER_ADOCS, userId],
-    () => UserService.getUserAdocs({ userId: userId! }),
-    {
-      enabled: !!userId,
-    },
-  );
-};
-
 const useGetRecentActivity = (userId: number | undefined, k: number) => {
   return useQuery<AnnotationDocumentRead[], Error>(
     [QueryKey.USER_ACTIVITY, userId],
@@ -69,8 +50,6 @@ const UserHooks = {
   useGetUser,
   useGetAll,
   useRegister,
-  useGetAllCodes,
-  useGetAllAdocs,
   useGetRecentActivity,
   useUpdate,
 };
