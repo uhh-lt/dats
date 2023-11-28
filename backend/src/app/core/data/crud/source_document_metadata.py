@@ -1,6 +1,9 @@
 from typing import List, Optional
 
-from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from loguru import logger
+from sqlalchemy.orm import Session
+
+from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document_metadata import (
@@ -11,8 +14,6 @@ from app.core.data.dto.source_document_metadata import (
 from app.core.data.meta_type import MetaType
 from app.core.data.orm.project_metadata import ProjectMetadataORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
-from loguru import logger
-from sqlalchemy.orm import Session
 
 
 # TODO: wohin damit?

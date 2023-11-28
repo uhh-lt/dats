@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -130,3 +130,17 @@ class SourceDocumentMetadataReadResolved(SourceDocumentMetadataBaseDTO):
         description="ProjectMetadata of the SourceDocumentMetadata"
     )
     model_config = ConfigDict(from_attributes=True)
+
+    def get_value(self) -> Union[str, int, datetime, bool, List, None]:
+        match self.project_metadata.metatype:
+            case MetaType.STRING:
+                return self.str_value
+            case MetaType.NUMBER:
+                return self.int_value
+            case MetaType.DATE:
+                return self.date_value
+            case MetaType.BOOLEAN:
+                return self.boolean_value
+            case MetaType.LIST:
+                return self.list_value
+        return None

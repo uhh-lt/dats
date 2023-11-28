@@ -32,7 +32,9 @@ from app.core.data.dto.export_job import (
 )
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataReadResolved,
+)
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
@@ -401,20 +403,20 @@ class ExportService(metaclass=SingletonMeta):
         self,
         db: Session,
         metadata_id: Optional[int] = None,
-        metadata_dto: Optional[SourceDocumentMetadataRead] = None,
+        metadata_dto: Optional[SourceDocumentMetadataReadResolved] = None,
     ) -> pd.DataFrame:
         if metadata_dto is None:
             if metadata_id is None:
                 raise ValueError("Either Metadata ID or DTO must be not None")
             metadata = crud_sdoc_meta.read(db=db, id=metadata_id)
-            metadata_dto = SourceDocumentMetadataRead.model_validate(metadata)
+            metadata_dto = SourceDocumentMetadataReadResolved.model_validate(metadata)
 
         logger.info(f"Exporting SourceDocumentMetadata {metadata_dto.id} ...")
         data = {
             "metadata_id": [metadata_dto.id],
             "applied_to_sdoc_id": [metadata_dto.source_document_id],
-            "key": [metadata_dto.key],
-            "value": [metadata_dto.value],
+            "key": [metadata_dto.project_metadata.key],
+            "value": [metadata_dto.get_value()],
         }
 
         df = pd.DataFrame(data=data)
@@ -428,7 +430,8 @@ class ExportService(metaclass=SingletonMeta):
         for md in metadata:
             metadata_dfs.append(
                 self.__generate_export_df_for_sdoc_metadata(
-                    db=db, metadata_dto=SourceDocumentMetadataRead.model_validate(md)
+                    db=db,
+                    metadata_dto=SourceDocumentMetadataReadResolved.model_validate(md),
                 )
             )
 
