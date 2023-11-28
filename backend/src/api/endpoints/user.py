@@ -1,5 +1,9 @@
 from typing import Dict, List, Optional
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
@@ -9,10 +13,6 @@ from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import UserRead, UserUpdate
 from app.core.data.orm.user import UserORM
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session, skip_limit_params
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
@@ -26,7 +26,7 @@ router = APIRouter(
     description="Returns the current (logged in) user",
 )
 async def get_me(*, user: UserORM = Depends(get_current_user)) -> Optional[UserRead]:
-    return UserRead.from_orm(user)
+    return UserRead.model_validate(user)
 
 
 @router.get(
