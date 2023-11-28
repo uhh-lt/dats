@@ -17,6 +17,9 @@ from config import conf
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
+        if create_dto.parent_code_id == -1:
+            create_dto.parent_code_id = None
+
         dto_obj_data = jsonable_encoder(create_dto)
         # first create the code
         # noinspection PyArgumentList
