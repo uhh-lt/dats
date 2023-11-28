@@ -4,7 +4,7 @@ import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider, 
 import { useCallback, useEffect, useState } from "react";
 import eventBus from "../../../EventBus";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
-import { CodeRead, SpanAnnotationReadResolved } from "../../../api/openapi";
+import { CodeRead } from "../../../api/openapi";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationRenderer";
 import CodeSelector from "../../../components/Selectors/CodeSelector";
@@ -77,7 +77,9 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Change the code of the annotation</DialogTitle>
+      <DialogTitle>
+        Changing the code of {annotationIds.length} annotation{annotationIds.length > 1 && "s"}
+      </DialogTitle>
       <CodeSelector
         projectId={projectId}
         setSelectedCodes={(codes) => setSelectedCode(codes.length > 0 ? codes[0] : undefined)}

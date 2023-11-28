@@ -8,16 +8,16 @@ import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2";
 import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationRenderer";
 import ServerDataGrid from "../../../components/DataGridTables/ServerDataGrid";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import AnnotatedSegmentsTableToolbar from "./AnnotatedSegmentsTableToolbar";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
 import { useAnnotatedSegmentQuery } from "./useAnnotatedSegmentsQuery";
 import { useInitAnnotatedSegmentsFilterSlice } from "./useInitAnnotatedSegmentsFilterSlice";
-import SdocMetadataRenderer from "../../../components/DataGrid/SdocMetadataRenderer";
 
-interface AnnotateSegmentsTableProps {
+interface AnnotatedSegmentsTableProps {
   onRowContextMenu: (event: React.MouseEvent<HTMLDivElement>, spanAnnotationId: number) => void;
 }
 
-function AnnotateSegmentsTable({ onRowContextMenu }: AnnotateSegmentsTableProps) {
+function AnnotatedSegmentsTable({ onRowContextMenu }: AnnotatedSegmentsTableProps) {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   // global client state (react router)
@@ -162,9 +162,10 @@ function AnnotateSegmentsTable({ onRowContextMenu }: AnnotateSegmentsTableProps)
         sortModel={sortModel}
         onSortModelChange={(sortModel) => dispatch(AnnotatedSegmentsActions.onSortModelChange(sortModel))}
         onRowContextMenu={handleRowContextMenu}
+        toolbar={AnnotatedSegmentsTableToolbar}
       />
     );
   }
 }
 
-export default AnnotateSegmentsTable;
+export default AnnotatedSegmentsTable;

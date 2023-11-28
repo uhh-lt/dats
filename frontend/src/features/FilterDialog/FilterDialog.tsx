@@ -1,7 +1,7 @@
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Box, Button, FormControlLabel, Popover, Switch } from "@mui/material";
+import { Box, Button, ButtonProps, FormControlLabel, Popover, Switch } from "@mui/material";
 import { useState } from "react";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
 import FilterRenderer, { FilterRendererProps } from "./FilterRenderer";
@@ -13,6 +13,7 @@ export interface FilterDialogProps {
   filter: MyFilter;
   expertMode: boolean;
   onChangeExpertMode: (expertMode: boolean) => void;
+  buttonProps?: Omit<ButtonProps, "onClick" | "startIcon">;
 }
 
 function FilterDialog({
@@ -20,6 +21,7 @@ function FilterDialog({
   filter,
   expertMode,
   onChangeExpertMode,
+  buttonProps,
   ...props
 }: FilterDialogProps & FilterRendererProps) {
   // local client state
@@ -46,7 +48,7 @@ function FilterDialog({
 
   return (
     <>
-      <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog}>
+      <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog} {...buttonProps}>
         <b>Filter ({numFilterExpressions})</b>
       </Button>
       <Popover

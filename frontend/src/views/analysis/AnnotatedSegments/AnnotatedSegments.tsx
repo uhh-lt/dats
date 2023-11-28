@@ -26,7 +26,6 @@ import SpanAnnotationEditDialog, {
 import MemoAPI from "../../../features/Memo/MemoAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import AnnotatedSegmentsFilterDialog from "./AnnotatedSegmentsFilterDialog";
 import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable";
 import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector";
 import SpanAnnotationCard from "./SpanAnnotationCard";
@@ -38,7 +37,6 @@ function AnnotatedSegments() {
 
   // local client state
   const contextMenuRef = useRef<GenericPositionContextMenuHandle>(null);
-  const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
 
   // global client state (react router)
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
@@ -66,10 +64,6 @@ function AnnotatedSegments() {
   };
 
   // events
-  const handleChangeCodeClick = () => {
-    openSpanAnnotation(rowSelectionModel);
-  };
-
   const handleRowContextMenu = (event: React.MouseEvent<HTMLDivElement>, spanAnnotationId: number) => {
     contextMenuRef.current?.open({ left: event.clientX, top: event.clientY });
   };
@@ -100,12 +94,6 @@ function AnnotatedSegments() {
           <Card sx={{ mb: 2, flexShrink: 0 }} elevation={2}>
             <CardContent sx={{ p: 1, pb: "8px !important" }}>
               <Stack direction="row" alignItems="center">
-                {rowSelectionModel.length > 0 && (
-                  <Button onClick={handleChangeCodeClick}>
-                    Change code of {rowSelectionModel.length} annotated segments
-                  </Button>
-                )}
-                <AnnotatedSegmentsFilterDialog anchorEl={filterDialogAnchorRef.current} />
                 <Box sx={{ flexGrow: 1 }} />
                 <AnnotatedSegmentsUserSelector projectId={projectId} mr={1} />
                 <TextField
@@ -142,7 +130,7 @@ function AnnotatedSegments() {
           <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer h100">
             <CardHeader title="Annotated Segments" />
             <CardContent className="myFlexFillAllContainer h100" style={{ padding: 0 }}>
-              <div className="h100" style={{ width: "100%" }} ref={filterDialogAnchorRef}>
+              <div className="h100" style={{ width: "100%" }}>
                 <AnnotatedSegmentsTable onRowContextMenu={handleRowContextMenu} />
               </div>
             </CardContent>

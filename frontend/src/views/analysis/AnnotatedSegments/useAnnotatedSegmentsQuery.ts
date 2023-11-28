@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "../../../api/QueryKey";
-import { AnalysisService, AnnotatedSegmentResult, AnnotatedSegmentsColumns, SortDirection } from "../../../api/openapi";
+import {
+  AnalysisService,
+  AnnotatedSegmentResult,
+  AnnotatedSegmentsColumns,
+  LogicalOperator,
+  SortDirection,
+} from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { MyFilter } from "../../../features/FilterDialog/filterUtils";
 
@@ -36,6 +42,38 @@ export const useAnnotatedSegmentQuery = (projectId: number | undefined) => {
     {
       enabled: !!projectId && userIds.length > 0,
       keepPreviousData: true, // see https://tanstack.com/query/v4/docs/react/guides/paginated-queries
+    },
+  );
+};
+
+export const useAllAnnotatedSegmentsQuery = (
+  projectId: number | undefined,
+  onSuccess: (data: AnnotatedSegmentResult) => void,
+) => {
+  const userIds = useAppSelector((state) => state.annotatedSegments.selectedUserIds);
+
+  return useQuery<AnnotatedSegmentResult, Error>(
+    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userIds, {}, 0, 1000, []],
+    () =>
+      AnalysisService.annotatedSegments({
+        projectId: projectId!,
+        requestBody: {
+          filter: {
+            items: [],
+            logic_operator: LogicalOperator.AND,
+          },
+          user_ids: userIds,
+          sorts: [],
+        },
+        page: 0,
+        pageSize: 1000,
+      }),
+    {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      enabled: false,
+      onSuccess: onSuccess,
     },
   );
 };

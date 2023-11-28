@@ -1,4 +1,5 @@
 import { DataGrid, GridColDef, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
+import { JSXElementConstructor } from "react";
 
 interface ServerDataGridProps {
   rows: { id: number }[];
@@ -12,6 +13,7 @@ interface ServerDataGridProps {
   sortModel: GridSortModel;
   onSortModelChange: (model: GridSortModel) => void;
   onRowContextMenu: (event: React.MouseEvent<HTMLDivElement>, rowId: number) => void;
+  toolbar?: JSXElementConstructor<any>;
 }
 
 function ServerDataGrid({
@@ -26,6 +28,7 @@ function ServerDataGrid({
   sortModel,
   onSortModelChange,
   onRowContextMenu,
+  toolbar,
 }: ServerDataGridProps) {
   // actions
   const handleContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -81,6 +84,8 @@ function ServerDataGrid({
           }, {}),
         },
       }}
+      // toolbar
+      slots={{ toolbar: toolbar }}
     />
   );
 }
