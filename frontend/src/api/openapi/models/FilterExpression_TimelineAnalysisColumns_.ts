@@ -21,5 +21,5 @@ export type FilterExpression_TimelineAnalysisColumns_ = {
     | ListOperator
     | DateOperator
     | BooleanOperator;
-  value: string | number | boolean | Array<string> | Array<Array<string>>;
+  value: boolean | string | number | Array<string> | Array<Array<string>>;
 };

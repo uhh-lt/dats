@@ -5910,9 +5910,9 @@
           "value": {
             "title": "Value",
             "anyOf": [
+              { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
-              { "type": "boolean" },
               { "type": "array", "items": { "type": "string" } },
               { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
             ]
@@ -5943,9 +5943,9 @@
           "value": {
             "title": "Value",
             "anyOf": [
+              { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
-              { "type": "boolean" },
               { "type": "array", "items": { "type": "string" } },
               { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
             ]
@@ -5976,9 +5976,9 @@
           "value": {
             "title": "Value",
             "anyOf": [
+              { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
-              { "type": "boolean" },
               { "type": "array", "items": { "type": "string" } },
               { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
             ]
@@ -6009,9 +6009,9 @@
           "value": {
             "title": "Value",
             "anyOf": [
+              { "type": "boolean" },
               { "type": "string" },
               { "type": "integer" },
-              { "type": "boolean" },
               { "type": "array", "items": { "type": "string" } },
               { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
             ]
@@ -6638,8 +6638,8 @@
             "type": "number",
             "description": "The minimum distance to use for the sim search.",
             "default": 0,
-            "max": 1,
-            "min": 0
+            "min": 0,
+            "max": 1
           }
         }
       },
