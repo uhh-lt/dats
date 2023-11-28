@@ -47,7 +47,7 @@ class FilterExpression(GenericModel, Generic[T]):
         DateOperator,
         BooleanOperator,
     ]
-    value: Union[str, int, bool, List[str], List[List[str]]]
+    value: Union[bool, str, int, List[str], List[List[str]]]
 
     def get_sqlalchemy_expression(self, **kwargs):
         if isinstance(self.column, int):
