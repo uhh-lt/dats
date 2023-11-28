@@ -25,7 +25,8 @@ def prepare_and_start_export_job_async(
 
     exs: ExportService = ExportService()
     ex_job = exs.prepare_export_job(export_params)
-    return start_export_job.apply_async(kwargs={"export_job": ex_job})
+    start_export_job.apply_async(kwargs={"export_job": ex_job})
+    return ex_job
 
 
 def prepare_and_start_crawling_job_async(

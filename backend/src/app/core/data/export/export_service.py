@@ -649,7 +649,9 @@ class ExportService(metaclass=SingletonMeta):
 
         export_data = None
         for memo in memos:
-            memo_data = self.__generate_export_df_for_memo(db=db, memo=memo)
+            memo_data = self.__generate_export_df_for_memo(
+                db=db, memo_id=memo.id, memo=memo
+            )
             if export_data is None:
                 export_data = memo_data
             else:
@@ -1036,7 +1038,7 @@ class ExportService(metaclass=SingletonMeta):
 
             exj = self._update_export_job(
                 url=results_url,
-                status=BackgroundJobStatus.RUNNING,
+                status=BackgroundJobStatus.FINISHED,
                 export_job_id=export_job_id,
             )
 
