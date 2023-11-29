@@ -12,6 +12,7 @@ from typing import Generator
 import pytest
 
 from app.core.startup import startup
+from migration.migrate import run_required_migrations
 
 sys._called_from_test = True
 
@@ -19,6 +20,7 @@ sys._called_from_test = True
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
+    run_required_migrations()
     startup(reset_data=True)
     os.environ["STARTUP_DONE"] = "1"
 
