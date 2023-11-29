@@ -15,6 +15,7 @@ from app.core.data.dto.action import ActionType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
+from app.core.data.orm.user import UserORM
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
