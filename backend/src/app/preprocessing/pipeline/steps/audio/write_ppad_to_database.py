@@ -1,5 +1,8 @@
 import json
 
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_link import crud_sdoc_link
@@ -14,8 +17,6 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from loguru import logger
-from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()

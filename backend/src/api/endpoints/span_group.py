@@ -1,5 +1,9 @@
 from typing import List, Optional, Union
 
+from fastapi import APIRouter, Depends
+from requests import Session
+
+from api.dependencies import get_current_user, get_db_session, resolve_code_param
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
@@ -7,10 +11,6 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationReadResolved,
 )
 from app.core.data.dto.span_group import SpanGroupCreate, SpanGroupRead, SpanGroupUpdate
-from fastapi import APIRouter, Depends
-from requests import Session
-
-from api.dependencies import get_current_user, get_db_session, resolve_code_param
 
 router = APIRouter(
     prefix="/spangroup", dependencies=[Depends(get_current_user)], tags=["spanGroup"]

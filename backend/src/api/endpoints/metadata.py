@@ -1,15 +1,15 @@
 from typing import Optional
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataCreate,
     SourceDocumentMetadataRead,
     SourceDocumentMetadataUpdate,
 )
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/metadata", dependencies=[Depends(get_current_user)], tags=["metadata"]

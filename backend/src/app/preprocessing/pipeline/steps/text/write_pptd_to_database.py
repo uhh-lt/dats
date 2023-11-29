@@ -1,5 +1,9 @@
 import json
 
+from loguru import logger
+from psycopg2 import OperationalError
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.source_document import crud_sdoc
@@ -21,9 +25,6 @@ from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from app.util.color import get_next_color
-from loguru import logger
-from psycopg2 import OperationalError
-from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()

@@ -1,7 +1,6 @@
 import logging
 
 import torch
-from config import build_ray_model_deployment_config, conf
 from dto.vit_gpt2 import ViTGPT2FilePathInput, ViTGPT2Output
 from PIL import Image
 from ray import serve
@@ -10,6 +9,8 @@ from transformers import (
     VisionEncoderDecoderModel,
     ViTFeatureExtractor,
 )
+
+from config import build_ray_model_deployment_config, conf
 
 cc = conf.vit_gpt2
 

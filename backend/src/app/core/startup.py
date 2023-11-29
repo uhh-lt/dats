@@ -3,8 +3,9 @@ import random
 import time
 import traceback
 
-import config
 from loguru import logger
+
+import config
 from migration.migrate import run_required_migrations
 
 

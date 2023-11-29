@@ -1,7 +1,8 @@
+from loguru import logger
+
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.autospan import AutoSpan
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
-from loguru import logger
 
 
 def generate_named_entity_annotations(cargo: PipelineCargo) -> PipelineCargo:

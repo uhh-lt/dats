@@ -1,5 +1,10 @@
 from typing import List, Optional, Union
 
+from fastapi import APIRouter, Depends
+from requests import Session
+
+from api.dependencies import get_current_user, get_db_session, resolve_code_param
+from api.util import get_object_memos
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.bbox_annotation import (
@@ -10,11 +15,6 @@ from app.core.data.dto.bbox_annotation import (
 )
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
-from fastapi import APIRouter, Depends
-from requests import Session
-
-from api.dependencies import get_current_user, get_db_session, resolve_code_param
-from api.util import get_object_memos
 
 router = APIRouter(
     prefix="/bbox", dependencies=[Depends(get_current_user)], tags=["bboxAnnotation"]
