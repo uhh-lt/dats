@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import List, Optional, Union
 
+from pydantic import BaseModel, Field
+
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.memo import AttachedObjectType, MemoRead
 from app.core.data.dto.util import PaginatedResults
-from pydantic import BaseModel, Field
 
 
 class MemoQueryBase(BaseModel):

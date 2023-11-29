@@ -1,7 +1,8 @@
 from typing import Set
 
-from app.core.data.dto.document_tag import DocumentTagRead
 from pydantic import BaseModel, Field
+
+from app.core.data.dto.document_tag import DocumentTagRead
 
 
 class SpanEntity(BaseModel):

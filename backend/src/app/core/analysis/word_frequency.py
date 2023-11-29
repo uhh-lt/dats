@@ -1,12 +1,14 @@
 from typing import List
 
+from sqlalchemy import String, cast, distinct, func
+from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
+
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
-from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
@@ -22,8 +24,6 @@ from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting
 from app.core.search.search_service import aggregate_ids
-from sqlalchemy import String, cast, distinct, func
-from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
 
 class WordFrequencyColumns(str, AbstractColumns):

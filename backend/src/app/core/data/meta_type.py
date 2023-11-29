@@ -1,8 +1,9 @@
 from enum import Enum
 
+from sqlalchemy import Column
+
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.filters.filtering_operators import FilterOperator
-from sqlalchemy import Column
 
 
 class MetaType(str, Enum):

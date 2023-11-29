@@ -1,6 +1,5 @@
 from typing import Optional
 
-from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.project_metadata import (
     ProjectMetadataCreate,
@@ -9,6 +8,8 @@ from app.core.data.dto.project_metadata import (
 )
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/projmeta",

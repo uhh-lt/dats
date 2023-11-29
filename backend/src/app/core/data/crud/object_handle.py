@@ -14,7 +14,6 @@ from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.user import crud_user

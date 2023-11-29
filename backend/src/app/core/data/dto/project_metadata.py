@@ -1,9 +1,10 @@
 from typing import Optional
 
+from pydantic import BaseModel, Field
+
 from app.core.data.doc_type import DocType
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.meta_type import MetaType
-from pydantic import BaseModel, Field
 
 
 # Properties shared across all DTOs

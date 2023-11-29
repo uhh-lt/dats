@@ -1,5 +1,8 @@
 from typing import List, Tuple
 
+from sqlalchemy import String, cast, func
+from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
+
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import DateGroupBy, TimelineAnalysisResultNew
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -19,8 +22,6 @@ from app.core.filters.columns import (
 from app.core.filters.filtering import Filter, apply_filtering
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 from app.core.search.search_service import aggregate_ids
-from sqlalchemy import String, cast, func
-from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
 
 class TimelineAnalysisColumns(str, AbstractColumns):
