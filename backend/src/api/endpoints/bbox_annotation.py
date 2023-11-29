@@ -1,10 +1,10 @@
-from typing import List, Optional, Union
+from typing import List, Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, resolve_code_param
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.bbox_annotation import (
@@ -152,13 +152,12 @@ async def get_memos(
 ) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    # TODO FIX THIS
     return get_object_memos(db_obj=db_obj)
 
 
 @router.get(
     "/{bbox_id}/memo/{user_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo attached to the BBoxAnnotation of the User with the given ID",
     description=(
         "Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the"
@@ -167,9 +166,9 @@ async def get_memos(
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), bbox_id: int, user_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
-    return get_object_memos(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
 
 @router.get(

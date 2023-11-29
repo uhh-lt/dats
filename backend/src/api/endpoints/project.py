@@ -9,7 +9,7 @@ from api.dependencies import (
     is_authorized,
     skip_limit_params,
 )
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
@@ -521,7 +521,7 @@ async def get_memos(
 
 @router.get(
     "/{proj_id}/memo/{user_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo attached to the Project of the User with the given ID",
     description=(
         "Returns the Memo attached to the Project with the given ID of the User with the"
@@ -534,9 +534,9 @@ async def get_memos(
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, user_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_project.read(db=db, id=proj_id)
-    return get_object_memos(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
 
 @router.get(

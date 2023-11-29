@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.current_code import crud_current_code
 from app.core.data.crud.memo import crud_memo
@@ -117,7 +117,7 @@ async def get_memos(
 
 @router.get(
     "/{code_id}/memo/{user_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
     description=(
         "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
@@ -126,6 +126,6 @@ async def get_memos(
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), code_id: int, user_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_code.read(db=db, id=code_id)
-    return get_object_memos(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)

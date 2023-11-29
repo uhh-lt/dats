@@ -3,7 +3,7 @@ import string
 
 import pytest
 
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
@@ -122,7 +122,7 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
     # get user memo
     with session.db_session() as sess:
         db_obj = crud_code.read(db=sess, id=code)
-        memos_user = [get_object_memos(db_obj=db_obj, user_id=user)]
+        memos_user = [get_object_memo_for_user(db_obj=db_obj, user_id=user)]
 
     assert len(memos_user) == 1
     assert memos_user[0].title == title

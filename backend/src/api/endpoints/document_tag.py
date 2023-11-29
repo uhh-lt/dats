@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.document_tag import (
@@ -145,13 +145,12 @@ async def get_memos(
 ) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.read(db=db, id=tag_id)
-    # TODO: FIX THIS
     return get_object_memos(db_obj=db_obj)
 
 
 @router.get(
     "/{tag_id}/memo/{user_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
     description=(
         "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
@@ -160,10 +159,9 @@ async def get_memos(
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), tag_id: int, user_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_document_tag.read(db=db, id=tag_id)
-    # TODO: FIX THIS
-    return get_object_memos(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
 
 @router.get(
