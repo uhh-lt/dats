@@ -68,7 +68,7 @@ class CRUDSourceDocument(
         if not db_obj:
             raise NoSuchElementError(self.model, id=id)
         sdoc, data = db_obj.tuple()
-        sdoc_read = SourceDocumentRead.from_orm(sdoc)
+        sdoc_read = SourceDocumentRead.model_validate(sdoc)
 
         # sdoc data is None for audio and video documents
         if data is None:
@@ -86,7 +86,7 @@ class CRUDSourceDocument(
                 sentence_character_offsets=[],
             )
         else:
-            sdoc_data_read = SourceDocumentDataRead.from_orm(data)
+            sdoc_data_read = SourceDocumentDataRead.model_validate(data)
         return SourceDocumentWithDataRead(**(sdoc_read.dict() | sdoc_data_read.dict()))
 
     def link_document_tag(

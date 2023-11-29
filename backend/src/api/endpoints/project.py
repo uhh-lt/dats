@@ -579,5 +579,5 @@ async def get_all_metadata(
 ) -> List[ProjectMetadataRead]:
     # TODO Flo: only if the user has access?
     db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
-    metadata = [ProjectMetadataRead.from_orm(meta) for meta in db_objs]
+    metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata

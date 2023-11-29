@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.dto_base import UpdateDTOBase
@@ -38,6 +38,4 @@ class ProjectMetadataUpdate(BaseModel, UpdateDTOBase):
 class ProjectMetadataRead(ProjectMetadataBaseDTO):
     id: int = Field(description="ID of the ProjectMetadata")
     project_id: int = Field(description="Project the ProjectMetadata belongs to")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

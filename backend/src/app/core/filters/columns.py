@@ -1,12 +1,13 @@
 from enum import Enum, EnumMeta
 from typing import Generic, List, TypeVar, Union
 
+from pydantic.generics import GenericModel
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.project import crud_project
 from app.core.data.doc_type import DocType
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
-from pydantic.generics import GenericModel
-from sqlalchemy.orm import Session
 
 
 # str?
@@ -53,7 +54,7 @@ def create_metadata_column_info(
     db: Session, project_id: int, allowed_doctypes: List[DocType]
 ) -> List[ColumnInfo]:
     project_metadata = [
-        ProjectMetadataRead.from_orm(pm)
+        ProjectMetadataRead.model_validate(pm)
         for pm in crud_project.read(db=db, id=project_id).metadata_
     ]
     project_metadata = [pm for pm in project_metadata if pm.doctype in allowed_doctypes]

@@ -62,7 +62,7 @@ async def update_by_id(
 ) -> Optional[SourceDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc_update)
-    sdoc_dto = SourceDocumentRead.from_orm(db_obj)
+    sdoc_dto = SourceDocumentRead.model_validate(db_obj)
     return sdoc_dto
 
 
@@ -91,7 +91,7 @@ async def update_sdoc(
 ) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
-    return SourceDocumentRead.from_orm(db_obj)
+    return SourceDocumentRead.model_validate(db_obj)
 
 
 @router.get(
@@ -372,4 +372,4 @@ async def get_word_frequencies(
     sdoc_id: int,
 ) -> List[WordFrequencyRead]:
     sdoc = crud_sdoc.read(db=db, id=sdoc_id)
-    return [WordFrequencyRead.from_orm(wf) for wf in sdoc.word_frequencies]
+    return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]

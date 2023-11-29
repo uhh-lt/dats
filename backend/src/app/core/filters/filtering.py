@@ -1,6 +1,9 @@
 from enum import Enum
 from typing import Generic, List, TypeVar, Union
 
+from pydantic.generics import GenericModel
+from sqlalchemy import and_, or_
+
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.orm.source_document import SourceDocumentORM
@@ -15,8 +18,6 @@ from app.core.filters.filtering_operators import (
     NumberOperator,
     StringOperator,
 )
-from pydantic.generics import GenericModel
-from sqlalchemy import and_, or_
 
 
 class LogicalOperator(str, Enum):
@@ -58,7 +59,7 @@ class FilterExpression(GenericModel, Generic[T]):
             db = kwargs["db"]
 
             # this is a project metadata expression!
-            project_metadata = ProjectMetadataRead.from_orm(
+            project_metadata = ProjectMetadataRead.model_validate(
                 crud_project_meta.read(db=db, id=self.column)
             )
             metadata_value_column = project_metadata.metatype.get_metadata_column()

@@ -1,6 +1,6 @@
 from typing import List, Tuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SourceDocumentDataBase(BaseModel):
@@ -32,8 +32,7 @@ class SourceDocumentDataRead(SourceDocumentDataBase):
         description="List of character offsets of each sentence"
     )
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Properties for creation

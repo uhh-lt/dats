@@ -225,7 +225,7 @@ class FilterExpression(BaseModel):
 
     def get_sqlalchemy_expression(self, db: Session, subquery_dict=None):
         if self.column == DBColumns.METADATA and self.project_metadata_id is not None:
-            project_metadata = ProjectMetadataRead.from_orm(
+            project_metadata = ProjectMetadataRead.model_validate(
                 crud_project_meta.read(db=db, id=self.project_metadata_id)
             )
             metadata_value_column = project_metadata.metatype.get_metadata_column()

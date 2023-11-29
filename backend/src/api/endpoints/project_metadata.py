@@ -1,15 +1,15 @@
 from typing import Optional
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.dto.project_metadata import (
     ProjectMetadataCreate,
     ProjectMetadataRead,
     ProjectMetadataUpdate,
 )
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/projmeta",
@@ -28,7 +28,7 @@ async def create_new_metadata(
     *, db: Session = Depends(get_db_session), metadata: ProjectMetadataCreate
 ) -> Optional[ProjectMetadataRead]:
     db_metadata = crud_project_meta.create(db=db, create_dto=metadata)
-    return ProjectMetadataRead.from_orm(db_metadata)
+    return ProjectMetadataRead.model_validate(db_metadata)
 
 
 @router.get(
@@ -42,7 +42,7 @@ async def get_by_id(
 ) -> Optional[ProjectMetadataRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_project_meta.read(db=db, id=metadata_id)
-    return ProjectMetadataRead.from_orm(db_obj)
+    return ProjectMetadataRead.model_validate(db_obj)
 
 
 @router.patch(
@@ -61,7 +61,7 @@ async def update_by_id(
     db_obj = crud_project_meta.update(
         db=db, metadata_id=metadata_id, update_dto=metadata
     )
-    return ProjectMetadataRead.from_orm(db_obj)
+    return ProjectMetadataRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -75,4 +75,4 @@ async def delete_by_id(
 ) -> Optional[ProjectMetadataRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_project_meta.remove(db=db, id=metadata_id)
-    return ProjectMetadataRead.from_orm(db_obj)
+    return ProjectMetadataRead.model_validate(db_obj)

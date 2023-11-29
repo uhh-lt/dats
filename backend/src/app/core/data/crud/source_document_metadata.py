@@ -47,7 +47,7 @@ class CRUDSourceDocumentMetadata(
         from app.core.data.crud.source_document import crud_sdoc
 
         # check if ProjectMetadata exists
-        project_metadata = ProjectMetadataRead.from_orm(
+        project_metadata = ProjectMetadataRead.model_validate(
             crud_project_meta.read(db, id=create_dto.project_metadata_id)
         )
 
@@ -94,7 +94,9 @@ class CRUDSourceDocumentMetadata(
             from app.core.data.crud.source_document import crud_sdoc
 
             # check if value has the correct type
-            project_metadata = ProjectMetadataRead.from_orm(db_obj.project_metadata)
+            project_metadata = ProjectMetadataRead.model_validate(
+                db_obj.project_metadata
+            )
             if not is_correct_type(project_metadata.metatype, update_dto):
                 raise ValueError(
                     f"provided value has the wrong type (need {project_metadata.metatype})"
