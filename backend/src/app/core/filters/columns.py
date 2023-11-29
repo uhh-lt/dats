@@ -1,7 +1,7 @@
 from enum import Enum, EnumMeta
 from typing import Generic, List, TypeVar, Union
 
-from pydantic.generics import GenericModel
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.project import crud_project
@@ -10,7 +10,6 @@ from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 
 
-# str?
 class AbstractColumns(Enum, metaclass=EnumMeta):
     def get_filter_column(self, **kwargs):
         raise NotImplementedError
@@ -28,11 +27,10 @@ class AbstractColumns(Enum, metaclass=EnumMeta):
         raise NotImplementedError
 
 
-# T = TypeVar('T', bound=AbstractColumns) will probably work with pydantic 2.4
-T = TypeVar("T")
+T = TypeVar("T", bound=AbstractColumns)
 
 
-class ColumnInfo(GenericModel, Generic[T]):
+class ColumnInfo(BaseModel, Generic[T]):
     label: str
     column: Union[T, int]  # TODO: Annotatoed[, SkipValidation] with pydantic 2.4
     sortable: bool

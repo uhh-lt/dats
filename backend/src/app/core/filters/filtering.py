@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Generic, List, TypeVar, Union
 
-from pydantic.generics import GenericModel
+from pydantic import BaseModel
 from sqlalchemy import and_, or_
 
 from app.core.data.crud.project_metadata import crud_project_meta
@@ -37,7 +37,7 @@ class LogicalOperator(str, Enum):
 T = TypeVar("T", bound=AbstractColumns)
 
 
-class FilterExpression(GenericModel, Generic[T]):
+class FilterExpression(BaseModel, Generic[T]):
     column: Union[T, int]
     operator: Union[
         IDOperator,
@@ -77,7 +77,7 @@ class FilterExpression(GenericModel, Generic[T]):
             )
 
 
-class Filter(GenericModel, Generic[T]):
+class Filter(BaseModel, Generic[T]):
     """A tree of column expressions for filtering on many database columns using various
     comparisons."""
 
@@ -89,7 +89,7 @@ class Filter(GenericModel, Generic[T]):
         return op(*[f.get_sqlalchemy_expression(**kwargs) for f in self.items])
 
 
-Filter.update_forward_refs()
+Filter.model_rebuild()
 
 
 def apply_filtering(query, filter: Filter, **kwargs):

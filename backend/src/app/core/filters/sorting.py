@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Generic, List, TypeVar
 
-from app.core.filters.columns import AbstractColumns
-from pydantic.generics import GenericModel
+from pydantic import BaseModel
 from sqlalchemy import Column, asc, desc
+
+from app.core.filters.columns import AbstractColumns
 
 
 class SortDirection(str, Enum):
@@ -21,7 +22,7 @@ class SortDirection(str, Enum):
 T = TypeVar("T", bound=AbstractColumns)
 
 
-class Sort(GenericModel, Generic[T]):
+class Sort(BaseModel, Generic[T]):
     """A sort expressions for sorting on many database columns"""
 
     column: T
