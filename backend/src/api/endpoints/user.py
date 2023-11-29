@@ -3,7 +3,6 @@ from typing import Dict, List, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-
 from api.dependencies import (
     get_current_user,
     get_db_session,
@@ -16,8 +15,6 @@ from app.core.data.dto.action import ActionType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
-from app.core.data.orm.user import User
-
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
