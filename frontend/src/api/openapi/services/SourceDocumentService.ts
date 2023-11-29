@@ -46,25 +46,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Removes the SourceDocument
-   * Removes the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdoc/{sdoc_id}",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the SourceDocument
    * Updates the SourceDocument with the given ID.
    * @returns SourceDocumentRead Successful Response
@@ -85,6 +66,25 @@ export class SourceDocumentService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Removes the SourceDocument
+   * Removes the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
       errors: {
         422: `Validation Error`,
       },
@@ -326,26 +326,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Unlinks the DocumentTag from the SourceDocument
-   * Unlinks the DocumentTags from the SourceDocument.
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static unlinkTag({ sdocId, tagId }: { sdocId: number; tagId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdoc/{sdoc_id}/tag/{tag_id}",
-      path: {
-        sdoc_id: sdocId,
-        tag_id: tagId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Links a DocumentTag with the SourceDocument
    * Links a DocumentTag with the SourceDocument with the given ID if it exists
    * @returns SourceDocumentRead Successful Response
@@ -366,17 +346,18 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns all Memo attached to the SourceDocument
-   * Returns all Memo attached to the SourceDocument with the given ID if it exists.
-   * @returns MemoRead Successful Response
+   * Unlinks the DocumentTag from the SourceDocument
+   * Unlinks the DocumentTags from the SourceDocument.
+   * @returns SourceDocumentRead Successful Response
    * @throws ApiError
    */
-  public static getMemos({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
+  public static unlinkTag({ sdocId, tagId }: { sdocId: number; tagId: number }): CancelablePromise<SourceDocumentRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/sdoc/{sdoc_id}/memo",
+      method: "DELETE",
+      url: "/sdoc/{sdoc_id}/tag/{tag_id}",
       path: {
         sdoc_id: sdocId,
+        tag_id: tagId,
       },
       errors: {
         422: `Validation Error`,
@@ -405,6 +386,25 @@ export class SourceDocumentService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns all Memo attached to the SourceDocument
+   * Returns all Memo attached to the SourceDocument with the given ID if it exists.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemos({ sdocId }: { sdocId: number }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/sdoc/{sdoc_id}/memo",
+      path: {
+        sdoc_id: sdocId,
+      },
       errors: {
         422: `Validation Error`,
       },

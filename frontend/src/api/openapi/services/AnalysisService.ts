@@ -167,7 +167,7 @@ export class AnalysisService {
   /**
    * Returns TimelineAnalysis Info.
    * Returns TimelineAnalysis Info.
-   * @returns any Successful Response
+   * @returns any[] Successful Response
    * @throws ApiError
    */
   public static getTimelineAnalysisValidDocuments({
@@ -176,7 +176,7 @@ export class AnalysisService {
   }: {
     projectId: number;
     dateMetadataId: number;
-  }): CancelablePromise<Array<any>> {
+  }): CancelablePromise<any[]> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/analysis/timeline_analysis_valid_docments/{project_id}/metadata/{date_metadata_id}}",

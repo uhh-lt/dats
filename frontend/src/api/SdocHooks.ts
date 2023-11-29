@@ -41,14 +41,14 @@ const fetchSdoc = async (sdocId: number) => {
   return sdoc;
 };
 
-const useGetDocument = (sdocId: number | undefined) =>
+const useGetDocument = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentWithDataRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
     enabled: !!sdocId,
     staleTime: Infinity,
   });
 
 const useGetDocumentIdByFilename = (filename: string | undefined, projectId: number) =>
-  useQuery<number | undefined, Error>(
+  useQuery<number | null | undefined, Error>(
     [QueryKey.SDOC_ID, projectId, filename],
     () =>
       ProjectService.resolveFilename({
@@ -62,7 +62,7 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
     },
   );
 
-const useGetDocumentByAdocId = (adocId: number | undefined) =>
+const useGetDocumentByAdocId = (adocId: number | null | undefined) =>
   useQuery<SourceDocumentWithDataRead, Error>(
     [QueryKey.SDOC_BY_ADOC, adocId],
     async () => {
@@ -74,7 +74,7 @@ const useGetDocumentByAdocId = (adocId: number | undefined) =>
     },
   );
 
-const useGetLinkedSdocIds = (sdocId: number | undefined) =>
+const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>(
     [QueryKey.SDOC_LINKS, sdocId],
     () =>
@@ -115,7 +115,7 @@ const useDeleteDocuments = () =>
   );
 
 // tags
-const useGetByTagId = (tagId: number | undefined) =>
+const useGetByTagId = (tagId: number | null | undefined) =>
   useQuery<number[], Error>(
     [QueryKey.SDOCS_BY_TAG_ID, tagId],
     () =>
@@ -127,7 +127,7 @@ const useGetByTagId = (tagId: number | undefined) =>
     },
   );
 
-const useGetAllDocumentTags = (sdocId: number | undefined) =>
+const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
   useQuery<DocumentTagRead[], Error>(
     [QueryKey.SDOC_TAGS, sdocId],
     () =>
@@ -161,7 +161,7 @@ const useRemoveDocumentTag = () =>
   });
 
 // adoc
-const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
+const useGetAllAnnotationDocuments = (sdocId: number | null | undefined) => {
   return useQuery<AnnotationDocumentRead[], Error>(
     [QueryKey.SDOC_ADOCS, sdocId],
     () =>
@@ -175,7 +175,7 @@ const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
 };
 
 // memo
-const useGetMemos = (sdocId: number | undefined) =>
+const useGetMemos = (sdocId: number | null | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SDOC, sdocId],
     () =>
@@ -188,7 +188,7 @@ const useGetMemos = (sdocId: number | undefined) =>
     },
   );
 
-const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
+const useGetMemo = (sdocId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_SDOC, sdocId, userId],
     () =>
@@ -202,7 +202,7 @@ const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
     },
   );
 
-const useGetRelatedMemos = (sdocId: number | undefined, userId: number | undefined) =>
+const useGetRelatedMemos = (sdocId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SDOC_RELATED, userId, sdocId],
     () =>
@@ -233,7 +233,7 @@ const useUpdateName = () =>
   });
 
 // metadata
-const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
+const useGetURL = (sdocId: number | null | undefined, webp: boolean = false) =>
   useQuery<string, Error>(
     [QueryKey.SDOC_URL, sdocId],
     () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: webp }),
@@ -244,7 +244,7 @@ const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
     },
   );
 
-const useGetThumbnailURL = (sdocId: number | undefined) =>
+const useGetThumbnailURL = (sdocId: number | null | undefined) =>
   useQuery<string, Error>(
     [QueryKey.SDOC_THUMBNAIL_URL, sdocId],
     () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: true, thumbnail: true }),
@@ -255,7 +255,7 @@ const useGetThumbnailURL = (sdocId: number | undefined) =>
     },
   );
 
-const useGetMetadata = (sdocId: number | undefined) =>
+const useGetMetadata = (sdocId: number | null | undefined) =>
   useQuery<SourceDocumentMetadataReadResolved[], Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
     async () =>
@@ -267,7 +267,7 @@ const useGetMetadata = (sdocId: number | undefined) =>
     },
   );
 
-const useGetWordFrequencies = (sdocId: number | undefined) =>
+const useGetWordFrequencies = (sdocId: number | null | undefined) =>
   useQuery<Word[], Error>(
     [QueryKey.SDOC_WORD_FREQUENCIES, sdocId],
     async () => {
@@ -291,7 +291,7 @@ interface WordLevelTranscription {
   end_ms: number;
 }
 
-const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
+const useGetWordLevelTranscriptions = (sdocId: number | null | undefined) =>
   useQuery<WordLevelTranscription[], Error>(
     [QueryKey.SDOC_WORD_LEVEL_TRANSCRIPTIONS, sdocId],
     async () => {

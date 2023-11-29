@@ -48,25 +48,6 @@ export class WhiteboardService {
   }
 
   /**
-   * Removes the Whiteboard
-   * Removes the Whiteboard with the given ID if it exists
-   * @returns WhiteboardRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/whiteboard/{whiteboard_id}",
-      path: {
-        whiteboard_id: whiteboardId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the Whiteboard
    * Updates the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
@@ -87,6 +68,25 @@ export class WhiteboardService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Removes the Whiteboard
+   * Removes the Whiteboard with the given ID if it exists
+   * @returns WhiteboardRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/whiteboard/{whiteboard_id}",
+      path: {
+        whiteboard_id: whiteboardId,
+      },
       errors: {
         422: `Validation Error`,
       },

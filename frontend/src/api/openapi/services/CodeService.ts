@@ -69,25 +69,6 @@ export class CodeService {
   }
 
   /**
-   * Deletes the Code
-   * Deletes the Code with the given ID.
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/code/{code_id}",
-      path: {
-        code_id: codeId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the Code
    * Updates the Code with the given ID.
    * @returns CodeRead Successful Response
@@ -115,15 +96,15 @@ export class CodeService {
   }
 
   /**
-   * Returns the Memo attached to the Code
-   * Returns the Memo attached to the Code with the given ID if it exists.
-   * @returns MemoRead Successful Response
+   * Deletes the Code
+   * Deletes the Code with the given ID.
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getMemos({ codeId }: { codeId: number }): CancelablePromise<Array<MemoRead>> {
+  public static deleteById({ codeId }: { codeId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/code/{code_id}/memo",
+      method: "DELETE",
+      url: "/code/{code_id}",
       path: {
         code_id: codeId,
       },
@@ -154,6 +135,25 @@ export class CodeService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the Memo attached to the Code
+   * Returns the Memo attached to the Code with the given ID if it exists.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemos({ codeId }: { codeId: number }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/code/{code_id}/memo",
+      path: {
+        code_id: codeId,
+      },
       errors: {
         422: `Validation Error`,
       },

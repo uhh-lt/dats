@@ -15,7 +15,7 @@ export type SourceDocumentReadAction = {
   /**
    * User-defined name of the document
    */
-  name?: string;
+  name?: string | null;
   /**
    * DOCTYPE of the SourceDocument
    */

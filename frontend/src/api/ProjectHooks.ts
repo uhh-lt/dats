@@ -36,7 +36,7 @@ const useGetAllTags = (projectId: number) =>
 // project
 const useGetAllProjects = () => useQuery<ProjectRead[], Error>([QueryKey.PROJECTS], () => ProjectService.readAll({}));
 
-const useGetProject = (projectId: number | undefined) =>
+const useGetProject = (projectId: number | null | undefined) =>
   useQuery<ProjectRead, Error>(
     [QueryKey.PROJECT, projectId],
     () =>
@@ -116,7 +116,7 @@ const useDeleteProject = () =>
   );
 
 // users
-const useGetAllUsers = (projectId: number | undefined) =>
+const useGetAllUsers = (projectId: number | null | undefined) =>
   useQuery<UserRead[], Error>(
     [QueryKey.PROJECT_USERS, projectId],
     () =>
@@ -159,7 +159,7 @@ const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
 };
 
 // memo
-const useGetMemo = (projectId: number | undefined, userId: number | undefined) =>
+const useGetMemo = (projectId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_PROJECT, projectId, userId],
     () =>
@@ -173,7 +173,7 @@ const useGetMemo = (projectId: number | undefined, userId: number | undefined) =
     },
   );
 
-const useGetAllUserMemos = (projectId: number | undefined, userId: number | undefined) =>
+const useGetAllUserMemos = (projectId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.USER_MEMOS, projectId, userId],
     () =>

@@ -20,10 +20,6 @@ export type UserRead = {
    */
   id: number;
   /**
-   * Hashed password of the User
-   */
-  password: string;
-  /**
    * Created timestamp of the User
    */
   created: string;

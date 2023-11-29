@@ -6,9 +6,9 @@ export type ProjectUpdate = {
   /**
    * Title of the Project
    */
-  title?: string;
+  title?: string | null;
   /**
    * Description of the Project
    */
-  description?: string;
+  description?: string | null;
 };

@@ -53,25 +53,6 @@ export class SdocMetadataService {
   }
 
   /**
-   * Deletes the Metadata
-   * Deletes the Metadata with the given ID.
-   * @returns SourceDocumentMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdocmeta/{metadata_id}",
-      path: {
-        metadata_id: metadataId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the Metadata
    * Updates the Metadata with the given ID.
    * @returns SourceDocumentMetadataRead Successful Response
@@ -92,6 +73,25 @@ export class SdocMetadataService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Deletes the Metadata
+   * Deletes the Metadata with the given ID.
+   * @returns SourceDocumentMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<SourceDocumentMetadataRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sdocmeta/{metadata_id}",
+      path: {
+        metadata_id: metadataId,
+      },
       errors: {
         422: `Validation Error`,
       },

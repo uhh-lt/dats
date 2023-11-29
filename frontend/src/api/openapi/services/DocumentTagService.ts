@@ -99,25 +99,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Deletes the DocumentTag
-   * Deletes the DocumentTag with the given ID.
-   * @returns DocumentTagRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/doctag/{tag_id}",
-      path: {
-        tag_id: tagId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the DocumentTag
    * Updates the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
@@ -145,15 +126,15 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns the Memo attached to the DocumentTag
-   * Returns the Memo attached to the DocumentTag with the given ID if it exists.
-   * @returns MemoRead Successful Response
+   * Deletes the DocumentTag
+   * Deletes the DocumentTag with the given ID.
+   * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static getMemos({ tagId }: { tagId: number }): CancelablePromise<Array<MemoRead>> {
+  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/doctag/{tag_id}/memo",
+      method: "DELETE",
+      url: "/doctag/{tag_id}",
       path: {
         tag_id: tagId,
       },
@@ -184,6 +165,25 @@ export class DocumentTagService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the Memo attached to the DocumentTag
+   * Returns the Memo attached to the DocumentTag with the given ID if it exists.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemos({ tagId }: { tagId: number }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/doctag/{tag_id}/memo",
+      path: {
+        tag_id: tagId,
+      },
       errors: {
         422: `Validation Error`,
       },

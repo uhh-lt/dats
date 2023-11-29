@@ -2,9 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * An enumeration.
- */
 export enum DateOperator {
   DATE_EQUALS = "DATE_EQUALS",
   DATE_GT = "DATE_GT",

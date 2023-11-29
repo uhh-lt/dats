@@ -6,5 +6,5 @@ export type SpanGroupUpdate = {
   /**
    * Name of the SpanGroup
    */
-  name?: string;
+  name?: string | null;
 };

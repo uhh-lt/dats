@@ -2,9 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * An enumeration.
- */
 export enum ActionTargetObjectType {
   MEMO = "memo",
   ANNOTATION_DOCUMENT = "annotation_document",

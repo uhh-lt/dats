@@ -29,25 +29,6 @@ export class MemoService {
   }
 
   /**
-   * Removes the Memo
-   * Removes the Memo with the given ID if it exists
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/memo/{memo_id}",
-      path: {
-        memo_id: memoId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the Memo
    * Updates the Memo with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -68,6 +49,25 @@ export class MemoService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Removes the Memo
+   * Removes the Memo with the given ID if it exists
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ memoId }: { memoId: number }): CancelablePromise<MemoRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/memo/{memo_id}",
+      path: {
+        memo_id: memoId,
+      },
       errors: {
         422: `Validation Error`,
       },

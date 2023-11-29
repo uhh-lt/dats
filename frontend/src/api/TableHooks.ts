@@ -11,7 +11,7 @@ export type TablePage = {
 
 export type TableRead = Omit<AnalysisTableRead, "content"> & { content: TablePage[] };
 
-const useGetTable = (tableId: number | undefined) =>
+const useGetTable = (tableId: number | null | undefined) =>
   useQuery<TableRead, Error>(
     [QueryKey.TABLE, tableId],
     async () => {
@@ -26,7 +26,7 @@ const useGetTable = (tableId: number | undefined) =>
     },
   );
 
-const useGetUserTables = (projectId: number | undefined, userId: number | undefined) =>
+const useGetUserTables = (projectId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<TableRead[], Error>(
     [QueryKey.TABLES_PROJECT_USER, projectId, userId],
     async () => {

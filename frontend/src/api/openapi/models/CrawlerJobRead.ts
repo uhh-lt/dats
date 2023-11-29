@@ -37,7 +37,7 @@ export type CrawlerJobRead = {
   /**
    * Path to the ZIP that contains the data of the CrawlerJob
    */
-  crawled_data_zip_path?: string;
+  crawled_data_zip_path?: string | null;
   /**
    * Created timestamp of the CrawlerJob
    */

@@ -18,7 +18,7 @@ export type CodeRead = {
   /**
    * Parent of the Code
    */
-  parent_code_id?: number;
+  parent_code_id?: number | null;
   /**
    * ID of the Code
    */

@@ -11,7 +11,7 @@ const useCreateMetadata = () =>
     },
   });
 
-const useGetMetadata = (metadataId: number | undefined) =>
+const useGetMetadata = (metadataId: number | null | undefined) =>
   useQuery<ProjectMetadataRead, Error>(
     [QueryKey.PROJECT_METADATA, metadataId],
     () => ProjectMetadataService.getById({ metadataId: metadataId! }),

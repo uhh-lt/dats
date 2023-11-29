@@ -41,7 +41,7 @@ const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: Crawle
   );
 };
 
-const useGetAllCrawlerJobs = (projectId: number | undefined) => {
+const useGetAllCrawlerJobs = (projectId: number | null | undefined) => {
   return useQuery<CrawlerJobRead[], Error>(
     [QueryKey.PROJECT_CRAWLER_JOBS, projectId],
     () =>

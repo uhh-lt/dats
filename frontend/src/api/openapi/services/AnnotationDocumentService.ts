@@ -90,11 +90,11 @@ export class AnnotationDocumentService {
     /**
      * The number of elements to skip (offset)
      */
-    skip?: number;
+    skip?: number | null;
     /**
      * The maximum number of returned elements
      */
-    limit?: number;
+    limit?: number | null;
     /**
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
@@ -152,11 +152,11 @@ export class AnnotationDocumentService {
     /**
      * The number of elements to skip (offset)
      */
-    skip?: number;
+    skip?: number | null;
     /**
      * The maximum number of returned elements
      */
-    limit?: number;
+    limit?: number | null;
     /**
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
@@ -213,11 +213,11 @@ export class AnnotationDocumentService {
     /**
      * The number of elements to skip (offset)
      */
-    skip?: number;
+    skip?: number | null;
     /**
      * The maximum number of returned elements
      */
-    limit?: number;
+    limit?: number | null;
   }): CancelablePromise<Array<SpanGroupRead>> {
     return __request(OpenAPI, {
       method: "GET",

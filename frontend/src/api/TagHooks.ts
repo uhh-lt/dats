@@ -5,7 +5,7 @@ import { QueryKey } from "./QueryKey";
 import { DocumentTagRead, DocumentTagService, MemoRead, SourceDocumentDocumentTagMultiLink } from "./openapi";
 
 // tags
-const useGetTag = (tagId: number | undefined) =>
+const useGetTag = (tagId: number | null | undefined) =>
   useQuery<DocumentTagRead, Error>([QueryKey.TAG, tagId], () => DocumentTagService.getById({ tagId: tagId! }), {
     enabled: !!tagId,
   });
@@ -123,13 +123,13 @@ const useBulkUpdateDocumentTags = () =>
   );
 
 // memos
-const useGetMemos = (tagId: number | undefined) =>
+const useGetMemos = (tagId: number | null | undefined) =>
   useQuery<MemoRead[], Error>([QueryKey.MEMO_TAG, tagId], () => DocumentTagService.getMemos({ tagId: tagId! }), {
     retry: false,
     enabled: !!tagId,
   });
 
-const useGetMemo = (tagId: number | undefined, userId: number | undefined) =>
+const useGetMemo = (tagId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_TAG, tagId, userId],
     () => DocumentTagService.getUserMemo({ tagId: tagId!, userId: userId! }),

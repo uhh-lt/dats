@@ -177,11 +177,11 @@ export class SearchService {
     /**
      * The number of elements to skip (offset)
      */
-    skip?: number;
+    skip?: number | null;
     /**
      * The maximum number of returned elements
      */
-    limit?: number;
+    limit?: number | null;
   }): CancelablePromise<PaginatedMemoSearchResults> {
     return __request(OpenAPI, {
       method: "POST",
@@ -213,11 +213,11 @@ export class SearchService {
     /**
      * The number of elements to skip (offset)
      */
-    skip?: number;
+    skip?: number | null;
     /**
      * The maximum number of returned elements
      */
-    limit?: number;
+    limit?: number | null;
   }): CancelablePromise<PaginatedMemoSearchResults> {
     return __request(OpenAPI, {
       method: "POST",

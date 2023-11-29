@@ -11,7 +11,7 @@ const useCreateMetadata = () =>
     },
   });
 
-const useGetMetadata = (metadataId: number | undefined) =>
+const useGetMetadata = (metadataId: number | null | undefined) =>
   useQuery<SourceDocumentMetadataReadResolved, Error>(
     [QueryKey.SDOC_METADATA, metadataId],
     () => SdocMetadataService.getById({ metadataId: metadataId! }),

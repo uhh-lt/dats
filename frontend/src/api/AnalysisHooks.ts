@@ -13,7 +13,7 @@ const useCodeFrequencies = (projectId: number, userIds: number[], codeIds: numbe
     }),
   );
 
-const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
+const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number | null | undefined) =>
   useQuery<CodeOccurrence[], Error>(
     [QueryKey.ANALYSIS_CODE_OCCURRENCES, projectId, userIds, codeId],
     () =>
@@ -27,7 +27,7 @@ const useCodeOccurrences = (projectId: number, userIds: number[], codeId: number
     },
   );
 
-const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: number | undefined) =>
+const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: number | null | undefined) =>
   useQuery<AnnotationOccurrence[], Error>(
     [QueryKey.ANALYSIS_ANNOTATION_OCCURRENCES, projectId, userIds, codeId],
     () =>

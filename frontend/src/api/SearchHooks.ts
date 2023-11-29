@@ -118,7 +118,7 @@ export enum SearchResultsType {
 //   return new ImageSimilaritySearchResults(results);
 // };
 
-const useSearchDocumentsNew = (projectId: number | undefined) => {
+const useSearchDocumentsNew = (projectId: number | null | undefined) => {
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
 
@@ -143,7 +143,7 @@ const useSearchDocumentsNew = (projectId: number | undefined) => {
 
 const useSearchCodeStats = (
   codeId: number,
-  userId: number | undefined,
+  userId: number | null | undefined,
   sdocIds: number[],
   sortStatsByGlobal: boolean,
 ) =>

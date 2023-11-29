@@ -14,7 +14,7 @@ export type MemoContentQuery = {
   /**
    * If set (i.e. not NULL / NONE), only returns Memo that have the given starred status
    */
-  starred?: boolean;
+  starred?: boolean | null;
   /**
    * The query term to search within the content of the Memo
    */

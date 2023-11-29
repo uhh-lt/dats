@@ -41,7 +41,7 @@ export type SourceDocumentWithDataRead = {
   /**
    * List of character offsets of each token
    */
-  token_character_offsets: Array<Array<any>>;
+  token_character_offsets: Array<any[]>;
   /**
    * List of sentences in the SourceDocument
    */
@@ -49,7 +49,7 @@ export type SourceDocumentWithDataRead = {
   /**
    * List of character offsets of each sentence
    */
-  sentence_character_offsets: Array<Array<any>>;
+  sentence_character_offsets: Array<any[]>;
   /**
    * Filename of the SourceDocument
    */
@@ -57,7 +57,7 @@ export type SourceDocumentWithDataRead = {
   /**
    * User-defined name of the document
    */
-  name?: string;
+  name?: string | null;
   /**
    * DOCTYPE of the SourceDocument
    */

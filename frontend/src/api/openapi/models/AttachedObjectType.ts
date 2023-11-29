@@ -2,9 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * An enumeration.
- */
 export enum AttachedObjectType {
   ANNOTATION_DOCUMENT = "annotation_document",
   SOURCE_DOCUMENT = "source_document",

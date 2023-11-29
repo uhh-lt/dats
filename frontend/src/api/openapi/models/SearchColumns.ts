@@ -2,9 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * An enumeration.
- */
 export enum SearchColumns {
   SC_SOURCE_DOCUMENT_FILENAME = "SC_SOURCE_DOCUMENT_FILENAME",
   SC_SOURCE_DOCUMENT_TYPE = "SC_SOURCE_DOCUMENT_TYPE",

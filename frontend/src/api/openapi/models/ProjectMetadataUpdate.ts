@@ -8,9 +8,9 @@ export type ProjectMetadataUpdate = {
   /**
    * Key of the ProjectMetadata
    */
-  key?: string;
+  key?: string | null;
   /**
    * Type of the ProjectMetadata
    */
-  metatype?: MetaType;
+  metatype: MetaType | null;
 };

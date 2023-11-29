@@ -17,7 +17,7 @@ const useCreateAdoc = () =>
     },
   });
 
-const useGetAdoc = (adocId: number | undefined) => {
+const useGetAdoc = (adocId: number | null | undefined) => {
   // filter out all disabled code ids
   return useQuery<AnnotationDocumentRead, Error>(
     [QueryKey.ADOC, adocId],
@@ -31,7 +31,7 @@ const useGetAdoc = (adocId: number | undefined) => {
   );
 };
 
-const useGetAllSpanAnnotations = (adocId: number | undefined) => {
+const useGetAllSpanAnnotations = (adocId: number | null | undefined) => {
   // filter out all disabled code ids
   const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
   return useQuery<SpanAnnotationReadResolved[], Error>(
@@ -66,7 +66,7 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) => {
   );
 };
 
-const useGetAllBboxAnnotations = (adocId: number | undefined) => {
+const useGetAllBboxAnnotations = (adocId: number | null | undefined) => {
   // filter out all disabled code ids
   const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
   return useQuery<BBoxAnnotationReadResolvedCode[], Error>(

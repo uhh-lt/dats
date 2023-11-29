@@ -6,13 +6,13 @@ export type MemoUpdate = {
   /**
    * Title of the Memo
    */
-  title?: string;
+  title?: string | null;
   /**
    * Content of the Memo
    */
-  content?: string;
+  content?: string | null;
   /**
    * Starred flag of the Memo
    */
-  starred?: boolean;
+  starred?: boolean | null;
 };

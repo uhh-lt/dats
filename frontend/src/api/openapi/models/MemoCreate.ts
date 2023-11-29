@@ -22,5 +22,5 @@ export type MemoCreate = {
   /**
    * Starred flag of the Memo
    */
-  starred?: boolean;
+  starred?: boolean | null;
 };

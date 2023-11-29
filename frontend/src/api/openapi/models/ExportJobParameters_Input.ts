@@ -13,7 +13,7 @@ import type { SingleUserAllDataExportJobParams } from "./SingleUserAllDataExport
 import type { SingleUserAllMemosExportJobParams } from "./SingleUserAllMemosExportJobParams";
 import type { SingleUserLogbookExportJobParams } from "./SingleUserLogbookExportJobParams";
 
-export type ExportJobParameters = {
+export type ExportJobParameters_Input = {
   /**
    * The type of the export job (what to export)
    */
@@ -21,7 +21,7 @@ export type ExportJobParameters = {
   /**
    * The format of the exported data.
    */
-  export_format?: ExportFormat;
+  export_format?: ExportFormat | null;
   /**
    * Specific parameters for the export job w.r.t it's type
    */

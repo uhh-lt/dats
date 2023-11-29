@@ -80,7 +80,7 @@ const useCreateAnnotation = () =>
     },
   });
 
-const useGetAnnotation = (spanId: number | undefined) =>
+const useGetAnnotation = (spanId: number | null | undefined) =>
   useQuery<SpanAnnotationReadResolved, Error>(
     [QueryKey.SPAN_ANNOTATION, spanId],
     () =>
@@ -91,7 +91,7 @@ const useGetAnnotation = (spanId: number | undefined) =>
     { enabled: !!spanId },
   );
 
-const useGetByCodeAndUser = (codeId: number | undefined, userId: number | undefined) =>
+const useGetByCodeAndUser = (codeId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<SpanAnnotationReadResolved[], Error>(
     [QueryKey.SPAN_ANNOTATIONS_USER_CODE, userId, codeId],
     () =>
@@ -240,14 +240,14 @@ const useDeleteSpan = () =>
   );
 
 // memo
-const useGetMemos = (spanId: number | undefined) =>
+const useGetMemos = (spanId: number | null | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
     () => SpanAnnotationService.getMemos({ spanId: spanId! }),
     { enabled: !!spanId, retry: false },
   );
 
-const useGetMemo = (spanId: number | undefined, userId: number | undefined) =>
+const useGetMemo = (spanId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_SPAN_ANNOTATION, spanId, userId],
     () => SpanAnnotationService.getUserMemo({ spanId: spanId!, userId: userId! }),

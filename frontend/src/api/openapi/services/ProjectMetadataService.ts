@@ -52,25 +52,6 @@ export class ProjectMetadataService {
   }
 
   /**
-   * Deletes the Metadata
-   * Deletes the Metadata with the given ID.
-   * @returns ProjectMetadataRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/projmeta/{metadata_id}",
-      path: {
-        metadata_id: metadataId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the Metadata
    * Updates the Metadata with the given ID.
    * @returns ProjectMetadataRead Successful Response
@@ -91,6 +72,25 @@ export class ProjectMetadataService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Deletes the Metadata
+   * Deletes the Metadata with the given ID.
+   * @returns ProjectMetadataRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ metadataId }: { metadataId: number }): CancelablePromise<ProjectMetadataRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/projmeta/{metadata_id}",
+      path: {
+        metadata_id: metadataId,
+      },
       errors: {
         422: `Validation Error`,
       },

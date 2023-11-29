@@ -14,11 +14,11 @@ export type DocumentTagRead = {
   /**
    * Description of the DocumentTag
    */
-  description?: string;
+  description?: string | null;
   /**
    * Parent of the DocumentTag
    */
-  parent_tag_id?: number;
+  parent_tag_id?: number | null;
   /**
    * ID of the DocumentTag
    */

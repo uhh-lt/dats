@@ -45,25 +45,6 @@ export class UserService {
   }
 
   /**
-   * Removes the User
-   * Removes the User with the given ID if it exists
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ userId }: { userId: number }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/user/{user_id}",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the User
    * Updates the User with the given ID if it exists
    * @returns UserRead Successful Response
@@ -91,6 +72,25 @@ export class UserService {
   }
 
   /**
+   * Removes the User
+   * Removes the User with the given ID if it exists
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ userId }: { userId: number }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/user/{user_id}",
+      path: {
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns all Users
    * Returns all Users that exist in the system
    * @returns PublicUserRead Successful Response
@@ -103,11 +103,11 @@ export class UserService {
     /**
      * The number of elements to skip (offset)
      */
-    skip?: number;
+    skip?: number | null;
     /**
      * The maximum number of returned elements
      */
-    limit?: number;
+    limit?: number | null;
   }): CancelablePromise<Array<PublicUserRead>> {
     return __request(OpenAPI, {
       method: "GET",

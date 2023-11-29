@@ -22,38 +22,6 @@ import { request as __request } from "../core/request";
 
 export class ProjectService {
   /**
-   * Returns all Projects of the current user
-   * Returns all Projects of the current user
-   * @returns ProjectRead Successful Response
-   * @throws ApiError
-   */
-  public static readAll({
-    skip,
-    limit,
-  }: {
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number;
-  }): CancelablePromise<Array<ProjectRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Creates a new Project
    * Creates a new Project.
    * @returns ProjectRead Successful Response
@@ -72,17 +40,30 @@ export class ProjectService {
   }
 
   /**
-   * Returns the Project with the given ID
-   * Returns the Project with the given ID if it exists
+   * Returns all Projects of the current user
+   * Returns all Projects of the current user
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static readProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static readAll({
+    skip,
+    limit,
+  }: {
+    /**
+     * The number of elements to skip (offset)
+     */
+    skip?: number | null;
+    /**
+     * The maximum number of returned elements
+     */
+    limit?: number | null;
+  }): CancelablePromise<Array<ProjectRead>> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/project/{proj_id}",
-      path: {
-        proj_id: projId,
+      url: "/project",
+      query: {
+        skip: skip,
+        limit: limit,
       },
       errors: {
         422: `Validation Error`,
@@ -91,14 +72,14 @@ export class ProjectService {
   }
 
   /**
-   * Removes the Project
-   * Removes the Project with the given ID.
+   * Returns the Project with the given ID
+   * Returns the Project with the given ID if it exists
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
-  public static deleteProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+  public static readProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
     return __request(OpenAPI, {
-      method: "DELETE",
+      method: "GET",
       url: "/project/{proj_id}",
       path: {
         proj_id: projId,
@@ -137,6 +118,25 @@ export class ProjectService {
   }
 
   /**
+   * Removes the Project
+   * Removes the Project with the given ID.
+   * @returns ProjectRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteProject({ projId }: { projId: number }): CancelablePromise<ProjectRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/project/{proj_id}",
+      path: {
+        proj_id: projId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns all SourceDocuments of the Project.
    * Returns all SourceDocuments of the Project with the given ID.
    * @returns PaginatedSourceDocumentReads Successful Response
@@ -153,11 +153,11 @@ export class ProjectService {
     /**
      * The number of elements to skip (offset)
      */
-    skip?: number;
+    skip?: number | null;
     /**
      * The maximum number of returned elements
      */
-    limit?: number;
+    limit?: number | null;
   }): CancelablePromise<PaginatedSourceDocumentReads> {
     return __request(OpenAPI, {
       method: "GET",
@@ -223,32 +223,6 @@ export class ProjectService {
   }
 
   /**
-   * Dissociates the Users with the Project
-   * Dissociates the Users with the Project with the given ID if it exists
-   * @returns UserRead Successful Response
-   * @throws ApiError
-   */
-  public static dissociateUserFromProject({
-    projId,
-    userId,
-  }: {
-    projId: number;
-    userId: number;
-  }): CancelablePromise<UserRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/user/{user_id}",
-      path: {
-        proj_id: projId,
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Associates the User with the Project
    * Associates an existing User to the Project with the given ID if it exists
    * @returns UserRead Successful Response
@@ -263,6 +237,32 @@ export class ProjectService {
   }): CancelablePromise<UserRead> {
     return __request(OpenAPI, {
       method: "PATCH",
+      url: "/project/{proj_id}/user/{user_id}",
+      path: {
+        proj_id: projId,
+        user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Dissociates the Users with the Project
+   * Dissociates the Users with the Project with the given ID if it exists
+   * @returns UserRead Successful Response
+   * @throws ApiError
+   */
+  public static dissociateUserFromProject({
+    projId,
+    userId,
+  }: {
+    projId: number;
+    userId: number;
+  }): CancelablePromise<UserRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
       url: "/project/{proj_id}/user/{user_id}",
       path: {
         proj_id: projId,
@@ -430,14 +430,14 @@ export class ProjectService {
   public static getUserMemosOfProject({
     projId,
     userId,
-    onlyStarred = false,
+    onlyStarred,
   }: {
     projId: number;
     userId: number;
     /**
      * If true only starred Memos are returned
      */
-    onlyStarred?: boolean;
+    onlyStarred?: boolean | null;
   }): CancelablePromise<Array<MemoRead>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -530,25 +530,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns the Memo of the current User for the Project.
-   * Returns the Memo of the current User for the Project with the given ID.
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getMemos({ projId }: { projId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project/{proj_id}/memo",
-      path: {
-        proj_id: projId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Adds a Memo of the current User to the Project.
    * Adds a Memo of the current User to the Project with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -569,6 +550,25 @@ export class ProjectService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the Memo of the current User for the Project.
+   * Returns the Memo of the current User for the Project with the given ID.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemos({ projId }: { projId: number }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/project/{proj_id}/memo",
+      path: {
+        proj_id: projId,
+      },
       errors: {
         422: `Validation Error`,
       },

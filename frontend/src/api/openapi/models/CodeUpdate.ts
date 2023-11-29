@@ -6,17 +6,17 @@ export type CodeUpdate = {
   /**
    * Name of the Code
    */
-  name?: string;
+  name?: string | null;
   /**
    * Color of the Code
    */
-  color?: string;
+  color?: string | null;
   /**
    * Description of the Code
    */
-  description?: string;
+  description?: string | null;
   /**
    * Parent of the Code
    */
-  parent_code_id?: number;
+  parent_code_id?: number | null;
 };

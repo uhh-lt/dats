@@ -2,9 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * An enumeration.
- */
 export enum FilterValueType {
   SDOC_ID = "SDOC_ID",
   CODE_ID = "CODE_ID",

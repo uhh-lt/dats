@@ -21,11 +21,11 @@ export type ActionRead = {
   /**
    * The before state of the target object in JSON.
    */
-  before_state?: string;
+  before_state?: string | null;
   /**
    * The after state of the target object in JSON.
    */
-  after_state?: string;
+  after_state?: string | null;
   /**
    * ID of the Action
    */

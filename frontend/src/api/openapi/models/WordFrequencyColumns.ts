@@ -2,9 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * An enumeration.
- */
 export enum WordFrequencyColumns {
   WF_WORD = "WF_WORD",
   WF_WORD_FREQUENCY = "WF_WORD_FREQUENCY",
