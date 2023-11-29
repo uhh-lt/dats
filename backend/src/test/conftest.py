@@ -73,7 +73,7 @@ def project(session: SQLService, user: int) -> Generator[int, None, None]:
     description = "Test description"
 
     with session.db_session() as sess:
-        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
+        system_user = UserRead.model_validate(crud_user.read(sess, SYSTEM_USER_ID))
         id = crud_project.create(
             db=sess,
             create_dto=ProjectCreate(
