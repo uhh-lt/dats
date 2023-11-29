@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Union
 
-from sqlalchemy import Column
+from sqlalchemy import Column, not_
 
 
 class FilterValueType(Enum):
@@ -26,6 +26,7 @@ class FilterOperator(Enum):
 
 class BooleanOperator(Enum):
     EQUALS = "BOOLEAN_EQUALS"
+    NOT_EQUALS = "BOOLEAN_NOT_EQUALS"
 
     def apply(self, column: Column, value: bool):
         if not isinstance(value, bool):
@@ -34,6 +35,8 @@ class BooleanOperator(Enum):
         match self:
             case BooleanOperator.EQUALS:
                 return column == value
+            case BooleanOperator.NOT_EQUALS:
+                return column != value
 
 
 class StringOperator(Enum):
@@ -101,12 +104,17 @@ class NumberOperator(Enum):
 
 class IDListOperator(Enum):
     CONTAINS = "ID_LIST_CONTAINS"
+    NOT_CONTAINS = "ID_LIST_NOT_CONTAINS"
 
     def apply(self, column, value: Union[str, List[str]]):
         if isinstance(column, tuple):
             if isinstance(value, str) and (len(column) == 2):
                 # Column is tuple of ORMs, e.g. (SourceDocumentORM.document_tags, DocumentTagORM.id)
-                return column[0].any(column[1] == int(value))
+                match self:
+                    case IDListOperator.CONTAINS:
+                        return column[0].any(column[1] == int(value))
+                    case IDListOperator.NOT_CONTAINS:
+                        return not_(column[0].any(column[1] == int(value)))
             else:
                 raise ValueError("Invalid column or value for IDListOperator!")
 
@@ -115,16 +123,25 @@ class IDListOperator(Enum):
                 if len(value) == 2:
                     # This is a special case only for span annotations! (this is bad...)
                     # Column is aggregated list of ["CODE_ID", "SPAN_TEXT"], e.g. subquery_dict.SPAN_ANNOTATIONS
-                    return column.contains([value])
+                    match self:
+                        case IDListOperator.CONTAINS:
+                            return column.contains([value])
+                        case IDListOperator.NOT_CONTAINS:
+                            return not_(column.contains([value]))
                 else:
                     raise ValueError("Invalid value for IDListOperator!")
             else:
                 # Column is aggregated list of IDs, e.g. subquery_dict.CODE_ID_LIST
-                return column.contains([int(value)])
+                match self:
+                    case IDListOperator.CONTAINS:
+                        return column.contains([int(value)])
+                    case IDListOperator.NOT_CONTAINS:
+                        return not_(column.contains([int(value)]))
 
 
 class ListOperator(Enum):
     CONTAINS = "LIST_CONTAINS"
+    NOT_CONTAINS = "LIST_NOT_CONTAINS"
 
     def apply(self, column, value: List[str]):
         if not isinstance(value, list):
@@ -139,6 +156,8 @@ class ListOperator(Enum):
         match self:
             case ListOperator.CONTAINS:
                 return column.contains([value])
+            case ListOperator.NOT_CONTAINS:
+                return not_(column.contains([value]))
 
 
 class DateOperator(Enum):
