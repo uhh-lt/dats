@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, ButtonGroup, Chip, MenuItem, Switch, TextField } from "@mui/material";
+import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
@@ -7,8 +7,8 @@ import CodeRenderer from "../../components/DataGrid/CodeRenderer";
 import TagRenderer from "../../components/DataGrid/TagRenderer";
 import UserRenderer from "../../components/DataGrid/UserRenderer";
 import { isValidDateString } from "../../utils/DateUtils";
-import { ColumnInfo, MyFilterExpression } from "./filterUtils";
 import { docTypeToIcon } from "../DocumentExplorer/docTypeToIcon";
+import { ColumnInfo, MyFilterExpression } from "./filterUtils";
 
 interface SharedFilterValueSelectorProps {
   filterExpression: MyFilterExpression;

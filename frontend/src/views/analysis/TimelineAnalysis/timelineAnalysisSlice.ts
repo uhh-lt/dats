@@ -96,6 +96,7 @@ export const timelineAnalysisSlice = createSlice({
     onCreateNewConcept: (state, action: PayloadAction<{ conceptData: string }>) => {
       let name = "New Concept";
       let conceptIndex = 1;
+      // eslint-disable-next-line no-loop-func
       while (state.concepts.find((c) => c.name === `${name} (${conceptIndex})`)) {
         conceptIndex++;
       }

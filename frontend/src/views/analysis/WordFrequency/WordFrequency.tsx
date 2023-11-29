@@ -1,16 +1,5 @@
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import {
-  Box,
-  Card,
-  CardContent,
-  CardHeader,
-  Grid,
-  IconButton,
-  Portal,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Box, Card, CardContent, Grid, IconButton, Portal, Stack, Tooltip, Typography } from "@mui/material";
 import { useContext, useRef } from "react";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import WordFrequencyFilterDialog from "./WordFrequencyFilterDialog";

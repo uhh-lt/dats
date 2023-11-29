@@ -13,7 +13,6 @@ import {
   ProjectRead,
   ProjectService,
   ProjectUpdate,
-  SourceDocumentMetadataRead,
   UserRead,
 } from "./openapi";
 import { useSelectEnabledCodes } from "./utils";

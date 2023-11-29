@@ -115,8 +115,10 @@ function ProjectCodes({ project }: ProjectProps) {
     const codesToExpand = [];
     let parentCodeId = code.parent_code_id;
     while (parentCodeId) {
+      let currentParentCodeId = parentCodeId;
+
       codesToExpand.push(parentCodeId);
-      parentCodeId = projectCodes.data?.find((code) => code.id === parentCodeId)?.parent_code_id;
+      parentCodeId = projectCodes.data?.find((code) => code.id === currentParentCodeId)?.parent_code_id;
     }
     expandCodes(codesToExpand.map((id) => id.toString()));
   };

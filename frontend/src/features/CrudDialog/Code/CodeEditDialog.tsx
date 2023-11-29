@@ -9,12 +9,12 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
 import CodeHooks from "../../../api/CodeHooks";
 import { CodeRead, CodeUpdate } from "../../../api/openapi";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import ColorUtils from "../../../utils/ColorUtils";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import { AnnoActions } from "../../../views/annotation/annoSlice";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 
 export const openCodeEditDialog = (code: CodeRead) => {
   eventBus.dispatch("open-edit-code", code);
@@ -121,8 +121,10 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               const codesToExpand = [];
               let parentCodeId = data.parent_code_id;
               while (parentCodeId) {
+                let currentParentCodeId = parentCodeId;
+
                 codesToExpand.push(parentCodeId);
-                parentCodeId = codes.find((code) => code.id === parentCodeId)?.parent_code_id;
+                parentCodeId = codes.find((code) => code.id === currentParentCodeId)?.parent_code_id;
               }
               dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             }

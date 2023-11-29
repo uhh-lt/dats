@@ -3,11 +3,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import {
   Card,
   CardContent,
-  Checkbox,
   ClickAwayListener,
   FormControl,
   FormControlLabel,
-  FormGroup,
   FormLabel,
   IconButton,
   InputBase,
@@ -19,21 +17,11 @@ import {
 } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { DocType } from "../../../api/openapi";
+import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { QueryType } from "../QueryType";
-import { SearchActions } from "../searchSlice";
-import ImageIcon from "@mui/icons-material/Image";
-import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
-import FeedIcon from "@mui/icons-material/Feed";
-import FeedOutlinedIcon from "@mui/icons-material/FeedOutlined";
-import AudiotrackIcon from "@mui/icons-material/Audiotrack";
-import AudiotrackOutlinedIcon from "@mui/icons-material/AudiotrackOutlined";
-import MovieIcon from "@mui/icons-material/Movie";
-import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
-import { useParams } from "react-router-dom";
 import { useNavigateIfNecessary } from "../hooks/useNavigateIfNecessary";
-import { Query } from "@tanstack/react-query";
+import { SearchActions } from "../searchSlice";
 
 interface SearchFormValues {
   query: string;

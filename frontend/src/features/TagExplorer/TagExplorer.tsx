@@ -1,12 +1,11 @@
-import AddBoxIcon from "@mui/icons-material/AddBox";
-import { AppBar, Box, BoxProps, Button, Checkbox, List, Stack, Toolbar } from "@mui/material";
+import { AppBar, Box, BoxProps, Checkbox, List, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { AttachedObjectType } from "../../api/openapi";
 import { useAuth } from "../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import TagCreateDialog, { openTagCreateDialog } from "../CrudDialog/Tag/TagCreateDialog";
+import TagMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton";
 import TagEditDialog from "../CrudDialog/Tag/TagEditDialog";
 import ExporterButton from "../Exporter/ExporterButton";
 import MemoButton from "../Memo/MemoButton";
@@ -16,7 +15,6 @@ import TagExplorerContextMenu from "./TagExplorerContextMenu";
 import TagTreeView from "./TagTreeView";
 import { flatTree } from "./TreeUtils";
 import useComputeTagTree from "./useComputeTagTree";
-import TagMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton";
 
 interface TagExplorerProps {
   showToolbar?: boolean;

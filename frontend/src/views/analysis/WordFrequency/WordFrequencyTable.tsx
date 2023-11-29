@@ -8,7 +8,6 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice";
 import { useWordFrequencyQuery } from "./useWordFrequencyQuery";
 import { WordFrequencyActions } from "./wordFrequencySlice";
-import SdocMetadataRenderer from "../../../components/DataGrid/SdocMetadataRenderer";
 
 interface WordFrequencyTableProps {
   onRowContextMenu: (event: React.MouseEvent<HTMLDivElement>, spanAnnotationId: number) => void;

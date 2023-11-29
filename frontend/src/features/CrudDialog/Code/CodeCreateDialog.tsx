@@ -22,12 +22,12 @@ import CodeHooks from "../../../api/CodeHooks";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { CodeRead } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import { AnnoActions } from "../../../views/annotation/annoSlice";
 import { contrastiveColors } from "../../../views/annotation/colors";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 
 type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;
 
@@ -159,8 +159,10 @@ function CodeCreateDialog() {
             const codesToExpand = [];
             let parentCodeId = data.parent_code_id;
             while (parentCodeId) {
+              let currentParentCodeId = parentCodeId;
+
               codesToExpand.push(parentCodeId);
-              parentCodeId = codes.data?.find((code) => code.id === parentCodeId)?.parent_code_id;
+              parentCodeId = codes.data?.find((code) => code.id === currentParentCodeId)?.parent_code_id;
             }
             dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             closeCodeCreateDialog();
