@@ -1,16 +1,15 @@
-import { useParams } from "react-router-dom";
-import UserHooks from "../../api/UserHooks";
 import { Container, Grid, Typography } from "@mui/material";
 import React from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import ProfileHome from "./pages/ProfileHome";
-import UpdateEmail from "./pages/UpdateEmail";
 import PasswordReset from "./pages/PasswordReset";
 import DataPrivacy from "./pages/DataPrivacy";
 import Support from "./pages/Support";
 import { AccountBox, Email, Help, Lock, Visibility } from "@mui/icons-material";
+import { useAuth } from "../../auth/AuthProvider";
+import UpdateEmail from "./pages/UpdateEmail";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,11 +45,8 @@ function a11yProps(index: number) {
 }
 
 function Profile() {
-  // router
-  const { userId } = useParams() as { userId: string };
-
   // global server state (react query)
-  const user = UserHooks.useGetUser(parseInt(userId));
+  const { user } = useAuth();
 
   const [value, setValue] = React.useState(0);
 

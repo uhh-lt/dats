@@ -58,7 +58,6 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
 
     # TODO missing cases:
     # - SourceDocumentLinkORM
-    # - SourceDocumentMetadataORM
 
     raise NotImplementedError(f"Unknown ORM: {type(orm)}")
 

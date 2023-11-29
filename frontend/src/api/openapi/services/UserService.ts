@@ -2,9 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AnnotationDocumentRead } from "../models/AnnotationDocumentRead";
-import type { CodeRead } from "../models/CodeRead";
-import type { MemoRead } from "../models/MemoRead";
 import type { ProjectRead } from "../models/ProjectRead";
+import type { PublicUserRead } from "../models/PublicUserRead";
 import type { UserRead } from "../models/UserRead";
 import type { UserUpdate } from "../models/UserUpdate";
 
@@ -29,10 +28,10 @@ export class UserService {
   /**
    * Returns the User
    * Returns the User with the given ID if it exists
-   * @returns UserRead Successful Response
+   * @returns PublicUserRead Successful Response
    * @throws ApiError
    */
-  public static getById({ userId }: { userId: number }): CancelablePromise<UserRead> {
+  public static getById({ userId }: { userId: number }): CancelablePromise<PublicUserRead> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}",
@@ -94,7 +93,7 @@ export class UserService {
   /**
    * Returns all Users
    * Returns all Users that exist in the system
-   * @returns UserRead Successful Response
+   * @returns PublicUserRead Successful Response
    * @throws ApiError
    */
   public static getAll({
@@ -109,7 +108,7 @@ export class UserService {
      * The maximum number of returned elements
      */
     limit?: number;
-  }): CancelablePromise<Array<UserRead>> {
+  }): CancelablePromise<Array<PublicUserRead>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user",
@@ -133,63 +132,6 @@ export class UserService {
     return __request(OpenAPI, {
       method: "GET",
       url: "/user/{user_id}/project",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns all Codes of the User
-   * Returns all Codes of the User with the given ID
-   * @returns CodeRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserCodes({ userId }: { userId: number }): CancelablePromise<Array<CodeRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/{user_id}/code",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns all Memos of the User
-   * Returns all Memos of the User with the given ID
-   * @returns MemoRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserMemos({ userId }: { userId: number }): CancelablePromise<Array<MemoRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/{user_id}/memo",
-      path: {
-        user_id: userId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns all Adocs of the User
-   * Returns all Adocs of the User with the given ID
-   * @returns AnnotationDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static getUserAdocs({ userId }: { userId: number }): CancelablePromise<Array<AnnotationDocumentRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/user/{user_id}/adocs",
       path: {
         user_id: userId,
       },

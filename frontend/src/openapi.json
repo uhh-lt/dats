@@ -104,7 +104,7 @@
         "responses": {
           "200": {
             "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserRead" } } }
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PublicUserRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -200,7 +200,7 @@
                 "schema": {
                   "title": "Response User-Get All",
                   "type": "array",
-                  "items": { "$ref": "#/components/schemas/UserRead" }
+                  "items": { "$ref": "#/components/schemas/PublicUserRead" }
                 }
               }
             }
@@ -231,96 +231,6 @@
                   "title": "Response User-Get User Projects",
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ProjectRead" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/user/{user_id}/code": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns all Codes of the User",
-        "description": "Returns all Codes of the User with the given ID",
-        "operationId": "get_user_codes",
-        "parameters": [
-          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response User-Get User Codes",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/CodeRead" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/user/{user_id}/memo": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns all Memos of the User",
-        "description": "Returns all Memos of the User with the given ID",
-        "operationId": "get_user_memos",
-        "parameters": [
-          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response User-Get User Memos",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/MemoRead" }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        },
-        "security": [{ "OAuth2PasswordBearer": [] }]
-      }
-    },
-    "/user/{user_id}/adocs": {
-      "get": {
-        "tags": ["user"],
-        "summary": "Returns all Adocs of the User",
-        "description": "Returns all Adocs of the User with the given ID",
-        "operationId": "get_user_adocs",
-        "parameters": [
-          { "required": true, "schema": { "title": "User Id", "type": "integer" }, "name": "user_id", "in": "path" }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Response User-Get User Adocs",
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/AnnotationDocumentRead" }
                 }
               }
             }
@@ -5101,7 +5011,7 @@
       },
       "ActionType": {
         "title": "ActionType",
-        "enum": ["CREATE", "UPDATE", "DELETE"],
+        "enum": ["CREATE", "READ", "UPDATE", "DELETE"],
         "type": "string",
         "description": "An enumeration."
       },
@@ -6300,6 +6210,17 @@
           "title": { "title": "Title", "type": "string", "description": "Title of the Project" },
           "description": { "title": "Description", "type": "string", "description": "Description of the Project" }
         }
+      },
+      "PublicUserRead": {
+        "title": "PublicUserRead",
+        "required": ["id", "first_name", "last_name"],
+        "type": "object",
+        "properties": {
+          "id": { "title": "Id", "type": "integer", "description": "ID of the User" },
+          "first_name": { "title": "First Name", "type": "string", "description": "First name of the User" },
+          "last_name": { "title": "Last Name", "type": "string", "description": "Last name of the User" }
+        },
+        "description": "A user object with information that everybody may see."
       },
       "SDocStatus": {
         "title": "SDocStatus",

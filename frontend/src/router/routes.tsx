@@ -91,7 +91,7 @@ const router = createBrowserRouter([
         element: <Imprint />,
       },
       {
-        path: "/user/:userId",
+        path: "/me",
         element: (
           <RequireAuth>
             <Profile />

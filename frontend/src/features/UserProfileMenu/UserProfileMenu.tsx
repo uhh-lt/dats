@@ -74,7 +74,7 @@ function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
           </CardContent>
           <List disablePadding>
             <ListItem disablePadding>
-              <ListItemButton component={RouterLink} to={"/user/" + user.id}>
+              <ListItemButton component={RouterLink} to={"/me"}>
                 <ListItemIcon>
                   <AccountBoxIcon />
                 </ListItemIcon>

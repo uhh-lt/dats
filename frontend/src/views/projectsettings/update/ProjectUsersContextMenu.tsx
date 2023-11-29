@@ -1,8 +1,5 @@
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
-import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 
 interface ProjectUsersContextMenuProps {
@@ -13,13 +10,6 @@ interface ProjectUsersContextMenuProps {
 }
 
 function ProjectUsersContextMenu({ position, userId, handleClose, onDeleteUser }: ProjectUsersContextMenuProps) {
-  const navigate = useNavigate();
-
-  const openUser = () => {
-    handleClose();
-    navigate(`/user/${userId}`);
-  };
-
   const deleteUser = () => {
     if (!userId) return;
     handleClose();
@@ -38,12 +28,6 @@ function ProjectUsersContextMenu({ position, userId, handleClose, onDeleteUser }
       }}
       // PaperProps={{ sx: { width: 240, height: 300 } }}
     >
-      <MenuItem onClick={openUser}>
-        <ListItemIcon>
-          <AccountCircleIcon fontSize="medium" />
-        </ListItemIcon>
-        <ListItemText>View user</ListItemText>
-      </MenuItem>
       <MenuItem onClick={deleteUser}>
         <ListItemIcon>
           <DeleteIcon fontSize="medium" />
