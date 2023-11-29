@@ -23,7 +23,7 @@ class SQLService(metaclass=SingletonMeta):
                 password=conf.postgres.password,
                 host=conf.postgres.host,
                 port=int(conf.postgres.port),
-                path=f"/{conf.postgres.db}",
+                path=f"{conf.postgres.db}",
             )
 
             engine = create_engine(
