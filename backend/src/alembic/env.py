@@ -1,13 +1,14 @@
 from logging.config import fileConfig
 from os import environ
 
+from sqlalchemy import engine_from_config, pool
+
 # When autogenerating migrations, alembic looks at our ORM models.
 # it's important to import all models so alembic won't try to
 # drop tables for models that weren't imported.
 import app.core.db.import_all_orms  # noqa: F401
 from alembic import context
 from app.core.data.orm.orm_base import ORMBase
-from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

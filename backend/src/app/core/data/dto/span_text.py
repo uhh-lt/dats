@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Properties shared across all DTOs
@@ -14,6 +14,4 @@ class SpanTextCreate(SpanTextBaseDTO):
 # Properties for reading (as in ORM)
 class SpanTextRead(SpanTextBaseDTO):
     id: int = Field(description="ID of the SpanText")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

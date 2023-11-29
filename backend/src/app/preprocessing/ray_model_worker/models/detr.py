@@ -2,11 +2,12 @@ import logging
 from typing import List, Tuple
 
 import torch
-from config import build_ray_model_deployment_config, conf
 from dto.detr import DETRFilePathInput, DETRObjectDetectionOutput, ObjectBBox
 from PIL import Image
 from ray import serve
 from transformers import DetrFeatureExtractor, DetrForObjectDetection
+
+from config import build_ray_model_deployment_config, conf
 
 cc = conf.detr
 

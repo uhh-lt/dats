@@ -3,6 +3,9 @@ from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.document_tag import crud_document_tag
@@ -49,8 +52,6 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.redis_service import RedisService
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
-from loguru import logger
-from sqlalchemy.orm import Session
 
 
 class NoDataToExportError(Exception):
@@ -153,7 +154,7 @@ class ExportService(metaclass=SingletonMeta):
             if sdoc_ids is None:
                 raise ValueError("Either IDs or DTOs must be not None")
             sdocs = [
-                SourceDocumentRead.from_orm(sdoc)
+                SourceDocumentRead.model_validate(sdoc)
                 for sdoc in crud_sdoc.read_by_ids(db=db, ids=sdoc_ids)
             ]
 
@@ -168,7 +169,7 @@ class ExportService(metaclass=SingletonMeta):
     ) -> List[Path]:
         # TODO Flo: paging for too many docs
         sdocs = [
-            SourceDocumentRead.from_orm(sdoc)
+            SourceDocumentRead.model_validate(sdoc)
             for sdoc in crud_sdoc.read_by_project(db=db, proj_id=project_id)
         ]
         sdoc_files = self.__get_raw_sdocs_files_for_export(db=db, sdocs=sdocs)
@@ -187,19 +188,19 @@ class ExportService(metaclass=SingletonMeta):
 
         logger.info(f"Exporting AnnotationDocument {adoc_id} ...")
         # get the adoc, proj, sdoc, user, and all annos
-        user_dto = UserRead.from_orm(adoc.user)
-        sdoc_dto = SourceDocumentRead.from_orm(adoc.source_document)
-        proj_dto = ProjectRead.from_orm(
+        user_dto = UserRead.model_validate(adoc.user)
+        sdoc_dto = SourceDocumentRead.model_validate(adoc.source_document)
+        proj_dto = ProjectRead.model_validate(
             crud_project.read(db=db, id=sdoc_dto.project_id)
         )
 
         # span annos
         spans = adoc.span_annotations
-        span_read_dtos = [SpanAnnotationRead.from_orm(span) for span in spans]
+        span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
         span_read_resolved_dtos = [
             SpanAnnotationReadResolved(
-                **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.from_orm(span_orm.current_code.code),
+                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+                code=CodeRead.model_validate(span_orm.current_code.code),
                 span_text=span_orm.span_text.text,
                 user_id=span_orm.annotation_document.user_id,
                 sdoc_id=span_orm.annotation_document.source_document_id,
@@ -209,11 +210,11 @@ class ExportService(metaclass=SingletonMeta):
 
         # bbox annos
         bboxes = adoc.bbox_annotations
-        bbox_read_dtos = [BBoxAnnotationRead.from_orm(bbox) for bbox in bboxes]
+        bbox_read_dtos = [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
         bbox_read_resolved_dtos = [
             BBoxAnnotationReadResolvedCode(
-                **bbox_dto.dict(exclude={"current_code_id"}),
-                code=CodeRead.from_orm(bbox_orm.current_code.code),
+                **bbox_dto.model_dump(exclude={"current_code_id"}),
+                code=CodeRead.model_validate(bbox_orm.current_code.code),
             )
             for bbox_orm, bbox_dto in zip(bboxes, bbox_read_dtos)
         ]
@@ -299,8 +300,8 @@ class ExportService(metaclass=SingletonMeta):
         logger.info(f"Exporting Memo {memo_id} ...")
         memo_dto = crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=memo)
 
-        user_dto = UserRead.from_orm(memo.user)
-        proj_dto = ProjectRead.from_orm(memo.project)
+        user_dto = UserRead.model_validate(memo.user)
+        proj_dto = ProjectRead.model_validate(memo.project)
 
         # get attached object
         # avoid circular imports
@@ -338,36 +339,36 @@ class ExportService(metaclass=SingletonMeta):
         }
 
         if isinstance(attached_to, CodeORM):
-            dto = CodeRead.from_orm(attached_to)
+            dto = CodeRead.model_validate(attached_to)
             data["code_name"] = [dto.name]
             data["code_id"] = [dto.id]
 
         elif isinstance(attached_to, SpanGroupORM):
-            dto = SpanGroupRead.from_orm(attached_to)
+            dto = SpanGroupRead.model_validate(attached_to)
             data["span_group_name"] = [dto.name]
             data["span_group_id"] = [dto.id]
 
         elif isinstance(attached_to, AnnotationDocumentORM):
-            dto = AnnotationDocumentRead.from_orm(attached_to)
-            sdoc_dto = SourceDocumentRead.from_orm(attached_to.source_document)
+            dto = AnnotationDocumentRead.model_validate(attached_to)
+            sdoc_dto = SourceDocumentRead.model_validate(attached_to.source_document)
             data["sdoc_name"] = [sdoc_dto.filename]
             data["adoc_id"] = [dto.id]
 
         elif isinstance(attached_to, SourceDocumentORM):
-            dto = SourceDocumentRead.from_orm(attached_to)
+            dto = SourceDocumentRead.model_validate(attached_to)
             data["sdoc_name"] = [dto.filename]
             data["sdoc_id"] = [dto.id]
 
         elif isinstance(attached_to, DocumentTagORM):
-            dto = DocumentTagRead.from_orm(attached_to)
+            dto = DocumentTagRead.model_validate(attached_to)
             data["tag_name"] = [dto.title]
             data["tag_id"] = [dto.id]
 
         elif isinstance(attached_to, SpanAnnotationORM):
-            span_read_dto = SpanAnnotationRead.from_orm(attached_to)
+            span_read_dto = SpanAnnotationRead.model_validate(attached_to)
             span_read_resolved_dto = SpanAnnotationReadResolved(
-                **span_read_dto.dict(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.from_orm(attached_to.current_code.code),
+                **span_read_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+                code=CodeRead.model_validate(attached_to.current_code.code),
                 span_text=attached_to.span_text.text,
                 user_id=attached_to.annotation_document.user_id,
                 sdoc_id=attached_to.annotation_document.source_document_id,
@@ -379,10 +380,10 @@ class ExportService(metaclass=SingletonMeta):
             data["code_name"] = [span_read_resolved_dto.code.name]
 
         elif isinstance(attached_to, BBoxAnnotationORM):
-            bbox_read_dto = BBoxAnnotationRead.from_orm(attached_to)
+            bbox_read_dto = BBoxAnnotationRead.model_validate(attached_to)
             bbox_read_resolved_dto = BBoxAnnotationReadResolvedCode(
-                **bbox_read_dto.dict(exclude={"current_code_id"}),
-                code=CodeRead.from_orm(attached_to.current_code.code),
+                **bbox_read_dto.model_dump(exclude={"current_code_id"}),
+                code=CodeRead.model_validate(attached_to.current_code.code),
             )
 
             data["bbox_anno_id"] = [bbox_read_dto.id]
@@ -406,7 +407,7 @@ class ExportService(metaclass=SingletonMeta):
             if metadata_id is None:
                 raise ValueError("Either Metadata ID or DTO must be not None")
             metadata = crud_sdoc_meta.read(db=db, id=metadata_id)
-            metadata_dto = SourceDocumentMetadataRead.from_orm(metadata)
+            metadata_dto = SourceDocumentMetadataRead.model_validate(metadata)
 
         logger.info(f"Exporting SourceDocumentMetadata {metadata_dto.id} ...")
         data = {
@@ -427,7 +428,7 @@ class ExportService(metaclass=SingletonMeta):
         for md in metadata:
             metadata_dfs.append(
                 self.__generate_export_df_for_sdoc_metadata(
-                    db=db, metadata_dto=SourceDocumentMetadataRead.from_orm(md)
+                    db=db, metadata_dto=SourceDocumentMetadataRead.model_validate(md)
                 )
             )
 
@@ -439,7 +440,7 @@ class ExportService(metaclass=SingletonMeta):
         logger.info(f"Exporting DocumentTag {tag_id} ...")
 
         tag = crud_document_tag.read(db=db, id=tag_id)
-        tag_dto = DocumentTagRead.from_orm(tag)
+        tag_dto = DocumentTagRead.model_validate(tag)
         applied_to_sdoc_ids = [sdoc.id for sdoc in tag.source_documents]
         applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
         data = {
@@ -498,12 +499,12 @@ class ExportService(metaclass=SingletonMeta):
         logger.info(f"Exporting Code {code_id} ...")
 
         code = crud_code.read(db=db, id=code_id)
-        user_dto = UserRead.from_orm(code.user)
-        code_dto = CodeRead.from_orm(code)
+        user_dto = UserRead.model_validate(code.user)
+        code_dto = CodeRead.model_validate(code)
         parent_code_id = code_dto.parent_code_id
         parent_code_name = None
         if parent_code_id is not None:
-            parent_code_name = CodeRead.from_orm(code.parent_code).name
+            parent_code_name = CodeRead.model_validate(code.parent_code).name
 
         data = {
             "code_id": [code_dto.id],
@@ -1028,7 +1029,7 @@ class ExportService(metaclass=SingletonMeta):
                 results_url = export_method(
                     self=self,
                     db=db,
-                    **exj.parameters.specific_export_job_parameters.dict(
+                    **exj.parameters.specific_export_job_parameters.model_dump(
                         exclude={"export_job_type"}
                     ),
                 )

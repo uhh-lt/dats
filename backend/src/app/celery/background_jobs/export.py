@@ -10,7 +10,7 @@ def start_export_job_(export_job: ExportJobRead) -> None:
     logger.info(
         (
             f"Starting ExportJob {export_job.id}",
-            f" with parameters:\n\t{export_job.parameters.json(indent=2, sort_keys=False)}",
+            f" with parameters:\n\t{export_job.parameters.model_dump_json(indent=2, sort_keys=False)}",
         )
     )
     exj_result = exs.start_export_job_sync(export_job_id=export_job.id)

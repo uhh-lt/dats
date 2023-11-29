@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Tuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -47,9 +47,7 @@ class SourceDocumentRead(SourceDocumentBaseDTO):
     id: int = Field(description="ID of the SourceDocument")
     created: datetime = Field(description="The created timestamp of the SourceDocument")
     updated: datetime = Field(description="Updated timestamp of the Memo")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SourceDocumentReadAction(SourceDocumentRead):

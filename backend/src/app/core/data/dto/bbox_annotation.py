@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .code import CodeRead
 from .dto_base import UpdateDTOBase
@@ -48,9 +48,7 @@ class BBoxAnnotationRead(BBoxAnnotationBaseDTO):
     )
     created: datetime = Field(description="Created timestamp of the BBoxAnnotation")
     updated: datetime = Field(description="Updated timestamp of the BBoxAnnotation")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class BBoxAnnotationReadResolvedCode(BBoxAnnotationBaseDTO):

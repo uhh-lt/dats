@@ -3,9 +3,9 @@ import random
 import time
 import traceback
 
-import config
 from loguru import logger
-from migration.migrate import run_required_migrations
+
+import config
 
 
 def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
@@ -52,11 +52,6 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
     # noinspection PyUnresolvedReferences
     try:
         config.verify_config()
-        # In production, multiple workers run in parallel, but
-        # we can not to run migrations in parallel.
-        # The block above should ensure that only one startup
-        # process is running at any given time.
-        run_required_migrations()
 
         # start and init services
         __init_services__(
@@ -131,18 +126,16 @@ def __init_services__(
 
 
 def __create_system_user__() -> None:
-    from config import conf
-    from pydantic import EmailStr
-
     from app.core.data.crud.user import crud_user
     from app.core.data.dto.user import UserCreate
     from app.core.db.sql_service import SQLService
+    from config import conf
 
     with SQLService().db_session() as db_session:
         if not crud_user.exists(db=db_session, id=1):
             # TODO Flo: this is not nice.. make sure system user cannot be changed, seen from outside, login, etc
             create_dto = UserCreate(
-                email=EmailStr(str(conf.system_user.email)),
+                email=str(conf.system_user.email),
                 first_name=str(conf.system_user.first_name),
                 last_name=str(conf.system_user.last_name),
                 password=str(conf.system_user.password),

@@ -1,9 +1,10 @@
+from loguru import logger
+
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.source_document import SDocStatus
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from loguru import logger
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()

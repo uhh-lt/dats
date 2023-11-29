@@ -1,10 +1,10 @@
-from config import conf
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import EmailStr
 
 from app.core.data.dto.feedback import FeedbackRead
 from app.core.data.dto.user import UserRead
 from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 
 class MailService(metaclass=SingletonMeta):
@@ -22,7 +22,6 @@ class MailService(metaclass=SingletonMeta):
                 VALIDATE_CERTS=conf.mail.validate_certs == "True",
             )
         )
-        cls.mail = EmailStr(conf.mail.mail)
         return super(MailService, cls).__new__(cls)
 
     async def send_mail(self, email: EmailStr, subject: str, body: str):

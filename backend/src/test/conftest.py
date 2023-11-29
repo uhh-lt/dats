@@ -10,7 +10,9 @@ import sys
 from typing import Generator
 
 import pytest
+
 from app.core.startup import startup
+from migration.migrate import run_required_migrations
 
 sys._called_from_test = True
 
@@ -18,6 +20,7 @@ sys._called_from_test = True
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
+    run_required_migrations()
     startup(reset_data=True)
     os.environ["STARTUP_DONE"] = "1"
 
@@ -51,7 +54,7 @@ def code(session: SQLService, project: int, user: int) -> Generator[int, None, N
 
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
-        code_obj = CodeRead.from_orm(db_code)
+        code_obj = CodeRead.model_validate(db_code)
 
     yield code_obj.id
 
@@ -70,7 +73,7 @@ def project(session: SQLService, user: int) -> Generator[int, None, None]:
     description = "Test description"
 
     with session.db_session() as sess:
-        system_user = UserRead.from_orm(crud_user.read(sess, SYSTEM_USER_ID))
+        system_user = UserRead.model_validate(crud_user.read(sess, SYSTEM_USER_ID))
         id = crud_project.create(
             db=sess,
             create_dto=ProjectCreate(
@@ -101,7 +104,7 @@ def user(session: SQLService) -> Generator[int, None, None]:
     with session.db_session() as sess:
         # create user
         db_user = crud_user.create(db=sess, create_dto=user)
-        user = UserRead.from_orm(db_user)
+        user = UserRead.model_validate(db_user)
 
     yield user.id
 

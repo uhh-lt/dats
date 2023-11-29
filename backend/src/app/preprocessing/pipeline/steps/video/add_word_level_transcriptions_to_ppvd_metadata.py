@@ -12,7 +12,7 @@ def add_word_level_transcriptions_to_ppvd_metadata(
     ppad: PreProAudioDoc = cargo.data["ppad"]
 
     # store word level transcriptions as metadata
-    wlt = list(map(lambda wlt: wlt.dict(), ppad.word_level_transcriptions))
+    wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
     ppvd.metadata["word_level_transcriptions"] = json.dumps(wlt)
 
     return cargo

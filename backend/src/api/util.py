@@ -1,5 +1,9 @@
 from typing import List, Optional, Union
 
+from fastapi import HTTPException
+from loguru import logger
+from starlette import status
+
 from app.core.data.dto.memo import AttachedObjectType, MemoInDB, MemoRead
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM
@@ -7,9 +11,6 @@ from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
-from fastapi import HTTPException
-from loguru import logger
-from starlette import status
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
@@ -35,7 +36,7 @@ def get_object_memos(
         return None
 
     memo_as_in_db_dtos = [
-        MemoInDB.from_orm(memo_db_obj)
+        MemoInDB.model_validate(memo_db_obj)
         for memo_db_obj in db_obj.object_handle.attached_memos
         if user_id is None or memo_db_obj.user_id == user_id
     ]
@@ -57,7 +58,7 @@ def get_object_memos(
 
     memos = [
         MemoRead(
-            **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+            **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
             attached_object_id=db_obj.id,
             attached_object_type=object_types[type(db_obj)],
         )

@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 from typing import Generator
 
-from config import conf
 from loguru import logger
 from pydantic import PostgresDsn
 from sqlalchemy import create_engine
@@ -12,6 +11,7 @@ from sqlalchemy_utils import create_database, database_exists, drop_database
 from app.core.data.orm.orm_base import ORMBase
 from app.core.db.import_all_orms import *  # noqa: F401, F403
 from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 
 class SQLService(metaclass=SingletonMeta):
@@ -19,15 +19,15 @@ class SQLService(metaclass=SingletonMeta):
         try:
             db_uri = PostgresDsn.build(
                 scheme="postgresql",
-                user=conf.postgres.user,
+                username=conf.postgres.user,
                 password=conf.postgres.password,
                 host=conf.postgres.host,
-                port=conf.postgres.port,
-                path=f"/{conf.postgres.db}",
+                port=int(conf.postgres.port),
+                path=f"{conf.postgres.db}",
             )
 
             engine = create_engine(
-                db_uri,
+                str(db_uri),
                 pool_pre_ping=True,
                 pool_size=conf.postgres.pool.pool_size,
                 max_overflow=conf.postgres.pool.max_overflow,

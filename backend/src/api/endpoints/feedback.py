@@ -1,14 +1,14 @@
 from typing import List, Optional
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.data.dto.user import UserRead
 from app.core.db.redis_service import RedisService
 from app.core.mail.mail_service import MailService
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session
 
 router = APIRouter(
     prefix="/feedback", dependencies=[Depends(get_current_user)], tags=["feedback"]
@@ -28,7 +28,7 @@ async def create_feedback(
 
     user = crud_user.read(db=db, id=feedback.user_id)
     await MailService().send_feedback_received_mail(
-        user=UserRead.from_orm(user),
+        user=UserRead.model_validate(user),
         feedback=feedback,
     )
     return fb
@@ -79,7 +79,7 @@ async def reply_to(
     user = crud_user.read(db=db, id=feedback.user_id)
 
     await MailService().send_feedback_response_mail(
-        user=UserRead.from_orm(user),
+        user=UserRead.model_validate(user),
         feedback=feedback,
         message=message,
     )

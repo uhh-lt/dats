@@ -1,14 +1,8 @@
 from typing import Dict, List, Optional
 
-from app.core.data.crud.annotation_document import crud_adoc
-from app.core.data.crud.user import crud_user
-from app.core.data.dto.action import ActionType
-from app.core.data.dto.annotation_document import AnnotationDocumentRead
-from app.core.data.dto.project import ProjectRead
-from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
-from app.core.data.orm.user import UserORM
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 
 from api.dependencies import (
     get_current_user,
@@ -16,6 +10,14 @@ from api.dependencies import (
     is_authorized,
     skip_limit_params,
 )
+from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.user import crud_user
+from app.core.data.dto.action import ActionType
+from app.core.data.dto.annotation_document import AnnotationDocumentRead
+from app.core.data.dto.project import ProjectRead
+from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
+from app.core.data.orm.user import User
+
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
@@ -29,7 +31,7 @@ router = APIRouter(
     description="Returns the current (logged in) user",
 )
 async def get_me(*, user: UserORM = Depends(get_current_user)) -> Optional[UserRead]:
-    return UserRead.from_orm(user)
+    return UserRead.model_validate(user)
 
 
 @router.get(
@@ -42,7 +44,7 @@ async def get_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
 ) -> Optional[PublicUserRead]:
     db_user = crud_user.read(db=db, id=user_id)
-    return PublicUserRead.from_orm(db_user)
+    return PublicUserRead.model_validate(db_user)
 
 
 @router.get(
@@ -57,7 +59,7 @@ async def get_all(
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> List[PublicUserRead]:
     db_objs = crud_user.read_multi(db=db, **skip_limit)
-    return [PublicUserRead.from_orm(proj) for proj in db_objs]
+    return [PublicUserRead.model_validate(proj) for proj in db_objs]
 
 
 @router.patch(
@@ -71,7 +73,7 @@ async def update_by_id(
     *, db: Session = Depends(get_db_session), user_id: int, user: UserUpdate
 ) -> Optional[UserRead]:
     db_user = crud_user.update(db=db, id=user_id, update_dto=user)
-    return UserRead.from_orm(db_user)
+    return UserRead.model_validate(db_user)
 
 
 @router.delete(
@@ -85,7 +87,7 @@ async def delete_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
 ) -> Optional[UserRead]:
     db_user = crud_user.remove(db=db, id=user_id)
-    return UserRead.from_orm(db_user)
+    return UserRead.model_validate(db_user)
 
 
 @router.get(
@@ -100,7 +102,7 @@ async def get_user_projects(
     *, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[ProjectRead]:
     db_obj = crud_user.read(db=db, id=user_id)
-    return [ProjectRead.from_orm(proj) for proj in db_obj.projects]
+    return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
 
 
 @router.get(
@@ -115,7 +117,7 @@ async def recent_activity(
 ) -> List[AnnotationDocumentRead]:
     # get all adocs of a user
     user_adocs = [
-        AnnotationDocumentRead.from_orm(db_obj)
+        AnnotationDocumentRead.model_validate(db_obj)
         for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
     ]
 

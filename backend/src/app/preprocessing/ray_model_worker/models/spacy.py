@@ -2,10 +2,11 @@ import logging
 from typing import Dict, List
 
 import spacy
-from config import build_ray_model_deployment_config, conf
 from dto.spacy import SpacyInput, SpacyPipelineOutput, SpacySpan, SpacyToken
 from ray import serve
 from spacy import Language
+
+from config import build_ray_model_deployment_config, conf
 
 cc = conf.spacy
 

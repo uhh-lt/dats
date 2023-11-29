@@ -8,7 +8,6 @@ from typing import List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 import magic
-from config import conf
 from fastapi import HTTPException, UploadFile
 from loguru import logger
 
@@ -21,6 +20,7 @@ from app.core.data.dto.source_document import (
     SourceDocumentRead,
 )
 from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 # TODO Flo: Currently only supports localhost but in future it could be that processes running on a different host use
 #           this service...

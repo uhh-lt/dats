@@ -57,8 +57,8 @@ jobs:
           swap-size-gb: 10
       - uses: actions/checkout@v3
       - name: Start Docker Containers
+        working-directory: docker
         run: |
-          cd docker
           ./setup-folders.sh
           cp .env.example .env
           chmod -R a+rwx backend_repo/ models_cache/ spacy_models/ tika/
@@ -66,10 +66,12 @@ jobs:
           export GID=$(id -g)
           export API_PRODUCTION_WORKERS=0
           export RAY_CONFIG="./config_test_no_gpu.yaml"
+          # disable backend and frontend
+          export COMPOSE_PROFILES=
           docker compose -f compose-test.yml up -d --quiet-pull
           echo Waiting for containers to start...
           sleep 30
-          cd ..
-      - name: Run CRUD tests
+      - name: Run unit tests
+        working-directory: docker
         run: |
-          docker exec -i demo-dwts-backend-api-1 /opt/envs/dwts/bin/python -m pytest
+          docker compose -f compose-test.yml run -i dwts-backend-api /opt/envs/dwts/bin/python -m pytest

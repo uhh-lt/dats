@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .dto_base import UpdateDTOBase
 
@@ -53,9 +53,7 @@ class MemoReadBaseDTO(MemoBaseDTO):
 # Properties in DB (as in ORM)
 class MemoInDB(MemoReadBaseDTO):
     attached_to_id: int = Field(description="The ObjectHandle the Memo is attached to")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MemoReadAnnotationDocument(MemoReadBaseDTO):

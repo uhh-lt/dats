@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .dto_base import UpdateDTOBase
 
@@ -23,6 +23,4 @@ class CurrentCodeUpdate(CurrentCodeBaseDTO, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class CurrentCodeRead(CurrentCodeBaseDTO):
     id: int = Field(description="ID of the CurrentCode")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,7 +1,8 @@
-from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 from langdetect import detect_langs
 from loguru import logger
+
+from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
+from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
 def detect_content_language(cargo: PipelineCargo) -> PipelineCargo:

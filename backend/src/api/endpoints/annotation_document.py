@@ -1,5 +1,14 @@
 from typing import Dict, List, Optional, Union
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+    resolve_code_param,
+    skip_limit_params,
+)
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.span_annotation import crud_span_anno
@@ -18,15 +27,6 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationReadResolved,
 )
 from app.core.data.dto.span_group import SpanGroupRead
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import (
-    get_current_user,
-    get_db_session,
-    resolve_code_param,
-    skip_limit_params,
-)
 
 router = APIRouter(
     prefix="/adoc",
@@ -44,7 +44,9 @@ router = APIRouter(
 async def create(
     *, db: Session = Depends(get_db_session), adoc: AnnotationDocumentCreate
 ) -> Optional[AnnotationDocumentRead]:
-    return AnnotationDocumentRead.from_orm(crud_adoc.create(db=db, create_dto=adoc))
+    return AnnotationDocumentRead.model_validate(
+        crud_adoc.create(db=db, create_dto=adoc)
+    )
 
 
 @router.get(
@@ -58,7 +60,7 @@ async def get_by_adoc_id(
 ) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.read(db=db, id=adoc_id)
-    return AnnotationDocumentRead.from_orm(db_obj)
+    return AnnotationDocumentRead.model_validate(db_obj)
 
 
 @router.delete(
@@ -72,7 +74,7 @@ async def delete_by_adoc_id(
 ) -> Optional[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.remove(db=db, id=adoc_id)
-    return AnnotationDocumentRead.from_orm(db_obj)
+    return AnnotationDocumentRead.model_validate(db_obj)
 
 
 @router.get(
@@ -90,12 +92,12 @@ async def get_all_span_annotations(
 ) -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
     # TODO Flo: only if the user has access?
     spans = crud_span_anno.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)
-    span_read_dtos = [SpanAnnotationRead.from_orm(span) for span in spans]
+    span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
     if resolve_code:
         return [
             SpanAnnotationReadResolved(
-                **span_dto.dict(exclude={"current_code_id", "span_text_id"}),
-                code=CodeRead.from_orm(span_orm.current_code.code),
+                **span_dto.model_dump(exclude={"current_code_id", "span_text_id"}),
+                code=CodeRead.model_validate(span_orm.current_code.code),
                 span_text=span_orm.span_text.text,
                 user_id=span_orm.annotation_document.user_id,
                 sdoc_id=span_orm.annotation_document.source_document_id,
@@ -134,12 +136,12 @@ async def get_all_bbox_annotations(
 ) -> List[Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]]:
     # TODO Flo: only if the user has access?
     bboxes = crud_bbox_anno.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)
-    bbox_read_dtos = [BBoxAnnotationRead.from_orm(bbox) for bbox in bboxes]
+    bbox_read_dtos = [BBoxAnnotationRead.model_validate(bbox) for bbox in bboxes]
     if resolve_code:
         return [
             BBoxAnnotationReadResolvedCode(
-                **bbox_dto.dict(exclude={"current_code_id"}),
-                code=CodeRead.from_orm(bbox_orm.current_code.code),
+                **bbox_dto.model_dump(exclude={"current_code_id"}),
+                code=CodeRead.model_validate(bbox_orm.current_code.code),
             )
             for bbox_orm, bbox_dto in zip(bboxes, bbox_read_dtos)
         ]
@@ -174,6 +176,6 @@ async def get_all_span_groups(
 ) -> List[SpanGroupRead]:
     # TODO Flo: only if the user has access?
     return [
-        SpanGroupRead.from_orm(group)
+        SpanGroupRead.model_validate(group)
         for group in crud_span_group.read_by_adoc(db=db, adoc_id=adoc_id, **skip_limit)
     ]
