@@ -4,6 +4,7 @@
 import os
 from contextlib import asynccontextmanager
 
+from app.core.authorization.authorization_service import ForbiddenError
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -75,7 +76,6 @@ from app.core.search.elasticsearch_service import (
     NoSuchSourceDocumentInElasticSearchError,
 )
 from config import conf
-from migration.migrate import run_required_migrations
 
 
 # custom method to generate OpenApi function names
@@ -238,6 +238,10 @@ async def integrity_error_handler(_, exc: IntegrityError):
     else:
         return PlainTextResponse(str(exc), status_code=500)
 
+@app.exception_handler(ForbiddenError)
+def forbidden_error_handler(_, exc: ForbiddenError):
+    return PlainTextResponse(str(exc), status_code=403)
+
 
 # include the endpoint routers
 app.include_router(general.router)
@@ -269,8 +273,6 @@ def main() -> None:
     assert (
         port is not None and isinstance(port, int) and port > 0
     ), "The API port has to be a positive integer! E.g. 8081"
-
-    run_required_migrations()
 
     is_debug = conf.api.production_mode == "0"
 

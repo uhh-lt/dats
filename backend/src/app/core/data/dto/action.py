@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class ActionType(str, Enum):
     CREATE = "CREATE"
+    READ = "READ"
     UPDATE = "UPDATE"
     DELETE = "DELETE"
 

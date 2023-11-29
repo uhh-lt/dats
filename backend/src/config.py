@@ -20,3 +20,12 @@ logger.add(sys.stderr, level=conf.logging.level.upper())
 #            level=conf.logging.level.upper())
 
 logger.info(f"Loaded config '{__conf_file__}'")
+
+
+def verify_config():
+    jwt_secret = conf.api.auth.jwt.secret
+    print(jwt_secret)
+    if not jwt_secret or jwt_secret == "":
+        raise Exception(
+            "JWT Secret not set! Please provide a valid JWT Secret using the JWT_SECRET environment variable."
+        )

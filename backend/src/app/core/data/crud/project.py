@@ -23,7 +23,9 @@ from app.core.db.sql_service import SQLService
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
-    def create(self, db: Session, *, create_dto: ProjectCreate) -> ProjectORM:
+    def create(
+        self, db: Session, *, create_dto: ProjectCreate, creating_user: UserRead
+    ) -> ProjectORM:
         # 1) create the project
         dto_obj_data = jsonable_encoder(create_dto)
         # noinspection PyArgumentList
@@ -44,10 +46,14 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         # 3) associate the system user
         self.associate_user(db=db, proj_id=project_id, user_id=SYSTEM_USER_ID)
 
-        # 4) create system codes
+        # 4) associate the user that created the project
+        if creating_user.id != SYSTEM_USER_ID:
+            self.associate_user(db=db, proj_id=project_id, user_id=creating_user.id)
+
+        # 5) create system codes
         crud_code.create_system_codes_for_project(db=db, proj_id=project_id)
 
-        # 5) create repo directory structure
+        # 6) create repo directory structure
         RepoService().create_directory_structure_for_project(proj_id=project_id)
 
         return db_obj
