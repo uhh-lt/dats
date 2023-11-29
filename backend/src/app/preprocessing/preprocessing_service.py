@@ -203,9 +203,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         self,
         payloads: List[PreprocessingJobPayloadCreateWithoutPreproJobId],
         proj_id: int,
-    ) -> Optional[PreprocessingJobRead]:
-        if len(payloads) == 0:
-            return None
+    ) -> PreprocessingJobRead:
         logger.info(
             f"Creating PreprocessingJob in Project {proj_id} "
             f"for {len(payloads)} documents ..."
@@ -253,7 +251,7 @@ class PreprocessingService(metaclass=SingletonMeta):
         uploaded_files: Optional[List[UploadFile]] = None,
         archive_file_path: Optional[Path] = None,
         unimported_project_files: Optional[List[Path]] = None,
-    ) -> Optional[PreprocessingJobRead]:
+    ) -> PreprocessingJobRead:
         if (
             uploaded_files is not None
             and archive_file_path is not None
@@ -279,6 +277,11 @@ class PreprocessingService(metaclass=SingletonMeta):
         else:
             raise ValueError(
                 "Either uploaded_files or archive_file_path must be specified!"
+            )
+
+        if len(payloads) == 0:
+            raise ValueError(
+                "Payloads are empty! Please specify at least one file to import!"
             )
 
         return self._create_and_start_preprocessing_job_from_payloads_async(

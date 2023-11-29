@@ -316,7 +316,7 @@ class RepoService(metaclass=SingletonMeta):
         relative: bool = True,
         webp: bool = False,
         thumbnail: bool = False,
-    ) -> Optional[str]:
+    ) -> str:
         dst_path = self.get_path_to_sdoc_file(
             sdoc, raise_if_not_exists=True, webp=webp, thumbnail=thumbnail
         )

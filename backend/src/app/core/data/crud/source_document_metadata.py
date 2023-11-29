@@ -3,7 +3,7 @@ from typing import List, Optional
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase
+from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document_metadata import (
@@ -153,7 +153,7 @@ class CRUDSourceDocumentMetadata(
         sdoc_id: int,
         skip: Optional[int] = None,
         limit: Optional[int] = None,
-    ) -> Optional[SourceDocumentMetadataORM]:
+    ) -> SourceDocumentMetadataORM:
         query = (
             db.query(self.model)
             .join(SourceDocumentMetadataORM.project_metadata)
@@ -168,6 +168,8 @@ class CRUDSourceDocumentMetadata(
             query = query.limit(limit)
 
         db_obj = query.first()
+        if db_obj is None:
+            raise NoSuchElementError(self.model, sdoc_id=sdoc_id, key=key)
         return db_obj
 
     def read_by_sdoc(

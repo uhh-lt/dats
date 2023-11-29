@@ -45,9 +45,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     ) -> List[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def exists(
-        self, db: Session, *, id: int, raise_error: bool = False
-    ) -> Optional[bool]:
+    def exists(self, db: Session, *, id: int, raise_error: bool = False) -> bool:
         exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
         if not exists and raise_error:
             raise NoSuchElementError(self.model, id=id)

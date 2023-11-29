@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -108,7 +108,7 @@ async def get_linked_sdocs(
 
 @router.get(
     "/{sdoc_id}/url",
-    response_model=Optional[str],
+    response_model=str,
     summary="Returns the URL to the original file of the SourceDocument",
     description="Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
 )
@@ -116,10 +116,10 @@ async def get_file_url(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    relative: Optional[bool] = True,
-    webp: Optional[bool] = False,
-    thumbnail: Optional[bool] = False,
-) -> Optional[str]:
+    relative: bool = True,
+    webp: bool = False,
+    thumbnail: bool = False,
+) -> str:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     # TODO: FIX TYPING
@@ -152,20 +152,17 @@ async def get_all_metadata(
 
 @router.get(
     "/{sdoc_id}/metadata/{metadata_key}",
-    response_model=Optional[SourceDocumentMetadataReadResolved],
+    response_model=SourceDocumentMetadataReadResolved,
     summary="Returns the SourceDocumentMetadata with the given Key",
     description="Returns the SourceDocumentMetadata with the given Key if it exists.",
 )
 async def read_metadata_by_key(
     *, db: Session = Depends(get_db_session), sdoc_id: int, metadata_key: str
-) -> Optional[SourceDocumentMetadataReadResolved]:
+) -> SourceDocumentMetadataReadResolved:
     # TODO Flo: only if the user has access?
-    crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
     metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
         db=db, sdoc_id=sdoc_id, key=metadata_key
     )
-    if metadata_db_obj is None:
-        return None
     return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
 
 
