@@ -6,7 +6,6 @@ import traceback
 from loguru import logger
 
 import config
-from migration.migrate import run_required_migrations
 
 
 def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
@@ -53,11 +52,6 @@ def startup(sql_echo: bool = False, reset_data: bool = False) -> None:
     # noinspection PyUnresolvedReferences
     try:
         config.verify_config()
-        # In production, multiple workers run in parallel, but
-        # we can not to run migrations in parallel.
-        # The block above should ensure that only one startup
-        # process is running at any given time.
-        run_required_migrations()
 
         # start and init services
         __init_services__(
