@@ -6,6 +6,7 @@ import MemoHooks from "../../api/MemoHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoForm } from "./MemoForm";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
 
 interface MemoContentCodeProps {
   code: CodeRead;
@@ -45,7 +46,7 @@ export function MemoContentCode({
             });
             closeDialog();
           },
-        },
+        }
       );
     } else {
       createMutation.mutate(
@@ -67,24 +68,29 @@ export function MemoContentCode({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        },
+        }
       );
     }
   };
   const handleDeleteCodeMemo = () => {
     if (memo) {
-      deleteMutation.mutate(
-        { memoId: memo.id },
-        {
-          onSuccess: () => {
-            SnackbarAPI.openSnackbar({
-              text: `Deleted memo for code ${code.name}`,
-              severity: "success",
-            });
-            closeDialog();
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the memo content tag - ${memo.title}? Note - This action cannot be undone!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { memoId: memo.id },
+            {
+              onSuccess: () => {
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted memo for code ${code.name}`,
+                  severity: "success",
+                });
+                closeDialog();
+              },
+            }
+          );
         },
-      );
+      });
     } else {
       throw Error("Invalid invocation of handleDeleteCodeMemo. No memo to delete.");
     }

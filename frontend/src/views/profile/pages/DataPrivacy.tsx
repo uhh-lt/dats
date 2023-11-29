@@ -9,7 +9,7 @@ export default function DataPrivacy() {
       </Typography>
 
       <Grid container spacing={1} sx={{ borderTop: 1, borderColor: "divider" }}>
-        <Grid item xs={12} sx={{ mt: 1, height: 550, overflow: "auto" }}>
+        <Grid item xs={12} sx={{ mt: 1, height: "100%", overflow: "auto" }}>
           <Typography variant={"body1"} gutterBottom>
             This section outlines how we collect, use, and protect your data.
             <br />
