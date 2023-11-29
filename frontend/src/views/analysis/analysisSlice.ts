@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI";
 
 export interface TimelineAnalysisConcept {
   name: string;
@@ -87,6 +88,10 @@ export const analysisSlice = createSlice({
     deleteConcept: (state, action: PayloadAction<TimelineAnalysisConcept>) => {
       const index = state.concepts.findIndex((c) => c.name === action.payload.name);
       if (index !== -1) {
+        // ConfirmationAPI.openConfirmationDialog({
+        //   text: `Do you really want to remove the concept with index - ${index}? Note - This action cannot be undone!`,
+        //   onAccept: () => state.concepts.splice(index, 1),
+        // });
         state.concepts.splice(index, 1);
       }
     },

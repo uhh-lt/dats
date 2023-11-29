@@ -6,6 +6,7 @@ import MemoHooks from "../../api/MemoHooks";
 import { MemoForm } from "./MemoForm";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
 
 interface MemoContentTagProps {
   tag: DocumentTagRead;
@@ -45,7 +46,7 @@ export function MemoContentTag({
             });
             closeDialog();
           },
-        },
+        }
       );
     } else {
       createMutation.mutate(
@@ -67,24 +68,29 @@ export function MemoContentTag({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        },
+        }
       );
     }
   };
   const handleDeleteTagMemo = () => {
     if (memo) {
-      deleteMutation.mutate(
-        { memoId: memo.id },
-        {
-          onSuccess: () => {
-            SnackbarAPI.openSnackbar({
-              text: `Deleted memo for tag ${tag.title}`,
-              severity: "success",
-            });
-            closeDialog();
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the memo content tag - ${memo.title}? Note - This action cannot be undone!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { memoId: memo.id },
+            {
+              onSuccess: () => {
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted memo for tag ${tag.title}`,
+                  severity: "success",
+                });
+                closeDialog();
+              },
+            }
+          );
         },
-      );
+      });
     } else {
       throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
     }

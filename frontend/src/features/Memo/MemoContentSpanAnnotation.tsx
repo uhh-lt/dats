@@ -6,6 +6,7 @@ import { MemoForm } from "./MemoForm";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
 
 interface MemoContentSpanAnnotationProps {
   spanAnnotation: SpanAnnotationReadResolved;
@@ -45,7 +46,7 @@ export function MemoContentSpanAnnotation({
             });
             closeDialog();
           },
-        },
+        }
       );
     } else {
       createMutation.mutate(
@@ -67,24 +68,29 @@ export function MemoContentSpanAnnotation({
             if (onMemoCreateSuccess) onMemoCreateSuccess(memo);
             closeDialog();
           },
-        },
+        }
       );
     }
   };
   const handleDeleteSpanAnnotationMemo = () => {
     if (memo) {
-      deleteMutation.mutate(
-        { memoId: memo.id },
-        {
-          onSuccess: (memo) => {
-            SnackbarAPI.openSnackbar({
-              text: `Deleted memo for spanAnnotation ${memo.attached_object_id}`,
-              severity: "success",
-            });
-            closeDialog();
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the memo content tag - ${memo.title}? Note - This action cannot be undone!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { memoId: memo.id },
+            {
+              onSuccess: (memo) => {
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted memo for spanAnnotation ${memo.attached_object_id}`,
+                  severity: "success",
+                });
+                closeDialog();
+              },
+            }
+          );
         },
-      );
+      });
     } else {
       throw Error("Invalid invocation of handleDeleteSpanAnnotationMemo. No memo to delete.");
     }

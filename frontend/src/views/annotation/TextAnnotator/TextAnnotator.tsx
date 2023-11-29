@@ -18,6 +18,7 @@ import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanCont
 import { AnnoActions } from "../annoSlice";
 import { ICode } from "./ICode";
 import { selectionIsEmpty } from "./utils";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentWithDataRead;
@@ -192,17 +193,22 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   const handleCodeSelectorDeleteAnnotation = (
     annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
   ) => {
-    deleteMutation.mutate(
-      { spanAnnotationToDelete: annotation as SpanAnnotationReadResolved },
-      {
-        onSuccess: (spanAnnotation) => {
-          SnackbarAPI.openSnackbar({
-            text: `Deleted Span Annotation ${spanAnnotation.id}`,
-            severity: "success",
-          });
-        },
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Do you really want to remove the span annotation - ${annotation.id}? Note - You can reassign it later!`,
+      onAccept: () => {
+        deleteMutation.mutate(
+          { spanAnnotationToDelete: annotation as SpanAnnotationReadResolved },
+          {
+            onSuccess: (spanAnnotation) => {
+              SnackbarAPI.openSnackbar({
+                text: `Deleted Span Annotation ${spanAnnotation.id}`,
+                severity: "success",
+              });
+            },
+          },
+        );
       },
-    );
+    });
   };
   const handleCodeSelectorEditCode = (
     annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,

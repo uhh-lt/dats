@@ -6,6 +6,7 @@ import MemoHooks from "../../api/MemoHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoForm } from "./MemoForm";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
 
 interface MemoContentSourceDocumentProps {
   sdoc: SourceDocumentRead;
@@ -45,7 +46,7 @@ export function MemoContentSourceDocument({
             });
             closeDialog();
           },
-        },
+        }
       );
     } else {
       createMutation.mutate(
@@ -67,24 +68,29 @@ export function MemoContentSourceDocument({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        },
+        }
       );
     }
   };
   const handleDeleteSdocMemo = () => {
     if (memo) {
-      deleteMutation.mutate(
-        { memoId: memo.id },
-        {
-          onSuccess: () => {
-            SnackbarAPI.openSnackbar({
-              text: `Deleted memo for source document ${sdoc.filename}`,
-              severity: "success",
-            });
-            closeDialog();
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the memo content tag - ${memo.title}? Note - This action cannot be undone!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { memoId: memo.id },
+            {
+              onSuccess: () => {
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted memo for source document ${sdoc.filename}`,
+                  severity: "success",
+                });
+                closeDialog();
+              },
+            }
+          );
         },
-      );
+      });
     } else {
       throw Error("Invalid invocation of handleDeleteSdocMemo. No memo to delete.");
     }

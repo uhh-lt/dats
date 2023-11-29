@@ -28,6 +28,7 @@ import UserHooks from "../../../api/UserHooks";
 import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import { ProjectProps } from "./ProjectProps";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 
 function ProjectUsers({ project }: ProjectProps) {
   const [selectedUser, setSelectedUser] = useState<PublicUserRead | null>(null);
@@ -64,27 +65,32 @@ function ProjectUsers({ project }: ProjectProps) {
           });
           setSelectedUser(null);
         },
-      },
+      }
     );
   };
 
   // remove user
   const removeUserMutation = ProjectHooks.useRemoveUser();
   const handleClickRemoveUser = (userId: number) => {
-    removeUserMutation.mutate(
-      {
-        projId: project.id,
-        userId: userId,
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Do you really want to delete the user ${userId}? This action cannot be undone!`,
+      onAccept: () => {
+        removeUserMutation.mutate(
+          {
+            projId: project.id,
+            userId: userId,
+          },
+          {
+            onSuccess: (data) => {
+              SnackbarAPI.openSnackbar({
+                text: "Successfully removed user " + data.first_name + "!",
+                severity: "success",
+              });
+            },
+          }
+        );
       },
-      {
-        onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
-            text: "Successfully removed user " + data.first_name + "!",
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   const handleChangeSelectedUser = (event: React.SyntheticEvent, value: PublicUserRead | null) => {
