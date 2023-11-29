@@ -87,14 +87,14 @@ async def read_all(
 
 @router.get(
     "/{proj_id}",
-    response_model=ProjectRead,
+    response_model=Optional[ProjectRead],
     summary="Returns the Project with the given ID",
     description="Returns the Project with the given ID if it exists",
     dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
 async def read_project(
     *, db: Session = Depends(get_db_session), proj_id: int
-) -> ProjectRead:
+) -> Optional[ProjectRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_project.read(db=db, id=proj_id)
     return ProjectRead.model_validate(db_obj)
@@ -231,7 +231,7 @@ async def delete_project_sdocs(
 
 @router.patch(
     "/{proj_id}/user/{user_id}",
-    response_model=UserRead,
+    response_model=Optional[UserRead],
     summary="Associates the User with the Project",
     description="Associates an existing User to the Project with the given ID if it exists",
     dependencies=[
@@ -241,7 +241,7 @@ async def delete_project_sdocs(
 )
 async def associate_user_to_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
-) -> UserRead:
+) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.model_validate(user_db_obj)
@@ -249,7 +249,7 @@ async def associate_user_to_project(
 
 @router.delete(
     "/{proj_id}/user/{user_id}",
-    response_model=UserRead,
+    response_model=Optional[UserRead],
     summary="Dissociates the Users with the Project",
     description="Dissociates the Users with the Project with the given ID if it exists",
     dependencies=[
@@ -259,7 +259,7 @@ async def associate_user_to_project(
 )
 async def dissociate_user_from_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
-) -> UserRead:
+) -> Optional[UserRead]:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.model_validate(user_db_obj)
@@ -433,7 +433,12 @@ async def get_user_actions_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
-    return crud_action.read_by_user_and_project(db=db, proj_id=proj_id, user_id=user_id)
+    return [
+        ActionRead.model_validate(ar)
+        for ar in crud_action.read_by_user_and_project(
+            db=db, proj_id=proj_id, user_id=user_id
+        )
+    ]
 
 
 @router.post(
@@ -484,7 +489,7 @@ async def remove_user_memos_of_project(
 
 @router.put(
     "/{proj_id}/memo",
-    response_model=MemoRead,
+    response_model=Optional[MemoRead],
     summary="Adds a Memo of the current User to the Project.",
     description="Adds a Memo of the current User to the Project with the given ID if it exists",
     dependencies=[
@@ -493,7 +498,7 @@ async def remove_user_memos_of_project(
 )
 async def add_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, memo: MemoCreate
-) -> MemoRead:
+) -> Optional[MemoRead]:
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
@@ -537,6 +542,33 @@ async def get_user_memo(
 ) -> MemoRead:
     db_obj = crud_project.read(db=db, id=proj_id)
     return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
+
+
+@router.get(
+    "/{proj_id}/resolve_filename/{filename}",
+    response_model=Optional[int],
+    summary="Returns the Id of the SourceDocument identified by project_id and filename if it exists",
+    description=(
+        "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
+    ),
+    dependencies=[
+        is_authorized(ActionType.READ, crud_project, "proj_id"),
+        # TODO add authorization for the specific source document?
+    ],
+)
+async def resolve_filename(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    filename: str,
+    only_finished: bool = True,
+) -> Optional[int]:
+    sdoc = crud_sdoc.read_by_filename(
+        db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
+    )
+    if sdoc is not None:
+        return sdoc.id
+    return None
 
 
 @router.get(

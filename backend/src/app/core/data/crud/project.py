@@ -62,7 +62,7 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
 
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> Optional[ProjectORM]:
+    def remove(self, db: Session, *, id: int) -> ProjectORM:
         # 1) delete the project and all connected data via cascading delete
         proj_db_obj = super().remove(db=db, id=id)
         # 2) delete the files from repo
