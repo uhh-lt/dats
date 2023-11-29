@@ -89,13 +89,16 @@ export const operator2HumanReadable: Record<FilterOperators, string> = {
   [StringOperator.STRING_STARTS_WITH]: "starts with",
   [StringOperator.STRING_ENDS_WITH]: "ends with",
   [IDListOperator.ID_LIST_CONTAINS]: "contains",
+  [IDListOperator.ID_LIST_NOT_CONTAINS]: "contains not",
   [ListOperator.LIST_CONTAINS]: "contains",
+  [ListOperator.LIST_NOT_CONTAINS]: "contains not",
   [DateOperator.DATE_EQUALS]: "=",
   [DateOperator.DATE_GT]: ">",
   [DateOperator.DATE_LT]: "<",
   [DateOperator.DATE_GTE]: ">=",
   [DateOperator.DATE_LTE]: "<+",
   [BooleanOperator.BOOLEAN_EQUALS]: "is",
+  [BooleanOperator.BOOLEAN_NOT_EQUALS]: "is not",
 };
 
 // METHODS
