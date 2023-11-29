@@ -2,4 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type ListOperator = {};
+export enum ListOperator {
+  LIST_CONTAINS = "LIST_CONTAINS",
+  LIST_NOT_CONTAINS = "LIST_NOT_CONTAINS",
+}

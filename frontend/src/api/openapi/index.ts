@@ -31,7 +31,7 @@ export type { Body_authentication_login } from "./models/Body_authentication_log
 export type { Body_project_upload_project_sdoc } from "./models/Body_project_upload_project_sdoc";
 export type { Body_search_search_code_stats } from "./models/Body_search_search_code_stats";
 export type { Body_search_search_sdocs_new } from "./models/Body_search_search_sdocs_new";
-export type { BooleanOperator } from "./models/BooleanOperator";
+export { BooleanOperator } from "./models/BooleanOperator";
 export type { CodeCreate } from "./models/CodeCreate";
 export type { CodeFrequency } from "./models/CodeFrequency";
 export type { CodeOccurrence } from "./models/CodeOccurrence";
@@ -67,10 +67,10 @@ export type { FilterExpression_WordFrequencyColumns_ } from "./models/FilterExpr
 export { FilterOperator } from "./models/FilterOperator";
 export { FilterValueType } from "./models/FilterValueType";
 export type { HTTPValidationError } from "./models/HTTPValidationError";
-export type { IDListOperator } from "./models/IDListOperator";
+export { IDListOperator } from "./models/IDListOperator";
 export { IDOperator } from "./models/IDOperator";
 export type { KeywordStat } from "./models/KeywordStat";
-export type { ListOperator } from "./models/ListOperator";
+export { ListOperator } from "./models/ListOperator";
 export { LogicalOperator } from "./models/LogicalOperator";
 export type { MemoContentQuery } from "./models/MemoContentQuery";
 export type { MemoCreate } from "./models/MemoCreate";

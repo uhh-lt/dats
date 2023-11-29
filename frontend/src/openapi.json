@@ -5479,7 +5479,11 @@
         "required": ["filter", "sorts"],
         "title": "Body_search-search_sdocs_new"
       },
-      "BooleanOperator": { "const": "BOOLEAN_EQUALS", "title": "BooleanOperator" },
+      "BooleanOperator": {
+        "type": "string",
+        "enum": ["BOOLEAN_EQUALS", "BOOLEAN_NOT_EQUALS"],
+        "title": "BooleanOperator"
+      },
       "CodeCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
@@ -6169,7 +6173,11 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
-      "IDListOperator": { "const": "ID_LIST_CONTAINS", "title": "IDListOperator" },
+      "IDListOperator": {
+        "type": "string",
+        "enum": ["ID_LIST_CONTAINS", "ID_LIST_NOT_CONTAINS"],
+        "title": "IDListOperator"
+      },
       "IDOperator": { "type": "string", "enum": ["ID_EQUALS", "ID_NOT_EQUALS"], "title": "IDOperator" },
       "KeywordStat": {
         "properties": {
@@ -6189,7 +6197,7 @@
         "required": ["keyword", "filtered_count", "global_count"],
         "title": "KeywordStat"
       },
-      "ListOperator": { "const": "LIST_CONTAINS", "title": "ListOperator" },
+      "ListOperator": { "type": "string", "enum": ["LIST_CONTAINS", "LIST_NOT_CONTAINS"], "title": "ListOperator" },
       "LogicalOperator": {
         "type": "string",
         "enum": ["or", "and"],

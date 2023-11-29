@@ -2,4 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type IDListOperator = {};
+export enum IDListOperator {
+  ID_LIST_CONTAINS = "ID_LIST_CONTAINS",
+  ID_LIST_NOT_CONTAINS = "ID_LIST_NOT_CONTAINS",
+}
