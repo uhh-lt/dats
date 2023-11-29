@@ -10,7 +10,7 @@ import { SearchActions } from "../../searchSlice";
 import { useAppDispatch } from "../../../../plugins/ReduxHooks";
 
 interface DeleteMenuItemProps {
-  sdocId: number | undefined;
+  sdocId: number | null | undefined;
   navigateTo?: string;
   onClick?: () => void;
 }

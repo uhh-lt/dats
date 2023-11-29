@@ -129,7 +129,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
             >
               <Switch
                 {...field}
-                checked={field.value}
+                checked={field.value === null ? false : field.value}
                 onChange={(e) => field.onChange(e.target.checked)}
                 onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
               />

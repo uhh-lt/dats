@@ -7,7 +7,7 @@ import DeleteMenuItem from "../../search/ToolBar/ToolBarElements/DeleteMenuItem"
 interface ProjectDocumentsContextMenuProps {}
 
 export interface ProjectDocumentsContextMenuHandle {
-  open: (position: PopoverPosition, projectId: number, sdocId: number | undefined) => void;
+  open: (position: PopoverPosition, projectId: number, sdocId: number | null | undefined) => void;
   close: () => void;
 }
 
@@ -19,7 +19,7 @@ const ProjectDocumentsContextMenu = forwardRef<ProjectDocumentsContextMenuHandle
     const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
     const [projectId, setProjectId] = useState<number>();
-    const [sdocId, setSdocId] = useState<number>();
+    const [sdocId, setSdocId] = useState<number | null | undefined>();
 
     // exposed methods (via ref)
     useImperativeHandle(ref, () => ({
@@ -28,7 +28,7 @@ const ProjectDocumentsContextMenu = forwardRef<ProjectDocumentsContextMenuHandle
     }));
 
     // methods
-    const openContextMenu = (position: PopoverPosition, projectId: number, sdocId: number | undefined) => {
+    const openContextMenu = (position: PopoverPosition, projectId: number, sdocId: number | null | undefined) => {
       setIsPopoverOpen(true);
       setPosition(position);
       setProjectId(projectId);

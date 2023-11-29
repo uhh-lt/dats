@@ -36,7 +36,7 @@ export const actionTarget2Title: Record<ActionTargetObjectType, string> = {
   document_tag: "Document Tag",
 };
 
-export const action2TargetTitle = (action: ActionRead): string | undefined => {
+export const action2TargetTitle = (action: ActionRead): string | null | undefined => {
   // the most recent version of the target object ...
   let obj = action.after_state; // ... is the after state for CREATE and UPDATE actions
   if (action.action_type === ActionType.DELETE) {
@@ -45,7 +45,7 @@ export const action2TargetTitle = (action: ActionRead): string | undefined => {
   }
 
   // if there is no object, an error occured in the backend!
-  if (obj === undefined) {
+  if (obj === undefined || obj == null) {
     return undefined;
   }
 
@@ -77,7 +77,7 @@ export const action2TargetTitle = (action: ActionRead): string | undefined => {
   }
 };
 
-export const parseActionState = (input: string | undefined | null): any => {
+export const parseActionState = (input: string | null | undefined | null): any => {
   if (input === undefined) {
     throw new Error("state is undefined!");
   }
@@ -98,7 +98,7 @@ export const parseActionState = (input: string | undefined | null): any => {
   }
 };
 
-export const generateActionStrings = (before: string | undefined, after: string | undefined) => {
+export const generateActionStrings = (before: string | null | undefined, after: string | null | undefined) => {
   const result = {
     before: "",
     after: "",
