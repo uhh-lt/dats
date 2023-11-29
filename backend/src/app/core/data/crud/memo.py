@@ -34,9 +34,7 @@ class CRUDMemo(CRUDBase[MemoORM, MemoCreate, MemoUpdate]):
     def create(self, db: Session, *, create_dto: MemoCreate) -> MemoORM:
         raise NotImplementedError()
 
-    def update(
-        self, db: Session, *, id: int, update_dto: MemoUpdate
-    ) -> Optional[MemoORM]:
+    def update(self, db: Session, *, id: int, update_dto: MemoUpdate) -> MemoORM:
         updated_memo = super().update(db, id=id, update_dto=update_dto)
         self.__update_memo_in_elasticsearch(updated_memo)
         return updated_memo

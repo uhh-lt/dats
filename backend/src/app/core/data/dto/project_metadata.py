@@ -11,7 +11,7 @@ from app.core.data.meta_type import MetaType
 class ProjectMetadataBaseDTO(BaseModel):
     key: str = Field(description="Key of the ProjectMetadata")
     metatype: MetaType = Field(description="Type of the ProjectMetadata")
-    read_only: Optional[bool] = Field(
+    read_only: bool = Field(
         description=(
             "Flag that tells if the ProjectMetadata cannot be changed."
             " Used for system generated metadata! Use False for user metadata."

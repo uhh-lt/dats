@@ -31,7 +31,7 @@ router = APIRouter(
 
 @router.get(
     "/{sdoc_id}",
-    response_model=Optional[SourceDocumentWithDataRead],
+    response_model=SourceDocumentWithDataRead,
     summary="Returns the SourceDocument",
     description="Returns the SourceDocument with the given ID if it exists",
 )
@@ -40,7 +40,7 @@ async def get_by_id(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     only_if_finished: bool = True,
-) -> Optional[SourceDocumentWithDataRead]:
+) -> SourceDocumentWithDataRead:
     # TODO Flo: only if the user has access?
     if not only_if_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
@@ -50,7 +50,7 @@ async def get_by_id(
 
 @router.patch(
     "/{sdoc_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Updates the SourceDocument",
     description="Updates the SourceDocument with the given ID.",
 )
@@ -59,7 +59,7 @@ async def update_by_id(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     sdoc_update: SourceDocumentUpdate,
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc_update)
     sdoc_dto = SourceDocumentRead.model_validate(db_obj)
@@ -68,13 +68,13 @@ async def update_by_id(
 
 @router.delete(
     "/{sdoc_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Removes the SourceDocument",
     description="Removes the SourceDocument with the given ID if it exists",
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), sdoc_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
     return SourceDocumentRead.model_validate(db_obj)
@@ -122,6 +122,7 @@ async def get_file_url(
 ) -> Optional[str]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    # TODO: FIX TYPING
     return RepoService().get_sdoc_url(
         sdoc=SourceDocumentRead.model_validate(sdoc_db_obj),
         relative=relative,
@@ -163,12 +164,14 @@ async def read_metadata_by_key(
     metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
         db=db, sdoc_id=sdoc_id, key=metadata_key
     )
+    if metadata_db_obj is None:
+        return None
     return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
 
 
 @router.patch(
     "/{sdoc_id}/metadata/{metadata_id}",
-    response_model=Optional[SourceDocumentMetadataReadResolved],
+    response_model=SourceDocumentMetadataReadResolved,
     summary="Updates the SourceDocumentMetadata",
     description="Updates the SourceDocumentMetadata with the given ID if it exists.",
 )
@@ -178,7 +181,7 @@ async def update_metadata_by_id(
     sdoc_id: int,
     metadata_id: int,
     metadata: SourceDocumentMetadataUpdate,
-) -> Optional[SourceDocumentMetadataReadResolved]:
+) -> SourceDocumentMetadataReadResolved:
     # TODO Flo: only if the user has access?
     crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
     metadata_db_obj = crud_sdoc_meta.update(
@@ -189,13 +192,13 @@ async def update_metadata_by_id(
 
 @router.get(
     "/{sdoc_id}/adoc/{user_id}",
-    response_model=Optional[AnnotationDocumentRead],
+    response_model=AnnotationDocumentRead,
     summary="Returns the AnnotationDocument for the SourceDocument of the User",
     description="Returns the AnnotationDocument for the SourceDocument of the User.",
 )
 async def get_adoc_of_user(
     *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
-) -> Optional[AnnotationDocumentRead]:
+) -> AnnotationDocumentRead:
     # TODO Flo: only if the user has access?
     return AnnotationDocumentRead.model_validate(
         crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id)
@@ -250,27 +253,27 @@ async def get_all_tags(
 
 @router.delete(
     "/{sdoc_id}/tags",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Unlinks all DocumentTags with the SourceDocument",
     description="Unlinks all DocumentTags of the SourceDocument.",
 )
 async def unlinks_all_tags(
     *, db: Session = Depends(get_db_session), sdoc_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, id=sdoc_id)
+    sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, sdoc_id=sdoc_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
 
 
 @router.patch(
     "/{sdoc_id}/tag/{tag_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Links a DocumentTag with the SourceDocument",
     description="Links a DocumentTag with the SourceDocument with the given ID if it exists",
 )
 async def link_tag(
     *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
@@ -278,13 +281,13 @@ async def link_tag(
 
 @router.delete(
     "/{sdoc_id}/tag/{tag_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Unlinks the DocumentTag from the SourceDocument",
     description="Unlinks the DocumentTags from the SourceDocument.",
 )
 async def unlink_tag(
     *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.unlink_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
@@ -292,13 +295,13 @@ async def unlink_tag(
 
 @router.put(
     "/{sdoc_id}/memo",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Adds a Memo to the SourceDocument",
     description="Adds a Memo to the SourceDocument with the given ID if it exists",
 )
 async def add_memo(
     *, db: Session = Depends(get_db_session), sdoc_id: int, memo: MemoCreate
-) -> Optional[MemoRead]:
+) -> MemoRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_sdoc(db=db, sdoc_id=sdoc_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)

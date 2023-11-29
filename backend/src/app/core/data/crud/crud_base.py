@@ -86,7 +86,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
     def update(
         self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> Optional[ORMModelType]:
+    ) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         before_state = self._get_action_state_from_orm(db_obj=db_obj)
 
@@ -110,7 +110,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
+    def remove(self, db: Session, *, id: int) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         before_state = self._get_action_state_from_orm(db_obj=db_obj)
 

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -24,23 +24,23 @@ router = APIRouter(
 
 @router.get(
     "/me",
-    response_model=Optional[UserRead],
+    response_model=UserRead,
     summary="Returns the current user",
     description="Returns the current (logged in) user",
 )
-async def get_me(*, user: UserORM = Depends(get_current_user)) -> Optional[UserRead]:
+async def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
 
 
 @router.get(
     "/{user_id}",
-    response_model=Optional[PublicUserRead],
+    response_model=PublicUserRead,
     summary="Returns the User",
     description="Returns the User with the given ID if it exists",
 )
 async def get_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
-) -> Optional[PublicUserRead]:
+) -> PublicUserRead:
     db_user = crud_user.read(db=db, id=user_id)
     return PublicUserRead.model_validate(db_user)
 
@@ -62,28 +62,28 @@ async def get_all(
 
 @router.patch(
     "/{user_id}",
-    response_model=Optional[UserRead],
+    response_model=UserRead,
     summary="Updates the User",
     description="Updates the User with the given ID if it exists",
     dependencies=[is_authorized(ActionType.UPDATE, crud_user, "user_id")],
 )
 async def update_by_id(
     *, db: Session = Depends(get_db_session), user_id: int, user: UserUpdate
-) -> Optional[UserRead]:
+) -> UserRead:
     db_user = crud_user.update(db=db, id=user_id, update_dto=user)
     return UserRead.model_validate(db_user)
 
 
 @router.delete(
     "/{user_id}",
-    response_model=Optional[UserRead],
+    response_model=UserRead,
     summary="Removes the User",
     description="Removes the User with the given ID if it exists",
     dependencies=[is_authorized(ActionType.DELETE, crud_user, "user_id")],
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
-) -> Optional[UserRead]:
+) -> UserRead:
     db_user = crud_user.remove(db=db, id=user_id)
     return UserRead.model_validate(db_user)
 

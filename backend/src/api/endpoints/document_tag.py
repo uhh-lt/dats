@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends
-from requests import Session
+from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memos
@@ -22,13 +22,13 @@ router = APIRouter(
 
 @router.put(
     "",
-    response_model=Optional[DocumentTagRead],
+    response_model=DocumentTagRead,
     summary="Creates a new DocumentTag",
     description="Creates a new DocumentTag and returns it with the generated ID.",
 )
 async def create_new_doc_tag(
     *, db: Session = Depends(get_db_session), doc_tag: DocumentTagCreate
-) -> Optional[DocumentTagRead]:
+) -> DocumentTagRead:
     db_obj = crud_document_tag.create(db=db, create_dto=doc_tag)
     return DocumentTagRead.model_validate(db_obj)
 
@@ -73,13 +73,13 @@ async def unlink_multiple_tags(
 
 @router.get(
     "/{tag_id}",
-    response_model=Optional[DocumentTagRead],
+    response_model=DocumentTagRead,
     summary="Returns the DocumentTag",
     description="Returns the DocumentTag with the given ID.",
 )
 async def get_by_id(
     *, db: Session = Depends(get_db_session), tag_id: int
-) -> Optional[DocumentTagRead]:
+) -> DocumentTagRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return DocumentTagRead.model_validate(db_obj)
@@ -87,13 +87,13 @@ async def get_by_id(
 
 @router.patch(
     "/{tag_id}",
-    response_model=Optional[DocumentTagRead],
+    response_model=DocumentTagRead,
     summary="Updates the DocumentTag",
     description="Updates the DocumentTag with the given ID.",
 )
 async def update_by_id(
     *, db: Session = Depends(get_db_session), tag_id: int, doc_tag: DocumentTagUpdate
-) -> Optional[DocumentTagRead]:
+) -> DocumentTagRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.update(db=db, id=tag_id, update_dto=doc_tag)
     return DocumentTagRead.model_validate(db_obj)
@@ -101,13 +101,13 @@ async def update_by_id(
 
 @router.delete(
     "/{tag_id}",
-    response_model=Optional[DocumentTagRead],
+    response_model=DocumentTagRead,
     summary="Deletes the DocumentTag",
     description="Deletes the DocumentTag with the given ID.",
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), tag_id: int
-) -> Optional[DocumentTagRead]:
+) -> DocumentTagRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.remove(db=db, id=tag_id)
     return DocumentTagRead.model_validate(db_obj)
@@ -115,13 +115,13 @@ async def delete_by_id(
 
 @router.put(
     "/{tag_id}/memo",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Adds a Memo to the DocumentTag",
     description="Adds a Memo to the DocumentTag with the given ID if it exists",
 )
 async def add_memo(
     *, db: Session = Depends(get_db_session), tag_id: int, memo: MemoCreate
-) -> Optional[MemoRead]:
+) -> MemoRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_document_tag(
         db=db, doc_tag_id=tag_id, create_dto=memo
@@ -145,6 +145,7 @@ async def get_memos(
 ) -> List[MemoRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_document_tag.read(db=db, id=tag_id)
+    # TODO: FIX THIS
     return get_object_memos(db_obj=db_obj)
 
 
@@ -161,6 +162,7 @@ async def get_user_memo(
     *, db: Session = Depends(get_db_session), tag_id: int, user_id: int
 ) -> Optional[MemoRead]:
     db_obj = crud_document_tag.read(db=db, id=tag_id)
+    # TODO: FIX THIS
     return get_object_memos(db_obj=db_obj, user_id=user_id)
 
 

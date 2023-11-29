@@ -33,7 +33,7 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
 
     def update(
         self, db: Session, *, id: int, update_dto: DocumentTagUpdate
-    ) -> DocumentTagORM | None:
+    ) -> DocumentTagORM:
         if update_dto.parent_tag_id == -1:
             update_dto.parent_tag_id = None
         return super().update(db, id=id, update_dto=update_dto)

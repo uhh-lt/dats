@@ -80,7 +80,7 @@ class CRUDSourceDocumentMetadata(
 
     def update(
         self, db: Session, *, metadata_id: int, update_dto: SourceDocumentMetadataUpdate
-    ) -> Optional[SourceDocumentMetadataORM]:
+    ) -> SourceDocumentMetadataORM:
         db_obj = self.read(db=db, id=metadata_id)
         if db_obj.project_metadata.read_only:
             logger.warning(

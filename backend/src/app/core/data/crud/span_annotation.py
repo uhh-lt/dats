@@ -16,6 +16,7 @@ from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
     SpanAnnotationUpdate,
+    SpanAnnotationUpdateWithCodeId,
 )
 from app.core.data.dto.span_text import SpanTextCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -139,7 +140,7 @@ class CRUDSpanAnnotation(
 
     def update(
         self, db: Session, *, id: int, update_dto: SpanAnnotationUpdate
-    ) -> Optional[SpanAnnotationORM]:
+    ) -> SpanAnnotationORM:
         span_anno = super().update(db, id=id, update_dto=update_dto)
 
         # update the annotation document's timestamp
@@ -148,7 +149,7 @@ class CRUDSpanAnnotation(
         return span_anno
 
     def update_with_code_id(
-        self, db: Session, *, id: int, update_dto: SpanAnnotationCreateWithCodeId
+        self, db: Session, *, id: int, update_dto: SpanAnnotationUpdateWithCodeId
     ) -> SpanAnnotationORM:
         from app.core.data.crud.code import crud_code
 
@@ -161,7 +162,7 @@ class CRUDSpanAnnotation(
 
         return self.update(db=db, id=id, update_dto=update_dto_with_ccid)
 
-    def remove(self, db: Session, *, id: int) -> Optional[SpanAnnotationORM]:
+    def remove(self, db: Session, *, id: int) -> SpanAnnotationORM:
         span_anno = super().remove(db, id=id)
 
         # update the annotation document's timestamp
@@ -197,7 +198,7 @@ class CRUDSpanAnnotation(
 
     def remove_from_all_span_groups(
         self, db: Session, span_id: int
-    ) -> Optional[SpanAnnotationORM]:
+    ) -> SpanAnnotationORM:
         db_obj = self.read(db=db, id=span_id)
         db_obj.span_groups = []
         db.commit()
@@ -206,7 +207,7 @@ class CRUDSpanAnnotation(
 
     def add_to_span_group(
         self, db: Session, span_id: int, group_id: int
-    ) -> Optional[SpanAnnotationORM]:
+    ) -> SpanAnnotationORM:
         span_db_obj = self.read(db=db, id=span_id)
         group_db_obj = crud_span_group.read(db=db, id=group_id)
         span_db_obj.span_groups.append(group_db_obj)
@@ -217,10 +218,10 @@ class CRUDSpanAnnotation(
 
     def remove_from_span_group(
         self, db: Session, span_id: int, group_id: int
-    ) -> Optional[SpanAnnotationORM]:
+    ) -> SpanAnnotationORM:
         span_db_obj = self.read(db=db, id=span_id)
-        group_db_obj = crud_span_group.read(db=db, id=group_id)
-        span_db_obj.document_tags.remove(group_db_obj)
+        # group_db_obj = crud_span_group.read(db=db, id=group_id)
+        # span_db_obj.document_tags.remove(group_db_obj)
         db.commit()
         db.refresh(span_db_obj)
         return span_db_obj
