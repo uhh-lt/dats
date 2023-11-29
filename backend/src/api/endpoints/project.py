@@ -540,33 +540,6 @@ async def get_user_memo(
 
 
 @router.get(
-    "/{proj_id}/resolve_filename/{filename}",
-    response_model=Optional[int],
-    summary="Returns the Id of the SourceDocument identified by project_id and filename if it exists",
-    description=(
-        "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
-    ),
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-        # TODO add authorization for the specific source document?
-    ],
-)
-async def resolve_filename(
-    *,
-    db: Session = Depends(get_db_session),
-    proj_id: int,
-    filename: str,
-    only_finished: bool = True,
-) -> Optional[int]:
-    sdoc = crud_sdoc.read_by_filename(
-        db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
-    )
-    if sdoc is not None:
-        return sdoc.id
-    return None
-
-
-@router.get(
     "/{proj_id}/metadata",
     response_model=List[ProjectMetadataRead],
     summary="Returns all ProjectMetadata",
