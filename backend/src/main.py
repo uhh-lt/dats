@@ -2,8 +2,8 @@
 # ruff: noqa: E402
 
 import os
+from contextlib import asynccontextmanager
 
-from app.core.authorization.authorization_service import ForbiddenError
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -14,6 +14,8 @@ from loguru import logger
 from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
+
+from app.core.authorization.authorization_service import ForbiddenError
 
 from app.core.startup import startup  # isort: skip
 
@@ -82,12 +84,23 @@ def custom_generate_unique_id(route: APIRoute):
     return f"{route.tags[0]}-{route.name}"
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting D-WISE Tool Suite FastAPI!")
+    yield
+    # Shutdown
+    logger.info("Stopping D-WISE Tool Suite FastAPI!")
+    RepoService().purge_temporary_files()
+
+
 # create the FastAPI app
 app = FastAPI(
     # title="D-WISE Tool Suite Backend API",
     # description="The REST API for the D-WISE Tool Suite Backend",
     # version="alpha_mwp_1",
     generate_unique_id_function=custom_generate_unique_id,
+    lifespan=lifespan,
 )
 
 
@@ -104,10 +117,12 @@ def custom_openapi():
     )
     openapi_schema["components"]["schemas"][
         "SourceDocumentReadAction"
-    ] = SourceDocumentReadAction.schema(ref_template="#/components/schemas/{model}")
+    ] = SourceDocumentReadAction.model_json_schema(
+        ref_template="#/components/schemas/{model}"
+    )
     openapi_schema["components"]["schemas"][
         "ProjectReadAction"
-    ] = ProjectReadAction.schema(ref_template="#/components/schemas/{model}")
+    ] = ProjectReadAction.model_json_schema(ref_template="#/components/schemas/{model}")
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -228,17 +243,6 @@ async def integrity_error_handler(_, exc: IntegrityError):
 @app.exception_handler(ForbiddenError)
 def forbidden_error_handler(_, exc: ForbiddenError):
     return PlainTextResponse(str(exc), status_code=403)
-
-
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Starting D-WISE Tool Suite FastAPI!")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("Stopping D-WISE Tool Suite FastAPI!")
-    RepoService().purge_temporary_files()
 
 
 # include the endpoint routers

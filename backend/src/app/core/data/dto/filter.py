@@ -145,4 +145,4 @@ class Filter(BaseModel):
         return op(*[f.get_sqlalchemy_expression() for f in self.items])
 
 
-Filter.update_forward_refs()
+Filter.model_rebuild()

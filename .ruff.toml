@@ -1,3 +1,5 @@
+src = ["backend/src"]
+
 [lint]
 
 # I: isort-compatible import sorting

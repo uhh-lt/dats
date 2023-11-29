@@ -3,6 +3,8 @@ import string
 from typing import Any, Dict
 
 import pytest
+from sqlalchemy.exc import IntegrityError
+
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
@@ -15,7 +17,6 @@ from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.user import UserCreate, UserRead
 from app.core.db.sql_service import SQLService
 from config import conf
-from sqlalchemy.exc import IntegrityError
 
 
 def get_number_of_system_codes() -> int:
@@ -45,7 +46,7 @@ def test_update_project(session: SQLService, project: int) -> None:
         crud_project.update(db=sess, id=project, update_dto=ProjectUpdate(title=title2))
 
     with session.db_session() as sess:
-        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
+        p = ProjectRead.model_validate(crud_project.read(db=sess, id=project))
 
     assert p.id == project
     assert p.title == title2
@@ -57,7 +58,7 @@ def test_update_project(session: SQLService, project: int) -> None:
         )
 
     with session.db_session() as sess:
-        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
+        p = ProjectRead.model_validate(crud_project.read(db=sess, id=project))
 
     assert p.id == project
     assert p.title == title2
@@ -79,7 +80,7 @@ def test_update_project(session: SQLService, project: int) -> None:
 
     # check if nothing has changed
     with session.db_session() as sess:
-        p = ProjectRead.from_orm(crud_project.read(db=sess, id=project))
+        p = ProjectRead.model_validate(crud_project.read(db=sess, id=project))
 
     assert p.id == project
     assert p.title == title2
@@ -92,7 +93,7 @@ def test_create_remove_project(session: SQLService) -> None:
         dbs = crud_project.read_multi(db=sess)
 
     with session.db_session() as sess:
-        p = [ProjectRead.from_orm(proj) for proj in dbs]
+        p = [ProjectRead.model_validate(proj) for proj in dbs]
 
     assert len(p) == 0
 
@@ -113,7 +114,7 @@ def test_create_remove_project(session: SQLService) -> None:
         dbs = crud_project.read_multi(db=sess)
 
     with session.db_session() as sess:
-        p = [ProjectRead.from_orm(proj) for proj in dbs]
+        p = [ProjectRead.model_validate(proj) for proj in dbs]
 
     assert len(p) == 1
     assert p[0].id == id
@@ -124,7 +125,7 @@ def test_create_remove_project(session: SQLService) -> None:
     with session.db_session() as sess:
         crud_project.remove(db=sess, id=id)
         dbs = crud_project.read_multi(db=sess)
-        p = [ProjectRead.from_orm(proj) for proj in dbs]
+        p = [ProjectRead.model_validate(proj) for proj in dbs]
 
     assert len(p) == 0
 
@@ -141,7 +142,7 @@ def test_project_users(session: SQLService, project: int, user: int) -> None:
     with session.db_session() as sess:
         users = crud_project.read(db=sess, id=project)
 
-        project_users = [UserRead.from_orm(user) for user in users.users]
+        project_users = [UserRead.model_validate(user) for user in users.users]
 
     assert len(project_users) == 2
 
@@ -157,13 +158,13 @@ def test_project_users(session: SQLService, project: int, user: int) -> None:
 
     with session.db_session() as sess:
         db_user = crud_user.create(db=sess, create_dto=user_three)
-        user_three_orm = UserRead.from_orm(db_user)
+        user_three_orm = UserRead.model_validate(db_user)
 
     with session.db_session() as sess:
         crud_project.associate_user(db=sess, proj_id=project, user_id=user_three_orm.id)
 
         proj_db_obj = crud_project.read(db=sess, id=project)
-        project_users = [UserRead.from_orm(user) for user in proj_db_obj.users]
+        project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
 
     assert len(project_users) == 3
     assert project_users[2].id == user_three_orm.id
@@ -172,7 +173,7 @@ def test_project_users(session: SQLService, project: int, user: int) -> None:
         crud_user.remove(db=sess, id=user_three_orm.id)
 
         proj_db_obj = crud_project.read(db=sess, id=project)
-        project_users = [UserRead.from_orm(user) for user in proj_db_obj.users]
+        project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
 
     assert len(project_users) == 2
     assert project_users[1].id == user
@@ -185,7 +186,7 @@ def test_get_remove_project_codes(session: SQLService, project: int) -> None:
     with session.db_session() as sess:
         proj_db_obj = crud_project.read(db=sess, id=project)
 
-        s = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
+        s = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
 
     assert len(s) == get_number_of_system_codes()
 
@@ -195,7 +196,7 @@ def test_get_remove_project_codes(session: SQLService, project: int) -> None:
         crud_code.remove_by_project(db=sess, proj_id=project)
 
         proj_db_obj = crud_project.read(db=sess, id=project)
-        s = [CodeRead.from_orm(code) for code in proj_db_obj.codes]
+        s = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
 
     assert len(s) == 0
 
@@ -206,7 +207,7 @@ def test_get_remove_project_codes(session: SQLService, project: int) -> None:
 def test_get_project_tags(session: SQLService, project: int) -> None:
     with session.db_session() as sess:
         proj_db_obj = crud_project.read(db=sess, id=project)
-        s = [DocumentTagRead.from_orm(tag) for tag in proj_db_obj.document_tags]
+        s = [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
 
     assert len(s) == 0
 
@@ -219,7 +220,7 @@ def test_get_remove_project_system_user_codes(
 ) -> None:
     with session.db_session() as sess:
         s = [
-            CodeRead.from_orm(code_db_obj)
+            CodeRead.model_validate(code_db_obj)
             for code_db_obj in crud_code.read_by_user_and_project(
                 db=sess, user_id=SYSTEM_USER_ID, proj_id=project
             )
@@ -234,7 +235,7 @@ def test_get_remove_project_system_user_codes(
             db=sess, user_id=SYSTEM_USER_ID, proj_id=project
         )
         s = [
-            CodeRead.from_orm(code_db_obj)
+            CodeRead.model_validate(code_db_obj)
             for code_db_obj in crud_code.read_by_user_and_project(
                 db=sess, user_id=SYSTEM_USER_ID, proj_id=project
             )
@@ -276,9 +277,9 @@ def test_get_add_remove_memos_project(
         db_obj = crud_memo.create_for_project(
             db=sess, project_id=project, create_dto=memo1
         )
-        memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+        memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
         MemoRead(
-            **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+            **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
             attached_object_id=project,
             attached_object_type=AttachedObjectType.project,
         )
@@ -301,9 +302,9 @@ def test_get_add_remove_memos_project(
         db_obj = crud_memo.create_for_project(
             db=sess, project_id=project, create_dto=memo2
         )
-        memo_as_in_db_dto = MemoInDB.from_orm(db_obj)
+        memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
         MemoRead(
-            **memo_as_in_db_dto.dict(exclude={"attached_to"}),
+            **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
             attached_object_id=project,
             attached_object_type=AttachedObjectType.project,
         )

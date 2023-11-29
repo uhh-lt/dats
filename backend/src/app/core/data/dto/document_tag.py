@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.util.color import get_next_color
@@ -36,9 +36,7 @@ class DocumentTagRead(DocumentTagBaseDTO):
     project_id: int = Field(description="Project the DocumentTag belongs to")
     created: datetime = Field(description="Created timestamp of the DocumentTag")
     updated: datetime = Field(description="Updated timestamp of the DocumentTag")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # To link a SourceDocument with a DocumentTag

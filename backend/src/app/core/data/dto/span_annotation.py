@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .code import CodeRead
 from .dto_base import UpdateDTOBase
@@ -51,9 +51,7 @@ class SpanAnnotationRead(SpanAnnotationBaseDTO):
     )
     created: datetime = Field(description="Created timestamp of the SpanAnnotation")
     updated: datetime = Field(description="Updated timestamp of the SpanAnnotation")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SpanAnnotationReadResolved(SpanAnnotationBaseDTO):

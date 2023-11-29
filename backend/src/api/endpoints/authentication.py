@@ -1,5 +1,11 @@
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_db_session
+from api.util import credentials_exception
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.user import (
     UserAuthorizationHeaderData,
@@ -9,12 +15,6 @@ from app.core.data.dto.user import (
 )
 from app.core.mail.mail_service import MailService
 from app.core.security import generate_jwt
-from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_db_session
-from api.util import credentials_exception
 
 router = APIRouter(prefix="/authentication", tags=["authentication"])
 
@@ -36,8 +36,8 @@ async def register(
         )
 
     db_user = crud_user.create(db=db, create_dto=user)
-    await MailService().send_welcome_mail(user=UserRead.from_orm(db_user))
-    return UserRead.from_orm(db_user)
+    await MailService().send_welcome_mail(user=UserRead.model_validate(db_user))
+    return UserRead.model_validate(db_user)
 
 
 @router.post(

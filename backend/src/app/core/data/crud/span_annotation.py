@@ -35,7 +35,7 @@ class CRUDSpanAnnotation(
         )
 
         # create the SpanAnnotation (and link the SpanText via FK)
-        dto_obj_data = jsonable_encoder(create_dto.dict(exclude={"span_text"}))
+        dto_obj_data = jsonable_encoder(create_dto.model_dump(exclude={"span_text"}))
         # noinspection PyArgumentList
         db_obj = self.model(**dto_obj_data)
         db_obj.span_text_id = span_text_orm.id
@@ -91,7 +91,7 @@ class CRUDSpanAnnotation(
 
         # create the SpanAnnotation (and link the SpanText via FK)
         dto_objs_data = [
-            jsonable_encoder(create_dto.dict(exclude={"span_text"}))
+            jsonable_encoder(create_dto.model_dump(exclude={"span_text"}))
             for create_dto in create_dtos
         ]
         # noinspection PyArgumentList
@@ -231,14 +231,14 @@ class CRUDSpanAnnotation(
     def _get_action_state_from_orm(self, db_obj: SpanAnnotationORM) -> Optional[str]:
         return srsly.json_dumps(
             SpanAnnotationReadResolved(
-                **SpanAnnotationRead.from_orm(db_obj).dict(
+                **SpanAnnotationRead.model_validate(db_obj).model_dump(
                     exclude={"current_code_id", "span_text_id"}
                 ),
-                code=CodeRead.from_orm(db_obj.current_code.code),
+                code=CodeRead.model_validate(db_obj.current_code.code),
                 span_text=db_obj.span_text.text,
                 user_id=db_obj.annotation_document.user_id,
                 sdoc_id=db_obj.annotation_document.source_document_id,
-            ).dict()
+            ).model_dump()
         )
 
 

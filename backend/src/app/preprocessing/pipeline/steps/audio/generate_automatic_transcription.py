@@ -1,3 +1,5 @@
+from loguru import logger
+
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.audio.wordleveltranscription import (
     WordLevelTranscription,
@@ -8,7 +10,6 @@ from app.preprocessing.ray_model_worker.dto.whisper import (
     WhisperFilePathInput,
     WhisperTranscriptionOutput,
 )
-from loguru import logger
 
 rms = RayModelService()
 

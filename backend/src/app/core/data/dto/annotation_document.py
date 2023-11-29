@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 
@@ -28,6 +28,4 @@ class AnnotationDocumentRead(AnnotationDocumentBaseDTO):
     id: int = Field(description="ID of the AnnotationDocument")
     created: datetime = Field(description="Created timestamp of the AnnotationDocument")
     updated: datetime = Field(description="Updated timestamp of the AnnotationDocument")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

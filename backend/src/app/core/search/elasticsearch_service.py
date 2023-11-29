@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union
 
 import srsly
-from config import conf
 from elasticsearch import Elasticsearch, helpers
 from loguru import logger
 from omegaconf import OmegaConf
@@ -22,6 +21,7 @@ from app.core.data.dto.search import (
 )
 from app.core.data.dto.source_document import SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 
 class NoSuchSourceDocumentInElasticSearchError(Exception):
@@ -190,7 +190,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         res = self.__client.index(
             index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
             id=str(esdoc.sdoc_id),
-            document=esdoc.json(),
+            document=esdoc.model_dump_json(),
         )
         if not int(res["_id"]) == esdoc.sdoc_id:
             # FIXME Flo: What to do?!
@@ -219,7 +219,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 doc = {
                     "_index": idx_name,
                     "_id": esdoc.sdoc_id,
-                    "_source": esdoc.dict(),
+                    "_source": esdoc.model_dump(),
                 }
                 yield doc
 
@@ -369,7 +369,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         res = self.__client.index(
             index=self.__get_index_name(proj_id=proj_id, index_type="memo"),
             id=str(esmemo.memo_id),
-            document=esmemo.json(),
+            document=esmemo.model_dump_json(),
         )
         if not int(res["_id"]) == esmemo.memo_id:
             # FIXME Flo: What to do?!
@@ -421,7 +421,9 @@ class ElasticSearchService(metaclass=SingletonMeta):
             raise NoSuchMemoInElasticSearchError(proj_id=proj_id, memo_id=memo_id)
 
         update_data = {
-            k: v for k, v in update.dict(exclude={"memo_id"}).items() if v is not None
+            k: v
+            for k, v in update.model_dump(exclude={"memo_id"}).items()
+            if v is not None
         }
 
         self.__client.update(

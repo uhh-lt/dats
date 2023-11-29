@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import weaviate
-from config import conf
 from loguru import logger
 
 from app.core.data.crud.source_document import crud_sdoc
@@ -23,6 +22,7 @@ from app.preprocessing.ray_model_worker.dto.clip import (
     ClipTextEmbeddingInput,
 )
 from app.util.singleton_meta import SingletonMeta
+from config import conf
 
 
 class SimSearchService(metaclass=SingletonMeta):
@@ -135,7 +135,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def _get_image_path_from_sdoc_id(self, sdoc_id: int) -> Path:
         with self.sqls.db_session() as db:
-            sdoc = SourceDocumentRead.from_orm(crud_sdoc.read(db=db, id=sdoc_id))
+            sdoc = SourceDocumentRead.model_validate(crud_sdoc.read(db=db, id=sdoc_id))
             assert (
                 sdoc.doctype == DocType.image
             ), f"SourceDocument with {sdoc_id=} is not an image!"

@@ -1,5 +1,9 @@
 from typing import Dict, List, Optional
 
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from api.dependencies import get_current_user, get_db_session, skip_limit_params
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.user import crud_user
@@ -9,10 +13,6 @@ from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import UserRead, UserUpdate
 from app.core.data.orm.user import UserORM
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from api.dependencies import get_current_user, get_db_session, skip_limit_params
 
 router = APIRouter(
     prefix="/user", dependencies=[Depends(get_current_user)], tags=["user"]
@@ -26,7 +26,7 @@ router = APIRouter(
     description="Returns the current (logged in) user",
 )
 async def get_me(*, user: UserORM = Depends(get_current_user)) -> Optional[UserRead]:
-    return UserRead.from_orm(user)
+    return UserRead.model_validate(user)
 
 
 @router.get(
@@ -39,7 +39,7 @@ async def get_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
 ) -> Optional[UserRead]:
     db_user = crud_user.read(db=db, id=user_id)
-    return UserRead.from_orm(db_user)
+    return UserRead.model_validate(db_user)
 
 
 @router.get(
@@ -54,7 +54,7 @@ async def get_all(
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> List[UserRead]:
     db_objs = crud_user.read_multi(db=db, **skip_limit)
-    return [UserRead.from_orm(proj) for proj in db_objs]
+    return [UserRead.model_validate(proj) for proj in db_objs]
 
 
 @router.patch(
@@ -67,7 +67,7 @@ async def update_by_id(
     *, db: Session = Depends(get_db_session), user_id: int, user: UserUpdate
 ) -> Optional[UserRead]:
     db_user = crud_user.update(db=db, id=user_id, update_dto=user)
-    return UserRead.from_orm(db_user)
+    return UserRead.model_validate(db_user)
 
 
 @router.delete(
@@ -80,7 +80,7 @@ async def delete_by_id(
     *, db: Session = Depends(get_db_session), user_id: int
 ) -> Optional[UserRead]:
     db_user = crud_user.remove(db=db, id=user_id)
-    return UserRead.from_orm(db_user)
+    return UserRead.model_validate(db_user)
 
 
 @router.get(
@@ -94,7 +94,7 @@ async def get_user_projects(
 ) -> List[ProjectRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=user_id)
-    return [ProjectRead.from_orm(proj) for proj in db_obj.projects]
+    return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
 
 
 @router.get(
@@ -108,7 +108,7 @@ async def get_user_codes(
 ) -> List[CodeRead]:
     # TODO Flo: only if the user has access?
     db_obj = crud_user.read(db=db, id=user_id)
-    return [CodeRead.from_orm(code) for code in db_obj.codes]
+    return [CodeRead.model_validate(code) for code in db_obj.codes]
 
 
 @router.get(
@@ -139,7 +139,7 @@ async def get_user_adocs(
 ) -> List[AnnotationDocumentRead]:
     # TODO Flo: only if the user has access?
     return [
-        AnnotationDocumentRead.from_orm(db_obj)
+        AnnotationDocumentRead.model_validate(db_obj)
         for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
     ]
 
@@ -157,7 +157,7 @@ async def recent_activity(
 
     # get all adocs of a user
     user_adocs = [
-        AnnotationDocumentRead.from_orm(db_obj)
+        AnnotationDocumentRead.model_validate(db_obj)
         for db_obj in crud_adoc.read_by_user(db=db, user_id=user_id)
     ]
 

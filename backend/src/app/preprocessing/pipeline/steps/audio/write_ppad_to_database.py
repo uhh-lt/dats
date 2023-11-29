@@ -1,5 +1,8 @@
 import json
 
+from loguru import logger
+from sqlalchemy.orm import Session
+
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_link import crud_sdoc_link
@@ -14,8 +17,6 @@ from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
 from app.preprocessing.pipeline.model.audio.preproaudiodoc import PreProAudioDoc
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
-from loguru import logger
-from sqlalchemy.orm import Session
 
 repo: RepoService = RepoService()
 sql: SQLService = SQLService()
@@ -38,7 +39,7 @@ def _persist_sdoc_metadata(
     logger.info(f"Persisting SourceDocumentMetadata for {ppad.filename}...")
     sdoc_id = sdoc_db_obj.id
     filename = sdoc_db_obj.filename
-    sdoc = SourceDocumentRead.from_orm(sdoc_db_obj)
+    sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     ppad.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
 
     metadata_create_dtos = [
@@ -59,7 +60,7 @@ def _persist_sdoc_metadata(
     ]
 
     # store word level transcriptions as metadata
-    wlt = list(map(lambda wlt: wlt.dict(), ppad.word_level_transcriptions))
+    wlt = list(map(lambda wlt: wlt.model_dump(), ppad.word_level_transcriptions))
     metadata_create_dtos.append(
         SourceDocumentMetadataCreate(
             key="word_level_transcriptions",

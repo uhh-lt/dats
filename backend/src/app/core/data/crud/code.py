@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional
 
 import srsly
-from config import conf
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
@@ -13,6 +12,7 @@ from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.current_code import CurrentCodeCreate
 from app.core.data.orm.code import CodeORM
 from app.util.color import get_next_color
+from config import conf
 
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
@@ -210,7 +210,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     def _get_action_state_from_orm(self, db_obj: CodeORM) -> Optional[str]:
         return srsly.json_dumps(
-            CodeRead.from_orm(db_obj).dict(),
+            CodeRead.model_validate(db_obj).model_dump(),
         )
 
 
