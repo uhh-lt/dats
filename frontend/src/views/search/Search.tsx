@@ -140,13 +140,8 @@ function Search() {
           />
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
             <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
-              <Grid
-                item
-                md={isSplitView ? 6 : 12}
-                display={isSplitView || !viewDocument ? "flex" : "none"}
-                className="h100"
-              >
-                <>
+              {(isSplitView || !viewDocument) && (
+                <Grid item md={isSplitView ? 6 : 12} className="h100">
                   {searchResults.isLoading && <div>Loading!</div>}
                   {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
                   {searchResults.isSuccess && columnInfo.isSuccess && (
@@ -176,24 +171,20 @@ function Search() {
                       )}
                     </Container>
                   )}
-                </>
-              </Grid>
-              <Grid
-                item
-                md={isSplitView ? 6 : 12}
-                display={isSplitView || viewDocument ? "flex" : "none"}
-                className="h100"
-                overflow={"auto"}
-              >
-                <Container sx={{ my: 2, height: "fit-content" }}>
-                  <DocumentViewer
-                    sdocId={sdocId ? parseInt(sdocId) : undefined}
-                    handleTagClick={handleAddTagFilter}
-                    showEntities={isShowEntities}
-                    isIdleContent={<Typography>Click a document to read it :)</Typography>}
-                  />
-                </Container>
-              </Grid>
+                </Grid>
+              )}
+              {(isSplitView || viewDocument) && (
+                <Grid item md={isSplitView ? 6 : 12} className="h100" overflow={"auto"}>
+                  <Container sx={{ my: 2, height: "fit-content" }}>
+                    <DocumentViewer
+                      sdocId={sdocId ? parseInt(sdocId) : undefined}
+                      handleTagClick={handleAddTagFilter}
+                      showEntities={isShowEntities}
+                      isIdleContent={<Typography>Click a document to read it :)</Typography>}
+                    />
+                  </Container>
+                </Grid>
+              )}
             </Grid>
           </Box>
         </Grid>
