@@ -9,8 +9,6 @@ from datetime import datetime
 from typing import List, Optional, Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
-from app.core.data.meta_type import MetaType
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
@@ -29,6 +27,9 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
+
+from alembic import op
+from app.core.data.meta_type import MetaType
 
 Base = declarative_base()
 

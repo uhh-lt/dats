@@ -10,7 +10,7 @@ const useGetProjects = (userId: number | null | undefined) =>
     () => UserService.getUserProjects({ userId: userId! }),
     {
       enabled: !!userId,
-    }
+    },
   );
 
 const useGetUser = (userId: number | null | undefined) =>
@@ -33,7 +33,7 @@ const useGetRecentActivity = (userId: number | null | undefined, k: number) => {
     () => UserService.recentActivity({ userId: userId!, k: k }),
     {
       enabled: !!userId,
-    }
+    },
   );
 };
 
