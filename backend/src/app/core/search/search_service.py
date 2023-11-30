@@ -207,7 +207,7 @@ class SearchService(metaclass=SingletonMeta):
                 query=query, filter=filter, db=db, subquery_dict=subquery.c
             )
 
-            query = apply_sorting(query=query, sorts=sorts)
+            query = apply_sorting(query=query, sorts=sorts, db=db)
 
             # query = query.order_by(
             #     SourceDocumentORM.id

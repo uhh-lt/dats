@@ -141,7 +141,7 @@ def find_annotated_segments(
 
         query = apply_filtering(query=query, filter=filter, db=db)
 
-        query = apply_sorting(query=query, sorts=sorts)
+        query = apply_sorting(query=query, sorts=sorts, db=db)
 
         query = query.order_by(
             SpanAnnotationORM.id

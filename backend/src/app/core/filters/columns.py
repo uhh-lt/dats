@@ -61,7 +61,7 @@ def create_metadata_column_info(
         ColumnInfo(
             label=f"{pm.doctype.value}-{pm.key}",
             column=pm.id,
-            sortable=True,
+            sortable=False,
             operator=pm.metatype.get_filter_operator(),
             value=FilterValueType.INFER_FROM_OPERATOR,
         )

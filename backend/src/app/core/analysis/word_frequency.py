@@ -273,7 +273,7 @@ def word_frequency(
         if len(sorts) == 0:
             query = query.order_by(word_count_acc.desc())
         else:
-            query = apply_sorting(query=query, sorts=sorts)
+            query = apply_sorting(query=query, sorts=sorts, db=db)
 
         query, pagination = apply_pagination(
             query=query, page_number=page + 1, page_size=page_size
