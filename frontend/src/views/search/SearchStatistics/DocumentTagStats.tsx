@@ -63,13 +63,13 @@ function DocumentTagStatsContent({ tagStats, handleClick, parentRef, filterBy }:
 
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
-    count: tagStats.length,
+    count: filteredTagStats.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...tagStats.map((t) => t.global_count)), [tagStats]);
+  const maxValue = useMemo(() => Math.max(...filteredTagStats.map((t) => t.global_count)), [filteredTagStats]);
 
   return (
     <TabPanel
@@ -84,7 +84,7 @@ function DocumentTagStatsContent({ tagStats, handleClick, parentRef, filterBy }:
     >
       {filteredTagStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let tagStat = tagStats[virtualItem.index];
+        let tagStat = filteredTagStats[virtualItem.index];
         return (
           <DocumentTagStatButtonContent
             tagId={tagStat.tag.id}

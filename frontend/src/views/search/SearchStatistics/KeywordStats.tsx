@@ -66,13 +66,13 @@ function KeywordStatsContent({ keywordStats, handleClick, parentRef, filterBy }:
 
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
-    count: keywordStats.length || 0,
+    count: filteredKeywordStats.length || 0,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 35,
   });
 
   // computed
-  const maxValue = useMemo(() => Math.max(...keywordStats.map((x) => x.global_count)), [keywordStats]);
+  const maxValue = useMemo(() => Math.max(...filteredKeywordStats.map((x) => x.global_count)), [filteredKeywordStats]);
 
   return (
     <TabPanel
@@ -87,7 +87,7 @@ function KeywordStatsContent({ keywordStats, handleClick, parentRef, filterBy }:
     >
       {filteredKeywordStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let keywordStat = keywordStats[virtualItem.index];
+        let keywordStat = filteredKeywordStats[virtualItem.index];
         return (
           <StatsDisplayButton
             key={virtualItem.key}
