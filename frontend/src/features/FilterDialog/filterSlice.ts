@@ -4,6 +4,7 @@ import { LogicalOperator } from "../../api/openapi";
 import {
   ColumnInfo,
   deleteInFilter,
+  filterOperator2defaultValue,
   filterOperator2FilterOperatorType,
   FilterOperators,
   findInFilter,
@@ -124,7 +125,7 @@ const filterReducer = {
       const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
 
       filterItem.operator = getDefaultOperator(filterOperatorType);
-      filterItem.value = "";
+      filterItem.value = filterOperator2defaultValue[filterOperator];
     }
   },
   changeOperator: (

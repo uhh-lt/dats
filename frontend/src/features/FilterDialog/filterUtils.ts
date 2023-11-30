@@ -64,6 +64,16 @@ export const isFilterExpression = (filter: MyFilter | MyFilterExpression): filte
 
 // MAPS
 
+export const filterOperator2defaultValue: Record<FilterOperator, any> = {
+  [FilterOperator.BOOLEAN]: false,
+  [FilterOperator.STRING]: "",
+  [FilterOperator.ID]: 0,
+  [FilterOperator.NUMBER]: 0,
+  [FilterOperator.ID_LIST]: [],
+  [FilterOperator.LIST]: [],
+  [FilterOperator.DATE]: new Date(),
+};
+
 export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOperatorType> = {
   [FilterOperator.BOOLEAN]: BooleanOperator,
   [FilterOperator.STRING]: StringOperator,
