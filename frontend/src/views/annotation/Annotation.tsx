@@ -4,12 +4,14 @@ import { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks";
 import { DocType, DocumentTagRead } from "../../api/openapi";
-import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata";
+import { useAuth } from "../../auth/AuthProvider";
 import EditableDocumentName, {
   EditableDocumentNameHandle,
 } from "../../components/EditableDocumentName/EditableDocumentName";
+import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton";
+import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
+import { AppBarContext } from "../../layouts/TwoBarLayout";
+import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata";
 import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip";
 import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
@@ -17,13 +19,12 @@ import CodeExplorer from "./CodeExplorer/CodeExplorer";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
 import MemoExplorer from "./MemoExplorer/MemoExplorer";
 import TextAnnotator from "./TextAnnotator/TextAnnotator";
-import { useSelectOrCreateCurrentUsersAnnotationDocument } from "./useSelectOrCreateCurrentUsersAnnotationDocument";
-import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton";
 
 function Annotation() {
   // global client state (URL)
   const { sdocId } = useParams();
   const sourceDocumentId = sdocId ? parseInt(sdocId) : undefined;
+  const { user } = useAuth();
 
   // local state
   const editableDocumentNameHandle = useRef<EditableDocumentNameHandle>(null);
@@ -34,7 +35,7 @@ function Annotation() {
   // global server state (react query)
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
   const metadata = SdocHooks.useGetMetadata(sourceDocumentId);
-  const annotationDocument = useSelectOrCreateCurrentUsersAnnotationDocument(sourceDocumentId);
+  const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sourceDocumentId, user.data?.id);
   const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sourceDocumentId);
 
   // tabs
@@ -76,7 +77,7 @@ function Annotation() {
               <CardContent className="h100">
                 {sdocId ? (
                   <>
-                    {sourceDocument.isSuccess && annotationDocument && metadata.isSuccess ? (
+                    {sourceDocument.isSuccess && annotationDocument.isSuccess && metadata.isSuccess ? (
                       <>
                         <Stack spacing={2} className="h100">
                           <div style={{ display: "flex", alignItems: "center" }}>
@@ -105,9 +106,9 @@ function Annotation() {
                             <AnnotationDocumentSelector sdocId={sourceDocumentId} />
                           </Box>
                           {sourceDocument.data.doctype === DocType.IMAGE ? (
-                            <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
+                            <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
                           ) : sourceDocument.data.doctype === DocType.TEXT ? (
-                            <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument} />
+                            <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
                           ) : (
                             <div>ERROR! This DocType is not (yet) supported!</div>
                           )}
