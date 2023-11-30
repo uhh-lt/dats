@@ -7368,7 +7368,7 @@
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
           "span_text_id": {
-            "type": "string",
+            "type": "integer",
             "title": "Span Text Id",
             "description": "The SpanText the SpanAnnotation spans."
           },

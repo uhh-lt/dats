@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { MyFilter } from "../features/FilterDialog/filterUtils";
+import { useAppSelector } from "../plugins/ReduxHooks";
 import { QueryKey } from "./QueryKey";
 import {
   KeywordStat,
@@ -11,10 +12,10 @@ import {
   SearchService,
   SimSearchImageHit,
   SimSearchSentenceHit,
+  SortDirection,
   SpanEntityStat,
   TagStat,
 } from "./openapi";
-import { useAppSelector } from "../plugins/ReduxHooks";
 
 export abstract class SearchResults<T extends Iterable<any>> {
   constructor(protected results: T) {
@@ -120,23 +121,27 @@ export enum SearchResultsType {
 
 const useSearchDocumentsNew = (projectId: number | null | undefined) => {
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
+  const sortModel = useAppSelector((state) => state.search.sortModel);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
 
   return useQuery<LexicalSearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, searchQuery],
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, sortModel, searchQuery],
     async () => {
       const sdocIds = await SearchService.searchSdocsNew({
         projectId: projectId!,
         searchQuery: searchQuery,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
-          sorts: [],
+          sorts: sortModel
+            .filter((sort) => sort.sort)
+            .map((sort) => ({ column: sort.field as SearchColumns, direction: sort.sort as SortDirection })),
         },
       });
       return new LexicalSearchResults(sdocIds);
     },
     {
       enabled: !!projectId,
+      keepPreviousData: true,
     },
   );
 };
@@ -148,7 +153,7 @@ const useSearchCodeStats = (
   sortStatsByGlobal: boolean,
 ) =>
   useQuery<SpanEntityStat[], Error>(
-    [QueryKey.SEARCH_ENTITY_STATISTICS, codeId, userId, sdocIds, sortStatsByGlobal],
+    [QueryKey.SEARCH_ENTITY_STATISTICS, codeId, userId, Array.from(sdocIds).sort(), sortStatsByGlobal],
     () =>
       SearchService.searchCodeStats({
         codeId: codeId,
@@ -164,16 +169,19 @@ const useSearchCodeStats = (
   );
 
 const useSearchKeywordStats = (projectId: number, sdocIds: number[], sortStatsByGlobal: boolean) =>
-  useQuery<KeywordStat[], Error>([QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, sdocIds, sortStatsByGlobal], () => {
-    return SearchService.searchKeywordStats({
-      projectId: projectId,
-      requestBody: sdocIds,
-      sortByGlobal: sortStatsByGlobal,
-    });
-  });
+  useQuery<KeywordStat[], Error>(
+    [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, Array.from(sdocIds).sort(), sortStatsByGlobal],
+    () => {
+      return SearchService.searchKeywordStats({
+        projectId: projectId,
+        requestBody: sdocIds,
+        sortByGlobal: sortStatsByGlobal,
+      });
+    },
+  );
 
 const useSearchTagStats = (sdocIds: number[], sortStatsByGlobal: boolean) =>
-  useQuery<TagStat[], Error>([QueryKey.SEARCH_TAG_STATISTICS, sdocIds, sortStatsByGlobal], () => {
+  useQuery<TagStat[], Error>([QueryKey.SEARCH_TAG_STATISTICS, Array.from(sdocIds).sort(), sortStatsByGlobal], () => {
     return SearchService.searchTagStats({
       requestBody: sdocIds,
       sortByGlobal: sortStatsByGlobal,
