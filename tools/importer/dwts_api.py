@@ -33,7 +33,7 @@ class DWTSAPI:
             "client_secret": "",
         }
         r = requests.post(
-            "http://localhost:19220/authentication/login", headers=headers, data=data
+            f"{self.BASE_PATH}authentication/login", headers=headers, data=data
         )
         r.raise_for_status()
         data = r.json()
@@ -87,7 +87,6 @@ class DWTSAPI:
         return r.json()
 
     # SDOCS
-
     def get_sdoc_id_by_filename(
         self, proj_id: int, filename: str, retry: bool = True
     ) -> Optional[int]:
@@ -364,7 +363,7 @@ if __name__ == "__main__":
         proj_id=project["id"], files=files, filter_duplicate_files_before_upload=True
     )
 
-    # wait for pre-processing to finishe
+    # wait for pre-processing to finished
     status = dwts.read_project_status(proj_id=project["id"])
     while status["num_sdocs_finished"] != (sdocs_in_project + num_files_to_upload):
         sleep(1)
