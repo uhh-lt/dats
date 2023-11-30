@@ -2,6 +2,7 @@ import { Stack } from "@mui/material";
 import SdocHooks from "../../api/SdocHooks";
 import { UserRead } from "../../api/openapi";
 import UserRenderer from "./UserRenderer";
+import React from "react";
 
 interface SdocAnnotatorsRendererProps {
   sdocId?: number;
@@ -39,10 +40,10 @@ function SdocAnnotatorsRendererWithData({ annotators }: { annotators: number[] |
   return (
     <Stack direction="row" alignItems="center">
       {annotators.map((annotator, index) => (
-        <>
+        <React.Fragment key={typeof annotator === "number" ? annotator : annotator.id}>
           {index > 0 && <span style={{ whiteSpace: "pre" }}>, </span>}
-          <UserRenderer key={typeof annotator === "number" ? annotator : annotator.id} user={annotator} />
-        </>
+          <UserRenderer user={annotator} />
+        </React.Fragment>
       ))}
     </Stack>
   );
