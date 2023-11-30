@@ -2,14 +2,14 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.whiteboard import WhiteboardCreate, WhiteboardUpdate
 from app.core.data.orm.whiteboard import WhiteboardORM
 
 
 class CRUDWhiteboard(CRUDBase[WhiteboardORM, WhiteboardCreate, WhiteboardUpdate]):
     def read_by_project_and_user(
-        self, db: Session, *, project_id: int, user_id: int, raise_error: bool = True
+        self, db: Session, *, project_id: int, user_id: int
     ) -> List[WhiteboardORM]:
         db_obj = (
             db.query(self.model)
@@ -19,13 +19,9 @@ class CRUDWhiteboard(CRUDBase[WhiteboardORM, WhiteboardCreate, WhiteboardUpdate]
             )
             .all()
         )
-        if raise_error and not db_obj:
-            raise NoSuchElementError(self.model, project_id=project_id, user_id=user_id)
         return db_obj
 
-    def read_by_project(
-        self, db: Session, *, project_id: int, raise_error: bool = True
-    ) -> List[WhiteboardORM]:
+    def read_by_project(self, db: Session, *, project_id: int) -> List[WhiteboardORM]:
         db_obj = (
             db.query(self.model)
             .filter(
@@ -33,8 +29,6 @@ class CRUDWhiteboard(CRUDBase[WhiteboardORM, WhiteboardCreate, WhiteboardUpdate]
             )
             .all()
         )
-        if raise_error and not db_obj:
-            raise NoSuchElementError(self.model, project_id=project_id)
         return db_obj
 
 

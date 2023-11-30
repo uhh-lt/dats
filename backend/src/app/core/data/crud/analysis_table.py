@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy.orm import Session
 
-from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
+from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.analysis_table import AnalysisTableCreate, AnalysisTableUpdate
 from app.core.data.orm.analysis_table import AnalysisTableORM
 
@@ -11,7 +11,7 @@ class CRUDAnalysisTable(
     CRUDBase[AnalysisTableORM, AnalysisTableCreate, AnalysisTableUpdate]
 ):
     def read_by_project_and_user(
-        self, db: Session, *, project_id: int, user_id: int, raise_error: bool = True
+        self, db: Session, *, project_id: int, user_id: int
     ) -> List[AnalysisTableORM]:
         db_obj = (
             db.query(self.model)
@@ -21,8 +21,6 @@ class CRUDAnalysisTable(
             )
             .all()
         )
-        if raise_error and not db_obj:
-            raise NoSuchElementError(self.model, project_id=project_id, user_id=user_id)
         return db_obj
 
 

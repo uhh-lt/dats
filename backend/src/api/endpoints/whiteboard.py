@@ -54,9 +54,7 @@ async def get_by_project(
     db: Session = Depends(get_db_session),
     project_id: int,
 ) -> List[WhiteboardRead]:
-    db_objs = crud_whiteboard.read_by_project(
-        db=db, project_id=project_id, raise_error=False
-    )
+    db_objs = crud_whiteboard.read_by_project(db=db, project_id=project_id)
     return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 
 
@@ -70,7 +68,7 @@ async def get_by_project_and_user(
     *, db: Session = Depends(get_db_session), project_id: int, user_id: int
 ) -> List[WhiteboardRead]:
     db_objs = crud_whiteboard.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=user_id, raise_error=False
+        db=db, project_id=project_id, user_id=user_id
     )
     return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 
