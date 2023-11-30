@@ -73,7 +73,7 @@ class AnnotatedSegmentsColumns(AbstractColumns):
             case AnnotatedSegmentsColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
             case AnnotatedSegmentsColumns.DOCUMENT_TAG_ID_LIST:
-                return DocumentTagORM.title
+                return None
             case AnnotatedSegmentsColumns.CODE_ID:
                 return CodeORM.name
             case AnnotatedSegmentsColumns.SPAN_TEXT:

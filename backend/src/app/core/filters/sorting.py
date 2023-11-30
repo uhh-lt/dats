@@ -33,4 +33,6 @@ class Sort(BaseModel, Generic[T]):
 
 
 def apply_sorting(query, sorts: List[Sort]):
+    if len(sorts) == 0:
+        return query
     return query.order_by(*[s.get_sqlalchemy_expression() for s in sorts])

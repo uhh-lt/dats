@@ -48,8 +48,8 @@ def aggregate_ids(column: InstrumentedAttribute, label: str):
 
 
 class SearchColumns(str, AbstractColumns):
-    SOURCE_DOCUMENT_FILENAME = "SC_SOURCE_DOCUMENT_FILENAME"
     SOURCE_DOCUMENT_TYPE = "SC_SOURCE_DOCUMENT_TYPE"
+    SOURCE_DOCUMENT_FILENAME = "SC_SOURCE_DOCUMENT_FILENAME"
     DOCUMENT_TAG_ID_LIST = "SC_DOCUMENT_TAG_ID_LIST"
     CODE_ID_LIST = "SC_CODE_ID_LIST"
     USER_ID_LIST = "SC_USER_ID_LIST"
@@ -109,11 +109,11 @@ class SearchColumns(str, AbstractColumns):
             case SearchColumns.SOURCE_DOCUMENT_TYPE:
                 return SourceDocumentORM.doctype
             case SearchColumns.DOCUMENT_TAG_ID_LIST:
-                return DocumentTagORM.title
+                return None
             case SearchColumns.CODE_ID_LIST:
                 return None
             case SearchColumns.USER_ID_LIST:
-                return UserORM.first_name
+                return None
             case SearchColumns.SPAN_ANNOTATIONS:
                 return None
 
