@@ -569,9 +569,7 @@ class ExportService(metaclass=SingletonMeta):
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
         # get the adoc
-        adoc = crud_adoc.read_by_sdoc_and_user(
-            db=db, sdoc_id=sdoc_id, user_id=user_id, raise_error=True
-        )
+        adoc = crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id)
         export_data = self.__generate_export_df_for_adoc(db=db, adoc=adoc)
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,

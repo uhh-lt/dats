@@ -4,6 +4,7 @@ from loguru import logger
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_link import crud_sdoc_link
@@ -11,6 +12,7 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
@@ -46,7 +48,7 @@ def _persist_sdoc_metadata(
     ppad.metadata["word_level_transcriptions"] = json.dumps(wlt)
 
     project_metadata = [
-        pm
+        ProjectMetadataRead.model_validate(pm)
         for pm in crud_project.read(db=db, id=ppad.project_id).metadata_
         if pm.doctype == DocType.audio
     ]
@@ -81,9 +83,13 @@ def _create_adoc_for_system_user(db: Session, sdoc_db_obj: SourceDocumentORM) ->
         f"Creating AnnotationDocument for system user for {sdoc_db_obj.filename}..."
     )
     sdoc_id = sdoc_db_obj.id
-    adoc_db = crud_adoc.read_by_sdoc_and_user(
-        db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
-    )
+    try:
+        adoc_db = crud_adoc.read_by_sdoc_and_user(
+            db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID
+        )
+    except NoSuchElementError:
+        adoc_db = None
+
     if not adoc_db:
         adoc_create = AnnotationDocumentCreate(
             source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
