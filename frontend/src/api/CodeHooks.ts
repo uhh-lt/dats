@@ -12,13 +12,13 @@ const useCreateMemo = () =>
     },
   });
 
-const useGetMemos = (codeId: number | undefined) =>
+const useGetMemos = (codeId: number | null | undefined) =>
   useQuery<MemoRead[], Error>([QueryKey.MEMO_CODE, codeId], () => CodeService.getMemos({ codeId: codeId! }), {
     retry: false,
     enabled: !!codeId,
   });
 
-const useGetMemo = (codeId: number | undefined, userId: number | undefined) =>
+const useGetMemo = (codeId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_CODE, codeId, userId],
     () => CodeService.getUserMemo({ codeId: codeId!, userId: userId! }),
@@ -29,7 +29,7 @@ const useGetMemo = (codeId: number | undefined, userId: number | undefined) =>
   );
 
 // code
-const useGetCode = (codeId: number | undefined) =>
+const useGetCode = (codeId: number | null | undefined) =>
   useQuery<CodeRead, Error>([QueryKey.CODE, codeId], () => CodeService.getById({ codeId: codeId! }), {
     enabled: !!codeId,
   });

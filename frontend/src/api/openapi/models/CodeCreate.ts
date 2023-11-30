@@ -10,7 +10,7 @@ export type CodeCreate = {
   /**
    * Color of the Code
    */
-  color?: string;
+  color?: string | null;
   /**
    * Description of the Code
    */
@@ -18,7 +18,7 @@ export type CodeCreate = {
   /**
    * Parent of the Code
    */
-  parent_code_id?: number;
+  parent_code_id?: number | null;
   /**
    * Project the Code belongs to
    */

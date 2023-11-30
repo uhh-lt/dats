@@ -5,14 +5,10 @@ import {
   AccordionProps,
   AccordionSummary,
   AccordionSummaryProps,
-  Grid,
   styled,
   Typography,
 } from "@mui/material";
-import { UseQueryResult } from "@tanstack/react-query";
-import { SourceDocumentMetadataRead } from "../../../../api/openapi";
-import DocumentKeywordsRow from "./DocumentKeywordsRow";
-import DocumentMetadataAddButton from "./DocumentMetadataAddButton";
+import SdocHooks from "../../../../api/SdocHooks";
 import DocumentMetadataRow from "./DocumentMetadataRow";
 
 const MyAccordion = styled((props: AccordionProps) => <Accordion disableGutters elevation={0} square {...props} />)(
@@ -39,11 +35,10 @@ const MyAccordionSummary = styled((props: AccordionSummaryProps) => (
 
 interface DocumentMetadataProps {
   sdocId: number | undefined;
-  metadata: UseQueryResult<Map<string, SourceDocumentMetadataRead>, Error>;
 }
 
-function DocumentMetadata({ sdocId, metadata }: DocumentMetadataProps) {
-  const metadatas = Array.from(metadata.isSuccess ? metadata.data.values() : []);
+function DocumentMetadata({ sdocId }: DocumentMetadataProps) {
+  const metadata = SdocHooks.useGetMetadata(sdocId);
 
   return (
     <MyAccordion disableGutters square elevation={0} variant="outlined">
@@ -53,15 +48,10 @@ function DocumentMetadata({ sdocId, metadata }: DocumentMetadataProps) {
       <AccordionDetails>
         {metadata.isLoading && <h1>Loading...</h1>}
         {metadata.isError && <h1>{metadata.error.message}</h1>}
-        {metadata.isSuccess && (
-          <Grid container rowSpacing={2} columnSpacing={1}>
-            <DocumentKeywordsRow sdocId={sdocId} />
-            {metadatas.map((data) => (
-              <DocumentMetadataRow key={data.id} metadata={data} />
-            ))}
-            <DocumentMetadataAddButton sdocId={sdocId!} />
-          </Grid>
-        )}
+        {metadata.isSuccess &&
+          metadata.data
+            .sort((a, b) => a.id - b.id)
+            .map((data) => <DocumentMetadataRow key={data.id} metadata={data} />)}
       </AccordionDetails>
     </MyAccordion>
   );

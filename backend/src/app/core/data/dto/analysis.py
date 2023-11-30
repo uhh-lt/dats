@@ -1,18 +1,15 @@
-from typing import List, Optional, Union
+from datetime import datetime
+from enum import Enum
+from typing import List, Union
 
 from pydantic import BaseModel, Field
+from sqlalchemy import func
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationRead,
-)
+from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.span_annotation import (
-    SpanAnnotationRead,
-    SpanAnnotationReadResolved,
-)
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 
 
 class CodeOccurrence(BaseModel):
@@ -62,10 +59,51 @@ class AnnotationOccurrence(BaseModel):
     text: str = Field(description="The Text of the Annotation")
 
 
-class AnnotatedSegment(BaseModel):
-    annotation: SpanAnnotationReadResolved = Field(description="The Annotation")
-    sdoc: SourceDocumentRead = Field(
-        description="The SourceDocument where the Code occurs."
+class AnnotatedSegmentResult(BaseModel):
+    total_results: int = Field(
+        description="The total number of span_annotation_ids. Used for pagination."
     )
-    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation")
-    tags: List[DocumentTagRead] = Field(description="The Tags of the Document")
+    span_annotation_ids: List[int] = Field(description="The SpanAnnotation IDs.")
+
+
+class TimelineAnalysisResultNew(BaseModel):
+    date: str = Field(description="The date.")
+    sdoc_ids: List[int] = Field(description="The SourceDoument IDs.")
+
+
+class WordFrequencyStat(BaseModel):
+    word: str = Field(description="The word.")
+    word_percent: float = Field(description="The percentage of the word.")
+    count: int = Field(description="The SourceDoument IDs.")
+    sdocs: int = Field(description="The number of SourceDocuments.")
+    sdocs_percent: float = Field(description="The percentage of SourceDocuments.")
+
+
+class WordFrequencyResult(BaseModel):
+    total_results: int = Field(
+        description="The total number of word_frequencies. Used for pagination."
+    )
+    sdocs_total: int = Field(description="The total number of SourceDocuments.")
+    words_total: int = Field(description="The total number of words.")
+    word_frequencies: List[WordFrequencyStat] = Field(
+        description="The WordFrequencies."
+    )
+
+
+class DateGroupBy(Enum):
+    YEAR = "YEAR"
+    MONTH = "MONTH"
+    DAY = "DAY"
+
+    def apply(self, column: InstrumentedAttribute[datetime]) -> List:
+        match self:
+            case DateGroupBy.YEAR:
+                return [func.extract("year", column)]
+            case DateGroupBy.MONTH:
+                return [func.extract("year", column), func.extract("month", column)]
+            case DateGroupBy.DAY:
+                return [
+                    func.extract("year", column),
+                    func.extract("month", column),
+                    func.extract("day", column),
+                ]

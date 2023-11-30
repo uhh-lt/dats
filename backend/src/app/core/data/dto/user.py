@@ -46,9 +46,7 @@ class PublicUserRead(BaseModel):
     id: int = Field(description="ID of the User")
     first_name: str = Field(description="First name of the User")
     last_name: str = Field(description="Last name of the User")
-
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserLogin(BaseModel):

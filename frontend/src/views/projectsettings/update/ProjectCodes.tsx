@@ -115,8 +115,10 @@ function ProjectCodes({ project }: ProjectProps) {
     const codesToExpand = [];
     let parentCodeId = code.parent_code_id;
     while (parentCodeId) {
+      let currentParentCodeId = parentCodeId;
+
       codesToExpand.push(parentCodeId);
-      parentCodeId = projectCodes.data?.find((code) => code.id === parentCodeId)?.parent_code_id;
+      parentCodeId = projectCodes.data?.find((code) => code.id === currentParentCodeId)?.parent_code_id;
     }
     expandCodes(codesToExpand.map((id) => id.toString()));
   };
@@ -147,15 +149,15 @@ function ProjectCodes({ project }: ProjectProps) {
       )}
       <List disablePadding>
         <ListItem disablePadding>
-          <ListItemButton onClick={() => openCodeCreateDialog({ name: "Tim" })}>
+          <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ onSuccess: onCreateCodeSuccess })}>
             <ListItemIcon>
               <AddIcon />
             </ListItemIcon>
-            <ListItemText primary="Add new code" />
+            <ListItemText primary="Create new code" />
           </ListItemButton>
         </ListItem>
       </List>
-      <CodeCreateDialog onCreateSuccess={onCreateCodeSuccess} />
+      <CodeCreateDialog />
       {projectCodes.isSuccess && codeTree && (
         <>
           <CodeTreeView

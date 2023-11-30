@@ -15,6 +15,7 @@ import ProjectDocuments from "./ProjectDocuments";
 import ProjectTags from "./ProjectTags";
 import ProjectUsers from "./ProjectUsers";
 import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
+import ProjectMetadata from "./ProjectMetadata";
 
 function ProjectUpdate() {
   const { user } = useAuth();
@@ -80,7 +81,8 @@ function ProjectUpdate() {
             <Tab label="User" value="3" />
             <Tab label="Codes" value="4" />
             <Tab label="Tags" value="5" />
-            <Tab label="Background Tasks" value="6" />
+            <Tab label="Metadata" value="6" />
+            <Tab label="Background Tasks" value="7" />
           </Tabs>
         </AppBar>
         {project.isLoading && <CardContent>Loading project...</CardContent>}
@@ -103,6 +105,9 @@ function ProjectUpdate() {
               <ProjectTags project={project.data} />
             </TabPanel>
             <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectMetadata project={project.data} />
+            </TabPanel>
+            <TabPanel value="7" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectBackgroundTasks project={project.data} />
             </TabPanel>
           </React.Fragment>

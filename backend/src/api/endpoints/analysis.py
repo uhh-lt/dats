@@ -1,23 +1,38 @@
-from typing import Dict, List
+from typing import List, Tuple
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.analysis_service import AnalysisService
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
+from app.core.analysis.annotated_segments import (
+    AnnotatedSegmentsColumns,
+    find_annotated_segments,
+    find_annotated_segments_info,
+)
+from app.core.analysis.timeline import (
+    TimelineAnalysisColumns,
+    timeline_analysis,
+    timeline_analysis_info,
+    timeline_analysis_valid_documents,
+)
+from app.core.analysis.word_frequency import (
+    WordFrequencyColumns,
+    word_frequency,
+    word_frequency_info,
+)
 from app.core.data.dto.analysis import (
-    AnalysisConcept,
-    AnnotatedSegment,
+    AnnotatedSegmentResult,
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
-    TimelineAnalysisResult,
+    DateGroupBy,
+    TimelineAnalysisResultNew,
+    WordFrequencyResult,
 )
-from app.core.data.dto.filter import Filter
-from app.core.data.dto.search import SimSearchQuery, SimSearchSentenceHit
-from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.search_service import SearchService
+from app.core.filters.columns import ColumnInfo
+from app.core.filters.filtering import Filter
+from app.core.filters.sorting import Sort
 
 router = APIRouter(
     prefix="/analysis", dependencies=[Depends(get_current_user)], tags=["analysis"]
@@ -34,10 +49,10 @@ async def code_frequencies(
     *,
     project_id: int,
     code_ids: List[int],
-    filter: Filter,
+    user_ids: List[int],
 ) -> List[CodeFrequency]:
     return AnalysisService().compute_code_frequency(
-        project_id=project_id, code_ids=code_ids, filter=filter
+        project_id=project_id, code_ids=code_ids, user_ids=user_ids
     )
 
 
@@ -73,101 +88,133 @@ async def annotation_occurrences(
 
 
 @router.post(
-    "/annotated_segments",
-    response_model=List[AnnotatedSegment],
-    summary="Returns AnnotationSegments.",
-    description="Returns AnnotationSegments.",
+    "/annotated_segments_info",
+    response_model=List[ColumnInfo[AnnotatedSegmentsColumns]],
+    summary="Returns AnnotationSegments Info.",
+    description="Returns AnnotationSegments Info.",
 )
-async def annotated_segments(
-    *, project_id: int, user_id: int, filter: Filter
-) -> List[AnnotatedSegment]:
-    return AnalysisService().find_annotated_segments(
-        project_id=project_id, user_id=user_id, filter=filter
+async def annotated_segments_info(
+    *,
+    project_id: int,
+) -> List[ColumnInfo[AnnotatedSegmentsColumns]]:
+    return find_annotated_segments_info(
+        project_id=project_id,
     )
 
 
 @router.post(
-    "/timeline_analysis",
-    response_model=List[TimelineAnalysisResult],
-    summary="Perform timeline analysis.",
-    description="Perform timeline analysis.",
+    "/annotated_segments",
+    response_model=AnnotatedSegmentResult,
+    summary="Returns AnnotationSegments.",
+    description="Returns AnnotationSegments.",
 )
-async def timeline_analysis(
+async def annotated_segments(
+    *,
+    project_id: int,
+    user_ids: List[int],
+    filter: Filter[AnnotatedSegmentsColumns],
+    page: int,
+    page_size: int,
+    sorts: List[Sort[AnnotatedSegmentsColumns]],
+) -> AnnotatedSegmentResult:
+    return find_annotated_segments(
+        project_id=project_id,
+        user_ids=user_ids,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )
+
+
+@router.get(
+    "/timeline_analysis_valid_docments/{project_id}/metadata/{date_metadata_id}}",
+    response_model=Tuple[int, int],
+    summary="Returns TimelineAnalysis Info.",
+    description="Returns TimelineAnalysis Info.",
+)
+async def get_timeline_analysis_valid_documents(
+    *,
+    project_id: int,
+    date_metadata_id: int,
+) -> Tuple[int, int]:
+    return timeline_analysis_valid_documents(
+        project_id=project_id,
+        date_metadata_id=date_metadata_id,
+    )
+
+
+@router.get(
+    "/timeline_analysis2_info/{project_id}",
+    response_model=List[ColumnInfo[TimelineAnalysisColumns]],
+    summary="Returns TimelineAnalysis Info.",
+    description="Returns TimelineAnalysis Info.",
+)
+async def timeline_analysis2_info(
+    *,
+    project_id: int,
+) -> List[ColumnInfo[TimelineAnalysisColumns]]:
+    return timeline_analysis_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/timeline_analysis2",
+    response_model=List[TimelineAnalysisResultNew],
+    summary="Perform new timeline analysis.",
+    description="Perform new timeline analysis.",
+)
+async def timeline_analysis2(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
-    concepts: List[AnalysisConcept],
-    threshold: float,
-    metadata_key: str,
-) -> List[TimelineAnalysisResult]:
-    # FIXME move this to AnalysisService!
-    # ensure that metadata key is valid
-    sdoc_metadata_dict = {
-        sdoc_meta.source_document_id: sdoc_meta.value
-        for sdoc_meta in crud_sdoc_meta.read_by_project_and_key(
-            db=db, project_id=project_id, key=metadata_key
-        )
-    }
-    if len(sdoc_metadata_dict) == 0:
-        return []
+    group_by: DateGroupBy,
+    project_metadata_id: int,
+    filter: Filter[TimelineAnalysisColumns],
+) -> List[TimelineAnalysisResultNew]:
+    return timeline_analysis(
+        project_id=project_id,
+        group_by=group_by,
+        project_metadata_id=project_metadata_id,
+        filter=filter,
+    )
 
-    # analyse every concept
-    sdoc_ids = []
-    similar_sentences_dict: Dict[str, List[SimSearchSentenceHit]] = {}
-    for concept in concepts:
-        hits: List[SimSearchSentenceHit] = SearchService().find_similar_sentences(
-            query=SimSearchQuery(
-                proj_id=project_id,
-                query=concept.sentences,
-                threshold=threshold,
-                top_k=10000,
-            )
-        )
-        similar_sentences_dict[concept.name] = hits
-        sdoc_ids.extend([hit.sdoc_id for hit in hits])
 
-    # filter sdoc_ids
-    sdoc_ids = list(set(sdoc_ids))  # remove duplicates
-    sdoc_ids = [
-        sdoc_id for sdoc_id in sdoc_ids if sdoc_id in sdoc_metadata_dict.keys()
-    ]  # remove invalid sdoc_ids that do not have the metadata key
+@router.get(
+    "/word_frequency_analysis_info/{project_id}",
+    response_model=List[ColumnInfo[WordFrequencyColumns]],
+    summary="Returns WordFrequency Info.",
+    description="Returns WordFrequency Info.",
+)
+async def word_frequency_analysis_info(
+    *,
+    project_id: int,
+) -> List[ColumnInfo[WordFrequencyColumns]]:
+    return word_frequency_info(
+        project_id=project_id,
+    )
 
-    # query sentences of relevant sdocs
-    esdocs_dict: Dict[int, List[str]] = {
-        esdoc.sdoc_id: esdoc.sentences
-        for esdoc in ElasticSearchService().get_esdocs_by_sdoc_ids(
-            proj_id=project_id, sdoc_ids=sdoc_ids, fields={"sentences"}
-        )
-    }
 
-    result = []
-    for concept in concepts:
-        for hit in similar_sentences_dict.get(concept.name, []):
-            sentences: List[str] = esdocs_dict.get(hit.sdoc_id, [])
-            if len(sentences) == 0:
-                continue
-
-            date = sdoc_metadata_dict.get(hit.sdoc_id, None)
-            if date is None:
-                continue
-
-            # build context
-            context = ""
-            if hit.sentence_id > 0:
-                context += sentences[hit.sentence_id - 1] + " "
-            context += sentences[hit.sentence_id] + " "
-            if hit.sentence_id < len(sentences) - 1:
-                context += sentences[hit.sentence_id + 1]
-            context = context.strip()
-
-            result.append(
-                TimelineAnalysisResult(
-                    concept_name=concept.name,
-                    date=date,
-                    sentence=sentences[hit.sentence_id],
-                    score=hit.score,
-                    sdoc_id=hit.sdoc_id,
-                    context=context,
-                )
-            )
-    return result
+@router.post(
+    "/word_frequency_analysis",
+    response_model=WordFrequencyResult,
+    summary="Perform word frequency analysis.",
+    description="Perform word frequency analysis.",
+)
+async def word_frequency_analysis(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    filter: Filter[WordFrequencyColumns],
+    page: int,
+    page_size: int,
+    sorts: List[Sort[WordFrequencyColumns]],
+) -> WordFrequencyResult:
+    return word_frequency(
+        project_id=project_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )

@@ -3,11 +3,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import {
   Card,
   CardContent,
-  Checkbox,
   ClickAwayListener,
   FormControl,
   FormControlLabel,
-  FormGroup,
   FormLabel,
   IconButton,
   InputBase,
@@ -18,34 +16,37 @@ import {
   Tooltip,
 } from "@mui/material";
 import React, { useRef, useState } from "react";
-import { UseFormRegister } from "react-hook-form";
-import { DocType } from "../../../api/openapi";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { QueryType } from "../QueryType";
+import { useNavigateIfNecessary } from "../hooks/useNavigateIfNecessary";
 import { SearchActions } from "../searchSlice";
-import ImageIcon from "@mui/icons-material/Image";
-import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
-import FeedIcon from "@mui/icons-material/Feed";
-import FeedOutlinedIcon from "@mui/icons-material/FeedOutlined";
-import AudiotrackIcon from "@mui/icons-material/Audiotrack";
-import AudiotrackOutlinedIcon from "@mui/icons-material/AudiotrackOutlined";
-import MovieIcon from "@mui/icons-material/Movie";
-import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
+
+interface SearchFormValues {
+  query: string;
+}
 
 interface SearchBarProps {
-  register: UseFormRegister<Record<string, any>>;
-  handleSubmit: any;
-  handleClearSearch: () => void;
   placeholder: string;
 }
 
-function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: SearchBarProps) {
+function SearchBar({ placeholder }: SearchBarProps) {
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
   const container = useRef<HTMLFormElement | null>(null);
+  const navigateIfNecessary = useNavigateIfNecessary();
 
   // global client state (redux)
-  const resultModalities = useAppSelector((state) => state.search.resultModalities);
   const searchType = useAppSelector((state) => state.search.searchType);
+  const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const dispatch = useAppDispatch();
+
+  // react hook form
+  const { register, handleSubmit, reset } = useForm<SearchFormValues>({
+    values: {
+      query: searchQuery,
+    },
+  });
 
   // local state
   const [anchorEl, setAnchorEl] = useState<HTMLFormElement | null>(null);
@@ -68,14 +69,36 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
     }
   };
 
-  const handleSubmitWrapper = (event: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit: SubmitHandler<SearchFormValues> = (data) => {
+    switch (searchType) {
+      case QueryType.LEXICAL:
+        dispatch(SearchActions.onChangeSearchQuery(data.query));
+        dispatch(SearchActions.clearSelectedDocuments());
+        navigateIfNecessary(`/project/${projectId}/search/`);
+        break;
+      case QueryType.SEMANTIC:
+        alert("not implemented!");
+        break;
+    }
+
     handleClose();
-    handleSubmit(event);
+    reset({
+      query: data.query,
+    });
   };
 
-  const handleClearSearchWrapper = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const onSubmitError: SubmitErrorHandler<SearchFormValues> = (errors) => {
+    console.error(errors);
+  };
+
+  const handleClearSearch = (event: React.MouseEvent<HTMLButtonElement>) => {
+    dispatch(SearchActions.onClearSearch());
+    navigateIfNecessary(`/project/${projectId}/search/`);
+
     handleClose();
-    handleClearSearch();
+    reset({
+      query: "",
+    });
   };
 
   return (
@@ -83,7 +106,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
       <Paper
         elevation={0}
         component="form"
-        onSubmit={handleSubmitWrapper}
+        onSubmit={handleSubmit(onSubmit, onSubmitError)}
         ref={container}
         sx={{
           padding: "2px",
@@ -116,7 +139,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
         />
         <Tooltip title={"Clear search"}>
           <span>
-            <IconButton sx={{ p: "10px" }} onClick={handleClearSearchWrapper}>
+            <IconButton sx={{ p: "10px" }} onClick={handleClearSearch}>
               <ClearIcon />
             </IconButton>
           </span>
@@ -129,59 +152,6 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
         >
           <Card variant="outlined" sx={{ borderTop: "none", borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
             <CardContent>
-              <FormControl component="fieldset" variant="standard" sx={{ mr: 3 }}>
-                <FormLabel component="legend">Result modalities</FormLabel>
-                <FormGroup row>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="Text"
-                        onChange={() => dispatch(SearchActions.toggleModality(DocType.TEXT))}
-                        checked={resultModalities.indexOf(DocType.TEXT) !== -1}
-                        checkedIcon={<FeedIcon />}
-                        icon={<FeedOutlinedIcon />}
-                      />
-                    }
-                    label="Text"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="Image"
-                        onChange={() => dispatch(SearchActions.toggleModality(DocType.IMAGE))}
-                        checked={resultModalities.indexOf(DocType.IMAGE) !== -1}
-                        checkedIcon={<ImageIcon />}
-                        icon={<ImageOutlinedIcon />}
-                      />
-                    }
-                    label="Image"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="Audio"
-                        onChange={() => dispatch(SearchActions.toggleModality(DocType.AUDIO))}
-                        checked={resultModalities.indexOf(DocType.AUDIO) !== -1}
-                        checkedIcon={<AudiotrackIcon />}
-                        icon={<AudiotrackOutlinedIcon />}
-                      />
-                    }
-                    label="Audio"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="Video"
-                        onChange={() => dispatch(SearchActions.toggleModality(DocType.VIDEO))}
-                        checked={resultModalities.indexOf(DocType.VIDEO) !== -1}
-                        checkedIcon={<MovieIcon />}
-                        icon={<MovieOutlinedIcon />}
-                      />
-                    }
-                    label="Video"
-                  />
-                </FormGroup>
-              </FormControl>
               <FormControl>
                 <FormLabel id="radio-buttons-group-query">Query Type</FormLabel>
                 <RadioGroup
@@ -191,8 +161,14 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
                   onChange={(event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
                   name="radio-buttons-group"
                 >
-                  {Object.entries(QueryType).map((qt) => (
-                    <FormControlLabel key={qt[1]} value={qt[1] as QueryType} control={<Radio />} label={qt[1]} />
+                  {Object.values(QueryType).map((qt) => (
+                    <FormControlLabel
+                      key={qt}
+                      value={qt}
+                      control={<Radio />}
+                      label={qt}
+                      disabled={qt === QueryType.SEMANTIC}
+                    />
                   ))}
                 </RadioGroup>
               </FormControl>

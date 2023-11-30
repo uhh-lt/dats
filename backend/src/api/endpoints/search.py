@@ -4,25 +4,20 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
-from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.search import (
-    KeywordStat,
     MemoContentQuery,
     MemoTitleQuery,
-    PaginatedElasticSearchDocumentHits,
     PaginatedMemoSearchResults,
-    SearchSDocsQueryParameters,
     SimSearchImageHit,
     SimSearchQuery,
     SimSearchSentenceHit,
-    SourceDocumentContentQuery,
-    SourceDocumentFilenameQuery,
-    SpanEntityDocumentFrequencyResult,
-    SpanEntityFrequency,
-    TagStat,
 )
+from app.core.data.dto.search_stats import KeywordStat, SpanEntityStat, TagStat
+from app.core.filters.columns import ColumnInfo
+from app.core.filters.filtering import Filter
+from app.core.filters.sorting import Sort
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.search_service import SearchService
+from app.core.search.search_service import SearchColumns, SearchService
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]
@@ -33,62 +28,61 @@ es = ElasticSearchService()
 
 
 @router.post(
-    "/sdoc",
+    "/sdoc_new_info",
+    response_model=List[ColumnInfo[SearchColumns]],
+    summary="Returns Search Info.",
+    description="Returns Search Info.",
+)
+async def search_sdocs_new_info(
+    *,
+    project_id: int,
+) -> List[ColumnInfo[SearchColumns]]:
+    return SearchService().search_new_info(project_id=project_id)
+
+
+@router.post(
+    "/sdoc_new",
     response_model=List[int],
     summary="Returns all SourceDocument IDs that match the query parameters.",
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
-async def search_sdocs(*, query_params: SearchSDocsQueryParameters) -> List[int]:
+async def search_sdocs_new(
+    *,
+    search_query: str,
+    project_id: int,
+    filter: Filter[SearchColumns],
+    sorts: List[Sort[SearchColumns]],
+) -> List[int]:
     # TODO Flo: only if the user has access?
-    return SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
-
-
-@router.post(
-    "/entity_stats",
-    response_model=List[SpanEntityFrequency],
-    summary="Returns SpanEntityStats for the given SourceDocuments.",
-    description="Returns SpanEntityStats for the given SourceDocuments.",
-)
-async def search_span_entity_stats(
-    *, db: Session = Depends(get_db_session), query_params: SearchSDocsQueryParameters
-) -> List[SpanEntityFrequency]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
-    return crud_sdoc.collect_entity_stats(
-        db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id
+    return SearchService().search_new(
+        search_query=search_query,
+        project_id=project_id,
+        filter=filter,
+        sorts=sorts,
     )
 
 
 @router.post(
     "/code_stats",
-    response_model=SpanEntityDocumentFrequencyResult,
+    response_model=List[SpanEntityStat],
     summary="Returns SpanEntityStats for the given SourceDocuments.",
     description="Returns SpanEntityStats for the given SourceDocuments.",
 )
 async def search_code_stats(
     *,
     db: Session = Depends(get_db_session),
-    query_params: SearchSDocsQueryParameters,
+    code_id: int,
+    user_ids: List[int],
+    sdoc_ids: List[int],
     sort_by_global: bool = False,
-) -> SpanEntityDocumentFrequencyResult:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
+) -> List[SpanEntityStat]:
     # TODO Flo for large corpora this gets very slow. Hence we have to set a limit and in future implement some lazy
     #  loading or scrolling in the frontend with skip and limit.
-    code_stats = crud_sdoc.collect_code_stats(
-        db=db, sdoc_ids=sdoc_ids, proj_id=query_params.proj_id, skip=0, limit=1000
+    code_stats = SearchService().compute_code_statistics(
+        code_id=code_id, user_ids=set(user_ids), sdoc_ids=set(sdoc_ids)
     )
-    for v in code_stats.stats.values():
-        v.sort(
-            key=(lambda x: x.global_count)
-            if sort_by_global
-            else (lambda x: x.filtered_count),
-            reverse=True,
-        )
+    if sort_by_global:
+        code_stats.sort(key=lambda x: x.global_count, reverse=True)
     return code_stats
 
 
@@ -100,17 +94,15 @@ async def search_code_stats(
 )
 async def search_keyword_stats(
     *,
-    query_params: SearchSDocsQueryParameters,
+    project_id: int,
+    sdoc_ids: List[int],
     sort_by_global: bool = False,
     top_k: int = 50,
 ) -> List[KeywordStat]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
     if len(sdoc_ids) == 0:
         return []
-    keyword_stats = es.get_sdoc_keyword_counts_by_sdoc_ids(
-        proj_id=query_params.proj_id, sdoc_ids=set(sdoc_ids), top_k=top_k
+    keyword_stats = SearchService().compute_keyword_statistics(
+        proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
     if sort_by_global:
         keyword_stats.sort(key=lambda x: x.global_count, reverse=True)
@@ -126,57 +118,13 @@ async def search_keyword_stats(
 async def search_tag_stats(
     *,
     db: Session = Depends(get_db_session),
-    query_params: SearchSDocsQueryParameters,
+    sdoc_ids: List[int],
     sort_by_global: bool = False,
 ) -> List[TagStat]:
-    sdoc_ids = SearchService().search_sdoc_ids_by_sdoc_query_parameters(
-        query_params=query_params
-    )
-    tag_stats = crud_sdoc.collect_tag_stats(db=db, sdoc_ids=sdoc_ids)
+    tag_stats = SearchService().compute_tag_statistics(sdoc_ids=set(sdoc_ids))
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
     return tag_stats
-
-
-@router.post(
-    "/lexical/sdoc/content",
-    response_model=PaginatedElasticSearchDocumentHits,
-    summary="Returns all SourceDocuments where the content matches the query via lexical search",
-    description="Returns all SourceDocuments where the content matches the query via lexical search",
-)
-async def search_sdocs_by_content_query(
-    *,
-    content_query: SourceDocumentContentQuery,
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-) -> PaginatedElasticSearchDocumentHits:
-    return es.search_sdocs_by_content_query(
-        proj_id=content_query.proj_id, query=content_query.content_query, **skip_limit
-    )
-
-
-@router.post(
-    "/lexical/sdoc/filename",
-    response_model=PaginatedElasticSearchDocumentHits,
-    summary="Returns all SourceDocuments where the filename matches the query via lexical search",
-    description="Returns all SourceDocuments where the filename matches the query via lexical search",
-)
-async def search_sdocs_by_filename_query(
-    *,
-    filename_query: SourceDocumentFilenameQuery,
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-) -> PaginatedElasticSearchDocumentHits:
-    if filename_query.prefix:
-        return es.search_sdocs_by_prefix_filename(
-            proj_id=filename_query.proj_id,
-            filename_prefix=filename_query.filename_query,
-            **skip_limit,
-        )
-    else:
-        return es.search_sdocs_by_exact_filename(
-            proj_id=filename_query.proj_id,
-            exact_filename=filename_query.filename_query,
-            **skip_limit,
-        )
 
 
 @router.post(

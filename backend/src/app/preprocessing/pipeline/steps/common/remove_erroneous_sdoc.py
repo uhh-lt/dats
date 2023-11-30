@@ -17,7 +17,10 @@ def remove_erroneous_or_unfinished_sdocs(cargo: PipelineCargo) -> PipelineCargo:
     with sql.db_session() as db:
         # this should work for all kind of documents (audio, image, text, video)
         for doc in ["ppad", "pptd", "ppvd", "ppid"]:
-            if doc in cargo.data:
+            if cargo.data is None:
+                continue
+
+            if doc in cargo.data.keys():
                 filename = str(cargo.data[doc].filename)
 
                 sdoc = crud_sdoc.read_by_filename(

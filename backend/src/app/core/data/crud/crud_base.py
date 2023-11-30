@@ -33,7 +33,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
     def read(self, db: Session, id: int) -> ORMModelType:
         db_obj = db.query(self.model).filter(self.model.id == id).first()
-        if not db_obj:
+        if db_obj is None:
             raise NoSuchElementError(self.model, id=id)
         return db_obj
 
@@ -45,9 +45,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
     ) -> List[ORMModelType]:
         return db.query(self.model).offset(skip).limit(limit).all()
 
-    def exists(
-        self, db: Session, *, id: int, raise_error: bool = False
-    ) -> Optional[bool]:
+    def exists(self, db: Session, *, id: int, raise_error: bool = False) -> bool:
         exists = db.query(self.model.id).filter(self.model.id == id).first() is not None
         if not exists and raise_error:
             raise NoSuchElementError(self.model, id=id)
@@ -86,7 +84,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
     def update(
         self, db: Session, *, id: int, update_dto: UpdateDTOType
-    ) -> Optional[ORMModelType]:
+    ) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         before_state = self._get_action_state_from_orm(db_obj=db_obj)
 
@@ -110,7 +108,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> Optional[ORMModelType]:
+    def remove(self, db: Session, *, id: int) -> ORMModelType:
         db_obj = self.read(db=db, id=id)
         before_state = self._get_action_state_from_orm(db_obj=db_obj)
 

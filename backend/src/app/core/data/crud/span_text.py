@@ -15,7 +15,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
     def create(self, db: Session, *, create_dto: SpanTextCreate) -> SpanTextORM:
         # Only create when not already present
         db_obj = self.read_by_text(db=db, text=create_dto.text)
-        if not db_obj:
+        if db_obj is None:
             return super().create(db=db, create_dto=create_dto)
         return db_obj
 
@@ -31,7 +31,7 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
         for i, create_dto in enumerate(create_dtos):
             db_obj = self.read_by_text(db=db, text=create_dto.text)
             span_texts.append(db_obj)
-            if not db_obj:
+            if db_obj is None:
                 to_create.append(create_dto)
                 to_create_idx.append(i)
         if len(to_create) > 0:

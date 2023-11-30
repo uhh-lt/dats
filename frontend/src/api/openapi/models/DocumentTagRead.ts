@@ -8,13 +8,17 @@ export type DocumentTagRead = {
    */
   title: string;
   /**
-   * Description of the DocumentTag
-   */
-  description?: string;
-  /**
-   * Color of the Code
+   * Color of the DocumentTag
    */
   color: string;
+  /**
+   * Description of the DocumentTag
+   */
+  description?: string | null;
+  /**
+   * Parent of the DocumentTag
+   */
+  parent_tag_id?: number | null;
   /**
    * ID of the DocumentTag
    */

@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -37,13 +37,13 @@ router = APIRouter(
 
 @router.put(
     "",
-    response_model=Optional[AnnotationDocumentRead],
+    response_model=AnnotationDocumentRead,
     summary="Creates an AnnotationDocument",
     description="Creates an AnnotationDocument",
 )
 async def create(
     *, db: Session = Depends(get_db_session), adoc: AnnotationDocumentCreate
-) -> Optional[AnnotationDocumentRead]:
+) -> AnnotationDocumentRead:
     return AnnotationDocumentRead.model_validate(
         crud_adoc.create(db=db, create_dto=adoc)
     )
@@ -51,13 +51,13 @@ async def create(
 
 @router.get(
     "/{adoc_id}",
-    response_model=Optional[AnnotationDocumentRead],
+    response_model=AnnotationDocumentRead,
     summary="Returns the AnnotationDocument",
     description="Returns the AnnotationDocument with the given ID if it exists",
 )
 async def get_by_adoc_id(
     *, db: Session = Depends(get_db_session), adoc_id: int
-) -> Optional[AnnotationDocumentRead]:
+) -> AnnotationDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.read(db=db, id=adoc_id)
     return AnnotationDocumentRead.model_validate(db_obj)
@@ -65,13 +65,13 @@ async def get_by_adoc_id(
 
 @router.delete(
     "/{adoc_id}",
-    response_model=Optional[AnnotationDocumentRead],
+    response_model=AnnotationDocumentRead,
     summary="Removes the AnnotationDocument",
     description="Removes the AnnotationDocument with the given ID if it exists",
 )
 async def delete_by_adoc_id(
     *, db: Session = Depends(get_db_session), adoc_id: int
-) -> Optional[AnnotationDocumentRead]:
+) -> AnnotationDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_adoc.remove(db=db, id=adoc_id)
     return AnnotationDocumentRead.model_validate(db_obj)

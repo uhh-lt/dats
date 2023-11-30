@@ -1,33 +1,32 @@
-from typing import List, Optional
+from typing import List
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.doc_type import DocType
-from app.core.data.dto.annotation_document import AnnotationDocumentRead
+from app.core.data.dto.annotation_document import (
+    AnnotationDocumentCreate,
+    AnnotationDocumentRead,
+)
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.source_document import (
-    SourceDocumentContent,
-    SourceDocumentHTML,
-    SourceDocumentKeywords,
     SourceDocumentRead,
-    SourceDocumentSentences,
-    SourceDocumentTokens,
     SourceDocumentUpdate,
+    SourceDocumentWithDataRead,
 )
 from app.core.data.dto.source_document_metadata import (
-    SourceDocumentMetadataRead,
+    SourceDocumentMetadataReadResolved,
     SourceDocumentMetadataUpdate,
 )
+from app.core.data.dto.word_frequency import WordFrequencyRead
 from app.core.data.repo.repo_service import RepoService
-from app.core.search.elasticsearch_service import ElasticSearchService
 
 router = APIRouter(
     prefix="/sdoc", dependencies=[Depends(get_current_user)], tags=["sourceDocument"]
@@ -36,7 +35,7 @@ router = APIRouter(
 
 @router.get(
     "/{sdoc_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentWithDataRead,
     summary="Returns the SourceDocument",
     description="Returns the SourceDocument with the given ID if it exists",
 )
@@ -45,131 +44,44 @@ async def get_by_id(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     only_if_finished: bool = True,
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentWithDataRead:
     # TODO Flo: only if the user has access?
     if not only_if_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
-    db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return SourceDocumentRead.model_validate(db_obj)
+    return crud_sdoc.read_with_data(db=db, id=sdoc_id)
+
+
+@router.patch(
+    "/{sdoc_id}",
+    response_model=SourceDocumentRead,
+    summary="Updates the SourceDocument",
+    description="Updates the SourceDocument with the given ID.",
+)
+async def update_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    sdoc_update: SourceDocumentUpdate,
+) -> SourceDocumentRead:
+    # TODO Flo: only if the user has access?
+    db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc_update)
+    sdoc_dto = SourceDocumentRead.model_validate(db_obj)
+    return sdoc_dto
 
 
 @router.delete(
     "/{sdoc_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Removes the SourceDocument",
     description="Removes the SourceDocument with the given ID if it exists",
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), sdoc_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
     return SourceDocumentRead.model_validate(db_obj)
-
-
-@router.get(
-    "/{sdoc_id}/content",
-    response_model=Optional[SourceDocumentContent],
-    summary="Returns the (textual) content of the SourceDocument",
-    description=(
-        "Returns the (textual) content of the SourceDocument if it exists. If the SourceDocument is "
-        "not a text file, there is no content but an URL to the file content."
-    ),
-)
-async def get_content(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-) -> Optional[SourceDocumentContent]:
-    # TODO Flo: only if the user has access?
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    if sdoc_db_obj.doctype == DocType.text:
-        return SourceDocumentContent.model_validate(sdoc_db_obj)
-    url = RepoService().get_sdoc_url(
-        sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
-    )
-    return SourceDocumentContent(source_document_id=sdoc_id, content=url)
-
-
-@router.get(
-    "/{sdoc_id}/html",
-    response_model=Optional[SourceDocumentHTML],
-    summary="Returns the (html) content of the SourceDocument",
-    description=(
-        "Returns the (html) content of the SourceDocument if it exists. If the SourceDocument is "
-        "not a text file, there is no content but an URL to the file content."
-    ),
-)
-async def get_html(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-) -> Optional[SourceDocumentHTML]:
-    # TODO Flo: only if the user has access?
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    if sdoc_db_obj.doctype == DocType.text:
-        return SourceDocumentHTML.model_validate(sdoc_db_obj)
-    else:
-        return RepoService().get_sdoc_url(
-            sdoc=SourceDocumentRead.model_validate(sdoc_db_obj)
-        )
-
-
-@router.get(
-    "/{sdoc_id}/tokens",
-    response_model=Optional[SourceDocumentTokens],
-    summary="Returns the textual tokens of the SourceDocument if it is a text document.",
-    description="Returns the textual tokens of the SourceDocument if it is a text document.",
-)
-async def get_tokens(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-    character_offsets: Optional[bool] = Query(
-        title="Include Character Offsets",
-        description="If True include the character offsets.",
-        default=False,
-    ),
-) -> Optional[SourceDocumentTokens]:
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-    # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    return SourceDocumentTokens.model_validate(sdoc_db_obj)
-
-
-@router.get(
-    "/{sdoc_id}/sentences",
-    response_model=Optional[SourceDocumentSentences],
-    summary="Returns the sentences of the SourceDocument if it is a text document.",
-    description="Returns the sentences of the SourceDocument if it is a text document.",
-)
-async def get_sentences(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-    sentence_offsets: Optional[bool] = Query(
-        title="Include Sentence Offsets",
-        description="If True include the character offsets.",
-        default=False,
-    ),
-) -> Optional[SourceDocumentSentences]:
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-    # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read_with_data(db=db, id=sdoc_id)
-    return SourceDocumentSentences.model_validate(sdoc_db_obj)
 
 
 @router.patch(
@@ -187,44 +99,6 @@ async def update_sdoc(
 
 
 @router.get(
-    "/{sdoc_id}/keywords",
-    response_model=Optional[SourceDocumentKeywords],
-    summary="Returns the keywords of the SourceDocument if it is a text document.",
-    description="Returns the keywords of the SourceDocument if it is a text document.",
-)
-async def get_keywords(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    only_finished: Optional[bool] = True,
-) -> Optional[SourceDocumentKeywords]:
-    # TODO Flo: only if the user has access?
-    if only_finished:
-        crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
-    sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-
-    # if the sdoc is audio or video we return the keywords of the transcript
-    if sdoc_db_obj.doctype == DocType.audio or sdoc_db_obj.doctype == DocType.video:
-        # FIXME a video sdoc has one linked sdoc and a audi has two.
-        #   the last is always the transcrip sdoc id.
-        #   but this is very hack and error prone.
-        linked_sdocs = crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
-        if len(linked_sdocs) == 1 and len(linked_sdocs) != 2:
-            # we have to follow the link from the audio sdoc to the transcript sdoc
-            linked_sdocs = crud_sdoc.collect_linked_sdoc_ids(
-                db=db,
-                sdoc_id=linked_sdocs[0],
-            )
-        elif len(linked_sdocs) == 2:
-            raise ValueError(f"Cannot find transcript for SourceDocument {sdoc_id}")
-        sdoc_id = linked_sdocs[-1]
-
-    return ElasticSearchService().get_sdoc_keywords_by_sdoc_id(
-        sdoc_id=sdoc_id, proj_id=sdoc_db_obj.project_id
-    )
-
-
-@router.get(
     "/{sdoc_id}/linked_sdocs",
     response_model=List[int],
     summary="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
@@ -236,25 +110,9 @@ async def get_linked_sdocs(
     return crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
 
 
-@router.patch(
-    "/{sdoc_id}/keywords",
-    response_model=Optional[SourceDocumentKeywords],
-    summary="Updates the keywords of the SourceDocument.",
-    description="Updates the keywords of the SourceDocument.",
-)
-async def update_keywords(
-    *, db: Session = Depends(get_db_session), keywords: SourceDocumentKeywords
-) -> Optional[SourceDocumentKeywords]:
-    # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.read(db=db, id=keywords.source_document_id)
-    return ElasticSearchService().update_esdoc_keywords(
-        keywords=keywords, proj_id=sdoc_db_obj.project_id
-    )
-
-
 @router.get(
     "/{sdoc_id}/url",
-    response_model=Optional[str],
+    response_model=str,
     summary="Returns the URL to the original file of the SourceDocument",
     description="Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
 )
@@ -262,12 +120,13 @@ async def get_file_url(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    relative: Optional[bool] = True,
-    webp: Optional[bool] = False,
-    thumbnail: Optional[bool] = False,
-) -> Optional[str]:
+    relative: bool = True,
+    webp: bool = False,
+    thumbnail: bool = False,
+) -> str:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
+    # TODO: FIX TYPING
     return RepoService().get_sdoc_url(
         sdoc=SourceDocumentRead.model_validate(sdoc_db_obj),
         relative=relative,
@@ -278,7 +137,7 @@ async def get_file_url(
 
 @router.get(
     "/{sdoc_id}/metadata",
-    response_model=List[SourceDocumentMetadataRead],
+    response_model=List[SourceDocumentMetadataReadResolved],
     summary="Returns all SourceDocumentMetadata",
     description="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
 )
@@ -286,40 +145,34 @@ async def get_all_metadata(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    exclude_csv: Optional[str] = "word_level_transcriptions,word_frequencies",
-) -> List[SourceDocumentMetadataRead]:
+) -> List[SourceDocumentMetadataReadResolved]:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    metadata = [
-        SourceDocumentMetadataRead.model_validate(meta)
+    return [
+        SourceDocumentMetadataReadResolved.model_validate(meta)
         for meta in sdoc_db_obj.metadata_
     ]
-    if exclude_csv is not None:
-        exclude = exclude_csv.split(",")
-        metadata = [meta for meta in metadata if meta.key not in exclude]
-    return metadata
 
 
 @router.get(
     "/{sdoc_id}/metadata/{metadata_key}",
-    response_model=Optional[SourceDocumentMetadataRead],
+    response_model=SourceDocumentMetadataReadResolved,
     summary="Returns the SourceDocumentMetadata with the given Key",
     description="Returns the SourceDocumentMetadata with the given Key if it exists.",
 )
 async def read_metadata_by_key(
     *, db: Session = Depends(get_db_session), sdoc_id: int, metadata_key: str
-) -> Optional[SourceDocumentMetadataRead]:
+) -> SourceDocumentMetadataReadResolved:
     # TODO Flo: only if the user has access?
-    crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
     metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
         db=db, sdoc_id=sdoc_id, key=metadata_key
     )
-    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
+    return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
 
 
 @router.patch(
     "/{sdoc_id}/metadata/{metadata_id}",
-    response_model=Optional[SourceDocumentMetadataRead],
+    response_model=SourceDocumentMetadataReadResolved,
     summary="Updates the SourceDocumentMetadata",
     description="Updates the SourceDocumentMetadata with the given ID if it exists.",
 )
@@ -329,28 +182,39 @@ async def update_metadata_by_id(
     sdoc_id: int,
     metadata_id: int,
     metadata: SourceDocumentMetadataUpdate,
-) -> Optional[SourceDocumentMetadataRead]:
+) -> SourceDocumentMetadataReadResolved:
     # TODO Flo: only if the user has access?
     crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
     metadata_db_obj = crud_sdoc_meta.update(
         db=db, metadata_id=metadata_id, update_dto=metadata
     )
-    return SourceDocumentMetadataRead.model_validate(metadata_db_obj)
+    return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
 
 
 @router.get(
     "/{sdoc_id}/adoc/{user_id}",
-    response_model=Optional[AnnotationDocumentRead],
-    summary="Returns the AnnotationDocument for the SourceDocument of the User",
-    description="Returns the AnnotationDocument for the SourceDocument of the User.",
+    response_model=AnnotationDocumentRead,
+    summary="Returns the AnnotationDocument for the SourceDocument of the User or Creates it",
+    description="Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
 )
 async def get_adoc_of_user(
     *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
-) -> Optional[AnnotationDocumentRead]:
+) -> AnnotationDocumentRead:
     # TODO Flo: only if the user has access?
-    return AnnotationDocumentRead.model_validate(
-        crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id)
-    )
+    try:
+        db_obj = crud_adoc.read_by_sdoc_and_user(
+            db=db, sdoc_id=sdoc_id, user_id=user_id
+        )
+    except NoSuchElementError:
+        db_obj = crud_adoc.create(
+            db=db,
+            create_dto=AnnotationDocumentCreate(
+                source_document_id=sdoc_id,
+                user_id=user_id,
+            ),
+        )
+
+    return AnnotationDocumentRead.model_validate(db_obj)
 
 
 @router.get(
@@ -401,27 +265,27 @@ async def get_all_tags(
 
 @router.delete(
     "/{sdoc_id}/tags",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Unlinks all DocumentTags with the SourceDocument",
     description="Unlinks all DocumentTags of the SourceDocument.",
 )
 async def unlinks_all_tags(
     *, db: Session = Depends(get_db_session), sdoc_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
-    sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, id=sdoc_id)
+    sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, sdoc_id=sdoc_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
 
 
 @router.patch(
     "/{sdoc_id}/tag/{tag_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Links a DocumentTag with the SourceDocument",
     description="Links a DocumentTag with the SourceDocument with the given ID if it exists",
 )
 async def link_tag(
     *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
@@ -429,13 +293,13 @@ async def link_tag(
 
 @router.delete(
     "/{sdoc_id}/tag/{tag_id}",
-    response_model=Optional[SourceDocumentRead],
+    response_model=SourceDocumentRead,
     summary="Unlinks the DocumentTag from the SourceDocument",
     description="Unlinks the DocumentTags from the SourceDocument.",
 )
 async def unlink_tag(
     *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
-) -> Optional[SourceDocumentRead]:
+) -> SourceDocumentRead:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_sdoc.unlink_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
@@ -443,13 +307,13 @@ async def unlink_tag(
 
 @router.put(
     "/{sdoc_id}/memo",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Adds a Memo to the SourceDocument",
     description="Adds a Memo to the SourceDocument with the given ID if it exists",
 )
 async def add_memo(
     *, db: Session = Depends(get_db_session), sdoc_id: int, memo: MemoCreate
-) -> Optional[MemoRead]:
+) -> MemoRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_sdoc(db=db, sdoc_id=sdoc_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
@@ -475,7 +339,7 @@ async def get_memos(
 
 @router.get(
     "/{sdoc_id}/memo/{user_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo attached to the SourceDocument of the User with the given ID",
     description=(
         "Returns the Memo attached to the SourceDocument with the given ID of the User with the"
@@ -484,9 +348,9 @@ async def get_memos(
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
-    return get_object_memos(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
 
 @router.get(
@@ -509,3 +373,18 @@ async def get_related_user_memos(
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
     ]
     return memos
+
+
+@router.get(
+    "/{sdoc_id}/word_frequencies",
+    response_model=List[WordFrequencyRead],
+    summary="Returns the SourceDocument's word frequencies",
+    description="Returns the SourceDocument's word frequencies with the given ID if it exists",
+)
+async def get_word_frequencies(
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+) -> List[WordFrequencyRead]:
+    sdoc = crud_sdoc.read(db=db, id=sdoc_id)
+    return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]

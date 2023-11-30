@@ -1,48 +1,120 @@
-import { DBColumns, Filter, FilterExpression, IDOperator, NumberOperator, StringOperator } from "../../api/openapi";
+import {
+  BooleanOperator,
+  DateOperator,
+  FilterOperator,
+  FilterValueType,
+  IDListOperator,
+  IDOperator,
+  ListOperator,
+  LogicalOperator,
+  NumberOperator,
+  StringOperator,
+} from "../../api/openapi";
 
-export interface MyFilterExpression extends FilterExpression {
+// TYPES
+
+export type ColumnInfo = {
+  label: string;
+  column: string;
+  sortable: boolean;
+  operator: FilterOperator;
+  value: FilterValueType;
+};
+
+export interface MyFilterExpression<T = string> {
   id: string;
+  column: T | number;
+  operator: FilterOperators;
+  value: string | number | boolean | Array<string>;
 }
 
-export interface MyFilter extends Filter {
+export interface MyFilter<T = string> {
   id: string;
-  items: (MyFilter | MyFilterExpression)[];
+  items: (MyFilter<T> | MyFilterExpression<T>)[];
+  logic_operator: LogicalOperator;
 }
 
-export type FilterOperators = FilterExpression["operator"];
+export type FilterOperatorType =
+  | typeof IDOperator
+  | typeof NumberOperator
+  | typeof StringOperator
+  | typeof IDListOperator
+  | typeof ListOperator
+  | typeof DateOperator
+  | typeof BooleanOperator;
 
-export const isFilter = (filter: Filter | FilterExpression): filter is Filter => {
-  return (filter as Filter).items !== undefined;
+export type FilterOperators =
+  | IDOperator
+  | NumberOperator
+  | StringOperator
+  | IDListOperator
+  | ListOperator
+  | DateOperator
+  | BooleanOperator;
+
+// TYPE GUARDS
+
+export const isFilter = (filter: MyFilter | MyFilterExpression): filter is MyFilter => {
+  return (filter as MyFilter).items !== undefined;
 };
 
-export const isFilterExpression = (filter: Filter | FilterExpression): filter is FilterExpression => {
-  return (filter as Filter).items === undefined;
+export const isFilterExpression = (filter: MyFilter | MyFilterExpression): filter is MyFilterExpression => {
+  return (filter as MyFilter).items === undefined;
 };
 
-export const column2operator: Record<DBColumns, typeof IDOperator | typeof NumberOperator | typeof StringOperator> = {
-  [DBColumns.SPAN_TEXT]: StringOperator,
-  [DBColumns.SOURCE_DOCUMENT_ID]: IDOperator,
-  [DBColumns.SOURCE_DOCUMENT_FILENAME]: StringOperator,
-  [DBColumns.CODE_ID]: IDOperator,
-  [DBColumns.CODE_NAME]: StringOperator,
-  [DBColumns.DOCUMENT_TAG_ID]: IDOperator,
-  [DBColumns.DOCUMENT_TAG_TITLE]: StringOperator,
-  [DBColumns.MEMO_ID]: IDOperator,
-  [DBColumns.MEMO_CONTENT]: StringOperator,
-  [DBColumns.MEMO_TITLE]: StringOperator,
+// MAPS
+
+export const filterOperator2defaultValue: Record<FilterOperator, any> = {
+  [FilterOperator.BOOLEAN]: false,
+  [FilterOperator.STRING]: "",
+  [FilterOperator.ID]: 0,
+  [FilterOperator.NUMBER]: 0,
+  [FilterOperator.ID_LIST]: [],
+  [FilterOperator.LIST]: [],
+  [FilterOperator.DATE]: new Date(),
 };
 
-export const column2defaultOperator: Record<DBColumns, FilterOperators> = {
-  [DBColumns.SPAN_TEXT]: StringOperator.STRING_CONTAINS,
-  [DBColumns.SOURCE_DOCUMENT_ID]: IDOperator.ID_EQUALS,
-  [DBColumns.SOURCE_DOCUMENT_FILENAME]: StringOperator.STRING_CONTAINS,
-  [DBColumns.CODE_ID]: IDOperator.ID_EQUALS,
-  [DBColumns.CODE_NAME]: StringOperator.STRING_CONTAINS,
-  [DBColumns.DOCUMENT_TAG_ID]: IDOperator.ID_EQUALS,
-  [DBColumns.DOCUMENT_TAG_TITLE]: StringOperator.STRING_CONTAINS,
-  [DBColumns.MEMO_ID]: IDOperator.ID_EQUALS,
-  [DBColumns.MEMO_CONTENT]: StringOperator.STRING_CONTAINS,
-  [DBColumns.MEMO_TITLE]: StringOperator.STRING_CONTAINS,
+export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOperatorType> = {
+  [FilterOperator.BOOLEAN]: BooleanOperator,
+  [FilterOperator.STRING]: StringOperator,
+  [FilterOperator.ID]: IDOperator,
+  [FilterOperator.NUMBER]: NumberOperator,
+  [FilterOperator.ID_LIST]: IDListOperator,
+  [FilterOperator.LIST]: ListOperator,
+  [FilterOperator.DATE]: DateOperator,
+};
+
+export const operator2HumanReadable: Record<FilterOperators, string> = {
+  [IDOperator.ID_EQUALS]: "=",
+  [IDOperator.ID_NOT_EQUALS]: "!=",
+  [NumberOperator.NUMBER_EQUALS]: "=",
+  [NumberOperator.NUMBER_NOT_EQUALS]: "!=",
+  [NumberOperator.NUMBER_GT]: ">",
+  [NumberOperator.NUMBER_LT]: "<",
+  [NumberOperator.NUMBER_GTE]: ">=",
+  [NumberOperator.NUMBER_LTE]: "<=",
+  [StringOperator.STRING_CONTAINS]: "contains",
+  [StringOperator.STRING_EQUALS]: "equals",
+  [StringOperator.STRING_NOT_EQUALS]: "not equals",
+  [StringOperator.STRING_STARTS_WITH]: "starts with",
+  [StringOperator.STRING_ENDS_WITH]: "ends with",
+  [IDListOperator.ID_LIST_CONTAINS]: "contains",
+  [IDListOperator.ID_LIST_NOT_CONTAINS]: "contains not",
+  [ListOperator.LIST_CONTAINS]: "contains",
+  [ListOperator.LIST_NOT_CONTAINS]: "contains not",
+  [DateOperator.DATE_EQUALS]: "=",
+  [DateOperator.DATE_GT]: ">",
+  [DateOperator.DATE_LT]: "<",
+  [DateOperator.DATE_GTE]: ">=",
+  [DateOperator.DATE_LTE]: "<+",
+  [BooleanOperator.BOOLEAN_EQUALS]: "is",
+  [BooleanOperator.BOOLEAN_NOT_EQUALS]: "is not",
+};
+
+// METHODS
+
+export const getDefaultOperator = (operator: FilterOperatorType): FilterOperators => {
+  return Object.values(operator)[0];
 };
 
 export const findInFilter = (filter: MyFilter, filterId: string): MyFilter | MyFilterExpression | undefined => {
@@ -76,7 +148,7 @@ export const deleteInFilter = (filter: MyFilter, filterId: string): MyFilter => 
   };
 };
 
-export const countFilterExpressiosn = (filter: MyFilter): number => {
+export const countFilterExpressions = (filter: MyFilter): number => {
   let count = 0;
   const stack: (MyFilter | MyFilterExpression)[] = [filter];
   while (stack?.length > 0) {

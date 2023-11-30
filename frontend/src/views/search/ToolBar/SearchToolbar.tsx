@@ -10,11 +10,14 @@ import BackButton from "./ToolBarElements/BackButton";
 import DeleteButton from "./ToolBarElements/DeleteButton";
 import DownloadButton from "./ToolBarElements/DownloadButton";
 import TableNavigation from "./ToolBarElements/TableNavigation";
-import TagMenuButton from "./ToolBarElements/TagMenuButton";
+import TagMenuButton from "./ToolBarElements/TagMenu/TagMenuButton";
 import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
 import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton";
 import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
 import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
+import ToggleTableView from "./ToolBarElements/ToggleTableViewButton";
+import SearchFilterDialog from "../SearchFilterDialog";
+import { useRef } from "react";
 
 interface DocumentViewerToolbarProps {
   sdocId: number | undefined | null;
@@ -41,14 +44,18 @@ function SearchToolbar({
   // global client state (redux)
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
 
+  // local client state
+  const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
+
   return (
     <AppBar
       position="relative"
       variant="outlined"
       elevation={0}
+      ref={filterDialogAnchorRef}
       sx={{
         backgroundColor: (theme) => theme.palette.background.paper,
-        minHeight: "52px",
+        height: "48px",
         p: "0px 4px",
         zIndex: (theme) => theme.zIndex.appBar,
         boxShadow: 4,
@@ -78,10 +85,12 @@ function SearchToolbar({
                 <DeleteButton sdocIds={selectedDocumentIds} navigateTo="../search" />
               </>
             )}
+            <SearchFilterDialog anchorEl={filterDialogAnchorRef.current} />
             <Box sx={{ flexGrow: 1 }} />
             <TableNavigation numDocuments={numSearchResults} />
             <ToggleShowTagsButton />
             <ToggleSplitViewButton />
+            <ToggleTableView />
           </Box>
         )}
         {sdocId && (

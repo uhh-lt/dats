@@ -76,29 +76,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Deletes the BBoxAnnotation
-   * Deletes the BBoxAnnotation with the given ID.
-   * @returns any Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({
-    bboxId,
-  }: {
-    bboxId: number;
-  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/bbox/{bbox_id}",
-      path: {
-        bbox_id: bboxId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the BBoxAnnotation
    * Updates the BBoxAnnotation with the given ID.
    * @returns any Successful Response
@@ -134,15 +111,19 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns the Code of the BBoxAnnotation
-   * Returns the Code of the BBoxAnnotation with the given ID if it exists.
-   * @returns CodeRead Successful Response
+   * Deletes the BBoxAnnotation
+   * Deletes the BBoxAnnotation with the given ID.
+   * @returns any Successful Response
    * @throws ApiError
    */
-  public static getCode({ bboxId }: { bboxId: number }): CancelablePromise<CodeRead> {
+  public static deleteById({
+    bboxId,
+  }: {
+    bboxId: number;
+  }): CancelablePromise<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/bbox/{bbox_id}/code",
+      method: "DELETE",
+      url: "/bbox/{bbox_id}",
       path: {
         bbox_id: bboxId,
       },
@@ -153,15 +134,15 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns the Memo attached to the BBoxAnnotation
-   * Returns the Memo attached to the BBoxAnnotation with the given ID if it exists.
-   * @returns MemoRead Successful Response
+   * Returns the Code of the BBoxAnnotation
+   * Returns the Code of the BBoxAnnotation with the given ID if it exists.
+   * @returns CodeRead Successful Response
    * @throws ApiError
    */
-  public static getMemos({ bboxId }: { bboxId: number }): CancelablePromise<Array<MemoRead>> {
+  public static getCode({ bboxId }: { bboxId: number }): CancelablePromise<CodeRead> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/bbox/{bbox_id}/memo",
+      url: "/bbox/{bbox_id}/code",
       path: {
         bbox_id: bboxId,
       },
@@ -192,6 +173,25 @@ export class BboxAnnotationService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Returns the Memo attached to the BBoxAnnotation
+   * Returns the Memo attached to the BBoxAnnotation with the given ID if it exists.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemos({ bboxId }: { bboxId: number }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/bbox/{bbox_id}/memo",
+      path: {
+        bbox_id: bboxId,
+      },
       errors: {
         422: `Validation Error`,
       },

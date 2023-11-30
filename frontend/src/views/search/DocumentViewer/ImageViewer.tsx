@@ -2,18 +2,46 @@ import { Box } from "@mui/material";
 import * as d3 from "d3";
 import React, { useEffect, useMemo, useRef } from "react";
 import AdocHooks from "../../../api/AdocHooks";
-import { AnnotationDocumentRead, BBoxAnnotationReadResolvedCode, SourceDocumentRead } from "../../../api/openapi";
+import {
+  AnnotationDocumentRead,
+  BBoxAnnotationReadResolvedCode,
+  SourceDocumentWithDataRead,
+} from "../../../api/openapi";
 import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
+import SdocHooks from "../../../api/SdocHooks";
 
 interface ImageViewerProps {
-  sdoc: SourceDocumentRead;
+  sdoc: SourceDocumentWithDataRead;
   adoc: AnnotationDocumentRead | null;
   showEntities: boolean;
-  width: number;
-  height: number;
 }
 
-function ImageViewer({ sdoc, adoc, showEntities, width, height }: ImageViewerProps) {
+function ImageViewer(props: ImageViewerProps) {
+  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdoc.id, "height");
+  const widthMetadata = SdocHooks.useGetMetadataByKey(props.sdoc.id, "width");
+
+  if (heightMetadata.isSuccess && widthMetadata.isSuccess) {
+    return (
+      <ImageViewerWithData {...props} height={heightMetadata.data.int_value!} width={widthMetadata.data.int_value!} />
+    );
+  } else if (heightMetadata.isError) {
+    return <div>{heightMetadata.error.message}</div>;
+  } else if (widthMetadata.isError) {
+    return <div>{widthMetadata.error.message}</div>;
+  } else if (heightMetadata.isLoading || widthMetadata.isLoading) {
+    return <div>Loading...</div>;
+  } else {
+    return <>Something went wrong!</>;
+  }
+}
+
+function ImageViewerWithData({
+  sdoc,
+  adoc,
+  showEntities,
+  height,
+  width,
+}: ImageViewerProps & { height: number; width: number }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const bboxRef = useRef<SVGGElement>(null);

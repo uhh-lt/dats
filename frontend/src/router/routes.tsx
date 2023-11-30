@@ -8,14 +8,19 @@ import Imprint from "../views/Imprint";
 import Login from "../views/Login";
 import NotFound from "../views/NotFound";
 import Analysis from "../views/analysis/Analysis";
+import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
+import TableDashboard from "../views/analysis/Table/TableDashboard";
+import TableView from "../views/analysis/Table/TableView";
 import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis";
 import Annotation from "../views/annotation/Annotation";
 import Autologbook from "../views/autologbook/Autologbook";
+import Feedback from "../views/feedback/Feedback";
 import FeedbackAll from "../views/feedback/FeedbackAll";
 import FeedbackUser from "../views/feedback/FeedbackUser";
 import Logbook from "../views/logbook/Logbook";
+import Profile from "../views/profile/Profile";
 import Projects from "../views/projects/Projects";
 import ProjectSettings from "../views/projectsettings/ProjectSettings";
 import ProjectCreation from "../views/projectsettings/creation/ProjectCreation";
@@ -23,13 +28,9 @@ import ProjectUpdate from "../views/projectsettings/update/ProjectUpdate";
 import Register from "../views/registration/Register";
 import Search from "../views/search/Search";
 import Settings from "../views/settings/Settings";
-import Feedback from "../views/feedback/Feedback";
 import Whiteboard from "../views/whiteboard/Whiteboard";
-import TableDashboard from "../views/analysis/Table/TableDashboard";
-import TableView from "../views/analysis/Table/TableView";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
-import Profile from "../views/profile/Profile";
-import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments";
+import WordFrequency from "../views/analysis/WordFrequency/WordFrequency";
 
 const router = createBrowserRouter([
   {
@@ -158,6 +159,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/annotated-segments",
         element: <AnnotatedSegments />,
+      },
+      {
+        path: "/project/:projectId/analysis/word-frequency",
+        element: <WordFrequency />,
       },
       {
         path: "/project/:projectId/analysis/table",

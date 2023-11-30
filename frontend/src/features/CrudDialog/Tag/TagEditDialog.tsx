@@ -1,7 +1,7 @@
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-import { useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import eventBus from "../../../EventBus";
 import TagHooks from "../../../api/TagHooks";
 import { ErrorMessage } from "@hookform/error-message";
@@ -10,10 +10,17 @@ import { HexColorPicker } from "react-colorful";
 import ColorUtils from "../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead";
+import TagRenderer from "../../../components/DataGrid/TagRenderer";
+import { DocumentTagUpdate } from "../../../api/openapi";
 
 export const openTagEditDialog = (tagId: number) => {
   eventBus.dispatch("open-edit-tag", tagId);
 };
+
+interface TagEditDialogProps {
+  tags: DocumentTagRead[];
+}
 
 /**
  * A dialog that allows to update a DocumentTag.
@@ -21,7 +28,7 @@ export const openTagEditDialog = (tagId: number) => {
  * It opens automatically and loads the corresponding DocumentTag.
  * @constructor
  */
-function TagEditDialog() {
+function TagEditDialog({ tags }: TagEditDialogProps) {
   // use react hook form
   const {
     register,
@@ -29,9 +36,9 @@ function TagEditDialog() {
     formState: { errors },
     reset,
     setValue,
-  } = useForm();
+  } = useForm<DocumentTagUpdate>();
 
-  // state
+  // local state
   const [tagId, setTagId] = useState<number>();
   const [open, setOpen] = useState(false);
   const [color, setColor] = useState("#000000");
@@ -60,6 +67,7 @@ function TagEditDialog() {
         title: tag.data.title,
         description: tag.data.description,
         color: tag.data.color,
+        parent_tag_id: tag.data.parent_tag_id || -1,
       });
       setColor(c);
     }
@@ -70,7 +78,7 @@ function TagEditDialog() {
   const deleteTagMutation = TagHooks.useDeleteTag();
 
   // form handling
-  const handleTagUpdate = (data: any) => {
+  const handleTagUpdate: SubmitHandler<DocumentTagUpdate> = (data) => {
     if (tag.data) {
       updateTagMutation.mutate(
         {
@@ -78,6 +86,7 @@ function TagEditDialog() {
             title: data.title,
             description: data.description,
             color: data.color,
+            parent_tag_id: data.parent_tag_id,
           },
           tagId: tag.data.id,
         },
@@ -95,7 +104,7 @@ function TagEditDialog() {
       throw new Error("Invalid invocation of method handleTagUpdate! Only call when tag.data is available!");
     }
   };
-  const handleError = (data: any) => console.error(data);
+  const handleError: SubmitErrorHandler<DocumentTagUpdate> = (data) => console.error(data);
   const handleDelete = () => {
     if (tag.data) {
       deleteTagMutation.mutate(
@@ -115,6 +124,14 @@ function TagEditDialog() {
     }
   };
 
+  let menuItems: React.ReactNode[] = tags
+    .filter((t) => t.id !== tag.data?.id)
+    .map((t) => (
+      <MenuItem key={t.id} value={t.id}>
+        <TagRenderer tag={t} />
+      </MenuItem>
+    ));
+
   return (
     <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleTagUpdate, handleError)}>
@@ -124,6 +141,23 @@ function TagEditDialog() {
         <DialogContent>
           <Stack spacing={3}>
             <TextField
+              key={tag.data?.id}
+              fullWidth
+              select
+              label="Parent Code"
+              variant="filled"
+              defaultValue={tag.data?.parent_tag_id || -1}
+              {...register("parent_tag_id")}
+              error={Boolean(errors.parent_tag_id)}
+              helperText={<ErrorMessage errors={errors} name="parent_tag_id" />}
+              InputLabelProps={{ shrink: true }}
+            >
+              <MenuItem key={-1} value={-1}>
+                No parent
+              </MenuItem>
+              {menuItems}
+            </TextField>
+            <TextField
               label="Name"
               fullWidth
               variant="standard"
@@ -131,6 +165,7 @@ function TagEditDialog() {
               error={Boolean(errors?.title)}
               helperText={<>{errors?.title ? errors.title.message : ""}</>}
               disabled={!tag.isSuccess}
+              InputLabelProps={{ shrink: true }}
             />
             <Stack direction="row">
               <TextField
@@ -165,6 +200,7 @@ function TagEditDialog() {
               error={Boolean(errors.description)}
               helperText={<ErrorMessage errors={errors} name="description" />}
               disabled={!tag.isSuccess}
+              InputLabelProps={{ shrink: true }}
             />
           </Stack>
         </DialogContent>

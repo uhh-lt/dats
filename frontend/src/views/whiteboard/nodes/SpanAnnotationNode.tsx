@@ -4,10 +4,14 @@ import { NodeProps, useReactFlow } from "reactflow";
 import AdocHooks from "../../../api/AdocHooks";
 import CodeHooks from "../../../api/CodeHooks";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
+import { AttachedObjectType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
 import { openSpanAnnotationEditDialog } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
+import MemoAPI from "../../../features/Memo/MemoAPI";
+import { useReactFlowService } from "../hooks/ReactFlowService";
+import { DWTSNodeData, SpanAnnotationNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
 import {
   createCodeNodes,
   createCodeSpanAnnotationEdge,
@@ -19,11 +23,7 @@ import {
   isMemoSpanAnnotationEdge,
   isSdocSpanAnnotationEdge,
 } from "../whiteboardUtils";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { DWTSNodeData, SpanAnnotationNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
 import BaseCardNode from "./BaseCardNode";
-import { AttachedObjectType } from "../../../api/openapi";
-import MemoAPI from "../../../features/Memo/MemoAPI";
 
 function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global client state
@@ -120,7 +120,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
     if (!annotation.data) return;
 
     if (event.detail >= 2) {
-      openSpanAnnotationEditDialog([annotation.data]);
+      openSpanAnnotationEditDialog([annotation.data.id]);
     }
   };
 

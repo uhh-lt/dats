@@ -45,7 +45,7 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
     } = useForm<EditFormValues>();
 
     // global server state (react-query)
-    const nameMetadata = SdocHooks.useGetName(sdocId);
+    const sdoc = SdocHooks.useGetDocument(sdocId);
     const updateNameMutation = SdocHooks.useUpdateName();
 
     // exposed methods (via ref)
@@ -59,24 +59,23 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
     };
 
     const handleSubmitEditForm: SubmitHandler<EditFormValues> = (data) => {
-      if (nameMetadata.isSuccess) {
-        if (data.name === nameMetadata.data.value) {
+      if (sdoc.isSuccess) {
+        if (data.name === sdoc.data.name) {
           setIsEditing(false);
           return;
         }
 
         updateNameMutation.mutate(
           {
-            metadataId: nameMetadata.data.id,
+            sdocId: sdoc.data.id,
             requestBody: {
-              key: nameMetadata.data.key,
-              value: data.name,
+              name: data.name,
             },
           },
           {
             onSuccess: (data) => {
               SnackbarAPI.openSnackbar({
-                text: `Updated document name to ${data.value}`,
+                text: `Updated document name to ${data.name}`,
                 severity: "success",
               });
               setIsEditing(false);
@@ -91,13 +90,13 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
     // effects
     useEffect(() => {
       if (isEditing) {
-        if (nameMetadata.isSuccess) {
-          setValue("name", nameMetadata.data.value);
+        if (sdoc.isSuccess) {
+          setValue("name", sdoc.data.name ? sdoc.data.name : sdoc.data.filename);
         }
       } else {
         reset();
       }
-    }, [isEditing, nameMetadata.data, nameMetadata.isSuccess, reset, setValue]);
+    }, [isEditing, sdoc.data, sdoc.isSuccess, reset, setValue]);
 
     // render
     if (isEditing) {
@@ -133,10 +132,10 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
       return (
         <DocumentLinkToOriginal sdocId={sdocId}>
           <Typography {...props}>
-            {nameMetadata.isSuccess ? (
-              <>{nameMetadata.data.value}</>
-            ) : nameMetadata.isError ? (
-              <>{nameMetadata.error.message}</>
+            {sdoc.isSuccess ? (
+              <>{sdoc.data.name ? sdoc.data.name : sdoc.data.filename}</>
+            ) : sdoc.isError ? (
+              <>{sdoc.error.message}</>
             ) : (
               <>Loading...</>
             )}

@@ -1,16 +1,15 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.data.doc_type import DocType
 from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.dto.source_document_data import SourceDocumentDataRead
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.util import PaginatedResults
-
-from .dto_base import UpdateDTOBase
 
 SDOC_FILENAME_MAX_LENGTH = 200
 SDOC_SUFFIX_MAX_LENGTH = 30
@@ -37,8 +36,8 @@ class SourceDocumentBaseDTO(BaseModel):
 
 # Properties for updating
 class SourceDocumentUpdate(BaseModel, UpdateDTOBase):
-    name: Optional[str] = Field(
-        description="User-defined name of the document", default=None
+    name: str = Field(
+        description="User-defined name of the document (default is the filename)"
     )
 
 
@@ -63,48 +62,9 @@ class PaginatedSourceDocumentReads(PaginatedResults):
     )
 
 
-class SourceDocumentContent(SourceDocumentBaseDTO):
-    content: str = Field(
-        description="The (textual) content of the SourceDocument the content belongs to."
-    )
-
-
-class SourceDocumentHTML(SourceDocumentRead):
-    html: str = Field(description="The (html) content of the SourceDocument.")
-
-
-class SourceDocumentTokens(SourceDocumentRead):
-    tokens: List[str] = Field(
-        description="The (textual) list Tokens of the SourceDocument the Tokens belong to."
-    )
-    token_character_offsets: Optional[List[Tuple[int, int]]] = Field(
-        description=("The list of character offsets of" " the Tokens"),
-        default=None,
-    )
-
-
-class SourceDocumentSentences(SourceDocumentRead):
-    sentences: List[str] = Field(
-        description="The Sentences of the SourceDocument the Sentences belong to."
-    )
-    sentence_character_offsets: Optional[List[Tuple[int, int]]] = Field(
-        description=("The list of character offsets of" " the Sentences"),
-        default=None,
-    )
-
-
-class SourceDocumentKeywords(BaseModel):
-    source_document_id: int = Field(
-        description="ID of the SourceDocument the Keywords belong to."
-    )
-    keywords: List[str] = Field(
-        description="The list of Keywords of the SourceDocument the Keywords belong to."
-    )
-
-
 class SourceDocumentCreate(SourceDocumentBaseDTO):
     pass
 
 
-class SourceDocumentWithData(SourceDocumentRead, SourceDocumentDataRead):
+class SourceDocumentWithDataRead(SourceDocumentRead, SourceDocumentDataRead):
     pass

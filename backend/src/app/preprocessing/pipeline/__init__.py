@@ -193,6 +193,9 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     from app.preprocessing.pipeline.steps.image.run_object_detection import (
         run_object_detection,
     )
+    from app.preprocessing.pipeline.steps.image.store_metadata_to_database import (
+        store_metadata_to_database,
+    )
     from app.preprocessing.pipeline.steps.image.write_ppid_to_database import (
         write_ppid_to_database,
     )
@@ -277,6 +280,15 @@ def build_image_pipeline(foo: str = "bar") -> PreprocessingPipeline:
     pipeline.register_step(
         func=store_document_in_elasticsearch,
         required_data=["pptd", "sdoc_id"],
+    )
+
+    pipeline.register_step(
+        func=store_metadata_to_database,
+        required_data=[
+            "pptd",
+            "ppid",
+            "sdoc_id",
+        ],
     )
 
     pipeline.register_step(

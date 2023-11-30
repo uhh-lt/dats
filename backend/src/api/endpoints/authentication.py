@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -27,7 +25,7 @@ router = APIRouter(prefix="/authentication", tags=["authentication"])
 )
 async def register(
     *, db: Session = Depends(get_db_session), user: UserCreate
-) -> Optional[UserRead]:
+) -> UserRead:
     db_user = crud_user.read_by_email(db, email=user.email)
     if db_user:
         raise HTTPException(

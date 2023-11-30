@@ -48,25 +48,6 @@ export class AnalysisTableService {
   }
 
   /**
-   * Removes the AnalysisTable
-   * Removes the AnalysisTable with the given ID if it exists
-   * @returns AnalysisTableRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ analysisTableId }: { analysisTableId: number }): CancelablePromise<AnalysisTableRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/analysisTable/{analysis_table_id}",
-      path: {
-        analysis_table_id: analysisTableId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the Analysis Table
    * Updates the Analysis Table with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
@@ -87,6 +68,25 @@ export class AnalysisTableService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Removes the AnalysisTable
+   * Removes the AnalysisTable with the given ID if it exists
+   * @returns AnalysisTableRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ analysisTableId }: { analysisTableId: number }): CancelablePromise<AnalysisTableRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/analysisTable/{analysis_table_id}",
+      path: {
+        analysis_table_id: analysisTableId,
+      },
       errors: {
         422: `Validation Error`,
       },

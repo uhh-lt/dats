@@ -9,10 +9,9 @@ import { IToken } from "./IToken";
 interface TokenProps {
   spanAnnotations: SpanAnnotationReadResolved[];
   token: IToken;
-  cssClassnames: string;
 }
 
-function Token({ token, spanAnnotations, cssClassnames }: TokenProps) {
+function Token({ token, spanAnnotations }: TokenProps) {
   // global client state (redux)
   const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
   const tagStyle = useAppSelector((state) => state.settings.annotator.tagStyle);
@@ -54,7 +53,7 @@ function Token({ token, spanAnnotations, cssClassnames }: TokenProps) {
     <>
       <span className={`tok ${spans.map((s) => `span-${s.id}`).join(" ")}`} data-tokenid={token.index}>
         {spanGroups}
-        <span id={"token" + token.index} className={"text " + cssClassnames}>
+        <span id={"token" + token.index} className={"text"}>
           {token.text}
         </span>
         {token.whitespace && " "}

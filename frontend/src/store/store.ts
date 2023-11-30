@@ -1,13 +1,19 @@
-import { configureStore, ThunkAction, Action } from "@reduxjs/toolkit";
-import annoReducer from "../views/annotation/annoSlice";
-import searchReducer from "../views/search/searchSlice";
-import logbookReducer from "../views/logbook/logbookSlice";
-import autologbookReducer from "../views/autologbook/autologbookSlice";
-import settingsReducer from "../views/settings/settingsSlice";
-import analysisReducer from "../views/analysis/analysisSlice";
-import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice";
+import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
+import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
+import annotatedSegmentsFilterReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsFilterSlice";
+import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice";
+import timelineAnalysisFilterReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisFilterSlice";
+import wordFrequencyFilterReducer from "../views/analysis/WordFrequency/wordFrequencyFilterSlice";
+import wordFrequencyReducer from "../views/analysis/WordFrequency/wordFrequencySlice";
+import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice";
+import analysisReducer from "../views/analysis/analysisSlice";
+import annoReducer from "../views/annotation/annoSlice";
+import autologbookReducer from "../views/autologbook/autologbookSlice";
+import logbookReducer from "../views/logbook/logbookSlice";
+import searchFilterReducer from "../views/search/searchFilterSlice";
+import searchReducer from "../views/search/searchSlice";
+import settingsReducer from "../views/settings/settingsSlice";
 
 const persistConfig = {
   key: "root",
@@ -27,6 +33,12 @@ export const store = configureStore({
     autologbook: autologbookReducer,
     settings: persistedSettingsReducer,
     annotatedSegments: annotatedSegmentsReducer,
+    timelineAnalysis: timelineAnalysisReducer,
+    searchFilter: searchFilterReducer,
+    annotatedSegmentsFilter: annotatedSegmentsFilterReducer,
+    timelineAnalysisFilter: timelineAnalysisFilterReducer,
+    wordFrequency: wordFrequencyReducer,
+    wordFrequencyFilter: wordFrequencyFilterReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

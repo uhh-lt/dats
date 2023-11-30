@@ -1,25 +1,55 @@
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Box, Button, Popover } from "@mui/material";
+import { Box, Button, ButtonProps, FormControlLabel, Popover, Switch } from "@mui/material";
 import { useState } from "react";
+import { useAppDispatch } from "../../plugins/ReduxHooks";
 import FilterRenderer, { FilterRendererProps } from "./FilterRenderer";
-import { countFilterExpressiosn } from "./filterUtils";
+import { MyFilter, countFilterExpressions } from "./filterUtils";
+import FilterRendererSimple from "./FilterRendererSimple";
 
-interface FilterDialogProps extends FilterRendererProps {
+export interface FilterDialogProps {
   anchorEl: HTMLElement | null;
+  filter: MyFilter;
+  expertMode: boolean;
+  onChangeExpertMode: (expertMode: boolean) => void;
+  buttonProps?: Omit<ButtonProps, "onClick" | "startIcon">;
 }
 
-function FilterDialog({ anchorEl, ...props }: FilterDialogProps) {
+function FilterDialog({
+  anchorEl,
+  filter,
+  expertMode,
+  onChangeExpertMode,
+  buttonProps,
+  ...props
+}: FilterDialogProps & FilterRendererProps) {
+  // local client state
   const [open, setOpen] = useState(false);
 
+  // global client state (redux)
+  const numFilterExpressions = countFilterExpressions(filter);
+  const dispatch = useAppDispatch();
+
+  // actions
+  const handleOpenEditDialog = () => {
+    setOpen(true);
+    dispatch(props.filterActions.onStartFilterEdit({ rootFilterId: "root" }));
+  };
+
+  const handleApplyChanges = () => {
+    setOpen(false);
+    dispatch(props.filterActions.onFinishFilterEdit());
+  };
+
   const handleRemoveAll = () => {
-    props.onFilterChange({ ...props.filter, items: [] });
+    dispatch(props.filterActions.resetEditFilter());
   };
 
   return (
     <>
-      <Button startIcon={<FilterListIcon />} onClick={() => setOpen(true)}>
-        <b>Filter ({countFilterExpressiosn(props.filter)})</b>
+      <Button startIcon={<FilterListIcon />} onClick={handleOpenEditDialog} {...buttonProps}>
+        <b>Filter ({numFilterExpressions})</b>
       </Button>
       <Popover
         open={open}
@@ -41,10 +71,19 @@ function FilterDialog({ anchorEl, ...props }: FilterDialogProps) {
         }}
         sx={{ mt: "56px" }}
       >
-        <FilterRenderer {...props} />
-        <Box display="flex" justifyContent="flex-end" width="100%">
-          <Button startIcon={<DeleteForeverIcon />} onClick={handleRemoveAll}>
+        {expertMode ? <FilterRenderer {...props} /> : <FilterRendererSimple {...props} />}
+        <Box display="flex" width="100%">
+          <FormControlLabel
+            control={<Switch checked={expertMode} onChange={(event) => onChangeExpertMode(event.target.checked)} />}
+            label="Expert search"
+            sx={{ ml: 0.25 }}
+          />
+          <Box flexGrow={1} />
+          <Button startIcon={<DeleteForeverIcon />} onClick={handleRemoveAll} sx={{ mr: 3 }}>
             Remove All
+          </Button>
+          <Button startIcon={<DoneIcon />} onClick={handleApplyChanges} variant="contained" color="success">
+            Apply filter
           </Button>
         </Box>
       </Popover>

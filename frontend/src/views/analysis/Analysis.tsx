@@ -21,7 +21,7 @@ function Analysis() {
             <Grid item>
               <AnalysisCard
                 to={"frequency"}
-                title={"Frequency Analysis"}
+                title={"Code Frequency Analysis"}
                 description={"Analyse the frequencies and occurrences of all codes in this project."}
                 color={"#77dd77"}
               />
@@ -50,6 +50,15 @@ function Analysis() {
                 to={"annotated-segments"}
                 title={"Annotated Segments"}
                 description={"View, search, edit all coded segments."}
+                color={"#77dd77"}
+              />
+            </Grid>
+
+            <Grid item>
+              <AnalysisCard
+                to={"word-frequency"}
+                title={"Word Frequency Analysis"}
+                description={"Analyse the frequencies and occurrences of all words in this project."}
                 color={"#77dd77"}
               />
             </Grid>

@@ -21,7 +21,7 @@ const useGetFeedback = (feedbackId: string) =>
 
 const useGetAllFeedback = () => useQuery<FeedbackRead[], Error>([QueryKey.FEEDBACKS], () => FeedbackService.getAll());
 
-const useGetUserFeedback = (userId: number | undefined) =>
+const useGetUserFeedback = (userId: number | null | undefined) =>
   useQuery<FeedbackRead[], Error>([QueryKey.FEEDBACKS_USER], () => FeedbackService.getAllByUser({ userId: userId! }), {
     enabled: !!userId,
   });

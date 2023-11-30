@@ -28,8 +28,8 @@ class CRUDAnnotationDocument(
         return db.query(self.model).filter(self.model.user_id == user_id).all()
 
     def read_by_sdoc_and_user(
-        self, db: Session, *, sdoc_id: int, user_id: int, raise_error: bool = True
-    ) -> Optional[AnnotationDocumentORM]:
+        self, db: Session, *, sdoc_id: int, user_id: int
+    ) -> AnnotationDocumentORM:
         db_obj = (
             db.query(self.model)
             .filter(
@@ -38,25 +38,10 @@ class CRUDAnnotationDocument(
             )
             .first()
         )
-        if raise_error and not db_obj:
+        if db_obj is None:
             raise NoSuchElementError(self.model, sdoc_id=sdoc_id, user_id=user_id)
-        return db_obj
 
-    def exists_by_sdoc_and_user(
-        self, db: Session, *, sdoc_id: int, user_id: int, raise_error: bool = False
-    ) -> Optional[bool]:
-        exists = (
-            db.query(self.model)
-            .filter(
-                self.model.source_document_id == sdoc_id,
-                self.model.user_id == user_id,
-            )
-            .first()
-            is not None
-        )
-        if not exists and raise_error:
-            raise NoSuchElementError(self.model, id=id)
-        return exists
+        return db_obj
 
     def remove_by_sdoc(self, db: Session, *, sdoc_id: int) -> List[int]:
         # find all adocs to be removed

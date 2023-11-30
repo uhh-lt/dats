@@ -1,9 +1,9 @@
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
-import { Box, CardMedia, CardProps, Typography } from "@mui/material";
+import { Box, CardMedia, CardProps, CircularProgress, Typography } from "@mui/material";
 import { useMemo } from "react";
-import ReactWordcloud, { OptionsProp, Word } from "react-wordcloud";
+import ReactWordcloud, { OptionsProp } from "react-wordcloud";
 import SdocHooks from "../../../../api/SdocHooks";
-import { DocType, SourceDocumentRead } from "../../../../api/openapi";
+import { DocType, SourceDocumentWithDataRead } from "../../../../api/openapi";
 import { useAppSelector } from "../../../../plugins/ReduxHooks";
 import { SearchResultProps } from "../SearchResultProps";
 import SearchResultCardBase from "./SearchResultCardBase";
@@ -78,7 +78,7 @@ const wordCloudOptions: OptionsProp = {
   rotationAngles: [-90, 0],
 };
 
-function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentRead }) {
+function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
   // global client state (redux)
   const searchResStyle = useAppSelector((state) => state.settings.search.searchResStyle);
 
@@ -91,53 +91,29 @@ function LexicalSearchResultCardTextContent({ sdoc }: { sdoc: SourceDocumentRead
   }, [searchResStyle, sdoc]);
 }
 
-function WordCloudContent({ sdoc }: { sdoc: SourceDocumentRead }) {
+function WordCloudContent({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
   // global server state (react-query)
   const wordFrequencies = SdocHooks.useGetWordFrequencies(sdoc.id);
 
-  // computed
-  const wordCloudInput = useMemo(() => {
-    if (!wordFrequencies.data) return [];
-
-    let entries: [string, number][] = Object.entries(JSON.parse(wordFrequencies.data.value));
-    entries.sort((a, b) => b[1] - a[1]); // sort array descending
-    return entries.slice(0, 20).map((e) => {
-      return { text: e[0], value: e[1] } as Word;
-    });
-  }, [wordFrequencies.data]);
-
-  // rendering
-  return (
-    <div style={{ overflow: "hidden", padding: 0, height: 212 }}>
-      <ReactWordcloud options={wordCloudOptions} words={wordCloudInput} />
-    </div>
-  );
+  if (wordFrequencies.data) {
+    return (
+      <div style={{ overflow: "hidden", padding: 0, height: 212 }}>
+        <ReactWordcloud options={wordCloudOptions} words={wordFrequencies.data} />
+      </div>
+    );
+  } else if (wordFrequencies.isLoading) {
+    return <CircularProgress />;
+  } else if (wordFrequencies.isError) {
+    return <div>{wordFrequencies.error.message}</div>;
+  } else {
+    return <>Something went wrong...</>;
+  }
 }
 
-function TextContent({ sdoc }: { sdoc: SourceDocumentRead }) {
-  // global server state (react-query)
-  const content = SdocHooks.useGetDocumentContent(sdoc.id);
-
-  // rendering
-  if (content.isSuccess) {
-    return (
-      <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
-        {content.data.content}
-      </Typography>
-    );
-  }
-
-  if (content.isError) {
-    return (
-      <Typography sx={{ mb: 1.5 }} variant="body2">
-        {content.error.message}
-      </Typography>
-    );
-  }
-
+function TextContent({ sdoc }: { sdoc: SourceDocumentWithDataRead }) {
   return (
-    <Typography sx={{ mb: 1.5 }} variant="body2">
-      Loading ...
+    <Typography sx={{ mb: 1.5, overflow: "hidden", height: 200, textOverflow: "ellipsis" }} variant="body2">
+      {sdoc.content}
     </Typography>
   );
 }

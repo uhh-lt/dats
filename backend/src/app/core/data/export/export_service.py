@@ -32,7 +32,9 @@ from app.core.data.dto.export_job import (
 )
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
+from app.core.data.dto.source_document_metadata import (
+    SourceDocumentMetadataReadResolved,
+)
 from app.core.data.dto.span_annotation import (
     SpanAnnotationRead,
     SpanAnnotationReadResolved,
@@ -401,20 +403,20 @@ class ExportService(metaclass=SingletonMeta):
         self,
         db: Session,
         metadata_id: Optional[int] = None,
-        metadata_dto: Optional[SourceDocumentMetadataRead] = None,
+        metadata_dto: Optional[SourceDocumentMetadataReadResolved] = None,
     ) -> pd.DataFrame:
         if metadata_dto is None:
             if metadata_id is None:
                 raise ValueError("Either Metadata ID or DTO must be not None")
             metadata = crud_sdoc_meta.read(db=db, id=metadata_id)
-            metadata_dto = SourceDocumentMetadataRead.model_validate(metadata)
+            metadata_dto = SourceDocumentMetadataReadResolved.model_validate(metadata)
 
         logger.info(f"Exporting SourceDocumentMetadata {metadata_dto.id} ...")
         data = {
             "metadata_id": [metadata_dto.id],
             "applied_to_sdoc_id": [metadata_dto.source_document_id],
-            "key": [metadata_dto.key],
-            "value": [metadata_dto.value],
+            "key": [metadata_dto.project_metadata.key],
+            "value": [metadata_dto.get_value()],
         }
 
         df = pd.DataFrame(data=data)
@@ -428,7 +430,8 @@ class ExportService(metaclass=SingletonMeta):
         for md in metadata:
             metadata_dfs.append(
                 self.__generate_export_df_for_sdoc_metadata(
-                    db=db, metadata_dto=SourceDocumentMetadataRead.model_validate(md)
+                    db=db,
+                    metadata_dto=SourceDocumentMetadataReadResolved.model_validate(md),
                 )
             )
 
@@ -566,9 +569,7 @@ class ExportService(metaclass=SingletonMeta):
         export_format: ExportFormat = ExportFormat.CSV,
     ) -> str:
         # get the adoc
-        adoc = crud_adoc.read_by_sdoc_and_user(
-            db=db, sdoc_id=sdoc_id, user_id=user_id, raise_error=True
-        )
+        adoc = crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id)
         export_data = self.__generate_export_df_for_adoc(db=db, adoc=adoc)
         export_file = self.__write_export_data_to_temp_file(
             data=export_data,
@@ -649,7 +650,9 @@ class ExportService(metaclass=SingletonMeta):
 
         export_data = None
         for memo in memos:
-            memo_data = self.__generate_export_df_for_memo(db=db, memo=memo)
+            memo_data = self.__generate_export_df_for_memo(
+                db=db, memo_id=memo.id, memo=memo
+            )
             if export_data is None:
                 export_data = memo_data
             else:
@@ -1036,7 +1039,7 @@ class ExportService(metaclass=SingletonMeta):
 
             exj = self._update_export_job(
                 url=results_url,
-                status=BackgroundJobStatus.RUNNING,
+                status=BackgroundJobStatus.FINISHED,
                 export_job_id=export_job_id,
             )
 

@@ -21,7 +21,7 @@ import {
   CodeRead,
   SpanAnnotationReadResolved,
 } from "../../../api/openapi";
-import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
+import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
 import MemoButton from "../../../features/Memo/MemoButton";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { ICode } from "../TextAnnotator/ICode";
@@ -127,7 +127,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
       // if code does not exist, open the code creation dialog
       if (newValue.id === -1) {
-        openCodeCreateDialog({ name: newValue.name });
+        openCodeCreateDialog({ name: newValue.name, onSuccess: submit });
         return;
       }
 
@@ -240,7 +240,6 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
               open={isAutoCompleteOpen}
               onClose={(event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
             />
-            <CodeCreateDialog onCreateSuccess={submit} />
           </>
         )}
       </Popover>

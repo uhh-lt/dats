@@ -15,14 +15,14 @@ export class SpanGroupService {
   /**
    * Creates a new SpanGroup
    * Creates a new SpanGroup and returns it with the generated ID.
-   * @returns SpanGroupRead Successful Response
+   * @returns any Successful Response
    * @throws ApiError
    */
   public static createNewSpanGroup({
     requestBody,
   }: {
     requestBody: SpanGroupCreate;
-  }): CancelablePromise<SpanGroupRead> {
+  }): CancelablePromise<SpanGroupRead | null> {
     return __request(OpenAPI, {
       method: "PUT",
       url: "/spangroup",
@@ -37,10 +37,10 @@ export class SpanGroupService {
   /**
    * Returns the SpanGroup
    * Returns the SpanGroup with the given ID.
-   * @returns SpanGroupRead Successful Response
+   * @returns any Successful Response
    * @throws ApiError
    */
-  public static getById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead> {
+  public static getById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead | null> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/spangroup/{span_group_id}",
@@ -54,28 +54,9 @@ export class SpanGroupService {
   }
 
   /**
-   * Deletes the SpanGroup
-   * Deletes the SpanGroup with the given ID.
-   * @returns SpanGroupRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/spangroup/{span_group_id}",
-      path: {
-        span_group_id: spanGroupId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the SpanGroup
    * Updates the SpanGroup with the given ID.
-   * @returns SpanGroupRead Successful Response
+   * @returns any Successful Response
    * @throws ApiError
    */
   public static updateById({
@@ -84,7 +65,7 @@ export class SpanGroupService {
   }: {
     spanGroupId: number;
     requestBody: SpanGroupUpdate;
-  }): CancelablePromise<SpanGroupRead> {
+  }): CancelablePromise<SpanGroupRead | null> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/spangroup/{span_group_id}",
@@ -93,6 +74,25 @@ export class SpanGroupService {
       },
       body: requestBody,
       mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Deletes the SpanGroup
+   * Deletes the SpanGroup with the given ID.
+   * @returns any Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ spanGroupId }: { spanGroupId: number }): CancelablePromise<SpanGroupRead | null> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/spangroup/{span_group_id}",
+      path: {
+        span_group_id: spanGroupId,
+      },
       errors: {
         422: `Validation Error`,
       },

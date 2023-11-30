@@ -3,24 +3,29 @@ import SdocHooks from "../../api/SdocHooks";
 import { SourceDocumentRead } from "../../api/openapi";
 import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon";
 
-interface SdocRendererProps {
-  sdoc: number | SourceDocumentRead;
-  link: boolean;
+export interface SdocRendererSharedProps {
+  link?: boolean;
+  renderFilename?: boolean;
+  renderDoctypeIcon?: boolean;
 }
 
-function SdocRenderer({ sdoc, link }: SdocRendererProps) {
+interface SdocRendererProps extends SdocRendererSharedProps {
+  sdoc: number | SourceDocumentRead;
+}
+
+function SdocRenderer({ sdoc, ...props }: SdocRendererProps) {
   if (typeof sdoc === "number") {
-    return <SdocRendererWithoutData sdocId={sdoc} link={link} />;
+    return <SdocRendererWithoutData sdocId={sdoc} {...props} />;
   } else {
-    return <SdocRendererWithData sdoc={sdoc} link={link} />;
+    return <SdocRendererWithData sdoc={sdoc} {...props} />;
   }
 }
 
-function SdocRendererWithoutData({ sdocId, link }: { sdocId: number; link: boolean }) {
+function SdocRendererWithoutData({ sdocId, ...props }: { sdocId: number } & SdocRendererSharedProps) {
   const sdoc = SdocHooks.useGetDocument(sdocId);
 
   if (sdoc.isSuccess) {
-    return <SdocRendererWithData sdoc={sdoc.data} link={link} />;
+    return <SdocRendererWithData sdoc={sdoc.data} {...props} />;
   } else if (sdoc.isError) {
     return <div>{sdoc.error.message}</div>;
   } else {
@@ -28,11 +33,16 @@ function SdocRendererWithoutData({ sdocId, link }: { sdocId: number; link: boole
   }
 }
 
-function SdocRendererWithData({ sdoc, link }: { sdoc: SourceDocumentRead; link: boolean }) {
+function SdocRendererWithData({
+  sdoc,
+  link,
+  renderFilename,
+  renderDoctypeIcon,
+}: { sdoc: SourceDocumentRead } & SdocRendererSharedProps) {
   const content = (
     <Stack direction="row" alignItems="center">
-      {docTypeToIcon[sdoc.doctype]}
-      {sdoc.filename}
+      {renderDoctypeIcon && docTypeToIcon[sdoc.doctype]}
+      {renderFilename && (sdoc.name ? sdoc.name : sdoc.filename)}
     </Stack>
   );
 

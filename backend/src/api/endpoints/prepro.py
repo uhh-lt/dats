@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -12,6 +12,7 @@ from app.core.data.dto.background_job_base import BackgroundJobStatus
 from app.core.data.dto.prepro import PreProProjectStatus
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.preprocessing_job_payload import PreprocessingJobPayloadRead
+from app.core.data.dto.source_document import SDocStatus
 from app.core.db.redis_service import RedisService
 from app.preprocessing.preprocessing_service import PreprocessingService
 
@@ -25,7 +26,7 @@ pps: PreprocessingService = PreprocessingService()
 
 @router.get(
     "/{prepro_job_id}",
-    response_model=Optional[PreprocessingJobRead],
+    response_model=PreprocessingJobRead,
     summary="Returns the PreprocessingJob for the given ID",
     description="Returns the PreprocessingJob for the given ID if it exists",
 )
@@ -33,7 +34,7 @@ async def get_prepro_job(
     *,
     db: Session = Depends(get_db_session),
     prepro_job_id: str,
-) -> Optional[PreprocessingJobRead]:
+) -> PreprocessingJobRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_prepro_job.read(db=db, uuid=prepro_job_id)
     return PreprocessingJobRead.model_validate(db_obj)
@@ -41,14 +42,14 @@ async def get_prepro_job(
 
 @router.patch(
     "/{prepro_job_id}/abort",
-    response_model=Optional[PreprocessingJobRead],
+    response_model=PreprocessingJobRead,
     summary="Aborts the PreprocessingJob for the given ID",
     description="Aborts the PreprocessingJob for the given ID if it exists",
 )
 async def abort_prepro_job(
     *,
     prepro_job_id: str,
-) -> Optional[PreprocessingJobRead]:
+) -> PreprocessingJobRead:
     # TODO Flo: only if the user has access?
     return pps.abort_preprocessing_job(ppj_id=prepro_job_id)
 
@@ -112,11 +113,12 @@ async def get_project_prepro_status(
         erroneous_prepro_job_payloads.extend(payloads)
 
     finished_sdocs = crud_sdoc.count_by_project(
-        db=db, proj_id=proj_id, only_finished=True
+        db=db, proj_id=proj_id, status=SDocStatus.finished
     )
-    total_sdocs = crud_sdoc.count_by_project(
-        db=db, proj_id=proj_id, only_finished=False
+    unfinished_sdocs = crud_sdoc.count_by_project(
+        db=db, proj_id=proj_id, status=SDocStatus.unfinished_or_erroneous
     )
+    total_sdocs = finished_sdocs + unfinished_sdocs
 
     return PreProProjectStatus(
         project_id=proj_id,

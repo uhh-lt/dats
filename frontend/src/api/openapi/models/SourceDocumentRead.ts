@@ -11,9 +11,9 @@ export type SourceDocumentRead = {
    */
   filename: string;
   /**
-   * Content of the SourceDocument
+   * User-defined name of the document
    */
-  content: string;
+  name?: string | null;
   /**
    * DOCTYPE of the SourceDocument
    */

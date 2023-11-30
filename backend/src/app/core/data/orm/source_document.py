@@ -11,8 +11,10 @@ if TYPE_CHECKING:
     from app.core.data.orm.document_tag import DocumentTagORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.source_document_data import SourceDocumentDataORM
     from app.core.data.orm.source_document_link import SourceDocumentLinkORM
     from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
+    from app.core.data.orm.word_frequency import WordFrequencyORM
 
 
 class SourceDocumentORM(ORMBase):
@@ -33,6 +35,11 @@ class SourceDocumentORM(ORMBase):
         "ObjectHandleORM",
         uselist=False,
         back_populates="source_document",
+        passive_deletes=True,
+    )
+    data: Mapped["SourceDocumentDataORM"] = relationship(
+        "SourceDocumentDataORM",
+        uselist=False,
         passive_deletes=True,
     )
 
@@ -63,6 +70,12 @@ class SourceDocumentORM(ORMBase):
         back_populates="parent_source_document",
         passive_deletes=True,
         foreign_keys="sourcedocumentlink.c.parent_source_document_id",
+    )
+
+    word_frequencies: Mapped[List["WordFrequencyORM"]] = relationship(
+        "WordFrequencyORM",
+        back_populates="source_document",
+        passive_deletes=True,
     )
 
     # many to many

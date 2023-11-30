@@ -15,11 +15,9 @@ from app.core.data.dto.search import (
     ElasticSearchMemoCreate,
     ElasticSearchMemoRead,
     ElasticSearchMemoUpdate,
-    KeywordStat,
     PaginatedElasticSearchDocumentHits,
     PaginatedMemoSearchResults,
 )
-from app.core.data.dto.source_document import SourceDocumentKeywords
 from app.util.singleton_meta import SingletonMeta
 from config import conf
 
@@ -233,23 +231,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
         )
         return num_indexed
 
-    def update_esdoc_keywords(
-        self, *, proj_id: int, keywords: SourceDocumentKeywords
-    ) -> SourceDocumentKeywords:
-        self.__client.update(
-            index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
-            id=str(keywords.source_document_id),
-            body={"doc": {"keywords": keywords.keywords}},
-        )
-
-        logger.debug(
-            (
-                f"Updated Keywords of Document '{keywords.source_document_id}' in Index "
-                f"'{self.__get_index_name(proj_id=proj_id, index_type='doc')}'!"
-            )
-        )
-        return keywords
-
     def get_esdocs_by_sdoc_ids(
         self, *, proj_id: int, sdoc_ids: Set[int], fields: Set[str] = None
     ) -> Optional[List[ElasticSearchDocumentRead]]:
@@ -296,65 +277,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 proj_id=proj_id, sdoc_id=sdoc_id
             )
         return ElasticSearchDocumentRead(**res["_source"])
-
-    def get_sdoc_keywords_by_sdoc_id(
-        self,
-        *,
-        proj_id: int,
-        sdoc_id: int,
-        character_offsets: Optional[bool] = False,
-    ) -> Optional[SourceDocumentKeywords]:
-        fields = {"keywords"}
-        if character_offsets:
-            fields.add("token_character_offsets")
-        esdoc = self.get_esdoc_by_sdoc_id(
-            proj_id=proj_id, sdoc_id=sdoc_id, fields=fields
-        )
-        return SourceDocumentKeywords(
-            source_document_id=sdoc_id, keywords=esdoc.keywords
-        )
-
-    def get_sdoc_keywords_by_sdoc_ids(
-        self, *, proj_id: int, sdoc_ids: Set[int]
-    ) -> Optional[List[SourceDocumentKeywords]]:
-        fields = {"keywords"}
-        return [
-            SourceDocumentKeywords(
-                source_document_id=esdoc.sdoc_id, keywords=esdoc.keywords
-            )
-            for esdoc in self.get_esdocs_by_sdoc_ids(
-                proj_id=proj_id, sdoc_ids=sdoc_ids, fields=fields
-            )
-        ]
-
-    def get_sdoc_keyword_counts_by_sdoc_ids(
-        self, *, proj_id: int, sdoc_ids: Set[int], top_k: int = 50
-    ) -> List[KeywordStat]:
-        # TODO Flo: build a generic aggregation function like __search
-        res = self.__client.search(
-            index=self.__get_index_name(proj_id=proj_id),
-            size=0,
-            query={"terms": {"sdoc_id": list(sdoc_ids)}},
-            aggs={"keyword_counts": {"terms": {"field": "keywords", "size": top_k}}},
-        )
-        filtered_stats = OmegaConf.create(res).aggregations.keyword_counts.buckets
-        filtered_stats_list = [(s["key"], s["doc_count"]) for s in filtered_stats]
-        keywords = [k for k, c in filtered_stats_list]
-
-        multi_search_body = []
-        for k in keywords:
-            multi_search_body.append({})  # empty header
-            multi_search_body.append({"size": 0, "query": {"term": {"keywords": k}}})
-
-        res = self.__client.msearch(
-            index=self.__get_index_name(proj_id=proj_id), body=multi_search_body
-        )
-        global_stats_list = [r["hits"]["total"]["value"] for r in res["responses"]]
-
-        return [
-            KeywordStat(keyword=f[0], filtered_count=f[1], global_count=g)
-            for f, g in zip(filtered_stats_list, global_stats_list)
-        ]
 
     def delete_document_from_index(self, proj_id: int, sdoc_id: int) -> None:
         self.__client.delete(
@@ -650,6 +572,36 @@ class ElasticSearchService(metaclass=SingletonMeta):
             skip=skip,
         )
 
+    def search_sdocs_by_content_query2(
+        self,
+        *,
+        proj_id: int,
+        sdoc_ids: Set[int],
+        query: str,
+        limit: Optional[int] = None,
+        skip: Optional[int] = None,
+    ) -> PaginatedElasticSearchDocumentHits:
+        return self.__search_sdocs(
+            proj_id=proj_id,
+            query={
+                "bool": {
+                    "must": [
+                        {"terms": {"sdoc_id": list(sdoc_ids)}},
+                        {
+                            "match": {
+                                "content": {
+                                    "query": query,
+                                    "fuzziness": "1",  # TODO Flo: no constant here! either config or per call
+                                }
+                            }
+                        },
+                    ]
+                }
+            },
+            limit=limit,
+            skip=skip,
+        )
+
     def search_sdocs_by_content_query(
         self,
         *,
@@ -671,20 +623,6 @@ class ElasticSearchService(metaclass=SingletonMeta):
             limit=limit,
             skip=skip,
         )
-
-    def search_sdocs_by_keywords_query(
-        self,
-        *,
-        proj_id: int,
-        keywords: List[str],
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
-    ) -> PaginatedElasticSearchDocumentHits:
-        query: Dict[str, any] = {"bool": {"must": []}}
-
-        for keyword in keywords:
-            query["bool"]["must"].append({"match": {"keywords": keyword}})
-        return self.__search_sdocs(proj_id=proj_id, query=query, limit=limit, skip=skip)
 
     def search_memos_by_exact_title(
         self,

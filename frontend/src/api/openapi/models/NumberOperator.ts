@@ -2,9 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * An enumeration.
- */
 export enum NumberOperator {
   NUMBER_EQUALS = "NUMBER_EQUALS",
   NUMBER_NOT_EQUALS = "NUMBER_NOT_EQUALS",

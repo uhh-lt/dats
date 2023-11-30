@@ -17,8 +17,6 @@ export const QueryKey = {
   PROJECT_CRAWLER_JOBS: "projectCrawlerJobs",
   // all crawler jobs of a project (by project id)
   PROJECT_PREPROCESSING_JOBS: "projectPreprocessingJobs",
-  // all metadata of a project (by project id and metadata key)
-  PROJECT_METADATA_BY_METADATA_KEY: "projectMetadataByMetadataKey",
 
   // all users
   USERS: "users",
@@ -63,30 +61,24 @@ export const QueryKey = {
 
   // a single document (by document id)
   SDOC: "sdoc",
-  // the name of a single document (by document id)
-  SDOC_NAME: "sdocName",
-  // a single document without content (by document id)
-  SDOC_NO_CONTENT: "sdocNoContent",
   // a single document (by adoc id)
   SDOC_BY_ADOC: "sdocByAdoc",
   // all tags of a document (by document id)
   SDOC_TAGS: "sdocTags",
   // all adocs of a document (by document id)
   SDOC_ADOCS: "sdocAdocs",
+  // adoc of a document (by document id, user id)
+  SDOC_ADOC_USER: "sdocAdocUser",
   // all metadata of a document (by document id)
   SDOC_METADATAS: "sdocMetadatas",
-  // tokens of a document (by document id)
-  SDOC_TOKENS: "sdocTokens",
   // keywords of a document (by document id)
   SDOC_KEYWORDS: "sdocKeywords",
   // word frequencies of a document (by document id)
   SDOC_WORD_FREQUENCIES: "sdocFrequencies",
   // word frequencies of a document (by document id)
   SDOC_WORD_LEVEL_TRANSCRIPTIONS: "sdocTranscriptions",
-  // sentences of a document (by document id)
-  SDOC_SENTENCES: "sdocSentences",
-  // content of a document (by document id)
-  SDOC_CONTENT: "sdocContent",
+  // metadata with given key of a document (by document id, metadata key)
+  SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
   // url of a document (by document id)
   SDOC_URL: "sdocURL",
   // thumbnail url of a document (by document id)
@@ -100,7 +92,7 @@ export const QueryKey = {
   // all sdocs which are in the project (by project id) and suffice the given filters (by filter list)
   SDOCS_BY_PROJECT_AND_FILTERS_SEARCH: "searchResults",
   // all sdocs that are tagged with the given tag (by tag id)
-  SDOCS_BY_TAG_ID: "searchResults",
+  SDOCS_BY_TAG_ID: "sdocsByTagId",
   // the name of a single SourceDocument (by project id and filename)
   SDOC_NAME_BY_PROJECT_AND_FILENAME: "sdocNameByProjectAndFilename",
 
@@ -127,7 +119,11 @@ export const QueryKey = {
   BBOX_ANNOTATIONS_USER_CODE: "bboxAnnotationsUserCode",
 
   // a single metadata (by metadata id)
-  METADATA: "metadata",
+  SDOC_METADATA: "sdocMetadata",
+  // a single metadata (by metadata id)
+  PROJECT_METADATA: "projectMetadata",
+  // project metadata (by project id)
+  PROJECT_METADATAS: "projectMetadatas",
 
   // a single feedback (by feedback id)
   FEEDBACK: "feedback",
@@ -158,6 +154,7 @@ export const QueryKey = {
   ANALYSIS_ANNOTATION_OCCURRENCES: "analysisAnnotationOccurrences",
   ANALYSIS_ANNOTATED_SEGMENTS: "analysisAnnotatedSegments",
   ANALYSIS_TIMELINE: "anaylsisTimeline",
+  ANALYSIS_WORD_FREQUENCY: "analysisWordFrequency",
 
   // preprocessing status of the project (by project id)
   PREPRO_PROJECT_STATUS: "preproProjectStatus",

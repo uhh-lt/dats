@@ -10,10 +10,13 @@ from app.util.color import get_next_color
 # Properties shared across all DTOs
 class DocumentTagBaseDTO(BaseModel):
     title: str = Field(description="Title of the DocumentTag")
+    color: str = Field(description="Color of the DocumentTag")
     description: Optional[str] = Field(
         description="Description of the DocumentTag", default=None
     )
-    color: str = Field(description="Color of the Code")
+    parent_tag_id: Optional[int] = Field(
+        description="Parent of the DocumentTag", default=None
+    )
 
 
 # Properties for creation
@@ -27,7 +30,7 @@ class DocumentTagCreate(DocumentTagBaseDTO):
 # Properties for updating
 class DocumentTagUpdate(DocumentTagBaseDTO, UpdateDTOBase):
     title: Optional[str] = Field(description="Title of the DocumentTag", default=None)
-    color: Optional[str] = Field(description="Color of the Code", default_factory=None)
+    color: Optional[str] = Field(description="Color of the DocumentTag", default=None)
 
 
 # Properties for reading (as in ORM)

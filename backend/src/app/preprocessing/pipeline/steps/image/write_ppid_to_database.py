@@ -7,14 +7,12 @@ from sqlalchemy.orm import Session
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.bbox_annotation import BBoxAnnotationCreate
 from app.core.data.dto.code import CodeCreate
-from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
@@ -38,51 +36,17 @@ def _create_and_persist_sdoc(db: Session, ppid: PreProImageDoc) -> SourceDocumen
     return sdoc_db_obj
 
 
-def _persist_sdoc_metadata(
-    db: Session, sdoc_db_obj: SourceDocumentORM, ppid: PreProImageDoc
-) -> None:
-    sdoc_id = sdoc_db_obj.id
-    filename = sdoc_db_obj.filename
-    sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
-    ppid.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
-
-    metadata_create_dtos = [
-        # mutable filename
-        SourceDocumentMetadataCreate(
-            key="file_name",
-            value=str(filename),
-            source_document_id=sdoc_id,
-            read_only=True,
-        ),
-        # immutable filename
-        SourceDocumentMetadataCreate(
-            key="name",
-            value=str(filename),
-            source_document_id=sdoc_id,
-            read_only=False,
-        ),
-    ]
-
-    for key, value in ppid.metadata.items():
-        metadata_create_dtos.append(
-            SourceDocumentMetadataCreate(
-                key=str(key),
-                value=str(value),
-                source_document_id=sdoc_id,
-                read_only=True,
-            )
-        )
-
-    crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
-
-
 def _create_adoc_for_system_user(
     db: Session, ppid: PreProImageDoc, sdoc_db_obj: SourceDocumentORM
 ) -> AnnotationDocumentORM:
     sdoc_id = sdoc_db_obj.id
-    adoc_db = crud_adoc.read_by_sdoc_and_user(
-        db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
-    )
+    try:
+        adoc_db = crud_adoc.read_by_sdoc_and_user(
+            db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID
+        )
+    except NoSuchElementError:
+        adoc_db = None
+
     if not adoc_db:
         adoc_create = AnnotationDocumentCreate(
             source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
@@ -146,9 +110,6 @@ def write_ppid_to_database(cargo: PipelineCargo) -> PipelineCargo:
         try:
             # create and persist SourceDocument
             sdoc_db_obj = _create_and_persist_sdoc(db=db, ppid=ppid)
-
-            # persist SourceDocument Metadata
-            _persist_sdoc_metadata(db=db, sdoc_db_obj=sdoc_db_obj, ppid=ppid)
 
             # create AnnotationDocument for system user
             adoc_db_obj = _create_adoc_for_system_user(

@@ -3,7 +3,7 @@ import { AttachedObjectType, MemoRead, MemoService } from "./openapi";
 import { QueryKey } from "./QueryKey";
 import queryClient from "../plugins/ReactQueryClient";
 
-const useGetMemo = (memoId: number | undefined) =>
+const useGetMemo = (memoId: number | null | undefined) =>
   useQuery<MemoRead, Error>([QueryKey.MEMO, memoId], () => MemoService.getById({ memoId: memoId! }), {
     enabled: !!memoId,
   });

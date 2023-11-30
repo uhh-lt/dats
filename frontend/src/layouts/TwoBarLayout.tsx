@@ -1,15 +1,16 @@
-import React, { useRef } from "react";
 import { Box, CssBaseline } from "@mui/material";
+import React, { useRef } from "react";
 import { Outlet, useParams } from "react-router-dom";
-import MemoDialog from "../features/Memo/MemoDialog";
-import SnackbarDialog from "../features/Snackbar/SnackbarDialog";
-import TagCreateDialog from "../features/CrudDialog/Tag/TagCreateDialog";
 import BottomBar from "../components/NavBarBottom/BottomBar";
 import TopBar from "../components/NavBarTop/TopBar";
-import "./Layout.css";
 import ConfirmationDialog from "../features/ConfirmationDialog/ConfirmationDialog";
-import ExporterDialog from "../features/Exporter/ExporterDialog";
+import CodeCreateDialog from "../features/CrudDialog/Code/CodeCreateDialog";
+import TagCreateDialog from "../features/CrudDialog/Tag/TagCreateDialog";
 import DialMenu from "../features/DialMenu/DialMenu";
+import ExporterDialog from "../features/Exporter/ExporterDialog";
+import MemoDialog from "../features/Memo/MemoDialog";
+import SnackbarDialog from "../features/Snackbar/SnackbarDialog";
+import "./Layout.css";
 
 export const AppBarContext = React.createContext<React.MutableRefObject<any> | null>(null);
 
@@ -35,6 +36,7 @@ function TwoBarLayout() {
           <MemoDialog />
           <SnackbarDialog />
           <TagCreateDialog />
+          <CodeCreateDialog />
           <ConfirmationDialog />
           <ExporterDialog />
         </AppBarContext.Provider>

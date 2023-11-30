@@ -9,14 +9,15 @@ from api.dependencies import (
     is_authorized,
     skip_limit_params,
 )
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
+from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.action import ActionQueryParameters, ActionRead, ActionType
 from app.core.data.dto.code import CodeRead
@@ -24,12 +25,14 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.preprocessing_job import PreprocessingJobRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import (
     PaginatedSourceDocumentReads,
+    SDocStatus,
     SourceDocumentRead,
 )
-from app.core.data.dto.source_document_metadata import SourceDocumentMetadataRead
 from app.core.data.dto.user import UserRead
+from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.preprocessing.preprocessing_service import PreprocessingService
 
@@ -86,14 +89,14 @@ async def read_all(
 
 @router.get(
     "/{proj_id}",
-    response_model=Optional[ProjectRead],
+    response_model=ProjectRead,
     summary="Returns the Project with the given ID",
     description="Returns the Project with the given ID if it exists",
     dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
 async def read_project(
     *, db: Session = Depends(get_db_session), proj_id: int
-) -> Optional[ProjectRead]:
+) -> ProjectRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_project.read(db=db, id=proj_id)
     return ProjectRead.model_validate(db_obj)
@@ -162,7 +165,11 @@ async def get_project_sdocs(
         )
     ]
     total_sdocs = crud_sdoc.count_by_project(
-        db=db, proj_id=proj_id, only_finished=only_finished
+        db=db,
+        proj_id=proj_id,
+        status=SDocStatus.finished
+        if only_finished
+        else SDocStatus.unfinished_or_erroneous,
     )
     skip, limit = skip_limit.values()
     # FIXME skip can be None
@@ -180,7 +187,7 @@ async def get_project_sdocs(
 
 @router.put(
     "/{proj_id}/sdoc",
-    response_model=Optional[PreprocessingJobRead],
+    response_model=PreprocessingJobRead,
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
     dependencies=[
@@ -203,7 +210,7 @@ async def upload_project_sdoc(
             "File(s) that get uploaded and " "represented by the SourceDocument(s)"
         ),
     ),
-) -> Optional[PreprocessingJobRead]:
+) -> PreprocessingJobRead:
     pps: PreprocessingService = PreprocessingService()
     return pps.prepare_and_start_preprocessing_job_async(
         proj_id=proj_id, uploaded_files=uploaded_files
@@ -226,7 +233,7 @@ async def delete_project_sdocs(
 
 @router.patch(
     "/{proj_id}/user/{user_id}",
-    response_model=Optional[UserRead],
+    response_model=UserRead,
     summary="Associates the User with the Project",
     description="Associates an existing User to the Project with the given ID if it exists",
     dependencies=[
@@ -236,7 +243,7 @@ async def delete_project_sdocs(
 )
 async def associate_user_to_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
-) -> Optional[UserRead]:
+) -> UserRead:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.model_validate(user_db_obj)
@@ -244,7 +251,7 @@ async def associate_user_to_project(
 
 @router.delete(
     "/{proj_id}/user/{user_id}",
-    response_model=Optional[UserRead],
+    response_model=UserRead,
     summary="Dissociates the Users with the Project",
     description="Dissociates the Users with the Project with the given ID if it exists",
     dependencies=[
@@ -254,7 +261,7 @@ async def associate_user_to_project(
 )
 async def dissociate_user_from_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
-) -> Optional[UserRead]:
+) -> UserRead:
     # TODO Flo: only if the user has access?
     user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.model_validate(user_db_obj)
@@ -428,7 +435,12 @@ async def get_user_actions_of_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> List[ActionRead]:
     # TODO Flo: only if the user has access?
-    return crud_action.read_by_user_and_project(db=db, proj_id=proj_id, user_id=user_id)
+    return [
+        ActionRead.model_validate(ar)
+        for ar in crud_action.read_by_user_and_project(
+            db=db, proj_id=proj_id, user_id=user_id
+        )
+    ]
 
 
 @router.post(
@@ -479,7 +491,7 @@ async def remove_user_memos_of_project(
 
 @router.put(
     "/{proj_id}/memo",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Adds a Memo of the current User to the Project.",
     description="Adds a Memo of the current User to the Project with the given ID if it exists",
     dependencies=[
@@ -488,7 +500,7 @@ async def remove_user_memos_of_project(
 )
 async def add_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, memo: MemoCreate
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
@@ -516,7 +528,7 @@ async def get_memos(
 
 @router.get(
     "/{proj_id}/memo/{user_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo attached to the Project of the User with the given ID",
     description=(
         "Returns the Memo attached to the Project with the given ID of the User with the"
@@ -529,14 +541,14 @@ async def get_memos(
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), proj_id: int, user_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_project.read(db=db, id=proj_id)
-    return get_object_memos(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
 
 @router.get(
     "/{proj_id}/resolve_filename/{filename}",
-    response_model=Optional[int],
+    response_model=int,
     summary="Returns the Id of the SourceDocument identified by project_id and filename if it exists",
     description=(
         "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
@@ -552,31 +564,29 @@ async def resolve_filename(
     proj_id: int,
     filename: str,
     only_finished: bool = True,
-) -> Optional[int]:
+) -> int:
     sdoc = crud_sdoc.read_by_filename(
         db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
     )
-    if sdoc is not None:
-        return sdoc.id
-    return None
+    if sdoc is None:
+        raise NoSuchElementError(
+            SourceDocumentORM, project_id=proj_id, filename=filename
+        )
+    return sdoc.id
 
 
 @router.get(
-    "/{proj_id}/metadata/{metadata_key}",
-    response_model=List[SourceDocumentMetadataRead],
-    summary="Returns all SourceDocumentMetadata of the project that have the specified metadata_key",
-    description=(
-        "Returns all SourceDocumentMetadata of the project that have the specified metadata_key"
-    ),
-    # TODO add authorization for the given source document?
-    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
+    "/{proj_id}/metadata",
+    response_model=List[ProjectMetadataRead],
+    summary="Returns all ProjectMetadata",
+    description="Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
 )
-async def get_project_metadata_by_metadata_key(
-    *, db: Session = Depends(get_db_session), proj_id: int, metadata_key: str
-) -> List[SourceDocumentMetadataRead]:
-    return [
-        SourceDocumentMetadataRead.model_validate(db_obj)
-        for db_obj in crud_sdoc_meta.read_by_project_and_key(
-            db=db, project_id=proj_id, key=metadata_key
-        )
-    ]
+async def get_all_metadata(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+) -> List[ProjectMetadataRead]:
+    # TODO Flo: only if the user has access?
+    db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
+    metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
+    return metadata

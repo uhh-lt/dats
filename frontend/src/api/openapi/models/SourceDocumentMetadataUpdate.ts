@@ -4,11 +4,23 @@
 
 export type SourceDocumentMetadataUpdate = {
   /**
-   * Key of the SourceDocumentMetadata
+   * Int Value of the SourceDocumentMetadata
    */
-  key?: string;
+  int_value: number | null;
   /**
-   * Value of the SourceDocumentMetadata
+   * String Value of the SourceDocumentMetadata
    */
-  value?: string;
+  str_value: string | null;
+  /**
+   * Boolean Value of the SourceDocumentMetadata
+   */
+  boolean_value: boolean | null;
+  /**
+   * Date Value of the SourceDocumentMetadata
+   */
+  date_value: string | null;
+  /**
+   * List Value of the SourceDocumentMetadata
+   */
+  list_value: Array<string> | null;
 };

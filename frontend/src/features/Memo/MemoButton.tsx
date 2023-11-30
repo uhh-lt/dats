@@ -22,9 +22,11 @@ export default function MemoButton({
 
   return (
     <Tooltip title="Memo">
-      <IconButton onClick={handleClickOpen} {...(props as IconButtonProps)}>
-        <CommentIcon />
-      </IconButton>
+      <span>
+        <IconButton onClick={handleClickOpen} {...(props as IconButtonProps)}>
+          <CommentIcon />
+        </IconButton>
+      </span>
     </Tooltip>
   );
 }

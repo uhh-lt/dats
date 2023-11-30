@@ -7,7 +7,6 @@ import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentDocumentTagMultiLink } from "../models/SourceDocumentDocumentTagMultiLink";
-import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -100,25 +99,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Deletes the DocumentTag
-   * Deletes the DocumentTag with the given ID.
-   * @returns DocumentTagRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/doctag/{tag_id}",
-      path: {
-        tag_id: tagId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Updates the DocumentTag
    * Updates the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
@@ -146,15 +126,15 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns the Memo attached to the DocumentTag
-   * Returns the Memo attached to the DocumentTag with the given ID if it exists.
-   * @returns MemoRead Successful Response
+   * Deletes the DocumentTag
+   * Deletes the DocumentTag with the given ID.
+   * @returns DocumentTagRead Successful Response
    * @throws ApiError
    */
-  public static getMemos({ tagId }: { tagId: number }): CancelablePromise<Array<MemoRead>> {
+  public static deleteById({ tagId }: { tagId: number }): CancelablePromise<DocumentTagRead> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/doctag/{tag_id}/memo",
+      method: "DELETE",
+      url: "/doctag/{tag_id}",
       path: {
         tag_id: tagId,
       },
@@ -192,6 +172,25 @@ export class DocumentTagService {
   }
 
   /**
+   * Returns the Memo attached to the DocumentTag
+   * Returns the Memo attached to the DocumentTag with the given ID if it exists.
+   * @returns MemoRead Successful Response
+   * @throws ApiError
+   */
+  public static getMemos({ tagId }: { tagId: number }): CancelablePromise<Array<MemoRead>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/doctag/{tag_id}/memo",
+      path: {
+        tag_id: tagId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Returns the Memo attached to the SpanAnnotation of the User with the given ID
    * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -212,12 +211,12 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns all SourceDocuments attached to the Tag with the given ID
-   * Returns all SourceDocuments attached to the Tag with the given ID if it exists.
-   * @returns SourceDocumentRead Successful Response
+   * Returns all SourceDocument IDs attached to the Tag with the given ID
+   * Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.
+   * @returns number Successful Response
    * @throws ApiError
    */
-  public static getSdocsByTagId({ tagId }: { tagId: number }): CancelablePromise<Array<SourceDocumentRead>> {
+  public static getSdocIdsByTagId({ tagId }: { tagId: number }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/doctag/{tag_id}/sdocs",

@@ -1,19 +1,67 @@
 import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import { SpanEntityDocumentFrequency } from "../../../api/openapi";
 import StatsDisplayButton from "./StatsDisplayButton";
 import { useFilterStats } from "../hooks/useFilterStats";
+import { SpanEntityStat } from "../../../api/openapi";
+import SearchHooks from "../../../api/SearchHooks";
+import { useAuth } from "../../../auth/AuthProvider";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { Box, CircularProgress } from "@mui/material";
 
 interface CodeStatsProps {
+  currentTab: string;
   codeId: number;
-  codeStats: SpanEntityDocumentFrequency[];
-  handleClick: (stat: SpanEntityDocumentFrequency) => void;
+  sdocIds: number[];
+  handleClick: (stat: SpanEntityStat) => void;
   parentRef: React.RefObject<HTMLDivElement>;
   filterBy: string;
 }
 
-function CodeStats({ codeId, codeStats, handleClick, parentRef, filterBy }: CodeStatsProps) {
+function CodeStats(props: CodeStatsProps) {
+  // rendering
+  let content: JSX.Element;
+  if (props.currentTab !== `${props.codeId}`) {
+    content = <></>;
+  } else {
+    content = <CodeStatsWithoutData {...props} />;
+  }
+
+  return (
+    <TabPanel value={`${props.codeId}`} sx={{ p: 0 }}>
+      {content}
+    </TabPanel>
+  );
+}
+
+function CodeStatsWithoutData(props: CodeStatsProps) {
+  // global client state
+  const { user } = useAuth();
+
+  // global client state (redux)
+  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
+
+  // global server state (react-query)
+  const codeStats = SearchHooks.useSearchCodeStats(props.codeId, user.data?.id, props.sdocIds, sortStatsByGlobal);
+
+  if (codeStats.isSuccess) {
+    return <CodeStatsWithData codeStats={codeStats.data} {...props} />;
+  } else if (codeStats.isLoading) {
+    return <CircularProgress />;
+  } else if (codeStats.isError) {
+    return <>{codeStats.error.message}</>;
+  } else {
+    return <>Someting went wrong!</>;
+  }
+}
+
+function CodeStatsWithData({
+  codeId,
+  codeStats,
+  handleClick,
+  parentRef,
+  filterBy,
+}: CodeStatsProps & { codeStats: SpanEntityStat[] }) {
   const filteredCodeStats = useFilterStats(codeStats, filterBy);
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
@@ -27,8 +75,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef, filterBy }: Code
 
   // render
   return (
-    <TabPanel
-      value={`${codeId}`}
+    <Box
       style={{
         whiteSpace: "nowrap",
         height: `${rowVirtualizer.getTotalSize()}px`,
@@ -36,6 +83,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef, filterBy }: Code
         position: "relative",
       }}
     >
+      {filteredCodeStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         let codeStat = filteredCodeStats[virtualItem.index];
 
@@ -51,7 +99,7 @@ function CodeStats({ codeId, codeStats, handleClick, parentRef, filterBy }: Code
           />
         );
       })}
-    </TabPanel>
+    </Box>
   );
 }
 

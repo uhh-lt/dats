@@ -1,5 +1,9 @@
 import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 
+import { Word } from "react-wordcloud";
+import queryClient from "../plugins/ReactQueryClient";
+import useStableQueries from "../utils/useStableQueries";
+import { QueryKey } from "./QueryKey";
 import {
   AnnotationDocumentRead,
   AnnotationDocumentService,
@@ -7,19 +11,11 @@ import {
   DocumentTagRead,
   DocumentTagService,
   MemoRead,
-  MetadataService,
   ProjectService,
-  SourceDocumentContent,
-  SourceDocumentKeywords,
-  SourceDocumentMetadataRead,
-  SourceDocumentRead,
-  SourceDocumentSentences,
+  SourceDocumentMetadataReadResolved,
   SourceDocumentService,
-  SourceDocumentTokens,
+  SourceDocumentWithDataRead,
 } from "./openapi";
-import { QueryKey } from "./QueryKey";
-import useStableQueries from "../utils/useStableQueries";
-import queryClient from "../plugins/ReactQueryClient";
 
 // sdoc
 const fetchSdoc = async (sdocId: number) => {
@@ -27,13 +23,9 @@ const fetchSdoc = async (sdocId: number) => {
     sdocId: sdocId!,
   });
 
-  const name = await SourceDocumentService.readMetadataByKey({ sdocId: sdocId, metadataKey: "name" });
-  sdoc.filename = name.value;
-
   switch (sdoc.doctype) {
     case DocType.TEXT:
-      const x = await SourceDocumentService.getHtml({ sdocId: sdocId, onlyFinished: true });
-      sdoc.content = x.html;
+      // dont do anything
       break;
     case DocType.IMAGE:
       let url = await SourceDocumentService.getFileUrl({ sdocId: sdocId, webp: true });
@@ -49,31 +41,14 @@ const fetchSdoc = async (sdocId: number) => {
   return sdoc;
 };
 
-const useGetDocumentNoContent = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentRead, Error>(
-    [QueryKey.SDOC_NO_CONTENT, sdocId],
-    async () => {
-      const sdoc = await SourceDocumentService.getById({
-        sdocId: sdocId!,
-      });
-
-      const name = await SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "name" });
-      sdoc.filename = name.value;
-
-      return sdoc;
-    },
-    {
-      enabled: !!sdocId,
-    },
-  );
-
-const useGetDocument = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
+const useGetDocument = (sdocId: number | null | undefined) =>
+  useQuery<SourceDocumentWithDataRead, Error>([QueryKey.SDOC, sdocId], () => fetchSdoc(sdocId!), {
     enabled: !!sdocId,
+    staleTime: Infinity,
   });
 
 const useGetDocumentIdByFilename = (filename: string | undefined, projectId: number) =>
-  useQuery<number | undefined, Error>(
+  useQuery<number | null | undefined, Error>(
     [QueryKey.SDOC_ID, projectId, filename],
     () =>
       ProjectService.resolveFilename({
@@ -87,8 +62,8 @@ const useGetDocumentIdByFilename = (filename: string | undefined, projectId: num
     },
   );
 
-const useGetDocumentByAdocId = (adocId: number | undefined) =>
-  useQuery<SourceDocumentRead, Error>(
+const useGetDocumentByAdocId = (adocId: number | null | undefined) =>
+  useQuery<SourceDocumentWithDataRead, Error>(
     [QueryKey.SDOC_BY_ADOC, adocId],
     async () => {
       const adoc = await AnnotationDocumentService.getByAdocId({ adocId: adocId! });
@@ -99,64 +74,7 @@ const useGetDocumentByAdocId = (adocId: number | undefined) =>
     },
   );
 
-const useGetDocumentTokens = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentTokens, Error>(
-    [QueryKey.SDOC_TOKENS, sdocId],
-    () =>
-      SourceDocumentService.getTokens({
-        sdocId: sdocId!,
-        characterOffsets: true,
-      }),
-    {
-      enabled: !!sdocId,
-    },
-  );
-
-const useGetDocumentKeywords = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentKeywords, Error>(
-    [QueryKey.SDOC_KEYWORDS, sdocId],
-    () =>
-      SourceDocumentService.getKeywords({
-        sdocId: sdocId!,
-      }),
-    {
-      enabled: !!sdocId,
-    },
-  );
-
-const useUpdateDocumentKeywords = () =>
-  useMutation(SourceDocumentService.updateKeywords, {
-    onSuccess: (sdoc) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_KEYWORDS, sdoc.source_document_id]);
-    },
-  });
-
-const useGetDocumentSentences = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentSentences, Error>(
-    [QueryKey.SDOC_SENTENCES, sdocId],
-    () =>
-      SourceDocumentService.getSentences({
-        sdocId: sdocId!,
-      }),
-    {
-      enabled: !!sdocId,
-    },
-  );
-
-const useGetDocumentContent = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentContent, Error>(
-    [QueryKey.SDOC_CONTENT, sdocId],
-    () =>
-      SourceDocumentService.getContent({
-        sdocId: sdocId!,
-      }),
-    {
-      enabled: !!sdocId,
-      staleTime: Infinity,
-    },
-  );
-
-const useGetLinkedSdocIds = (sdocId: number | undefined) =>
+const useGetLinkedSdocIds = (sdocId: number | null | undefined) =>
   useQuery<number[], Error>(
     [QueryKey.SDOC_LINKS, sdocId],
     () =>
@@ -197,11 +115,11 @@ const useDeleteDocuments = () =>
   );
 
 // tags
-const useGetByTagId = (tagId: number | undefined) =>
-  useQuery<SourceDocumentRead[], Error>(
+const useGetByTagId = (tagId: number | null | undefined) =>
+  useQuery<number[], Error>(
     [QueryKey.SDOCS_BY_TAG_ID, tagId],
     () =>
-      DocumentTagService.getSdocsByTagId({
+      DocumentTagService.getSdocIdsByTagId({
         tagId: tagId!,
       }),
     {
@@ -209,7 +127,7 @@ const useGetByTagId = (tagId: number | undefined) =>
     },
   );
 
-const useGetAllDocumentTags = (sdocId: number | undefined) =>
+const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
   useQuery<DocumentTagRead[], Error>(
     [QueryKey.SDOC_TAGS, sdocId],
     () =>
@@ -243,7 +161,7 @@ const useRemoveDocumentTag = () =>
   });
 
 // adoc
-const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
+const useGetAllAnnotationDocuments = (sdocId: number | null | undefined) => {
   return useQuery<AnnotationDocumentRead[], Error>(
     [QueryKey.SDOC_ADOCS, sdocId],
     () =>
@@ -256,8 +174,22 @@ const useGetAllAnnotationDocuments = (sdocId: number | undefined) => {
   );
 };
 
+const useGetOrCreateAdocOfUser = (sdocId: number | null | undefined, userId: number | null | undefined) => {
+  return useQuery<AnnotationDocumentRead, Error>(
+    [QueryKey.SDOC_ADOC_USER, sdocId, userId],
+    () =>
+      SourceDocumentService.getAdocOfUser({
+        sdocId: sdocId!,
+        userId: userId!,
+      }),
+    {
+      enabled: !!sdocId && !!userId,
+    },
+  );
+};
+
 // memo
-const useGetMemos = (sdocId: number | undefined) =>
+const useGetMemos = (sdocId: number | null | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SDOC, sdocId],
     () =>
@@ -270,7 +202,7 @@ const useGetMemos = (sdocId: number | undefined) =>
     },
   );
 
-const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
+const useGetMemo = (sdocId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead, Error>(
     [QueryKey.MEMO_SDOC, sdocId, userId],
     () =>
@@ -284,7 +216,7 @@ const useGetMemo = (sdocId: number | undefined, userId: number | undefined) =>
     },
   );
 
-const useGetRelatedMemos = (sdocId: number | undefined, userId: number | undefined) =>
+const useGetRelatedMemos = (sdocId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<MemoRead[], Error>(
     [QueryKey.MEMO_SDOC_RELATED, userId, sdocId],
     () =>
@@ -307,68 +239,74 @@ const useCreateMemo = () =>
     },
   });
 
-// name
-const useGetName = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentMetadataRead, Error>(
-    [QueryKey.SDOC_NAME, sdocId],
-    async () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "name" }),
-    {
-      enabled: !!sdocId,
-    },
-  );
-
 const useUpdateName = () =>
-  useMutation(MetadataService.updateById, {
-    onSuccess: (metadata) => {
-      queryClient.invalidateQueries([QueryKey.SDOC, metadata.source_document_id]);
-      queryClient.setQueryData([QueryKey.SDOC_NAME, metadata.source_document_id], metadata);
+  useMutation(SourceDocumentService.updateSdoc, {
+    onSuccess: (sdoc) => {
+      queryClient.invalidateQueries([QueryKey.SDOC, sdoc.id]);
     },
   });
 
 // metadata
-const useGetURL = (sdocId: number | undefined, webp: boolean = false) =>
+const useGetURL = (sdocId: number | null | undefined, webp: boolean = false) =>
   useQuery<string, Error>(
     [QueryKey.SDOC_URL, sdocId],
     () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: webp }),
     {
       enabled: !!sdocId,
       select: (url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + url),
+      staleTime: Infinity,
     },
   );
 
-const useGetThumbnailURL = (sdocId: number | undefined) =>
+const useGetThumbnailURL = (sdocId: number | null | undefined) =>
   useQuery<string, Error>(
     [QueryKey.SDOC_THUMBNAIL_URL, sdocId],
     () => SourceDocumentService.getFileUrl({ sdocId: sdocId!, relative: true, webp: true, thumbnail: true }),
     {
       enabled: !!sdocId,
       select: (thumbnail_url) => encodeURI(process.env.REACT_APP_CONTENT + "/" + thumbnail_url),
+      staleTime: Infinity,
     },
   );
 
-const useGetMetadata = (sdocId: number | undefined) =>
-  useQuery<Map<string, SourceDocumentMetadataRead>, Error>(
+const useGetMetadata = (sdocId: number | null | undefined) =>
+  useQuery<SourceDocumentMetadataReadResolved[], Error>(
     [QueryKey.SDOC_METADATAS, sdocId],
-    async () => {
-      const metadatas = await SourceDocumentService.getAllMetadata({
+    async () =>
+      SourceDocumentService.getAllMetadata({
         sdocId: sdocId!,
-        excludeCsv: "word_level_transcriptions,word_frequencies,name",
-      });
-      const result = new Map<string, SourceDocumentMetadataRead>();
-      metadatas.forEach((metadata) => {
-        result.set(metadata.key, metadata);
-      });
-      return result;
-    },
+      }),
     {
       enabled: !!sdocId,
     },
   );
 
-const useGetWordFrequencies = (sdocId: number | undefined) =>
-  useQuery<SourceDocumentMetadataRead, Error>(
+const useGetWordFrequencies = (sdocId: number | null | undefined) =>
+  useQuery<Word[], Error>(
     [QueryKey.SDOC_WORD_FREQUENCIES, sdocId],
-    () => SourceDocumentService.readMetadataByKey({ sdocId: sdocId!, metadataKey: "word_frequencies" }),
+    async () => {
+      const wordFrequencies = await SourceDocumentService.getWordFrequencies({ sdocId: sdocId! });
+
+      let entries: [string, number][] = wordFrequencies.map((wf) => [wf.word, wf.count]);
+      entries.sort((a, b) => b[1] - a[1]); // sort array descending
+      return entries.slice(0, 20).map((e) => {
+        return { text: e[0], value: e[1] } as Word;
+      });
+    },
+    {
+      enabled: !!sdocId,
+      staleTime: Infinity,
+    },
+  );
+
+const useGetMetadataByKey = (sdocId: number | null | undefined, key: string) =>
+  useQuery<SourceDocumentMetadataReadResolved, Error>(
+    [QueryKey.SDOC_METADATA_BY_KEY, sdocId, key],
+    async () =>
+      SourceDocumentService.readMetadataByKey({
+        sdocId: sdocId!,
+        metadataKey: key,
+      }),
     {
       enabled: !!sdocId,
     },
@@ -380,7 +318,7 @@ interface WordLevelTranscription {
   end_ms: number;
 }
 
-const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
+const useGetWordLevelTranscriptions = (sdocId: number | null | undefined) =>
   useQuery<WordLevelTranscription[], Error>(
     [QueryKey.SDOC_WORD_LEVEL_TRANSCRIPTIONS, sdocId],
     async () => {
@@ -388,7 +326,7 @@ const useGetWordLevelTranscriptions = (sdocId: number | undefined) =>
         sdocId: sdocId!,
         metadataKey: "word_level_transcriptions",
       });
-      return JSON.parse(metadata.value) as WordLevelTranscription[];
+      return JSON.parse(metadata.str_value!) as WordLevelTranscription[];
     },
     {
       enabled: !!sdocId,
@@ -399,12 +337,6 @@ const SdocHooks = {
   // sdoc
   useGetDocument,
   useGetDocumentByAdocId,
-  useGetDocumentNoContent,
-  useGetDocumentTokens,
-  useGetDocumentKeywords,
-  useUpdateDocumentKeywords,
-  useGetDocumentSentences,
-  useGetDocumentContent,
   useGetLinkedSdocIds,
   useDeleteDocument,
   useDeleteDocuments,
@@ -416,13 +348,13 @@ const SdocHooks = {
   useRemoveDocumentTag,
   // adoc
   useGetAllAnnotationDocuments,
+  useGetOrCreateAdocOfUser,
   // memo
   useGetMemos,
   useGetMemo,
   useGetRelatedMemos,
   useCreateMemo,
   // name
-  useGetName,
   useUpdateName,
   // metadata
   useGetURL,
@@ -430,6 +362,7 @@ const SdocHooks = {
   useGetMetadata,
   useGetWordFrequencies,
   useGetWordLevelTranscriptions,
+  useGetMetadataByKey,
 };
 
 export default SdocHooks;

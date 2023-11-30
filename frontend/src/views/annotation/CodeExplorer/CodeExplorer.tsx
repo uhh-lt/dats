@@ -1,18 +1,29 @@
-import AddBoxIcon from "@mui/icons-material/AddBox";
-import { AppBar, Box, BoxProps, Button, Checkbox, Stack, Toolbar } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import {
+  AppBar,
+  Box,
+  BoxProps,
+  Checkbox,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Toolbar,
+} from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
+import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
+import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
 import ExporterButton from "../../../features/Exporter/ExporterButton";
 import MemoButton from "../../../features/Memo/MemoButton";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
 import { AnnoActions } from "../annoSlice";
 import CodeEditButton from "./CodeEditButton";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
 import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
 import CodeTreeView from "./CodeTreeView";
@@ -201,17 +212,18 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
             sx={{
               borderBottom: 1,
               borderColor: "divider",
-              p: 1,
+              alignItems: "center",
             }}
           >
-            <Button
-              variant="contained"
-              onClick={() => openCodeCreateDialog({ parentCodeId: selectedCodeId })}
-              startIcon={<AddBoxIcon />}
-              sx={{ flexGrow: 1, mr: 1 }}
-            >
-              Add Code
-            </Button>
+            <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
+              <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ parentCodeId: selectedCodeId })}>
+                <ListItemIcon>
+                  <AddIcon />
+                </ListItemIcon>
+                <ListItemText primary="Create new code" />
+              </ListItemButton>
+            </List>
+
             <ExporterButton
               tooltip="Export codeset"
               exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
@@ -220,7 +232,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
           </Stack>
         )}
         {content}
-        <CodeCreateDialog />
       </Box>
     );
   },

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -14,13 +12,11 @@ router = APIRouter(
 
 @router.get(
     "/{memo_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo",
     description="Returns the Memo with the given ID if it exists",
 )
-async def get_by_id(
-    *, db: Session = Depends(get_db_session), memo_id: int
-) -> Optional[MemoRead]:
+async def get_by_id(*, db: Session = Depends(get_db_session), memo_id: int) -> MemoRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.read(db=db, id=memo_id)
     return crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
@@ -28,13 +24,13 @@ async def get_by_id(
 
 @router.patch(
     "/{memo_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Updates the Memo",
     description="Updates the Memo with the given ID if it exists",
 )
 async def update_by_id(
     *, db: Session = Depends(get_db_session), memo_id: int, memo: MemoUpdate
-) -> Optional[MemoRead]:
+) -> MemoRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.update(db=db, id=memo_id, update_dto=memo)
     return crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
@@ -42,14 +38,13 @@ async def update_by_id(
 
 @router.delete(
     "/{memo_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Removes the Memo",
     description="Removes the Memo with the given ID if it exists",
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), memo_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     # TODO Flo: only if the user has access?
-    memo = await get_by_id(db=db, memo_id=memo_id)
-    crud_memo.remove(db=db, id=memo_id)
-    return memo
+    memo = crud_memo.remove(db=db, id=memo_id)
+    return MemoRead.model_validate(memo)

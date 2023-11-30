@@ -19,11 +19,13 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import eventBus from "../../EventBus";
 import ExporterHooks from "../../api/ExporterHooks";
+import ProjectHooks from "../../api/ProjectHooks";
 import {
-  ExportFormat,
-  ExportJobParameters,
   BackgroundJobStatus,
+  ExportFormat,
+  ExportJobParameters_Input,
   SingleDocAllUserAnnotationsExportJobParams,
   SingleDocSingleUserAnnotationsExportJobParams,
   SingleProjectAllDataExportJobParams,
@@ -33,10 +35,8 @@ import {
   SingleUserLogbookExportJobParams,
 } from "../../api/openapi";
 import { ExportJobType } from "../../api/openapi/models/ExportJobType";
-import ProjectHooks from "../../api/ProjectHooks";
 import { useAuth } from "../../auth/AuthProvider";
 import UserName from "../../components/UserName";
-import eventBus from "../../EventBus";
 import SnackbarAPI from "../Snackbar/SnackbarAPI";
 import ExporterItemSelectList from "./ExporterItemSelectList";
 
@@ -72,7 +72,10 @@ export interface ExporterInfo {
   sdocId: number;
 }
 
-const exporterInfoToExporterJobParameters = (exporterData: ExporterInfo, projectId: number): ExportJobParameters => {
+const exporterInfoToExporterJobParameters = (
+  exporterData: ExporterInfo,
+  projectId: number,
+): ExportJobParameters_Input => {
   switch (exporterData.type) {
     case "Project":
       return {

@@ -1,12 +1,12 @@
 import { Box, Tooltip } from "@mui/material";
+import { useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
-import React, { useMemo, useRef, useState } from "react";
-import { SourceDocumentRead, AnnotationDocumentRead } from "../../../api/openapi";
 import { OnProgressProps } from "react-player/base";
 import SdocHooks from "../../../api/SdocHooks";
+import { AnnotationDocumentRead, SourceDocumentWithDataRead } from "../../../api/openapi";
 
 interface AudioVideoViewerProps {
-  sdoc: SourceDocumentRead;
+  sdoc: SourceDocumentWithDataRead;
   adoc: AnnotationDocumentRead | null;
   showEntities: boolean;
   width?: number;

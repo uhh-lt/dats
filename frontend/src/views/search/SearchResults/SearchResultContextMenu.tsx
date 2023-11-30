@@ -1,6 +1,6 @@
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import React from "react";
-import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenuMenuItem";
+import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenu/TagMenuMenuItem";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";

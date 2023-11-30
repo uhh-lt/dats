@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List
 
 from pydantic import BaseModel, ConfigDict, Field, SkipValidation
 
@@ -25,5 +25,5 @@ class PipelineCargo(BaseModel):
         description="Tasks that have been executed.", default_factory=list
     )
 
-    data: Optional[Dict[str, Any]] = Field(description="data", default_factory=dict)
+    data: Dict[str, Any] = Field(description="data", default_factory=dict)
     model_config = ConfigDict(arbitrary_types_allowed=True)

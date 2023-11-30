@@ -1,10 +1,10 @@
-from typing import List, Optional, Union
+from typing import List, Union
 
 from fastapi import APIRouter, Depends
-from requests import Session
+from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, resolve_code_param
-from api.util import get_object_memos
+from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.dto.code import CodeRead
@@ -24,7 +24,7 @@ router = APIRouter(
 
 @router.put(
     "",
-    response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
+    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Creates a SpanAnnotation",
     description="Creates a SpanAnnotation",
 )
@@ -33,7 +33,7 @@ async def add_span_annotation(
     db: Session = Depends(get_db_session),
     span: SpanAnnotationCreateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
-) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
+) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.create_with_code_id(db=db, create_dto=span)
     span_dto = SpanAnnotationRead.model_validate(db_obj)
@@ -51,7 +51,7 @@ async def add_span_annotation(
 
 @router.get(
     "/{span_id}",
-    response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
+    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Returns the SpanAnnotation",
     description="Returns the SpanAnnotation with the given ID.",
 )
@@ -60,7 +60,7 @@ async def get_by_id(
     db: Session = Depends(get_db_session),
     span_id: int,
     resolve_code: bool = Depends(resolve_code_param),
-) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
+) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.read(db=db, id=span_id)
     span_dto = SpanAnnotationRead.model_validate(db_obj)
@@ -78,7 +78,7 @@ async def get_by_id(
 
 @router.patch(
     "/{span_id}",
-    response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
+    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Updates the SpanAnnotation",
     description="Updates the SpanAnnotation with the given ID.",
 )
@@ -88,7 +88,7 @@ async def update_by_id(
     span_id: int,
     span_anno: SpanAnnotationUpdateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
-) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
+) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.update_with_code_id(db=db, id=span_id, update_dto=span_anno)
     span_dto = SpanAnnotationRead.model_validate(db_obj)
@@ -106,13 +106,13 @@ async def update_by_id(
 
 @router.delete(
     "/{span_id}",
-    response_model=Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
+    response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Deletes the SpanAnnotation",
     description="Deletes the SpanAnnotation with the given ID.",
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), span_id: int
-) -> Optional[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
+) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
     # TODO Flo: only if the user has access?
     db_obj = crud_span_anno.remove(db=db, id=span_id)
     return SpanAnnotationRead.model_validate(db_obj)
@@ -120,13 +120,11 @@ async def delete_by_id(
 
 @router.get(
     "/{span_id}/code",
-    response_model=Optional[CodeRead],
+    response_model=CodeRead,
     summary="Returns the Code of the SpanAnnotation",
     description="Returns the Code of the SpanAnnotation with the given ID if it exists.",
 )
-async def get_code(
-    *, db: Session = Depends(get_db_session), span_id: int
-) -> Optional[CodeRead]:
+async def get_code(*, db: Session = Depends(get_db_session), span_id: int) -> CodeRead:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.read(db=db, id=span_id)
     return CodeRead.model_validate(span_db_obj.current_code.code)
@@ -151,13 +149,13 @@ async def get_all_groups(
 
 @router.delete(
     "/{span_id}/groups",
-    response_model=Optional[SpanAnnotationRead],
+    response_model=SpanAnnotationRead,
     summary="Removes the SpanAnnotation from all SpanGroups",
     description="Removes the SpanAnnotation from all SpanGroups",
 )
 async def remove_from_all_groups(
     *, db: Session = Depends(get_db_session), span_id: int
-) -> Optional[SpanAnnotationRead]:
+) -> SpanAnnotationRead:
     # TODO Flo: only if the user has access?
     span_db_obj = crud_span_anno.remove_from_all_span_groups(db=db, span_id=span_id)
     return SpanAnnotationRead.model_validate(span_db_obj)
@@ -165,13 +163,13 @@ async def remove_from_all_groups(
 
 @router.patch(
     "/{span_id}/group/{group_id}",
-    response_model=Optional[SpanAnnotationRead],
+    response_model=SpanAnnotationRead,
     summary="Adds the SpanAnnotation to the SpanGroup",
     description="Adds the SpanAnnotation to the SpanGroup",
 )
 async def add_to_group(
     *, db: Session = Depends(get_db_session), span_id: int, group_id: int
-) -> Optional[SpanAnnotationRead]:
+) -> SpanAnnotationRead:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_span_anno.add_to_span_group(
         db=db, span_id=span_id, group_id=group_id
@@ -181,13 +179,13 @@ async def add_to_group(
 
 @router.delete(
     "/{span_id}/group/{group_id}",
-    response_model=Optional[SpanAnnotationRead],
+    response_model=SpanAnnotationRead,
     summary="Removes the SpanAnnotation from the SpanGroup",
     description="Removes the SpanAnnotation from the SpanGroup",
 )
 async def remove_from_group(
     *, db: Session = Depends(get_db_session), span_id: int, group_id: int
-) -> Optional[SpanAnnotationRead]:
+) -> SpanAnnotationRead:
     # TODO Flo: only if the user has access?
     sdoc_db_obj = crud_span_anno.remove_from_span_group(
         db=db, span_id=span_id, group_id=group_id
@@ -197,13 +195,13 @@ async def remove_from_group(
 
 @router.put(
     "/{span_id}/memo",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Adds a Memo to the SpanAnnotation",
     description="Adds a Memo to the SpanAnnotation with the given ID if it exists",
 )
 async def add_memo(
     *, db: Session = Depends(get_db_session), span_id: int, memo: MemoCreate
-) -> Optional[MemoRead]:
+) -> MemoRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_memo.create_for_span_annotation(
         db=db, span_anno_id=span_id, create_dto=memo
@@ -232,7 +230,7 @@ async def get_memos(
 
 @router.get(
     "/{span_id}/memo/{user_id}",
-    response_model=Optional[MemoRead],
+    response_model=MemoRead,
     summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
     description=(
         "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
@@ -241,9 +239,9 @@ async def get_memos(
 )
 async def get_user_memo(
     *, db: Session = Depends(get_db_session), span_id: int, user_id: int
-) -> Optional[MemoRead]:
+) -> MemoRead:
     db_obj = crud_span_anno.read(db=db, id=span_id)
-    return get_object_memos(db_obj=db_obj, user_id=user_id)
+    return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
 
 @router.get(

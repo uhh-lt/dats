@@ -2,30 +2,19 @@ from typing import List
 
 from sqlalchemy import and_, func
 
-from api.util import get_object_memos
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
-    AnnotatedSegment,
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
 )
-from app.core.data.dto.bbox_annotation import (
-    BBoxAnnotationRead,
-)
+from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
-from app.core.data.dto.document_tag import DocumentTagRead
-from app.core.data.dto.filter import Filter
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.span_annotation import (
-    SpanAnnotationRead,
-    SpanAnnotationReadResolved,
-)
+from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
-from app.core.data.orm.memo import MemoORM
-from app.core.data.orm.object_handle import ObjectHandleORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
@@ -39,7 +28,7 @@ class AnalysisService(metaclass=SingletonMeta):
         return super(AnalysisService, cls).__new__(cls)
 
     def compute_code_frequency(
-        self, project_id: int, code_ids: List[int], filter: Filter
+        self, project_id: int, user_ids: List[int], code_ids: List[int]
     ) -> List[CodeFrequency]:
         with self.sqls.db_session() as db:
             # 1. find all codes of interest (that is the given code_ids and all their childrens code_ids)
@@ -85,7 +74,7 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
-                filter.get_sqlalchemy_expression(),
+                AnnotationDocumentORM.user_id.in_(user_ids),
                 CurrentCodeORM.code_id.in_(codes_of_interest),
             )
             span_res = query.all()
@@ -108,6 +97,7 @@ class AnalysisService(metaclass=SingletonMeta):
             )
             # noinspection PyUnresolvedReferences
             query = query.filter(
+                AnnotationDocumentORM.user_id.in_(user_ids),
                 CurrentCodeORM.code_id.in_(codes_of_interest),
             )
             bbox_res = query.all()
@@ -309,73 +299,3 @@ class AnalysisService(metaclass=SingletonMeta):
 
             # 3. return the result
             return span_code_occurrences + bbox_code_occurrences
-
-    def find_annotated_segments(
-        self, project_id: int, user_id: int, filter: Filter
-    ) -> List[AnnotatedSegment]:
-        with self.sqls.db_session() as db:
-            # 1. query all span annotation occurrences of the code
-            query = (
-                db.query(
-                    SpanAnnotationORM,
-                    SourceDocumentORM,
-                    CodeORM,
-                    SpanTextORM.text,
-                    AnnotationDocumentORM,
-                )
-                .join(
-                    AnnotationDocumentORM,
-                    AnnotationDocumentORM.source_document_id == SourceDocumentORM.id,
-                )
-                .join(
-                    SpanAnnotationORM,
-                    SpanAnnotationORM.annotation_document_id
-                    == AnnotationDocumentORM.id,
-                )
-                .join(
-                    CurrentCodeORM,
-                    CurrentCodeORM.id == SpanAnnotationORM.current_code_id,
-                )
-                .join(CodeORM, CodeORM.id == CurrentCodeORM.code_id)
-                .join(SourceDocumentORM.document_tags)
-                .join(SpanTextORM, SpanTextORM.id == SpanAnnotationORM.span_text_id)
-                .join(
-                    ObjectHandleORM,
-                    ObjectHandleORM.span_annotation_id == SpanAnnotationORM.id,
-                    isouter=True,
-                )
-                .join(
-                    MemoORM, MemoORM.attached_to_id == ObjectHandleORM.id, isouter=True
-                )
-            )
-            # noinspection PyUnresolvedReferences
-            query = query.filter(
-                filter.get_sqlalchemy_expression(),
-                and_(
-                    SourceDocumentORM.project_id == project_id,
-                    AnnotationDocumentORM.user_id == user_id,
-                ),
-            )
-            result = query.all()
-            annotated_segments = [
-                AnnotatedSegment(
-                    annotation=SpanAnnotationReadResolved(
-                        **SpanAnnotationRead.model_validate(row[0]).model_dump(
-                            exclude={"current_code_id", "span_text_id"}
-                        ),
-                        code=CodeRead.model_validate(row[2]),
-                        span_text=row[3],
-                        user_id=row[4].user_id,
-                        sdoc_id=row[4].source_document_id,
-                    ),
-                    sdoc=SourceDocumentRead.model_validate(row[1]),
-                    memo=get_object_memos(db_obj=row[0], user_id=user_id),
-                    tags=[
-                        DocumentTagRead.model_validate(tag)
-                        for tag in row[1].document_tags
-                    ],
-                )
-                for row in result
-            ]
-
-            return annotated_segments

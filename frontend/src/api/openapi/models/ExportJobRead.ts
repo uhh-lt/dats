@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { ExportJobParameters } from "./ExportJobParameters";
+import type { ExportJobParameters_Output } from "./ExportJobParameters_Output";
 
 export type ExportJobRead = {
   /**
@@ -13,7 +13,7 @@ export type ExportJobRead = {
   /**
    * URL to download the results when done.
    */
-  results_url?: string;
+  results_url?: string | null;
   /**
    * ID of the ExportJob
    */
@@ -21,7 +21,7 @@ export type ExportJobRead = {
   /**
    * The parameters of the export job that defines what to export!
    */
-  parameters: ExportJobParameters;
+  parameters: ExportJobParameters_Output;
   /**
    * Created timestamp of the ExportJob
    */

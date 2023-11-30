@@ -1,16 +1,15 @@
-import { IconButtonProps } from "@mui/material";
-import React, { useCallback } from "react";
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import { SourceDocumentMetadataRead } from "../../../../api/openapi";
-import { createMetadataFilter } from "../../SearchFilter";
-import { SearchActions } from "../../searchSlice";
-import { useAppDispatch } from "../../../../plugins/ReduxHooks";
+import { IconButtonProps } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi";
+import { useAppDispatch } from "../../../../plugins/ReduxHooks";
+import { SearchActions } from "../../searchSlice";
 
 interface DocumentMetadataAddFilterButtonProps {
-  metadata: SourceDocumentMetadataRead;
+  metadata: SourceDocumentMetadataReadResolved;
 }
 
 function DocumentMetadataAddFilterButton({
@@ -23,9 +22,9 @@ function DocumentMetadataAddFilterButton({
   const dispatch = useAppDispatch();
 
   const handleAddMetadataFilter = useCallback(() => {
-    dispatch(SearchActions.addFilter(createMetadataFilter(metadata.key, metadata.value)));
+    dispatch(SearchActions.onAddMetadataFilter({ metadata }));
     navigate("../search");
-  }, [dispatch, metadata.key, metadata.value, navigate]);
+  }, [dispatch, metadata, navigate]);
 
   return (
     <Tooltip title="Add as filter">

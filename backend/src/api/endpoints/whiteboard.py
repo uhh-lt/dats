@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -18,13 +18,13 @@ router = APIRouter(
 
 @router.put(
     "",
-    response_model=Optional[WhiteboardRead],
+    response_model=WhiteboardRead,
     summary="Creates an Whiteboard",
     description="Creates an Whiteboard",
 )
 async def create(
     *, db: Session = Depends(get_db_session), whiteboard: WhiteboardCreate
-) -> Optional[WhiteboardRead]:
+) -> WhiteboardRead:
     return WhiteboardRead.model_validate(
         crud_whiteboard.create(db=db, create_dto=whiteboard)
     )
@@ -32,13 +32,13 @@ async def create(
 
 @router.get(
     "/{whiteboard_id}",
-    response_model=Optional[WhiteboardRead],
+    response_model=WhiteboardRead,
     summary="Returns the Whiteboard",
     description="Returns the Whiteboard with the given ID if it exists",
 )
 async def get_by_id(
     *, db: Session = Depends(get_db_session), whiteboard_id: int
-) -> Optional[WhiteboardRead]:
+) -> WhiteboardRead:
     db_obj = crud_whiteboard.read(db=db, id=whiteboard_id)
     return WhiteboardRead.model_validate(db_obj)
 
@@ -54,9 +54,7 @@ async def get_by_project(
     db: Session = Depends(get_db_session),
     project_id: int,
 ) -> List[WhiteboardRead]:
-    db_objs = crud_whiteboard.read_by_project(
-        db=db, project_id=project_id, raise_error=False
-    )
+    db_objs = crud_whiteboard.read_by_project(db=db, project_id=project_id)
     return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 
 
@@ -70,14 +68,14 @@ async def get_by_project_and_user(
     *, db: Session = Depends(get_db_session), project_id: int, user_id: int
 ) -> List[WhiteboardRead]:
     db_objs = crud_whiteboard.read_by_project_and_user(
-        db=db, project_id=project_id, user_id=user_id, raise_error=False
+        db=db, project_id=project_id, user_id=user_id
     )
     return [WhiteboardRead.model_validate(db_obj) for db_obj in db_objs]
 
 
 @router.patch(
     "/{whiteboard_id}",
-    response_model=Optional[WhiteboardRead],
+    response_model=WhiteboardRead,
     summary="Updates the Whiteboard",
     description="Updates the Whiteboard with the given ID if it exists",
 )
@@ -86,20 +84,20 @@ async def update_by_id(
     db: Session = Depends(get_db_session),
     whiteboard_id: int,
     whiteboard: WhiteboardUpdate,
-) -> Optional[WhiteboardRead]:
+) -> WhiteboardRead:
     db_obj = crud_whiteboard.update(db=db, id=whiteboard_id, update_dto=whiteboard)
     return WhiteboardRead.model_validate(db_obj)
 
 
 @router.delete(
     "/{whiteboard_id}",
-    response_model=Optional[WhiteboardRead],
+    response_model=WhiteboardRead,
     summary="Removes the Whiteboard",
     description="Removes the Whiteboard with the given ID if it exists",
 )
 async def delete_by_id(
     *, db: Session = Depends(get_db_session), whiteboard_id: int
-) -> Optional[WhiteboardRead]:
+) -> WhiteboardRead:
     # TODO Flo: only if the user has access?
     db_obj = crud_whiteboard.remove(db=db, id=whiteboard_id)
     return WhiteboardRead.model_validate(db_obj)

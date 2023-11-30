@@ -21,7 +21,7 @@ class CRUDPreprocessingJobPayload(
 ):
     def read(self, db: Session, uuid: str) -> PreprocessingJobPayloadORM:
         db_obj = db.query(self.model).filter(self.model.id == uuid).first()
-        if not db_obj:
+        if db_obj is None:
             raise NoSuchElementError(self.model, id=id)
         return db_obj
 

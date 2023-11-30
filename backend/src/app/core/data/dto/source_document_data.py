@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Tuple
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SourceDocumentDataBase(BaseModel):
@@ -22,23 +22,17 @@ class SourceDocumentDataBase(BaseModel):
 
 
 class SourceDocumentDataRead(SourceDocumentDataBase):
-    @property
-    def tokens(self):
-        return [self.content[s:e] for s, e in zip(self.token_starts, self.token_ends)]
+    tokens: List[str] = Field(description="List of tokens in the SourceDocument")
+    token_character_offsets: List[Tuple[int, int]] = Field(
+        description="List of character offsets of each token"
+    )
 
-    @property
-    def token_character_offsets(self):
-        return [(s, e) for s, e in zip(self.token_starts, self.token_ends)]
+    sentences: List[str] = Field(description="List of sentences in the SourceDocument")
+    sentence_character_offsets: List[Tuple[int, int]] = Field(
+        description="List of character offsets of each sentence"
+    )
 
-    @property
-    def sentences(self):
-        return [
-            self.content[s:e] for s, e in zip(self.sentence_starts, self.sentence_ends)
-        ]
-
-    @property
-    def sentence_character_offsets(self):
-        return [(s, e) for s, e in zip(self.sentence_starts, self.sentence_ends)]
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Properties for creation

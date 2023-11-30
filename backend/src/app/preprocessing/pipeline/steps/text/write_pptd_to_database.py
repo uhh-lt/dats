@@ -1,23 +1,27 @@
-import json
-
 from loguru import logger
 from psycopg2 import OperationalError
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.code import crud_code
+from app.core.data.crud.crud_base import NoSuchElementError
+from app.core.data.crud.project import crud_project
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.crud.source_document_link import crud_sdoc_link
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.user import SYSTEM_USER_ID
+from app.core.data.crud.word_frequency import crud_word_frequency
+from app.core.data.doc_type import DocType
 from app.core.data.dto.annotation_document import AnnotationDocumentCreate
 from app.core.data.dto.code import CodeCreate
+from app.core.data.dto.project_metadata import ProjectMetadataRead
 from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.dto.source_document_data import SourceDocumentDataCreate
 from app.core.data.dto.source_document_metadata import SourceDocumentMetadataCreate
 from app.core.data.dto.span_annotation import SpanAnnotationCreate
+from app.core.data.dto.word_frequency import WordFrequencyCreate
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.repo.repo_service import RepoService
@@ -63,43 +67,37 @@ def _persist_sdoc_metadata(
 ) -> None:
     logger.info(f"Persisting SourceDocument Metadata for {pptd.filename}...")
     sdoc_id = sdoc_db_obj.id
-    filename = sdoc_db_obj.filename
     sdoc = SourceDocumentRead.model_validate(sdoc_db_obj)
     pptd.metadata["url"] = str(RepoService().get_sdoc_url(sdoc=sdoc))
+    pptd.metadata["keywords"] = pptd.keywords
 
-    metadata_create_dtos = [
-        # persist original filename
-        SourceDocumentMetadataCreate(
-            key="file_name",
-            value=filename,
-            source_document_id=sdoc_id,
-            read_only=True,
-        ),
-        # persist name
-        SourceDocumentMetadataCreate(
-            key="name",
-            value=filename,
-            source_document_id=sdoc_id,
-            read_only=False,
-        ),
-        # persist word frequencies
-        SourceDocumentMetadataCreate(
-            key="word_frequencies",
-            value=json.dumps(pptd.word_freqs),
-            source_document_id=sdoc_id,
-            read_only=True,
-        ),
+    project_metadata = [
+        ProjectMetadataRead.model_validate(pm)
+        for pm in crud_project.read(db=db, id=pptd.project_id).metadata_
+        if pm.doctype == DocType.text
     ]
+    project_metadata_map = {str(m.key): m for m in project_metadata}
 
-    for key, value in pptd.metadata.items():
-        metadata_create_dtos.append(
-            SourceDocumentMetadataCreate(
-                key=key,
-                value=value,
-                source_document_id=sdoc_id,
-                read_only=True,
+    # we create SourceDocumentMetadata for every project metadata
+    metadata_create_dtos = []
+    for project_metadata_key, project_metadata in project_metadata_map.items():
+        if project_metadata_key in pptd.metadata.keys():
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate.with_metatype(
+                    value=pptd.metadata[project_metadata_key],
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata.id,
+                    metatype=project_metadata.metatype,
+                )
             )
-        )
+        else:
+            metadata_create_dtos.append(
+                SourceDocumentMetadataCreate.with_metatype(
+                    source_document_id=sdoc_id,
+                    project_metadata_id=project_metadata.id,
+                    metatype=project_metadata.metatype,
+                )
+            )
 
     crud_sdoc_meta.create_multi(db=db, create_dtos=metadata_create_dtos)
 
@@ -121,9 +119,13 @@ def _create_adoc_for_system_user(
 ) -> AnnotationDocumentORM:
     logger.info(f"Creating AnnotationDocument for {pptd.filename}...")
     sdoc_id = sdoc_db_obj.id
-    adoc_db = crud_adoc.read_by_sdoc_and_user(
-        db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID, raise_error=False
-    )
+    try:
+        adoc_db = crud_adoc.read_by_sdoc_and_user(
+            db=db, sdoc_id=sdoc_id, user_id=SYSTEM_USER_ID
+        )
+    except NoSuchElementError:
+        adoc_db = None
+
     if not adoc_db:
         adoc_create = AnnotationDocumentCreate(
             source_document_id=sdoc_id, user_id=SYSTEM_USER_ID
@@ -184,6 +186,26 @@ def _persist_span_annotations(
             raise e
 
 
+def _persist_sdoc_word_frequencies(
+    db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
+) -> None:
+    logger.info(f"Persisting SourceDocument Word Frequencies for {pptd.filename}...")
+    sdoc_id = sdoc_db_obj.id
+    word_freqs = pptd.word_freqs
+
+    wfs_create_dtos = []
+    for word, count in word_freqs.items():
+        wfs_create_dtos.append(
+            WordFrequencyCreate(
+                sdoc_id=sdoc_id,
+                word=word,
+                count=count,
+            )
+        )
+
+    crud_word_frequency.create_multi(db=db, create_dtos=wfs_create_dtos)
+
+
 def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
     pptd: PreProTextDoc = cargo.data["pptd"]
 
@@ -208,6 +230,9 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
 
             # persist SpanAnnotations
             _persist_span_annotations(db=db, adoc_db_obj=adoc_db_obj, pptd=pptd)
+
+            # persist WordFrequencies
+            _persist_sdoc_word_frequencies(db=db, sdoc_db_obj=sdoc_db_obj, pptd=pptd)
 
         except Exception as e:
             logger.error(

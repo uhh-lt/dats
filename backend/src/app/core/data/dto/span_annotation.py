@@ -44,7 +44,7 @@ class SpanAnnotationUpdateWithCodeId(BaseModel, UpdateDTOBase):
 # Properties for reading (as in ORM)
 class SpanAnnotationRead(SpanAnnotationBaseDTO):
     id: int = Field(description="ID of the SpanAnnotation")
-    span_text_id: str = Field(description="The SpanText the SpanAnnotation spans.")
+    span_text_id: int = Field(description="The SpanText the SpanAnnotation spans.")
     current_code_id: int = Field(description="CurrentCode the SpanAnnotation refers to")
     annotation_document_id: int = Field(
         description="AnnotationDocument the SpanAnnotation refers to"

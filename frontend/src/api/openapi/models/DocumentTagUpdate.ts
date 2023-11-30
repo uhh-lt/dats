@@ -6,13 +6,17 @@ export type DocumentTagUpdate = {
   /**
    * Title of the DocumentTag
    */
-  title?: string;
+  title?: string | null;
+  /**
+   * Color of the DocumentTag
+   */
+  color?: string | null;
   /**
    * Description of the DocumentTag
    */
-  description?: string;
+  description?: string | null;
   /**
-   * Color of the Code
+   * Parent of the DocumentTag
    */
-  color?: string;
+  parent_tag_id?: number | null;
 };

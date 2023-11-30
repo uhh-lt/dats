@@ -56,7 +56,7 @@ const usePollPreProJob = (preProJobId: string | undefined, initialData: Preproce
   );
 };
 
-const useGetAllPreProJobs = (projectId: number | undefined) => {
+const useGetAllPreProJobs = (projectId: number | null | undefined) => {
   return useQuery<PreprocessingJobRead[], Error>(
     [QueryKey.PROJECT_PREPROCESSING_JOBS, projectId],
     () =>

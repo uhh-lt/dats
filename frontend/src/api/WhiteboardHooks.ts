@@ -11,7 +11,7 @@ export type WhiteboardGraph = {
 
 export type Whiteboard = Omit<WhiteboardRead, "content"> & { content: WhiteboardGraph };
 
-const useGetWhiteboard = (whiteboardId: number | undefined) =>
+const useGetWhiteboard = (whiteboardId: number | null | undefined) =>
   useQuery<Whiteboard, Error>(
     [QueryKey.WHITEBOARD, whiteboardId],
     async () => {
@@ -26,7 +26,7 @@ const useGetWhiteboard = (whiteboardId: number | undefined) =>
     },
   );
 
-const useGetProjectWhiteboards = (projectId: number | undefined) =>
+const useGetProjectWhiteboards = (projectId: number | null | undefined) =>
   useQuery<Whiteboard[], Error>(
     [QueryKey.WHITEBOARDS_PROJECT, projectId],
     async () => {
@@ -42,7 +42,7 @@ const useGetProjectWhiteboards = (projectId: number | undefined) =>
     },
   );
 
-const useGetUserWhiteboards = (projectId: number | undefined, userId: number | undefined) =>
+const useGetUserWhiteboards = (projectId: number | null | undefined, userId: number | null | undefined) =>
   useQuery<Whiteboard[], Error>(
     [QueryKey.WHITEBOARDS_PROJECT_USER, projectId, userId],
     async () => {

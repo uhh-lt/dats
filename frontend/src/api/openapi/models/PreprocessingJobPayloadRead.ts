@@ -21,7 +21,7 @@ export type PreprocessingJobPayloadRead = {
   /**
    * ID of the SourceDocument that was created from the payload.
    */
-  source_document_id?: number;
+  source_document_id?: number | null;
   /**
    * The current status of the payload.
    */
@@ -41,9 +41,9 @@ export type PreprocessingJobPayloadRead = {
   /**
    * The current step in the preprocessing pipeline.
    */
-  current_pipeline_step?: string;
+  current_pipeline_step?: string | null;
   /**
    * The error message if the payload failed.
    */
-  error_message?: string;
+  error_message?: string | null;
 };

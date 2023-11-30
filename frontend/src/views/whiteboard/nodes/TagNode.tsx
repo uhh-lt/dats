@@ -37,20 +37,19 @@ function TagNode(props: NodeProps<TagNodeData>) {
 
   // global server state (react-query)
   const tag = TagHooks.useGetTag(props.data.tagId);
-  const sdocs = SdocHooks.useGetByTagId(props.data.tagId);
+  const sdocIds = SdocHooks.useGetByTagId(props.data.tagId);
   const memo = TagHooks.useGetMemo(props.data.tagId, userId);
 
   // effects
   useEffect(() => {
-    if (!sdocs.data) return;
-    const sdocIds = sdocs.data.map((sdoc) => sdoc.id);
+    if (!sdocIds.data) return;
 
     // checks which edges are already in the graph and removes edges to non-existing sdocs
     const edgesToDelete = reactFlowInstance
       .getEdges()
       .filter(isTagSdocEdge)
       .filter((edge) => edge.source === `tag-${props.data.tagId}`) // isEdgeForThisTag
-      .filter((edge) => !sdocIds.includes(parseInt(edge.target.split("-")[1]))); // isEdgeForNonExistingSdoc
+      .filter((edge) => !sdocIds.data.includes(parseInt(edge.target.split("-")[1]))); // isEdgeForNonExistingSdoc
     reactFlowInstance.deleteElements({ edges: edgesToDelete });
 
     //  checks which sdoc nodes are already in the graph and adds edges to them
@@ -58,11 +57,11 @@ function TagNode(props: NodeProps<TagNodeData>) {
       .getNodes()
       .filter(isSdocNode)
       .map((sdoc) => sdoc.data.sdocId);
-    const edgesToAdd = intersection(existingSdocNodeIds, sdocIds).map((sdocId) =>
+    const edgesToAdd = intersection(existingSdocNodeIds, sdocIds.data).map((sdocId) =>
       createTagSdocEdge({ tagId: props.data.tagId, sdocId }),
     );
     reactFlowInstance.addEdges(edgesToAdd);
-  }, [props.data.tagId, reactFlowInstance, sdocs.data]);
+  }, [props.data.tagId, reactFlowInstance, sdocIds.data]);
 
   useEffect(() => {
     if (!memo.data) return;
@@ -93,8 +92,10 @@ function TagNode(props: NodeProps<TagNodeData>) {
   };
 
   const handleContextMenuExpandDocuments = () => {
-    if (!sdocs.data) return;
-    reactFlowService.addNodes(createSdocNodes({ sdocs: sdocs.data, position: { x: props.xPos, y: props.yPos - 200 } }));
+    if (!sdocIds.data) return;
+    reactFlowService.addNodes(
+      createSdocNodes({ sdocs: sdocIds.data, position: { x: props.xPos, y: props.yPos - 200 } }),
+    );
     contextMenuRef.current?.close();
   };
 
@@ -153,7 +154,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
         )}
       </BaseCardNode>
       <GenericPositionMenu ref={contextMenuRef}>
-        <MenuItem onClick={handleContextMenuExpandDocuments}>Expand documents ({sdocs.data?.length || 0})</MenuItem>
+        <MenuItem onClick={handleContextMenuExpandDocuments}>Expand documents ({sdocIds.data?.length || 0})</MenuItem>
         <Divider />
         {memo.data ? (
           <MenuItem onClick={handleContextMenuExpandMemo}>Expand memo</MenuItem>
