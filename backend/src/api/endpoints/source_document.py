@@ -6,10 +6,14 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.annotation_document import crud_adoc
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
-from app.core.data.dto.annotation_document import AnnotationDocumentRead
+from app.core.data.dto.annotation_document import (
+    AnnotationDocumentCreate,
+    AnnotationDocumentRead,
+)
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.source_document import (
@@ -190,16 +194,27 @@ async def update_metadata_by_id(
 @router.get(
     "/{sdoc_id}/adoc/{user_id}",
     response_model=AnnotationDocumentRead,
-    summary="Returns the AnnotationDocument for the SourceDocument of the User",
-    description="Returns the AnnotationDocument for the SourceDocument of the User.",
+    summary="Returns the AnnotationDocument for the SourceDocument of the User or Creates it",
+    description="Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
 )
 async def get_adoc_of_user(
     *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
 ) -> AnnotationDocumentRead:
     # TODO Flo: only if the user has access?
-    return AnnotationDocumentRead.model_validate(
-        crud_adoc.read_by_sdoc_and_user(db=db, sdoc_id=sdoc_id, user_id=user_id)
-    )
+    try:
+        db_obj = crud_adoc.read_by_sdoc_and_user(
+            db=db, sdoc_id=sdoc_id, user_id=user_id
+        )
+    except NoSuchElementError:
+        db_obj = crud_adoc.create(
+            db=db,
+            create_dto=AnnotationDocumentCreate(
+                source_document_id=sdoc_id,
+                user_id=user_id,
+            ),
+        )
+
+    return AnnotationDocumentRead.model_validate(db_obj)
 
 
 @router.get(
