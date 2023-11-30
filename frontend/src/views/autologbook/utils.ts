@@ -21,7 +21,6 @@ export const actionType2Color: Record<ActionType, string> = {
   READ: "rgba(10, 10, 10, 0.2)",
   UPDATE: "rgba(255, 180, 30, 0.2)",
   DELETE: "rgba(255, 87, 51, 0.2)",
-  READ: "rgba(255, 87, 51, 0.2)",
 };
 
 export const actionTarget2Title: Record<ActionTargetObjectType, string> = {
