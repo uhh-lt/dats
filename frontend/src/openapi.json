@@ -1276,8 +1276,8 @@
     "/sdoc/{sdoc_id}/adoc/{user_id}": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the AnnotationDocument for the SourceDocument of the User",
-        "description": "Returns the AnnotationDocument for the SourceDocument of the User.",
+        "summary": "Returns the AnnotationDocument for the SourceDocument of the User or Creates it",
+        "description": "Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
         "operationId": "get_adoc_of_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -6911,7 +6911,10 @@
       "SortDirection": { "type": "string", "enum": ["asc", "desc"], "title": "SortDirection" },
       "Sort_AnnotatedSegmentsColumns_": {
         "properties": {
-          "column": { "$ref": "#/components/schemas/AnnotatedSegmentsColumns" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedSegmentsColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
           "direction": { "$ref": "#/components/schemas/SortDirection" }
         },
         "type": "object",
@@ -6920,7 +6923,10 @@
       },
       "Sort_SearchColumns_": {
         "properties": {
-          "column": { "$ref": "#/components/schemas/SearchColumns" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/SearchColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
           "direction": { "$ref": "#/components/schemas/SortDirection" }
         },
         "type": "object",
@@ -6929,7 +6935,10 @@
       },
       "Sort_WordFrequencyColumns_": {
         "properties": {
-          "column": { "$ref": "#/components/schemas/WordFrequencyColumns" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/WordFrequencyColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
           "direction": { "$ref": "#/components/schemas/SortDirection" }
         },
         "type": "object",

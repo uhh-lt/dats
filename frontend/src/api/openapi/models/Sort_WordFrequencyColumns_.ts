@@ -6,6 +6,6 @@ import type { SortDirection } from "./SortDirection";
 import type { WordFrequencyColumns } from "./WordFrequencyColumns";
 
 export type Sort_WordFrequencyColumns_ = {
-  column: WordFrequencyColumns;
+  column: WordFrequencyColumns | number;
   direction: SortDirection;
 };

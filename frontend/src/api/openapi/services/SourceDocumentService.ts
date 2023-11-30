@@ -224,8 +224,8 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the AnnotationDocument for the SourceDocument of the User
-   * Returns the AnnotationDocument for the SourceDocument of the User.
+   * Returns the AnnotationDocument for the SourceDocument of the User or Creates it
+   * Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */

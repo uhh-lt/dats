@@ -6,6 +6,6 @@ import type { AnnotatedSegmentsColumns } from "./AnnotatedSegmentsColumns";
 import type { SortDirection } from "./SortDirection";
 
 export type Sort_AnnotatedSegmentsColumns_ = {
-  column: AnnotatedSegmentsColumns;
+  column: AnnotatedSegmentsColumns | number;
   direction: SortDirection;
 };

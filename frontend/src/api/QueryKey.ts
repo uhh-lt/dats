@@ -67,6 +67,8 @@ export const QueryKey = {
   SDOC_TAGS: "sdocTags",
   // all adocs of a document (by document id)
   SDOC_ADOCS: "sdocAdocs",
+  // adoc of a document (by document id, user id)
+  SDOC_ADOC_USER: "sdocAdocUser",
   // all metadata of a document (by document id)
   SDOC_METADATAS: "sdocMetadatas",
   // keywords of a document (by document id)

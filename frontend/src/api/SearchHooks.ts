@@ -124,6 +124,8 @@ const useSearchDocumentsNew = (projectId: number | null | undefined) => {
   const sortModel = useAppSelector((state) => state.search.sortModel);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
 
+  console.log(filter);
+
   return useQuery<LexicalSearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, sortModel, searchQuery],
     async () => {

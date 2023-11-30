@@ -174,6 +174,20 @@ const useGetAllAnnotationDocuments = (sdocId: number | null | undefined) => {
   );
 };
 
+const useGetOrCreateAdocOfUser = (sdocId: number | null | undefined, userId: number | null | undefined) => {
+  return useQuery<AnnotationDocumentRead, Error>(
+    [QueryKey.SDOC_ADOC_USER, sdocId, userId],
+    () =>
+      SourceDocumentService.getAdocOfUser({
+        sdocId: sdocId!,
+        userId: userId!,
+      }),
+    {
+      enabled: !!sdocId && !!userId,
+    },
+  );
+};
+
 // memo
 const useGetMemos = (sdocId: number | null | undefined) =>
   useQuery<MemoRead[], Error>(
@@ -334,6 +348,7 @@ const SdocHooks = {
   useRemoveDocumentTag,
   // adoc
   useGetAllAnnotationDocuments,
+  useGetOrCreateAdocOfUser,
   // memo
   useGetMemos,
   useGetMemo,
