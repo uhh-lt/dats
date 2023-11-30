@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_db_session
 from api.util import credentials_exception
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.user import crud_user
 from app.core.data.dto.user import (
     UserAuthorizationHeaderData,
@@ -26,7 +27,11 @@ router = APIRouter(prefix="/authentication", tags=["authentication"])
 async def register(
     *, db: Session = Depends(get_db_session), user: UserCreate
 ) -> UserRead:
-    db_user = crud_user.read_by_email(db, email=user.email)
+    try:
+        db_user = crud_user.read_by_email(db, email=user.email)
+    except NoSuchElementError:
+        db_user = None
+
     if db_user:
         raise HTTPException(
             status_code=400,
@@ -61,5 +66,5 @@ async def login(
         raise credentials_exception
 
     return UserAuthorizationHeaderData(
-        access_token=generate_jwt(user), token_type="bearer"
+        access_token=generate_jwt(UserRead.model_validate(user)), token_type="bearer"
     )
