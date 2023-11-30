@@ -2,31 +2,48 @@ import { TabPanel } from "@mui/lab";
 import { UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import { DocumentTagRead, TagStat } from "../../../api/openapi";
+import SearchHooks from "../../../api/SearchHooks";
 import TagHooks from "../../../api/TagHooks";
-import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
+import { DocumentTagRead, TagStat } from "../../../api/openapi";
+import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { useFilterStats } from "../hooks/useFilterStats";
+import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
 
 interface DocumentTagStatsProps {
-  tagStats: UseQueryResult<TagStat[], Error>;
+  sdocIds: number[];
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
   filterBy: string;
 }
 
-function DocumentTagStats({ tagStats, handleClick, parentRef, filterBy }: DocumentTagStatsProps) {
-  const filteredTagStats = useFilterStats(tagStats.data ? tagStats.data : [], filterBy);
+function DocumentTagStats({ sdocIds, handleClick, parentRef, filterBy }: DocumentTagStatsProps) {
+  // global client state (redux)
+  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
+
+  // global server state (react-query)
+  const tagStats = SearchHooks.useSearchTagStats(sdocIds, sortStatsByGlobal);
 
   return (
     <>
       {tagStats.isSuccess ? (
-        <DocumentTagStatsContent tagStats={filteredTagStats} handleClick={handleClick} parentRef={parentRef} />
+        <DocumentTagStatsContent
+          tagStats={tagStats.data}
+          handleClick={handleClick}
+          parentRef={parentRef}
+          filterBy={filterBy}
+        />
       ) : tagStats.isError ? (
-        <TabPanel value="tags">Error: {tagStats.error.message}</TabPanel>
+        <TabPanel value="tags" style={{ padding: 0 }}>
+          Error: {tagStats.error.message}
+        </TabPanel>
       ) : tagStats.isLoading && tagStats.isFetching ? (
-        <TabPanel value="tags">Loading...</TabPanel>
+        <TabPanel value="tags" style={{ padding: 0 }}>
+          Loading...
+        </TabPanel>
       ) : (
-        <></>
+        <TabPanel value="tags" style={{ padding: 0 }}>
+          Something went wrong!
+        </TabPanel>
       )}
     </>
   );
@@ -38,9 +55,12 @@ interface DocumentTagStatsContentProps {
   tagStats: TagStat[];
   handleClick: (tagId: number) => void;
   parentRef: React.RefObject<HTMLDivElement>;
+  filterBy: string;
 }
 
-function DocumentTagStatsContent({ tagStats, handleClick, parentRef }: DocumentTagStatsContentProps) {
+function DocumentTagStatsContent({ tagStats, handleClick, parentRef, filterBy }: DocumentTagStatsContentProps) {
+  const filteredTagStats = useFilterStats(tagStats, filterBy);
+
   // The virtualizer
   const rowVirtualizer = useVirtualizer({
     count: tagStats.length,
@@ -59,8 +79,10 @@ function DocumentTagStatsContent({ tagStats, handleClick, parentRef }: DocumentT
         height: `${rowVirtualizer.getTotalSize()}px`,
         width: "100%",
         position: "relative",
+        padding: 0,
       }}
     >
+      {filteredTagStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         let tagStat = tagStats[virtualItem.index];
         return (

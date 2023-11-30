@@ -83,6 +83,7 @@ function CodeStatsWithData({
         position: "relative",
       }}
     >
+      {filteredCodeStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
         let codeStat = filteredCodeStats[virtualItem.index];
 

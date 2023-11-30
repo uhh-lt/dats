@@ -3,15 +3,13 @@ import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
-import SearchHooks from "../../../api/SearchHooks";
+import { SpanEntityStat } from "../../../api/openapi";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
 import CodeStats from "./CodeStats";
 import DocumentTagStats from "./DocumentTagStats";
 import KeywordStats from "./KeywordStats";
 import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
 import StatsSearchBar from "./StatsSearchBar";
-import { SpanEntityStat } from "../../../api/openapi";
 
 interface SearchStatisticsProps {
   sdocIds: number[];
@@ -38,11 +36,6 @@ function SearchStatistics({
 
   // query all codes of the current project
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
-
-  // stats
-  const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
-  const keywordStats = SearchHooks.useSearchKeywordStats(projectId, sdocIds, sortStatsByGlobal);
-  const tagStats = SearchHooks.useSearchTagStats(sdocIds, sortStatsByGlobal);
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
@@ -84,13 +77,13 @@ function SearchStatistics({
 
         <Box ref={parentRef} className="myFlexFillAllContainer" p={2}>
           <KeywordStats
-            keywordStats={keywordStats}
+            sdocIds={sdocIds}
             handleClick={handleKeywordClick}
             parentRef={parentRef}
             filterBy={filterStatsBy}
           />
           <DocumentTagStats
-            tagStats={tagStats}
+            sdocIds={sdocIds}
             handleClick={handleTagClick}
             parentRef={parentRef}
             filterBy={filterStatsBy}
