@@ -75,6 +75,8 @@ export const QueryKey = {
   SDOC_WORD_FREQUENCIES: "sdocFrequencies",
   // word frequencies of a document (by document id)
   SDOC_WORD_LEVEL_TRANSCRIPTIONS: "sdocTranscriptions",
+  // metadata with given key of a document (by document id, metadata key)
+  SDOC_METADATA_BY_KEY: "sdocMetadataByKey",
   // url of a document (by document id)
   SDOC_URL: "sdocURL",
   // thumbnail url of a document (by document id)

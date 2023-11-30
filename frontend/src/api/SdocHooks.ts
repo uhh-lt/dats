@@ -285,6 +285,19 @@ const useGetWordFrequencies = (sdocId: number | null | undefined) =>
     },
   );
 
+const useGetMetadataByKey = (sdocId: number | null | undefined, key: string) =>
+  useQuery<SourceDocumentMetadataReadResolved, Error>(
+    [QueryKey.SDOC_METADATA_BY_KEY, sdocId, key],
+    async () =>
+      SourceDocumentService.readMetadataByKey({
+        sdocId: sdocId!,
+        metadataKey: key,
+      }),
+    {
+      enabled: !!sdocId,
+    },
+  );
+
 interface WordLevelTranscription {
   text: string;
   start_ms: number;
@@ -334,6 +347,7 @@ const SdocHooks = {
   useGetMetadata,
   useGetWordFrequencies,
   useGetWordLevelTranscriptions,
+  useGetMetadataByKey,
 };
 
 export default SdocHooks;

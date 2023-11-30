@@ -70,6 +70,11 @@ def run_required_migrations():
             db_version.version = 7
             db.commit()
             print("MIGRATED ADD MISSING SDOC METADATA!")
+        if db_version.version < 8:
+            __migrate_image_width_height(db)
+            db_version.version = 8
+            db.commit()
+            print("MIGRATED IMAGE WIDTH HEIGHT!")
 
 
 def __migrate_database_schema() -> None:
@@ -385,3 +390,51 @@ def __migrate_add_missing_sdoc_metadata(db: Session):
                 )
 
         crud_sdoc_meta.create_multi(db, create_dtos=create_dtos)
+
+
+def __convert_string_to_int_metadata(db: Session, proj_metadata: ProjectMetadataORM):
+    for sdoc_meta in proj_metadata.sdoc_metadata:
+        if sdoc_meta.str_value is None:
+            continue
+        sdoc_meta.int_value = (
+            round(float(sdoc_meta.str_value)) if len(sdoc_meta.str_value) > 0 else 0
+        )
+        sdoc_meta.str_value = None
+        db.add(sdoc_meta)
+
+
+def __migrate_image_width_height(db: Session):
+    projects = db.query(ProjectORM).all()
+    for project in projects:
+        logger.info(
+            "Migration: Fixing image width height for project {}...",
+            project.id,
+        )
+        width_pm = (
+            db.query(ProjectMetadataORM)
+            .filter(
+                ProjectMetadataORM.key == "width",
+                ProjectMetadataORM.project_id == project.id,
+                ProjectMetadataORM.doctype == DocType.image,
+            )
+            .one_or_none()
+        )
+        height_pm = (
+            db.query(ProjectMetadataORM)
+            .filter(
+                ProjectMetadataORM.key == "height",
+                ProjectMetadataORM.project_id == project.id,
+                ProjectMetadataORM.doctype == DocType.image,
+            )
+            .one_or_none()
+        )
+        if width_pm:
+            __convert_string_to_int_metadata(db, width_pm)
+            width_pm.metatype = MetaType.NUMBER
+            db.add(width_pm)
+        if height_pm:
+            __convert_string_to_int_metadata(db, height_pm)
+            height_pm.metatype = MetaType.NUMBER
+            db.add(height_pm)
+
+        db.commit()

@@ -95,15 +95,7 @@ function DocumentViewer({
                 <TextViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
               )}
               {sdoc.data.doctype === DocType.IMAGE && (
-                <ImageViewer
-                  sdoc={sdoc.data}
-                  adoc={selectedAdoc}
-                  showEntities={showEntities}
-                  // width={parseInt(metadata.data.get("width")!.value)}
-                  // height={parseInt(metadata.data.get("height")!.value)}
-                  width={800}
-                  height={600}
-                />
+                <ImageViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} />
               )}
               {sdoc.data.doctype === DocType.AUDIO && (
                 <AudioVideoViewer sdoc={sdoc.data} adoc={selectedAdoc} showEntities={showEntities} height={200} />

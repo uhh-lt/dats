@@ -15,14 +15,28 @@ import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanCont
 import { ICode } from "../TextAnnotator/ICode";
 import SVGBBox from "./SVGBBox";
 import SVGBBoxText from "./SVGBBoxText";
+import SdocHooks from "../../../api/SdocHooks";
 
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentWithDataRead;
   adoc: AnnotationDocumentRead | null;
-  height: number;
 }
 
-function ImageAnnotator({ sdoc, adoc, height }: ImageAnnotatorProps) {
+function ImageAnnotator(props: ImageAnnotatorProps) {
+  const heightMetadata = SdocHooks.useGetMetadataByKey(props.sdoc.id, "height");
+
+  if (heightMetadata.isSuccess) {
+    return <ImageAnnotatorWithHeight sdoc={props.sdoc} adoc={props.adoc} height={heightMetadata.data.int_value!} />;
+  } else if (heightMetadata.isError) {
+    return <div>{heightMetadata.error.message}</div>;
+  } else if (heightMetadata.isLoading) {
+    return <div>Loading...</div>;
+  } else {
+    return <>Something went wrong!</>;
+  }
+}
+
+function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & { height: number }) {
   // references to svg elements
   const svgRef = useRef<SVGSVGElement>(null);
   const gZoomRef = useRef<SVGGElement>(null);
