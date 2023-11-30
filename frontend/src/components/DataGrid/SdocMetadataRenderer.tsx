@@ -38,7 +38,7 @@ function SdocMetadataRendererWithData({ sdocMetadata }: { sdocMetadata: SourceDo
     case MetaType.BOOLEAN:
       return <>{sdocMetadata.boolean_value ? sdocMetadata.boolean_value : <i>empty</i>}</>;
     case MetaType.LIST:
-      return <>{sdocMetadata.list_value ? sdocMetadata.list_value : <i>empty</i>}</>;
+      return <>{sdocMetadata.list_value ? sdocMetadata.list_value.join(", ") : <i>empty</i>}</>;
     default:
       return <>Unkown MetaType!</>;
   }

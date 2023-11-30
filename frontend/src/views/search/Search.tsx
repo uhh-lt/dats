@@ -1,19 +1,19 @@
 import { Container, Divider, Grid, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
-import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
-import SearchHooks from "../../api/SearchHooks";
-import { SourceDocumentRead, SpanEntityStat } from "../../api/openapi";
+import SearchHooks, { LexicalSearchResults } from "../../api/SearchHooks";
+import { SpanEntityStat } from "../../api/openapi";
 import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
 import { SettingsActions } from "../settings/settingsSlice";
 import DocumentViewer from "./DocumentViewer/DocumentViewer";
 import SearchBar from "./SearchBar/SearchBar";
-import SearchFilterDialog from "./SearchFilterDialog";
-import SearchResultsView from "./SearchResults/SearchResultsView";
+import SearchResultCardsView from "./SearchResults/Cards/SearchResultCardsView";
+import SearchResultsTableView from "./SearchResults/Table/SearchResultsTableView";
 import SearchStatistics from "./SearchStatistics/SearchStatistics";
 import SearchToolbar from "./ToolBar/SearchToolbar";
 import { useAddTagFilter } from "./hooks/useAddTagFilter";
@@ -39,16 +39,17 @@ function Search() {
 
   // redux (global client state)
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
+  const isTableView = useAppSelector((state) => state.search.isTableView);
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
   const dispatch = useAppDispatch();
 
   // filter
-  const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
   const projectMetadata = ProjectHooks.useGetMetadata(parseInt(projectId));
-  useInitSearchFilterSlice({ projectId: parseInt(projectId) });
+  const columnInfo = useInitSearchFilterSlice({ projectId: parseInt(projectId) });
 
   // query (global server state)
   const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId));
+  console.log(searchResults.data?.getSearchResultSDocIds() || []);
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -60,10 +61,10 @@ function Search() {
 
   // handle navigation
   const navigateIfNecessary = useNavigateIfNecessary();
-  const handleResultClick = (sdoc: SourceDocumentRead) => {
+  const handleResultClick = (sdocId: number) => {
     // remove doc/:docId from url (if it exists) then add new doc id
     let url = removeTrailingSlash(location.pathname.split("/doc")[0]);
-    navigate(`${url}/doc/${sdoc.id}`);
+    navigate(`${url}/doc/${sdocId}`);
     dispatch(SearchActions.clearSelectedDocuments());
   };
 
@@ -129,7 +130,6 @@ function Search() {
           md={10}
           className="h100"
           sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
-          ref={filterDialogAnchorRef}
         >
           <SearchToolbar
             sdocId={sdocId ? parseInt(sdocId) : undefined}
@@ -139,7 +139,6 @@ function Search() {
             viewDocument={viewDocument}
           />
           <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
-            <SearchFilterDialog anchorEl={filterDialogAnchorRef.current} />
             <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
               <Grid
                 item
@@ -150,12 +149,32 @@ function Search() {
                 <>
                   {searchResults.isLoading && <div>Loading!</div>}
                   {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
-                  {searchResults.isSuccess && (
-                    <SearchResultsView
-                      searchResults={searchResults.data}
-                      handleResultClick={handleResultClick}
-                      className="h100"
-                    />
+                  {searchResults.isSuccess && columnInfo.isSuccess && (
+                    <Container
+                      sx={{
+                        py: 2,
+                        height: "100%",
+                        maxWidth: "100% !important",
+                      }}
+                    >
+                      {!(searchResults.data instanceof LexicalSearchResults) ? (
+                        <Typography>"A critical error occured! Please reload."</Typography>
+                      ) : searchResults.data.getNumberOfHits() === 0 ? (
+                        <Typography>No search results for this query...</Typography>
+                      ) : isTableView ? (
+                        <SearchResultsTableView
+                          searchResults={searchResults.data}
+                          columnInfo={columnInfo.data}
+                          handleResultClick={handleResultClick}
+                        />
+                      ) : (
+                        <SearchResultCardsView
+                          searchResults={searchResults.data}
+                          columnInfo={columnInfo.data}
+                          handleResultClick={handleResultClick}
+                        />
+                      )}
+                    </Container>
                   )}
                 </>
               </Grid>

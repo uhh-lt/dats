@@ -3,13 +3,7 @@ import SdocHooks from "../../api/SdocHooks";
 import { DocumentTagRead } from "../../api/openapi";
 import TagRenderer from "./TagRenderer";
 
-interface SharedProps {
-  link?: boolean;
-  renderFilename?: boolean;
-  renderDoctypeIcon?: boolean;
-}
-
-interface SdocTagsRendererProps extends SharedProps {
+interface SdocTagsRendererProps {
   sdocId?: number;
   tags?: number[] | DocumentTagRead[];
 }
@@ -29,7 +23,7 @@ function SdocTagsRenderer({ sdocId, tags, ...props }: SdocTagsRendererProps) {
   return null;
 }
 
-function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number } & SharedProps) {
+function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number }) {
   const tags = SdocHooks.useGetAllDocumentTags(sdocId);
 
   if (tags.isSuccess) {
@@ -41,7 +35,7 @@ function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number } & 
   }
 }
 
-function SdocTagsRendererWithData({ tags }: { tags: number[] | DocumentTagRead[] } & SharedProps) {
+function SdocTagsRendererWithData({ tags }: { tags: number[] | DocumentTagRead[] }) {
   return (
     <Stack direction="row" alignItems="center">
       {tags.map((tag) => (

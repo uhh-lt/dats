@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DocType, SourceDocumentMetadataReadResolved } from "../../api/openapi";
 import { QueryType } from "./QueryType";
+import { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 
 interface SearchState {
   selectedDocumentIds: number[];
@@ -12,6 +13,8 @@ interface SearchState {
   resultModalities: DocType[];
   searchType: QueryType;
   searchQuery: string;
+  isTableView: boolean;
+  sortModel: GridSortModel;
 }
 
 const initialState: SearchState = {
@@ -24,6 +27,8 @@ const initialState: SearchState = {
   resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
   searchType: QueryType.LEXICAL,
   searchQuery: "",
+  isTableView: false,
+  sortModel: [],
 };
 
 export const searchSlice = createSlice({
@@ -59,9 +64,17 @@ export const searchSlice = createSlice({
       state.selectedDocumentIds = state.selectedDocumentIds.filter((sdocId) => action.payload.indexOf(sdocId) === -1);
     },
 
+    // sorting
+    onSortModelChange: (state, action: PayloadAction<GridSortModel>) => {
+      state.sortModel = action.payload;
+    },
+
     // ui
     toggleSplitView: (state) => {
       state.isSplitView = !state.isSplitView;
+    },
+    onToggleTableView: (state) => {
+      state.isTableView = !state.isTableView;
     },
     toggleShowEntities: (state) => {
       state.isShowEntities = !state.isShowEntities;
@@ -69,11 +82,16 @@ export const searchSlice = createSlice({
     toggleShowTags: (state) => {
       state.isShowTags = !state.isShowTags;
     },
+    // pagination
     setRowsPerPage: (state, action: PayloadAction<number>) => {
       state.rowsPerPage = action.payload;
     },
     setPage: (state, action: PayloadAction<number>) => {
       state.page = action.payload;
+    },
+    onPaginationModelChange: (state, action: PayloadAction<GridPaginationModel>) => {
+      state.page = action.payload.page;
+      state.rowsPerPage = action.payload.pageSize;
     },
     setResultModalites: (state, action: PayloadAction<DocType[]>) => {
       state.resultModalities = action.payload.sort();

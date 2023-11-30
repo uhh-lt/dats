@@ -42,7 +42,7 @@ function SdocRendererWithData({
   const content = (
     <Stack direction="row" alignItems="center">
       {renderDoctypeIcon && docTypeToIcon[sdoc.doctype]}
-      {renderFilename && sdoc.filename}
+      {renderFilename && (sdoc.name ? sdoc.name : sdoc.filename)}
     </Stack>
   );
 
