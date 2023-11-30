@@ -1,12 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKey } from "../../../api/QueryKey";
-import {
-  AnalysisService,
-  AnnotatedSegmentResult,
-  AnnotatedSegmentsColumns,
-  LogicalOperator,
-  SortDirection,
-} from "../../../api/openapi";
+import { AnalysisService, AnnotatedSegmentResult, AnnotatedSegmentsColumns, SortDirection } from "../../../api/openapi";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { MyFilter } from "../../../features/FilterDialog/filterUtils";
 
@@ -51,17 +45,15 @@ export const useAllAnnotatedSegmentsQuery = (
   onSuccess: (data: AnnotatedSegmentResult) => void,
 ) => {
   const userIds = useAppSelector((state) => state.annotatedSegments.selectedUserIds);
+  const filter = useAppSelector((state) => state.annotatedSegmentsFilter.filter["root"]);
 
   return useQuery<AnnotatedSegmentResult, Error>(
-    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userIds, {}, 0, 1000, []],
+    [QueryKey.ANALYSIS_ANNOTATED_SEGMENTS, projectId, userIds, filter, 0, 1000, []],
     () =>
       AnalysisService.annotatedSegments({
         projectId: projectId!,
         requestBody: {
-          filter: {
-            items: [],
-            logic_operator: LogicalOperator.AND,
-          },
+          filter: filter as MyFilter<AnnotatedSegmentsColumns>,
           user_ids: userIds,
           sorts: [],
         },
