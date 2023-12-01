@@ -238,13 +238,11 @@ async def delete_project_sdocs(
     description="Associates an existing User to the Project with the given ID if it exists",
     dependencies=[
         is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
     ],
 )
 async def associate_user_to_project(
     *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
 ) -> UserRead:
-    # TODO Flo: only if the user has access?
     user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.model_validate(user_db_obj)
 
@@ -256,7 +254,6 @@ async def associate_user_to_project(
     description="Dissociates the Users with the Project with the given ID if it exists",
     dependencies=[
         is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
     ],
 )
 async def dissociate_user_from_project(
