@@ -87,26 +87,39 @@ class DWTSAPI:
         return r.json()
 
     # SDOCS
+
     def get_sdoc_id_by_filename(
         self, proj_id: int, filename: str, retry: bool = True
     ) -> Optional[int]:
         r = requests.post(
-            self.BASE_PATH + "search/lexical/sdoc/filename",
+            self.BASE_PATH + f"search/sdoc_new?search_query=" f"&project_id={proj_id}",
             data=json.dumps(
-                {"proj_id": proj_id, "filename_query": filename, "prefix": False}
+                {
+                    "filter": {
+                        "items": [
+                            {
+                                "column": "SC_SOURCE_DOCUMENT_FILENAME",
+                                "operator": "STRING_EQUALS",
+                                "value": filename,
+                            }
+                        ],
+                        "logic_operator": "or",
+                    },
+                    "sorts": [],
+                }
             ),
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
 
         r.raise_for_status()
         r = r.json()
-        if len(r["hits"]) == 0:
+        if len(r) == 0:
             if retry:
                 print(f"Could not find sdoc_id of file {filename}! Retrying...")
                 sleep(1)
                 return self.get_sdoc_id_by_filename(proj_id, filename)
             return None
-        return r["hits"][0]["sdoc_id"]
+        return r[0]
 
     def resolve_sdoc_id_from_proj_and_filename(
         self, proj_id: int, filename: str
@@ -126,11 +139,9 @@ class DWTSAPI:
     def read_all_sdocs(self, proj_id: int):
         # get all sdoc ids
         r = requests.post(
-            self.BASE_PATH + "search/sdoc",
+            self.BASE_PATH + f"search/sdoc_new?search_query=" f"&project_id={proj_id}",
             data=json.dumps(
-                {
-                    "proj_id": proj_id,
-                }
+                {"filter": {"items": [], "logic_operator": "or"}, "sorts": []}
             ),
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
@@ -140,8 +151,23 @@ class DWTSAPI:
     def read_all_sdocs_by_tags(self, proj_id: int, tags: List[int]):
         # get all sdoc ids
         r = requests.post(
-            self.BASE_PATH + "search/sdoc",
-            data=json.dumps({"proj_id": proj_id, "tag_ids": tags, "all_tags": False}),
+            self.BASE_PATH + f"search/sdoc_new?search_query=" f"&project_id={proj_id}",
+            data=json.dumps(
+                {
+                    "filter": {
+                        "items": [
+                            {
+                                "column": "SC_DOCUMENT_TAG_ID_LIST",
+                                "operator": "ID_LIST_CONTAINS",
+                                "value": tag,
+                            }
+                            for tag in tags
+                        ],
+                        "logic_operator": "and",
+                    },
+                    "sorts": [],
+                }
+            ),
             headers={"Authorization": f"Bearer {self.access_token}"},
         )
         r.raise_for_status()
@@ -274,26 +300,17 @@ class DWTSAPI:
         value: Union[str, int, bool, List[str]],
         metatype: str,
     ):
-        # metatype is STRING DATE BOOLEAN NUMBER LIST
-        value_key = "str_value"
-        if metatype == "DATE":
-            value_key = "date_value"
-        elif metatype == "BOOLEAN":
-            value_key = "boolean_value"
-        elif metatype == "NUMBER":
-            value_key = "int_value"
-        elif metatype == "LIST":
-            value_key = "list_value"
-        elif metatype == "STRING":
-            value_key = "str_value"
-
         sdoc_metadata = self.read_sdoc_metadata_by_key(sdoc_id=sdoc_id, key=key)
 
         r = requests.patch(
             self.BASE_PATH + f"sdocmeta/{sdoc_metadata['id']}",
             data=json.dumps(
                 {
-                    value_key: value,
+                    "str_value": value if metatype == "STRING" else None,
+                    "int_value": value if metatype == "NUMBER" else None,
+                    "date_value": value if metatype == "DATE" else None,
+                    "boolean_value": value if metatype == "BOOLEAN" else None,
+                    "list_value": value if metatype == "LIST" else None,
                 }
             ),
             headers={"Authorization": f"Bearer {self.access_token}"},
@@ -363,7 +380,7 @@ if __name__ == "__main__":
         proj_id=project["id"], files=files, filter_duplicate_files_before_upload=True
     )
 
-    # wait for pre-processing to finished
+    # wait for pre-processing to finishe
     status = dwts.read_project_status(proj_id=project["id"])
     while status["num_sdocs_finished"] != (sdocs_in_project + num_files_to_upload):
         sleep(1)
@@ -389,6 +406,9 @@ if __name__ == "__main__":
     # create project metadata
     project_metadata = dwts.create_project_metadata(
         proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="text"
+    )
+    project_metadata = dwts.create_project_metadata(
+        proj_id=project["id"], key="sdoc_id", metatype="STRING", doctype="image"
     )
     print("created project metadata", project_metadata)
 
