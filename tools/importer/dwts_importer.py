@@ -111,8 +111,22 @@ parser.add_argument(
     "--content_key",
     help="For JSON files, the key of the content field. Default is html",
     default="html",
-    required=True,
+    required=False,
     dest="content_key",
+)
+parser.add_argument(
+    "--mime_type",
+    help="The mime type of the content / uploaded document. Defaults to using magic for autodetect",
+    default=None,
+    required=False,
+    dest="mime_type",
+)
+parser.add_argument(
+    "--file_extension",
+    help="In the directory, only files with this extension will be uploaded. Default is *",
+    default="*",
+    required=False,
+    dest="file_extension",
 )
 args = parser.parse_args()
 
@@ -165,7 +179,7 @@ if directory.is_file():
 #           dict_key        name, content, mime
 files: List[Tuple[str, Tuple[str, bytes, str]]] = []
 json_data = dict()
-for file in directory.iterdir():
+for file in directory.glob(f"**/*.{args.file_extension}"):
     if not file.is_file():
         continue
 
@@ -179,14 +193,10 @@ for file in directory.iterdir():
                 print(f"Skipping file {file.name} because {args.content_key} is empty!")
                 continue
             json_data[filename] = data
-            mime = magic.from_buffer(data[args.content_key], mime=True)
-            if (
-                mime != "text/html"
-                and mime != "application/xhtml+xml"
-                and mime != "text/plain"
-            ):
-                print(f"Skipping file {filename} because mime is not supported!")
-                continue
+            if args.mime_type is None:
+                mime = magic.from_buffer(data[args.content_key], mime=True)
+            else:
+                mime = args.mime_type
             sdoc_id = api.resolve_sdoc_id_from_proj_and_filename(
                 proj_id=project["id"], filename=filename
             )
@@ -202,7 +212,10 @@ for file in directory.iterdir():
             print(f"Error with file: {filename} --> {e}")
     else:
         file_bytes = file.read_bytes()
-        mime = magic.from_buffer(file_bytes, mime=True)
+        if args.mime_type is None:
+            mime = magic.from_buffer(file_bytes, mime=True)
+        else:
+            mime = args.mime_type
         files.append(("uploaded_files", (filename, file_bytes, mime)))
 
 if len(files) != 0:
