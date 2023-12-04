@@ -21,7 +21,6 @@ dependencies:
   - pillow=9.2.0
   - elasticsearch=7.17
   - python-magic=0.4
-  - tika=1.24
   - python-jose=3.3
   - frozendict=2.3
   - email_validator=2.1

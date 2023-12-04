@@ -211,6 +211,7 @@ services:
       ES_HOST: ${ES_HOST:-elasticsearch}
       ES_PORT: ${ES_PORT:-9200}
       ES_MIN_HEALTH: ${ES_MIN_HEALTH:-75}
+      RAY_ENABLED: ${RAY_ENABLED:-True}
       RAY_HOST: ${RAY_HOST:-ray}
       RAY_PORT: ${RAY_PORT:-8000}
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}

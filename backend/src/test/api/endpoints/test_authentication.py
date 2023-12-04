@@ -48,5 +48,5 @@ def test_authentication_required():
             assert (route.methods, route.path) in public_routes
         else:
             raise Exception(
-                "Authentication testing for route class {route} not implemented yet"
+                f"Authentication testing for route class {route} not implemented yet"
             )

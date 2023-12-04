@@ -1,0 +1,62 @@
+name: Update OpenAPI spec
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  pull_request:
+    branches:
+      - main
+      - mwp_v1
+    paths:
+      - "backend/**"
+      - ".github/**"
+      - "docker/**"
+
+jobs:
+  update-openapi-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Checkout PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr checkout ${{ github.event.pull_request.number }}
+      - name: Start Docker Containers
+        run: |
+          cd docker
+          ./setup-folders.sh
+          cp .env.example .env
+          chmod -R a+rwx backend_repo/ models_cache/ spacy_models/
+          python monkey_patch_docker_compose_for_backend_tests.py --disable_ray
+          export GID=$(id -g)
+          export API_PRODUCTION_WORKERS=0
+          export RAY_ENABLED=False
+          export API_EXPOSED=5500
+          docker compose -f compose-test.yml up -d --quiet-pull
+          echo Waiting for containers to start...
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: frontend/package.json
+      - name: Install npm dependencies
+        working-directory: frontend
+        run: npm ci -f
+      - name: Check that backend is running
+        working-directory: docker
+        run: |
+          docker compose logs dwts-backend-api
+          docker compose ps | grep dwts-backend-api
+      - name: Update spec
+        working-directory: frontend
+        run: |
+          node updateAPI.js -p 5500
+          npm run generate-dev
+      - name: Check that frontend builds without error
+        working-directory: frontend
+        run: npm run build
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: "frontend/src/api"
+          message: "Update OpenAPI spec and client"
+          pathspec_error_handling: exitImmediately
+          default_author: github_actions

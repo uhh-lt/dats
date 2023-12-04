@@ -6,7 +6,6 @@ import random
 import string
 
 # Allow app to detect if it's running inside tests
-import sys
 from typing import Generator
 
 import pytest
@@ -14,7 +13,7 @@ import pytest
 from app.core.startup import startup
 from migration.migrate import run_required_migrations
 
-sys._called_from_test = True
+os.environ["RAY_ENABLED"] = "False"
 
 # Flo: just do it once. We have to check because if we start the main function, unvicorn will import this
 # file once more manually, so it would be executed twice.

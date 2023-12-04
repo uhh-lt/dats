@@ -16,6 +16,7 @@ system_user:
   password: ${oc.env:SYSTEM_USER_PASSWORD, "SYSTEM"}
 
 ray:
+  enabled: ${oc.env:RAY_ENABLED, True}
   protocol: ${oc.env:RAY_PROTOCOL, http}
   host: ${oc.env:RAY_HOST, localhost}
   port: ${oc.env:RAY_PORT, 33132}
