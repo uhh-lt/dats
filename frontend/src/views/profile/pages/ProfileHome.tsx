@@ -1,11 +1,10 @@
-import { Button, Grid, MenuItem, Select, SelectChangeEvent, TextField, Typography } from "@mui/material";
-import { UseQueryResult } from "@tanstack/react-query";
-import { UserRead } from "../../../api/openapi";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { Button, Grid, MenuItem, Select, SelectChangeEvent, TextField, Typography } from "@mui/material";
 import { useState } from "react";
+import { UserRead } from "../../../api/openapi";
 
 interface ProfileHomeProps {
-  user: UseQueryResult<UserRead, Error>;
+  user: UserRead;
 }
 
 export default function ProfileHome({ user }: ProfileHomeProps) {
@@ -15,7 +14,7 @@ export default function ProfileHome({ user }: ProfileHomeProps) {
     setPronouns(event.target.value as number);
   };
 
-  return user.data ? (
+  return (
     <>
       <Typography variant={"h5"} gutterBottom sx={{ pb: 1 }}>
         Profile
@@ -31,7 +30,7 @@ export default function ProfileHome({ user }: ProfileHomeProps) {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                value={user.data.first_name + " " + user.data.last_name}
+                value={user.first_name + " " + user.last_name}
                 sx={{
                   width: "70%",
                   bgcolor: "divider",
@@ -52,7 +51,7 @@ export default function ProfileHome({ user }: ProfileHomeProps) {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                value={user.data.email}
+                value={user.email}
                 sx={{
                   width: "70%",
                   bgcolor: "divider",
@@ -121,7 +120,5 @@ export default function ProfileHome({ user }: ProfileHomeProps) {
         </Grid>
       </Grid>
     </>
-  ) : (
-    <></>
   );
 }

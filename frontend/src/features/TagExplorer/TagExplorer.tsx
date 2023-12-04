@@ -108,7 +108,7 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
 
     const content = (
       <>
-        {user.isSuccess && allTags.isSuccess && tagTree ? (
+        {user && allTags.isSuccess && tagTree ? (
           <>
             <TagTreeView
               className="myFlexFillAllContainer"
@@ -150,8 +150,6 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
               handleClose={() => setContextMenuPosition(null)}
             />
           </>
-        ) : user.isError ? (
-          <>{user.error.message}</>
         ) : allTags.isError ? (
           <>{allTags.error.message}</>
         ) : (

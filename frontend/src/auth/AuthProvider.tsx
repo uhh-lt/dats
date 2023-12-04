@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import {
   ApiError,
   AuthenticationService,
@@ -7,18 +8,25 @@ import {
   UserRead,
   UserService,
 } from "../api/openapi";
-import { QueryObserverResult, useQuery } from "@tanstack/react-query";
+import queryClient from "../plugins/ReactQueryClient";
 import { dateToLocaleDate } from "../utils/DateUtils";
 
 // init once
 OpenAPI.BASE = process.env.REACT_APP_SERVER || "";
 OpenAPI.TOKEN = localStorage.getItem("dwts-access") || undefined;
 
+export enum LoginStatus {
+  LOGGED_IN,
+  LOGGED_OUT,
+}
+
 interface AuthContextType {
-  user: QueryObserverResult<UserRead, Error>;
+  user: {
+    data: UserRead | undefined;
+  };
   login: (user: string, pass: string) => Promise<void>;
-  logout: () => void;
-  isLoggedIn: boolean;
+  logout: () => Promise<void>;
+  loginStatus: LoginStatus;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -39,10 +47,21 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
   const [refreshToken, setRefreshToken] = useState<string | undefined>(
     localStorage.getItem("dwts-refresh-access") || undefined,
   );
-  const user = useQuery<UserRead, Error>(["me", accessToken], UserService.getMe, {
-    enabled: !!accessToken,
+
+  const internalUser = useQuery<UserRead, Error>(["me", accessToken], UserService.getMe, {
     retry: false,
   });
+
+  const [user, setUser] = useState<UserRead>();
+  useEffect(() => {
+    if (internalUser.isLoading) {
+      return;
+    }
+
+    if (internalUser?.data?.id !== user?.id) {
+      setUser(internalUser.data);
+    }
+  }, [internalUser, user]);
 
   const updateAuthData = (authData: UserAuthorizationHeaderData) => {
     localStorage.setItem("dwts-access", authData.access_token);
@@ -61,12 +80,12 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
    * Login and save access token
    * @throws ApiError
    */
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     const authData = await AuthenticationService.login({ formData: { username, password } });
     updateAuthData(authData);
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     if (refreshToken === undefined) {
       console.error("Can't refresh access token, no refresh token set");
       return;
@@ -75,7 +94,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     try {
       await AuthenticationService.logout({ refreshToken });
     } catch (e) {
-      if (e instanceof ApiError && e.status == 403) {
+      if (e instanceof ApiError && e.status === 403) {
         // refresh token expired, keep logging the user out
       } else {
         // There's a bug, logout didn't work
@@ -90,7 +109,8 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     setAccessToken(undefined);
     setRefreshToken(undefined);
     setAccessTokenExpires(undefined);
-  };
+    queryClient.clear();
+  }, [refreshToken]);
 
   useEffect(() => {
     if (accessTokenExpires === undefined) {
@@ -107,7 +127,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     };
 
     // Refresh 60 seconds before the access token expires
-    const refreshBefore = 60 * 1000;
+    const refreshBefore = 1000;
     const msToWait = Math.max(accessTokenExpires.getTime() - Date.now() - refreshBefore, 0);
     const handle = setTimeout(() => {
       refreshAccessToken();
@@ -116,13 +136,22 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     return () => clearTimeout(handle);
   }, [accessTokenExpires, refreshToken]);
 
+  let status;
+  const definitelyLoggedIn = user !== undefined || internalUser.isSuccess;
+  const verifyingAccessToken = (internalUser.isLoading || internalUser.isFetching) && accessToken !== undefined;
+  if (definitelyLoggedIn || verifyingAccessToken) {
+    status = LoginStatus.LOGGED_IN;
+  } else {
+    status = LoginStatus.LOGGED_OUT;
+  }
+
   return (
     <AuthContext.Provider
       value={{
         login,
         logout,
-        user,
-        isLoggedIn: user.isSuccess,
+        user: { data: user },
+        loginStatus: status,
       }}
     >
       {children}

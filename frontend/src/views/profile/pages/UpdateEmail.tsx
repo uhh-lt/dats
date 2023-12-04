@@ -1,18 +1,17 @@
-import { UseQueryResult } from "@tanstack/react-query";
-import { UserRead } from "../../../api/openapi";
+import { ErrorMessage } from "@hookform/error-message";
 import { Button, Grid, TextField, Typography } from "@mui/material";
-import UserHooks from "../../../api/UserHooks";
 import { useRef } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import UserHooks from "../../../api/UserHooks";
+import { UserRead } from "../../../api/openapi";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { ErrorMessage } from "@hookform/error-message";
 import { EMAIL_REGEX, SUPPORT_EMAIL } from "../../../utils/GlobalConstants";
 type UpdateEmailValues = {
   newemail: string;
 };
 
 interface UpdateEmailProps {
-  user: UseQueryResult<UserRead, Error>;
+  user: UserRead;
 }
 
 export default function UpdateEmail({ user }: UpdateEmailProps) {
@@ -29,35 +28,33 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
   newemail.current = watch("newemail", "");
 
   const handleUpdate: SubmitHandler<UpdateEmailValues> = (data) => {
-    user.data
-      ? updateUserMutation.mutate(
-          {
-            userId: user.data.id,
-            requestBody: {
-              email: data.newemail,
-            },
-          },
-          {
-            onSuccess: () => {
-              SnackbarAPI.openSnackbar({
-                text: `Hurray! Your email updated successfully.`,
-                severity: "success",
-              });
-            },
-            onError: () => {
-              SnackbarAPI.openSnackbar({
-                text: `Sorry! Your email update failed. Please contact` + { SUPPORT_EMAIL },
-                severity: "error",
-              });
-            },
-          },
-        )
-      : console.log("User not found");
+    updateUserMutation.mutate(
+      {
+        userId: user.id,
+        requestBody: {
+          email: data.newemail,
+        },
+      },
+      {
+        onSuccess: () => {
+          SnackbarAPI.openSnackbar({
+            text: `Hurray! Your email updated successfully.`,
+            severity: "success",
+          });
+        },
+        onError: () => {
+          SnackbarAPI.openSnackbar({
+            text: `Sorry! Your email update failed. Please contact` + { SUPPORT_EMAIL },
+            severity: "error",
+          });
+        },
+      },
+    );
   };
 
   const handleError: SubmitErrorHandler<UpdateEmailValues> = (data) => console.error(data);
 
-  return user.data ? (
+  return (
     <>
       <Typography variant={"h5"} gutterBottom sx={{ pb: 1 }}>
         Update Email
@@ -71,7 +68,7 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              value={user.data.email}
+              value={user.email}
               disabled
               sx={{
                 width: "60%",
@@ -114,7 +111,5 @@ export default function UpdateEmail({ user }: UpdateEmailProps) {
         </Grid>
       </form>
     </>
-  ) : (
-    <></>
   );
 }

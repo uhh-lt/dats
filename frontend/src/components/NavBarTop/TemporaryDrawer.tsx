@@ -18,13 +18,13 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { Link as RouterLink } from "react-router-dom";
-import { useAuth } from "../../auth/AuthProvider";
+import { LoginStatus, useAuth } from "../../auth/AuthProvider";
 import ExporterListItemButton from "../../features/Exporter/ExporterListItemButton";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
 export default function TemporaryDrawer() {
-  const { isLoggedIn } = useAuth();
+  const { loginStatus } = useAuth();
 
   const [state, setState] = useState({
     top: false,
@@ -56,7 +56,7 @@ export default function TemporaryDrawer() {
       {/*  <ImportDocumentListButton />*/}
       {/*</List>*/}
       <List>
-        {isLoggedIn && (
+        {loginStatus === LoginStatus.LOGGED_IN && (
           <>
             <ListItem disablePadding>
               <ListItemButton component={RouterLink} to="/projects">

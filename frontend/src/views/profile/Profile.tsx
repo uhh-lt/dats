@@ -63,7 +63,7 @@ function Profile() {
           height: "100%",
         }}
       >
-        {user.isSuccess ? (
+        {user.data ? (
           <>
             {/* Grid container for creating vertical layout of tabs and tabpanel */}
             <Grid
@@ -156,10 +156,10 @@ function Profile() {
               {/* Grid item tabpanels */}
               <Grid item xs={9}>
                 <TabPanel value={value} index={0}>
-                  <ProfileHome user={user} />
+                  <ProfileHome user={user.data} />
                 </TabPanel>
                 <TabPanel value={value} index={1}>
-                  <UpdateEmail user={user} />
+                  <UpdateEmail user={user.data} />
                 </TabPanel>
                 <TabPanel value={value} index={2}>
                   <PasswordReset />
@@ -173,10 +173,6 @@ function Profile() {
               </Grid>
             </Grid>
           </>
-        ) : user.isError ? (
-          <Typography variant={"body1"} gutterBottom mt={3}>
-            Error: {user.error.message}
-          </Typography>
         ) : (
           <Typography variant={"body1"} gutterBottom mt={3}>
             Loading...

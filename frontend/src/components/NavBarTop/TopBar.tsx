@@ -1,14 +1,14 @@
 import { AppBar, AppBarProps, Box, Button, Grid, Link, Stack, Toolbar, Typography } from "@mui/material";
-import React, { useContext } from "react";
-import TemporaryDrawer from "./TemporaryDrawer";
+import { useContext } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useAuth } from "../../auth/AuthProvider";
-import UserProfileMenu from "../../features/UserProfileMenu/UserProfileMenu";
 import ProjectHooks from "../../api/ProjectHooks";
+import { LoginStatus, useAuth } from "../../auth/AuthProvider";
+import UserProfileMenu from "../../features/UserProfileMenu/UserProfileMenu";
+import { AppBarContext } from "../../layouts/TwoBarLayout";
+import TemporaryDrawer from "./TemporaryDrawer";
 
 function TopBar(props: AppBarProps) {
-  const { isLoggedIn, logout, user } = useAuth();
+  const { loginStatus, logout, user } = useAuth();
   const navigate = useNavigate();
   const appBarContainerRef = useContext(AppBarContext);
 
@@ -31,7 +31,7 @@ function TopBar(props: AppBarProps) {
             <Stack direction="row" sx={{ alignItems: "center", height: "100%" }}>
               <TemporaryDrawer />
               <Typography variant="h6" noWrap sx={{ display: { xs: "none", sm: "block" } }}>
-                {isLoggedIn ? (
+                {loginStatus === LoginStatus.LOGGED_IN ? (
                   <Link href="/projects" color="inherit" underline="none">
                     DWTS
                   </Link>
@@ -53,12 +53,12 @@ function TopBar(props: AppBarProps) {
                   Project: {project.data?.title}
                 </Typography>
               )}
-              {!isLoggedIn ? (
+              {loginStatus === LoginStatus.LOGGED_OUT ? (
                 <Button color="inherit" component={RouterLink} to="/login">
                   Login
                 </Button>
               ) : (
-                <UserProfileMenu handleLogout={handleLogout} user={user.data!} />
+                <UserProfileMenu handleLogout={handleLogout} user={user.data} />
               )}
             </Stack>
           </Grid>

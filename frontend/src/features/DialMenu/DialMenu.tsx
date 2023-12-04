@@ -1,15 +1,15 @@
-import { Dialog, SpeedDial, SpeedDialAction } from "@mui/material";
 import FeedbackIcon from "@mui/icons-material/Feedback";
-import { useAuth } from "../../auth/AuthProvider";
-import React, { useMemo, useState } from "react";
 import HelpIcon from "@mui/icons-material/Help";
-import FeedbackDialog from "../Feedback/FeedbackDialog";
-import { useLocation } from "react-router-dom";
-import { HELP_MESSAGE_SUFFIX, USER_GUIDE_BASE_URL, USER_GUIDE_ROUTE_MAP } from "../../utils/GlobalConstants";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
+import { Dialog, SpeedDial, SpeedDialAction } from "@mui/material";
+import { useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useAuth } from "../../auth/AuthProvider";
+import { HELP_MESSAGE_SUFFIX, USER_GUIDE_BASE_URL, USER_GUIDE_ROUTE_MAP } from "../../utils/GlobalConstants";
+import FeedbackDialog from "../Feedback/FeedbackDialog";
 
 function DialMenu() {
-  const { user, isLoggedIn } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
 
   // local state
@@ -43,42 +43,39 @@ function DialMenu() {
 
   return (
     <>
-      {isLoggedIn ? (
-        <SpeedDial
-          ariaLabel="DialMenu"
-          icon={<SupportAgentIcon />}
-          sx={{ position: "absolute", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar + 1 }}
-        >
-          <SpeedDialAction
-            key="help"
-            icon={<HelpIcon />}
-            tooltipTitle={
-              <>
-                Hint: {wikiTargetRoute.description}
-                {location.pathname.includes("imprint") ? "Imprint" : ". " + HELP_MESSAGE_SUFFIX}
-              </>
-            }
-            onClick={handleRedirect}
-          />
-          <SpeedDialAction
-            key="feedback"
-            icon={<FeedbackIcon />}
-            tooltipTitle={"Send Feedback"}
-            onClick={openFeedbackDialog}
-          />
-        </SpeedDial>
-      ) : null}
-      {isFeedbackDialogOpen ? (
-        <Dialog open={isFeedbackDialogOpen} onClose={closeFeedbackDialog} maxWidth="md" fullWidth>
-          <FeedbackDialog
-            setIsFeedbackDialogOpen={setIsFeedbackDialogOpen}
-            user={user}
-            isLoggedIn={isLoggedIn}
-            locPathName={location.pathname}
-          />
-        </Dialog>
-      ) : (
-        <></>
+      {user.data && (
+        <>
+          <SpeedDial
+            ariaLabel="DialMenu"
+            icon={<SupportAgentIcon />}
+            sx={{ position: "absolute", bottom: 16, right: 16, zIndex: (theme) => theme.zIndex.appBar + 1 }}
+          >
+            <SpeedDialAction
+              key="help"
+              icon={<HelpIcon />}
+              tooltipTitle={
+                <>
+                  Hint: {wikiTargetRoute.description}
+                  {location.pathname.includes("imprint") ? "Imprint" : ". " + HELP_MESSAGE_SUFFIX}
+                </>
+              }
+              onClick={handleRedirect}
+            />
+            <SpeedDialAction
+              key="feedback"
+              icon={<FeedbackIcon />}
+              tooltipTitle={"Send Feedback"}
+              onClick={openFeedbackDialog}
+            />
+          </SpeedDial>
+          <Dialog open={isFeedbackDialogOpen} onClose={closeFeedbackDialog} maxWidth="md" fullWidth>
+            <FeedbackDialog
+              setIsFeedbackDialogOpen={setIsFeedbackDialogOpen}
+              user={user.data}
+              locPathName={location.pathname}
+            />
+          </Dialog>
+        </>
       )}
     </>
   );

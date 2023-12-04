@@ -1,22 +1,20 @@
-import FeedbackHooks from "../../api/FeedbackHooks";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import { ErrorMessage } from "@hookform/error-message";
+import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
+import { DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React from "react";
 import { useForm } from "react-hook-form";
-import SaveIcon from "@mui/icons-material/Save";
+import FeedbackHooks from "../../api/FeedbackHooks";
 import { UserRead } from "../../api/openapi";
-import { QueryObserverResult } from "@tanstack/react-query";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
 
 interface FeedbackDialogProps {
   setIsFeedbackDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  user: QueryObserverResult<UserRead, Error>;
-  isLoggedIn: boolean;
+  user: UserRead;
   locPathName: string;
 }
 
-function FeedbackDialog({ setIsFeedbackDialogOpen, user, isLoggedIn, locPathName }: FeedbackDialogProps) {
+function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: FeedbackDialogProps) {
   // react form
   const {
     register,
@@ -34,31 +32,29 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, isLoggedIn, locPathName
 
   // form event handlers
   const handleSubmitFeedback = (data: any) => {
-    if (user.data) {
-      createMutation.mutate(
-        {
-          requestBody: {
-            user_id: user.data.id,
-            user_content: `URL: ${locPathName}\n${data.content}`,
-          },
+    createMutation.mutate(
+      {
+        requestBody: {
+          user_id: user?.id,
+          user_content: `URL: ${locPathName}\n${data.content}`,
         },
-        {
-          onSuccess: () => {
-            SnackbarAPI.openSnackbar({
-              text: `Thanks for your feedback!`,
-              severity: "success",
-            });
-            closeFeedbackDialog();
-          },
+      },
+      {
+        onSuccess: () => {
+          SnackbarAPI.openSnackbar({
+            text: `Thanks for your feedback!`,
+            severity: "success",
+          });
+          closeFeedbackDialog();
         },
-      );
-    }
+      },
+    );
   };
   const handleError = (data: any) => console.error(data);
 
   return (
     <>
-      {isLoggedIn ? (
+      {user ? (
         <form onSubmit={handleSubmit(handleSubmitFeedback, handleError)}>
           <DialogTitle>Submit your feedback</DialogTitle>
           <DialogContent>
