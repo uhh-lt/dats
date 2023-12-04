@@ -159,6 +159,7 @@ class SearchService(metaclass=SingletonMeta):
         self,
         project_id: int,
         search_query: str,
+        expert_mode: bool,
         filter: Filter[SearchColumns],
         sorts: List[Sort[SearchColumns]],
     ) -> List[int]:
@@ -223,7 +224,10 @@ class SearchService(metaclass=SingletonMeta):
         else:
             # use elasticseach for full text seach
             elastic_hits = ElasticSearchService().search_sdocs_by_content_query(
-                proj_id=project_id, query=search_query, sdoc_ids=set(filtered_sdoc_ids)
+                proj_id=project_id,
+                query=search_query,
+                sdoc_ids=set(filtered_sdoc_ids),
+                use_simple_query=not expert_mode,
             )
 
             return [hit.sdoc_id for hit in elastic_hits.hits]

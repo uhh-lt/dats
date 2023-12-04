@@ -566,26 +566,24 @@ class ElasticSearchService(metaclass=SingletonMeta):
         proj_id: int,
         sdoc_ids: Set[int],
         query: str,
+        use_simple_query: bool = True,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
     ) -> PaginatedElasticSearchDocumentHits:
+        if use_simple_query:
+            q = {
+                "simple_query_string": {
+                    "query": query,
+                    "fields": ["content"],
+                    "default_operator": "and",
+                }
+            }
+        else:
+            q = {"query_string": {"query": query, "default_field": "content"}}
+
         return self.__search_sdocs(
             proj_id=proj_id,
-            query={
-                "bool": {
-                    "must": [
-                        {"terms": {"sdoc_id": list(sdoc_ids)}},
-                        {
-                            "match": {
-                                "content": {
-                                    "query": query,
-                                    "fuzziness": "1",  # TODO Flo: no constant here! either config or per call
-                                }
-                            }
-                        },
-                    ]
-                }
-            },
+            query={"bool": {"must": [{"terms": {"sdoc_id": list(sdoc_ids)}}, q]}},
             limit=limit,
             skip=skip,
         )

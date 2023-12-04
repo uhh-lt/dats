@@ -50,12 +50,14 @@ async def search_sdocs(
     *,
     search_query: str,
     project_id: int,
+    expert_mode: bool,
     filter: Filter[SearchColumns],
     sorts: List[Sort[SearchColumns]],
 ) -> List[int]:
     # TODO Flo: only if the user has access?
     return SearchService().search(
         search_query=search_query,
+        expert_mode=expert_mode,
         project_id=project_id,
         filter=filter,
         sorts=sorts,
