@@ -35,7 +35,7 @@ function LogbookEditor() {
   const { projectId } = useParams() as { projectId: string };
 
   // global server state (react query)
-  const projectMemo = ProjectHooks.useGetMemo(parseInt(projectId), user.data?.id);
+  const projectMemo = ProjectHooks.useGetMemo(parseInt(projectId), user?.id);
 
   // mutations
   const createMutation = ProjectHooks.useCreateMemo();
@@ -43,7 +43,7 @@ function LogbookEditor() {
 
   // handle ui events
   const handleSave = () => {
-    if (!user.data || !editorRef.current) return;
+    if (!user || !editorRef.current) return;
 
     const editor = editorRef.current.getInstance();
     const content = editor.getMarkdown();
@@ -78,8 +78,8 @@ function LogbookEditor() {
           requestBody: {
             content: content,
             starred: false,
-            title: "Logbook of user " + user.data!.id,
-            user_id: user.data.id,
+            title: "Logbook of user " + user?.id,
+            user_id: user.id,
             project_id: parseInt(projectId),
           },
         },

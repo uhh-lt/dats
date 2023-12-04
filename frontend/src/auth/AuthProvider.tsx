@@ -21,9 +21,7 @@ export enum LoginStatus {
 }
 
 interface AuthContextType {
-  user: {
-    data: UserRead | undefined;
-  };
+  user: UserRead | undefined;
   login: (user: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   loginStatus: LoginStatus;
@@ -150,7 +148,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
       value={{
         login,
         logout,
-        user: { data: user },
+        user,
         loginStatus: status,
       }}
     >

@@ -46,10 +46,10 @@ export function AnnotationDocumentSelector({ sdocId, ...props }: AnnotationDocum
 
   // init
   useEffect(() => {
-    if (user.data && visibleUserIds === undefined) {
-      dispatch(AnnoActions.setVisibleUserIds([user.data.id]));
+    if (user && visibleUserIds === undefined) {
+      dispatch(AnnoActions.setVisibleUserIds([user.id]));
     }
-  }, [visibleUserIds, dispatch, user.data]);
+  }, [visibleUserIds, dispatch, user]);
 
   // effects
   // ensure that visible adocs, visible user ids and source document id are in sync

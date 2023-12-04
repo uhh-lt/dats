@@ -204,8 +204,8 @@ function ExporterDialog() {
     (event: CustomEventInit<ExporterInfo>) => {
       setOpen(true);
       const data = event.detail!;
-      if (data.users.length !== 1 && user.data) {
-        data.users = [user.data.id];
+      if (data.users.length !== 1 && user) {
+        data.users = [user.id];
       }
       setExporterData(event.detail!);
     },

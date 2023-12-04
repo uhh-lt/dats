@@ -30,7 +30,7 @@ import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
 
 function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
-  const userId = useAuth().user.data!.id;
+  const userId = useAuth().user!.id;
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // whiteboard state (react-flow)

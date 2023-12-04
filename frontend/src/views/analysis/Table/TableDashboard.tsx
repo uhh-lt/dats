@@ -36,7 +36,7 @@ function TableDashboard() {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
-  const userTables = TableHooks.useGetUserTables(projectId, user.data?.id);
+  const userTables = TableHooks.useGetUserTables(projectId, user?.id);
 
   // local client state
   const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
@@ -110,14 +110,14 @@ function TableDashboard() {
 
   // CRUD table actions
   const handleCreateTable = (tableType: TableType) => {
-    if (!user.data?.id) return;
+    if (!user?.id) return;
 
     const content = [{ id: uuidv4(), name: `Table sheet 1`, content: TableType2Template[tableType] }];
     createTable.mutate(
       {
         requestBody: {
           project_id: projectId,
-          user_id: user.data.id,
+          user_id: user.id,
           title: "New Table",
           content: JSON.stringify(content),
           table_type: tableType,
@@ -135,7 +135,7 @@ function TableDashboard() {
   };
 
   const handleDuplicateTable = (id: number) => () => {
-    if (!user.data?.id || !userTables.data) return;
+    if (!user?.id || !userTables.data) return;
 
     const table = userTables.data.find((table) => table.id === id);
     if (!table) return;
@@ -144,7 +144,7 @@ function TableDashboard() {
       {
         requestBody: {
           project_id: projectId,
-          user_id: user.data.id,
+          user_id: user.id,
           title: table.title + " (copy)",
           content: JSON.stringify(table.content),
           table_type: table.table_type,

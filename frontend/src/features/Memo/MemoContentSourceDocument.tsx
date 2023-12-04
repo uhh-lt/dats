@@ -26,7 +26,7 @@ export function MemoContentSourceDocument({
 
   // form handling
   const handleCreateOrUpdateCodeMemo = (data: any) => {
-    if (!user.data) return;
+    if (!user) return;
 
     if (memo) {
       updateMutation.mutate(
@@ -52,7 +52,7 @@ export function MemoContentSourceDocument({
         {
           sdocId: sdoc.id,
           requestBody: {
-            user_id: user.data.id,
+            user_id: user.id,
             project_id: sdoc.project_id,
             title: data.title,
             content: data.content,

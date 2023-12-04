@@ -27,10 +27,10 @@ function AnnotatedSegmentsUserSelector({
 
   // init
   useEffect(() => {
-    if (user.data && selectedUserIds.length === 0) {
-      dispatch(AnnotatedSegmentsActions.setSelectedUserIds([user.data.id]));
+    if (user && selectedUserIds.length === 0) {
+      dispatch(AnnotatedSegmentsActions.setSelectedUserIds([user.id]));
     }
-  }, [selectedUserIds, dispatch, user.data]);
+  }, [selectedUserIds, dispatch, user]);
 
   // render
   return (

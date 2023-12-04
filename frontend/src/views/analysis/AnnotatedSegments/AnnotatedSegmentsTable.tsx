@@ -41,7 +41,7 @@ function AnnotatedSegmentsTable({ onRowContextMenu }: AnnotatedSegmentsTableProp
 
   // computed
   const columns: GridColDef<{ id: number }>[] = useMemo(() => {
-    if (!tableInfo.data || !user.data) return [];
+    if (!tableInfo.data || !user) return [];
 
     const result = tableInfo.data.map((column) => {
       const colDef = {
@@ -94,11 +94,11 @@ function AnnotatedSegmentsTable({ onRowContextMenu }: AnnotatedSegmentsTableProp
             flex: 3,
             description: "Your comments on the annotation",
             renderCell: (params) =>
-              user.data ? (
+              user ? (
                 <MemoRenderer2
                   attachedObjectType={AttachedObjectType.SPAN_ANNOTATION}
                   attachedObjectId={params.row.id}
-                  userId={user.data.id}
+                  userId={user.id}
                   showTitle={false}
                   showContent
                   showIcon={false}
@@ -136,7 +136,7 @@ function AnnotatedSegmentsTable({ onRowContextMenu }: AnnotatedSegmentsTableProp
     });
 
     return result;
-  }, [tableInfo.data, user.data]);
+  }, [tableInfo.data, user]);
 
   if (annotatedSegments.isError) {
     return (

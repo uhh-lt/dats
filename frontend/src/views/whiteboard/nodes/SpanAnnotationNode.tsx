@@ -27,7 +27,7 @@ import BaseCardNode from "./BaseCardNode";
 
 function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global client state
-  const userId = useAuth().user.data!.id;
+  const userId = useAuth().user!.id;
 
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DWTSNodeData, any>();

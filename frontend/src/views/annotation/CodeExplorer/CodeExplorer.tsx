@@ -145,7 +145,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
 
     const content = (
       <>
-        {user.data && allCodes.isSuccess && codeTree ? (
+        {user && allCodes.isSuccess && codeTree ? (
           <>
             <CodeTreeView
               className="myFlexFillAllContainer"

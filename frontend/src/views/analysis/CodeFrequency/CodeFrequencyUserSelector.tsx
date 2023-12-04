@@ -24,10 +24,10 @@ function CodeFrequencyUserSelector({ projectId, ...props }: CodeFrequencyUserSel
 
   // init
   useEffect(() => {
-    if (user.data && selectedUserIds === undefined) {
-      dispatch(AnalysisActions.setSelectedUserIds([user.data.id]));
+    if (user && selectedUserIds === undefined) {
+      dispatch(AnalysisActions.setSelectedUserIds([user.id]));
     }
-  }, [selectedUserIds, dispatch, user.data]);
+  }, [selectedUserIds, dispatch, user]);
 
   // render
   return (

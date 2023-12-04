@@ -43,7 +43,7 @@ function DialMenu() {
 
   return (
     <>
-      {user.data && (
+      {user && (
         <>
           <SpeedDial
             ariaLabel="DialMenu"
@@ -71,7 +71,7 @@ function DialMenu() {
           <Dialog open={isFeedbackDialogOpen} onClose={closeFeedbackDialog} maxWidth="md" fullWidth>
             <FeedbackDialog
               setIsFeedbackDialogOpen={setIsFeedbackDialogOpen}
-              user={user.data}
+              user={user}
               locPathName={location.pathname}
             />
           </Dialog>

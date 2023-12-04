@@ -42,7 +42,7 @@ function CodeStatsWithoutData(props: CodeStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
 
   // global server state (react-query)
-  const codeStats = SearchHooks.useSearchCodeStats(props.codeId, user.data?.id, props.sdocIds, sortStatsByGlobal);
+  const codeStats = SearchHooks.useSearchCodeStats(props.codeId, user?.id, props.sdocIds, sortStatsByGlobal);
 
   if (codeStats.isSuccess) {
     return <CodeStatsWithData codeStats={codeStats.data} {...props} />;

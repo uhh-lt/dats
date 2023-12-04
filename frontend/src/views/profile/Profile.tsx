@@ -63,7 +63,7 @@ function Profile() {
           height: "100%",
         }}
       >
-        {user.data ? (
+        {user ? (
           <>
             {/* Grid container for creating vertical layout of tabs and tabpanel */}
             <Grid
@@ -156,10 +156,10 @@ function Profile() {
               {/* Grid item tabpanels */}
               <Grid item xs={9}>
                 <TabPanel value={value} index={0}>
-                  <ProfileHome user={user.data} />
+                  <ProfileHome user={user} />
                 </TabPanel>
                 <TabPanel value={value} index={1}>
-                  <UpdateEmail user={user.data} />
+                  <UpdateEmail user={user} />
                 </TabPanel>
                 <TabPanel value={value} index={2}>
                   <PasswordReset />

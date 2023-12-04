@@ -36,10 +36,10 @@ export function ActionFilters({ projectId }: ActionFiltersProps) {
 
   // init userIds with logged in user
   useEffect(() => {
-    if (user.data) {
-      dispatch(AutologbookActions.setUserIds([user.data.id]));
+    if (user) {
+      dispatch(AutologbookActions.setUserIds([user.id]));
     }
-  }, [dispatch, user.data]);
+  }, [dispatch, user]);
 
   const handleUserIdsChange = (event: SelectChangeEvent<number[]>) => {
     dispatch(AutologbookActions.setUserIds(event.target.value as number[]));

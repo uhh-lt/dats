@@ -34,9 +34,9 @@ function ProjectUpdate() {
   const navigate = useNavigate();
   const deleteProjectMutation = ProjectHooks.useDeleteProject();
   const handleClickRemoveProject = () => {
-    if (project.data && user.data) {
+    if (project.data && user) {
       deleteProjectMutation.mutate(
-        { projId: project.data.id, userId: user.data.id },
+        { projId: project.data.id, userId: user.id },
         {
           onSuccess: (data) => {
             SnackbarAPI.openSnackbar({

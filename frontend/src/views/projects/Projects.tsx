@@ -25,7 +25,7 @@ import RecentActivity from "./RecentActivity";
 
 function Projects() {
   const { user } = useAuth();
-  const projects = UserHooks.useGetProjects(user.data?.id);
+  const projects = UserHooks.useGetProjects(user?.id);
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);

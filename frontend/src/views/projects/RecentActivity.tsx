@@ -11,7 +11,7 @@ function RecentActivity() {
   const { user } = useAuth();
 
   // global server stat - react query
-  const recentAdocs = UserHooks.useGetRecentActivity(user.data?.id, 5);
+  const recentAdocs = UserHooks.useGetRecentActivity(user?.id, 5);
 
   return (
     <>

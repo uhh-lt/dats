@@ -58,7 +58,7 @@ function TopBar(props: AppBarProps) {
                   Login
                 </Button>
               ) : (
-                <UserProfileMenu handleLogout={handleLogout} user={user.data} />
+                <UserProfileMenu handleLogout={handleLogout} user={user} />
               )}
             </Stack>
           </Grid>

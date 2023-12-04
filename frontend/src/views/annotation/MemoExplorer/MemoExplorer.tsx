@@ -15,7 +15,7 @@ function MemoExplorer({ sdocId, showToolbar, ...props }: MemoExplorerProps & Box
 
   // queries
   // document Memo, span annotation memo, bbox memo
-  const memos = SdocHooks.useGetRelatedMemos(sdocId, user.data?.id);
+  const memos = SdocHooks.useGetRelatedMemos(sdocId, user?.id);
 
   const content = (
     <Box className="myFlexFillAllContainer" sx={{ p: 1 }}>

@@ -26,7 +26,7 @@ export function MemoContentTag({
 
   // form handling
   const handleCreateOrUpdateCodeMemo = (data: any) => {
-    if (!user.data) return;
+    if (!user) return;
 
     if (memo) {
       updateMutation.mutate(
@@ -52,7 +52,7 @@ export function MemoContentTag({
         {
           tagId: tag.id,
           requestBody: {
-            user_id: user.data.id,
+            user_id: user.id,
             project_id: tag.project_id,
             title: data.title,
             content: data.content,

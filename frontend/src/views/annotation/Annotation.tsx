@@ -35,7 +35,7 @@ function Annotation() {
   // global server state (react query)
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
   const metadata = SdocHooks.useGetMetadata(sourceDocumentId);
-  const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sourceDocumentId, user.data?.id);
+  const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sourceDocumentId, user?.id);
   const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sourceDocumentId);
 
   // tabs
