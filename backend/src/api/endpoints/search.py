@@ -158,22 +158,13 @@ async def search_memos_by_title_query(
     title_query: MemoTitleQuery,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
 ) -> PaginatedMemoSearchResults:
-    if title_query.prefix:
-        return es.search_memos_by_prefix_title(
-            proj_id=title_query.proj_id,
-            user_id=title_query.user_id,
-            title_prefix=title_query.title_query,
-            starred=title_query.starred,
-            **skip_limit,
-        )
-    else:
-        return es.search_memos_by_exact_title(
-            proj_id=title_query.proj_id,
-            user_id=title_query.user_id,
-            exact_title=title_query.title_query,
-            starred=title_query.starred,
-            **skip_limit,
-        )
+    return es.search_memos_by_title_query(
+        proj_id=title_query.proj_id,
+        user_id=title_query.user_id,
+        query=title_query.title_query,
+        starred=title_query.starred,
+        **skip_limit,
+    )
 
 
 @router.post(

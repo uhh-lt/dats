@@ -222,7 +222,7 @@ class SearchService(metaclass=SingletonMeta):
             return filtered_sdoc_ids
         else:
             # use elasticseach for full text seach
-            elastic_hits = ElasticSearchService().search_sdocs_by_content_query2(
+            elastic_hits = ElasticSearchService().search_sdocs_by_content_query(
                 proj_id=project_id, query=search_query, sdoc_ids=set(filtered_sdoc_ids)
             )
 
