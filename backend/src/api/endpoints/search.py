@@ -28,25 +28,25 @@ es = ElasticSearchService()
 
 
 @router.post(
-    "/sdoc_new_info",
+    "/sdoc_info",
     response_model=List[ColumnInfo[SearchColumns]],
     summary="Returns Search Info.",
     description="Returns Search Info.",
 )
-async def search_sdocs_new_info(
+async def search_sdocs_info(
     *,
     project_id: int,
 ) -> List[ColumnInfo[SearchColumns]]:
-    return SearchService().search_new_info(project_id=project_id)
+    return SearchService().search_info(project_id=project_id)
 
 
 @router.post(
-    "/sdoc_new",
+    "/sdoc",
     response_model=List[int],
     summary="Returns all SourceDocument IDs that match the query parameters.",
     description="Returns all SourceDocument Ids that match the query parameters.",
 )
-async def search_sdocs_new(
+async def search_sdocs(
     *,
     search_query: str,
     project_id: int,
@@ -54,7 +54,7 @@ async def search_sdocs_new(
     sorts: List[Sort[SearchColumns]],
 ) -> List[int]:
     # TODO Flo: only if the user has access?
-    return SearchService().search_new(
+    return SearchService().search(
         search_query=search_query,
         project_id=project_id,
         filter=filter,

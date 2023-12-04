@@ -139,7 +139,7 @@ class SearchService(metaclass=SingletonMeta):
         cls.sss = SimSearchService()
         return super(SearchService, cls).__new__(cls)
 
-    def search_new_info(self, project_id) -> List[ColumnInfo[SearchColumns]]:
+    def search_info(self, project_id) -> List[ColumnInfo[SearchColumns]]:
         with self.sqls.db_session() as db:
             metadata_column_info = create_metadata_column_info(
                 db=db,
@@ -155,7 +155,7 @@ class SearchService(metaclass=SingletonMeta):
             ColumnInfo[SearchColumns].from_column(column) for column in SearchColumns
         ] + metadata_column_info
 
-    def search_new(
+    def search(
         self,
         project_id: int,
         search_query: str,
