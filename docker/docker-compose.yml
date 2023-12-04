@@ -142,7 +142,6 @@ services:
     volumes:
       - ../backend/src:/dwts_code/src
       - ./backend_repo:/tmp/dwts
-      - ./tika:/tika
     depends_on:
       - rabbitmq
       - redis
