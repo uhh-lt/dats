@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { Body_search_search_code_stats } from "../models/Body_search_search_code_stats";
-import type { Body_search_search_sdocs_new } from "../models/Body_search_search_sdocs_new";
+import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
@@ -25,14 +25,14 @@ export class SearchService {
    * @returns ColumnInfo_SearchColumns_ Successful Response
    * @throws ApiError
    */
-  public static searchSdocsNewInfo({
+  public static searchSdocsInfo({
     projectId,
   }: {
     projectId: number;
   }): CancelablePromise<Array<ColumnInfo_SearchColumns_>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/sdoc_new_info",
+      url: "/search/sdoc_info",
       query: {
         project_id: projectId,
       },
@@ -48,21 +48,24 @@ export class SearchService {
    * @returns number Successful Response
    * @throws ApiError
    */
-  public static searchSdocsNew({
+  public static searchSdocs({
     searchQuery,
     projectId,
+    expertMode,
     requestBody,
   }: {
     searchQuery: string;
     projectId: number;
-    requestBody: Body_search_search_sdocs_new;
+    expertMode: boolean;
+    requestBody: Body_search_search_sdocs;
   }): CancelablePromise<Array<number>> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/search/sdoc_new",
+      url: "/search/sdoc",
       query: {
         search_query: searchQuery,
         project_id: projectId,
+        expert_mode: expertMode,
       },
       body: requestBody,
       mediaType: "application/json",
