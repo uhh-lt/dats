@@ -24,6 +24,18 @@
       }
     },
     {
+      "name": "Python: run_migrations.py",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/run_migrations.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/backend/src",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
+    },
+    {
       "name": "Alembic: check",
       "type": "node-terminal",
       "request": "launch",
