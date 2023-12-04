@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+
 from app.core.data.crud.refresh_token import crud_refresh_token
 from app.core.db.sql_service import SQLService
 
