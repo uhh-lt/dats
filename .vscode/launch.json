@@ -24,6 +24,17 @@
       }
     },
     {
+      "name": "Python: Test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pytest",
+      "cwd": "${workspaceFolder}/backend/src",
+      "envFile": "${workspaceFolder}/backend/.env",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend/src"
+      }
+    },
+    {
       "name": "Python: run_migrations.py",
       "type": "python",
       "request": "launch",
