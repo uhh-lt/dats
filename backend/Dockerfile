@@ -1,3 +1,6 @@
+# docker build -f Dockerfile -t uhhlt/dwts_backend:debian_dev_latest .
+# docker push uhhlt/dwts_backend:debian_dev_latest
+
 FROM ubuntu:jammy-20221020 as ubuntu
 CMD ["/bin/bash"]
 
