@@ -10,6 +10,9 @@ from loguru import logger
 from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from config import conf
+
+cc = conf.celery
 
 repo = RepoService()
 
@@ -94,8 +97,14 @@ def extract_content_in_html_from_word_or_pdf_docs(
 
     if filepath.suffix == ".pdf":
         html, extracted_images = __extract_content_in_html_from_pdf_docs(filepath)
+        extracted_images = (
+            extracted_images if cc.preprocessing.extract_images_from_pdf else []
+        )
     elif filepath.suffix == ".docx" or filepath.suffix == ".doc":
         html, extracted_images = __extract_content_in_html_from_word_docs(filepath)
+        extracted_images = (
+            extracted_images if cc.preprocessing.extract_images_from_docx else []
+        )
     else:
         html = ""
         extracted_images = []
