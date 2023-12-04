@@ -14,6 +14,7 @@ from app.core.data.orm.preprocessing_job import PreprocessingJobORM
 from app.core.data.orm.preprocessing_job_payload import PreprocessingJobPayloadORM
 from app.core.data.orm.project import ProjectORM, ProjectUserLinkTable
 from app.core.data.orm.project_metadata import ProjectMetadataORM
+from app.core.data.orm.refresh_token import RefreshTokenORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_data import SourceDocumentDataORM
 from app.core.data.orm.source_document_link import SourceDocumentLinkORM

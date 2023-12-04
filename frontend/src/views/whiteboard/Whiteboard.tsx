@@ -20,7 +20,7 @@ function Whiteboard() {
   const updateWhiteboardMutation = WhiteboardHooks.useUpdateWhiteboard();
   const whiteboard = WhiteboardHooks.useGetWhiteboard(whiteboardId);
 
-  const readonly = whiteboard.data?.user_id !== user.data?.id;
+  const readonly = whiteboard.data?.user_id !== user?.id;
 
   const handleChange = (value: string) => {
     if (!whiteboard.data || whiteboard.data.title === value) return;

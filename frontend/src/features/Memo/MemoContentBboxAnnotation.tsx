@@ -31,7 +31,7 @@ export function MemoContentBboxAnnotation({
 
   // form handling
   const handleCreateOrUpdateBboxAnnotationMemo = (data: any) => {
-    if (!user.data) return;
+    if (!user) return;
 
     if (memo) {
       updateMutation.mutate(
@@ -57,7 +57,7 @@ export function MemoContentBboxAnnotation({
         {
           bboxId: bboxAnnotation.id,
           requestBody: {
-            user_id: user.data.id,
+            user_id: user.id,
             project_id: bboxAnnotation.code.project_id,
             title: data.title,
             content: data.content,

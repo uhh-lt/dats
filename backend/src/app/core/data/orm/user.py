@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from app.core.data.orm.memo import MemoORM
     from app.core.data.orm.object_handle import ObjectHandleORM
     from app.core.data.orm.project import ProjectORM
+    from app.core.data.orm.refresh_token import RefreshTokenORM
     from app.core.data.orm.whiteboard import WhiteboardORM
 
 
@@ -58,6 +59,10 @@ class UserORM(ORMBase):
 
     actions: Mapped[List["ActionORM"]] = relationship(
         "ActionORM", back_populates="user", passive_deletes=True
+    )
+
+    refresh_tokens: Mapped[List["RefreshTokenORM"]] = relationship(
+        "RefreshTokenORM", back_populates="user", passive_deletes=True
     )
 
     # many to many

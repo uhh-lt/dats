@@ -63,7 +63,7 @@ function Profile() {
           height: "100%",
         }}
       >
-        {user.isSuccess ? (
+        {user ? (
           <>
             {/* Grid container for creating vertical layout of tabs and tabpanel */}
             <Grid
@@ -173,10 +173,6 @@ function Profile() {
               </Grid>
             </Grid>
           </>
-        ) : user.isError ? (
-          <Typography variant={"body1"} gutterBottom mt={3}>
-            Error: {user.error.message}
-          </Typography>
         ) : (
           <Typography variant={"body1"} gutterBottom mt={3}>
             Loading...

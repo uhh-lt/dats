@@ -29,11 +29,11 @@ function ProjectDetails({ project }: ProjectProps) {
 
   // form handling
   const handleProjectUpdate = (data: any) => {
-    if (!user.data?.id) return;
+    if (!user?.id) return;
 
     updateProjectMutation.mutate(
       {
-        userId: user.data.id!,
+        userId: user.id!,
         projId: project.id,
         requestBody: {
           title: data.name,
@@ -114,7 +114,7 @@ function ProjectDetails({ project }: ProjectProps) {
           type="submit"
           loading={updateProjectMutation.isLoading}
           loadingPosition="start"
-          disabled={!user.data}
+          disabled={!user}
         >
           Update project
         </LoadingButton>

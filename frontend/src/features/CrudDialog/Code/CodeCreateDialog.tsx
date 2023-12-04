@@ -129,7 +129,7 @@ function CodeCreateDialog() {
 
   // react form handlers
   const handleSubmitCodeCreateDialog: SubmitHandler<CodeCreateValues> = (data) => {
-    if (user.data) {
+    if (user) {
       let pcid: number | undefined = undefined;
       if (typeof data.parentCodeId === "string") {
         pcid = parseInt(data.parentCodeId);
@@ -143,7 +143,7 @@ function CodeCreateDialog() {
             description: data.description,
             color: data.color,
             project_id: parseInt(projectId),
-            user_id: user.data.id,
+            user_id: user.id,
             parent_code_id: pcid,
           },
         },

@@ -26,7 +26,7 @@ function ProjectSelection() {
   const { projectId } = useParams() as { projectId: string };
 
   // global server state (react query)
-  const projects = UserHooks.useGetProjects(user.data?.id);
+  const projects = UserHooks.useGetProjects(user?.id);
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);

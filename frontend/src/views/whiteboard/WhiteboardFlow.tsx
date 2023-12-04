@@ -154,7 +154,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
-  const userId = useAuth().user.data?.id;
+  const userId = useAuth().user?.id;
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);

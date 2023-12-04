@@ -23,7 +23,7 @@ import { UserRead } from "../../api/openapi";
 
 interface UserProfileMenuProps {
   handleLogout: () => void;
-  user: UserRead;
+  user: UserRead | undefined;
 }
 
 function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
@@ -39,6 +39,10 @@ function UserProfileMenu({ handleLogout, user }: UserProfileMenuProps) {
 
   const open = Boolean(anchorEl);
   const id = open ? "simple-popover" : undefined;
+
+  if (!user) {
+    return <></>;
+  }
 
   return (
     <div>

@@ -26,7 +26,7 @@ export function MemoContentSpanAnnotation({
 
   // form handling
   const handleCreateOrUpdateSpanAnnotationMemo = (data: any) => {
-    if (!user.data) return;
+    if (!user) return;
 
     if (memo) {
       updateMutation.mutate(
@@ -52,7 +52,7 @@ export function MemoContentSpanAnnotation({
         {
           spanId: spanAnnotation.id,
           requestBody: {
-            user_id: user.data.id,
+            user_id: user.id,
             project_id: spanAnnotation.code.project_id,
             title: data.title,
             content: data.content,

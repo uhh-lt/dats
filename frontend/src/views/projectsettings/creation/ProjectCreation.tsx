@@ -36,10 +36,10 @@ function ProjectCreation() {
 
   // form handling
   const handleProjectCreation = (data: any) => {
-    if (!user.data) return;
+    if (!user) return;
     createProjectMutation.mutate(
       {
-        userId: user.data.id,
+        userId: user.id,
         requestBody: {
           title: data.name,
           description: data.description,
@@ -135,7 +135,7 @@ function ProjectCreation() {
             type="submit"
             loading={createProjectMutation.isLoading}
             loadingPosition="start"
-            disabled={!user.data}
+            disabled={!user}
           >
             Create project
           </LoadingButton>

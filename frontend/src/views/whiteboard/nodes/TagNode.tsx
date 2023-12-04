@@ -25,7 +25,7 @@ import MemoAPI from "../../../features/Memo/MemoAPI";
 
 function TagNode(props: NodeProps<TagNodeData>) {
   // global client state
-  const userId = useAuth().user.data!.id;
+  const userId = useAuth().user?.id;
 
   // whiteboard state (react-flow)
   const reactFlowInstance = useReactFlow<DWTSNodeData, any>();

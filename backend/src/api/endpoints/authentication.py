@@ -5,7 +5,9 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db_session
 from api.util import credentials_exception
 from app.core.data.crud.crud_base import NoSuchElementError
+from app.core.data.crud.refresh_token import crud_refresh_token
 from app.core.data.crud.user import crud_user
+from app.core.data.dto.refresh_token import RefreshAccessTokenData
 from app.core.data.dto.user import (
     UserAuthorizationHeaderData,
     UserCreate,
@@ -65,6 +67,47 @@ async def login(
     if not user:
         raise credentials_exception
 
+    (access_token, access_token_expires) = generate_jwt(user)
+    refresh_token = crud_refresh_token.generate(db, user.id)
+
     return UserAuthorizationHeaderData(
-        access_token=generate_jwt(UserRead.model_validate(user)), token_type="bearer"
+        access_token=access_token,
+        access_token_expires=access_token_expires,
+        token_type="bearer",
+        refresh_token=refresh_token.token,
+        refresh_token_expires=refresh_token.expires_at,
+    )
+
+
+@router.post(
+    "/logout",
+    summary="Log out the user from the given session.",
+    description=("Revokes the refresh token associated with the given session."),
+)
+def logout(
+    *, db: Session = Depends(get_db_session), dto: RefreshAccessTokenData = Depends()
+):
+    token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
+    crud_refresh_token.revoke(db, token)
+
+
+@router.post(
+    "/refresh_access",
+    summary="Obtain a new access token.",
+    description=("Uses the given refresh token to obtain a new access token."),
+)
+async def refresh_access_token(
+    *, db: Session = Depends(get_db_session), dto: RefreshAccessTokenData = Depends()
+) -> UserAuthorizationHeaderData:
+    token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
+    crud_refresh_token.revoke(db, token)
+
+    (access_token, access_token_expires) = generate_jwt(token.user)
+    new_token = crud_refresh_token.generate(db, token.user.id)
+    return UserAuthorizationHeaderData(
+        access_token=access_token,
+        access_token_expires=access_token_expires,
+        refresh_token=new_token.token,
+        token_type="bearer",
+        refresh_token_expires=new_token.expires_at,
     )

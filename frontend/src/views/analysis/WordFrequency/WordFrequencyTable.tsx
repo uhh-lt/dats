@@ -32,7 +32,7 @@ function WordFrequencyTable({ onRowContextMenu, tableContainerRef }: WordFrequen
 
   // computed
   const columns: GridColDef<WordFrequencyStat>[] = useMemo(() => {
-    if (!tableInfo.data || !user.data) return [];
+    if (!tableInfo.data || !user) return [];
 
     const result = tableInfo.data.map((column) => {
       const colDef = {
@@ -89,7 +89,7 @@ function WordFrequencyTable({ onRowContextMenu, tableContainerRef }: WordFrequen
 
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as GridColDef<WordFrequencyStat>[];
-  }, [tableInfo.data, user.data]);
+  }, [tableInfo.data, user]);
 
   let tableContent: JSX.Element;
   if (wordFrequency.isError) {

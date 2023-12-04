@@ -145,7 +145,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
 
     const content = (
       <>
-        {user.isSuccess && allCodes.isSuccess && codeTree ? (
+        {user && allCodes.isSuccess && codeTree ? (
           <>
             <CodeTreeView
               className="myFlexFillAllContainer"
@@ -184,8 +184,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
               handleClose={() => setContextMenuPosition(null)}
             />
           </>
-        ) : user.isError ? (
-          <>{user.error.message}</>
         ) : allCodes.isError ? (
           <>{allCodes.error.message}</>
         ) : (

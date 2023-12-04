@@ -109,14 +109,14 @@ function WhiteboardDashboard() {
 
   // CRUD whiteboard actions
   const handleCreateWhiteboard = (title: string) => {
-    if (!user.data?.id) return;
+    if (!user?.id) return;
 
     const content: WhiteboardGraph = { nodes: [], edges: [] };
     createWhiteboard.mutate(
       {
         requestBody: {
           project_id: projectId,
-          user_id: user.data.id,
+          user_id: user.id,
           title: title,
           content: JSON.stringify(content),
         },
@@ -134,7 +134,7 @@ function WhiteboardDashboard() {
 
   const handleDuplicateWhiteboard = useCallback(
     (id: number) => () => {
-      if (!user.data?.id || !projectWhiteboards.data) return;
+      if (!user?.id || !projectWhiteboards.data) return;
 
       const whiteboard = projectWhiteboards.data.find((whiteboard) => whiteboard.id === id);
       if (!whiteboard) return;
@@ -144,7 +144,7 @@ function WhiteboardDashboard() {
         {
           requestBody: {
             project_id: projectId,
-            user_id: user.data.id,
+            user_id: user.id,
             title: whiteboard.title + " (copy)",
             content: JSON.stringify(whiteboard.content),
           },
@@ -159,7 +159,7 @@ function WhiteboardDashboard() {
         },
       );
     },
-    [createWhiteboard.mutate, projectId, user.data, projectWhiteboards.data],
+    [createWhiteboard.mutate, projectId, user, projectWhiteboards.data],
   );
 
   const handleDeleteClick = (id: GridRowId) => () => {

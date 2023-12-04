@@ -33,7 +33,7 @@ export default function MemoDialog() {
   // 3. memoId is set, attachedObjectId is not set
   const memo = useGetMemoQuery(memoEventData?.memoId ? undefined : memoEventData?.attachedObjectType)(
     memoEventData?.memoId ? memoEventData.memoId : memoEventData?.attachedObjectId,
-    user.data?.id,
+    user?.id,
   );
   const attachedObject = useGetMemosAttachedObject(memoEventData?.attachedObjectType)(memoEventData?.attachedObjectId);
 

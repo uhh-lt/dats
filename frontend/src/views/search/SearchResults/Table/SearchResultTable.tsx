@@ -42,7 +42,7 @@ function SearchResultsTable({ onRowClick, onRowContextMenu, sdocIds, columnInfo 
 
   // computed
   const columns: GridColDef<{ id: number }>[] = useMemo(() => {
-    if (!user.data) return [];
+    if (!user) return [];
 
     const result = columnInfo.map((column) => {
       const colDef = {
@@ -101,7 +101,7 @@ function SearchResultsTable({ onRowClick, onRowContextMenu, sdocIds, columnInfo 
 
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as GridColDef<{ id: number }>[];
-  }, [columnInfo, user.data]);
+  }, [columnInfo, user]);
 
   // render
   let tableContent: JSX.Element;

@@ -42,11 +42,11 @@ function Logbook() {
   // global server state (react-query)
   const searchMemos = SearchHooks.useSearchMemoContent({
     content_query: searchTerm,
-    user_id: user.data!.id,
+    user_id: user!.id,
     proj_id: parseInt(projectId),
     starred: starred,
   });
-  const userMemos = ProjectHooks.useGetAllUserMemos(parseInt(projectId), user.data!.id);
+  const userMemos = ProjectHooks.useGetAllUserMemos(parseInt(projectId), user!.id);
 
   // computed
   // select memos based on search term (if there is no search term, show all user memos)
