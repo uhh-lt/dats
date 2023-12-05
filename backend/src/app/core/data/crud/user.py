@@ -32,7 +32,13 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
         return user
 
     def authenticate(self, db: Session, user_login: UserLogin) -> Optional[UserORM]:
-        user = self.read_by_email(db=db, email=user_login.username)
+        try:
+            user = self.read_by_email(db=db, email=user_login.username)
+        except NoSuchElementError:
+            # Don't tell users if the email or the password was wrong
+            # to prevent email guessing attacks
+            return None
+
         if not verify_password(
             plain_password=user_login.password, hashed_password=user.password
         ):
