@@ -145,7 +145,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
     // disallow deleting of SYSTEM CODES
     if (code && code.user_id !== SYSTEM_USER_ID) {
       ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to delete the code ${code.name}? This action cannot be undone!`,
+        text: `Do you really want to delete the code "${code.name}"? This action cannot be undone!`,
         onAccept: () => {
           deleteCodeMutation.mutate(
             { codeId: code.id },

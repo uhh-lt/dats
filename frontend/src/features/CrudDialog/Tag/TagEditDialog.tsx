@@ -109,7 +109,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   const handleDelete = () => {
     if (tag.data) {
       ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to delete the tag - ${tag.data.title}? This action cannot be undone!`,
+        text: `Do you really want to delete the tag "${tag.data.title}"? This action cannot be undone!`,
         onAccept: () => {
           deleteTagMutation.mutate(
             { tagId: tag.data.id },

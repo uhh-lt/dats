@@ -65,7 +65,7 @@ function ProjectUsers({ project }: ProjectProps) {
           });
           setSelectedUser(null);
         },
-      }
+      },
     );
   };
 
@@ -73,7 +73,7 @@ function ProjectUsers({ project }: ProjectProps) {
   const removeUserMutation = ProjectHooks.useRemoveUser();
   const handleClickRemoveUser = (userId: number) => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to delete the user ${userId}? This action cannot be undone!`,
+      text: `Do you really want to remove the User ${userId} from this project? You can add her again.`,
       onAccept: () => {
         removeUserMutation.mutate(
           {
@@ -87,7 +87,7 @@ function ProjectUsers({ project }: ProjectProps) {
                 severity: "success",
               });
             },
-          }
+          },
         );
       },
     });

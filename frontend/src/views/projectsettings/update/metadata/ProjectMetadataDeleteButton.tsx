@@ -5,6 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks";
 import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
+import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI";
 
 interface ProjectMetadataDeleteButtonProps {
   metadataId: number;
@@ -15,20 +16,25 @@ function ProjectMetadataDeleteButton({ metadataId, ...props }: ProjectMetadataDe
   const deleteMutation = ProjectMetadataHooks.useDeleteMetadata();
 
   const handleDeleteMetadata = useCallback(() => {
-    const mutation = deleteMutation.mutate;
-    mutation(
-      {
-        metadataId: metadataId,
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Do you really want to delete the ProjectMetadata ${metadataId}? This will remove metadata from all corresponding documents. This action cannot be undone!`,
+      onAccept: () => {
+        const mutation = deleteMutation.mutate;
+        mutation(
+          {
+            metadataId: metadataId,
+          },
+          {
+            onSuccess: (data) => {
+              SnackbarAPI.openSnackbar({
+                text: `Deleted Metadata ${data.id} from Project ${data.project_id}`,
+                severity: "success",
+              });
+            },
+          },
+        );
       },
-      {
-        onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
-            text: `Deleted Metadata ${data.id} from Project ${data.project_id}`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   }, [deleteMutation.mutate, metadataId]);
 
   return (

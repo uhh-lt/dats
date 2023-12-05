@@ -80,7 +80,7 @@ export function MemoContentBboxAnnotation({
   const handleDeleteBboxAnnotationMemo = () => {
     if (memo) {
       ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to remove the memo content tag - ${memo.title}? Note - This action cannot be undone!`,
+        text: `Do you really want to remove the BBoxAnnotation Memo "${memo.title}"? This action cannot be undone!`,
         onAccept: () => {
           deleteMutation.mutate(
             { memoId: memo.id },
