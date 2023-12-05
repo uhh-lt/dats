@@ -19,8 +19,4 @@ export type MemoTitleQuery = {
    * The query term to search within the title of the Memo
    */
   title_query: string;
-  /**
-   * If true, filename prefix search is done. If false exact title is searched.
-   */
-  prefix: boolean;
 };

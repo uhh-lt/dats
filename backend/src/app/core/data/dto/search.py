@@ -34,9 +34,6 @@ class MemoTitleQuery(MemoQueryBase):
         description="The query term to search within the title of the Memo",
         min_length=1,
     )
-    prefix: bool = Field(
-        description="If true, filename prefix search is done. If false exact title is searched."
-    )
 
 
 class ElasticSearchIntegerRange(BaseModel):

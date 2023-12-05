@@ -5,7 +5,7 @@ import { useAppDispatch } from "../../plugins/ReduxHooks";
 import { SearchFilterActions } from "./searchFilterSlice";
 
 const useGetSearchInfo = (projectId: number) =>
-  useQuery(["tableInfo", "search", projectId], () => SearchService.searchSdocsNewInfo({ projectId }));
+  useQuery(["tableInfo", "search", projectId], () => SearchService.searchSdocsInfo({ projectId }));
 
 export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)

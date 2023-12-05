@@ -541,42 +541,10 @@ class ElasticSearchService(metaclass=SingletonMeta):
             else 0,
         )
 
-    def search_sdocs_by_exact_filename(
+    def search_sdocs_by_filename_query(
         self,
         *,
         proj_id: int,
-        exact_filename: str,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
-    ) -> PaginatedElasticSearchDocumentHits:
-        # Flo: Using term query since filename is a keyword field
-        return self.__search_sdocs(
-            proj_id=proj_id,
-            query={"term": {"filename": exact_filename}},
-            limit=limit,
-            skip=skip,
-        )
-
-    def search_sdocs_by_prefix_filename(
-        self,
-        *,
-        proj_id: int,
-        filename_prefix: str,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
-    ) -> PaginatedElasticSearchDocumentHits:
-        return self.__search_sdocs(
-            proj_id=proj_id,
-            query={"prefix": {"filename": filename_prefix}},
-            limit=limit,
-            skip=skip,
-        )
-
-    def search_sdocs_by_content_query2(
-        self,
-        *,
-        proj_id: int,
-        sdoc_ids: Set[int],
         query: str,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
@@ -585,17 +553,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             proj_id=proj_id,
             query={
                 "bool": {
-                    "must": [
-                        {"terms": {"sdoc_id": list(sdoc_ids)}},
-                        {
-                            "match": {
-                                "content": {
-                                    "query": query,
-                                    "fuzziness": "1",  # TODO Flo: no constant here! either config or per call
-                                }
-                            }
-                        },
-                    ]
+                    "must": [{"match": {"filename": {"query": query, "fuzziness": 1}}}]
                 }
             },
             limit=limit,
@@ -606,57 +564,47 @@ class ElasticSearchService(metaclass=SingletonMeta):
         self,
         *,
         proj_id: int,
+        sdoc_ids: Set[int],
         query: str,
+        use_simple_query: bool = True,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
     ) -> PaginatedElasticSearchDocumentHits:
+        if use_simple_query:
+            q = {
+                "simple_query_string": {
+                    "query": query,
+                    "fields": ["content"],
+                    "default_operator": "and",
+                }
+            }
+        else:
+            q = {"query_string": {"query": query, "default_field": "content"}}
+
         return self.__search_sdocs(
             proj_id=proj_id,
+            query={"bool": {"must": [{"terms": {"sdoc_id": list(sdoc_ids)}}, q]}},
+            limit=limit,
+            skip=skip,
+        )
+
+    def search_memos_by_title_query(
+        self,
+        *,
+        proj_id: int,
+        user_id: int,
+        query: str,
+        starred: Optional[bool] = None,
+        limit: Optional[int] = None,
+        skip: Optional[int] = None,
+    ) -> PaginatedMemoSearchResults:
+        return self.__search_memos(
+            proj_id=proj_id,
             query={
-                "match": {
-                    "content": {
-                        "query": query,
-                        "fuzziness": "1",  # TODO Flo: no constant here! either config or per call
-                    }
+                "bool": {
+                    "must": [{"match": {"title": {"query": query, "fuzziness": 1}}}]
                 }
             },
-            limit=limit,
-            skip=skip,
-        )
-
-    def search_memos_by_exact_title(
-        self,
-        *,
-        proj_id: int,
-        user_id: int,
-        exact_title: str,
-        starred: Optional[bool] = None,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
-    ) -> PaginatedMemoSearchResults:
-        # Flo: Using term query since title is a keyword field
-        return self.__search_memos(
-            proj_id=proj_id,
-            query={"bool": {"must": [{"term": {"title": exact_title}}]}},
-            user_id=user_id,
-            starred=starred,
-            limit=limit,
-            skip=skip,
-        )
-
-    def search_memos_by_prefix_title(
-        self,
-        *,
-        proj_id: int,
-        user_id: int,
-        title_prefix: str,
-        starred: Optional[bool] = None,
-        limit: Optional[int] = None,
-        skip: Optional[int] = None,
-    ) -> PaginatedMemoSearchResults:
-        return self.__search_memos(
-            proj_id=proj_id,
-            query={"bool": {"must": [{"prefix": {"title": title_prefix}}]}},
             user_id=user_id,
             starred=starred,
             limit=limit,

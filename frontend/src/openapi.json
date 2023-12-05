@@ -3291,12 +3291,12 @@
         }
       }
     },
-    "/search/sdoc_new_info": {
+    "/search/sdoc_info": {
       "post": {
         "tags": ["search"],
         "summary": "Returns Search Info.",
         "description": "Returns Search Info.",
-        "operationId": "search_sdocs_new_info",
+        "operationId": "search_sdocs_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3314,7 +3314,7 @@
                 "schema": {
                   "type": "array",
                   "items": { "$ref": "#/components/schemas/ColumnInfo_SearchColumns_" },
-                  "title": "Response Search-Search Sdocs New Info"
+                  "title": "Response Search-Search Sdocs Info"
                 }
               }
             }
@@ -3326,12 +3326,12 @@
         }
       }
     },
-    "/search/sdoc_new": {
+    "/search/sdoc": {
       "post": {
         "tags": ["search"],
         "summary": "Returns all SourceDocument IDs that match the query parameters.",
         "description": "Returns all SourceDocument Ids that match the query parameters.",
-        "operationId": "search_sdocs_new",
+        "operationId": "search_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3345,24 +3345,24 @@
             "in": "query",
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "expert_mode",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Expert Mode" }
           }
         ],
         "requestBody": {
           "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_sdocs_new" } }
-          }
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_sdocs" } } }
         },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "type": "integer" },
-                  "title": "Response Search-Search Sdocs New"
-                }
+                "schema": { "type": "array", "items": { "type": "integer" }, "title": "Response Search-Search Sdocs" }
               }
             }
           },
@@ -5467,7 +5467,7 @@
         "required": ["user_ids", "sdoc_ids"],
         "title": "Body_search-search_code_stats"
       },
-      "Body_search-search_sdocs_new": {
+      "Body_search-search_sdocs": {
         "properties": {
           "filter": { "$ref": "#/components/schemas/Filter_SearchColumns_" },
           "sorts": {
@@ -5478,7 +5478,7 @@
         },
         "type": "object",
         "required": ["filter", "sorts"],
-        "title": "Body_search-search_sdocs_new"
+        "title": "Body_search-search_sdocs"
       },
       "BooleanOperator": {
         "type": "string",
@@ -6317,15 +6317,10 @@
             "minLength": 1,
             "title": "Title Query",
             "description": "The query term to search within the title of the Memo"
-          },
-          "prefix": {
-            "type": "boolean",
-            "title": "Prefix",
-            "description": "If true, filename prefix search is done. If false exact title is searched."
           }
         },
         "type": "object",
-        "required": ["proj_id", "user_id", "title_query", "prefix"],
+        "required": ["proj_id", "user_id", "title_query"],
         "title": "MemoTitleQuery"
       },
       "MemoUpdate": {

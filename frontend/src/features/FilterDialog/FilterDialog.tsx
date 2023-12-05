@@ -75,7 +75,7 @@ function FilterDialog({
         <Box display="flex" width="100%">
           <FormControlLabel
             control={<Switch checked={expertMode} onChange={(event) => onChangeExpertMode(event.target.checked)} />}
-            label="Expert search"
+            label="Expert filtering"
             sx={{ ml: 0.25 }}
           />
           <Box flexGrow={1} />

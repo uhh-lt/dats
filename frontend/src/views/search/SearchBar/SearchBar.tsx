@@ -1,6 +1,9 @@
 import ClearIcon from "@mui/icons-material/Clear";
+import HelpIcon from "@mui/icons-material/Help";
 import SearchIcon from "@mui/icons-material/Search";
 import {
+  Box,
+  Button,
   Card,
   CardContent,
   ClickAwayListener,
@@ -13,6 +16,7 @@ import {
   Popper,
   Radio,
   RadioGroup,
+  Switch,
   Tooltip,
 } from "@mui/material";
 import React, { useRef, useState } from "react";
@@ -39,6 +43,7 @@ function SearchBar({ placeholder }: SearchBarProps) {
   // global client state (redux)
   const searchType = useAppSelector((state) => state.search.searchType);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
+  const expertMode = useAppSelector((state) => state.search.expertMode);
   const dispatch = useAppDispatch();
 
   // react hook form
@@ -151,7 +156,39 @@ function SearchBar({ placeholder }: SearchBarProps) {
           style={{ marginTop: "-3px !important" }}
         >
           <Card variant="outlined" sx={{ borderTop: "none", borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
-            <CardContent>
+            <CardContent
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+              }}
+            >
+              <Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={expertMode}
+                      onChange={(event) => dispatch(SearchActions.onChangeExpertMode(event.target.checked))}
+                    />
+                  }
+                  label="Expert search"
+                  sx={{ ml: 0.25 }}
+                />
+                <br></br>
+                <Button
+                  size="small"
+                  startIcon={<HelpIcon />}
+                  sx={{ ml: 1 }}
+                  href={
+                    expertMode
+                      ? "https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html"
+                      : "https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-simple-query-string-query.html#simple-query-string-syntax"
+                  }
+                  target="_blank"
+                >
+                  Help
+                </Button>
+              </Box>
+              <Box flexGrow={1} />
               <FormControl>
                 <FormLabel id="radio-buttons-group-query">Query Type</FormLabel>
                 <RadioGroup

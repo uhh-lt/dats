@@ -139,7 +139,7 @@ class SearchService(metaclass=SingletonMeta):
         cls.sss = SimSearchService()
         return super(SearchService, cls).__new__(cls)
 
-    def search_new_info(self, project_id) -> List[ColumnInfo[SearchColumns]]:
+    def search_info(self, project_id) -> List[ColumnInfo[SearchColumns]]:
         with self.sqls.db_session() as db:
             metadata_column_info = create_metadata_column_info(
                 db=db,
@@ -155,10 +155,11 @@ class SearchService(metaclass=SingletonMeta):
             ColumnInfo[SearchColumns].from_column(column) for column in SearchColumns
         ] + metadata_column_info
 
-    def search_new(
+    def search(
         self,
         project_id: int,
         search_query: str,
+        expert_mode: bool,
         filter: Filter[SearchColumns],
         sorts: List[Sort[SearchColumns]],
     ) -> List[int]:
@@ -222,8 +223,11 @@ class SearchService(metaclass=SingletonMeta):
             return filtered_sdoc_ids
         else:
             # use elasticseach for full text seach
-            elastic_hits = ElasticSearchService().search_sdocs_by_content_query2(
-                proj_id=project_id, query=search_query, sdoc_ids=set(filtered_sdoc_ids)
+            elastic_hits = ElasticSearchService().search_sdocs_by_content_query(
+                proj_id=project_id,
+                query=search_query,
+                sdoc_ids=set(filtered_sdoc_ids),
+                use_simple_query=not expert_mode,
             )
 
             return [hit.sdoc_id for hit in elastic_hits.hits]

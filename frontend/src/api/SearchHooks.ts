@@ -123,15 +123,17 @@ const useSearchDocumentsNew = (projectId: number | null | undefined) => {
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
   const sortModel = useAppSelector((state) => state.search.sortModel);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
+  const expertMode = useAppSelector((state) => state.search.expertMode);
 
   console.log(filter);
 
   return useQuery<LexicalSearchResults, Error>(
     [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, sortModel, searchQuery],
     async () => {
-      const sdocIds = await SearchService.searchSdocsNew({
+      const sdocIds = await SearchService.searchSdocs({
         projectId: projectId!,
         searchQuery: searchQuery,
+        expertMode: expertMode,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
           sorts: sortModel

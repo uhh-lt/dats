@@ -15,6 +15,7 @@ interface SearchState {
   searchQuery: string;
   isTableView: boolean;
   sortModel: GridSortModel;
+  expertMode: boolean;
 }
 
 const initialState: SearchState = {
@@ -29,6 +30,7 @@ const initialState: SearchState = {
   searchQuery: "",
   isTableView: false,
   sortModel: [],
+  expertMode: false,
 };
 
 export const searchSlice = createSlice({
@@ -136,6 +138,9 @@ export const searchSlice = createSlice({
       state.searchQuery = "";
       state.searchType = QueryType.LEXICAL;
       state.selectedDocumentIds = [];
+    },
+    onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
+      state.expertMode = action.payload;
     },
   },
 });
