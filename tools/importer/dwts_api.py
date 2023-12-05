@@ -106,40 +106,6 @@ class DWTSAPI:
 
     # SDOCS
 
-    def get_sdoc_id_by_filename(
-        self, proj_id: int, filename: str, retry: bool = True
-    ) -> Optional[int]:
-        r = requests.post(
-            self.BASE_PATH
-            + f"search/sdoc?search_query=%27%27&project_id={proj_id}&expert_mode=true",
-            data=json.dumps(
-                {
-                    "filter": {
-                        "items": [
-                            {
-                                "column": "SC_SOURCE_DOCUMENT_FILENAME",
-                                "operator": "STRING_EQUALS",
-                                "value": filename,
-                            }
-                        ],
-                        "logic_operator": "or",
-                    },
-                    "sorts": [],
-                }
-            ),
-            headers={"Authorization": f"Bearer {self.access_token}"},
-        )
-
-        r.raise_for_status()
-        r = r.json()
-        if len(r) == 0:
-            if retry:
-                print(f"Could not find sdoc_id of file {filename}! Retrying...")
-                sleep(1)
-                return self.get_sdoc_id_by_filename(proj_id, filename)
-            return None
-        return r[0]
-
     def resolve_sdoc_id_from_proj_and_filename(
         self, proj_id: int, filename: str
     ) -> Optional[int]:
@@ -207,8 +173,8 @@ class DWTSAPI:
             filtered_files = []
             for file in files:
                 dict_key, (fname, content, mime) = file
-                sdoc_id = self.get_sdoc_id_by_filename(
-                    proj_id=proj_id, filename=fname, retry=False
+                sdoc_id = self.resolve_sdoc_id_from_proj_and_filename(
+                    proj_id=proj_id, filename=fname
                 )
                 if sdoc_id is None:
                     filtered_files.append(file)
