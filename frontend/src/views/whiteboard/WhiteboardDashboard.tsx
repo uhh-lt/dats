@@ -165,7 +165,7 @@ function WhiteboardDashboard() {
 
   const handleDeleteClick = (id: GridRowId) => () => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the whiteboard with id - ${id}? Note - This action cannot be undone!`,
+      text: `Do you really want to remove the Whiteboard ${id}? This action cannot be undone!`,
       onAccept: () => {
         deleteWhiteboard.mutate(
           {

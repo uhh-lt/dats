@@ -46,7 +46,7 @@ export function MemoContentSpanAnnotation({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -68,14 +68,14 @@ export function MemoContentSpanAnnotation({
             if (onMemoCreateSuccess) onMemoCreateSuccess(memo);
             closeDialog();
           },
-        }
+        },
       );
     }
   };
   const handleDeleteSpanAnnotationMemo = () => {
     if (memo) {
       ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to remove the memo content tag - ${memo.title}? Note - This action cannot be undone!`,
+        text: `Do you really want to remove the SpanAnnotation Memo "${memo.title}"? This action cannot be undone!`,
         onAccept: () => {
           deleteMutation.mutate(
             { memoId: memo.id },
@@ -87,7 +87,7 @@ export function MemoContentSpanAnnotation({
                 });
                 closeDialog();
               },
-            }
+            },
           );
         },
       });

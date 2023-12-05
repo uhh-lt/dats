@@ -194,7 +194,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     annotation: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
   ) => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the span annotation - ${annotation.id}? Note - You can reassign it later!`,
+      text: `Do you really want to remove the SpanAnnotation ${annotation.id}? You can reassign it later!`,
       onAccept: () => {
         deleteMutation.mutate(
           { spanAnnotationToDelete: annotation as SpanAnnotationReadResolved },

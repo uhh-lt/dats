@@ -46,7 +46,7 @@ export function MemoContentCode({
             });
             closeDialog();
           },
-        }
+        },
       );
     } else {
       createMutation.mutate(
@@ -68,14 +68,14 @@ export function MemoContentCode({
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
             closeDialog();
           },
-        }
+        },
       );
     }
   };
   const handleDeleteCodeMemo = () => {
     if (memo) {
       ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to remove the memo content tag - ${memo.title}? Note - This action cannot be undone!`,
+        text: `Do you really want to remove the Code Memo "${memo.title}"? This action cannot be undone!`,
         onAccept: () => {
           deleteMutation.mutate(
             { memoId: memo.id },
@@ -87,7 +87,7 @@ export function MemoContentCode({
                 });
                 closeDialog();
               },
-            }
+            },
           );
         },
       });

@@ -37,7 +37,7 @@ function ProjectUpdate() {
   const handleClickRemoveProject = () => {
     if (project.data && user) {
       ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to delete the project ${project.data.title}? This action cannot be undone and  will remove project and all of it's content including documents!`,
+        text: `Do you really want to delete the project "${project.data.title}"? This action cannot be undone and  will remove project and all of it's content including documents!`,
         onAccept: () => {
           deleteProjectMutation.mutate(
             { projId: project.data.id, userId: user.id },

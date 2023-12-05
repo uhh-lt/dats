@@ -15,7 +15,7 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
     (tag: DocumentTagRead) => {
       if (sdocId) {
         ConfirmationAPI.openConfirmationDialog({
-          text: `Do you really want to remove the document tag - ${sdocId}? Note - You can reassign this tag later!`,
+          text: `Do you really want to remove the DocumentTag "${tag.title}" from SourceDocument ${sdocId} ? You can reassign this tag later!`,
           onAccept: () => {
             const mutation = removeTagMutation.mutate;
             mutation(
@@ -30,7 +30,7 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
                     severity: "success",
                   });
                 },
-              }
+              },
             );
           },
         });
@@ -38,7 +38,7 @@ export function useDeletableDocumentTags(sdocId: number | undefined) {
         throw new Error("Trying to delete DocumentTag from undefined SourceDocument");
       }
     },
-    [removeTagMutation.mutate, sdocId]
+    [removeTagMutation.mutate, sdocId],
   );
 
   return { documentTags, handleDeleteDocumentTag };
