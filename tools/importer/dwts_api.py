@@ -1,6 +1,7 @@
 import json
 from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.parse import quote
 
 import requests
 
@@ -39,6 +40,7 @@ class DWTSAPI:
         r.raise_for_status()
         data = r.json()
         self.access_token = data["access_token"]
+        self.refresh_token = data["refresh_token"]
         self.token_type = data["token_type"]
         print("Logged in!")
 
@@ -46,11 +48,9 @@ class DWTSAPI:
         headers = {
             "accept": "application/json",
         }
-        data = {
-            "refresh_token": self.refresh_token,
-        }
         r = requests.post(
-            f"{self.BASE_PATH}authentication/refresh_access", headers=headers, data=data
+            f"{self.BASE_PATH}authentication/refresh_access?refresh_token={self.refresh_token}",
+            headers=headers,
         )
         r.raise_for_status()
         data = r.json()
@@ -109,13 +109,12 @@ class DWTSAPI:
     def resolve_sdoc_id_from_proj_and_filename(
         self, proj_id: int, filename: str
     ) -> Optional[int]:
-        r = requests.get(
-            self.BASE_PATH
-            + f"project/{proj_id}/resolve_filename/{filename}?only_finished=false",
-            headers={"Authorization": f"Bearer {self.access_token}"},
-        )
-        r.raise_for_status()
         try:
+            r = requests.get(
+                self.BASE_PATH
+                + f"project/{proj_id}/resolve_filename/{quote(filename)}?only_finished=false",
+                headers={"Authorization": f"Bearer {self.access_token}"},
+            )
             sdoc_id = r.json()
             return sdoc_id
         except Exception:
@@ -181,13 +180,16 @@ class DWTSAPI:
             print(f"Filtered {len(files) - len(filtered_files)} files !")
             files = filtered_files
 
-        r = requests.put(
-            self.BASE_PATH + f"project/{proj_id}/sdoc",
-            files=files,
-            headers={"Authorization": f"Bearer {self.access_token}"},
-        )
-        r.raise_for_status()
-        print(f"Started uploading {len(files)} files.")
+        if len(files) > 0:
+            r = requests.put(
+                self.BASE_PATH + f"project/{proj_id}/sdoc",
+                files=files,
+                headers={"Authorization": f"Bearer {self.access_token}"},
+            )
+            r.raise_for_status()
+            print(f"Started uploading {len(files)} files.")
+        else:
+            print("No files to upload!")
         return len(files)
 
     # TAGS
