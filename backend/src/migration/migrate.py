@@ -78,6 +78,7 @@ def run_required_migrations():
 
 
 def __migrate_database_schema() -> None:
+    SQLService().create_database_if_not_exists()
     config = Config("alembic.ini")
     upgrade(config, "head")
     print("MIGRATED DB SCHEMA!")
