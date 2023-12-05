@@ -218,7 +218,12 @@ for file in directory.glob(f"**/*.{args.file_extension}"):
             mime = args.mime_type
         files.append(("uploaded_files", (filename, file_bytes, mime)))
 
-if len(files) != 0:
+# remove duplicate files
+temp = {upload_file[1][0]: upload_file for upload_file in files}
+files = list(temp.values())
+
+
+def upload_files(files: List[Tuple[str, Tuple[str, bytes, str]]]):
     # status before upload
     status = api.read_project_status(proj_id=project["id"])
     sdocs_in_project = status["num_sdocs_finished"]
@@ -240,6 +245,17 @@ if len(files) != 0:
         )
 
     print("Upload success!")
+
+
+# upload files batchwise, 200 files at a time
+num_batches = len(files) // 200 + 1
+current_batch = 1
+for i in range(0, len(files), 200):
+    print(f"\n\nUploading batch {current_batch} / {num_batches}")
+    upload_files(files=files[i : i + 200])
+    api.refresh_login()
+    current_batch += 1
+
 
 # create new tag if it does not exist
 tag = api.get_tag_by_title(proj_id=project["id"], title=args.tag_name)
