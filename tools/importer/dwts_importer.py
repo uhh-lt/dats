@@ -248,11 +248,13 @@ def upload_files(files: List[Tuple[str, Tuple[str, bytes, str]]]):
     print("Upload success!")
 
 
+print(f"Uploading {len(files)} files to project '{project['title']}'!")
+
 # upload files batchwise, 200 files at a time
 num_batches = math.ceil(len(files) / 200)
 current_batch = 1
 for i in range(0, len(files), 200):
-    print(f"\n\nUploading batch {current_batch} / {num_batches}")
+    print(f"\nUploading batch {current_batch} / {num_batches}")
     upload_files(files=files[i : i + 200])
     api.refresh_login()
     current_batch += 1
