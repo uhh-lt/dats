@@ -9,8 +9,11 @@ import string
 from typing import Generator
 
 import pytest
+from loguru import logger
 
+from app.core.db.sql_service import SQLService
 from app.core.startup import startup
+from config import conf
 from migration.migrate import run_required_migrations
 
 os.environ["RAY_ENABLED"] = "False"
@@ -19,6 +22,13 @@ os.environ["RAY_ENABLED"] = "False"
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
+    if SQLService().database_contains_data():
+        # Make sure we don't accidentally delete important data
+        logger.error(
+            f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it."
+        )
+        exit(1)
+
     run_required_migrations()
     startup(reset_data=True)
     os.environ["STARTUP_DONE"] = "1"
@@ -29,7 +39,6 @@ from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.code import CodeCreate, CodeRead
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserCreate, UserRead
-from app.core.db.sql_service import SQLService
 
 
 # Always use the asyncio backend for async tests
