@@ -16,6 +16,7 @@ class DWTSAPI:
         self.username = username
         self.password = password
         self.access_token = None
+        self.refresh_token = None
         self.token_type = None
 
     # LOGIN
@@ -40,6 +41,23 @@ class DWTSAPI:
         self.access_token = data["access_token"]
         self.token_type = data["token_type"]
         print("Logged in!")
+
+    def refresh_login(self):
+        headers = {
+            "accept": "application/json",
+        }
+        data = {
+            "refresh_token": self.refresh_token,
+        }
+        r = requests.post(
+            f"{self.BASE_PATH}authentication/refresh_access", headers=headers, data=data
+        )
+        r.raise_for_status()
+        data = r.json()
+        self.access_token = data["access_token"]
+        self.refresh_token = data["refresh_token"]
+        self.token_type = data["token_type"]
+        print("Refreshed login!")
 
     # PROJECTS
 
@@ -92,7 +110,8 @@ class DWTSAPI:
         self, proj_id: int, filename: str, retry: bool = True
     ) -> Optional[int]:
         r = requests.post(
-            self.BASE_PATH + f"search/sdoc_new?search_query=" f"&project_id={proj_id}",
+            self.BASE_PATH
+            + f"search/sdoc?search_query=%27%27&project_id={proj_id}&expert_mode=true",
             data=json.dumps(
                 {
                     "filter": {
@@ -139,7 +158,8 @@ class DWTSAPI:
     def read_all_sdocs(self, proj_id: int):
         # get all sdoc ids
         r = requests.post(
-            self.BASE_PATH + f"search/sdoc_new?search_query=" f"&project_id={proj_id}",
+            self.BASE_PATH
+            + f"search/sdoc?search_query=%27%27&project_id={proj_id}&expert_mode=true",
             data=json.dumps(
                 {"filter": {"items": [], "logic_operator": "or"}, "sorts": []}
             ),
@@ -151,7 +171,8 @@ class DWTSAPI:
     def read_all_sdocs_by_tags(self, proj_id: int, tags: List[int]):
         # get all sdoc ids
         r = requests.post(
-            self.BASE_PATH + f"search/sdoc_new?search_query=" f"&project_id={proj_id}",
+            self.BASE_PATH
+            + f"search/sdoc?search_query=%27%27&project_id={proj_id}&expert_mode=true",
             data=json.dumps(
                 {
                     "filter": {
