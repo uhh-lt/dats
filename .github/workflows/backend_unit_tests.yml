@@ -68,6 +68,7 @@ jobs:
           # disable backend and frontend
           export COMPOSE_PROFILES=
           export RAY_ENABLED=False
+          export POSTRES_DB=dwts-test
           docker compose -f compose-test.yml up -d --quiet-pull
           echo Waiting for containers to start...
           sleep 30

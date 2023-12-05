@@ -27,6 +27,7 @@ from app.core.search.elasticsearch_service import ElasticSearchService
 
 
 def run_required_migrations():
+    SQLService().create_database_if_not_exists()
     __migrate_database_schema()
     with SQLService().db_session() as db:
         db_version = db.query(VersionORM).first()
