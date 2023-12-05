@@ -6,7 +6,9 @@ from app.core.data.dto.source_document_link import SourceDocumentLinkCreate
 from app.core.data.repo.repo_service import RepoService
 from app.preprocessing.pipeline.model.pipeline_cargo import PipelineCargo
 from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
+from config import conf
 
+cc = conf.celery
 repo: RepoService = RepoService()
 
 
@@ -19,15 +21,21 @@ def extract_sdoc_links_from_html_of_mixed_documents(
     soup = BeautifulSoup(pptd.html, "html.parser")
 
     # extract and create text -> image links
-    img_links = soup.findAll("img")
-    img_srcs = set([img["src"].strip() for img in img_links if img.has_attr("src")])
-    for img_src in img_srcs:
-        create_dtos.append(
-            SourceDocumentLinkCreate(
-                parent_source_document_id=None,
-                linked_source_document_filename=repo.truncate_filename(img_src),
+    filepath = pptd.filepath
+    if filepath.suffix == ".pdf" and not cc.preprocessing.extract_images_from_pdf:
+        create_dtos = []
+    elif filepath.suffix == ".docx" and not cc.preprocessing.extract_images_from_docx:
+        create_dtos = []
+    else:
+        img_links = soup.findAll("img")
+        img_srcs = set([img["src"].strip() for img in img_links if img.has_attr("src")])
+        for img_src in img_srcs:
+            create_dtos.append(
+                SourceDocumentLinkCreate(
+                    parent_source_document_id=None,
+                    linked_source_document_filename=repo.truncate_filename(img_src),
+                )
             )
-        )
 
     # extract and create text -> audio links
     audio_links = soup.findAll("audio")
@@ -62,6 +70,6 @@ def extract_sdoc_links_from_html_of_mixed_documents(
                 linked_source_document_filename=repo.truncate_filename(video_src),
             )
         )
-    pptd.sdoc_link_create_dtos = create_dtos
 
+    pptd.sdoc_link_create_dtos = create_dtos
     return cargo
