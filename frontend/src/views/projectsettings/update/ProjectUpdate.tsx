@@ -15,6 +15,7 @@ import ProjectDocuments from "./ProjectDocuments";
 import ProjectTags from "./ProjectTags";
 import ProjectUsers from "./ProjectUsers";
 import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 import ProjectMetadata from "./ProjectMetadata";
 
 function ProjectUpdate() {
@@ -35,18 +36,23 @@ function ProjectUpdate() {
   const deleteProjectMutation = ProjectHooks.useDeleteProject();
   const handleClickRemoveProject = () => {
     if (project.data && user) {
-      deleteProjectMutation.mutate(
-        { projId: project.data.id, userId: user.id },
-        {
-          onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
-              text: "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
-              severity: "success",
-            });
-            navigate(`/projectsettings`);
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to delete the project "${project.data.title}"? This action cannot be undone and  will remove project and all of it's content including documents!`,
+        onAccept: () => {
+          deleteProjectMutation.mutate(
+            { projId: project.data.id, userId: user.id },
+            {
+              onSuccess: (data) => {
+                SnackbarAPI.openSnackbar({
+                  text: "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
+                  severity: "success",
+                });
+                navigate(`/projectsettings`);
+              },
+            },
+          );
         },
-      );
+      });
     }
   };
 

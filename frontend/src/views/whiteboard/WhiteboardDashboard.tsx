@@ -24,6 +24,7 @@ import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { dateToLocaleString } from "../../utils/DateUtils";
 import CreateWhiteboardCard from "./CreateWhiteboardCard";
+import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI";
 
 function WhiteboardDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -163,19 +164,24 @@ function WhiteboardDashboard() {
   );
 
   const handleDeleteClick = (id: GridRowId) => () => {
-    deleteWhiteboard.mutate(
-      {
-        whiteboardId: id as number,
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Do you really want to remove the Whiteboard ${id}? This action cannot be undone!`,
+      onAccept: () => {
+        deleteWhiteboard.mutate(
+          {
+            whiteboardId: id as number,
+          },
+          {
+            onSuccess(data, variables, context) {
+              SnackbarAPI.openSnackbar({
+                text: `Deleted whiteboard '${data.title}'`,
+                severity: "success",
+              });
+            },
+          },
+        );
       },
-      {
-        onSuccess(data, variables, context) {
-          SnackbarAPI.openSnackbar({
-            text: `Deleted whiteboard '${data.title}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   const processRowUpdate = (newRow: GridRowModel<Whiteboard>) => {

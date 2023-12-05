@@ -14,6 +14,7 @@ import { useAppDispatch } from "../../../plugins/ReduxHooks";
 import ColorUtils from "../../../utils/ColorUtils";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
 import { AnnoActions } from "../../../views/annotation/annoSlice";
+import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 
 export const openCodeEditDialog = (code: CodeRead) => {
@@ -143,18 +144,23 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   const handleCodeDelete = () => {
     // disallow deleting of SYSTEM CODES
     if (code && code.user_id !== SYSTEM_USER_ID) {
-      deleteCodeMutation.mutate(
-        { codeId: code.id },
-        {
-          onSuccess: (data: CodeRead) => {
-            setOpen(false); // close dialog
-            SnackbarAPI.openSnackbar({
-              text: `Deleted code ${data.name}`,
-              severity: "success",
-            });
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to delete the code "${code.name}"? This action cannot be undone!`,
+        onAccept: () => {
+          deleteCodeMutation.mutate(
+            { codeId: code.id },
+            {
+              onSuccess: (data: CodeRead) => {
+                setOpen(false); // close dialog
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted code ${data.name}`,
+                  severity: "success",
+                });
+              },
+            },
+          );
         },
-      );
+      });
     } else {
       throw new Error("Invalid invocation of method handleCodeDelete! Only call when code.data is available!");
     }

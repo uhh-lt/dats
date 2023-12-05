@@ -2,6 +2,7 @@ import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
 import MemoHooks from "../../api/MemoHooks";
 import { BBoxAnnotationReadResolvedCode, MemoRead } from "../../api/openapi";
 import { useAuth } from "../../auth/AuthProvider";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
 import SnackbarAPI from "../Snackbar/SnackbarAPI";
 import { MemoCreateSuccessHandler } from "./MemoAPI";
 import { MemoForm } from "./MemoForm";
@@ -78,18 +79,23 @@ export function MemoContentBboxAnnotation({
   };
   const handleDeleteBboxAnnotationMemo = () => {
     if (memo) {
-      deleteMutation.mutate(
-        { memoId: memo.id },
-        {
-          onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
-              text: `Deleted memo for bboxAnnotation ${data.attached_object_id}`,
-              severity: "success",
-            });
-            closeDialog();
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the BBoxAnnotation Memo "${memo.title}"? This action cannot be undone!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { memoId: memo.id },
+            {
+              onSuccess: (data) => {
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted memo for bboxAnnotation ${data.attached_object_id}`,
+                  severity: "success",
+                });
+                closeDialog();
+              },
+            },
+          );
         },
-      );
+      });
     } else {
       throw Error("Invalid invocation of handleDeleteBboxAnnotationMemo. No memo to delete.");
     }

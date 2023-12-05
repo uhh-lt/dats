@@ -10,6 +10,7 @@ import { HexColorPicker } from "react-colorful";
 import ColorUtils from "../../../utils/ColorUtils";
 import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead";
 import TagRenderer from "../../../components/DataGrid/TagRenderer";
 import { DocumentTagUpdate } from "../../../api/openapi";
@@ -107,18 +108,23 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   const handleError: SubmitErrorHandler<DocumentTagUpdate> = (data) => console.error(data);
   const handleDelete = () => {
     if (tag.data) {
-      deleteTagMutation.mutate(
-        { tagId: tag.data.id },
-        {
-          onSuccess: (data) => {
-            setOpen(false); // close dialog
-            SnackbarAPI.openSnackbar({
-              text: `Deleted tag with id ${data.id}`,
-              severity: "success",
-            });
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to delete the tag "${tag.data.title}"? This action cannot be undone!`,
+        onAccept: () => {
+          deleteTagMutation.mutate(
+            { tagId: tag.data.id },
+            {
+              onSuccess: (data) => {
+                setOpen(false); // close dialog
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted tag with id ${data.id}`,
+                  severity: "success",
+                });
+              },
+            },
+          );
         },
-      );
+      });
     } else {
       throw new Error("Invalid invocation of method handleDelete! Only call when tag.data is available!");
     }

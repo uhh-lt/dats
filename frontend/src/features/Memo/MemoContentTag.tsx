@@ -6,6 +6,7 @@ import MemoHooks from "../../api/MemoHooks";
 import { MemoForm } from "./MemoForm";
 import { useAuth } from "../../auth/AuthProvider";
 import { MemoContentProps } from "./MemoContentBboxAnnotation";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
 
 interface MemoContentTagProps {
   tag: DocumentTagRead;
@@ -73,18 +74,23 @@ export function MemoContentTag({
   };
   const handleDeleteTagMemo = () => {
     if (memo) {
-      deleteMutation.mutate(
-        { memoId: memo.id },
-        {
-          onSuccess: () => {
-            SnackbarAPI.openSnackbar({
-              text: `Deleted memo for tag ${tag.title}`,
-              severity: "success",
-            });
-            closeDialog();
-          },
+      ConfirmationAPI.openConfirmationDialog({
+        text: `Do you really want to remove the DocumentTag Memo "${memo.title}"? This action cannot be undone!`,
+        onAccept: () => {
+          deleteMutation.mutate(
+            { memoId: memo.id },
+            {
+              onSuccess: () => {
+                SnackbarAPI.openSnackbar({
+                  text: `Deleted memo for tag ${tag.title}`,
+                  severity: "success",
+                });
+                closeDialog();
+              },
+            },
+          );
         },
-      );
+      });
     } else {
       throw Error("Invalid invocation of handleDeleteTagMemo. No memo to delete.");
     }
