@@ -1,5 +1,6 @@
 import argparse
 import json
+import math
 from pathlib import Path
 from time import sleep
 from typing import List, Tuple
@@ -248,7 +249,7 @@ def upload_files(files: List[Tuple[str, Tuple[str, bytes, str]]]):
 
 
 # upload files batchwise, 200 files at a time
-num_batches = len(files) // 200 + 1
+num_batches = math.ceil(len(files) / 200)
 current_batch = 1
 for i in range(0, len(files), 200):
     print(f"\n\nUploading batch {current_batch} / {num_batches}")
