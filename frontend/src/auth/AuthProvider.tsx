@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     };
 
     // Refresh 60 seconds before the access token expires
-    const refreshBefore = 1000;
+    const refreshBefore = 60 * 1000;
     const msToWait = Math.max(accessTokenExpires.getTime() - Date.now() - refreshBefore, 0);
     const handle = setTimeout(() => {
       refreshAccessToken();

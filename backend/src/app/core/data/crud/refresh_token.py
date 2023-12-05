@@ -55,6 +55,9 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
 
         return token
 
+    def read(self, _db: Session, _id: int) -> RefreshTokenORM:
+        raise Exception("Use read_and_verify instead")
+
     def revoke(self, db: Session, token: RefreshTokenORM) -> RefreshTokenORM:
         token.revoked_at = datetime.utcnow()
         db.add(token)

@@ -12,6 +12,8 @@ def test_authentication_required():
         ({"GET"}, "/"),
         ({"GET"}, "/heartbeat"),
         ({"POST"}, "/authentication/login"),
+        ({"POST"}, "/authentication/logout"),
+        ({"POST"}, "/authentication/refresh_access"),
         ({"POST"}, "/authentication/register"),
         # This route requires authentication, but does so
         # in a manner we couldn't easily verify in the test.
