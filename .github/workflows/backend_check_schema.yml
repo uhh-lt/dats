@@ -1,9 +1,6 @@
 name: Check backend database schema
 on:
   pull_request:
-    branches:
-      - main
-      - mwp_v1
     paths:
       - "backend/**"
       - ".github/**"
