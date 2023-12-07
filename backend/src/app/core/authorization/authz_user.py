@@ -51,7 +51,7 @@ class AuthzUser:
         )
 
     def assert_in_project(self, project_id: int):
-        authorized_project = self.db.query(
+        authorized_project_exists = self.db.query(
             self.db.query(ProjectORM)
             .join(ProjectORM.users)
             .filter(UserORM.id == self.user.id, ProjectORM.id == project_id)
@@ -59,7 +59,7 @@ class AuthzUser:
         ).scalar()
 
         self.assert_true(
-            authorized_project is not None,
+            authorized_project_exists,
             "User and object need to be in the same project",
         )
 

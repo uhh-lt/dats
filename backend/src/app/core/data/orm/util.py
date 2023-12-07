@@ -63,7 +63,7 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
 
 
 def get_orm_user_id(orm: ORMBase) -> Optional[int]:
-    proj_id = getattr(orm, "project_id", None)
+    proj_id = getattr(orm, "user_id", None)
     if proj_id is not None:
         return proj_id
 
