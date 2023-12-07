@@ -6,10 +6,10 @@ from sqlalchemy.orm import Session
 from api.dependencies import (
     get_current_user,
     get_db_session,
-    is_authorized,
     skip_limit_params,
 )
 from api.util import get_object_memo_for_user, get_object_memos
+from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.crud_base import NoSuchElementError
@@ -18,8 +18,7 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document import crud_sdoc
-from app.core.data.crud.user import crud_user
-from app.core.data.dto.action import ActionQueryParameters, ActionRead, ActionType
+from app.core.data.dto.action import ActionQueryParameters, ActionRead
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
@@ -48,7 +47,6 @@ router = APIRouter(
     response_model=ProjectRead,
     summary="Creates a new Project",
     description="Creates a new Project.",
-    dependencies=[is_authorized(ActionType.CREATE, crud_project)],
 )
 async def create_new_project(
     *,
@@ -71,33 +69,19 @@ async def create_new_project(
 
 
 @router.get(
-    "",
-    response_model=List[ProjectRead],
-    summary="Returns all Projects of the current user",
-    description="Returns all Projects of the current user",
-    dependencies=[is_authorized(ActionType.READ, crud_project)],
-)
-async def read_all(
-    *,
-    db: Session = Depends(get_db_session),
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-) -> List[ProjectRead]:
-    # TODO Flo: only return the projects of the current user
-    db_objs = crud_project.read_multi(db=db, **skip_limit)
-    return [ProjectRead.model_validate(proj) for proj in db_objs]
-
-
-@router.get(
     "/{proj_id}",
     response_model=ProjectRead,
     summary="Returns the Project with the given ID",
     description="Returns the Project with the given ID if it exists",
-    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
 async def read_project(
-    *, db: Session = Depends(get_db_session), proj_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     db_obj = crud_project.read(db=db, id=proj_id)
     return ProjectRead.model_validate(db_obj)
 
@@ -107,12 +91,15 @@ async def read_project(
     response_model=ProjectRead,
     summary="Updates the Project",
     description="Updates the Project with the given ID.",
-    dependencies=[is_authorized(ActionType.UPDATE, crud_project, "proj_id")],
 )
 async def update_project(
-    *, db: Session = Depends(get_db_session), proj_id: int, proj: ProjectUpdate
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    proj: ProjectUpdate,
+    authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
     db_obj = crud_project.update(db=db, id=proj_id, update_dto=proj)
     return ProjectRead.model_validate(db_obj)
 
@@ -122,12 +109,15 @@ async def update_project(
     response_model=ProjectRead,
     summary="Removes the Project",
     description="Removes the Project with the given ID.",
-    dependencies=[is_authorized(ActionType.DELETE, crud_project, "proj_id")],
 )
 async def delete_project(
-    *, db: Session = Depends(get_db_session), proj_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> ProjectRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     db_obj = crud_project.remove(db=db, id=proj_id)
 
     try:
@@ -148,7 +138,6 @@ async def delete_project(
     response_model=PaginatedSourceDocumentReads,
     summary="Returns all SourceDocuments of the Project.",
     description="Returns all SourceDocuments of the Project with the given ID.",
-    dependencies=[is_authorized(ActionType.READ, crud_project, "proj_id")],
 )
 async def get_project_sdocs(
     *,
@@ -156,8 +145,10 @@ async def get_project_sdocs(
     only_finished: bool = True,
     db: Session = Depends(get_db_session),
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    authz_user: AuthzUser = Depends(),
 ) -> PaginatedSourceDocumentReads:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     sdocs_on_page = [
         SourceDocumentRead.model_validate(sdoc)
         for sdoc in crud_sdoc.read_by_project(
@@ -190,13 +181,6 @@ async def get_project_sdocs(
     response_model=PreprocessingJobRead,
     summary="Uploads one or multiple SourceDocument to the Project",
     description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
-    dependencies=[
-        is_authorized(
-            ActionType.UPDATE,
-            crud_project,
-            "proj_id",
-        )
-    ],
 )
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
@@ -210,7 +194,10 @@ async def upload_project_sdoc(
             "File(s) that get uploaded and " "represented by the SourceDocument(s)"
         ),
     ),
+    authz_user: AuthzUser = Depends(),
 ) -> PreprocessingJobRead:
+    authz_user.assert_in_project(proj_id)
+
     pps: PreprocessingService = PreprocessingService()
     return pps.prepare_and_start_preprocessing_job_async(
         proj_id=proj_id, uploaded_files=uploaded_files
@@ -222,12 +209,15 @@ async def upload_project_sdoc(
     response_model=List[int],
     summary="Removes all SourceDocuments of the Project",
     description="Removes all SourceDocuments of the Project with the given ID if it exists",
-    dependencies=[is_authorized(ActionType.UPDATE, crud_project, "proj_id")],
 )
 async def delete_project_sdocs(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     return crud_sdoc.remove_by_project(db=db, proj_id=proj_id)
 
 
@@ -236,13 +226,16 @@ async def delete_project_sdocs(
     response_model=UserRead,
     summary="Associates the User with the Project",
     description="Associates an existing User to the Project with the given ID if it exists",
-    dependencies=[
-        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-    ],
 )
 async def associate_user_to_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> UserRead:
+    authz_user.assert_in_project(proj_id)
+
     user_db_obj = crud_project.associate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.model_validate(user_db_obj)
 
@@ -252,14 +245,16 @@ async def associate_user_to_project(
     response_model=UserRead,
     summary="Dissociates the Users with the Project",
     description="Dissociates the Users with the Project with the given ID if it exists",
-    dependencies=[
-        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-    ],
 )
 async def dissociate_user_from_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> UserRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     user_db_obj = crud_project.dissociate_user(db=db, proj_id=proj_id, user_id=user_id)
     return UserRead.model_validate(user_db_obj)
 
@@ -269,14 +264,15 @@ async def dissociate_user_from_project(
     response_model=List[UserRead],
     summary="Returns all Users of the Project",
     description="Returns all Users of the Project with the given ID",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-    ],
 )
 async def get_project_users(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[UserRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [UserRead.model_validate(user) for user in proj_db_obj.users]
 
@@ -286,14 +282,15 @@ async def get_project_users(
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project",
     description="Returns all Codes of the Project with the given ID",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-    ],
 )
 async def get_project_codes(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[CodeRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     result = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
     result.sort(key=lambda c: c.id)
@@ -305,14 +302,15 @@ async def get_project_codes(
     response_model=List[int],
     summary="Removes all Codes of the Project",
     description="Removes all Codes of the Project with the given ID if it exists",
-    dependencies=[
-        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-    ],
 )
 async def delete_project_codes(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     return crud_code.remove_by_project(db=db, proj_id=proj_id)
 
 
@@ -321,14 +319,15 @@ async def delete_project_codes(
     response_model=List[DocumentTagRead],
     summary="Returns all DocumentTags of the Project",
     description="Returns all DocumentTags of the Project with the given ID",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-    ],
 )
 async def get_project_tags(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[DocumentTagRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     proj_db_obj = crud_project.read(db=db, id=proj_id)
     return [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
 
@@ -338,14 +337,15 @@ async def get_project_tags(
     response_model=List[int],
     summary="Removes all DocumentTags of the Project",
     description="Removes all DocumentTags of the Project with the given ID if it exists",
-    dependencies=[
-        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-    ],
 )
 async def delete_project_tags(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     return crud_document_tag.remove_by_project(db=db, proj_id=proj_id)
 
 
@@ -354,15 +354,16 @@ async def delete_project_tags(
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project from a User",
     description="Returns all Codes of the Project from a User",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-        is_authorized(ActionType.READ, crud_user, "user_id"),
-    ],
 )
 async def get_user_codes_of_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[CodeRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     return [
         CodeRead.model_validate(code_db_obj)
         for code_db_obj in crud_code.read_by_user_and_project(
@@ -376,15 +377,16 @@ async def get_user_codes_of_project(
     response_model=int,
     summary="Removes all Codes of the Project from a User",
     description="Removes all Codes of the Project from a User. Returns the number of removed Codes.",
-    dependencies=[
-        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
-    ],
 )
 async def remove_user_codes_of_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     return crud_code.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
 
 
@@ -393,10 +395,6 @@ async def remove_user_codes_of_project(
     response_model=List[MemoRead],
     summary="Returns all Memos of the Project from a User",
     description="Returns all Memos of the Project from a User",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-        is_authorized(ActionType.READ, crud_user, "user_id"),
-    ],
 )
 async def get_user_memos_of_project(
     *,
@@ -408,8 +406,10 @@ async def get_user_memos_of_project(
         default=False,
     ),
     db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     db_objs = crud_memo.read_by_user_and_project(
         db=db, user_id=user_id, proj_id=proj_id, only_starred=only_starred
     )
@@ -423,15 +423,16 @@ async def get_user_memos_of_project(
     response_model=List[ActionRead],
     summary="Returns all Actions of the Project from a User",
     description="Returns all Actions of the Project from a User",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-        is_authorized(ActionType.READ, crud_user, "user_id"),
-    ],
 )
 async def get_user_actions_of_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[ActionRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     return [
         ActionRead.model_validate(ar)
         for ar in crud_action.read_by_user_and_project(
@@ -445,16 +446,15 @@ async def get_user_actions_of_project(
     response_model=List[ActionRead],
     summary="Returns all Actions",
     description="Returns all Actions of the Project",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-    ],
 )
 async def query_actions_of_project(
     *,
     query_params: ActionQueryParameters,
     db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[ActionRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(query_params.proj_id)
+
     return [
         ActionRead.model_validate(action)
         for action in crud_action.read_by(
@@ -469,35 +469,23 @@ async def query_actions_of_project(
     ]
 
 
-@router.delete(
-    "/{proj_id}/user/{user_id}/memo",
-    response_model=List[int],
-    summary="Removes all Memos of the Project from a User",
-    description="Removes all Memos of the Project from a User. Returns the number of removed Memos.",
-    dependencies=[
-        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-        is_authorized(ActionType.UPDATE, crud_user, "user_id"),
-    ],
-)
-async def remove_user_memos_of_project(
-    *, proj_id: int, user_id: int, db: Session = Depends(get_db_session)
-) -> List[int]:
-    # TODO Flo: only if the user has access?
-    return crud_memo.remove_by_user_and_project(db=db, user_id=user_id, proj_id=proj_id)
-
-
 @router.put(
     "/{proj_id}/memo",
     response_model=MemoRead,
     summary="Adds a Memo of the current User to the Project.",
     description="Adds a Memo of the current User to the Project with the given ID if it exists",
-    dependencies=[
-        is_authorized(ActionType.UPDATE, crud_project, "proj_id"),
-    ],
 )
 async def add_memo(
-    *, db: Session = Depends(get_db_session), proj_id: int, memo: MemoCreate
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    memo: MemoCreate,
+    authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
+    authz_user.assert_in_project(proj_id)
+    authz_user.assert_is_same_user(memo.user_id)
+    authz_user.assert_in_project(memo.project_id)
+
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
@@ -512,13 +500,15 @@ async def add_memo(
     response_model=List[MemoRead],
     summary="Returns the Memo of the current User for the Project.",
     description="Returns the Memo of the current User for the Project with the given ID.",
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-    ],
 )
 async def get_memos(
-    *, db: Session = Depends(get_db_session), proj_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
+    authz_user.assert_in_project(proj_id)
+
     db_obj = crud_project.read(db=db, id=proj_id)
     return get_object_memos(db_obj=db_obj)
 
@@ -531,14 +521,16 @@ async def get_memos(
         "Returns the Memo attached to the Project with the given ID of the User with the"
         " given ID if it exists."
     ),
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-        is_authorized(ActionType.READ, crud_user, "user_id"),
-    ],
 )
 async def get_user_memo(
-    *, db: Session = Depends(get_db_session), proj_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
+    authz_user.assert_in_project(proj_id)
+
     db_obj = crud_project.read(db=db, id=proj_id)
     return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
@@ -550,10 +542,6 @@ async def get_user_memo(
     description=(
         "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
     ),
-    dependencies=[
-        is_authorized(ActionType.READ, crud_project, "proj_id"),
-        # TODO add authorization for the specific source document?
-    ],
 )
 async def resolve_filename(
     *,
@@ -561,7 +549,10 @@ async def resolve_filename(
     proj_id: int,
     filename: str,
     only_finished: bool = True,
+    authz_user: AuthzUser = Depends(),
 ) -> int:
+    authz_user.assert_in_project(proj_id)
+
     sdoc = crud_sdoc.read_by_filename(
         db=db, proj_id=proj_id, only_finished=only_finished, filename=filename
     )
@@ -582,8 +573,10 @@ async def get_all_metadata(
     *,
     db: Session = Depends(get_db_session),
     proj_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[ProjectMetadataRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
     metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata
