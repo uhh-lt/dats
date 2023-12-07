@@ -6,12 +6,11 @@ from sqlalchemy.orm import Session
 from api.dependencies import (
     get_current_user,
     get_db_session,
-    is_authorized,
     skip_limit_params,
 )
+from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.user import crud_user
-from app.core.data.dto.action import ActionType
 from app.core.data.dto.annotation_document import AnnotationDocumentRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import PublicUserRead, UserRead, UserUpdate
@@ -65,11 +64,16 @@ async def get_all(
     response_model=UserRead,
     summary="Updates the User",
     description="Updates the User with the given ID if it exists",
-    dependencies=[is_authorized(ActionType.UPDATE, crud_user, "user_id")],
 )
 async def update_by_id(
-    *, db: Session = Depends(get_db_session), user_id: int, user: UserUpdate
+    *,
+    db: Session = Depends(get_db_session),
+    user_id: int,
+    user: UserUpdate,
+    authz_user: AuthzUser = Depends(),
 ) -> UserRead:
+    authz_user.assert_is_same_user(user_id)
+
     db_user = crud_user.update(db=db, id=user_id, update_dto=user)
     return UserRead.model_validate(db_user)
 
@@ -79,11 +83,14 @@ async def update_by_id(
     response_model=UserRead,
     summary="Removes the User",
     description="Removes the User with the given ID if it exists",
-    dependencies=[is_authorized(ActionType.DELETE, crud_user, "user_id")],
 )
 async def delete_by_id(
-    *, db: Session = Depends(get_db_session), user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> UserRead:
+    authz_user.assert_is_same_user(user_id)
     db_user = crud_user.remove(db=db, id=user_id)
     return UserRead.model_validate(db_user)
 
@@ -93,12 +100,15 @@ async def delete_by_id(
     response_model=List[ProjectRead],
     summary="Returns all Projects of the User",
     description="Returns all Projects of the User with the given ID",
-    # Only users themselves can see what projects they are in
-    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
 )
 async def get_user_projects(
-    *, user_id: int, db: Session = Depends(get_db_session)
+    *,
+    user_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[ProjectRead]:
+    authz_user.assert_is_same_user(user_id)
+
     db_obj = crud_user.read(db=db, id=user_id)
     return [ProjectRead.model_validate(proj) for proj in db_obj.projects]
 
@@ -108,11 +118,16 @@ async def get_user_projects(
     response_model=List[AnnotationDocumentRead],
     summary="Returns sdoc ids of sdocs the User recently modified (annotated)",
     description="Returns the top k sdoc ids that the User recently modified (annotated)",
-    dependencies=[is_authorized(ActionType.READ, crud_user, "user_id")],
 )
 async def recent_activity(
-    *, user_id: int, k: int, db: Session = Depends(get_db_session)
+    *,
+    user_id: int,
+    k: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> List[AnnotationDocumentRead]:
+    authz_user.assert_is_same_user(user_id)
+
     # get all adocs of a user
     user_adocs = [
         AnnotationDocumentRead.model_validate(db_obj)
