@@ -33,9 +33,6 @@ const useGetAllTags = (projectId: number) =>
     },
   );
 
-// project
-const useGetAllProjects = () => useQuery<ProjectRead[], Error>([QueryKey.PROJECTS], () => ProjectService.readAll({}));
-
 const useGetProject = (projectId: number | null | undefined) =>
   useQuery<ProjectRead, Error>(
     [QueryKey.PROJECT, projectId],
@@ -227,7 +224,6 @@ const ProjectHooks = {
   // tags
   useGetAllTags,
   // project
-  useGetAllProjects,
   useGetProject,
   useCreateProject,
   useUpdateProject,
