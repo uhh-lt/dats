@@ -25,6 +25,9 @@ def __extract_content_in_html_from_word_docs(filepath: Path) -> Tuple[str, List[
     extracted_images: List[Path] = []
 
     def convert_image(image) -> Dict[str, str]:
+        if not cc.preprocessing.extract_images_from_pdf:
+            return {"src": ""}
+
         fn = filepath.parent / f"image_{str(uuid4())}"
         if "png" in image.content_type:
             fn = fn.with_suffix(".png")
@@ -59,17 +62,18 @@ def __extract_content_in_html_from_pdf_docs(filepath: Path) -> Tuple[str, List[P
     for page in doc:
         # extract images and save on disk
         extracted_images_in_page = []
-        for img in page.get_images():
-            xref = img[0]  # get the XREF of the image
-            pix = fitz.Pixmap(doc, xref)  # create a Pixmap
+        if cc.preprocessing.extract_images_from_pdf:
+            for img in page.get_images():
+                xref = img[0]  # get the XREF of the image
+                pix = fitz.Pixmap(doc, xref)  # create a Pixmap
 
-            if pix.n - pix.alpha > 3:  # CMYK: convert to RGB first
-                pix = fitz.Pixmap(fitz.csRGB, pix)
+                if pix.n - pix.alpha > 3:  # CMYK: convert to RGB first
+                    pix = fitz.Pixmap(fitz.csRGB, pix)
 
-            fn = filepath.parent / f"image_{str(uuid4())}.png"
-            pix.save(fn)
-            extracted_images.append(fn)
-            extracted_images_in_page.append(fn)
+                fn = filepath.parent / f"image_{str(uuid4())}.png"
+                pix.save(fn)
+                extracted_images.append(fn)
+                extracted_images_in_page.append(fn)
 
         # get page text as html
         html = page.get_text("xhtml")
