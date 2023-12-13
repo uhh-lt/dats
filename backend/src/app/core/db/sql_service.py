@@ -47,6 +47,10 @@ class SQLService(metaclass=SingletonMeta):
     def __del__(self):
         self.__engine.dispose()
 
+    def drop_database(self):
+        logger.warning("Dropping existing DB!")
+        drop_database(self.__engine.url)
+
     # This method is unused and only left here for historic reference
     def _create_database_and_tables(self, drop_if_exists: bool = False) -> None:
         logger.info("Setting up PostgresSQL DB and tables...")
