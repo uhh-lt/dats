@@ -1,6 +1,6 @@
-weaviate-client==3.24.1
-scrapy==2.10.0
-scrapy-playwright==0.0.31
+mammoth==1.6.0
 pymupdf==1.23.4
 pytest-order==1.2.0
-mammoth==1.6.0
+scrapy==2.10.0
+scrapy-playwright==0.0.31
+weaviate-client==3.24.1
