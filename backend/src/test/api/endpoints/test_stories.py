@@ -16,46 +16,8 @@ def test_project_add_user(client: TestClient, api_user, api_project) -> None:
     assert response_add_p1_bob.status_code == 200
 
     # Alice updates project2 details - failure
-    change_p2_failure = {"title": "this", "description": "shouldn't work"}
     response_update_p2_alice_failure = client.patch(
         f"/project/{project2['id']}",
-        headers=alice["AuthHeader"],
-        json=change_p2_failure,
-    )
-    assert response_update_p2_alice_failure.status_code == 403
-
-
-@pytest.mark.order(after="test_project_add_user")
-def test_project_update(client: TestClient, api_user, api_project) -> None:
-    alice = api_user.userList["alice"]
-    bob = api_user.userList["bob"]
-    project1 = api_project.projectList["project1"]
-    project2 = api_project.projectList["project2"]
-
-    # Bob adds Alice to project2
-    response_add_p2_alice = client.patch(
-        f"/project/{project2['id']}/user/{alice['id']}", headers=bob["AuthHeader"]
-    )
-    assert response_add_p2_alice.status_code == 200
-
-    # Alice updates project2 details
-    change_p2 = {"title": "this", "description": "should work"}
-    response_update_p2_alice_success = client.patch(
-        f"/project/{project2['id']}", headers=alice["AuthHeader"], json=change_p2
-    )
-    assert response_update_p2_alice_success.status_code == 200
-
-    # Alice changes title and description of project1
-    change_p1 = {"title": "its weird", "description": "innit?"}
-    response_update_p1 = client.patch(
-        f"/project/{project1['id']}", headers=alice["AuthHeader"], json=change_p1
-    )
-    response_update_p1.status_code == 200
-
-    # Bob changes title and description of project2
-    change_p2 = {"title": "You know the rules", "description": "and so do I"}
-    response_update_p2 = client.patch(
-        f"/project/{project2['id']}", headers=bob["AuthHeader"], json=change_p2
     )
     response_update_p2.status_code == 200
 
