@@ -180,8 +180,8 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns the Memo attached to the BBoxAnnotation
-   * Returns the Memo attached to the BBoxAnnotation with the given ID if it exists.
+   * Returns the Memos attached to the BBoxAnnotation
+   * Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
@@ -219,8 +219,8 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns BBoxAnnotation with the given Code of the User with the given ID
-   * Returns BBoxAnnotation with the given Code of the User with the given ID
+   * Returns BBoxAnnotations with the given Code of the User with the given ID
+   * Returns BBoxAnnotations with the given Code of the User with the given ID
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError
    */
