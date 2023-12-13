@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Never
 
 from sqlalchemy import update
@@ -16,7 +16,7 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
     def generate(self, db: Session, user_id: int) -> RefreshTokenORM:
         dto = RefreshTokenCreate(
             token=genereate_refresh_token(),
-            expires_at=datetime.utcnow()
+            expires_at=datetime.now(UTC)
             + timedelta(seconds=int(conf.api.auth.jwt.refresh_ttl)),
             user_id=user_id,
         )
@@ -32,13 +32,12 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
         if token is None:
             raise credentials_exception
 
-        is_expired = datetime.utcnow() > token.expires_at
+        is_expired = datetime.now(UTC) > token.expires_at
         # Allow an extra time window of 10 seconds after revoking
         # in case the frontend has multiple requests trying to refresh at once
-        is_revoked = (
-            token.revoked_at is not None
-            and datetime.utcnow() > token.revoked_at + timedelta(seconds=10)
-        )
+        is_revoked = token.revoked_at is not None and datetime.now(
+            UTC
+        ) > token.revoked_at + timedelta(seconds=10)
 
         if is_expired or is_revoked:
             # if the token was already revoked,
@@ -48,7 +47,7 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
             revoke_statement = (
                 update(RefreshTokenORM)
                 .where(RefreshTokenORM.user_id == token.user_id)
-                .values(revoked_at=datetime.utcnow())
+                .values(revoked_at=datetime.now(UTC))
             )
             db.execute(revoke_statement)
             raise credentials_exception
@@ -59,7 +58,7 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
         raise Exception("Use read_and_verify instead")
 
     def revoke(self, db: Session, token: RefreshTokenORM) -> RefreshTokenORM:
-        token.revoked_at = datetime.utcnow()
+        token.revoked_at = datetime.now(UTC)
         db.add(token)
         db.commit()
         db.refresh(token)

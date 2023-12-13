@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Dict, Optional, Tuple
 
 from jose import jwt
@@ -25,12 +25,12 @@ def generate_password_hash(password: str) -> str:
 
 
 def generate_jwt(user: UserORM) -> Tuple[str, datetime]:
-    expire = datetime.utcnow() + timedelta(seconds=__access_ttl)
+    expire = datetime.now(UTC) + timedelta(seconds=__access_ttl)
 
     payload = {
         "sub": user.email,
         "type": "access_token",
-        "iat": datetime.utcnow(),
+        "iat": datetime.now(UTC),
         "exp": expire,
     }
     logger.debug(f"Generated JWT for {user.email} that expires at {expire}!")
