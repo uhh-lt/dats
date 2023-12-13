@@ -55,6 +55,7 @@ def anyio_backend():
     return "asyncio"
 
 
+# APP Fixture
 @pytest.fixture
 def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
     name = "".join(random.choices(string.ascii_letters, k=15))
@@ -135,7 +136,7 @@ def client() -> TestClient:
 
 
 @pytest.fixture(scope="module")
-def credentials(client: TestClient) -> Generator[dict, None, None]:
+def api_user(client: TestClient):
     class UserFactory:
         def __init__(self):
             self.userList = {}
@@ -204,8 +205,7 @@ def api_project(
             }
             response = client.put("/project", headers=headers, json=project).json()
             project["id"] = response["id"]
-            self.projectList["title"] = project
-            print(f"{self.projectList=}")
+            self.projectList[title] = project
             return project
 
         def __del__(self):
@@ -226,12 +226,12 @@ def api_project(
 
 
 @pytest.fixture(scope="module")
-def api_codes(client: TestClient, api_project, credentials):
+def api_codes(client: TestClient):
     class CodesFactory:
         def __init__(self):
             self.codeList = {}
 
-        def create(self, name, user, project):
+        def create(self, name: string, user: dict, project: dict):
             headers = user["AuthHeader"]
             project_id = project["id"]
             user_id = user["id"]
