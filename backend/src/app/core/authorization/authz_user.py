@@ -38,7 +38,7 @@ class AuthzUser:
         try:
             orm_object = crud.value.read(self.db, object_id)
         except NoSuchElementError:
-            self.assert_bool(False, "Object does not exist")
+            self.assert_bool(False, f"{crud.name} {object_id} does not exist")
             return
 
         project_id = get_parent_project_id(orm_object)
