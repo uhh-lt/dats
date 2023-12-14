@@ -31,7 +31,6 @@ def test_project_add_user(client: TestClient, api_user, api_project) -> None:
 def test_project_update(client: TestClient, api_user, api_project) -> None:
     alice = api_user.userList["alice"]
     bob = api_user.userList["bob"]
-    print(f"{api_project.projectList=}")
     project1 = api_project.projectList["project1"]
     project2 = api_project.projectList["project2"]
 
@@ -103,20 +102,43 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
     assert response_remove_charlie.status_code == 200
 
 
-# @pytest.mark.order(4)
-# def test_codes_create(client: TestClient, api_user, api_project, api_codes) -> None:
-#     project1 = api_project.projectList["project1"]
-#     project2 = api_project.projectList["project2"]
+@pytest.mark.order(4)
+def test_codes_create(client: TestClient, api_user, api_project, api_code) -> None:
+    project1 = api_project.projectList["project1"]
+    project2 = api_project.projectList["project2"]
 
-#     alice = api_user.userList["alice"]
-#     bob = api_user.userList["bob"]
+    alice = api_user.userList["alice"]
+    bob = api_user.userList["bob"]
 
-#     # Create codes in project1
-#     code1 = api_codes.create("code1", alice, project1)
-#     code2 = api_codes.create("code2", alice, project1)
-#     code3 = api_codes.create("code3", alice, project1)
+    # Create codes in project1
+    response_codes_project1_before = client.get(
+        f"/project/{project1["id"]}/code", headers=alice["AuthHeader"]
+    ).json()
+    codes_project1_before = len(response_codes_project1_before)
 
-#     # Create codes in project2
-#     code4 = api_codes.create("code4", bob, project2)
-#     code5 = api_codes.create("code5", bob, project2)
-#     code6 = api_codes.create("code6", bob, project2)
+    _ = api_code.create("code1", alice, project1)
+    _ = api_code.create("code2", alice, project1)
+    _ = api_code.create("code3", alice, project1)
+
+    response_codes_project1_after = client.get(
+        f"/project/{project1["id"]}/code", headers=alice["AuthHeader"]
+    ).json()
+    codes_project1_after = len(response_codes_project1_after)
+
+    assert codes_project1_before + 3 == codes_project1_after
+
+    # Create codes in project2
+    response_codes_project2_before = client.get(
+        f"/project/{project2["id"]}/code", headers=bob["AuthHeader"]
+    ).json()
+    codes_project2_before = len(response_codes_project2_before)
+    _ = api_code.create("code4", bob, project2)
+    _ = api_code.create("code5", bob, project2)
+    _ = api_code.create("code6", bob, project2)
+
+    response_codes_project2_after = client.get(
+        f"/project/{project2["id"]}/code", headers=alice["AuthHeader"]
+    ).json()
+    codes_project2_after = len(response_codes_project2_after)
+
+    assert codes_project2_before + 3 == codes_project2_after
