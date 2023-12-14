@@ -3,8 +3,14 @@ from typing import List, Union
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_current_user, get_db_session, resolve_code_param
+from api.dependencies import (
+    get_current_user,
+    get_db_session,
+    resolve_code_param,
+)
 from api.util import get_object_memo_for_user, get_object_memos
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.bbox_annotation import (
@@ -32,8 +38,13 @@ async def add_bbox_annotation(
     db: Session = Depends(get_db_session),
     bbox: BBoxAnnotationCreateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(
+        Crud.ANNOTATION_DOCUMENT, bbox.annotation_document_id
+    )
+    authz_user.assert_in_same_project_as(Crud.CODE, bbox.code_id)
+
     db_obj = crud_bbox_anno.create_with_code_id(db=db, create_dto=bbox)
     bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
@@ -56,8 +67,10 @@ async def get_by_id(
     db: Session = Depends(get_db_session),
     bbox_id: int,
     resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
     bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
@@ -81,8 +94,11 @@ async def update_by_id(
     bbox_id: int,
     bbox_anno: BBoxAnnotationUpdateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
+    authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+    authz_user.assert_in_same_project_as(Crud.CODE, bbox_anno.code_id)
+
     db_obj = crud_bbox_anno.update_with_code_id(db=db, id=bbox_id, update_dto=bbox_anno)
     bbox_dto = BBoxAnnotationRead.model_validate(db_obj)
     if resolve_code:
@@ -101,9 +117,13 @@ async def update_by_id(
     description="Deletes the BBoxAnnotation with the given ID.",
 )
 async def delete_by_id(
-    *, db: Session = Depends(get_db_session), bbox_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    bbox_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+
     db_obj = crud_bbox_anno.remove(db=db, id=bbox_id)
     return BBoxAnnotationRead.model_validate(db_obj)
 
@@ -114,9 +134,16 @@ async def delete_by_id(
     summary="Returns the Code of the BBoxAnnotation",
     description="Returns the Code of the BBoxAnnotation with the given ID if it exists.",
 )
-async def get_code(*, db: Session = Depends(get_db_session), bbox_id: int) -> CodeRead:
-    # TODO Flo: only if the user has access?
+async def get_code(
+    *,
+    db: Session = Depends(get_db_session),
+    bbox_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> CodeRead:
+    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+
     bbox_db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
+
     return CodeRead.model_validate(bbox_db_obj.current_code.code)
 
 
@@ -127,9 +154,16 @@ async def get_code(*, db: Session = Depends(get_db_session), bbox_id: int) -> Co
     description="Adds a Memo to the BBoxAnnotation with the given ID if it exists",
 )
 async def add_memo(
-    *, db: Session = Depends(get_db_session), bbox_id: int, memo: MemoCreate
+    *,
+    db: Session = Depends(get_db_session),
+    bbox_id: int,
+    memo: MemoCreate,
+    authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(memo.project_id)
+    authz_user.assert_is_same_user(memo.user_id)
+    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+
     db_obj = crud_memo.create_for_bbox_annotation(
         db=db, bbox_anno_id=bbox_id, create_dto=memo
     )
@@ -144,14 +178,19 @@ async def add_memo(
 @router.get(
     "/{bbox_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo attached to the BBoxAnnotation",
-    description="Returns the Memo attached to the BBoxAnnotation with the given ID if it exists.",
+    summary="Returns the Memos attached to the BBoxAnnotation",
+    description="Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
 )
 async def get_memos(
-    *, db: Session = Depends(get_db_session), bbox_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    bbox_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
+    # TODO how to authorize memo access here?
     return get_object_memos(db_obj=db_obj)
 
 
@@ -165,8 +204,17 @@ async def get_memos(
     ),
 )
 async def get_user_memo(
-    *, db: Session = Depends(get_db_session), bbox_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    bbox_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
+    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+    # no authorization for user id, any user can read
+    # all memos as long as they're in the same project
+    # as the annotation
+
     db_obj = crud_bbox_anno.read(db=db, id=bbox_id)
     return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
@@ -174,14 +222,22 @@ async def get_user_memo(
 @router.get(
     "/code/{code_id}/user/{user_id}",
     response_model=List[BBoxAnnotationRead],
-    summary="Returns BBoxAnnotation with the given Code of the User with the given ID",
+    summary="Returns BBoxAnnotations with the given Code of the User with the given ID",
     description=(
-        "Returns BBoxAnnotation with the given Code of the User with the given ID"
+        "Returns BBoxAnnotations with the given Code of the User with the given ID"
     ),
 )
 async def get_by_user_code(
-    *, db: Session = Depends(get_db_session), code_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    code_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[BBoxAnnotationRead]:
+    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
+    # no authorization for user id, any user can read
+    # all annotations as long as they're in the same project
+
     db_objs = crud_bbox_anno.read_by_code_and_user(
         db=db, code_id=code_id, user_id=user_id
     )

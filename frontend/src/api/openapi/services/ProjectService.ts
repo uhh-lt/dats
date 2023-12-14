@@ -40,38 +40,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all Projects of the current user
-   * Returns all Projects of the current user
-   * @returns ProjectRead Successful Response
-   * @throws ApiError
-   */
-  public static readAll({
-    skip,
-    limit,
-  }: {
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-  }): CancelablePromise<Array<ProjectRead>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/project",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
    * Returns the Project with the given ID
    * Returns the Project with the given ID if it exists
    * @returns ProjectRead Successful Response
@@ -448,32 +416,6 @@ export class ProjectService {
       },
       query: {
         only_starred: onlyStarred,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Removes all Memos of the Project from a User
-   * Removes all Memos of the Project from a User. Returns the number of removed Memos.
-   * @returns number Successful Response
-   * @throws ApiError
-   */
-  public static removeUserMemosOfProject({
-    projId,
-    userId,
-  }: {
-    projId: number;
-    userId: number;
-  }): CancelablePromise<Array<number>> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/project/{proj_id}/user/{user_id}/memo",
-      path: {
-        proj_id: projId,
-        user_id: userId,
       },
       errors: {
         422: `Validation Error`,

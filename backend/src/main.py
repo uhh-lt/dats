@@ -15,7 +15,7 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
 
-from app.core.authorization.authorization_service import ForbiddenError
+from app.core.authorization.authz_user import ForbiddenError
 from migration.migrate import run_required_migrations
 
 from app.core.startup import startup  # isort: skip

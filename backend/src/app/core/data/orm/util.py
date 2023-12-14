@@ -56,10 +56,18 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
         ):
             return orm.annotation_document.source_document.project_id
 
-    # TODO missing cases:
+    # TODO missing case
     # - SourceDocumentLinkORM
 
     raise NotImplementedError(f"Unknown ORM: {type(orm)}")
+
+
+def get_orm_user_id(orm: ORMBase) -> Optional[int]:
+    proj_id = getattr(orm, "user_id", None)
+    if proj_id is not None:
+        return proj_id
+
+    raise NotImplementedError(f"Object has no user_id: {type(orm)}")
 
 
 def get_action_target_type(orm: ORMBase) -> Optional[ActionTargetObjectType]:

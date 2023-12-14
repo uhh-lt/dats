@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.analysis_table import crud_analysis_table
 from app.core.data.dto.analysis_table import (
     AnalysisTableCreate,
@@ -25,8 +27,14 @@ router = APIRouter(
     description="Creates an AnalysisTable",
 )
 async def create(
-    *, db: Session = Depends(get_db_session), analysis_table: AnalysisTableCreate
+    *,
+    db: Session = Depends(get_db_session),
+    analysis_table: AnalysisTableCreate,
+    authz_user: AuthzUser = Depends(),
 ) -> AnalysisTableRead:
+    authz_user.assert_in_project(analysis_table.project_id)
+    authz_user.assert_is_same_user(analysis_table.user_id)
+
     return AnalysisTableRead.model_validate(
         crud_analysis_table.create(db=db, create_dto=analysis_table)
     )
@@ -39,8 +47,13 @@ async def create(
     description="Returns the AnalysisTable with the given ID if it exists",
 )
 async def get_by_id(
-    *, db: Session = Depends(get_db_session), analysis_table_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    analysis_table_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> AnalysisTableRead:
+    authz_user.assert_in_same_project_as(Crud.ANALYSIS_TABLE, analysis_table_id)
+
     db_obj = crud_analysis_table.read(db=db, id=analysis_table_id)
     return AnalysisTableRead.model_validate(db_obj)
 
@@ -52,8 +65,17 @@ async def get_by_id(
     description="Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
 )
 async def get_by_project_and_user(
-    *, db: Session = Depends(get_db_session), project_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[AnalysisTableRead]:
+    # No need to authorize against the user:
+    # all users can see all analysis tables in the project
+    # at the moment.
+    authz_user.assert_in_project(project_id)
+
     db_objs = crud_analysis_table.read_by_project_and_user(
         db=db, project_id=project_id, user_id=user_id
     )
@@ -71,7 +93,10 @@ async def update_by_id(
     db: Session = Depends(get_db_session),
     analysis_table_id: int,
     analysis_table: AnalysisTableUpdate,
+    authz_user: AuthzUser = Depends(),
 ) -> AnalysisTableRead:
+    authz_user.assert_in_same_project_as(Crud.ANALYSIS_TABLE, analysis_table_id)
+
     db_obj = crud_analysis_table.update(
         db=db, id=analysis_table_id, update_dto=analysis_table
     )
@@ -85,8 +110,12 @@ async def update_by_id(
     description="Removes the AnalysisTable with the given ID if it exists",
 )
 async def delete_by_id(
-    *, db: Session = Depends(get_db_session), analysis_table_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    analysis_table_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> AnalysisTableRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.ANALYSIS_TABLE, analysis_table_id)
+
     db_obj = crud_analysis_table.remove(db=db, id=analysis_table_id)
     return AnalysisTableRead.model_validate(db_obj)

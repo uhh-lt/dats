@@ -99,7 +99,7 @@ export class AnnotationDocumentService {
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
-  }): CancelablePromise<Array<SpanAnnotationRead | SpanAnnotationReadResolved>> {
+  }): CancelablePromise<Array<SpanAnnotationRead> | Array<SpanAnnotationReadResolved>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/adoc/{adoc_id}/span_annotations",
@@ -161,7 +161,7 @@ export class AnnotationDocumentService {
      * If true, the current_code_id of the SpanAnnotation gets resolved and replaced by the respective Code entity
      */
     resolve?: boolean;
-  }): CancelablePromise<Array<BBoxAnnotationRead | BBoxAnnotationReadResolvedCode>> {
+  }): CancelablePromise<Array<BBoxAnnotationRead> | Array<BBoxAnnotationReadResolvedCode>> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/adoc/{adoc_id}/bbox_annotations",

@@ -21,6 +21,7 @@ from app.core.analysis.word_frequency import (
     word_frequency,
     word_frequency_info,
 )
+from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.analysis import (
     AnnotatedSegmentResult,
     AnnotationOccurrence,
@@ -50,7 +51,10 @@ async def code_frequencies(
     project_id: int,
     code_ids: List[int],
     user_ids: List[int],
+    authz_user: AuthzUser = Depends(),
 ) -> List[CodeFrequency]:
+    authz_user.assert_in_project(project_id)
+
     return AnalysisService().compute_code_frequency(
         project_id=project_id, code_ids=code_ids, user_ids=user_ids
     )
@@ -67,7 +71,10 @@ async def code_occurrences(
     project_id: int,
     user_ids: List[int],
     code_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[CodeOccurrence]:
+    authz_user.assert_in_project(project_id)
+
     return AnalysisService().find_code_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
     )
@@ -80,8 +87,14 @@ async def code_occurrences(
     description="Returns AnnotationOccurrences.",
 )
 async def annotation_occurrences(
-    *, project_id: int, user_ids: List[int], code_id: int
+    *,
+    project_id: int,
+    user_ids: List[int],
+    code_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[AnnotationOccurrence]:
+    authz_user.assert_in_project(project_id)
+
     return AnalysisService().find_annotation_occurrences(
         project_id=project_id, user_ids=user_ids, code_id=code_id
     )
@@ -96,7 +109,9 @@ async def annotation_occurrences(
 async def annotated_segments_info(
     *,
     project_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[ColumnInfo[AnnotatedSegmentsColumns]]:
+    authz_user.assert_in_project(project_id)
     return find_annotated_segments_info(
         project_id=project_id,
     )
@@ -116,7 +131,10 @@ async def annotated_segments(
     page: int,
     page_size: int,
     sorts: List[Sort[AnnotatedSegmentsColumns]],
+    authz_user: AuthzUser = Depends(),
 ) -> AnnotatedSegmentResult:
+    authz_user.assert_in_project(project_id)
+
     return find_annotated_segments(
         project_id=project_id,
         user_ids=user_ids,
@@ -137,7 +155,10 @@ async def get_timeline_analysis_valid_documents(
     *,
     project_id: int,
     date_metadata_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> Tuple[int, int]:
+    authz_user.assert_in_project(project_id)
+
     return timeline_analysis_valid_documents(
         project_id=project_id,
         date_metadata_id=date_metadata_id,
@@ -153,7 +174,10 @@ async def get_timeline_analysis_valid_documents(
 async def timeline_analysis2_info(
     *,
     project_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[ColumnInfo[TimelineAnalysisColumns]]:
+    authz_user.assert_in_project(project_id)
+
     return timeline_analysis_info(
         project_id=project_id,
     )
@@ -167,12 +191,14 @@ async def timeline_analysis2_info(
 )
 async def timeline_analysis2(
     *,
-    db: Session = Depends(get_db_session),
     project_id: int,
     group_by: DateGroupBy,
     project_metadata_id: int,
     filter: Filter[TimelineAnalysisColumns],
+    authz_user: AuthzUser = Depends(),
 ) -> List[TimelineAnalysisResultNew]:
+    authz_user.assert_in_project(project_id)
+
     return timeline_analysis(
         project_id=project_id,
         group_by=group_by,
@@ -190,7 +216,10 @@ async def timeline_analysis2(
 async def word_frequency_analysis_info(
     *,
     project_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[ColumnInfo[WordFrequencyColumns]]:
+    authz_user.assert_in_project(project_id)
+
     return word_frequency_info(
         project_id=project_id,
     )
@@ -210,7 +239,10 @@ async def word_frequency_analysis(
     page: int,
     page_size: int,
     sorts: List[Sort[WordFrequencyColumns]],
+    authz_user: AuthzUser = Depends(),
 ) -> WordFrequencyResult:
+    authz_user.assert_in_project(project_id)
+
     return word_frequency(
         project_id=project_id,
         filter=filter,
