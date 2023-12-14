@@ -252,9 +252,7 @@ def api_user(client: TestClient):
 
         def __del__(self):
             for user in self.userList.values():
-                print(
-                    f"{client.delete(f"/user/{user["id"]}", headers = user["AuthHeader"])=}"
-                )
+                client.delete(f"/user/{user["id"]}", headers=user["AuthHeader"])
 
     return UserFactory()
 
@@ -289,16 +287,14 @@ def api_project(
                 "Authorization": f"{login["token_type"]} {login["access_token"]}"
             }
             for project in self.projectList.values():
-                client.delete(
-                    f"/project/{project["id"]}", headers=superuser_authheader
-                ).json()
+                client.delete(f"/project/{project["id"]}", headers=superuser_authheader)
 
     return ProjectFactory()
 
 
 @pytest.fixture(scope="module")
-def api_codes(client: TestClient):
-    class CodesFactory:
+def api_code(client: TestClient):
+    class CodeFactory:
         def __init__(self):
             self.codeList = {}
 
@@ -315,23 +311,37 @@ def api_codes(client: TestClient):
                 "user_id": user_id,
             }
             response = client.put("/code", headers=headers, json=code).json()
-            print(f"{response=}")
-            self.codeList["name"] = name
-            print(f"{self.codeList=}")
+            # print(f"{response=}")
+            code["id"] = response["id"]
+            self.codeList[name] = code
+            # print(f"{self.codeList=}")
             return code
 
-        def __del__(self):
-            # TODO: Prevent user deletion before project deletion or use SYSTEM user
-            # FIXME: Using the standard SYSTEM@dwts.org user
-            # login with system user to remove all projects
-            superuser = {"username": "SYSTEM@dwts.org", "password": "SYSTEM"}
-            login = client.post("authentication/login", data=superuser).json()
-            superuser_authheader = {
-                "Authorization": f"{login["token_type"]} {login["access_token"]}"
-            }
-            for project in self.projectList.values():
-                client.delete(
-                    f"/project/{project["id"]}", headers=superuser_authheader
-                ).json()
+    return CodeFactory()
 
-    return CodesFactory()
+
+@pytest.fixture(scope="module")
+def api_document(client: TestClient):
+    class DocumentFactory:
+        def __init__(self):
+            self.codeList = {}
+
+        def create(self, filename: string, user: dict, project: dict):
+            headers = user["AuthHeader"]
+            project_id = project["id"]
+            user_id = user["id"]
+            document = {
+                "filename": filename,
+                "project_id": project_id,
+                "user_id": user_id,
+            }
+            response = client.put(
+                f"/project/{project["id"]}/sdoc", headers=headers, json=document
+            ).json()
+            print(f"{response=}")
+            document["id"] = response["id"]
+            self.documentList[filename] = document
+            # print(f"{self.codeList=}")
+            return document
+
+    return DocumentFactory()
