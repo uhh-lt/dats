@@ -216,7 +216,6 @@ def api_user(client: TestClient):
             # Create
             email = "".join(random.choices(string.ascii_letters, k=10)) + "@aol.com"
             password = "".join(random.choices(string.ascii_letters, k=20))
-            first_name = first_name
             last_name = "".join(random.choices(string.ascii_letters, k=10))
             credentials = {
                 "email": email,
