@@ -16,7 +16,6 @@ from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
 
 from app.core.authorization.authz_user import ForbiddenError
-from migration.migrate import run_required_migrations
 
 from app.core.startup import startup  # isort: skip
 
@@ -278,12 +277,6 @@ def main() -> None:
     assert (
         port is not None and isinstance(port, int) and port > 0
     ), "The API port has to be a positive integer! E.g. 8081"
-
-    # Migrations are usually run in the docker entrypoint script.
-    # When the backend is run in development mode outside a container,
-    # the `main` function we're in is used instead.
-    # In that case, we'll need to run the migrations now.
-    run_required_migrations()
 
     is_debug = conf.api.production_mode == "0"
 
