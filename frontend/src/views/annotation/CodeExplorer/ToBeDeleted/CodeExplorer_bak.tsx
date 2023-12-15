@@ -4,36 +4,32 @@ import {
   Box,
   BoxProps,
   Checkbox,
-  Divider,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Stack,
-  TextField,
   Toolbar,
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import { AttachedObjectType } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
-import ExporterButton from "../../../features/Exporter/ExporterButton";
-import MemoButton from "../../../features/Memo/MemoButton";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { AnnoActions } from "../annoSlice";
-import CodeEditButton from "./CodeEditButton";
-import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
-import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
-import CodeTreeView from "./CodeTreeView";
-import ICodeTree from "./ICodeTree";
-import { codesToTree, flatTree, flatTreeWithRoot } from "./TreeUtils";
-import useComputeCodeTree from "./useComputeCodeTree";
-import { TreeFilter } from "../../../features/TagExplorer/TreeUtils";
-import Tree, { Node } from "ts-tree-structure";
+import { AttachedObjectType } from "../../../../api/openapi";
+import { useAuth } from "../../../../auth/AuthProvider";
+import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
+import { openCodeCreateDialog } from "../../../../features/CrudDialog/Code/CodeCreateDialog";
+import CodeEditDialog from "../../../../features/CrudDialog/Code/CodeEditDialog";
+import ExporterButton from "../../../../features/Exporter/ExporterButton";
+import MemoButton from "../../../../features/Memo/MemoButton";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
+import { AnnoActions } from "../../annoSlice";
+import CodeEditButton from "../CodeEditButton";
+import CodeExplorerContextMenu from "../CodeExplorerContextMenu";
+import CodeToggleVisibilityButton from "../CodeToggleVisibilityButton";
+import CodeTreeView from "../CodeTreeView";
+import ICodeTree from "../ICodeTree";
+import { flatTree, flatTreeWithRoot } from "../TreeUtils";
+import useComputeCodeTree from "../useComputeCodeTree";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
@@ -50,30 +46,12 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
     const { user } = useAuth();
 
     // custom hooks
-    let { codeTree, allCodes } = useComputeCodeTree();
+    const { codeTree, allCodes } = useComputeCodeTree();
 
     // global client state (redux)
     const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
     const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
     const dispatch = useAppDispatch();
-
-    const [codeFilter, setCodeFilter] = useState<string>("");
-    let nodesToExpand = React.useMemo(() => new Set<number>(), []);
-
-    if (allCodes.data) {
-      codeTree = new Tree().parse<ICodeTree>(codesToTree(allCodes.data));
-      if (codeFilter.length > 0) {
-        const filteredData = TreeFilter({
-          dataTree: codeTree as Node<ICodeTree>,
-          nodesToExpand,
-          dataFilter: codeFilter,
-        });
-        codeTree = filteredData.dataTree as Node<ICodeTree>;
-        nodesToExpand = filteredData.nodesToExpand;
-      }
-    } else {
-      codeTree = null;
-    }
 
     // effects
     // update global client state when selection changes
@@ -90,15 +68,10 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
         }
       } else if (allCodes.data) {
         dispatch(AnnoActions.setCodesForSelection(allCodes.data));
-        // dispatch(AnnoActions.setExpandedParentCodeIds(Array.from(nodesToExpand).map((id) => id.toString())));
       } else {
         dispatch(AnnoActions.setCodesForSelection([]));
       }
     }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
-
-    // useEffect(() => {
-    //   dispatch(AnnoActions.setExpandedParentCodeIds(Array.from(nodesToExpand).map((id) => id.toString())));
-    // }, [nodesToExpand, expandedCodeIds, dispatch]);
 
     // handle ui events
     const handleSelectCode = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
@@ -231,54 +204,35 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
           </AppBar>
         )}
         {showButtons && (
-          <>
-            <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
-              <Typography variant="h6" color="inherit" component="div">
-                Filter codes
-              </Typography>
-              <TextField
-                sx={{ ml: 1, flex: 1 }}
-                placeholder={"type name here..."}
-                variant="outlined"
-                size="small"
-                value={codeFilter}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setCodeFilter(event.target.value);
-                }}
-              />
-              {/* <CodeToggleEnabledButton code={codeTree?.model} /> */}
-            </Toolbar>
-            <Divider />
-            <Stack
-              direction="row"
-              className="myFlexFitContentContainer"
-              sx={{
-                borderBottom: 1,
-                borderColor: "divider",
-                alignItems: "center",
-              }}
-            >
-              <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
-                <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ parentCodeId: selectedCodeId })}>
-                  <ListItemIcon>
-                    <AddIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Create new code" />
-                </ListItemButton>
-              </List>
+          <Stack
+            direction="row"
+            className="myFlexFitContentContainer"
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              alignItems: "center",
+            }}
+          >
+            <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
+              <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ parentCodeId: selectedCodeId })}>
+                <ListItemIcon>
+                  <AddIcon />
+                </ListItemIcon>
+                <ListItemText primary="Create new code" />
+              </ListItemButton>
+            </List>
 
-              <ExporterButton
-                tooltip="Export codeset"
-                exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
-                iconButtonProps={{ color: "inherit" }}
-              />
-            </Stack>
-          </>
+            <ExporterButton
+              tooltip="Export codeset"
+              exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
+              iconButtonProps={{ color: "inherit" }}
+            />
+          </Stack>
         )}
         {content}
       </Box>
     );
-  }
+  },
 );
 
 export default CodeExplorer;
