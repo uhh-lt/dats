@@ -1,20 +1,20 @@
-import { AppBar, Box, BoxProps, Checkbox, Divider, List, Stack, TextField, Toolbar } from "@mui/material";
+import { AppBar, Box, BoxProps, Checkbox, List, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../auth/useAuth.ts";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
-import TagMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
-import TagEditDialog from "../CrudDialog/Tag/TagEditDialog.tsx";
-import ExporterButton from "../Exporter/ExporterButton.tsx";
-import MemoButton from "../Memo/MemoButton.tsx";
-import { ITagTree } from "./ITagTree.ts";
-import TagEditButton from "./TagEditButton.tsx";
-import TagExplorerContextMenu from "./TagExplorerContextMenu.tsx";
-import TagTreeView from "./TagTreeView.tsx";
-import { flatTree } from "./TreeUtils.ts";
-import useComputeTagTree from "./useComputeTagTree.ts";
+import { AttachedObjectType } from "../../../api/openapi";
+import { useAuth } from "../../../auth/AuthProvider";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import TagMenuCreateButton from "../../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton";
+import TagEditDialog from "../../CrudDialog/Tag/TagEditDialog";
+import ExporterButton from "../../Exporter/ExporterButton";
+import MemoButton from "../../Memo/MemoButton";
+import { ITagTree } from "../ITagTree";
+import TagEditButton from "../TagEditButton";
+import TagExplorerContextMenu from "../TagExplorerContextMenu";
+import TagTreeView from "../TagTreeView";
+import { flatTree } from "../TreeUtils";
+import useComputeTagTree from "../useComputeTagTree";
 
 interface TagExplorerProps {
   showToolbar?: boolean;
@@ -31,66 +31,34 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
   ({ showToolbar, showCheckboxes, showButtons, onTagClick, ...props }, ref) => {
     const { user } = useAuth();
 
+    // custom hooks
+    const { tagTree, allTags } = useComputeTagTree();
+
     // local client state
     const [selectedTagId, setSelectedTagId] = useState<number | undefined>(undefined);
     const [expandedTagIds, setExpandedTagIds] = useState<string[]>([]);
 
-    const [tagFilter, setTagFilter] = useState<string>("");
-
-    // custom hooks
-    let { tagTree, allTags } = useComputeTagTree();
-
-    let nodesToExpand = React.useMemo(() => new Set<number>(), []);
-
-    if (allTags.data) {
-      tagTree = new Tree().parse<ITagTree>(tagsToTree(allTags.data));
-      if (tagFilter.length > 0) {
-        const filteredData = TreeFilter({
-          dataTree: tagTree as Node<ITagTree>,
-          nodesToExpand,
-          dataFilter: tagFilter,
-        });
-        tagTree = filteredData.dataTree as Node<ITagTree>;
-        nodesToExpand = filteredData.nodesToExpand;
-      }
-    } else {
-      tagTree = null;
-    }
-
-    // effects
-    // automatically expand filtered nodes
-    React.useEffect(() => {
-      setExpandedTagIds((prevExpandedTagIds) => Array.from(nodesToExpand).map((id) => id.toString()));
-    }, [nodesToExpand, expandedTagIds]);
-
-    // console.log(nodesToExpand, expandedTagIds);
-
     // handle ui events
-    const handleSelectTag = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
+    const handleSelectTag = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
       const tagId = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
       setSelectedTagId(tagId);
     };
     const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
       event.stopPropagation();
       setExpandedTagIds((prevExpandedTagIds) => [nodeId, ...prevExpandedTagIds]);
-      // expandCodes([nodeId]);
-      console.log([nodeId]);
     };
     const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
       event.stopPropagation();
-      console.log(nodeId, expandedTagIds);
       const id = expandedTagIds.indexOf(nodeId);
       const newTagIds = [...expandedTagIds];
       newTagIds.splice(id, 1);
-      newTagIds.splice(-1, 1);
-      console.log(newTagIds);
       setExpandedTagIds(newTagIds);
     };
 
     // context menu
     const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
     const [contextMenuData, setContextMenuData] = useState<ITagTree>();
-    const onContextMenu = (node: ITagTree) => (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
+    const onContextMenu = (node: ITagTree) => (event: any) => {
       event.preventDefault();
       setContextMenuPosition({ x: event.clientX, y: event.clientY });
       setContextMenuData(node);
@@ -202,44 +170,25 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
           </AppBar>
         )}
         {showButtons && (
-          <>
-            <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
-              <Typography variant="h6" color="inherit" component="div">
-                Filter tags
-              </Typography>
-              <TextField
-                sx={{ ml: 1, flex: 1 }}
-                placeholder={"type name here..."}
-                variant="outlined"
-                size="small"
-                value={tagFilter}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setTagFilter(event.target.value);
-                }}
-              />
-              {/* <CodeToggleEnabledButton code={codeTree?.model} /> */}
-            </Toolbar>
-            <Divider />
-            <Stack
-              direction="row"
-              className="myFlexFitContentContainer"
-              sx={{
-                borderBottom: 1,
-                borderColor: "divider",
-                alignItems: "center",
-              }}
-            >
-              <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
-                <TagMenuCreateButton tagName="" sx={{ px: 1.5 }} />
-              </List>
+          <Stack
+            direction="row"
+            className="myFlexFitContentContainer"
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              alignItems: "center",
+            }}
+          >
+            <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
+              <TagMenuCreateButton tagName="" sx={{ px: 1.5 }} />
+            </List>
 
-              <ExporterButton
-                tooltip="Export tagset"
-                exporterInfo={{ type: "Tagset", singleUser: false, users: [], sdocId: -1 }}
-                iconButtonProps={{ color: "inherit" }}
-              />
-            </Stack>
-          </>
+            <ExporterButton
+              tooltip="Export tagset"
+              exporterInfo={{ type: "Tagset", singleUser: false, users: [], sdocId: -1 }}
+              iconButtonProps={{ color: "inherit" }}
+            />
+          </Stack>
         )}
         {content}
       </Box>
