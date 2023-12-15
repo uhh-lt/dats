@@ -1034,6 +1034,26 @@
           }
         }
       },
+      "delete": {
+        "tags": ["sourceDocument"],
+        "summary": "Removes the SourceDocument",
+        "description": "Removes the SourceDocument with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
       "patch": {
         "tags": ["sourceDocument"],
         "summary": "Updates the SourceDocument",
@@ -1047,26 +1067,6 @@
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentUpdate" } } }
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["sourceDocument"],
-        "summary": "Removes the SourceDocument",
-        "description": "Removes the SourceDocument with the given ID if it exists",
-        "operationId": "delete_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -1197,42 +1197,6 @@
             "schema": { "type": "string", "title": "Metadata Key" }
           }
         ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataReadResolved" } }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/metadata/{metadata_id}": {
-      "patch": {
-        "tags": ["sourceDocument"],
-        "summary": "Updates the SourceDocumentMetadata",
-        "description": "Updates the SourceDocumentMetadata with the given ID if it exists.",
-        "operationId": "update_metadata_by_id",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          {
-            "name": "metadata_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Metadata Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentMetadataUpdate" } }
-          }
-        },
         "responses": {
           "200": {
             "description": "Successful Response",

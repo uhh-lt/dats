@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memo_for_user, get_object_memos
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.annotation_document import crud_adoc
 from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
@@ -23,7 +25,6 @@ from app.core.data.dto.source_document import (
 )
 from app.core.data.dto.source_document_metadata import (
     SourceDocumentMetadataReadResolved,
-    SourceDocumentMetadataUpdate,
 )
 from app.core.data.dto.word_frequency import WordFrequencyRead
 from app.core.data.repo.repo_service import RepoService
@@ -44,30 +45,14 @@ async def get_by_id(
     db: Session = Depends(get_db_session),
     sdoc_id: int,
     only_if_finished: bool = True,
+    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentWithDataRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     if not only_if_finished:
         crud_sdoc.get_status(db=db, sdoc_id=sdoc_id, raise_error_on_unfinished=True)
 
     return crud_sdoc.read_with_data(db=db, id=sdoc_id)
-
-
-@router.patch(
-    "/{sdoc_id}",
-    response_model=SourceDocumentRead,
-    summary="Updates the SourceDocument",
-    description="Updates the SourceDocument with the given ID.",
-)
-async def update_by_id(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    sdoc_update: SourceDocumentUpdate,
-) -> SourceDocumentRead:
-    # TODO Flo: only if the user has access?
-    db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc_update)
-    sdoc_dto = SourceDocumentRead.model_validate(db_obj)
-    return sdoc_dto
 
 
 @router.delete(
@@ -77,9 +62,13 @@ async def update_by_id(
     description="Removes the SourceDocument with the given ID if it exists",
 )
 async def delete_by_id(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     db_obj = crud_sdoc.remove(db=db, id=sdoc_id)
     return SourceDocumentRead.model_validate(db_obj)
 
@@ -91,9 +80,14 @@ async def delete_by_id(
     description="Updates the SourceDocument with the given ID.",
 )
 async def update_sdoc(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, sdoc: SourceDocumentUpdate
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    sdoc: SourceDocumentUpdate,
+    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     db_obj = crud_sdoc.update(db=db, id=sdoc_id, update_dto=sdoc)
     return SourceDocumentRead.model_validate(db_obj)
 
@@ -105,8 +99,13 @@ async def update_sdoc(
     description="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
 )
 async def get_linked_sdocs(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     return crud_sdoc.collect_linked_sdoc_ids(db=db, sdoc_id=sdoc_id)
 
 
@@ -123,8 +122,10 @@ async def get_file_url(
     relative: bool = True,
     webp: bool = False,
     thumbnail: bool = False,
+    authz_user: AuthzUser = Depends(),
 ) -> str:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     # TODO: FIX TYPING
     return RepoService().get_sdoc_url(
@@ -145,8 +146,10 @@ async def get_all_metadata(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[SourceDocumentMetadataReadResolved]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return [
         SourceDocumentMetadataReadResolved.model_validate(meta)
@@ -161,32 +164,16 @@ async def get_all_metadata(
     description="Returns the SourceDocumentMetadata with the given Key if it exists.",
 )
 async def read_metadata_by_key(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, metadata_key: str
-) -> SourceDocumentMetadataReadResolved:
-    # TODO Flo: only if the user has access?
-    metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
-        db=db, sdoc_id=sdoc_id, key=metadata_key
-    )
-    return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
-
-
-@router.patch(
-    "/{sdoc_id}/metadata/{metadata_id}",
-    response_model=SourceDocumentMetadataReadResolved,
-    summary="Updates the SourceDocumentMetadata",
-    description="Updates the SourceDocumentMetadata with the given ID if it exists.",
-)
-async def update_metadata_by_id(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
-    metadata_id: int,
-    metadata: SourceDocumentMetadataUpdate,
+    metadata_key: str,
+    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentMetadataReadResolved:
-    # TODO Flo: only if the user has access?
-    crud_sdoc.exists(db=db, id=sdoc_id, raise_error=True)
-    metadata_db_obj = crud_sdoc_meta.update(
-        db=db, metadata_id=metadata_id, update_dto=metadata
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
+    metadata_db_obj = crud_sdoc_meta.read_by_sdoc_and_key(
+        db=db, sdoc_id=sdoc_id, key=metadata_key
     )
     return SourceDocumentMetadataReadResolved.model_validate(metadata_db_obj)
 
@@ -198,9 +185,14 @@ async def update_metadata_by_id(
     description="Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
 )
 async def get_adoc_of_user(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> AnnotationDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     try:
         db_obj = crud_adoc.read_by_sdoc_and_user(
             db=db, sdoc_id=sdoc_id, user_id=user_id
@@ -224,9 +216,13 @@ async def get_adoc_of_user(
     description="Returns all AnnotationDocuments for the SourceDocument.",
 )
 async def get_all_adocs(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[AnnotationDocumentRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     return [
         AnnotationDocumentRead.model_validate(adoc)
         for adoc in crud_sdoc.read(db=db, id=sdoc_id).annotation_documents
@@ -240,9 +236,13 @@ async def get_all_adocs(
     description="Removes all AnnotationDocuments for the SourceDocument.",
 )
 async def remove_all_adocs(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     return crud_adoc.remove_by_sdoc(db=db, sdoc_id=sdoc_id)
 
 
@@ -253,9 +253,13 @@ async def remove_all_adocs(
     description="Returns all DocumentTags linked with the SourceDocument.",
 )
 async def get_all_tags(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[DocumentTagRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     sdoc_db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return [
         DocumentTagRead.model_validate(doc_tag_db_obj)
@@ -270,9 +274,13 @@ async def get_all_tags(
     description="Unlinks all DocumentTags of the SourceDocument.",
 )
 async def unlinks_all_tags(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, sdoc_id=sdoc_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
 
@@ -284,9 +292,15 @@ async def unlinks_all_tags(
     description="Links a DocumentTag with the SourceDocument with the given ID if it exists",
 )
 async def link_tag(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+
     sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
 
@@ -298,9 +312,15 @@ async def link_tag(
     description="Unlinks the DocumentTags from the SourceDocument.",
 )
 async def unlink_tag(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, tag_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> SourceDocumentRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+
     sdoc_db_obj = crud_sdoc.unlink_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)
 
@@ -312,9 +332,18 @@ async def unlink_tag(
     description="Adds a Memo to the SourceDocument with the given ID if it exists",
 )
 async def add_memo(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, memo: MemoCreate
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    memo: MemoCreate,
+    authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
-    # TODO Flo: only if the user has access?
+    sdoc = crud_sdoc.read(db, sdoc_id)
+    authz_user.assert_is_same_user(memo.user_id)
+    authz_user.assert_in_project(sdoc.project_id)
+    authz_user.assert_in_project(memo.project_id)
+    authz_user.assert_condition(sdoc.project_id == memo.project_id)
+
     db_obj = crud_memo.create_for_sdoc(db=db, sdoc_id=sdoc_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     return MemoRead(
@@ -331,8 +360,13 @@ async def add_memo(
     description="Returns all Memo attached to the SourceDocument with the given ID if it exists.",
 )
 async def get_memos(
-    *, db: Session = Depends(get_db_session), sdoc_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return get_object_memos(db_obj=db_obj)
 
@@ -347,8 +381,14 @@ async def get_memos(
     ),
 )
 async def get_user_memo(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     db_obj = crud_sdoc.read(db=db, id=sdoc_id)
     return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
@@ -366,8 +406,14 @@ async def get_user_memo(
     ),
 )
 async def get_related_user_memos(
-    *, db: Session = Depends(get_db_session), sdoc_id: int, user_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    sdoc_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     db_objs = crud_memo.read_by_user_and_sdoc(db=db, user_id=user_id, sdoc_id=sdoc_id)
     memos = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
@@ -385,6 +431,9 @@ async def get_word_frequencies(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[WordFrequencyRead]:
+    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
+
     sdoc = crud_sdoc.read(db=db, id=sdoc_id)
     return [WordFrequencyRead.model_validate(wf) for wf in sdoc.word_frequencies]

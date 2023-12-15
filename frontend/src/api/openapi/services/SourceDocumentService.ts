@@ -6,7 +6,6 @@ import type { DocumentTagRead } from "../models/DocumentTagRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
-import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
 import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 import type { SourceDocumentWithDataRead } from "../models/SourceDocumentWithDataRead";
@@ -46,6 +45,25 @@ export class SourceDocumentService {
   }
 
   /**
+   * Removes the SourceDocument
+   * Removes the SourceDocument with the given ID if it exists
+   * @returns SourceDocumentRead Successful Response
+   * @throws ApiError
+   */
+  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/sdoc/{sdoc_id}",
+      path: {
+        sdoc_id: sdocId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Updates the SourceDocument
    * Updates the SourceDocument with the given ID.
    * @returns SourceDocumentRead Successful Response
@@ -66,25 +84,6 @@ export class SourceDocumentService {
       },
       body: requestBody,
       mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Removes the SourceDocument
-   * Removes the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static deleteById({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdoc/{sdoc_id}",
-      path: {
-        sdoc_id: sdocId,
-      },
       errors: {
         422: `Validation Error`,
       },
@@ -187,36 +186,6 @@ export class SourceDocumentService {
         sdoc_id: sdocId,
         metadata_key: metadataKey,
       },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Updates the SourceDocumentMetadata
-   * Updates the SourceDocumentMetadata with the given ID if it exists.
-   * @returns SourceDocumentMetadataReadResolved Successful Response
-   * @throws ApiError
-   */
-  public static updateMetadataById({
-    sdocId,
-    metadataId,
-    requestBody,
-  }: {
-    sdocId: number;
-    metadataId: number;
-    requestBody: SourceDocumentMetadataUpdate;
-  }): CancelablePromise<SourceDocumentMetadataReadResolved> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/sdoc/{sdoc_id}/metadata/{metadata_id}",
-      path: {
-        sdoc_id: sdocId,
-        metadata_id: metadataId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         422: `Validation Error`,
       },
