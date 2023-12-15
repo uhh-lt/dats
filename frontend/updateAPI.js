@@ -67,7 +67,7 @@ http
 
         // 5. prettify file
         console.log("Prettify openapi.json");
-        exec(`prettier -w ${openapiFilePath}`, (err, stdout, stderr) => {
+        exec(`npx prettier --write ${openapiFilePath}`, (err, stdout, stderr) => {
           if (err) {
             // node couldn't execute the command
             console.error("An error occured when trying to run prettier :(");
