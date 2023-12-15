@@ -14,25 +14,23 @@ import {
 } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Tree, { Node } from "ts-tree-structure";
-import ProjectHooks from "../../../api/ProjectHooks.ts";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import { TreeFilter } from "../../../features/TagExplorer/TreeUtils.ts";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton.tsx";
-import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton.tsx";
-import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton.tsx";
-import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView.tsx";
-import ICodeTree from "../../annotation/CodeExplorer/ICodeTree.ts";
-import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils.ts";
-import { ProjectProps } from "./ProjectProps.ts";
+import ProjectHooks from "../../../../api/ProjectHooks";
+import { CodeRead } from "../../../../api/openapi";
+import CodeCreateDialog, { openCodeCreateDialog } from "../../../../features/CrudDialog/Code/CodeCreateDialog";
+import CodeEditDialog from "../../../../features/CrudDialog/Code/CodeEditDialog";
+import CodeEditButton from "../../../annotation/CodeExplorer/CodeEditButton";
+import CodeToggleEnabledButton from "../../../annotation/CodeExplorer/CodeToggleEnabledButton";
+import CodeToggleVisibilityButton from "../../../annotation/CodeExplorer/CodeToggleVisibilityButton";
+import CodeTreeView from "../../../annotation/CodeExplorer/CodeTreeView";
+import ICodeTree from "../../../annotation/CodeExplorer/ICodeTree";
+import { codesToTree } from "../../../annotation/CodeExplorer/TreeUtils";
+import { ProjectProps } from "../ProjectProps";
+import Filter from "../../../../features/TagExplorer/Filter";
 
 function ProjectCodes({ project }: ProjectProps) {
   // local state
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
-  const [codeFilter, setCodeFilter] = useState<string>("");
+  // const [codeFilter, setCodeFilter] = useState<string>("");
   const expandCodes = useCallback((codesToExpand: string[]) => {
     setExpandedCodeIds((prev) => {
       for (const codeId of codesToExpand) {
@@ -44,70 +42,72 @@ function ProjectCodes({ project }: ProjectProps) {
     });
   }, []);
 
-  // global client state (redux)
-  const dispatch = useAppDispatch();
-
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(project.id, true);
+  let codeTree;
+  let nodesToExpand;
 
+  if (projectCodes.data) {
+    codeTree = new Tree().parse<ICodeTree>(codesToTree(projectCodes.data));
+    nodesToExpand = new Set<number>();
+  } else {
+    codeTree = null;
+    nodesToExpand = new Set<number>();
+  }
   // computed
-  const { codeTree, nodesToExpand } = useMemo(() => {
-    if (projectCodes.data) {
-      // build the tree
-      const codeTree = new Tree().parse<ICodeTree>(codesToTree(projectCodes.data));
-      const nodesToExpand = new Set<number>();
-      const results = TreeFilter({ dataTree: codeTree, nodesToExpand, dataFilter: codeFilter });
-      return { codeTree: results.dataTree as Node<ICodeTree>, nodesToExpand: results.nodesToExpand };
+  // const { codeTree, nodesToExpand } = useMemo(() => {
+  //   if (projectCodes.data) {
+  //     // build the tree
+  //     const codeTree = new Tree().parse<ICodeTree>(codesToTree(projectCodes.data));
 
-      // if (codeFilter.trim().length > 0) {
-      //   const nodesToKeep = new Set<number>();
+  //     const nodesToExpand = new Set<number>();
 
-      //   // find all nodes that match the filter
-      //   codeTree.walk(
-      //     (node) => {
-      //       if (node.model.code.name.startsWith(codeFilter.trim())) {
-      //         // keep the node
-      //         nodesToKeep.add(node.model.code.id);
+  //     if (codeFilter.trim().length > 0) {
+  //       const nodesToKeep = new Set<number>();
 
-      //         // keep its children
-      //         node.children.map((child) => child.model.code.id).forEach((id) => nodesToKeep.add(id));
+  //       // find all nodes that match the filter
+  //       codeTree.walk(
+  //         (node) => {
+  //           if (node.model.code.name.startsWith(codeFilter.trim())) {
+  //             // keep the node
+  //             nodesToKeep.add(node.model.code.id);
 
-      //         // keep its parents
-      //         let parent = node.parent;
-      //         while (parent) {
-      //           nodesToKeep.add(parent.model.code.id);
-      //           nodesToExpand.add(parent.model.code.id);
-      //           parent = parent.parent;
-      //         }
-      //       }
-      //       return true;
-      //     },
-      //     { strategy: "breadth" }
-      //   );
+  //             // keep its children
+  //             node.children.map((child) => child.model.code.id).forEach((id) => nodesToKeep.add(id));
 
-      //   // filter the codeTree
-      //   let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
-      //   nodes_to_remove.forEach((node) => {
-      //     node.drop();
-      //   });
-      // }
+  //             // keep its parents
+  //             let parent = node.parent;
+  //             while (parent) {
+  //               nodesToKeep.add(parent.model.code.id);
+  //               nodesToExpand.add(parent.model.code.id);
+  //               parent = parent.parent;
+  //             }
+  //           }
+  //           return true;
+  //         },
+  //         { strategy: "breadth" }
+  //       );
 
-      // return { codeTree, nodesToExpand };
-    } else {
-      return { codeTree: null, nodesToExpand: new Set<number>() };
-    }
-  }, [projectCodes.data, codeFilter]);
+  //       // filter the codeTree
+  //       let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
+  //       nodes_to_remove.forEach((node) => {
+  //         node.drop();
+  //       });
+  //     }
 
-  // effects
-  // automatically expand filtered nodes
-  useEffect(() => {
-    expandCodes(Array.from(nodesToExpand).map((id) => id.toString()));
-  }, [expandCodes, nodesToExpand]);
+  //     return { codeTree, nodesToExpand };
+  //   } else {
+  //     return { codeTree: null, nodesToExpand: new Set<number>() };
+  //   }
+  // }, [projectCodes.data, codeFilter]);
+
+  // // effects
+  // // automatically expand filtered nodes
+  // useEffect(() => {
+  //   expandCodes(Array.from(nodesToExpand).map((id) => id.toString()));
+  // }, [expandCodes, nodesToExpand]);
 
   // ui event handlers
-  const handleCreateCodeClick = () => {
-    dispatch(CRUDDialogActions.openCodeCreateDialog({ codeCreateSuccessHandler: onCreateCodeSuccess }));
-  };
   const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
     expandCodes([nodeId]);
@@ -119,13 +119,13 @@ function ProjectCodes({ project }: ProjectProps) {
     newCodeIds.splice(id, 1);
     setExpandedCodeIds(newCodeIds);
   };
-  const onCreateCodeSuccess = (code: CodeRead) => {
+  const onCreateCodeSuccess = (code: CodeRead, isNewCode: boolean) => {
     // if we add a new code successfully, we want to show the code in the code explorer
     // this means, we have to expand the parent codes, so the new code is visible
     const codesToExpand = [];
     let parentCodeId = code.parent_code_id;
     while (parentCodeId) {
-      const currentParentCodeId = parentCodeId;
+      let currentParentCodeId = parentCodeId;
 
       codesToExpand.push(parentCodeId);
       parentCodeId = projectCodes.data?.find((code) => code.id === currentParentCodeId)?.parent_code_id;
@@ -135,7 +135,15 @@ function ProjectCodes({ project }: ProjectProps) {
 
   return (
     <Box display="flex" className="myFlexContainer h100">
-      <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
+      <Filter
+        dataTree={codeTree as Node<ICodeTree>}
+        nodesToExpand={nodesToExpand}
+        expandCodes={expandCodes}
+        handleExpandClick={handleExpandClick}
+        handleCollapseClick={handleCollapseClick}
+        onCreateCodeSuccess={onCreateCodeSuccess}
+      />
+      {/* <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
         <Typography variant="h6" color="inherit" component="div">
           Filter codes
         </Typography>
@@ -151,7 +159,7 @@ function ProjectCodes({ project }: ProjectProps) {
         />
         <CodeToggleEnabledButton code={codeTree?.model} />
       </Toolbar>
-      <Divider />
+      <Divider /> */}
 
       {projectCodes.isLoading && <CardContent>Loading project codes...</CardContent>}
       {projectCodes.isError && (
@@ -159,7 +167,7 @@ function ProjectCodes({ project }: ProjectProps) {
       )}
       <List disablePadding>
         <ListItem disablePadding>
-          <ListItemButton sx={{ px: 1.5 }} onClick={handleCreateCodeClick}>
+          <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ onSuccess: onCreateCodeSuccess })}>
             <ListItemIcon>
               <AddIcon />
             </ListItemIcon>
