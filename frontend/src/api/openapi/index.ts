@@ -75,7 +75,6 @@ export { LogicalOperator } from "./models/LogicalOperator";
 export type { MemoContentQuery } from "./models/MemoContentQuery";
 export type { MemoCreate } from "./models/MemoCreate";
 export type { MemoRead } from "./models/MemoRead";
-export type { MemoTitleQuery } from "./models/MemoTitleQuery";
 export type { MemoUpdate } from "./models/MemoUpdate";
 export { MetaType } from "./models/MetaType";
 export { NumberOperator } from "./models/NumberOperator";

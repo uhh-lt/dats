@@ -6,8 +6,6 @@ import {
   KeywordStat,
   MemoContentQuery,
   MemoRead,
-  MemoTitleQuery,
-  PaginatedMemoSearchResults,
   SearchColumns,
   SearchService,
   SimSearchImageHit,
@@ -207,23 +205,10 @@ const useSearchMemoContent = (params: MemoContentQuery) =>
     },
   );
 
-const useSearchMemoTitle = (params: MemoTitleQuery) =>
-  useQuery<PaginatedMemoSearchResults, Error>(
-    [QueryKey.MEMOS_BY_TITLE_SEARCH, params.title_query],
-    () =>
-      SearchService.searchMemosByTitleQuery({
-        requestBody: params,
-      }),
-    {
-      enabled: params.title_query.length > 0,
-    },
-  );
-
 const SearchHooks = {
   useSearchCodeStats,
   useSearchKeywordStats,
   useSearchTagStats,
-  useSearchMemoTitle,
   useSearchMemoContent,
   useSearchDocumentsNew,
 };
