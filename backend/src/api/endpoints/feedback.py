@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
-from app.core.data.crud.user import crud_user
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.feedback import FeedbackCreate, FeedbackRead
 from app.core.data.dto.user import UserRead
 from app.core.db.redis_service import RedisService
@@ -22,8 +23,13 @@ router = APIRouter(
     description="Creates a new Feedback and returns it with the generated ID.",
 )
 async def create_feedback(
-    *, db: Session = Depends(get_db_session), feedback: FeedbackCreate
+    *,
+    db: Session = Depends(get_db_session),
+    feedback: FeedbackCreate,
+    authz_user: AuthzUser = Depends(),
 ) -> FeedbackRead:
+    authz_user.assert_is_same_user(feedback.user_id)
+
     fb = RedisService().store_feedback(feedback=feedback)
 
     user = crud_user.read(db=db, id=feedback.user_id)
@@ -40,7 +46,11 @@ async def create_feedback(
     summary="Returns the Feedback",
     description="Returns the Feedback with the given ID.",
 )
-async def get_by_id(*, feedback_id: str) -> FeedbackRead:
+async def get_by_id(
+    *, feedback_id: str, authz_user: AuthzUser = Depends()
+) -> FeedbackRead:
+    authz_user.assert_is_same_user(SYSTEM_USER_ID)
+
     return RedisService().load_feedback(key=feedback_id)
 
 
@@ -50,7 +60,9 @@ async def get_by_id(*, feedback_id: str) -> FeedbackRead:
     summary="Returns all Feedback",
     description="Returns the Metadata with the given ID.",
 )
-async def get_all() -> List[FeedbackRead]:
+async def get_all(authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
+    authz_user.assert_is_same_user(SYSTEM_USER_ID)
+
     return RedisService().get_all_feedbacks()
 
 
@@ -60,7 +72,10 @@ async def get_all() -> List[FeedbackRead]:
     summary="Returns all Feedback of a User",
     description="Returns the Metadata of the User with the given ID.",
 )
-async def get_all_by_user(*, user_id: int) -> List[FeedbackRead]:
+async def get_all_by_user(
+    *, user_id: int, authz_user: AuthzUser = Depends()
+) -> List[FeedbackRead]:
+    authz_user.assert_is_same_user(SYSTEM_USER_ID)
     return RedisService().get_all_feedbacks_of_user(user_id)
 
 
@@ -71,8 +86,13 @@ async def get_all_by_user(*, user_id: int) -> List[FeedbackRead]:
     description="Sends an e-mail to the User that created the Feedback with the given message.",
 )
 async def reply_to(
-    *, db: Session = Depends(get_db_session), feedback_id: str, message: str
+    *,
+    db: Session = Depends(get_db_session),
+    feedback_id: str,
+    message: str,
+    authz_user: AuthzUser = Depends(),
 ) -> str:
+    authz_user.assert_is_same_user(SYSTEM_USER_ID)
     # todo: load_feedback should raise exception, if it does not exist!
     feedback: FeedbackRead = RedisService().load_feedback(key=feedback_id)
 
