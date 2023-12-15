@@ -1,9 +1,11 @@
 from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends
-from requests import Session
+from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, resolve_code_param
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.span_annotation import (
@@ -24,8 +26,15 @@ router = APIRouter(
     description="Creates a new SpanGroup and returns it with the generated ID.",
 )
 async def create_new_span_group(
-    *, db: Session = Depends(get_db_session), span_group: SpanGroupCreate
+    *,
+    db: Session = Depends(get_db_session),
+    span_group: SpanGroupCreate,
+    authz_user: AuthzUser = Depends(),
 ) -> Optional[SpanGroupRead]:
+    authz_user.assert_in_same_project_as(
+        Crud.ANNOTATION_DOCUMENT, span_group.annotation_document_id
+    )
+
     db_obj = crud_span_group.create(db=db, create_dto=span_group)
     return SpanGroupRead.model_validate(db_obj)
 
@@ -37,9 +46,13 @@ async def create_new_span_group(
     description="Returns the SpanGroup with the given ID.",
 )
 async def get_by_id(
-    *, db: Session = Depends(get_db_session), span_group_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    span_group_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> Optional[SpanGroupRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
+
     db_obj = crud_span_group.read(db=db, id=span_group_id)
     return SpanGroupRead.model_validate(db_obj)
 
@@ -55,8 +68,10 @@ async def update_by_id(
     db: Session = Depends(get_db_session),
     span_group_id: int,
     span_anno: SpanGroupUpdate,
+    authz_user: AuthzUser = Depends(),
 ) -> Optional[SpanGroupRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
+
     db_obj = crud_span_group.update(db=db, id=span_group_id, update_dto=span_anno)
     return SpanGroupRead.model_validate(db_obj)
 
@@ -68,9 +83,13 @@ async def update_by_id(
     description="Deletes the SpanGroup with the given ID.",
 )
 async def delete_by_id(
-    *, db: Session = Depends(get_db_session), span_group_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    span_group_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> Optional[SpanGroupRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
+
     db_obj = crud_span_group.remove(db=db, id=span_group_id)
     return SpanGroupRead.model_validate(db_obj)
 
@@ -86,8 +105,10 @@ async def get_all_annotations(
     db: Session = Depends(get_db_session),
     span_group_id: int,
     resolve_code: bool = Depends(resolve_code_param),
-) -> List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]]:
-    # TODO Flo: only if the user has access?
+    authz_user: AuthzUser = Depends(),
+) -> List[SpanAnnotationRead] | List[SpanAnnotationReadResolved]:
+    authz_user.assert_in_same_project_as(Crud.SPAN_GROUP, span_group_id)
+
     span_group_db_obj = crud_span_group.read(db=db, id=span_group_id)
     spans = span_group_db_obj.span_annotations
     span_read_dtos = [SpanAnnotationRead.model_validate(span) for span in spans]
