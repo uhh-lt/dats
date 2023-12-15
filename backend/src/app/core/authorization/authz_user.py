@@ -34,9 +34,14 @@ class AuthzUser:
         self.user = user
         self.db = db
 
-    def assert_in_same_project_as(self, crud: Crud, object_id: int):
+    def assert_in_same_project_as(self, crud: Crud, object_id: int | str):
         try:
-            orm_object = crud.value.read(self.db, object_id)
+            # Some read functions take an int, others take a str
+            # (e.g. PreprocessingJobs).
+            # There's no good way to bind the value of `Crud` to the
+            # type of `object_id`, so we switch off the type checker
+            # for this line :(
+            orm_object = crud.value.read(self.db, object_id)  # type: ignore
         except NoSuchElementError:
             self.assert_bool(False, f"{crud.name} {object_id} does not exist")
             return
@@ -48,9 +53,14 @@ class AuthzUser:
 
         self.assert_in_project(project_id)
 
-    def assert_object_has_same_user_id(self, crud: Crud, object_id: int):
+    def assert_object_has_same_user_id(self, crud: Crud, object_id: int | str):
         try:
-            orm_object = crud.value.read(self.db, object_id)
+            # Some read functions take an int, others take a str
+            # (e.g. PreprocessingJobs).
+            # There's no good way to bind the value of `Crud` to the
+            # type of `object_id`, so we switch off the type checker
+            # for this line :(
+            orm_object = crud.value.read(self.db, object_id)  # type: ignore
         except NoSuchElementError:
             self.assert_bool(False, "Object does not exist")
             return
