@@ -11,6 +11,7 @@ from typing import Callable, Generator
 import pytest
 from fastapi import Request
 from fastapi.datastructures import Headers
+from sqlalchemy.orm import Session
 
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.project import ProjectORM
@@ -66,6 +67,16 @@ def code(session: SQLService, project: int, user: int) -> Generator[int, None, N
 @pytest.fixture
 def session() -> SQLService:
     return SQLService()
+
+
+@pytest.fixture
+def rollbacked_session(session: SQLService) -> Generator[Session, None, None]:
+    db = session.session_maker()
+
+    yield db
+
+    db.rollback()
+    db.close()
 
 
 def project_fixture_base(session: SQLService, user: int) -> ProjectORM:
@@ -159,12 +170,13 @@ def make_user(session: SQLService) -> Generator[Callable[[], UserRead], None, No
 
 
 @pytest.fixture
-def authz_user(user: int, session: SQLService, mock_request: Request) -> AuthzUser:
-    with session.db_session() as db:
-        user_orm = crud_user.read(db, user)
-        authz_user = AuthzUser(request=mock_request, user=user_orm, db=db)
+def authz_user(
+    user: int, rollbacked_session: Session, mock_request: Request
+) -> AuthzUser:
+    user_orm = crud_user.read(rollbacked_session, user)
+    authz_user = AuthzUser(request=mock_request, user=user_orm, db=rollbacked_session)
 
-        return authz_user
+    return authz_user
 
 
 @pytest.fixture
