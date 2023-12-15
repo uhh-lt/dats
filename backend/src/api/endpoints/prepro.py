@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.preprocessing_job import crud_prepro_job
 from app.core.data.crud.preprocessing_job_payload import crud_prepro_job_payload
 from app.core.data.crud.project import crud_project
@@ -34,8 +36,10 @@ async def get_prepro_job(
     *,
     db: Session = Depends(get_db_session),
     prepro_job_id: str,
+    authz_user: AuthzUser = Depends(),
 ) -> PreprocessingJobRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.PREPROCESSING_JOB, prepro_job_id)
+
     db_obj = crud_prepro_job.read(db=db, uuid=prepro_job_id)
     return PreprocessingJobRead.model_validate(db_obj)
 
@@ -47,10 +51,10 @@ async def get_prepro_job(
     description="Aborts the PreprocessingJob for the given ID if it exists",
 )
 async def abort_prepro_job(
-    *,
-    prepro_job_id: str,
+    *, prepro_job_id: str, authz_user: AuthzUser = Depends()
 ) -> PreprocessingJobRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.PREPROCESSING_JOB, prepro_job_id)
+
     return pps.abort_preprocessing_job(ppj_id=prepro_job_id)
 
 
@@ -64,8 +68,10 @@ async def get_all_prepro_jobs(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[PreprocessingJobRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(project_id)
+
     db_objs = crud_prepro_job.read_by_proj_id(db=db, proj_id=project_id)
     prepro_jobs = [PreprocessingJobRead.model_validate(db_obj) for db_obj in db_objs]
     prepro_jobs.sort(key=lambda x: x.created, reverse=True)
@@ -79,9 +85,13 @@ async def get_all_prepro_jobs(
     description="Returns the PreProProjectStatus of the Project with the given ID.",
 )
 async def get_project_prepro_status(
-    *, proj_id: int, db: Session = Depends(get_db_session)
+    *,
+    proj_id: int,
+    db: Session = Depends(get_db_session),
+    authz_user: AuthzUser = Depends(),
 ) -> PreProProjectStatus:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(proj_id)
+
     crud_project.exists(db=db, id=proj_id, raise_error=True)
 
     active_ppj_ids = crud_prepro_job.read_ids_by_proj_id_and_status(
