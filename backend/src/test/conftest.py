@@ -15,7 +15,6 @@ from fastapi.datastructures import Headers
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.project import ProjectORM
 from app.core.startup import startup
-from migration.migrate import run_required_migrations
 
 os.environ["RAY_ENABLED"] = "False"
 
@@ -23,7 +22,6 @@ os.environ["RAY_ENABLED"] = "False"
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
-    run_required_migrations()
     startup(reset_data=True)
     os.environ["STARTUP_DONE"] = "1"
 
