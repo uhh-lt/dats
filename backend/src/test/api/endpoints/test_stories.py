@@ -142,3 +142,18 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     codes_project2_after = len(response_codes_project2_after)
 
     assert codes_project2_before + 3 == codes_project2_after
+
+
+@pytest.mark.order(5)
+def test_document(api_user, api_project, api_document):
+    alice = api_user.userList["alice"]
+    project1 = api_project.projectList["project1"]
+
+    # Upload two text documents
+    helloWorld = "helloWorld.txt"
+    filetwo = "filetwo.txt"
+    doc_response = api_document.create([helloWorld, filetwo], alice, project1)
+    helloWorld = doc_response[helloWorld]
+    filetwo = doc_response[filetwo]
+
+    # Upload two image documents

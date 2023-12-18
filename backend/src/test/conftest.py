@@ -323,24 +323,27 @@ def api_code(client: TestClient):
 def api_document(client: TestClient):
     class DocumentFactory:
         def __init__(self):
-            self.codeList = {}
+            self.documentList = {}
 
-        def create(self, filename: string, user: dict, project: dict):
+        def create(self, uploadList: list, user: dict, project: dict):
             headers = user["AuthHeader"]
-            project_id = project["id"]
-            user_id = user["id"]
-            document = {
-                "filename": filename,
-                "project_id": project_id,
-                "user_id": user_id,
-            }
+            files = []
+            for filename in uploadList:
+                files.append(("uploaded_files", (filename, open(filename, "rb"))))
             response = client.put(
-                f"/project/{project["id"]}/sdoc", headers=headers, json=document
+                f"/project/{project["id"]}/sdoc", headers=headers, files=files
             ).json()
-            print(f"{response=}")
-            document["id"] = response["id"]
-            self.documentList[filename] = document
-            # print(f"{self.codeList=}")
-            return document
+            docs = {}
+            for file in response["payloads"]:
+                document = {
+                    "id": file["id"],
+                    "filename": file["filename"],
+                    "project_id": file["project_id"],
+                    "mime_type": file["mime_type"],
+                    "doc_type": file["doc_type"],
+                }
+                docs[document["filename"]] = document
+            self.documentList.update(docs)
+            return docs
 
     return DocumentFactory()
