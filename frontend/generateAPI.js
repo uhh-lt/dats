@@ -18,5 +18,5 @@ console.log(openapiOutput.toString("utf-8"));
 
 // 3. prettify file
 console.log(`Prettify generated code at ${openapiFolderPath}`);
-const prettierOutput = execSync(`prettier -w ${openapiFolderPath}`);
+const prettierOutput = execSync(`npx prettier --write ${openapiFolderPath}`);
 console.log(prettierOutput.toString("utf-8"));
