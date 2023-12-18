@@ -64,4 +64,5 @@ async def delete_by_id(
     authz_user.assert_in_same_project_as(Crud.MEMO, memo_id)
 
     memo = crud_memo.remove(db=db, id=memo_id)
-    return MemoRead.model_validate(memo)
+
+    return crud_memo.get_memo_read_dto_from_orm(db, memo)
