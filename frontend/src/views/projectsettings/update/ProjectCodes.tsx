@@ -25,7 +25,7 @@ import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
 import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
 import { ProjectProps } from "./ProjectProps";
-import { TreeFilter } from "../../../features/TagExplorer/TreeUtils";
+import { filterTree } from "../../../features/TagExplorer/TreeUtils";
 
 function ProjectCodes({ project }: ProjectProps) {
   // local state
@@ -50,44 +50,8 @@ function ProjectCodes({ project }: ProjectProps) {
     if (projectCodes.data) {
       // build the tree
       const codeTree = new Tree().parse<ICodeTree>(codesToTree(projectCodes.data));
-      const nodesToExpand = new Set<number>();
-      const results = TreeFilter({ dataTree: codeTree, nodesToExpand, dataFilter: codeFilter });
+      const results = filterTree({ dataTree: codeTree, dataFilter: codeFilter });
       return { codeTree: results.dataTree as Node<ICodeTree>, nodesToExpand: results.nodesToExpand };
-
-      // if (codeFilter.trim().length > 0) {
-      //   const nodesToKeep = new Set<number>();
-
-      //   // find all nodes that match the filter
-      //   codeTree.walk(
-      //     (node) => {
-      //       if (node.model.code.name.startsWith(codeFilter.trim())) {
-      //         // keep the node
-      //         nodesToKeep.add(node.model.code.id);
-
-      //         // keep its children
-      //         node.children.map((child) => child.model.code.id).forEach((id) => nodesToKeep.add(id));
-
-      //         // keep its parents
-      //         let parent = node.parent;
-      //         while (parent) {
-      //           nodesToKeep.add(parent.model.code.id);
-      //           nodesToExpand.add(parent.model.code.id);
-      //           parent = parent.parent;
-      //         }
-      //       }
-      //       return true;
-      //     },
-      //     { strategy: "breadth" }
-      //   );
-
-      //   // filter the codeTree
-      //   let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
-      //   nodes_to_remove.forEach((node) => {
-      //     node.drop();
-      //   });
-      // }
-
-      // return { codeTree, nodesToExpand };
     } else {
       return { codeTree: null, nodesToExpand: new Set<number>() };
     }

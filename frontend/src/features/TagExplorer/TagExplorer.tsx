@@ -11,11 +11,11 @@ import ExporterButton from "../Exporter/ExporterButton";
 import MemoButton from "../Memo/MemoButton";
 import useComputeTagTree from "./useComputeTagTree";
 import { ITagTree } from "./ITagTree";
-import { TreeFilter, flatTree, tagsToTree } from "./TreeUtils";
+import { flatTree, filterTree } from "./TreeUtils";
 import TagTreeView from "./TagTreeView";
 import TagEditButton from "./TagEditButton";
 import TagExplorerContextMenu from "./TagExplorerContextMenu";
-import Tree, { Node } from "ts-tree-structure";
+import { Node } from "ts-tree-structure";
 
 interface TagExplorerProps {
   showToolbar?: boolean;
@@ -41,30 +41,23 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
     // custom hooks
     let { tagTree, allTags } = useComputeTagTree();
 
-    let nodesToExpand = React.useMemo(() => new Set<number>(), []);
-
-    if (allTags.data) {
-      tagTree = new Tree().parse<ITagTree>(tagsToTree(allTags.data));
-      if (tagFilter.length > 0) {
-        const filteredData = TreeFilter({
+    let { nodesToExpand, filteredTagTree } = React.useMemo(() => {
+      if (allTags.data) {
+        const filteredData = filterTree({
           dataTree: tagTree as Node<ITagTree>,
-          nodesToExpand,
           dataFilter: tagFilter,
         });
-        tagTree = filteredData.dataTree as Node<ITagTree>;
-        nodesToExpand = filteredData.nodesToExpand;
+        return { nodesToExpand: filteredData.nodesToExpand, filteredTagTree: filteredData.dataTree as Node<ITagTree> };
+      } else {
+        return { nodesToExpand: [], filteredTagTree: null };
       }
-    } else {
-      tagTree = null;
-    }
+    }, [allTags.data, tagFilter, tagTree]);
 
     // effects
     // automatically expand filtered nodes
     React.useEffect(() => {
-      setExpandedTagIds((prevExpandedTagIds) => Array.from(nodesToExpand).map((id) => id.toString()));
-    }, [nodesToExpand, expandedTagIds]);
-
-    // console.log(nodesToExpand, expandedTagIds);
+      setExpandedTagIds(() => Array.from(nodesToExpand).map((id) => id.toString()));
+    }, [nodesToExpand]);
 
     // handle ui events
     const handleSelectTag = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
@@ -74,17 +67,12 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
     const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
       event.stopPropagation();
       setExpandedTagIds((prevExpandedTagIds) => [nodeId, ...prevExpandedTagIds]);
-      // expandCodes([nodeId]);
-      console.log([nodeId]);
     };
     const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
       event.stopPropagation();
-      console.log(nodeId, expandedTagIds);
       const id = expandedTagIds.indexOf(nodeId);
       const newTagIds = [...expandedTagIds];
       newTagIds.splice(id, 1);
-      newTagIds.splice(-1, 1);
-      console.log(newTagIds);
       setExpandedTagIds(newTagIds);
     };
 
@@ -141,11 +129,11 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
 
     const content = (
       <>
-        {user && allTags.isSuccess && tagTree ? (
+        {user && allTags.isSuccess && filteredTagTree ? (
           <>
             <TagTreeView
               className="myFlexFillAllContainer"
-              data={tagTree.model}
+              data={filteredTagTree.model}
               multiSelect={false}
               selected={selectedTagId?.toString() || ""}
               expanded={expandedTagIds}

@@ -32,7 +32,7 @@ import CodeTreeView from "./CodeTreeView";
 import ICodeTree from "./ICodeTree";
 import { codesToTree, flatTree, flatTreeWithRoot } from "./TreeUtils";
 import useComputeCodeTree from "./useComputeCodeTree";
-import { TreeFilter } from "../../../features/TagExplorer/TreeUtils";
+import { filterTree } from "../../../features/TagExplorer/TreeUtils";
 import Tree, { Node } from "ts-tree-structure";
 
 interface CodeExplorerProps {
@@ -58,18 +58,15 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
     const dispatch = useAppDispatch();
 
     const [codeFilter, setCodeFilter] = useState<string>("");
-    let nodesToExpand = React.useMemo(() => new Set<number>(), []);
 
     if (allCodes.data) {
       codeTree = new Tree().parse<ICodeTree>(codesToTree(allCodes.data));
       if (codeFilter.length > 0) {
-        const filteredData = TreeFilter({
+        const filteredData = filterTree({
           dataTree: codeTree as Node<ICodeTree>,
-          nodesToExpand,
           dataFilter: codeFilter,
         });
         codeTree = filteredData.dataTree as Node<ICodeTree>;
-        nodesToExpand = filteredData.nodesToExpand;
       }
     } else {
       codeTree = null;
@@ -95,10 +92,6 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
         dispatch(AnnoActions.setCodesForSelection([]));
       }
     }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
-
-    // useEffect(() => {
-    //   dispatch(AnnoActions.setExpandedParentCodeIds(Array.from(nodesToExpand).map((id) => id.toString())));
-    // }, [nodesToExpand, expandedCodeIds, dispatch]);
 
     // handle ui events
     const handleSelectCode = (event: React.SyntheticEvent, nodeIds: string[] | string) => {

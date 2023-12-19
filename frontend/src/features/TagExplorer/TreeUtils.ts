@@ -2,10 +2,10 @@ import { DocumentTagRead } from "../../api/openapi";
 import { ITagTree } from "./ITagTree";
 import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree";
 import { Node } from "ts-tree-structure";
+import { cloneDeep } from "lodash";
 
 interface FilterProps {
   dataTree: Node<ICodeTree> | Node<ITagTree>;
-  nodesToExpand: Set<number>;
   dataFilter: string;
 }
 
@@ -71,12 +71,17 @@ export function flatTree(tree: ITagTree | null): DocumentTagRead[] {
   return result;
 }
 
-export function TreeFilter({ dataTree, nodesToExpand, dataFilter }: FilterProps) {
+export function filterTree({ dataTree, dataFilter }: FilterProps) {
+  let nodesToExpand = new Set<number>();
+
+  // clone tree using lodash
+  let dataTreeCopy = cloneDeep(dataTree);
+
   if (dataFilter.trim().length > 0) {
     const nodesToKeep = new Set<number>();
 
     // find all nodes that match the filter
-    dataTree.walk(
+    dataTreeCopy.walk(
       (node) => {
         if ("code" in node.model) {
           if (node.model.code.name.startsWith(dataFilter.trim())) {
@@ -132,15 +137,17 @@ export function TreeFilter({ dataTree, nodesToExpand, dataFilter }: FilterProps)
       { strategy: "breadth" }
     );
 
-    // filter the codeTree
+    // filter the dataTree
     let nodes_to_remove =
-      "code" in dataTree.model
-        ? (dataTree as Node<ICodeTree>).all((node) => !nodesToKeep.has(node.model.code.id))
-        : (dataTree as Node<ITagTree>).all((node) => !nodesToKeep.has(node.model.data.id));
+      "code" in dataTreeCopy.model
+        ? (dataTreeCopy as Node<ICodeTree>).all((node) => !nodesToKeep.has(node.model.code.id))
+        : (dataTreeCopy as Node<ITagTree>).all((node) => !nodesToKeep.has(node.model.data.id));
     nodes_to_remove.forEach((node) => {
       node.drop();
     });
-    dataTree = "code" in dataTree.model ? (dataTree as Node<ICodeTree>) : (dataTree as Node<ITagTree>);
+    dataTreeCopy = "code" in dataTreeCopy.model ? (dataTreeCopy as Node<ICodeTree>) : (dataTreeCopy as Node<ITagTree>);
+  } else {
+    dataTreeCopy = dataTree;
   }
-  return { dataTree, nodesToExpand };
+  return { dataTree: dataTreeCopy, nodesToExpand };
 }
