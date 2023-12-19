@@ -32,7 +32,7 @@ async def create_new_code(
 ) -> CodeRead:
     authz_user.assert_is_same_user(code.user_id)
     authz_user.assert_in_project(code.project_id)
-    if code.parent_code_id is not None:
+    if code.parent_code_id is not None and code.parent_code_id != -1:
         authz_user.assert_in_same_project_as(Crud.CODE, code.parent_code_id)
 
     db_code = crud_code.create(db=db, create_dto=code)
