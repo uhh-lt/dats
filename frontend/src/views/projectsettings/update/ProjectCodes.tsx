@@ -19,7 +19,7 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
 import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
 import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import { TreeFilter } from "../../../features/TagExplorer/TreeUtils.ts";
+import { filterTree } from "../../../features/TagExplorer/TreeUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton.tsx";
 import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton.tsx";
@@ -55,44 +55,8 @@ function ProjectCodes({ project }: ProjectProps) {
     if (projectCodes.data) {
       // build the tree
       const codeTree = new Tree().parse<ICodeTree>(codesToTree(projectCodes.data));
-      const nodesToExpand = new Set<number>();
-      const results = TreeFilter({ dataTree: codeTree, nodesToExpand, dataFilter: codeFilter });
+      const results = filterTree({ dataTree: codeTree, dataFilter: codeFilter });
       return { codeTree: results.dataTree as Node<ICodeTree>, nodesToExpand: results.nodesToExpand };
-
-      // if (codeFilter.trim().length > 0) {
-      //   const nodesToKeep = new Set<number>();
-
-      //   // find all nodes that match the filter
-      //   codeTree.walk(
-      //     (node) => {
-      //       if (node.model.code.name.startsWith(codeFilter.trim())) {
-      //         // keep the node
-      //         nodesToKeep.add(node.model.code.id);
-
-      //         // keep its children
-      //         node.children.map((child) => child.model.code.id).forEach((id) => nodesToKeep.add(id));
-
-      //         // keep its parents
-      //         let parent = node.parent;
-      //         while (parent) {
-      //           nodesToKeep.add(parent.model.code.id);
-      //           nodesToExpand.add(parent.model.code.id);
-      //           parent = parent.parent;
-      //         }
-      //       }
-      //       return true;
-      //     },
-      //     { strategy: "breadth" }
-      //   );
-
-      //   // filter the codeTree
-      //   let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
-      //   nodes_to_remove.forEach((node) => {
-      //     node.drop();
-      //   });
-      // }
-
-      // return { codeTree, nodesToExpand };
     } else {
       return { codeTree: null, nodesToExpand: new Set<number>() };
     }
