@@ -311,10 +311,8 @@ def api_code(client: TestClient):
                 "user_id": user_id,
             }
             response = client.put("/code", headers=headers, json=code).json()
-            # print(f"{response=}")
             code["id"] = response["id"]
             self.codeList[name] = code
-            # print(f"{self.codeList=}")
             return code
 
     return CodeFactory()
