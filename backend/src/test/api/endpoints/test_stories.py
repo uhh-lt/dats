@@ -146,14 +146,34 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 
 @pytest.mark.order(5)
 def test_document(api_user, api_project, api_document):
+    # TODO: Missing testcases
     alice = api_user.userList["alice"]
     project1 = api_project.projectList["project1"]
 
-    # Upload two text documents
-    helloWorld = "helloWorld.txt"
-    filetwo = "filetwo.txt"
-    doc_response = api_document.create([helloWorld, filetwo], alice, project1)
-    helloWorld = doc_response[helloWorld]
-    filetwo = doc_response[filetwo]
+    # Upload text documents
+    textd1 = "helloWorld.txt"
+    textd2 = "filetwo.txt"
+    doc_response = api_document.create([textd1, textd2], alice, project1)
+    textd1 = doc_response[textd1]
+    textd2 = doc_response[textd2]
 
-    # Upload two image documents
+    # Upload image documents
+    imaged1 = "kittyOne.jpg"
+    imaged2 = "cutze.png"
+    image_response = api_document.create([imaged1, imaged2], alice, project1)
+    imaged1 = image_response[imaged1]
+    imaged2 = image_response[imaged2]
+
+    # Upload video documents
+    videod1 = "highres.mp4"
+    videod2 = "webm.webm"
+    video_response = api_document.create([videod1, videod2], alice, project1)
+    videod1 = video_response[videod1]
+    videod2 = video_response[videod2]
+
+    # Upload audio documents
+    audiod1 = "pcm.wav"
+    audiod2 = "mp3.mp3"
+    audio_response = api_document.create([audiod1, audiod2], alice, project1)
+    audiod1 = audio_response[audiod1]
+    audiod2 = audio_response[audiod2]
