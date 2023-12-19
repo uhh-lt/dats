@@ -9,6 +9,7 @@ import string
 from typing import Generator
 
 import pytest
+import requests
 from loguru import logger
 
 from app.core.db.sql_service import SQLService
@@ -256,7 +257,10 @@ def api_document(client: TestClient):
             headers = user["AuthHeader"]
             files = []
             for filename in uploadList:
-                files.append(("uploaded_files", (filename, open(filename, "rb"))))
+                request_download = requests.get(filename[0])
+                files.append(
+                    ("uploaded_files", (filename[1], request_download.content))
+                )
             response = client.put(
                 f"/project/{project["id"]}/sdoc", headers=headers, files=files
             ).json()
