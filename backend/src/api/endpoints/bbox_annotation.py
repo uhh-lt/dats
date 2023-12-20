@@ -160,9 +160,15 @@ async def add_memo(
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
-    authz_user.assert_in_project(memo.project_id)
+    bbox_anno = crud_bbox_anno.read(db, bbox_id)
     authz_user.assert_is_same_user(memo.user_id)
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+    authz_user.assert_in_project(memo.project_id)
+    authz_user.assert_in_project(
+        bbox_anno.annotation_document.source_document.project_id
+    )
+    authz_user.assert_condition(
+        bbox_anno.annotation_document.source_document.project_id == memo.project_id
+    )
 
     db_obj = crud_memo.create_for_bbox_annotation(
         db=db, bbox_anno_id=bbox_id, create_dto=memo
