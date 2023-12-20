@@ -125,9 +125,11 @@ async def add_memo(
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    authz_user.assert_in_project(memo.project_id)
+    code = crud_code.read(db, code_id)
     authz_user.assert_is_same_user(memo.user_id)
+    authz_user.assert_in_project(code.project_id)
+    authz_user.assert_in_project(memo.project_id)
+    authz_user.assert_condition(memo.project_id == code.project_id)
 
     code = crud_code.read(db, code_id)
     authz_user.assert_condition(
