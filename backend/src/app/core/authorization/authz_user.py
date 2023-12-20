@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_current_user, get_db_session
 from app.core.data.crud import Crud
 from app.core.data.crud.crud_base import NoSuchElementError
+from app.core.data.orm.orm_base import ORMBase
 from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.orm.util import get_orm_user_id, get_parent_project_id
@@ -37,15 +38,7 @@ class AuthzUser:
         self.db = db
 
     def assert_in_same_project_as(self, crud: Crud, object_id: int | str):
-        try:
-            # Some read functions take an int, others take a str
-            # (e.g. PreprocessingJobs).
-            # There's no good way to bind the value of `Crud` to the
-            # type of `object_id`, so we switch off the type checker
-            # for this line :(
-            orm_object = crud.value.read(self.db, object_id)  # type: ignore
-        except NoSuchElementError:
-            self.deny_access(f"{crud.name} {object_id} does not exist")
+        orm_object = self.read_crud(crud, object_id)
 
         project_id = get_parent_project_id(orm_object)
         if project_id is None:
@@ -81,15 +74,7 @@ class AuthzUser:
             self.assert_condition(required_project_id in user_project_ids)
 
     def assert_object_has_same_user_id(self, crud: Crud, object_id: int | str):
-        try:
-            # Some read functions take an int, others take a str
-            # (e.g. PreprocessingJobs).
-            # There's no good way to bind the value of `Crud` to the
-            # type of `object_id`, so we switch off the type checker
-            # for this line :(
-            orm_object = crud.value.read(self.db, object_id)  # type: ignore
-        except NoSuchElementError:
-            self.deny_access("Object does not exist")
+        orm_object = self.read_crud(crud, object_id)
 
         user_id = get_orm_user_id(orm_object)
         if user_id is None:
@@ -131,3 +116,14 @@ class AuthzUser:
         logger.opt(depth=1).debug(
             f"check {result_description}: user {self.user.id}, {self.request.method} {self.request.url.path}{note}"
         )
+
+    def read_crud(self, crud: Crud, id: int | str) -> ORMBase:
+        try:
+            # Some read functions take an int, others take a str
+            # (e.g. PreprocessingJobs).
+            # There's no good way to bind the value of `Crud` to the
+            # type of `object_id`, so we switch off the type checker
+            # for this line :(
+            return crud.value.read(self.db, id)  # type: ignore
+        except NoSuchElementError:
+            self.deny_access("Object does not exist")
