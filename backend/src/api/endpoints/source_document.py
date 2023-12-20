@@ -300,6 +300,9 @@ async def link_tag(
 ) -> SourceDocumentRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
     authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+    authz_user.assert_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id), (Crud.DOCUMENT_TAG, tag_id)]
+    )
 
     sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
     return SourceDocumentRead.model_validate(sdoc_db_obj)

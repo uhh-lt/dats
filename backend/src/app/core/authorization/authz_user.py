@@ -1,4 +1,4 @@
-from typing import List, NoReturn
+from typing import List, NoReturn, Tuple
 
 from fastapi import Depends, Request
 from loguru import logger
@@ -72,6 +72,19 @@ class AuthzUser:
 
         for required_project_id in required_project_ids:
             self.assert_condition(required_project_id in user_project_ids)
+
+    def assert_objects_in_same_project(self, specs: List[Tuple[Crud, int | str]]):
+        orms = [self.read_crud(spec[0], spec[1]) for spec in specs]
+
+        project_ids = {get_parent_project_id(orm) for orm in orms}
+
+        if None in project_ids:
+            self.deny_access("Object has no parent project")
+
+        self.assert_condition(
+            len(project_ids) == 1,
+            "Objects need to be in the same project",
+        )
 
     def assert_object_has_same_user_id(self, crud: Crud, object_id: int | str):
         orm_object = self.read_crud(crud, object_id)
