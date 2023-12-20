@@ -68,10 +68,10 @@ class AuthzUser:
         if None in required_project_ids:
             self.deny_access("One or several objects have no parent project")
 
+        # Since we pre-load user projects, this should require no db query
         user_project_ids = {proj.id for proj in self.user.projects}
 
-        for required_project_id in required_project_ids:
-            self.assert_condition(required_project_id in user_project_ids)
+        self.assert_condition(required_project_ids.issubset(user_project_ids))
 
     def assert_objects_in_same_project(self, specs: List[Tuple[Crud, int | str]]):
         orms = [self.read_crud(spec[0], spec[1]) for spec in specs]

@@ -8,6 +8,7 @@ from app.core.data.crud import Crud
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.user import UserRead
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.db.sql_service import SQLService
 
@@ -103,6 +104,7 @@ def test_assert_in_same_project_as_many(
     code: int,
     rollbacked_session: Session,
     make_project: Callable[[], ProjectORM],
+    make_code: Callable[[], CodeORM],
 ):
     authz_user.assert_in_same_project_as_many(Crud.CODE, [code])
     # This should always pass
@@ -118,14 +120,19 @@ def test_assert_in_same_project_as_many(
 
     with pytest.raises(ForbiddenError):
         # Check code that exists but is not in project
-        authz_user.assert_in_same_project_as(Crud.CODE, code)
+        authz_user.assert_in_same_project_as_many(Crud.CODE, [code])
+
+    with pytest.raises(ForbiddenError):
+        # Check with a second code that is in the project
+        second_code = make_code()
+        authz_user.assert_in_same_project_as_many(Crud.CODE, [code, second_code.id])
 
     with pytest.raises(ForbiddenError):
         # Check code that does not exist
-        authz_user.assert_in_same_project_as(Crud.CODE, code + 1)
+        authz_user.assert_in_same_project_as_many(Crud.CODE, [code + 1])
 
     with pytest.raises(ForbiddenError):
         # Check entity that has no parent project
-        authz_user.assert_in_same_project_as(Crud.USER, authz_user.user.id)
+        authz_user.assert_in_same_project_as_many(Crud.USER, [authz_user.user.id])
 
     code_orm.project_id = previous_project.id

@@ -14,6 +14,7 @@ from fastapi.datastructures import Headers
 from sqlalchemy.orm import Session
 
 from app.core.authorization.authz_user import AuthzUser
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.startup import startup
 
@@ -29,7 +30,7 @@ if not STARTUP_DONE:
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
-from app.core.data.dto.code import CodeCreate, CodeRead
+from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserCreate, UserRead
 from app.core.db.sql_service import SQLService
@@ -41,8 +42,7 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest.fixture
-def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
+def code_fixture_base(session: SQLService, project: int, user: int) -> CodeORM:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -56,12 +56,35 @@ def code(session: SQLService, project: int, user: int) -> Generator[int, None, N
 
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
-        code_obj = CodeRead.model_validate(db_code)
+    return db_code
+
+
+@pytest.fixture
+def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
+    code_obj = code_fixture_base(session, project, user)
 
     yield code_obj.id
 
     with session.db_session() as sess:
         crud_code.remove(db=sess, id=code_obj.id)
+
+
+@pytest.fixture
+def make_code(
+    session: SQLService, project: int, user: int
+) -> Generator[Callable[[], CodeORM], None, None]:
+    created_codes = []
+
+    def factory():
+        code = code_fixture_base(session, project, user)
+        created_codes.append(code)
+        return code
+
+    yield factory
+
+    with session.db_session() as sess:
+        for code in created_codes:
+            crud_code.remove(db=sess, id=code.id)
 
 
 @pytest.fixture
