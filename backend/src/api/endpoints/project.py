@@ -482,9 +482,10 @@ async def add_memo(
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
-    authz_user.assert_in_project(proj_id)
     authz_user.assert_is_same_user(memo.user_id)
+    authz_user.assert_in_project(proj_id)
     authz_user.assert_in_project(memo.project_id)
+    authz_user.assert_condition(proj_id == memo.project_id)
 
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
