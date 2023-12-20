@@ -78,7 +78,7 @@ class AuthzUser:
         user_project_ids = {proj.id for proj in self.user.projects}
 
         for required_project_id in required_project_ids:
-            self.assert_bool(required_project_id in user_project_ids)
+            self.assert_condition(required_project_id in user_project_ids)
 
     def assert_object_has_same_user_id(self, crud: Crud, object_id: int | str):
         try:
@@ -98,7 +98,7 @@ class AuthzUser:
         self.assert_is_same_user(user_id)
 
     def assert_is_same_user(self, other_user_id: int):
-        self.assert_bool(self.user.id == other_user_id)
+        self.assert_condition(self.user.id == other_user_id)
 
     def assert_in_project(self, project_id: int):
         authorized_project_exists = self.db.query(
@@ -108,11 +108,11 @@ class AuthzUser:
             .exists()
         ).scalar()
 
-        self.assert_bool(
+        self.assert_condition(
             authorized_project_exists, f"User needs to be in project {project_id}"
         )
 
-    def assert_bool(self, is_authorized: bool, note: str = ""):
+    def assert_condition(self, is_authorized: bool, note: str = ""):
         self.log_check(is_authorized, note)
 
         if not is_authorized:

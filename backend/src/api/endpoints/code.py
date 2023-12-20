@@ -130,7 +130,7 @@ async def add_memo(
     authz_user.assert_is_same_user(memo.user_id)
 
     code = crud_code.read(db, code_id)
-    authz_user.assert_bool(
+    authz_user.assert_condition(
         code.project_id == memo.project_id, "Memo project needs to match code project"
     )
 

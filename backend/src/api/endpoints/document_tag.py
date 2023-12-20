@@ -40,7 +40,7 @@ async def create_new_doc_tag(
         authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, doc_tag.parent_tag_id)
 
         parent_tag = crud_document_tag.read(db, doc_tag.parent_tag_id)
-        authz_user.assert_bool(
+        authz_user.assert_condition(
             parent_tag.project_id == doc_tag.project_id,
             "Tag parent needs to be in the same project",
         )
@@ -170,7 +170,7 @@ async def add_memo(
     authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(tag.project_id)
     authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_bool(
+    authz_user.assert_condition(
         tag.project_id == memo.project_id, "Tag and memo project need to match"
     )
 
