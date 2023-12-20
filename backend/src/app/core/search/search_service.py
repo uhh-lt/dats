@@ -6,7 +6,6 @@ from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 from sqlalchemy.orm import InstrumentedAttribute
 
 from app.core.data.crud.project_metadata import crud_project_meta
-from app.core.data.crud.user import SYSTEM_USER_ID
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import (
     SimSearchImageHit,
@@ -347,15 +346,11 @@ class SearchService(metaclass=SingletonMeta):
     def compute_code_statistics(
         self,
         code_id: int,
-        user_ids: Set[int],
         sdoc_ids: Set[int],
         limit: Optional[int] = None,
     ) -> List[SpanEntityStat]:
         with self.sqls.db_session() as db:
             # we always want ADocs from the SYSTEM_USER
-            if not user_ids:
-                user_ids = set()
-            user_ids.add(SYSTEM_USER_ID)
 
             # code statistics for the sdoc_ids
             count = func.count().label("count")
@@ -372,7 +367,6 @@ class SearchService(metaclass=SingletonMeta):
                 .group_by(SpanTextORM.id)
                 .filter(
                     CodeORM.id == code_id,
-                    AnnotationDocumentORM.user_id.in_(list(user_ids)),
                     AnnotationDocumentORM.source_document_id.in_(list(sdoc_ids)),
                 )
                 .order_by(count.desc())
@@ -399,7 +393,6 @@ class SearchService(metaclass=SingletonMeta):
                 .group_by(SpanTextORM.id)
                 .filter(
                     CodeORM.id == code_id,
-                    AnnotationDocumentORM.user_id.in_(list(user_ids)),
                     SpanTextORM.id.in_(span_text_ids),
                 )
                 .order_by(func.array_position(span_text_ids, SpanTextORM.id))

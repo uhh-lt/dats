@@ -78,7 +78,6 @@ async def search_code_stats(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
-    user_ids: List[int],
     sdoc_ids: List[int],
     sort_by_global: bool = False,
     authz_user: AuthzUser = Depends(),
@@ -89,7 +88,7 @@ async def search_code_stats(
     # TODO Flo for large corpora this gets very slow. Hence we have to set a limit and in future implement some lazy
     #  loading or scrolling in the frontend with skip and limit.
     code_stats = SearchService().compute_code_statistics(
-        code_id=code_id, user_ids=set(user_ids), sdoc_ids=set(sdoc_ids)
+        code_id=code_id, sdoc_ids=set(sdoc_ids)
     )
     if sort_by_global:
         code_stats.sort(key=lambda x: x.global_count, reverse=True)

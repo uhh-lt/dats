@@ -29,7 +29,6 @@ export type { Body_analysis_code_frequencies } from "./models/Body_analysis_code
 export type { Body_analysis_word_frequency_analysis } from "./models/Body_analysis_word_frequency_analysis";
 export type { Body_authentication_login } from "./models/Body_authentication_login";
 export type { Body_project_upload_project_sdoc } from "./models/Body_project_upload_project_sdoc";
-export type { Body_search_search_code_stats } from "./models/Body_search_search_code_stats";
 export type { Body_search_search_sdocs } from "./models/Body_search_search_sdocs";
 export { BooleanOperator } from "./models/BooleanOperator";
 export type { CodeCreate } from "./models/CodeCreate";

@@ -1,7 +1,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_search_search_code_stats } from "../models/Body_search_search_code_stats";
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
@@ -86,7 +85,7 @@ export class SearchService {
     sortByGlobal = false,
   }: {
     codeId: number;
-    requestBody: Body_search_search_code_stats;
+    requestBody: Array<number>;
     sortByGlobal?: boolean;
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {

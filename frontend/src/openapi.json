@@ -3323,7 +3323,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Body_search-search_code_stats" } }
+            "application/json": { "schema": { "type": "array", "items": { "type": "integer" }, "title": "Sdoc Ids" } }
           }
         },
         "responses": {
@@ -5339,15 +5339,6 @@
         "type": "object",
         "required": ["uploaded_files"],
         "title": "Body_project-upload_project_sdoc"
-      },
-      "Body_search-search_code_stats": {
-        "properties": {
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
-          "sdoc_ids": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" }
-        },
-        "type": "object",
-        "required": ["user_ids", "sdoc_ids"],
-        "title": "Body_search-search_code_stats"
       },
       "Body_search-search_sdocs": {
         "properties": {
