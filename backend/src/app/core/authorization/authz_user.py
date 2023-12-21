@@ -99,15 +99,14 @@ class AuthzUser:
         self.assert_condition(self.user.id == other_user_id)
 
     def assert_in_project(self, project_id: int):
-        authorized_project_exists = self.db.query(
-            self.db.query(ProjectORM)
-            .join(ProjectORM.users)
-            .filter(UserORM.id == self.user.id, ProjectORM.id == project_id)
-            .exists()
-        ).scalar()
+        # Since we're eager-loading user projects in crud_user.read_by_email,
+        # this statement is faster than sending a custom query
+        authorized_project = next(
+            (proj for proj in self.user.projects if proj.id == project_id), None
+        )
 
         self.assert_condition(
-            authorized_project_exists, f"User needs to be in project {project_id}"
+            authorized_project is not None, f"User needs to be in project {project_id}"
         )
 
     def assert_condition(self, is_authorized: bool, note: str = ""):

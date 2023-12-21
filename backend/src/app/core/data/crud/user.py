@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
 from app.core.data.dto.user import UserCreate, UserLogin, UserUpdate
@@ -26,7 +26,12 @@ class CRUDUser(CRUDBase[UserORM, UserCreate, UserUpdate]):
 
     def read_by_email(self, db: Session, *, email: str) -> UserORM:
         # Flo: email is unique so there can be only one, which is why we use first() here
-        user = db.query(self.model).filter(self.model.email == email).first()
+        user = (
+            db.query(self.model)
+            .options(joinedload(self.model.projects))
+            .filter(self.model.email == email)
+            .first()
+        )
         if user is None:
             raise NoSuchElementError(self.model, email=email)
         return user
