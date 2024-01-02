@@ -120,7 +120,7 @@ def __migrate_project_docs(
     )
     if len(ids) == 0:
         return 0
-    ids = [id[0] for id in ids]
+    ids = {id[0] for id in ids}
     es_docs = ElasticSearchService().get_esdocs_by_sdoc_ids(
         proj_id=project_id, sdoc_ids=ids, fields=fields
     )

@@ -3,6 +3,7 @@ import shutil
 import urllib.parse as url
 import uuid
 import zipfile
+from http.client import BAD_REQUEST
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 from zipfile import ZipFile
@@ -406,6 +407,11 @@ class RepoService(metaclass=SingletonMeta):
         self, proj_id: int, uploaded_file: UploadFile
     ) -> Path:
         try:
+            if uploaded_file.filename is None:
+                raise HTTPException(
+                    status_code=BAD_REQUEST, detail="Uploaded file has no filename!"
+                )
+
             fn = Path(self.truncate_filename(uploaded_file.filename))
             in_project_dst = self._create_directory_structure_for_project_file(
                 proj_id=proj_id, filename=fn

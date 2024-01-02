@@ -19,7 +19,7 @@ class SpanGroupCreate(SpanGroupBaseDTO):
 
 
 # Properties for updating
-class SpanGroupUpdate(SpanGroupBaseDTO, UpdateDTOBase):
+class SpanGroupUpdate(BaseModel, UpdateDTOBase):
     name: Optional[str] = Field(description="Name of the SpanGroup", default=None)
 
 

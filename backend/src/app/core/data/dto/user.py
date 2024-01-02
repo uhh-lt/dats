@@ -19,7 +19,7 @@ class UserCreate(UserBaseDTO):
 
 
 # Properties for updating
-class UserUpdate(UserBaseDTO, UpdateDTOBase):
+class UserUpdate(BaseModel, UpdateDTOBase):
     email: Optional[str] = Field(description="E-Mail of the User", default=None)
     first_name: Optional[str] = Field(
         description="First name of the User", default=None

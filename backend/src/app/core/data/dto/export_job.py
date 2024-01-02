@@ -142,7 +142,7 @@ class ExportJobCreate(ExportJobBaseDTO):
 
 
 # Properties to update
-class ExportJobUpdate(ExportJobBaseDTO, UpdateDTOBase):
+class ExportJobUpdate(BaseModel, UpdateDTOBase):
     status: Optional[BackgroundJobStatus] = Field(
         default=None, description="Status of the ExportJob"
     )

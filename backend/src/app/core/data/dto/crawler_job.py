@@ -43,7 +43,7 @@ class CrawlerJobCreate(CrawlerJobBaseDTO):
 
 
 # Properties to update
-class CrawlerJobUpdate(CrawlerJobBaseDTO, UpdateDTOBase):
+class CrawlerJobUpdate(BaseModel, UpdateDTOBase):
     status: Optional[BackgroundJobStatus] = Field(
         default=None, description="Status of the CrawlerJob"
     )
