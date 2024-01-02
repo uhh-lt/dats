@@ -2,6 +2,7 @@ import {
   ActionRead,
   ActionTargetObjectType,
   ActionType,
+  AnnotationDocumentRead,
   BBoxAnnotationReadResolvedCode,
   CodeRead,
   DocumentTagRead,
@@ -25,7 +26,7 @@ export const actionType2Color: Record<ActionType, string> = {
 
 export const actionTarget2Title: Record<ActionTargetObjectType, string> = {
   memo: "Memo",
-  annotation_document: "Annotation Document",
+  annotation_document: "Annotations",
   source_document: "Document",
   code: "Code",
   span_annotation: "Span Annotation",
@@ -68,6 +69,8 @@ export const action2TargetTitle = (action: ActionRead): string | null | undefine
         return `Code: ${bboxAnno.code.name} Coordinates: ${bboxAnno.x_min}, ${bboxAnno.y_min}, ${bboxAnno.x_max}, ${bboxAnno.y_max}`;
       case ActionTargetObjectType.CODE:
         return (parsedObject as CodeRead).name;
+      case ActionTargetObjectType.ANNOTATION_DOCUMENT:
+        return `Document #${(parsedObject as AnnotationDocumentRead).source_document_id}`;
       default:
         return undefined;
     }
