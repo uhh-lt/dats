@@ -36,6 +36,10 @@ class SQLService(metaclass=SingletonMeta):
             cls.__engine: Engine = engine
             cls.session_maker = sessionmaker(autoflush=False, bind=engine)
 
+            if kwargs.get("reset_database") is True:
+                logger.warning("Dropping existing DB!")
+                drop_database(cls.__engine.url)
+
             return super(SQLService, cls).__new__(cls)
 
         except Exception as e:
