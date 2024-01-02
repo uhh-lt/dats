@@ -10,7 +10,7 @@ export type PreProProjectStatus = {
   /**
    * List of active PreprocessingJob UUIDs
    */
-  active_prepro_job_ids: Array<string>;
+  active_prepro_job_ids?: Array<string>;
   /**
    * Number of active PreprocessingJobPayloads
    */
