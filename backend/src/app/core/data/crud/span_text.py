@@ -38,7 +38,9 @@ class CRUDSpanText(CRUDBase[SpanTextORM, SpanTextCreate, None]):
             created = super().create_multi(db=db, create_dtos=to_create)
             for i, obj in zip(to_create_idx, created):
                 span_texts[i] = obj
-        return span_texts
+        # Ignore types: We've made sure that no `None` values remain since we've created
+        # span texts to replace them
+        return span_texts  # type: ignore
 
     def read_by_text(self, db: Session, *, text: str) -> Optional[SpanTextORM]:
         return db.query(self.model.id).filter(self.model.text == text).first()
