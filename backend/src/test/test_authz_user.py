@@ -21,15 +21,14 @@ def test_assert_true(authz_user: AuthzUser):
 
 
 def test_assert_in_project(
-    user: int, project: int, session: SQLService, authz_user: AuthzUser
+    user: int, project: int, rollbacked_session: Session, authz_user: AuthzUser
 ):
-    with session.db_session() as db:
+    authz_user.assert_in_project(project)
+
+    crud_project.dissociate_user(rollbacked_session, proj_id=project, user_id=user)
+
+    with pytest.raises(ForbiddenError):
         authz_user.assert_in_project(project)
-
-        crud_project.dissociate_user(db, proj_id=project, user_id=user)
-
-        with pytest.raises(ForbiddenError):
-            authz_user.assert_in_project(project)
 
 
 def test_assert_is_same_user(
