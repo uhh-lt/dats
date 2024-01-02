@@ -22,8 +22,7 @@ router = APIRouter(
 @router.put(
     "",
     response_model=Optional[SpanGroupRead],
-    summary="Creates a new SpanGroup",
-    description="Creates a new SpanGroup and returns it with the generated ID.",
+    summary="Creates a new SpanGroup and returns it with the generated ID.",
 )
 async def create_new_span_group(
     *,
@@ -42,8 +41,7 @@ async def create_new_span_group(
 @router.get(
     "/{span_group_id}",
     response_model=Optional[SpanGroupRead],
-    summary="Returns the SpanGroup",
-    description="Returns the SpanGroup with the given ID.",
+    summary="Returns the SpanGroup with the given ID.",
 )
 async def get_by_id(
     *,
@@ -60,8 +58,7 @@ async def get_by_id(
 @router.patch(
     "/{span_group_id}",
     response_model=Optional[SpanGroupRead],
-    summary="Updates the SpanGroup",
-    description="Updates the SpanGroup with the given ID.",
+    summary="Updates the SpanGroup with the given ID.",
 )
 async def update_by_id(
     *,
@@ -79,8 +76,7 @@ async def update_by_id(
 @router.delete(
     "/{span_group_id}",
     response_model=Optional[SpanGroupRead],
-    summary="Deletes the SpanGroup",
-    description="Deletes the SpanGroup with the given ID.",
+    summary="Deletes the SpanGroup with the given ID.",
 )
 async def delete_by_id(
     *,
@@ -97,8 +93,7 @@ async def delete_by_id(
 @router.get(
     "/{span_group_id}/span_annotations",
     response_model=List[Union[SpanAnnotationRead, SpanAnnotationReadResolved]],
-    summary="Returns all SpanAnnotations in the SpanGroup",
-    description="Returns all SpanAnnotations in the SpanGroup with the given ID if it exists",
+    summary="Returns all SpanAnnotations in the SpanGroup with the given ID if it exists",
 )
 async def get_all_annotations(
     *,

@@ -23,7 +23,6 @@ import { request as __request } from "../core/request";
 export class AnalysisService {
   /**
    * Returns all SourceDocument IDs that match the query parameters.
-   * Returns all SourceDocument Ids that match the query parameters.
    * @returns CodeFrequency Successful Response
    * @throws ApiError
    */
@@ -50,7 +49,6 @@ export class AnalysisService {
 
   /**
    * Returns all SourceDocument IDs that match the query parameters.
-   * Returns all SourceDocument Ids that match the query parameters.
    * @returns CodeOccurrence Successful Response
    * @throws ApiError
    */
@@ -79,7 +77,6 @@ export class AnalysisService {
   }
 
   /**
-   * Returns AnnotationOccurrences.
    * Returns AnnotationOccurrences.
    * @returns AnnotationOccurrence Successful Response
    * @throws ApiError
@@ -110,7 +107,6 @@ export class AnalysisService {
 
   /**
    * Returns AnnotationSegments Info.
-   * Returns AnnotationSegments Info.
    * @returns ColumnInfo_AnnotatedSegmentsColumns_ Successful Response
    * @throws ApiError
    */
@@ -132,7 +128,6 @@ export class AnalysisService {
   }
 
   /**
-   * Returns AnnotationSegments.
    * Returns AnnotationSegments.
    * @returns AnnotatedSegmentResult Successful Response
    * @throws ApiError
@@ -166,7 +161,6 @@ export class AnalysisService {
 
   /**
    * Returns TimelineAnalysis Info.
-   * Returns TimelineAnalysis Info.
    * @returns any[] Successful Response
    * @throws ApiError
    */
@@ -192,7 +186,6 @@ export class AnalysisService {
 
   /**
    * Returns TimelineAnalysis Info.
-   * Returns TimelineAnalysis Info.
    * @returns ColumnInfo_TimelineAnalysisColumns_ Successful Response
    * @throws ApiError
    */
@@ -214,7 +207,6 @@ export class AnalysisService {
   }
 
   /**
-   * Perform new timeline analysis.
    * Perform new timeline analysis.
    * @returns TimelineAnalysisResultNew Successful Response
    * @throws ApiError
@@ -248,7 +240,6 @@ export class AnalysisService {
 
   /**
    * Returns WordFrequency Info.
-   * Returns WordFrequency Info.
    * @returns ColumnInfo_WordFrequencyColumns_ Successful Response
    * @throws ApiError
    */
@@ -270,7 +261,6 @@ export class AnalysisService {
   }
 
   /**
-   * Perform word frequency analysis.
    * Perform word frequency analysis.
    * @returns WordFrequencyResult Successful Response
    * @throws ApiError

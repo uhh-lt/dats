@@ -20,8 +20,7 @@ router = APIRouter(
 @router.put(
     "",
     response_model=SourceDocumentMetadataRead,
-    summary="Creates new Metadata",
-    description="Creates a new Metadata and returns it with the generated ID.",
+    summary="Creates a new Metadata and returns it with the generated ID.",
 )
 async def create_new_metadata(
     *,
@@ -43,8 +42,7 @@ async def create_new_metadata(
 @router.get(
     "/{metadata_id}",
     response_model=SourceDocumentMetadataReadResolved,
-    summary="Returns the Metadata",
-    description="Returns the Metadata with the given ID.",
+    summary="Returns the Metadata with the given ID.",
 )
 async def get_by_id(
     *,
@@ -61,8 +59,7 @@ async def get_by_id(
 @router.patch(
     "/{metadata_id}",
     response_model=SourceDocumentMetadataRead,
-    summary="Updates the Metadata",
-    description="Updates the Metadata with the given ID.",
+    summary="Updates the Metadata with the given ID.",
 )
 async def update_by_id(
     *,
@@ -80,8 +77,7 @@ async def update_by_id(
 @router.delete(
     "/{metadata_id}",
     response_model=SourceDocumentMetadataRead,
-    summary="Deletes the Metadata",
-    description="Deletes the Metadata with the given ID.",
+    summary="Deletes the Metadata with the given ID.",
 )
 async def delete_by_id(
     *,

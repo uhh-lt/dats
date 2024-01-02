@@ -19,8 +19,7 @@ router = APIRouter(
 @router.put(
     "",
     response_model=FeedbackRead,
-    summary="Creates new Feedback",
-    description="Creates a new Feedback and returns it with the generated ID.",
+    summary="Creates a new Feedback and returns it with the generated ID.",
 )
 async def create_feedback(
     *,
@@ -43,8 +42,7 @@ async def create_feedback(
 @router.get(
     "/{feedback_id}",
     response_model=FeedbackRead,
-    summary="Returns the Feedback",
-    description="Returns the Feedback with the given ID.",
+    summary="Returns the Feedback with the given ID.",
 )
 async def get_by_id(
     *, feedback_id: str, authz_user: AuthzUser = Depends()
@@ -57,8 +55,7 @@ async def get_by_id(
 @router.get(
     "",
     response_model=List[FeedbackRead],
-    summary="Returns all Feedback",
-    description="Returns the Metadata with the given ID.",
+    summary="Returns the Metadata with the given ID.",
 )
 async def get_all(authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
     authz_user.assert_is_same_user(SYSTEM_USER_ID)
@@ -69,8 +66,7 @@ async def get_all(authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
 @router.get(
     "/user/{user_id}",
     response_model=List[FeedbackRead],
-    summary="Returns all Feedback of a User",
-    description="Returns the Metadata of the User with the given ID.",
+    summary="Returns the Metadata of the User with the given ID.",
 )
 async def get_all_by_user(
     *, user_id: int, authz_user: AuthzUser = Depends()
@@ -82,8 +78,7 @@ async def get_all_by_user(
 @router.post(
     "/reply_to/{feedback_id}",
     response_model=str,
-    summary="Reply to the Feedback",
-    description="Sends an e-mail to the User that created the Feedback with the given message.",
+    summary="Sends an e-mail to the User that created the Feedback with the given message.",
 )
 async def reply_to(
     *,

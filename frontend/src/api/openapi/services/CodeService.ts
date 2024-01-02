@@ -13,7 +13,6 @@ import { request as __request } from "../core/request";
 
 export class CodeService {
   /**
-   * Creates a new Code
    * Creates a new Code and returns it with the generated ID.
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -31,7 +30,6 @@ export class CodeService {
   }
 
   /**
-   * Returns the Code linked by the CurrentCode
    * Returns the Code linked by the CurrentCode with the given ID.
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -50,7 +48,6 @@ export class CodeService {
   }
 
   /**
-   * Returns the Code
    * Returns the Code with the given ID.
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -69,7 +66,6 @@ export class CodeService {
   }
 
   /**
-   * Updates the Code
    * Updates the Code with the given ID.
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -96,7 +92,6 @@ export class CodeService {
   }
 
   /**
-   * Deletes the Code
    * Deletes the Code with the given ID.
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -115,7 +110,6 @@ export class CodeService {
   }
 
   /**
-   * Adds a Memo to the Code
    * Adds a Memo to the Code with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -142,7 +136,6 @@ export class CodeService {
   }
 
   /**
-   * Returns the Memo attached to the Code
    * Returns the Memo attached to the Code with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -161,7 +154,6 @@ export class CodeService {
   }
 
   /**
-   * Returns the Memo attached to the SpanAnnotation of the User with the given ID
    * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError

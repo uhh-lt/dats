@@ -17,7 +17,6 @@ import { request as __request } from "../core/request";
 export class SpanAnnotationService {
   /**
    * Creates a SpanAnnotation
-   * Creates a SpanAnnotation
    * @returns any Successful Response
    * @throws ApiError
    */
@@ -46,7 +45,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Returns the SpanAnnotation
    * Returns the SpanAnnotation with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -77,7 +75,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Updates the SpanAnnotation
    * Updates the SpanAnnotation with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -112,7 +109,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Deletes the SpanAnnotation
    * Deletes the SpanAnnotation with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -135,7 +131,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Returns the Code of the SpanAnnotation
    * Returns the Code of the SpanAnnotation with the given ID if it exists.
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -154,7 +149,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Returns all SpanGroups that contain the the SpanAnnotation
    * Returns all SpanGroups that contain the the SpanAnnotation.
    * @returns SpanGroupRead Successful Response
    * @throws ApiError
@@ -174,7 +168,6 @@ export class SpanAnnotationService {
 
   /**
    * Removes the SpanAnnotation from all SpanGroups
-   * Removes the SpanAnnotation from all SpanGroups
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
@@ -192,7 +185,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Adds the SpanAnnotation to the SpanGroup
    * Adds the SpanAnnotation to the SpanGroup
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
@@ -219,7 +211,6 @@ export class SpanAnnotationService {
 
   /**
    * Removes the SpanAnnotation from the SpanGroup
-   * Removes the SpanAnnotation from the SpanGroup
    * @returns SpanAnnotationRead Successful Response
    * @throws ApiError
    */
@@ -244,7 +235,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Adds a Memo to the SpanAnnotation
    * Adds a Memo to the SpanAnnotation with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -271,7 +261,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Returns the Memo attached to the SpanAnnotation
    * Returns the Memo attached to the SpanAnnotation with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -290,7 +279,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Returns the Memo attached to the SpanAnnotation of the User with the given ID
    * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -310,7 +298,6 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Returns SpanAnnotations with the given Code of the User with the given ID
    * Returns SpanAnnotations with the given Code of the User with the given ID
    * @returns SpanAnnotationReadResolved Successful Response
    * @throws ApiError

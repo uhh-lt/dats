@@ -41,7 +41,6 @@ router = APIRouter(
     "",
     response_model=AnnotationDocumentRead,
     summary="Creates an AnnotationDocument",
-    description="Creates an AnnotationDocument",
 )
 async def create(
     *,
@@ -60,8 +59,7 @@ async def create(
 @router.get(
     "/{adoc_id}",
     response_model=AnnotationDocumentRead,
-    summary="Returns the AnnotationDocument",
-    description="Returns the AnnotationDocument with the given ID if it exists",
+    summary="Returns the AnnotationDocument with the given ID if it exists",
 )
 async def get_by_adoc_id(
     *,
@@ -78,8 +76,7 @@ async def get_by_adoc_id(
 @router.delete(
     "/{adoc_id}",
     response_model=AnnotationDocumentRead,
-    summary="Removes the AnnotationDocument",
-    description="Removes the AnnotationDocument with the given ID if it exists",
+    summary="Removes the AnnotationDocument with the given ID if it exists",
 )
 async def delete_by_adoc_id(
     *,
@@ -96,8 +93,7 @@ async def delete_by_adoc_id(
 @router.get(
     "/{adoc_id}/span_annotations",
     response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
-    summary="Returns all SpanAnnotations in the AnnotationDocument",
-    description="Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
+    summary="Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
 )
 async def get_all_span_annotations(
     *,
@@ -129,8 +125,7 @@ async def get_all_span_annotations(
 @router.delete(
     "/{adoc_id}/span_annotations",
     response_model=List[int],
-    summary="Removes all SpanAnnotations in the AnnotationDocument",
-    description="Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
+    summary="Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
 )
 async def delete_all_span_annotations(
     *,
@@ -149,8 +144,7 @@ async def delete_all_span_annotations(
     response_model=Union[
         List[BBoxAnnotationRead], List[BBoxAnnotationReadResolvedCode]
     ],
-    summary="Returns all BBoxAnnotations in the AnnotationDocument",
-    description="Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
+    summary="Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
 )
 async def get_all_bbox_annotations(
     *,
@@ -179,8 +173,7 @@ async def get_all_bbox_annotations(
 @router.delete(
     "/{adoc_id}/bbox_annotations",
     response_model=List[int],
-    summary="Removes all BBoxAnnotations in the AnnotationDocument",
-    description="Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
+    summary="Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
 )
 async def delete_all_bbox_annotations(
     *,
@@ -197,8 +190,7 @@ async def delete_all_bbox_annotations(
 @router.get(
     "/{adoc_id}/span_groups",
     response_model=List[SpanGroupRead],
-    summary="Returns all SpanGroups in the AnnotationDocument",
-    description="Returns all SpanGroups in the AnnotationDocument with the given ID if it exists",
+    summary="Returns all SpanGroups in the AnnotationDocument with the given ID if it exists",
 )
 async def get_all_span_groups(
     *,

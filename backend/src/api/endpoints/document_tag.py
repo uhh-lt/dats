@@ -25,8 +25,7 @@ router = APIRouter(
 @router.put(
     "",
     response_model=DocumentTagRead,
-    summary="Creates a new DocumentTag",
-    description="Creates a new DocumentTag and returns it with the generated ID.",
+    summary="Creates a new DocumentTag and returns it with the generated ID.",
 )
 async def create_new_doc_tag(
     *,
@@ -52,8 +51,7 @@ async def create_new_doc_tag(
 @router.patch(
     "/bulk/link",
     response_model=int,
-    summary="Links multiple DocumentTags with the SourceDocuments",
-    description="Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
+    summary="Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
 )
 async def link_multiple_tags(
     *,
@@ -80,8 +78,7 @@ async def link_multiple_tags(
 @router.delete(
     "/bulk/unlink",
     response_model=int,
-    summary="Unlinks all DocumentTags with the SourceDocuments",
-    description="Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
+    summary="Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
 )
 async def unlink_multiple_tags(
     *,
@@ -106,8 +103,7 @@ async def unlink_multiple_tags(
 @router.get(
     "/{tag_id}",
     response_model=DocumentTagRead,
-    summary="Returns the DocumentTag",
-    description="Returns the DocumentTag with the given ID.",
+    summary="Returns the DocumentTag with the given ID.",
 )
 async def get_by_id(
     *,
@@ -124,8 +120,7 @@ async def get_by_id(
 @router.patch(
     "/{tag_id}",
     response_model=DocumentTagRead,
-    summary="Updates the DocumentTag",
-    description="Updates the DocumentTag with the given ID.",
+    summary="Updates the DocumentTag with the given ID.",
 )
 async def update_by_id(
     *, db: Session = Depends(get_db_session), tag_id: int, doc_tag: DocumentTagUpdate
@@ -138,8 +133,7 @@ async def update_by_id(
 @router.delete(
     "/{tag_id}",
     response_model=DocumentTagRead,
-    summary="Deletes the DocumentTag",
-    description="Deletes the DocumentTag with the given ID.",
+    summary="Deletes the DocumentTag with the given ID.",
 )
 async def delete_by_id(
     *,
@@ -156,8 +150,7 @@ async def delete_by_id(
 @router.put(
     "/{tag_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the DocumentTag",
-    description="Adds a Memo to the DocumentTag with the given ID if it exists",
+    summary="Adds a Memo to the DocumentTag with the given ID if it exists",
 )
 async def add_memo(
     *,
@@ -188,8 +181,7 @@ async def add_memo(
 @router.get(
     "/{tag_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo attached to the DocumentTag",
-    description="Returns the Memo attached to the DocumentTag with the given ID if it exists.",
+    summary="Returns the Memo attached to the DocumentTag with the given ID if it exists.",
 )
 async def get_memos(
     *,
@@ -206,8 +198,7 @@ async def get_memos(
 @router.get(
     "/{tag_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
         " given ID if it exists."
     ),
@@ -228,8 +219,7 @@ async def get_user_memo(
 @router.get(
     "/{tag_id}/sdocs",
     response_model=List[int],
-    summary="Returns all SourceDocument IDs attached to the Tag with the given ID",
-    description=(
+    summary=(
         "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists."
     ),
 )

@@ -19,8 +19,7 @@
     "/": {
       "get": {
         "tags": ["general"],
-        "summary": "Root To Docs",
-        "description": "Redirection to /docs",
+        "summary": "Redirection to /docs",
         "operationId": "root_to_docs",
         "responses": {
           "200": { "description": "Successful Response", "content": { "application/json": { "schema": {} } } }
@@ -30,8 +29,7 @@
     "/authentication/register": {
       "post": {
         "tags": ["authentication"],
-        "summary": "Registers a new User",
-        "description": "Registers a new User and returns it with the generated ID.",
+        "summary": "Registers a new User and returns it with the generated ID.",
         "operationId": "register",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/UserCreate" } } },
@@ -52,8 +50,7 @@
     "/authentication/login": {
       "post": {
         "tags": ["authentication"],
-        "summary": "Returns the JWT access token for the provided user login data",
-        "description": "Returns the JWT access token for the provided user login data if the login was successful. This is usually only called from an OAuth2 client!",
+        "summary": "Returns the JWT access token for the provided user login data if the login was successful. This is usually only called from an OAuth2 client!",
         "operationId": "login",
         "requestBody": {
           "content": {
@@ -80,8 +77,7 @@
     "/authentication/logout": {
       "post": {
         "tags": ["authentication"],
-        "summary": "Log out the user from the given session.",
-        "description": "Revokes the refresh token associated with the given session.",
+        "summary": "Revokes the refresh token associated with the given session.",
         "operationId": "logout",
         "parameters": [
           {
@@ -103,8 +99,7 @@
     "/authentication/refresh_access": {
       "post": {
         "tags": ["authentication"],
-        "summary": "Obtain a new access token.",
-        "description": "Uses the given refresh token to obtain a new access token.",
+        "summary": "Uses the given refresh token to obtain a new access token.",
         "operationId": "refresh_access_token",
         "parameters": [
           {
@@ -131,8 +126,7 @@
     "/user/me": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns the current user",
-        "description": "Returns the current (logged in) user",
+        "summary": "Returns the current (logged in) user",
         "operationId": "get_me",
         "responses": {
           "200": {
@@ -146,8 +140,7 @@
     "/user/{user_id}": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns the User",
-        "description": "Returns the User with the given ID if it exists",
+        "summary": "Returns the User with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -166,8 +159,7 @@
       },
       "patch": {
         "tags": ["user"],
-        "summary": "Updates the User",
-        "description": "Updates the User with the given ID if it exists",
+        "summary": "Updates the User with the given ID if it exists",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -190,8 +182,7 @@
       },
       "delete": {
         "tags": ["user"],
-        "summary": "Removes the User",
-        "description": "Removes the User with the given ID if it exists",
+        "summary": "Removes the User with the given ID if it exists",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -212,8 +203,7 @@
     "/user": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns all Users",
-        "description": "Returns all Users that exist in the system",
+        "summary": "Returns all Users that exist in the system",
         "operationId": "get_all",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -263,8 +253,7 @@
     "/user/{user_id}/project": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns all Projects of the User",
-        "description": "Returns all Projects of the User with the given ID",
+        "summary": "Returns all Projects of the User with the given ID",
         "operationId": "get_user_projects",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -293,8 +282,7 @@
     "/user/{user_id}/recent_activity": {
       "get": {
         "tags": ["user"],
-        "summary": "Returns sdoc ids of sdocs the User recently modified (annotated)",
-        "description": "Returns the top k sdoc ids that the User recently modified (annotated)",
+        "summary": "Returns the top k sdoc ids that the User recently modified (annotated)",
         "operationId": "recent_activity",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -325,7 +313,6 @@
       "put": {
         "tags": ["project"],
         "summary": "Creates a new Project",
-        "description": "Creates a new Project.",
         "operationId": "create_new_project",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectCreate" } } },
@@ -347,8 +334,7 @@
     "/project/{proj_id}": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns the Project with the given ID",
-        "description": "Returns the Project with the given ID if it exists",
+        "summary": "Returns the Project with the given ID if it exists",
         "operationId": "read_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -367,8 +353,7 @@
       },
       "patch": {
         "tags": ["project"],
-        "summary": "Updates the Project",
-        "description": "Updates the Project with the given ID.",
+        "summary": "Updates the Project with the given ID.",
         "operationId": "update_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -391,8 +376,7 @@
       },
       "delete": {
         "tags": ["project"],
-        "summary": "Removes the Project",
-        "description": "Removes the Project with the given ID.",
+        "summary": "Removes the Project with the given ID.",
         "operationId": "delete_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -413,8 +397,7 @@
     "/project/{proj_id}/sdoc": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all SourceDocuments of the Project.",
-        "description": "Returns all SourceDocuments of the Project with the given ID.",
+        "summary": "Returns all SourceDocuments of the Project with the given ID.",
         "operationId": "get_project_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -463,8 +446,7 @@
       },
       "put": {
         "tags": ["project"],
-        "summary": "Uploads one or multiple SourceDocument to the Project",
-        "description": "Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
+        "summary": "Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
         "operationId": "upload_project_sdoc",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -489,8 +471,7 @@
       },
       "delete": {
         "tags": ["project"],
-        "summary": "Removes all SourceDocuments of the Project",
-        "description": "Removes all SourceDocuments of the Project with the given ID if it exists",
+        "summary": "Removes all SourceDocuments of the Project with the given ID if it exists",
         "operationId": "delete_project_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -519,8 +500,7 @@
     "/project/{proj_id}/user/{user_id}": {
       "patch": {
         "tags": ["project"],
-        "summary": "Associates the User with the Project",
-        "description": "Associates an existing User to the Project with the given ID if it exists",
+        "summary": "Associates an existing User to the Project with the given ID if it exists",
         "operationId": "associate_user_to_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -540,8 +520,7 @@
       },
       "delete": {
         "tags": ["project"],
-        "summary": "Dissociates the Users with the Project",
-        "description": "Dissociates the Users with the Project with the given ID if it exists",
+        "summary": "Dissociates the Users with the Project with the given ID if it exists",
         "operationId": "dissociate_user_from_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -563,8 +542,7 @@
     "/project/{proj_id}/user": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all Users of the Project",
-        "description": "Returns all Users of the Project with the given ID",
+        "summary": "Returns all Users of the Project with the given ID",
         "operationId": "get_project_users",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -593,8 +571,7 @@
     "/project/{proj_id}/code": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all Codes of the Project",
-        "description": "Returns all Codes of the Project with the given ID",
+        "summary": "Returns all Codes of the Project with the given ID",
         "operationId": "get_project_codes",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -621,8 +598,7 @@
       },
       "delete": {
         "tags": ["project"],
-        "summary": "Removes all Codes of the Project",
-        "description": "Removes all Codes of the Project with the given ID if it exists",
+        "summary": "Removes all Codes of the Project with the given ID if it exists",
         "operationId": "delete_project_codes",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -651,8 +627,7 @@
     "/project/{proj_id}/tag": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all DocumentTags of the Project",
-        "description": "Returns all DocumentTags of the Project with the given ID",
+        "summary": "Returns all DocumentTags of the Project with the given ID",
         "operationId": "get_project_tags",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -679,8 +654,7 @@
       },
       "delete": {
         "tags": ["project"],
-        "summary": "Removes all DocumentTags of the Project",
-        "description": "Removes all DocumentTags of the Project with the given ID if it exists",
+        "summary": "Removes all DocumentTags of the Project with the given ID if it exists",
         "operationId": "delete_project_tags",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -710,7 +684,6 @@
       "get": {
         "tags": ["project"],
         "summary": "Returns all Codes of the Project from a User",
-        "description": "Returns all Codes of the Project from a User",
         "operationId": "get_user_codes_of_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -738,8 +711,7 @@
       },
       "delete": {
         "tags": ["project"],
-        "summary": "Removes all Codes of the Project from a User",
-        "description": "Removes all Codes of the Project from a User. Returns the number of removed Codes.",
+        "summary": "Removes all Codes of the Project from a User. Returns the number of removed Codes.",
         "operationId": "remove_user_codes_of_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -766,7 +738,6 @@
       "get": {
         "tags": ["project"],
         "summary": "Returns all Memos of the Project from a User",
-        "description": "Returns all Memos of the Project from a User",
         "operationId": "get_user_memos_of_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -809,7 +780,6 @@
       "get": {
         "tags": ["project"],
         "summary": "Returns all Actions of the Project from a User",
-        "description": "Returns all Actions of the Project from a User",
         "operationId": "get_user_actions_of_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -839,8 +809,7 @@
     "/project/{proj_id}/actions": {
       "post": {
         "tags": ["project"],
-        "summary": "Returns all Actions",
-        "description": "Returns all Actions of the Project",
+        "summary": "Returns all Actions of the Project",
         "operationId": "query_actions_of_project",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionQueryParameters" } } },
@@ -870,8 +839,7 @@
     "/project/{proj_id}/memo": {
       "put": {
         "tags": ["project"],
-        "summary": "Adds a Memo of the current User to the Project.",
-        "description": "Adds a Memo of the current User to the Project with the given ID if it exists",
+        "summary": "Adds a Memo of the current User to the Project with the given ID if it exists",
         "operationId": "add_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -894,8 +862,7 @@
       },
       "get": {
         "tags": ["project"],
-        "summary": "Returns the Memo of the current User for the Project.",
-        "description": "Returns the Memo of the current User for the Project with the given ID.",
+        "summary": "Returns the Memo of the current User for the Project with the given ID.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -924,8 +891,7 @@
     "/project/{proj_id}/memo/{user_id}": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns the Memo attached to the Project of the User with the given ID",
-        "description": "Returns the Memo attached to the Project with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the Project with the given ID of the User with the given ID if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -948,7 +914,6 @@
       "get": {
         "tags": ["project"],
         "summary": "Returns the Id of the SourceDocument identified by project_id and filename if it exists",
-        "description": "Returns the Id of the SourceDocument identified by project_id and filename if it exists",
         "operationId": "resolve_filename",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -978,8 +943,7 @@
     "/project/{proj_id}/metadata": {
       "get": {
         "tags": ["project"],
-        "summary": "Returns all ProjectMetadata",
-        "description": "Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+        "summary": "Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
         "operationId": "get_all_metadata",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1008,8 +972,7 @@
     "/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the SourceDocument",
-        "description": "Returns the SourceDocument with the given ID if it exists",
+        "summary": "Returns the SourceDocument with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1036,8 +999,7 @@
       },
       "delete": {
         "tags": ["sourceDocument"],
-        "summary": "Removes the SourceDocument",
-        "description": "Removes the SourceDocument with the given ID if it exists",
+        "summary": "Removes the SourceDocument with the given ID if it exists",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1056,8 +1018,7 @@
       },
       "patch": {
         "tags": ["sourceDocument"],
-        "summary": "Updates the SourceDocument",
-        "description": "Updates the SourceDocument with the given ID.",
+        "summary": "Updates the SourceDocument with the given ID.",
         "operationId": "update_sdoc",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1083,7 +1044,6 @@
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
-        "description": "Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
         "operationId": "get_linked_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1112,8 +1072,7 @@
     "/sdoc/{sdoc_id}/url": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the URL to the original file of the SourceDocument",
-        "description": "Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
+        "summary": "Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
         "operationId": "get_file_url",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1154,8 +1113,7 @@
     "/sdoc/{sdoc_id}/metadata": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all SourceDocumentMetadata",
-        "description": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
+        "summary": "Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
         "operationId": "get_all_metadata",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1184,8 +1142,7 @@
     "/sdoc/{sdoc_id}/metadata/{metadata_key}": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the SourceDocumentMetadata with the given Key",
-        "description": "Returns the SourceDocumentMetadata with the given Key if it exists.",
+        "summary": "Returns the SourceDocumentMetadata with the given Key if it exists.",
         "operationId": "read_metadata_by_key",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1214,8 +1171,7 @@
     "/sdoc/{sdoc_id}/adoc/{user_id}": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the AnnotationDocument for the SourceDocument of the User or Creates it",
-        "description": "Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
+        "summary": "Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
         "operationId": "get_adoc_of_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1237,8 +1193,7 @@
     "/sdoc/{sdoc_id}/adoc": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all AnnotationDocuments for the SourceDocument",
-        "description": "Returns all AnnotationDocuments for the SourceDocument.",
+        "summary": "Returns all AnnotationDocuments for the SourceDocument.",
         "operationId": "get_all_adocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1265,8 +1220,7 @@
       },
       "delete": {
         "tags": ["sourceDocument"],
-        "summary": "Removes all AnnotationDocuments for the SourceDocument",
-        "description": "Removes all AnnotationDocuments for the SourceDocument.",
+        "summary": "Removes all AnnotationDocuments for the SourceDocument.",
         "operationId": "remove_all_adocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1295,8 +1249,7 @@
     "/sdoc/{sdoc_id}/tags": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all DocumentTags linked with the SourceDocument",
-        "description": "Returns all DocumentTags linked with the SourceDocument.",
+        "summary": "Returns all DocumentTags linked with the SourceDocument.",
         "operationId": "get_all_tags",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1323,8 +1276,7 @@
       },
       "delete": {
         "tags": ["sourceDocument"],
-        "summary": "Unlinks all DocumentTags with the SourceDocument",
-        "description": "Unlinks all DocumentTags of the SourceDocument.",
+        "summary": "Unlinks all DocumentTags of the SourceDocument.",
         "operationId": "unlinks_all_tags",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1345,8 +1297,7 @@
     "/sdoc/{sdoc_id}/tag/{tag_id}": {
       "patch": {
         "tags": ["sourceDocument"],
-        "summary": "Links a DocumentTag with the SourceDocument",
-        "description": "Links a DocumentTag with the SourceDocument with the given ID if it exists",
+        "summary": "Links a DocumentTag with the SourceDocument with the given ID if it exists",
         "operationId": "link_tag",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1366,8 +1317,7 @@
       },
       "delete": {
         "tags": ["sourceDocument"],
-        "summary": "Unlinks the DocumentTag from the SourceDocument",
-        "description": "Unlinks the DocumentTags from the SourceDocument.",
+        "summary": "Unlinks the DocumentTags from the SourceDocument.",
         "operationId": "unlink_tag",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1389,8 +1339,7 @@
     "/sdoc/{sdoc_id}/memo": {
       "put": {
         "tags": ["sourceDocument"],
-        "summary": "Adds a Memo to the SourceDocument",
-        "description": "Adds a Memo to the SourceDocument with the given ID if it exists",
+        "summary": "Adds a Memo to the SourceDocument with the given ID if it exists",
         "operationId": "add_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1413,8 +1362,7 @@
       },
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns all Memo attached to the SourceDocument",
-        "description": "Returns all Memo attached to the SourceDocument with the given ID if it exists.",
+        "summary": "Returns all Memo attached to the SourceDocument with the given ID if it exists.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1443,8 +1391,7 @@
     "/sdoc/{sdoc_id}/memo/{user_id}": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the Memo attached to the SourceDocument of the User with the given ID",
-        "description": "Returns the Memo attached to the SourceDocument with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the SourceDocument with the given ID of the User with the given ID if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1467,7 +1414,6 @@
       "get": {
         "tags": ["sourceDocument"],
         "summary": "Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.",
-        "description": "Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.",
         "operationId": "get_related_user_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1497,8 +1443,7 @@
     "/sdoc/{sdoc_id}/word_frequencies": {
       "get": {
         "tags": ["sourceDocument"],
-        "summary": "Returns the SourceDocument's word frequencies",
-        "description": "Returns the SourceDocument's word frequencies with the given ID if it exists",
+        "summary": "Returns the SourceDocument's word frequencies with the given ID if it exists",
         "operationId": "get_word_frequencies",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1527,8 +1472,7 @@
     "/doctag": {
       "put": {
         "tags": ["documentTag"],
-        "summary": "Creates a new DocumentTag",
-        "description": "Creates a new DocumentTag and returns it with the generated ID.",
+        "summary": "Creates a new DocumentTag and returns it with the generated ID.",
         "operationId": "create_new_doc_tag",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentTagCreate" } } },
@@ -1550,8 +1494,7 @@
     "/doctag/bulk/link": {
       "patch": {
         "tags": ["documentTag"],
-        "summary": "Links multiple DocumentTags with the SourceDocuments",
-        "description": "Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
+        "summary": "Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
         "operationId": "link_multiple_tags",
         "requestBody": {
           "content": {
@@ -1579,8 +1522,7 @@
     "/doctag/bulk/unlink": {
       "delete": {
         "tags": ["documentTag"],
-        "summary": "Unlinks all DocumentTags with the SourceDocuments",
-        "description": "Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
+        "summary": "Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
         "operationId": "unlink_multiple_tags",
         "requestBody": {
           "content": {
@@ -1608,8 +1550,7 @@
     "/doctag/{tag_id}": {
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns the DocumentTag",
-        "description": "Returns the DocumentTag with the given ID.",
+        "summary": "Returns the DocumentTag with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1628,8 +1569,7 @@
       },
       "patch": {
         "tags": ["documentTag"],
-        "summary": "Updates the DocumentTag",
-        "description": "Updates the DocumentTag with the given ID.",
+        "summary": "Updates the DocumentTag with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1652,8 +1592,7 @@
       },
       "delete": {
         "tags": ["documentTag"],
-        "summary": "Deletes the DocumentTag",
-        "description": "Deletes the DocumentTag with the given ID.",
+        "summary": "Deletes the DocumentTag with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1674,8 +1613,7 @@
     "/doctag/{tag_id}/memo": {
       "put": {
         "tags": ["documentTag"],
-        "summary": "Adds a Memo to the DocumentTag",
-        "description": "Adds a Memo to the DocumentTag with the given ID if it exists",
+        "summary": "Adds a Memo to the DocumentTag with the given ID if it exists",
         "operationId": "add_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1698,8 +1636,7 @@
       },
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns the Memo attached to the DocumentTag",
-        "description": "Returns the Memo attached to the DocumentTag with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the DocumentTag with the given ID if it exists.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1728,8 +1665,7 @@
     "/doctag/{tag_id}/memo/{user_id}": {
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-        "description": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1751,8 +1687,7 @@
     "/doctag/{tag_id}/sdocs": {
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns all SourceDocument IDs attached to the Tag with the given ID",
-        "description": "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.",
+        "summary": "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.",
         "operationId": "get_sdoc_ids_by_tag_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1782,7 +1717,6 @@
       "put": {
         "tags": ["annotationDocument"],
         "summary": "Creates an AnnotationDocument",
-        "description": "Creates an AnnotationDocument",
         "operationId": "create",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotationDocumentCreate" } } },
@@ -1804,8 +1738,7 @@
     "/adoc/{adoc_id}": {
       "get": {
         "tags": ["annotationDocument"],
-        "summary": "Returns the AnnotationDocument",
-        "description": "Returns the AnnotationDocument with the given ID if it exists",
+        "summary": "Returns the AnnotationDocument with the given ID if it exists",
         "operationId": "get_by_adoc_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1824,8 +1757,7 @@
       },
       "delete": {
         "tags": ["annotationDocument"],
-        "summary": "Removes the AnnotationDocument",
-        "description": "Removes the AnnotationDocument with the given ID if it exists",
+        "summary": "Removes the AnnotationDocument with the given ID if it exists",
         "operationId": "delete_by_adoc_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1846,8 +1778,7 @@
     "/adoc/{adoc_id}/span_annotations": {
       "get": {
         "tags": ["annotationDocument"],
-        "summary": "Returns all SpanAnnotations in the AnnotationDocument",
-        "description": "Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
+        "summary": "Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
         "operationId": "get_all_span_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1910,8 +1841,7 @@
       },
       "delete": {
         "tags": ["annotationDocument"],
-        "summary": "Removes all SpanAnnotations in the AnnotationDocument",
-        "description": "Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
+        "summary": "Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
         "operationId": "delete_all_span_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1940,8 +1870,7 @@
     "/adoc/{adoc_id}/bbox_annotations": {
       "get": {
         "tags": ["annotationDocument"],
-        "summary": "Returns all BBoxAnnotations in the AnnotationDocument",
-        "description": "Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
+        "summary": "Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
         "operationId": "get_all_bbox_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2004,8 +1933,7 @@
       },
       "delete": {
         "tags": ["annotationDocument"],
-        "summary": "Removes all BBoxAnnotations in the AnnotationDocument",
-        "description": "Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
+        "summary": "Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
         "operationId": "delete_all_bbox_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2034,8 +1962,7 @@
     "/adoc/{adoc_id}/span_groups": {
       "get": {
         "tags": ["annotationDocument"],
-        "summary": "Returns all SpanGroups in the AnnotationDocument",
-        "description": "Returns all SpanGroups in the AnnotationDocument with the given ID if it exists",
+        "summary": "Returns all SpanGroups in the AnnotationDocument with the given ID if it exists",
         "operationId": "get_all_span_groups",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2087,7 +2014,6 @@
       "put": {
         "tags": ["spanAnnotation"],
         "summary": "Creates a SpanAnnotation",
-        "description": "Creates a SpanAnnotation",
         "operationId": "add_span_annotation",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2135,8 +2061,7 @@
     "/span/{span_id}": {
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns the SpanAnnotation",
-        "description": "Returns the SpanAnnotation with the given ID.",
+        "summary": "Returns the SpanAnnotation with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2177,8 +2102,7 @@
       },
       "patch": {
         "tags": ["spanAnnotation"],
-        "summary": "Updates the SpanAnnotation",
-        "description": "Updates the SpanAnnotation with the given ID.",
+        "summary": "Updates the SpanAnnotation with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2225,8 +2149,7 @@
       },
       "delete": {
         "tags": ["spanAnnotation"],
-        "summary": "Deletes the SpanAnnotation",
-        "description": "Deletes the SpanAnnotation with the given ID.",
+        "summary": "Deletes the SpanAnnotation with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2257,8 +2180,7 @@
     "/span/{span_id}/code": {
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns the Code of the SpanAnnotation",
-        "description": "Returns the Code of the SpanAnnotation with the given ID if it exists.",
+        "summary": "Returns the Code of the SpanAnnotation with the given ID if it exists.",
         "operationId": "get_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2279,8 +2201,7 @@
     "/span/{span_id}/groups": {
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns all SpanGroups that contain the the SpanAnnotation",
-        "description": "Returns all SpanGroups that contain the the SpanAnnotation.",
+        "summary": "Returns all SpanGroups that contain the the SpanAnnotation.",
         "operationId": "get_all_groups",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2308,7 +2229,6 @@
       "delete": {
         "tags": ["spanAnnotation"],
         "summary": "Removes the SpanAnnotation from all SpanGroups",
-        "description": "Removes the SpanAnnotation from all SpanGroups",
         "operationId": "remove_from_all_groups",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2330,7 +2250,6 @@
       "patch": {
         "tags": ["spanAnnotation"],
         "summary": "Adds the SpanAnnotation to the SpanGroup",
-        "description": "Adds the SpanAnnotation to the SpanGroup",
         "operationId": "add_to_group",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2351,7 +2270,6 @@
       "delete": {
         "tags": ["spanAnnotation"],
         "summary": "Removes the SpanAnnotation from the SpanGroup",
-        "description": "Removes the SpanAnnotation from the SpanGroup",
         "operationId": "remove_from_group",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2373,8 +2291,7 @@
     "/span/{span_id}/memo": {
       "put": {
         "tags": ["spanAnnotation"],
-        "summary": "Adds a Memo to the SpanAnnotation",
-        "description": "Adds a Memo to the SpanAnnotation with the given ID if it exists",
+        "summary": "Adds a Memo to the SpanAnnotation with the given ID if it exists",
         "operationId": "add_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2397,8 +2314,7 @@
       },
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns the Memo attached to the SpanAnnotation",
-        "description": "Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2427,8 +2343,7 @@
     "/span/{span_id}/memo/{user_id}": {
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-        "description": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2451,7 +2366,6 @@
       "get": {
         "tags": ["spanAnnotation"],
         "summary": "Returns SpanAnnotations with the given Code of the User with the given ID",
-        "description": "Returns SpanAnnotations with the given Code of the User with the given ID",
         "operationId": "get_by_user_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2481,8 +2395,7 @@
     "/spangroup": {
       "put": {
         "tags": ["spanGroup"],
-        "summary": "Creates a new SpanGroup",
-        "description": "Creates a new SpanGroup and returns it with the generated ID.",
+        "summary": "Creates a new SpanGroup and returns it with the generated ID.",
         "operationId": "create_new_span_group",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SpanGroupCreate" } } },
@@ -2511,8 +2424,7 @@
     "/spangroup/{span_group_id}": {
       "get": {
         "tags": ["spanGroup"],
-        "summary": "Returns the SpanGroup",
-        "description": "Returns the SpanGroup with the given ID.",
+        "summary": "Returns the SpanGroup with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2543,8 +2455,7 @@
       },
       "patch": {
         "tags": ["spanGroup"],
-        "summary": "Updates the SpanGroup",
-        "description": "Updates the SpanGroup with the given ID.",
+        "summary": "Updates the SpanGroup with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2579,8 +2490,7 @@
       },
       "delete": {
         "tags": ["spanGroup"],
-        "summary": "Deletes the SpanGroup",
-        "description": "Deletes the SpanGroup with the given ID.",
+        "summary": "Deletes the SpanGroup with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2613,8 +2523,7 @@
     "/spangroup/{span_group_id}/span_annotations": {
       "get": {
         "tags": ["spanGroup"],
-        "summary": "Returns all SpanAnnotations in the SpanGroup",
-        "description": "Returns all SpanAnnotations in the SpanGroup with the given ID if it exists",
+        "summary": "Returns all SpanAnnotations in the SpanGroup with the given ID if it exists",
         "operationId": "get_all_annotations",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2666,7 +2575,6 @@
       "put": {
         "tags": ["bboxAnnotation"],
         "summary": "Creates a BBoxAnnotation",
-        "description": "Creates a BBoxAnnotation",
         "operationId": "add_bbox_annotation",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2714,8 +2622,7 @@
     "/bbox/{bbox_id}": {
       "get": {
         "tags": ["bboxAnnotation"],
-        "summary": "Returns the BBoxAnnotation",
-        "description": "Returns the BBoxAnnotation with the given ID.",
+        "summary": "Returns the BBoxAnnotation with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2756,8 +2663,7 @@
       },
       "patch": {
         "tags": ["bboxAnnotation"],
-        "summary": "Updates the BBoxAnnotation",
-        "description": "Updates the BBoxAnnotation with the given ID.",
+        "summary": "Updates the BBoxAnnotation with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2804,8 +2710,7 @@
       },
       "delete": {
         "tags": ["bboxAnnotation"],
-        "summary": "Deletes the BBoxAnnotation",
-        "description": "Deletes the BBoxAnnotation with the given ID.",
+        "summary": "Deletes the BBoxAnnotation with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2836,8 +2741,7 @@
     "/bbox/{bbox_id}/code": {
       "get": {
         "tags": ["bboxAnnotation"],
-        "summary": "Returns the Code of the BBoxAnnotation",
-        "description": "Returns the Code of the BBoxAnnotation with the given ID if it exists.",
+        "summary": "Returns the Code of the BBoxAnnotation with the given ID if it exists.",
         "operationId": "get_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2858,8 +2762,7 @@
     "/bbox/{bbox_id}/memo": {
       "put": {
         "tags": ["bboxAnnotation"],
-        "summary": "Adds a Memo to the BBoxAnnotation",
-        "description": "Adds a Memo to the BBoxAnnotation with the given ID if it exists",
+        "summary": "Adds a Memo to the BBoxAnnotation with the given ID if it exists",
         "operationId": "add_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2882,8 +2785,7 @@
       },
       "get": {
         "tags": ["bboxAnnotation"],
-        "summary": "Returns the Memos attached to the BBoxAnnotation",
-        "description": "Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
+        "summary": "Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2912,8 +2814,7 @@
     "/bbox/{bbox_id}/memo/{user_id}": {
       "get": {
         "tags": ["bboxAnnotation"],
-        "summary": "Returns the Memo attached to the BBoxAnnotation of the User with the given ID",
-        "description": "Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the given ID if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2936,7 +2837,6 @@
       "get": {
         "tags": ["bboxAnnotation"],
         "summary": "Returns BBoxAnnotations with the given Code of the User with the given ID",
-        "description": "Returns BBoxAnnotations with the given Code of the User with the given ID",
         "operationId": "get_by_user_code",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2966,8 +2866,7 @@
     "/code": {
       "put": {
         "tags": ["code"],
-        "summary": "Creates a new Code",
-        "description": "Creates a new Code and returns it with the generated ID.",
+        "summary": "Creates a new Code and returns it with the generated ID.",
         "operationId": "create_new_code",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CodeCreate" } } },
@@ -2989,8 +2888,7 @@
     "/code/current/{current_code_id}": {
       "get": {
         "tags": ["code"],
-        "summary": "Returns the Code linked by the CurrentCode",
-        "description": "Returns the Code linked by the CurrentCode with the given ID.",
+        "summary": "Returns the Code linked by the CurrentCode with the given ID.",
         "operationId": "get_code_by_current_code_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3016,8 +2914,7 @@
     "/code/{code_id}": {
       "get": {
         "tags": ["code"],
-        "summary": "Returns the Code",
-        "description": "Returns the Code with the given ID.",
+        "summary": "Returns the Code with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3036,8 +2933,7 @@
       },
       "patch": {
         "tags": ["code"],
-        "summary": "Updates the Code",
-        "description": "Updates the Code with the given ID.",
+        "summary": "Updates the Code with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3060,8 +2956,7 @@
       },
       "delete": {
         "tags": ["code"],
-        "summary": "Deletes the Code",
-        "description": "Deletes the Code with the given ID.",
+        "summary": "Deletes the Code with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3082,8 +2977,7 @@
     "/code/{code_id}/memo": {
       "put": {
         "tags": ["code"],
-        "summary": "Adds a Memo to the Code",
-        "description": "Adds a Memo to the Code with the given ID if it exists",
+        "summary": "Adds a Memo to the Code with the given ID if it exists",
         "operationId": "add_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3106,8 +3000,7 @@
       },
       "get": {
         "tags": ["code"],
-        "summary": "Returns the Memo attached to the Code",
-        "description": "Returns the Memo attached to the Code with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the Code with the given ID if it exists.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3136,8 +3029,7 @@
     "/code/{code_id}/memo/{user_id}": {
       "get": {
         "tags": ["code"],
-        "summary": "Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-        "description": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3159,8 +3051,7 @@
     "/memo/{memo_id}": {
       "get": {
         "tags": ["memo"],
-        "summary": "Returns the Memo",
-        "description": "Returns the Memo with the given ID if it exists",
+        "summary": "Returns the Memo with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3179,8 +3070,7 @@
       },
       "patch": {
         "tags": ["memo"],
-        "summary": "Updates the Memo",
-        "description": "Updates the Memo with the given ID if it exists",
+        "summary": "Updates the Memo with the given ID if it exists",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3203,8 +3093,7 @@
       },
       "delete": {
         "tags": ["memo"],
-        "summary": "Removes the Memo",
-        "description": "Removes the Memo with the given ID if it exists",
+        "summary": "Removes the Memo with the given ID if it exists",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3226,7 +3115,6 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns Search Info.",
-        "description": "Returns Search Info.",
         "operationId": "search_sdocs_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3260,8 +3148,7 @@
     "/search/sdoc": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns all SourceDocument IDs that match the query parameters.",
-        "description": "Returns all SourceDocument Ids that match the query parameters.",
+        "summary": "Returns all SourceDocument Ids that match the query parameters.",
         "operationId": "search_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3308,7 +3195,6 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns SpanEntityStats for the given SourceDocuments.",
-        "description": "Returns SpanEntityStats for the given SourceDocuments.",
         "operationId": "search_code_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3350,7 +3236,6 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns KeywordStats for the given SourceDocuments.",
-        "description": "Returns KeywordStats for the given SourceDocuments.",
         "operationId": "search_keyword_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3402,8 +3287,7 @@
     "/search/tag_stats": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns TagStat for the given SourceDocuments.",
-        "description": "Returns Stat for the given SourceDocuments.",
+        "summary": "Returns Stat for the given SourceDocuments.",
         "operationId": "search_tag_stats",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3444,7 +3328,6 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns all Memos where the content matches the query via lexical search",
-        "description": "Returns all Memos where the content matches the query via lexical search",
         "operationId": "search_memos_by_content_query",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3493,7 +3376,6 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns similar sentences according to a textual or visual query.",
-        "description": "Returns similar sentences according to a textual or visual query.",
         "operationId": "find_similar_sentences",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
@@ -3524,7 +3406,6 @@
       "post": {
         "tags": ["search"],
         "summary": "Returns similar images according to a textual or visual query.",
-        "description": "Returns similar images according to a textual or visual query.",
         "operationId": "find_similar_images",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SimSearchQuery" } } },
@@ -3554,8 +3435,7 @@
     "/sdocmeta": {
       "put": {
         "tags": ["sdocMetadata"],
-        "summary": "Creates new Metadata",
-        "description": "Creates a new Metadata and returns it with the generated ID.",
+        "summary": "Creates a new Metadata and returns it with the generated ID.",
         "operationId": "create_new_metadata",
         "requestBody": {
           "content": {
@@ -3581,8 +3461,7 @@
     "/sdocmeta/{metadata_id}": {
       "get": {
         "tags": ["sdocMetadata"],
-        "summary": "Returns the Metadata",
-        "description": "Returns the Metadata with the given ID.",
+        "summary": "Returns the Metadata with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3608,8 +3487,7 @@
       },
       "patch": {
         "tags": ["sdocMetadata"],
-        "summary": "Updates the Metadata",
-        "description": "Updates the Metadata with the given ID.",
+        "summary": "Updates the Metadata with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3641,8 +3519,7 @@
       },
       "delete": {
         "tags": ["sdocMetadata"],
-        "summary": "Deletes the Metadata",
-        "description": "Deletes the Metadata with the given ID.",
+        "summary": "Deletes the Metadata with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3670,8 +3547,7 @@
     "/feedback": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns all Feedback",
-        "description": "Returns the Metadata with the given ID.",
+        "summary": "Returns the Metadata with the given ID.",
         "operationId": "get_all",
         "responses": {
           "200": {
@@ -3691,8 +3567,7 @@
       },
       "put": {
         "tags": ["feedback"],
-        "summary": "Creates new Feedback",
-        "description": "Creates a new Feedback and returns it with the generated ID.",
+        "summary": "Creates a new Feedback and returns it with the generated ID.",
         "operationId": "create_feedback",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FeedbackCreate" } } },
@@ -3714,8 +3589,7 @@
     "/feedback/{feedback_id}": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns the Feedback",
-        "description": "Returns the Feedback with the given ID.",
+        "summary": "Returns the Feedback with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3741,8 +3615,7 @@
     "/feedback/user/{user_id}": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns all Feedback of a User",
-        "description": "Returns the Metadata of the User with the given ID.",
+        "summary": "Returns the Metadata of the User with the given ID.",
         "operationId": "get_all_by_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3771,8 +3644,7 @@
     "/feedback/reply_to/{feedback_id}": {
       "post": {
         "tags": ["feedback"],
-        "summary": "Reply to the Feedback",
-        "description": "Sends an e-mail to the User that created the Feedback with the given message.",
+        "summary": "Sends an e-mail to the User that created the Feedback with the given message.",
         "operationId": "reply_to",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3800,7 +3672,6 @@
       "post": {
         "tags": ["analysis"],
         "summary": "Returns all SourceDocument IDs that match the query parameters.",
-        "description": "Returns all SourceDocument Ids that match the query parameters.",
         "operationId": "code_frequencies",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3841,7 +3712,6 @@
       "post": {
         "tags": ["analysis"],
         "summary": "Returns all SourceDocument IDs that match the query parameters.",
-        "description": "Returns all SourceDocument Ids that match the query parameters.",
         "operationId": "code_occurrences",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3883,7 +3753,6 @@
       "post": {
         "tags": ["analysis"],
         "summary": "Returns AnnotationOccurrences.",
-        "description": "Returns AnnotationOccurrences.",
         "operationId": "annotation_occurrences",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3925,7 +3794,6 @@
       "post": {
         "tags": ["analysis"],
         "summary": "Returns AnnotationSegments Info.",
-        "description": "Returns AnnotationSegments Info.",
         "operationId": "annotated_segments_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3960,7 +3828,6 @@
       "post": {
         "tags": ["analysis"],
         "summary": "Returns AnnotationSegments.",
-        "description": "Returns AnnotationSegments.",
         "operationId": "annotated_segments",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4000,7 +3867,6 @@
       "get": {
         "tags": ["analysis"],
         "summary": "Returns TimelineAnalysis Info.",
-        "description": "Returns TimelineAnalysis Info.",
         "operationId": "get_timeline_analysis_valid_documents",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4043,7 +3909,6 @@
       "get": {
         "tags": ["analysis"],
         "summary": "Returns TimelineAnalysis Info.",
-        "description": "Returns TimelineAnalysis Info.",
         "operationId": "timeline_analysis2_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4078,7 +3943,6 @@
       "post": {
         "tags": ["analysis"],
         "summary": "Perform new timeline analysis.",
-        "description": "Perform new timeline analysis.",
         "operationId": "timeline_analysis2",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4131,7 +3995,6 @@
       "get": {
         "tags": ["analysis"],
         "summary": "Returns WordFrequency Info.",
-        "description": "Returns WordFrequency Info.",
         "operationId": "word_frequency_analysis_info",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4166,7 +4029,6 @@
       "post": {
         "tags": ["analysis"],
         "summary": "Perform word frequency analysis.",
-        "description": "Perform word frequency analysis.",
         "operationId": "word_frequency_analysis",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4205,8 +4067,7 @@
     "/prepro/{prepro_job_id}": {
       "get": {
         "tags": ["prepro"],
-        "summary": "Returns the PreprocessingJob for the given ID",
-        "description": "Returns the PreprocessingJob for the given ID if it exists",
+        "summary": "Returns the PreprocessingJob for the given ID if it exists",
         "operationId": "get_prepro_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4232,8 +4093,7 @@
     "/prepro/{prepro_job_id}/abort": {
       "patch": {
         "tags": ["prepro"],
-        "summary": "Aborts the PreprocessingJob for the given ID",
-        "description": "Aborts the PreprocessingJob for the given ID if it exists",
+        "summary": "Aborts the PreprocessingJob for the given ID if it exists",
         "operationId": "abort_prepro_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4259,8 +4119,7 @@
     "/prepro/project/{project_id}": {
       "get": {
         "tags": ["prepro"],
-        "summary": "Returns all PreprocessingJobs for the given project ID",
-        "description": "Returns all PreprocessingJobs for the given project ID if it exists",
+        "summary": "Returns all PreprocessingJobs for the given project ID if it exists",
         "operationId": "get_all_prepro_jobs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4295,7 +4154,6 @@
       "get": {
         "tags": ["prepro"],
         "summary": "Returns the PreProProjectStatus of the Project with the given ID.",
-        "description": "Returns the PreProProjectStatus of the Project with the given ID.",
         "operationId": "get_project_prepro_status",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4317,7 +4175,6 @@
       "post": {
         "tags": ["export"],
         "summary": "Returns the ExportJob for the given Parameters",
-        "description": "Returns the ExportJob for the given Parameters",
         "operationId": "start_export_job",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobParameters-Input" } } },
@@ -4339,8 +4196,7 @@
     "/export/{export_job_id}": {
       "get": {
         "tags": ["export"],
-        "summary": "Returns the ExportJob for the given ID",
-        "description": "Returns the ExportJob for the given ID if it exists",
+        "summary": "Returns the ExportJob for the given ID if it exists",
         "operationId": "get_export_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4367,7 +4223,6 @@
       "post": {
         "tags": ["crawler"],
         "summary": "Returns the CrawlerJob for the given Parameters",
-        "description": "Returns the CrawlerJob for the given Parameters",
         "operationId": "start_crawler_job",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CrawlerJobParameters" } } },
@@ -4389,8 +4244,7 @@
     "/crawler/{crawler_job_id}": {
       "get": {
         "tags": ["crawler"],
-        "summary": "Returns the CrawlerJob for the given ID",
-        "description": "Returns the CrawlerJob for the given ID if it exists",
+        "summary": "Returns the CrawlerJob for the given ID if it exists",
         "operationId": "get_crawler_job",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4416,8 +4270,7 @@
     "/crawler/project/{project_id}": {
       "get": {
         "tags": ["crawler"],
-        "summary": "Returns all CrawlerJobs for the given project ID",
-        "description": "Returns all CrawlerJobs for the given project ID if it exists",
+        "summary": "Returns all CrawlerJobs for the given project ID if it exists",
         "operationId": "get_all_crawler_jobs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4452,7 +4305,6 @@
       "put": {
         "tags": ["analysisTable"],
         "summary": "Creates an AnalysisTable",
-        "description": "Creates an AnalysisTable",
         "operationId": "create",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableCreate" } } },
@@ -4474,8 +4326,7 @@
     "/analysisTable/{analysis_table_id}": {
       "get": {
         "tags": ["analysisTable"],
-        "summary": "Returns the AnalysisTable",
-        "description": "Returns the AnalysisTable with the given ID if it exists",
+        "summary": "Returns the AnalysisTable with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4499,8 +4350,7 @@
       },
       "patch": {
         "tags": ["analysisTable"],
-        "summary": "Updates the Analysis Table",
-        "description": "Updates the Analysis Table with the given ID if it exists",
+        "summary": "Updates the Analysis Table with the given ID if it exists",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4528,8 +4378,7 @@
       },
       "delete": {
         "tags": ["analysisTable"],
-        "summary": "Removes the AnalysisTable",
-        "description": "Removes the AnalysisTable with the given ID if it exists",
+        "summary": "Removes the AnalysisTable with the given ID if it exists",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4555,8 +4404,7 @@
     "/analysisTable/project/{project_id}/user/{user_id}": {
       "get": {
         "tags": ["analysisTable"],
-        "summary": "Returns AnalysisTables of the Project of the User",
-        "description": "Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
+        "summary": "Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
         "operationId": "get_by_project_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4592,7 +4440,6 @@
       "put": {
         "tags": ["whiteboard"],
         "summary": "Creates an Whiteboard",
-        "description": "Creates an Whiteboard",
         "operationId": "create",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardCreate" } } },
@@ -4614,8 +4461,7 @@
     "/whiteboard/{whiteboard_id}": {
       "get": {
         "tags": ["whiteboard"],
-        "summary": "Returns the Whiteboard",
-        "description": "Returns the Whiteboard with the given ID if it exists",
+        "summary": "Returns the Whiteboard with the given ID if it exists",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4639,8 +4485,7 @@
       },
       "patch": {
         "tags": ["whiteboard"],
-        "summary": "Updates the Whiteboard",
-        "description": "Updates the Whiteboard with the given ID if it exists",
+        "summary": "Updates the Whiteboard with the given ID if it exists",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4668,8 +4513,7 @@
       },
       "delete": {
         "tags": ["whiteboard"],
-        "summary": "Removes the Whiteboard",
-        "description": "Removes the Whiteboard with the given ID if it exists",
+        "summary": "Removes the Whiteboard with the given ID if it exists",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4695,8 +4539,7 @@
     "/whiteboard/project/{project_id}": {
       "get": {
         "tags": ["whiteboard"],
-        "summary": "Returns Whiteboards of the Project ",
-        "description": "Returns the Whiteboards of the Project with the given ID",
+        "summary": "Returns the Whiteboards of the Project with the given ID",
         "operationId": "get_by_project",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4730,8 +4573,7 @@
     "/whiteboard/project/{project_id}/user/{user_id}": {
       "get": {
         "tags": ["whiteboard"],
-        "summary": "Returns Whiteboards of the Project of the User",
-        "description": "Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
+        "summary": "Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
         "operationId": "get_by_project_and_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4766,8 +4608,7 @@
     "/projmeta": {
       "put": {
         "tags": ["projectMetadata"],
-        "summary": "Creates new Metadata",
-        "description": "Creates a new Metadata and returns it with the generated ID.",
+        "summary": "Creates a new Metadata and returns it with the generated ID.",
         "operationId": "create_new_metadata",
         "requestBody": {
           "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataCreate" } } },
@@ -4789,8 +4630,7 @@
     "/projmeta/{metadata_id}": {
       "get": {
         "tags": ["projectMetadata"],
-        "summary": "Returns the Metadata",
-        "description": "Returns the Metadata with the given ID.",
+        "summary": "Returns the Metadata with the given ID.",
         "operationId": "get_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4814,8 +4654,7 @@
       },
       "patch": {
         "tags": ["projectMetadata"],
-        "summary": "Updates the Metadata",
-        "description": "Updates the Metadata with the given ID.",
+        "summary": "Updates the Metadata with the given ID.",
         "operationId": "update_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4843,8 +4682,7 @@
       },
       "delete": {
         "tags": ["projectMetadata"],
-        "summary": "Deletes the Metadata",
-        "description": "Deletes the Metadata with the given ID.",
+        "summary": "Deletes the Metadata with the given ID.",
         "operationId": "delete_by_id",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [

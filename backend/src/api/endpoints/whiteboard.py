@@ -22,7 +22,6 @@ router = APIRouter(
     "",
     response_model=WhiteboardRead,
     summary="Creates an Whiteboard",
-    description="Creates an Whiteboard",
 )
 async def create(
     *,
@@ -41,8 +40,7 @@ async def create(
 @router.get(
     "/{whiteboard_id}",
     response_model=WhiteboardRead,
-    summary="Returns the Whiteboard",
-    description="Returns the Whiteboard with the given ID if it exists",
+    summary="Returns the Whiteboard with the given ID if it exists",
 )
 async def get_by_id(
     *,
@@ -59,8 +57,7 @@ async def get_by_id(
 @router.get(
     "/project/{project_id}",
     response_model=List[WhiteboardRead],
-    summary="Returns Whiteboards of the Project ",
-    description="Returns the Whiteboards of the Project with the given ID",
+    summary="Returns the Whiteboards of the Project with the given ID",
 )
 async def get_by_project(
     *,
@@ -77,8 +74,7 @@ async def get_by_project(
 @router.get(
     "/project/{project_id}/user/{user_id}",
     response_model=List[WhiteboardRead],
-    summary="Returns Whiteboards of the Project of the User",
-    description="Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
+    summary="Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
 )
 async def get_by_project_and_user(
     *,
@@ -98,8 +94,7 @@ async def get_by_project_and_user(
 @router.patch(
     "/{whiteboard_id}",
     response_model=WhiteboardRead,
-    summary="Updates the Whiteboard",
-    description="Updates the Whiteboard with the given ID if it exists",
+    summary="Updates the Whiteboard with the given ID if it exists",
 )
 async def update_by_id(
     *,
@@ -117,8 +112,7 @@ async def update_by_id(
 @router.delete(
     "/{whiteboard_id}",
     response_model=WhiteboardRead,
-    summary="Removes the Whiteboard",
-    description="Removes the Whiteboard with the given ID if it exists",
+    summary="Removes the Whiteboard with the given ID if it exists",
 )
 async def delete_by_id(
     *,

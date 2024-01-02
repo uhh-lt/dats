@@ -29,8 +29,7 @@ pps: PreprocessingService = PreprocessingService()
 @router.get(
     "/{prepro_job_id}",
     response_model=PreprocessingJobRead,
-    summary="Returns the PreprocessingJob for the given ID",
-    description="Returns the PreprocessingJob for the given ID if it exists",
+    summary="Returns the PreprocessingJob for the given ID if it exists",
 )
 async def get_prepro_job(
     *,
@@ -47,8 +46,7 @@ async def get_prepro_job(
 @router.patch(
     "/{prepro_job_id}/abort",
     response_model=PreprocessingJobRead,
-    summary="Aborts the PreprocessingJob for the given ID",
-    description="Aborts the PreprocessingJob for the given ID if it exists",
+    summary="Aborts the PreprocessingJob for the given ID if it exists",
 )
 async def abort_prepro_job(
     *, prepro_job_id: str, authz_user: AuthzUser = Depends()
@@ -61,8 +59,7 @@ async def abort_prepro_job(
 @router.get(
     "/project/{project_id}",
     response_model=List[PreprocessingJobRead],
-    summary="Returns all PreprocessingJobs for the given project ID",
-    description="Returns all PreprocessingJobs for the given project ID if it exists",
+    summary="Returns all PreprocessingJobs for the given project ID if it exists",
 )
 async def get_all_prepro_jobs(
     *,
@@ -82,7 +79,6 @@ async def get_all_prepro_jobs(
     "/project/{proj_id}/status",
     response_model=PreProProjectStatus,
     summary="Returns the PreProProjectStatus of the Project with the given ID.",
-    description="Returns the PreProProjectStatus of the Project with the given ID.",
 )
 async def get_project_prepro_status(
     *,

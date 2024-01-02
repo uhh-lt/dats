@@ -10,7 +10,6 @@ import { request as __request } from "../core/request";
 
 export class MemoService {
   /**
-   * Returns the Memo
    * Returns the Memo with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -29,7 +28,6 @@ export class MemoService {
   }
 
   /**
-   * Updates the Memo
    * Updates the Memo with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -56,7 +54,6 @@ export class MemoService {
   }
 
   /**
-   * Removes the Memo
    * Removes the Memo with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError

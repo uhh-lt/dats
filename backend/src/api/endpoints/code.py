@@ -21,8 +21,7 @@ router = APIRouter(
 @router.put(
     "",
     response_model=CodeRead,
-    summary="Creates a new Code",
-    description="Creates a new Code and returns it with the generated ID.",
+    summary="Creates a new Code and returns it with the generated ID.",
 )
 async def create_new_code(
     *,
@@ -42,8 +41,7 @@ async def create_new_code(
 @router.get(
     "/current/{current_code_id}",
     response_model=CodeRead,
-    summary="Returns the Code linked by the CurrentCode",
-    description="Returns the Code linked by the CurrentCode with the given ID.",
+    summary="Returns the Code linked by the CurrentCode with the given ID.",
 )
 async def get_code_by_current_code_id(
     *,
@@ -60,8 +58,7 @@ async def get_code_by_current_code_id(
 @router.get(
     "/{code_id}",
     response_model=CodeRead,
-    summary="Returns the Code",
-    description="Returns the Code with the given ID.",
+    summary="Returns the Code with the given ID.",
 )
 async def get_by_id(
     *,
@@ -78,8 +75,7 @@ async def get_by_id(
 @router.patch(
     "/{code_id}",
     response_model=CodeRead,
-    summary="Updates the Code",
-    description="Updates the Code with the given ID.",
+    summary="Updates the Code with the given ID.",
 )
 async def update_by_id(
     *,
@@ -97,8 +93,7 @@ async def update_by_id(
 @router.delete(
     "/{code_id}",
     response_model=CodeRead,
-    summary="Deletes the Code",
-    description="Deletes the Code with the given ID.",
+    summary="Deletes the Code with the given ID.",
 )
 async def delete_by_id(
     *,
@@ -115,8 +110,7 @@ async def delete_by_id(
 @router.put(
     "/{code_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the Code",
-    description="Adds a Memo to the Code with the given ID if it exists",
+    summary="Adds a Memo to the Code with the given ID if it exists",
 )
 async def add_memo(
     *,
@@ -148,8 +142,7 @@ async def add_memo(
 @router.get(
     "/{code_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo attached to the Code",
-    description="Returns the Memo attached to the Code with the given ID if it exists.",
+    summary="Returns the Memo attached to the Code with the given ID if it exists.",
 )
 async def get_memos(
     *,
@@ -166,8 +159,7 @@ async def get_memos(
 @router.get(
     "/{code_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
         " given ID if it exists."
     ),

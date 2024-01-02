@@ -31,7 +31,6 @@ router = APIRouter(
     "",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
     summary="Creates a BBoxAnnotation",
-    description="Creates a BBoxAnnotation",
 )
 async def add_bbox_annotation(
     *,
@@ -59,8 +58,7 @@ async def add_bbox_annotation(
 @router.get(
     "/{bbox_id}",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
-    summary="Returns the BBoxAnnotation",
-    description="Returns the BBoxAnnotation with the given ID.",
+    summary="Returns the BBoxAnnotation with the given ID.",
 )
 async def get_by_id(
     *,
@@ -85,8 +83,7 @@ async def get_by_id(
 @router.patch(
     "/{bbox_id}",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
-    summary="Updates the BBoxAnnotation",
-    description="Updates the BBoxAnnotation with the given ID.",
+    summary="Updates the BBoxAnnotation with the given ID.",
 )
 async def update_by_id(
     *,
@@ -113,8 +110,7 @@ async def update_by_id(
 @router.delete(
     "/{bbox_id}",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
-    summary="Deletes the BBoxAnnotation",
-    description="Deletes the BBoxAnnotation with the given ID.",
+    summary="Deletes the BBoxAnnotation with the given ID.",
 )
 async def delete_by_id(
     *,
@@ -131,8 +127,7 @@ async def delete_by_id(
 @router.get(
     "/{bbox_id}/code",
     response_model=CodeRead,
-    summary="Returns the Code of the BBoxAnnotation",
-    description="Returns the Code of the BBoxAnnotation with the given ID if it exists.",
+    summary="Returns the Code of the BBoxAnnotation with the given ID if it exists.",
 )
 async def get_code(
     *,
@@ -150,8 +145,7 @@ async def get_code(
 @router.put(
     "/{bbox_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the BBoxAnnotation",
-    description="Adds a Memo to the BBoxAnnotation with the given ID if it exists",
+    summary="Adds a Memo to the BBoxAnnotation with the given ID if it exists",
 )
 async def add_memo(
     *,
@@ -184,8 +178,7 @@ async def add_memo(
 @router.get(
     "/{bbox_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memos attached to the BBoxAnnotation",
-    description="Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
+    summary="Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
 )
 async def get_memos(
     *,
@@ -203,8 +196,7 @@ async def get_memos(
 @router.get(
     "/{bbox_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the BBoxAnnotation of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the"
         " given ID if it exists."
     ),
@@ -228,8 +220,7 @@ async def get_user_memo(
 @router.get(
     "/code/{code_id}/user/{user_id}",
     response_model=List[BBoxAnnotationRead],
-    summary="Returns BBoxAnnotations with the given Code of the User with the given ID",
-    description=(
+    summary=(
         "Returns BBoxAnnotations with the given Code of the User with the given ID"
     ),
 )

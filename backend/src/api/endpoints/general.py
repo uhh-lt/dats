@@ -10,6 +10,6 @@ async def heartbeat():
 
 
 # Allow to view docs without being logged in (?)
-@router.get("/", tags=["general"], description="Redirection to /docs")
+@router.get("/", tags=["general"], summary="Redirection to /docs")
 async def root_to_docs():
     return RedirectResponse("/docs")

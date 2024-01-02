@@ -24,7 +24,6 @@ router = APIRouter(
     "",
     response_model=AnalysisTableRead,
     summary="Creates an AnalysisTable",
-    description="Creates an AnalysisTable",
 )
 async def create(
     *,
@@ -43,8 +42,7 @@ async def create(
 @router.get(
     "/{analysis_table_id}",
     response_model=AnalysisTableRead,
-    summary="Returns the AnalysisTable",
-    description="Returns the AnalysisTable with the given ID if it exists",
+    summary="Returns the AnalysisTable with the given ID if it exists",
 )
 async def get_by_id(
     *,
@@ -61,8 +59,7 @@ async def get_by_id(
 @router.get(
     "/project/{project_id}/user/{user_id}",
     response_model=List[AnalysisTableRead],
-    summary="Returns AnalysisTables of the Project of the User",
-    description="Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
+    summary="Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
 )
 async def get_by_project_and_user(
     *,
@@ -85,8 +82,7 @@ async def get_by_project_and_user(
 @router.patch(
     "/{analysis_table_id}",
     response_model=AnalysisTableRead,
-    summary="Updates the Analysis Table",
-    description="Updates the Analysis Table with the given ID if it exists",
+    summary="Updates the Analysis Table with the given ID if it exists",
 )
 async def update_by_id(
     *,
@@ -106,8 +102,7 @@ async def update_by_id(
 @router.delete(
     "/{analysis_table_id}",
     response_model=AnalysisTableRead,
-    summary="Removes the AnalysisTable",
-    description="Removes the AnalysisTable with the given ID if it exists",
+    summary="Removes the AnalysisTable with the given ID if it exists",
 )
 async def delete_by_id(
     *,

@@ -28,7 +28,6 @@ router = APIRouter(
     "",
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Creates a SpanAnnotation",
-    description="Creates a SpanAnnotation",
 )
 async def add_span_annotation(
     *,
@@ -65,8 +64,7 @@ async def add_span_annotation(
 @router.get(
     "/{span_id}",
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
-    summary="Returns the SpanAnnotation",
-    description="Returns the SpanAnnotation with the given ID.",
+    summary="Returns the SpanAnnotation with the given ID.",
 )
 async def get_by_id(
     *,
@@ -94,8 +92,7 @@ async def get_by_id(
 @router.patch(
     "/{span_id}",
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
-    summary="Updates the SpanAnnotation",
-    description="Updates the SpanAnnotation with the given ID.",
+    summary="Updates the SpanAnnotation with the given ID.",
 )
 async def update_by_id(
     *,
@@ -128,8 +125,7 @@ async def update_by_id(
 @router.delete(
     "/{span_id}",
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
-    summary="Deletes the SpanAnnotation",
-    description="Deletes the SpanAnnotation with the given ID.",
+    summary="Deletes the SpanAnnotation with the given ID.",
 )
 async def delete_by_id(
     *,
@@ -146,8 +142,7 @@ async def delete_by_id(
 @router.get(
     "/{span_id}/code",
     response_model=CodeRead,
-    summary="Returns the Code of the SpanAnnotation",
-    description="Returns the Code of the SpanAnnotation with the given ID if it exists.",
+    summary="Returns the Code of the SpanAnnotation with the given ID if it exists.",
 )
 async def get_code(
     *,
@@ -164,8 +159,7 @@ async def get_code(
 @router.get(
     "/{span_id}/groups",
     response_model=List[SpanGroupRead],
-    summary="Returns all SpanGroups that contain the the SpanAnnotation",
-    description="Returns all SpanGroups that contain the the SpanAnnotation.",
+    summary="Returns all SpanGroups that contain the the SpanAnnotation.",
 )
 async def get_all_groups(
     *,
@@ -186,7 +180,6 @@ async def get_all_groups(
     "/{span_id}/groups",
     response_model=SpanAnnotationRead,
     summary="Removes the SpanAnnotation from all SpanGroups",
-    description="Removes the SpanAnnotation from all SpanGroups",
 )
 async def remove_from_all_groups(
     *,
@@ -204,7 +197,6 @@ async def remove_from_all_groups(
     "/{span_id}/group/{group_id}",
     response_model=SpanAnnotationRead,
     summary="Adds the SpanAnnotation to the SpanGroup",
-    description="Adds the SpanAnnotation to the SpanGroup",
 )
 async def add_to_group(
     *,
@@ -226,7 +218,6 @@ async def add_to_group(
     "/{span_id}/group/{group_id}",
     response_model=SpanAnnotationRead,
     summary="Removes the SpanAnnotation from the SpanGroup",
-    description="Removes the SpanAnnotation from the SpanGroup",
 )
 async def remove_from_group(
     *,
@@ -247,8 +238,7 @@ async def remove_from_group(
 @router.put(
     "/{span_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the SpanAnnotation",
-    description="Adds a Memo to the SpanAnnotation with the given ID if it exists",
+    summary="Adds a Memo to the SpanAnnotation with the given ID if it exists",
 )
 async def add_memo(
     *,
@@ -281,8 +271,7 @@ async def add_memo(
 @router.get(
     "/{span_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo attached to the SpanAnnotation",
-    description="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
+    summary="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
 )
 async def get_memos(
     *,
@@ -299,8 +288,7 @@ async def get_memos(
 @router.get(
     "/{span_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
         " given ID if it exists."
     ),
@@ -321,8 +309,7 @@ async def get_user_memo(
 @router.get(
     "/code/{code_id}/user/{user_id}",
     response_model=List[SpanAnnotationReadResolved],
-    summary="Returns SpanAnnotations with the given Code of the User with the given ID",
-    description=(
+    summary=(
         "Returns SpanAnnotations with the given Code of the User with the given ID"
     ),
 )

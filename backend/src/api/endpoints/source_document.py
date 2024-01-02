@@ -37,8 +37,7 @@ router = APIRouter(
 @router.get(
     "/{sdoc_id}",
     response_model=SourceDocumentWithDataRead,
-    summary="Returns the SourceDocument",
-    description="Returns the SourceDocument with the given ID if it exists",
+    summary="Returns the SourceDocument with the given ID if it exists",
 )
 async def get_by_id(
     *,
@@ -58,8 +57,7 @@ async def get_by_id(
 @router.delete(
     "/{sdoc_id}",
     response_model=SourceDocumentRead,
-    summary="Removes the SourceDocument",
-    description="Removes the SourceDocument with the given ID if it exists",
+    summary="Removes the SourceDocument with the given ID if it exists",
 )
 async def delete_by_id(
     *,
@@ -76,8 +74,7 @@ async def delete_by_id(
 @router.patch(
     "/{sdoc_id}",
     response_model=SourceDocumentRead,
-    summary="Updates the SourceDocument",
-    description="Updates the SourceDocument with the given ID.",
+    summary="Updates the SourceDocument with the given ID.",
 )
 async def update_sdoc(
     *,
@@ -96,7 +93,6 @@ async def update_sdoc(
     "/{sdoc_id}/linked_sdocs",
     response_model=List[int],
     summary="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
-    description="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
 )
 async def get_linked_sdocs(
     *,
@@ -112,8 +108,7 @@ async def get_linked_sdocs(
 @router.get(
     "/{sdoc_id}/url",
     response_model=str,
-    summary="Returns the URL to the original file of the SourceDocument",
-    description="Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
+    summary="Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
 )
 async def get_file_url(
     *,
@@ -139,8 +134,7 @@ async def get_file_url(
 @router.get(
     "/{sdoc_id}/metadata",
     response_model=List[SourceDocumentMetadataReadResolved],
-    summary="Returns all SourceDocumentMetadata",
-    description="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
+    summary="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
 )
 async def get_all_metadata(
     *,
@@ -160,8 +154,7 @@ async def get_all_metadata(
 @router.get(
     "/{sdoc_id}/metadata/{metadata_key}",
     response_model=SourceDocumentMetadataReadResolved,
-    summary="Returns the SourceDocumentMetadata with the given Key",
-    description="Returns the SourceDocumentMetadata with the given Key if it exists.",
+    summary="Returns the SourceDocumentMetadata with the given Key if it exists.",
 )
 async def read_metadata_by_key(
     *,
@@ -181,8 +174,7 @@ async def read_metadata_by_key(
 @router.get(
     "/{sdoc_id}/adoc/{user_id}",
     response_model=AnnotationDocumentRead,
-    summary="Returns the AnnotationDocument for the SourceDocument of the User or Creates it",
-    description="Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
+    summary="Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
 )
 async def get_adoc_of_user(
     *,
@@ -212,8 +204,7 @@ async def get_adoc_of_user(
 @router.get(
     "/{sdoc_id}/adoc",
     response_model=List[AnnotationDocumentRead],
-    summary="Returns all AnnotationDocuments for the SourceDocument",
-    description="Returns all AnnotationDocuments for the SourceDocument.",
+    summary="Returns all AnnotationDocuments for the SourceDocument.",
 )
 async def get_all_adocs(
     *,
@@ -232,8 +223,7 @@ async def get_all_adocs(
 @router.delete(
     "/{sdoc_id}/adoc",
     response_model=List[int],
-    summary="Removes all AnnotationDocuments for the SourceDocument",
-    description="Removes all AnnotationDocuments for the SourceDocument.",
+    summary="Removes all AnnotationDocuments for the SourceDocument.",
 )
 async def remove_all_adocs(
     *,
@@ -249,8 +239,7 @@ async def remove_all_adocs(
 @router.get(
     "/{sdoc_id}/tags",
     response_model=List[DocumentTagRead],
-    summary="Returns all DocumentTags linked with the SourceDocument",
-    description="Returns all DocumentTags linked with the SourceDocument.",
+    summary="Returns all DocumentTags linked with the SourceDocument.",
 )
 async def get_all_tags(
     *,
@@ -270,8 +259,7 @@ async def get_all_tags(
 @router.delete(
     "/{sdoc_id}/tags",
     response_model=SourceDocumentRead,
-    summary="Unlinks all DocumentTags with the SourceDocument",
-    description="Unlinks all DocumentTags of the SourceDocument.",
+    summary="Unlinks all DocumentTags of the SourceDocument.",
 )
 async def unlinks_all_tags(
     *,
@@ -288,8 +276,7 @@ async def unlinks_all_tags(
 @router.patch(
     "/{sdoc_id}/tag/{tag_id}",
     response_model=SourceDocumentRead,
-    summary="Links a DocumentTag with the SourceDocument",
-    description="Links a DocumentTag with the SourceDocument with the given ID if it exists",
+    summary="Links a DocumentTag with the SourceDocument with the given ID if it exists",
 )
 async def link_tag(
     *,
@@ -311,8 +298,7 @@ async def link_tag(
 @router.delete(
     "/{sdoc_id}/tag/{tag_id}",
     response_model=SourceDocumentRead,
-    summary="Unlinks the DocumentTag from the SourceDocument",
-    description="Unlinks the DocumentTags from the SourceDocument.",
+    summary="Unlinks the DocumentTags from the SourceDocument.",
 )
 async def unlink_tag(
     *,
@@ -331,8 +317,7 @@ async def unlink_tag(
 @router.put(
     "/{sdoc_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the SourceDocument",
-    description="Adds a Memo to the SourceDocument with the given ID if it exists",
+    summary="Adds a Memo to the SourceDocument with the given ID if it exists",
 )
 async def add_memo(
     *,
@@ -359,8 +344,7 @@ async def add_memo(
 @router.get(
     "/{sdoc_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns all Memo attached to the SourceDocument",
-    description="Returns all Memo attached to the SourceDocument with the given ID if it exists.",
+    summary="Returns all Memo attached to the SourceDocument with the given ID if it exists.",
 )
 async def get_memos(
     *,
@@ -377,8 +361,7 @@ async def get_memos(
 @router.get(
     "/{sdoc_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the SourceDocument of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the SourceDocument with the given ID of the User with the"
         " given ID if it exists."
     ),
@@ -400,10 +383,6 @@ async def get_user_memo(
     "/{sdoc_id}/relatedmemos/{user_id}",
     response_model=List[MemoRead],
     summary=(
-        "Returns the Memo attached to the SourceDocument of the User with the given ID and all memos "
-        "attached to its annotations."
-    ),
-    description=(
         "Returns the Memo attached to the SourceDocument of the User with the given ID and all memos"
         " attached to its annotations."
     ),
@@ -427,8 +406,7 @@ async def get_related_user_memos(
 @router.get(
     "/{sdoc_id}/word_frequencies",
     response_model=List[WordFrequencyRead],
-    summary="Returns the SourceDocument's word frequencies",
-    description="Returns the SourceDocument's word frequencies with the given ID if it exists",
+    summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
 )
 async def get_word_frequencies(
     *,

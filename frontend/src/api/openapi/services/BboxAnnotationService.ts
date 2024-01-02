@@ -16,7 +16,6 @@ import { request as __request } from "../core/request";
 export class BboxAnnotationService {
   /**
    * Creates a BBoxAnnotation
-   * Creates a BBoxAnnotation
    * @returns any Successful Response
    * @throws ApiError
    */
@@ -45,7 +44,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns the BBoxAnnotation
    * Returns the BBoxAnnotation with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -76,7 +74,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Updates the BBoxAnnotation
    * Updates the BBoxAnnotation with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -111,7 +108,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Deletes the BBoxAnnotation
    * Deletes the BBoxAnnotation with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -134,7 +130,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns the Code of the BBoxAnnotation
    * Returns the Code of the BBoxAnnotation with the given ID if it exists.
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -153,7 +148,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Adds a Memo to the BBoxAnnotation
    * Adds a Memo to the BBoxAnnotation with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -180,7 +174,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns the Memos attached to the BBoxAnnotation
    * Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -199,7 +192,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns the Memo attached to the BBoxAnnotation of the User with the given ID
    * Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -219,7 +211,6 @@ export class BboxAnnotationService {
   }
 
   /**
-   * Returns BBoxAnnotations with the given Code of the User with the given ID
    * Returns BBoxAnnotations with the given Code of the User with the given ID
    * @returns BBoxAnnotationRead Successful Response
    * @throws ApiError

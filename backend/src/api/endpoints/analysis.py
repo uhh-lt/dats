@@ -44,7 +44,6 @@ router = APIRouter(
     "/code_frequencies",
     response_model=List[CodeFrequency],
     summary="Returns all SourceDocument IDs that match the query parameters.",
-    description="Returns all SourceDocument Ids that match the query parameters.",
 )
 async def code_frequencies(
     *,
@@ -64,7 +63,6 @@ async def code_frequencies(
     "/code_occurrences",
     response_model=List[CodeOccurrence],
     summary="Returns all SourceDocument IDs that match the query parameters.",
-    description="Returns all SourceDocument Ids that match the query parameters.",
 )
 async def code_occurrences(
     *,
@@ -84,7 +82,6 @@ async def code_occurrences(
     "/annotation_occurrences",
     response_model=List[AnnotationOccurrence],
     summary="Returns AnnotationOccurrences.",
-    description="Returns AnnotationOccurrences.",
 )
 async def annotation_occurrences(
     *,
@@ -104,7 +101,6 @@ async def annotation_occurrences(
     "/annotated_segments_info",
     response_model=List[ColumnInfo[AnnotatedSegmentsColumns]],
     summary="Returns AnnotationSegments Info.",
-    description="Returns AnnotationSegments Info.",
 )
 async def annotated_segments_info(
     *,
@@ -121,7 +117,6 @@ async def annotated_segments_info(
     "/annotated_segments",
     response_model=AnnotatedSegmentResult,
     summary="Returns AnnotationSegments.",
-    description="Returns AnnotationSegments.",
 )
 async def annotated_segments(
     *,
@@ -149,7 +144,6 @@ async def annotated_segments(
     "/timeline_analysis_valid_docments/{project_id}/metadata/{date_metadata_id}}",
     response_model=Tuple[int, int],
     summary="Returns TimelineAnalysis Info.",
-    description="Returns TimelineAnalysis Info.",
 )
 async def get_timeline_analysis_valid_documents(
     *,
@@ -169,7 +163,6 @@ async def get_timeline_analysis_valid_documents(
     "/timeline_analysis2_info/{project_id}",
     response_model=List[ColumnInfo[TimelineAnalysisColumns]],
     summary="Returns TimelineAnalysis Info.",
-    description="Returns TimelineAnalysis Info.",
 )
 async def timeline_analysis2_info(
     *,
@@ -187,7 +180,6 @@ async def timeline_analysis2_info(
     "/timeline_analysis2",
     response_model=List[TimelineAnalysisResultNew],
     summary="Perform new timeline analysis.",
-    description="Perform new timeline analysis.",
 )
 async def timeline_analysis2(
     *,
@@ -211,7 +203,6 @@ async def timeline_analysis2(
     "/word_frequency_analysis_info/{project_id}",
     response_model=List[ColumnInfo[WordFrequencyColumns]],
     summary="Returns WordFrequency Info.",
-    description="Returns WordFrequency Info.",
 )
 async def word_frequency_analysis_info(
     *,
@@ -229,7 +220,6 @@ async def word_frequency_analysis_info(
     "/word_frequency_analysis",
     response_model=WordFrequencyResult,
     summary="Perform word frequency analysis.",
-    description="Perform word frequency analysis.",
 )
 async def word_frequency_analysis(
     *,

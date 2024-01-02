@@ -46,7 +46,6 @@ router = APIRouter(
     "",
     response_model=ProjectRead,
     summary="Creates a new Project",
-    description="Creates a new Project.",
 )
 async def create_new_project(
     *,
@@ -71,8 +70,7 @@ async def create_new_project(
 @router.get(
     "/{proj_id}",
     response_model=ProjectRead,
-    summary="Returns the Project with the given ID",
-    description="Returns the Project with the given ID if it exists",
+    summary="Returns the Project with the given ID if it exists",
 )
 async def read_project(
     *,
@@ -89,8 +87,7 @@ async def read_project(
 @router.patch(
     "/{proj_id}",
     response_model=ProjectRead,
-    summary="Updates the Project",
-    description="Updates the Project with the given ID.",
+    summary="Updates the Project with the given ID.",
 )
 async def update_project(
     *,
@@ -107,8 +104,7 @@ async def update_project(
 @router.delete(
     "/{proj_id}",
     response_model=ProjectRead,
-    summary="Removes the Project",
-    description="Removes the Project with the given ID.",
+    summary="Removes the Project with the given ID.",
 )
 async def delete_project(
     *,
@@ -136,8 +132,7 @@ async def delete_project(
 @router.get(
     "/{proj_id}/sdoc",
     response_model=PaginatedSourceDocumentReads,
-    summary="Returns all SourceDocuments of the Project.",
-    description="Returns all SourceDocuments of the Project with the given ID.",
+    summary="Returns all SourceDocuments of the Project with the given ID.",
 )
 async def get_project_sdocs(
     *,
@@ -179,8 +174,7 @@ async def get_project_sdocs(
 @router.put(
     "/{proj_id}/sdoc",
     response_model=PreprocessingJobRead,
-    summary="Uploads one or multiple SourceDocument to the Project",
-    description="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
+    summary="Uploads one or multiple SourceDocument to the Project with the given ID if it exists",
 )
 # Flo: Since we're uploading a file we have to use multipart/form-data directly in the router method
 #  see: https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
@@ -207,8 +201,7 @@ async def upload_project_sdoc(
 @router.delete(
     "/{proj_id}/sdoc",
     response_model=List[int],
-    summary="Removes all SourceDocuments of the Project",
-    description="Removes all SourceDocuments of the Project with the given ID if it exists",
+    summary="Removes all SourceDocuments of the Project with the given ID if it exists",
 )
 async def delete_project_sdocs(
     *,
@@ -224,8 +217,7 @@ async def delete_project_sdocs(
 @router.patch(
     "/{proj_id}/user/{user_id}",
     response_model=UserRead,
-    summary="Associates the User with the Project",
-    description="Associates an existing User to the Project with the given ID if it exists",
+    summary="Associates an existing User to the Project with the given ID if it exists",
 )
 async def associate_user_to_project(
     *,
@@ -243,8 +235,7 @@ async def associate_user_to_project(
 @router.delete(
     "/{proj_id}/user/{user_id}",
     response_model=UserRead,
-    summary="Dissociates the Users with the Project",
-    description="Dissociates the Users with the Project with the given ID if it exists",
+    summary="Dissociates the Users with the Project with the given ID if it exists",
 )
 async def dissociate_user_from_project(
     *,
@@ -262,8 +253,7 @@ async def dissociate_user_from_project(
 @router.get(
     "/{proj_id}/user",
     response_model=List[UserRead],
-    summary="Returns all Users of the Project",
-    description="Returns all Users of the Project with the given ID",
+    summary="Returns all Users of the Project with the given ID",
 )
 async def get_project_users(
     *,
@@ -280,8 +270,7 @@ async def get_project_users(
 @router.get(
     "/{proj_id}/code",
     response_model=List[CodeRead],
-    summary="Returns all Codes of the Project",
-    description="Returns all Codes of the Project with the given ID",
+    summary="Returns all Codes of the Project with the given ID",
 )
 async def get_project_codes(
     *,
@@ -300,8 +289,7 @@ async def get_project_codes(
 @router.delete(
     "/{proj_id}/code",
     response_model=List[int],
-    summary="Removes all Codes of the Project",
-    description="Removes all Codes of the Project with the given ID if it exists",
+    summary="Removes all Codes of the Project with the given ID if it exists",
 )
 async def delete_project_codes(
     *,
@@ -317,8 +305,7 @@ async def delete_project_codes(
 @router.get(
     "/{proj_id}/tag",
     response_model=List[DocumentTagRead],
-    summary="Returns all DocumentTags of the Project",
-    description="Returns all DocumentTags of the Project with the given ID",
+    summary="Returns all DocumentTags of the Project with the given ID",
 )
 async def get_project_tags(
     *,
@@ -335,8 +322,7 @@ async def get_project_tags(
 @router.delete(
     "/{proj_id}/tag",
     response_model=List[int],
-    summary="Removes all DocumentTags of the Project",
-    description="Removes all DocumentTags of the Project with the given ID if it exists",
+    summary="Removes all DocumentTags of the Project with the given ID if it exists",
 )
 async def delete_project_tags(
     *,
@@ -353,7 +339,6 @@ async def delete_project_tags(
     "/{proj_id}/user/{user_id}/code",
     response_model=List[CodeRead],
     summary="Returns all Codes of the Project from a User",
-    description="Returns all Codes of the Project from a User",
 )
 async def get_user_codes_of_project(
     *,
@@ -375,8 +360,7 @@ async def get_user_codes_of_project(
 @router.delete(
     "/{proj_id}/user/{user_id}/code",
     response_model=int,
-    summary="Removes all Codes of the Project from a User",
-    description="Removes all Codes of the Project from a User. Returns the number of removed Codes.",
+    summary="Removes all Codes of the Project from a User. Returns the number of removed Codes.",
 )
 async def remove_user_codes_of_project(
     *,
@@ -394,7 +378,6 @@ async def remove_user_codes_of_project(
     "/{proj_id}/user/{user_id}/memo",
     response_model=List[MemoRead],
     summary="Returns all Memos of the Project from a User",
-    description="Returns all Memos of the Project from a User",
 )
 async def get_user_memos_of_project(
     *,
@@ -422,7 +405,6 @@ async def get_user_memos_of_project(
     "/{proj_id}/user/{user_id}/action",
     response_model=List[ActionRead],
     summary="Returns all Actions of the Project from a User",
-    description="Returns all Actions of the Project from a User",
 )
 async def get_user_actions_of_project(
     *,
@@ -444,8 +426,7 @@ async def get_user_actions_of_project(
 @router.post(
     "/{proj_id}/actions",
     response_model=List[ActionRead],
-    summary="Returns all Actions",
-    description="Returns all Actions of the Project",
+    summary="Returns all Actions of the Project",
 )
 async def query_actions_of_project(
     *,
@@ -472,8 +453,7 @@ async def query_actions_of_project(
 @router.put(
     "/{proj_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo of the current User to the Project.",
-    description="Adds a Memo of the current User to the Project with the given ID if it exists",
+    summary="Adds a Memo of the current User to the Project with the given ID if it exists",
 )
 async def add_memo(
     *,
@@ -499,8 +479,7 @@ async def add_memo(
 @router.get(
     "/{proj_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo of the current User for the Project.",
-    description="Returns the Memo of the current User for the Project with the given ID.",
+    summary="Returns the Memo of the current User for the Project with the given ID.",
 )
 async def get_memos(
     *,
@@ -517,8 +496,7 @@ async def get_memos(
 @router.get(
     "/{proj_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the Project of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the Project with the given ID of the User with the"
         " given ID if it exists."
     ),
@@ -539,8 +517,7 @@ async def get_user_memo(
 @router.get(
     "/{proj_id}/resolve_filename/{filename}",
     response_model=int,
-    summary="Returns the Id of the SourceDocument identified by project_id and filename if it exists",
-    description=(
+    summary=(
         "Returns the Id of the SourceDocument identified by project_id and filename if it exists"
     ),
 )
@@ -567,8 +544,7 @@ async def resolve_filename(
 @router.get(
     "/{proj_id}/metadata",
     response_model=List[ProjectMetadataRead],
-    summary="Returns all ProjectMetadata",
-    description="Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
+    summary="Returns all ProjectMetadata of the SourceDocument with the given ID if it exists",
 )
 async def get_all_metadata(
     *,
