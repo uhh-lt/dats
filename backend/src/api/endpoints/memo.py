@@ -17,7 +17,7 @@ router = APIRouter(
     response_model=MemoRead,
     summary="Returns the Memo with the given ID if it exists",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     memo_id: int,
@@ -34,7 +34,7 @@ async def get_by_id(
     response_model=MemoRead,
     summary="Updates the Memo with the given ID if it exists",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     memo_id: int,
@@ -52,7 +52,7 @@ async def update_by_id(
     response_model=MemoRead,
     summary="Removes the Memo with the given ID if it exists",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     memo_id: int,

@@ -23,7 +23,7 @@ router = APIRouter(
     response_model=CodeRead,
     summary="Creates a new Code and returns it with the generated ID.",
 )
-async def create_new_code(
+def create_new_code(
     *,
     db: Session = Depends(get_db_session),
     code: CodeCreate,
@@ -43,7 +43,7 @@ async def create_new_code(
     response_model=CodeRead,
     summary="Returns the Code linked by the CurrentCode with the given ID.",
 )
-async def get_code_by_current_code_id(
+def get_code_by_current_code_id(
     *,
     db: Session = Depends(get_db_session),
     current_code_id: int,
@@ -60,7 +60,7 @@ async def get_code_by_current_code_id(
     response_model=CodeRead,
     summary="Returns the Code with the given ID.",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -77,7 +77,7 @@ async def get_by_id(
     response_model=CodeRead,
     summary="Updates the Code with the given ID.",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -95,7 +95,7 @@ async def update_by_id(
     response_model=CodeRead,
     summary="Deletes the Code with the given ID.",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -112,7 +112,7 @@ async def delete_by_id(
     response_model=MemoRead,
     summary="Adds a Memo to the Code with the given ID if it exists",
 )
-async def add_memo(
+def add_memo(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -144,7 +144,7 @@ async def add_memo(
     response_model=List[MemoRead],
     summary="Returns the Memo attached to the Code with the given ID if it exists.",
 )
-async def get_memos(
+def get_memos(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -164,7 +164,7 @@ async def get_memos(
         " given ID if it exists."
     ),
 )
-async def get_user_memo(
+def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,

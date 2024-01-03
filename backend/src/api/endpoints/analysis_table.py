@@ -25,7 +25,7 @@ router = APIRouter(
     response_model=AnalysisTableRead,
     summary="Creates an AnalysisTable",
 )
-async def create(
+def create(
     *,
     db: Session = Depends(get_db_session),
     analysis_table: AnalysisTableCreate,
@@ -44,7 +44,7 @@ async def create(
     response_model=AnalysisTableRead,
     summary="Returns the AnalysisTable with the given ID if it exists",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     analysis_table_id: int,
@@ -61,7 +61,7 @@ async def get_by_id(
     response_model=List[AnalysisTableRead],
     summary="Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists",
 )
-async def get_by_project_and_user(
+def get_by_project_and_user(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -84,7 +84,7 @@ async def get_by_project_and_user(
     response_model=AnalysisTableRead,
     summary="Updates the Analysis Table with the given ID if it exists",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     analysis_table_id: int,
@@ -104,7 +104,7 @@ async def update_by_id(
     response_model=AnalysisTableRead,
     summary="Removes the AnalysisTable with the given ID if it exists",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     analysis_table_id: int,

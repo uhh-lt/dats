@@ -26,7 +26,7 @@ router = APIRouter(
     response_model=UserRead,
     summary="Returns the current (logged in) user",
 )
-async def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
+def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
     return UserRead.model_validate(user)
 
 
@@ -35,9 +35,7 @@ async def get_me(*, user: UserORM = Depends(get_current_user)) -> UserRead:
     response_model=PublicUserRead,
     summary="Returns the User with the given ID if it exists",
 )
-async def get_by_id(
-    *, db: Session = Depends(get_db_session), user_id: int
-) -> PublicUserRead:
+def get_by_id(*, db: Session = Depends(get_db_session), user_id: int) -> PublicUserRead:
     db_user = crud_user.read(db=db, id=user_id)
     return PublicUserRead.model_validate(db_user)
 
@@ -47,7 +45,7 @@ async def get_by_id(
     response_model=List[PublicUserRead],
     summary="Returns all Users that exist in the system",
 )
-async def get_all(
+def get_all(
     *,
     db: Session = Depends(get_db_session),
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
@@ -61,7 +59,7 @@ async def get_all(
     response_model=UserRead,
     summary="Updates the User with the given ID if it exists",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     user_id: int,
@@ -79,7 +77,7 @@ async def update_by_id(
     response_model=UserRead,
     summary="Removes the User with the given ID if it exists",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     user_id: int,
@@ -95,7 +93,7 @@ async def delete_by_id(
     response_model=List[ProjectRead],
     summary="Returns all Projects of the User with the given ID",
 )
-async def get_user_projects(
+def get_user_projects(
     *,
     user_id: int,
     db: Session = Depends(get_db_session),
@@ -112,7 +110,7 @@ async def get_user_projects(
     response_model=List[AnnotationDocumentRead],
     summary="Returns the top k sdoc ids that the User recently modified (annotated)",
 )
-async def recent_activity(
+def recent_activity(
     *,
     user_id: int,
     k: int,

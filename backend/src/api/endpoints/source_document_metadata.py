@@ -22,7 +22,7 @@ router = APIRouter(
     response_model=SourceDocumentMetadataRead,
     summary="Creates a new Metadata and returns it with the generated ID.",
 )
-async def create_new_metadata(
+def create_new_metadata(
     *,
     db: Session = Depends(get_db_session),
     metadata: SourceDocumentMetadataCreate,
@@ -44,7 +44,7 @@ async def create_new_metadata(
     response_model=SourceDocumentMetadataReadResolved,
     summary="Returns the Metadata with the given ID.",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     metadata_id: int,
@@ -61,7 +61,7 @@ async def get_by_id(
     response_model=SourceDocumentMetadataRead,
     summary="Updates the Metadata with the given ID.",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     metadata_id: int,
@@ -79,7 +79,7 @@ async def update_by_id(
     response_model=SourceDocumentMetadataRead,
     summary="Deletes the Metadata with the given ID.",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     metadata_id: int,

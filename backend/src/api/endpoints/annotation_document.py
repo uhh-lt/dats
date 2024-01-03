@@ -42,7 +42,7 @@ router = APIRouter(
     response_model=AnnotationDocumentRead,
     summary="Creates an AnnotationDocument",
 )
-async def create(
+def create(
     *,
     db: Session = Depends(get_db_session),
     adoc: AnnotationDocumentCreate,
@@ -61,7 +61,7 @@ async def create(
     response_model=AnnotationDocumentRead,
     summary="Returns the AnnotationDocument with the given ID if it exists",
 )
-async def get_by_adoc_id(
+def get_by_adoc_id(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
@@ -78,7 +78,7 @@ async def get_by_adoc_id(
     response_model=AnnotationDocumentRead,
     summary="Removes the AnnotationDocument with the given ID if it exists",
 )
-async def delete_by_adoc_id(
+def delete_by_adoc_id(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
@@ -95,7 +95,7 @@ async def delete_by_adoc_id(
     response_model=Union[List[SpanAnnotationRead], List[SpanAnnotationReadResolved]],
     summary="Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
 )
-async def get_all_span_annotations(
+def get_all_span_annotations(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
@@ -127,7 +127,7 @@ async def get_all_span_annotations(
     response_model=List[int],
     summary="Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists",
 )
-async def delete_all_span_annotations(
+def delete_all_span_annotations(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
@@ -146,7 +146,7 @@ async def delete_all_span_annotations(
     ],
     summary="Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
 )
-async def get_all_bbox_annotations(
+def get_all_bbox_annotations(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
@@ -175,7 +175,7 @@ async def get_all_bbox_annotations(
     response_model=List[int],
     summary="Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists",
 )
-async def delete_all_bbox_annotations(
+def delete_all_bbox_annotations(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,
@@ -192,7 +192,7 @@ async def delete_all_bbox_annotations(
     response_model=List[SpanGroupRead],
     summary="Returns all SpanGroups in the AnnotationDocument with the given ID if it exists",
 )
-async def get_all_span_groups(
+def get_all_span_groups(
     *,
     db: Session = Depends(get_db_session),
     adoc_id: int,

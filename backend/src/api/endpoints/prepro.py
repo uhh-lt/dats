@@ -31,7 +31,7 @@ pps: PreprocessingService = PreprocessingService()
     response_model=PreprocessingJobRead,
     summary="Returns the PreprocessingJob for the given ID if it exists",
 )
-async def get_prepro_job(
+def get_prepro_job(
     *,
     db: Session = Depends(get_db_session),
     prepro_job_id: str,
@@ -48,7 +48,7 @@ async def get_prepro_job(
     response_model=PreprocessingJobRead,
     summary="Aborts the PreprocessingJob for the given ID if it exists",
 )
-async def abort_prepro_job(
+def abort_prepro_job(
     *, prepro_job_id: str, authz_user: AuthzUser = Depends()
 ) -> PreprocessingJobRead:
     authz_user.assert_in_same_project_as(Crud.PREPROCESSING_JOB, prepro_job_id)
@@ -61,7 +61,7 @@ async def abort_prepro_job(
     response_model=List[PreprocessingJobRead],
     summary="Returns all PreprocessingJobs for the given project ID if it exists",
 )
-async def get_all_prepro_jobs(
+def get_all_prepro_jobs(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -80,7 +80,7 @@ async def get_all_prepro_jobs(
     response_model=PreProProjectStatus,
     summary="Returns the PreProProjectStatus of the Project with the given ID.",
 )
-async def get_project_prepro_status(
+def get_project_prepro_status(
     *,
     proj_id: int,
     db: Session = Depends(get_db_session),

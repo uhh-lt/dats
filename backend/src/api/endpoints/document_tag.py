@@ -27,7 +27,7 @@ router = APIRouter(
     response_model=DocumentTagRead,
     summary="Creates a new DocumentTag and returns it with the generated ID.",
 )
-async def create_new_doc_tag(
+def create_new_doc_tag(
     *,
     db: Session = Depends(get_db_session),
     doc_tag: DocumentTagCreate,
@@ -53,7 +53,7 @@ async def create_new_doc_tag(
     response_model=int,
     summary="Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
 )
-async def link_multiple_tags(
+def link_multiple_tags(
     *,
     db: Session = Depends(get_db_session),
     multi_link: SourceDocumentDocumentTagMultiLink,
@@ -80,7 +80,7 @@ async def link_multiple_tags(
     response_model=int,
     summary="Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
 )
-async def unlink_multiple_tags(
+def unlink_multiple_tags(
     *,
     db: Session = Depends(get_db_session),
     multi_link: SourceDocumentDocumentTagMultiLink,
@@ -105,7 +105,7 @@ async def unlink_multiple_tags(
     response_model=DocumentTagRead,
     summary="Returns the DocumentTag with the given ID.",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     tag_id: int,
@@ -122,7 +122,7 @@ async def get_by_id(
     response_model=DocumentTagRead,
     summary="Updates the DocumentTag with the given ID.",
 )
-async def update_by_id(
+def update_by_id(
     *, db: Session = Depends(get_db_session), tag_id: int, doc_tag: DocumentTagUpdate
 ) -> DocumentTagRead:
     # TODO Flo: only if the user has access?
@@ -135,7 +135,7 @@ async def update_by_id(
     response_model=DocumentTagRead,
     summary="Deletes the DocumentTag with the given ID.",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     tag_id: int,
@@ -152,7 +152,7 @@ async def delete_by_id(
     response_model=MemoRead,
     summary="Adds a Memo to the DocumentTag with the given ID if it exists",
 )
-async def add_memo(
+def add_memo(
     *,
     db: Session = Depends(get_db_session),
     tag_id: int,
@@ -183,7 +183,7 @@ async def add_memo(
     response_model=List[MemoRead],
     summary="Returns the Memo attached to the DocumentTag with the given ID if it exists.",
 )
-async def get_memos(
+def get_memos(
     *,
     db: Session = Depends(get_db_session),
     tag_id: int,
@@ -203,7 +203,7 @@ async def get_memos(
         " given ID if it exists."
     ),
 )
-async def get_user_memo(
+def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     tag_id: int,
@@ -223,7 +223,7 @@ async def get_user_memo(
         "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists."
     ),
 )
-async def get_sdoc_ids_by_tag_id(
+def get_sdoc_ids_by_tag_id(
     *,
     db: Session = Depends(get_db_session),
     tag_id: int,

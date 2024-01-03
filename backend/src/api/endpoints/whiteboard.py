@@ -23,7 +23,7 @@ router = APIRouter(
     response_model=WhiteboardRead,
     summary="Creates an Whiteboard",
 )
-async def create(
+def create(
     *,
     db: Session = Depends(get_db_session),
     whiteboard: WhiteboardCreate,
@@ -42,7 +42,7 @@ async def create(
     response_model=WhiteboardRead,
     summary="Returns the Whiteboard with the given ID if it exists",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     whiteboard_id: int,
@@ -59,7 +59,7 @@ async def get_by_id(
     response_model=List[WhiteboardRead],
     summary="Returns the Whiteboards of the Project with the given ID",
 )
-async def get_by_project(
+def get_by_project(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -76,7 +76,7 @@ async def get_by_project(
     response_model=List[WhiteboardRead],
     summary="Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists",
 )
-async def get_by_project_and_user(
+def get_by_project_and_user(
     *,
     db: Session = Depends(get_db_session),
     project_id: int,
@@ -96,7 +96,7 @@ async def get_by_project_and_user(
     response_model=WhiteboardRead,
     summary="Updates the Whiteboard with the given ID if it exists",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     whiteboard_id: int,
@@ -114,7 +114,7 @@ async def update_by_id(
     response_model=WhiteboardRead,
     summary="Removes the Whiteboard with the given ID if it exists",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     whiteboard_id: int,

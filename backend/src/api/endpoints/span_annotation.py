@@ -29,7 +29,7 @@ router = APIRouter(
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Creates a SpanAnnotation",
 )
-async def add_span_annotation(
+def add_span_annotation(
     *,
     db: Session = Depends(get_db_session),
     span: SpanAnnotationCreateWithCodeId,
@@ -66,7 +66,7 @@ async def add_span_annotation(
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Returns the SpanAnnotation with the given ID.",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -94,7 +94,7 @@ async def get_by_id(
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Updates the SpanAnnotation with the given ID.",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -127,7 +127,7 @@ async def update_by_id(
     response_model=Union[SpanAnnotationRead, SpanAnnotationReadResolved],
     summary="Deletes the SpanAnnotation with the given ID.",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -144,7 +144,7 @@ async def delete_by_id(
     response_model=CodeRead,
     summary="Returns the Code of the SpanAnnotation with the given ID if it exists.",
 )
-async def get_code(
+def get_code(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -161,7 +161,7 @@ async def get_code(
     response_model=List[SpanGroupRead],
     summary="Returns all SpanGroups that contain the the SpanAnnotation.",
 )
-async def get_all_groups(
+def get_all_groups(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -181,7 +181,7 @@ async def get_all_groups(
     response_model=SpanAnnotationRead,
     summary="Removes the SpanAnnotation from all SpanGroups",
 )
-async def remove_from_all_groups(
+def remove_from_all_groups(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -198,7 +198,7 @@ async def remove_from_all_groups(
     response_model=SpanAnnotationRead,
     summary="Adds the SpanAnnotation to the SpanGroup",
 )
-async def add_to_group(
+def add_to_group(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -219,7 +219,7 @@ async def add_to_group(
     response_model=SpanAnnotationRead,
     summary="Removes the SpanAnnotation from the SpanGroup",
 )
-async def remove_from_group(
+def remove_from_group(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -240,7 +240,7 @@ async def remove_from_group(
     response_model=MemoRead,
     summary="Adds a Memo to the SpanAnnotation with the given ID if it exists",
 )
-async def add_memo(
+def add_memo(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -273,7 +273,7 @@ async def add_memo(
     response_model=List[MemoRead],
     summary="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
 )
-async def get_memos(
+def get_memos(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -293,7 +293,7 @@ async def get_memos(
         " given ID if it exists."
     ),
 )
-async def get_user_memo(
+def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     span_id: int,
@@ -313,7 +313,7 @@ async def get_user_memo(
         "Returns SpanAnnotations with the given Code of the User with the given ID"
     ),
 )
-async def get_by_user_code(
+def get_by_user_code(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,

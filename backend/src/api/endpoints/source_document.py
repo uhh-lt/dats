@@ -39,7 +39,7 @@ router = APIRouter(
     response_model=SourceDocumentWithDataRead,
     summary="Returns the SourceDocument with the given ID if it exists",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -59,7 +59,7 @@ async def get_by_id(
     response_model=SourceDocumentRead,
     summary="Removes the SourceDocument with the given ID if it exists",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -76,7 +76,7 @@ async def delete_by_id(
     response_model=SourceDocumentRead,
     summary="Updates the SourceDocument with the given ID.",
 )
-async def update_sdoc(
+def update_sdoc(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -94,7 +94,7 @@ async def update_sdoc(
     response_model=List[int],
     summary="Returns the ids of SourceDocuments linked to the SourceDocument with the given id.",
 )
-async def get_linked_sdocs(
+def get_linked_sdocs(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -110,7 +110,7 @@ async def get_linked_sdocs(
     response_model=str,
     summary="Returns the URL to the original file of the SourceDocument with the given ID if it exists.",
 )
-async def get_file_url(
+def get_file_url(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -136,7 +136,7 @@ async def get_file_url(
     response_model=List[SourceDocumentMetadataReadResolved],
     summary="Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists",
 )
-async def get_all_metadata(
+def get_all_metadata(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -156,7 +156,7 @@ async def get_all_metadata(
     response_model=SourceDocumentMetadataReadResolved,
     summary="Returns the SourceDocumentMetadata with the given Key if it exists.",
 )
-async def read_metadata_by_key(
+def read_metadata_by_key(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -176,7 +176,7 @@ async def read_metadata_by_key(
     response_model=AnnotationDocumentRead,
     summary="Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.",
 )
-async def get_adoc_of_user(
+def get_adoc_of_user(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -206,7 +206,7 @@ async def get_adoc_of_user(
     response_model=List[AnnotationDocumentRead],
     summary="Returns all AnnotationDocuments for the SourceDocument.",
 )
-async def get_all_adocs(
+def get_all_adocs(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -225,7 +225,7 @@ async def get_all_adocs(
     response_model=List[int],
     summary="Removes all AnnotationDocuments for the SourceDocument.",
 )
-async def remove_all_adocs(
+def remove_all_adocs(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -241,7 +241,7 @@ async def remove_all_adocs(
     response_model=List[DocumentTagRead],
     summary="Returns all DocumentTags linked with the SourceDocument.",
 )
-async def get_all_tags(
+def get_all_tags(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -261,7 +261,7 @@ async def get_all_tags(
     response_model=SourceDocumentRead,
     summary="Unlinks all DocumentTags of the SourceDocument.",
 )
-async def unlinks_all_tags(
+def unlinks_all_tags(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -278,7 +278,7 @@ async def unlinks_all_tags(
     response_model=SourceDocumentRead,
     summary="Links a DocumentTag with the SourceDocument with the given ID if it exists",
 )
-async def link_tag(
+def link_tag(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -300,7 +300,7 @@ async def link_tag(
     response_model=SourceDocumentRead,
     summary="Unlinks the DocumentTags from the SourceDocument.",
 )
-async def unlink_tag(
+def unlink_tag(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -319,7 +319,7 @@ async def unlink_tag(
     response_model=MemoRead,
     summary="Adds a Memo to the SourceDocument with the given ID if it exists",
 )
-async def add_memo(
+def add_memo(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -346,7 +346,7 @@ async def add_memo(
     response_model=List[MemoRead],
     summary="Returns all Memo attached to the SourceDocument with the given ID if it exists.",
 )
-async def get_memos(
+def get_memos(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -366,7 +366,7 @@ async def get_memos(
         " given ID if it exists."
     ),
 )
-async def get_user_memo(
+def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -387,7 +387,7 @@ async def get_user_memo(
         " attached to its annotations."
     ),
 )
-async def get_related_user_memos(
+def get_related_user_memos(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,
@@ -408,7 +408,7 @@ async def get_related_user_memos(
     response_model=List[WordFrequencyRead],
     summary="Returns the SourceDocument's word frequencies with the given ID if it exists",
 )
-async def get_word_frequencies(
+def get_word_frequencies(
     *,
     db: Session = Depends(get_db_session),
     sdoc_id: int,

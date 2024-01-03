@@ -52,7 +52,7 @@ async def register(
         "This is usually only called from an OAuth2 client!"
     ),
 )
-async def login(
+def login(
     *,
     db: Session = Depends(get_db_session),
     user_login_form_data: OAuth2PasswordRequestForm = Depends(),
@@ -92,7 +92,7 @@ def logout(
     "/refresh_access",
     summary="Uses the given refresh token to obtain a new access token.",
 )
-async def refresh_access_token(
+def refresh_access_token(
     *, db: Session = Depends(get_db_session), dto: RefreshAccessTokenData = Depends()
 ) -> UserAuthorizationHeaderData:
     token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
