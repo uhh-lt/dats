@@ -5,7 +5,11 @@
 # shellcheck shell=bash
 
 # Initialize Micromamba for the current shell
-eval "$("${MAMBA_EXE}" shell hook --shell=bash)"
+if [ -n "${MAMBA_EXE:-}" ]; then
+    eval "$("${MAMBA_EXE}" shell hook --shell=bash)"
+elif type "micromamba" &> /dev/null; then
+        eval "$(micromamba shell hook --shell=bash)"
+fi
 
 # Attempt to initialize Conda (might not be installed)
 __conda_setup="$('conda' 'shell.bash' 'hook' 2> /dev/null)" || true
@@ -20,12 +24,12 @@ fi
 unset __conda_setup
 
 # Attempt to initialize Mamba (might not be installed)
-if [ -f "${MAMBA_ROOT_PREFIX}/etc/profile.d/mamba.sh" ]; then
+if [ -n "${MAMBA_ROOT_PREFIX:-}" ] && [ -f "${MAMBA_ROOT_PREFIX}/etc/profile.d/mamba.sh" ]; then
     # shellcheck disable=SC1091
     . "${MAMBA_ROOT_PREFIX}/etc/profile.d/mamba.sh"
 fi
 
-if [[ "${MAMBA_SKIP_ACTIVATE}" == "1" ]]; then
+if [[ "${MAMBA_SKIP_ACTIVATE:-}" == "1" ]]; then
   return
 fi
 

@@ -73,6 +73,7 @@ class ErroneousArchiveException(Exception):
 class RepoService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         repo_root = Path(conf.repo.root_directory)
+        logger.info(f"Using repo root {repo_root}")
         cls.repo_root = repo_root
         cls.temp_files_root = repo_root.joinpath("temporary_files")
         cls.logs_root = repo_root.joinpath("logs")
