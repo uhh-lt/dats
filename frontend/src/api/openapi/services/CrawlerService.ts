@@ -11,7 +11,6 @@ import { request as __request } from "../core/request";
 export class CrawlerService {
   /**
    * Returns the CrawlerJob for the given Parameters
-   * Returns the CrawlerJob for the given Parameters
    * @returns CrawlerJobRead Successful Response
    * @throws ApiError
    */
@@ -32,7 +31,6 @@ export class CrawlerService {
   }
 
   /**
-   * Returns the CrawlerJob for the given ID
    * Returns the CrawlerJob for the given ID if it exists
    * @returns CrawlerJobRead Successful Response
    * @throws ApiError
@@ -51,7 +49,6 @@ export class CrawlerService {
   }
 
   /**
-   * Returns all CrawlerJobs for the given project ID
    * Returns all CrawlerJobs for the given project ID if it exists
    * @returns CrawlerJobRead Successful Response
    * @throws ApiError

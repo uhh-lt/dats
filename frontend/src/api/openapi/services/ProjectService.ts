@@ -23,7 +23,6 @@ import { request as __request } from "../core/request";
 export class ProjectService {
   /**
    * Creates a new Project
-   * Creates a new Project.
    * @returns ProjectRead Successful Response
    * @throws ApiError
    */
@@ -40,7 +39,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns the Project with the given ID
    * Returns the Project with the given ID if it exists
    * @returns ProjectRead Successful Response
    * @throws ApiError
@@ -59,7 +57,6 @@ export class ProjectService {
   }
 
   /**
-   * Updates the Project
    * Updates the Project with the given ID.
    * @returns ProjectRead Successful Response
    * @throws ApiError
@@ -86,7 +83,6 @@ export class ProjectService {
   }
 
   /**
-   * Removes the Project
    * Removes the Project with the given ID.
    * @returns ProjectRead Successful Response
    * @throws ApiError
@@ -105,7 +101,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all SourceDocuments of the Project.
    * Returns all SourceDocuments of the Project with the given ID.
    * @returns PaginatedSourceDocumentReads Successful Response
    * @throws ApiError
@@ -145,7 +140,6 @@ export class ProjectService {
   }
 
   /**
-   * Uploads one or multiple SourceDocument to the Project
    * Uploads one or multiple SourceDocument to the Project with the given ID if it exists
    * @returns PreprocessingJobRead Successful Response
    * @throws ApiError
@@ -172,7 +166,6 @@ export class ProjectService {
   }
 
   /**
-   * Removes all SourceDocuments of the Project
    * Removes all SourceDocuments of the Project with the given ID if it exists
    * @returns number Successful Response
    * @throws ApiError
@@ -191,7 +184,6 @@ export class ProjectService {
   }
 
   /**
-   * Associates the User with the Project
    * Associates an existing User to the Project with the given ID if it exists
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -217,7 +209,6 @@ export class ProjectService {
   }
 
   /**
-   * Dissociates the Users with the Project
    * Dissociates the Users with the Project with the given ID if it exists
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -243,7 +234,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all Users of the Project
    * Returns all Users of the Project with the given ID
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -262,7 +252,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all Codes of the Project
    * Returns all Codes of the Project with the given ID
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -281,7 +270,6 @@ export class ProjectService {
   }
 
   /**
-   * Removes all Codes of the Project
    * Removes all Codes of the Project with the given ID if it exists
    * @returns number Successful Response
    * @throws ApiError
@@ -300,7 +288,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all DocumentTags of the Project
    * Returns all DocumentTags of the Project with the given ID
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -319,7 +306,6 @@ export class ProjectService {
   }
 
   /**
-   * Removes all DocumentTags of the Project
    * Removes all DocumentTags of the Project with the given ID if it exists
    * @returns number Successful Response
    * @throws ApiError
@@ -338,7 +324,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all Codes of the Project from a User
    * Returns all Codes of the Project from a User
    * @returns CodeRead Successful Response
    * @throws ApiError
@@ -364,7 +349,6 @@ export class ProjectService {
   }
 
   /**
-   * Removes all Codes of the Project from a User
    * Removes all Codes of the Project from a User. Returns the number of removed Codes.
    * @returns number Successful Response
    * @throws ApiError
@@ -390,7 +374,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all Memos of the Project from a User
    * Returns all Memos of the Project from a User
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -425,7 +408,6 @@ export class ProjectService {
 
   /**
    * Returns all Actions of the Project from a User
-   * Returns all Actions of the Project from a User
    * @returns ActionRead Successful Response
    * @throws ApiError
    */
@@ -450,7 +432,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all Actions
    * Returns all Actions of the Project
    * @returns ActionRead Successful Response
    * @throws ApiError
@@ -472,7 +453,6 @@ export class ProjectService {
   }
 
   /**
-   * Adds a Memo of the current User to the Project.
    * Adds a Memo of the current User to the Project with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -499,7 +479,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns the Memo of the current User for the Project.
    * Returns the Memo of the current User for the Project with the given ID.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -518,7 +497,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns the Memo attached to the Project of the User with the given ID
    * Returns the Memo attached to the Project with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -538,7 +516,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns the Id of the SourceDocument identified by project_id and filename if it exists
    * Returns the Id of the SourceDocument identified by project_id and filename if it exists
    * @returns number Successful Response
    * @throws ApiError
@@ -569,7 +546,6 @@ export class ProjectService {
   }
 
   /**
-   * Returns all ProjectMetadata
    * Returns all ProjectMetadata of the SourceDocument with the given ID if it exists
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError

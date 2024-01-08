@@ -32,9 +32,8 @@ es = ElasticSearchService()
     "/sdoc_info",
     response_model=List[ColumnInfo[SearchColumns]],
     summary="Returns Search Info.",
-    description="Returns Search Info.",
 )
-async def search_sdocs_info(
+def search_sdocs_info(
     *, project_id: int, authz_user: AuthzUser = Depends()
 ) -> List[ColumnInfo[SearchColumns]]:
     authz_user.assert_in_project(project_id)
@@ -45,10 +44,9 @@ async def search_sdocs_info(
 @router.post(
     "/sdoc",
     response_model=List[int],
-    summary="Returns all SourceDocument IDs that match the query parameters.",
-    description="Returns all SourceDocument Ids that match the query parameters.",
+    summary="Returns all SourceDocument Ids that match the query parameters.",
 )
-async def search_sdocs(
+def search_sdocs(
     *,
     search_query: str,
     project_id: int,
@@ -72,9 +70,8 @@ async def search_sdocs(
     "/code_stats",
     response_model=List[SpanEntityStat],
     summary="Returns SpanEntityStats for the given SourceDocuments.",
-    description="Returns SpanEntityStats for the given SourceDocuments.",
 )
-async def search_code_stats(
+def search_code_stats(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -99,9 +96,8 @@ async def search_code_stats(
     "/keyword_stats",
     response_model=List[KeywordStat],
     summary="Returns KeywordStats for the given SourceDocuments.",
-    description="Returns KeywordStats for the given SourceDocuments.",
 )
-async def search_keyword_stats(
+def search_keyword_stats(
     *,
     project_id: int,
     sdoc_ids: List[int],
@@ -126,10 +122,9 @@ async def search_keyword_stats(
 @router.post(
     "/tag_stats",
     response_model=List[TagStat],
-    summary="Returns TagStat for the given SourceDocuments.",
-    description="Returns Stat for the given SourceDocuments.",
+    summary="Returns Stat for the given SourceDocuments.",
 )
-async def search_tag_stats(
+def search_tag_stats(
     *,
     sdoc_ids: List[int],
     sort_by_global: bool = False,
@@ -147,9 +142,8 @@ async def search_tag_stats(
     "/lexical/memo/content",
     response_model=PaginatedMemoSearchResults,
     summary="Returns all Memos where the content matches the query via lexical search",
-    description="Returns all Memos where the content matches the query via lexical search",
 )
-async def search_memos_by_content_query(
+def search_memos_by_content_query(
     *,
     content_query: MemoContentQuery,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
@@ -170,9 +164,8 @@ async def search_memos_by_content_query(
     "/simsearch/sentences",
     response_model=List[SimSearchSentenceHit],
     summary="Returns similar sentences according to a textual or visual query.",
-    description="Returns similar sentences according to a textual or visual query.",
 )
-async def find_similar_sentences(
+def find_similar_sentences(
     query: SimSearchQuery, authz_user: AuthzUser = Depends()
 ) -> List[SimSearchSentenceHit]:
     authz_user.assert_in_project(query.proj_id)
@@ -184,9 +177,8 @@ async def find_similar_sentences(
     "/simsearch/images",
     response_model=List[SimSearchImageHit],
     summary="Returns similar images according to a textual or visual query.",
-    description="Returns similar images according to a textual or visual query.",
 )
-async def find_similar_images(
+def find_similar_images(
     query: SimSearchQuery, authz_user: AuthzUser = Depends()
 ) -> List[SimSearchImageHit]:
     authz_user.assert_in_project(query.proj_id)

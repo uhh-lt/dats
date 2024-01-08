@@ -19,7 +19,6 @@ import { request as __request } from "../core/request";
 export class SearchService {
   /**
    * Returns Search Info.
-   * Returns Search Info.
    * @returns ColumnInfo_SearchColumns_ Successful Response
    * @throws ApiError
    */
@@ -41,7 +40,6 @@ export class SearchService {
   }
 
   /**
-   * Returns all SourceDocument IDs that match the query parameters.
    * Returns all SourceDocument Ids that match the query parameters.
    * @returns number Successful Response
    * @throws ApiError
@@ -75,7 +73,6 @@ export class SearchService {
 
   /**
    * Returns SpanEntityStats for the given SourceDocuments.
-   * Returns SpanEntityStats for the given SourceDocuments.
    * @returns SpanEntityStat Successful Response
    * @throws ApiError
    */
@@ -104,7 +101,6 @@ export class SearchService {
   }
 
   /**
-   * Returns KeywordStats for the given SourceDocuments.
    * Returns KeywordStats for the given SourceDocuments.
    * @returns KeywordStat Successful Response
    * @throws ApiError
@@ -137,7 +133,6 @@ export class SearchService {
   }
 
   /**
-   * Returns TagStat for the given SourceDocuments.
    * Returns Stat for the given SourceDocuments.
    * @returns TagStat Successful Response
    * @throws ApiError
@@ -164,7 +159,6 @@ export class SearchService {
   }
 
   /**
-   * Returns all Memos where the content matches the query via lexical search
    * Returns all Memos where the content matches the query via lexical search
    * @returns PaginatedMemoSearchResults Successful Response
    * @throws ApiError
@@ -201,7 +195,6 @@ export class SearchService {
 
   /**
    * Returns similar sentences according to a textual or visual query.
-   * Returns similar sentences according to a textual or visual query.
    * @returns SimSearchSentenceHit Successful Response
    * @throws ApiError
    */
@@ -222,7 +215,6 @@ export class SearchService {
   }
 
   /**
-   * Returns similar images according to a textual or visual query.
    * Returns similar images according to a textual or visual query.
    * @returns SimSearchImageHit Successful Response
    * @throws ApiError

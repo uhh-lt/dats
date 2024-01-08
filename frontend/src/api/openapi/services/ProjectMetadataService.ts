@@ -11,7 +11,6 @@ import { request as __request } from "../core/request";
 
 export class ProjectMetadataService {
   /**
-   * Creates new Metadata
    * Creates a new Metadata and returns it with the generated ID.
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
@@ -33,7 +32,6 @@ export class ProjectMetadataService {
   }
 
   /**
-   * Returns the Metadata
    * Returns the Metadata with the given ID.
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
@@ -52,7 +50,6 @@ export class ProjectMetadataService {
   }
 
   /**
-   * Updates the Metadata
    * Updates the Metadata with the given ID.
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError
@@ -79,7 +76,6 @@ export class ProjectMetadataService {
   }
 
   /**
-   * Deletes the Metadata
    * Deletes the Metadata with the given ID.
    * @returns ProjectMetadataRead Successful Response
    * @throws ApiError

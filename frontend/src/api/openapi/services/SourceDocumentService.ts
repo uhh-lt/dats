@@ -17,7 +17,6 @@ import { request as __request } from "../core/request";
 
 export class SourceDocumentService {
   /**
-   * Returns the SourceDocument
    * Returns the SourceDocument with the given ID if it exists
    * @returns SourceDocumentWithDataRead Successful Response
    * @throws ApiError
@@ -45,7 +44,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Removes the SourceDocument
    * Removes the SourceDocument with the given ID if it exists
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
@@ -64,7 +62,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Updates the SourceDocument
    * Updates the SourceDocument with the given ID.
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
@@ -92,7 +89,6 @@ export class SourceDocumentService {
 
   /**
    * Returns the ids of SourceDocuments linked to the SourceDocument with the given id.
-   * Returns the ids of SourceDocuments linked to the SourceDocument with the given id.
    * @returns number Successful Response
    * @throws ApiError
    */
@@ -110,7 +106,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the URL to the original file of the SourceDocument
    * Returns the URL to the original file of the SourceDocument with the given ID if it exists.
    * @returns string Successful Response
    * @throws ApiError
@@ -144,7 +139,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns all SourceDocumentMetadata
    * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
    * @returns SourceDocumentMetadataReadResolved Successful Response
    * @throws ApiError
@@ -167,7 +161,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the SourceDocumentMetadata with the given Key
    * Returns the SourceDocumentMetadata with the given Key if it exists.
    * @returns SourceDocumentMetadataReadResolved Successful Response
    * @throws ApiError
@@ -193,7 +186,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the AnnotationDocument for the SourceDocument of the User or Creates it
    * Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
@@ -219,7 +211,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns all AnnotationDocuments for the SourceDocument
    * Returns all AnnotationDocuments for the SourceDocument.
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
@@ -238,7 +229,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Removes all AnnotationDocuments for the SourceDocument
    * Removes all AnnotationDocuments for the SourceDocument.
    * @returns number Successful Response
    * @throws ApiError
@@ -257,7 +247,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns all DocumentTags linked with the SourceDocument
    * Returns all DocumentTags linked with the SourceDocument.
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -276,7 +265,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Unlinks all DocumentTags with the SourceDocument
    * Unlinks all DocumentTags of the SourceDocument.
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
@@ -295,7 +283,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Links a DocumentTag with the SourceDocument
    * Links a DocumentTag with the SourceDocument with the given ID if it exists
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
@@ -315,7 +302,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Unlinks the DocumentTag from the SourceDocument
    * Unlinks the DocumentTags from the SourceDocument.
    * @returns SourceDocumentRead Successful Response
    * @throws ApiError
@@ -335,7 +321,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Adds a Memo to the SourceDocument
    * Adds a Memo to the SourceDocument with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -362,7 +347,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns all Memo attached to the SourceDocument
    * Returns all Memo attached to the SourceDocument with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -381,7 +365,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the Memo attached to the SourceDocument of the User with the given ID
    * Returns the Memo attached to the SourceDocument with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -401,7 +384,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.
    * Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -427,7 +409,6 @@ export class SourceDocumentService {
   }
 
   /**
-   * Returns the SourceDocument's word frequencies
    * Returns the SourceDocument's word frequencies with the given ID if it exists
    * @returns WordFrequencyRead Successful Response
    * @throws ApiError

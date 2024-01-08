@@ -5,11 +5,11 @@ router = APIRouter()
 
 
 @router.get("/heartbeat", tags=["general"])
-async def heartbeat():
+def heartbeat():
     return True
 
 
 # Allow to view docs without being logged in (?)
-@router.get("/", tags=["general"], description="Redirection to /docs")
-async def root_to_docs():
+@router.get("/", tags=["general"], summary="Redirection to /docs")
+def root_to_docs():
     return RedirectResponse("/docs")

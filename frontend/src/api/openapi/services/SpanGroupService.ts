@@ -13,7 +13,6 @@ import { request as __request } from "../core/request";
 
 export class SpanGroupService {
   /**
-   * Creates a new SpanGroup
    * Creates a new SpanGroup and returns it with the generated ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -35,7 +34,6 @@ export class SpanGroupService {
   }
 
   /**
-   * Returns the SpanGroup
    * Returns the SpanGroup with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -54,7 +52,6 @@ export class SpanGroupService {
   }
 
   /**
-   * Updates the SpanGroup
    * Updates the SpanGroup with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -81,7 +78,6 @@ export class SpanGroupService {
   }
 
   /**
-   * Deletes the SpanGroup
    * Deletes the SpanGroup with the given ID.
    * @returns any Successful Response
    * @throws ApiError
@@ -100,7 +96,6 @@ export class SpanGroupService {
   }
 
   /**
-   * Returns all SpanAnnotations in the SpanGroup
    * Returns all SpanAnnotations in the SpanGroup with the given ID if it exists
    * @returns any Successful Response
    * @throws ApiError

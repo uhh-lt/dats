@@ -20,9 +20,8 @@ exs: ExportService = ExportService()
     "",
     response_model=ExportJobRead,
     summary="Returns the ExportJob for the given Parameters",
-    description="Returns the ExportJob for the given Parameters",
 )
-async def start_export_job(
+def start_export_job(
     *, export_params: ExportJobParameters, authz_user: AuthzUser = Depends()
 ) -> ExportJobRead:
     authz_user.assert_in_project(
@@ -35,10 +34,9 @@ async def start_export_job(
 @router.get(
     "/{export_job_id}",
     response_model=ExportJobRead,
-    summary="Returns the ExportJob for the given ID",
-    description="Returns the ExportJob for the given ID if it exists",
+    summary="Returns the ExportJob for the given ID if it exists",
 )
-async def get_export_job(
+def get_export_job(
     *, export_job_id: str, authz_user: AuthzUser = Depends()
 ) -> ExportJobRead:
     job = exs.get_export_job(export_job_id=export_job_id)

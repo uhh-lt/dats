@@ -19,9 +19,8 @@ cs: CrawlerService = CrawlerService()
     "",
     response_model=CrawlerJobRead,
     summary="Returns the CrawlerJob for the given Parameters",
-    description="Returns the CrawlerJob for the given Parameters",
 )
-async def start_crawler_job(
+def start_crawler_job(
     *, crawler_params: CrawlerJobParameters, authz_user: AuthzUser = Depends()
 ) -> CrawlerJobRead:
     authz_user.assert_in_project(crawler_params.project_id)
@@ -32,10 +31,9 @@ async def start_crawler_job(
 @router.get(
     "/{crawler_job_id}",
     response_model=CrawlerJobRead,
-    summary="Returns the CrawlerJob for the given ID",
-    description="Returns the CrawlerJob for the given ID if it exists",
+    summary="Returns the CrawlerJob for the given ID if it exists",
 )
-async def get_crawler_job(
+def get_crawler_job(
     *, crawler_job_id: str, authz_user: AuthzUser = Depends()
 ) -> CrawlerJobRead:
     job = cs.get_crawler_job(crawler_job_id=crawler_job_id)
@@ -48,10 +46,9 @@ async def get_crawler_job(
 @router.get(
     "/project/{project_id}",
     response_model=List[CrawlerJobRead],
-    summary="Returns all CrawlerJobs for the given project ID",
-    description="Returns all CrawlerJobs for the given project ID if it exists",
+    summary="Returns all CrawlerJobs for the given project ID if it exists",
 )
-async def get_all_crawler_jobs(
+def get_all_crawler_jobs(
     *, project_id: int, authz_user: AuthzUser = Depends()
 ) -> List[CrawlerJobRead]:
     authz_user.assert_in_project(project_id)
