@@ -123,7 +123,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
 
     # TODO: remove_multi ?
 
-    def _get_action_user_id_from_orm(self, db_obj: ORMModelType) -> int:
+    def _get_action_user_id_from_orm(self, db_obj: ORMModelType) -> Optional[int]:
         from app.core.data.crud.user import SYSTEM_USER_ID
 
         return SYSTEM_USER_ID

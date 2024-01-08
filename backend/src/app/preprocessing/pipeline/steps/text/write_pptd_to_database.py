@@ -1,3 +1,5 @@
+import traceback
+
 from loguru import logger
 from psycopg2 import OperationalError
 from sqlalchemy.orm import Session
@@ -237,8 +239,9 @@ def write_pptd_to_database(cargo: PipelineCargo) -> PipelineCargo:
         except Exception as e:
             logger.error(
                 f"Error while persisting PreprocessingPipeline Results "
-                f"for {pptd.filename}: {e}"
+                f"for {pptd.filename}"
             )
+            traceback.print_exception(e)
             # FIXME: this is not working because we commmit the sessions in the cruds!
             # To fix it, we have to use flush instead of commit in the cruds and commit
             #  via the context manager, i.e., session autocommit...

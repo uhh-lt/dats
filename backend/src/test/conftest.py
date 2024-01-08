@@ -5,18 +5,20 @@ import os
 import random
 import string
 
-# Allow app to detect if it's running inside tests
 from typing import Callable, Generator
 
 import pytest
 from fastapi import Request
 from fastapi.datastructures import Headers
 from sqlalchemy.orm import Session
+from loguru import logger
 
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
+from app.core.db.sql_service import SQLService
 from app.core.startup import startup
+from config import conf
 
 os.environ["RAY_ENABLED"] = "False"
 
@@ -24,6 +26,13 @@ os.environ["RAY_ENABLED"] = "False"
 # file once more manually, so it would be executed twice.
 STARTUP_DONE = bool(int(os.environ.get("STARTUP_DONE", "0")))
 if not STARTUP_DONE:
+    if SQLService().database_contains_data():
+        # Make sure we don't accidentally delete important data
+        logger.error(
+            f"Database '{conf.postgres.db}' is not empty. The tests will only run given a database without any tables in it."
+        )
+        exit(1)
+
     startup(reset_data=True)
     os.environ["STARTUP_DONE"] = "1"
 
@@ -33,7 +42,11 @@ from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserCreate, UserRead
-from app.core.db.sql_service import SQLService
+
+
+def pytest_sessionfinish():
+    # Make sure the next test session starts with a clean database
+    SQLService().drop_database()
 
 
 # Always use the asyncio backend for async tests

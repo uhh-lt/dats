@@ -10,7 +10,7 @@ export type DocumentTagCreate = {
   /**
    * Color of the Code
    */
-  color?: string | null;
+  color?: string;
   /**
    * Description of the DocumentTag
    */

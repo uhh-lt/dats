@@ -20,7 +20,7 @@ class ProjectCreate(ProjectBaseDTO):
 
 
 # Properties for updating
-class ProjectUpdate(ProjectBaseDTO, UpdateDTOBase):
+class ProjectUpdate(BaseModel, UpdateDTOBase):
     title: Optional[str] = Field(description="Title of the Project", default=None)
     description: Optional[str] = Field(
         description="Description of the Project", default=None

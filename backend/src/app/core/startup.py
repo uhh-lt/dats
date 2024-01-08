@@ -99,10 +99,10 @@ def __init_services__(
     repos = RepoService()
     if create_root_repo_directory_structure:
         repos._create_root_repo_directory_structure(remove_if_exists=reset_repo)
-    # create SQL DBs and Tables # TODO Flo: Alembic
+    # create SQL DBs and Tables
     from app.core.db.sql_service import SQLService
 
-    SQLService(echo=sql_echo)
+    SQLService(echo=sql_echo, reset_database=reset_database)
     # import and init ElasticSearch
     from app.core.search.elasticsearch_service import ElasticSearchService
 

@@ -22,17 +22,18 @@ class CodeBaseDTO(BaseModel):
 class CodeCreate(CodeBaseDTO):
     project_id: int = Field(description="Project the Code belongs to")
     user_id: int = Field(description="User the Code belongs to")
-    color: Optional[str] = Field(
-        description="Color of the Code", default_factory=get_next_color
-    )
+    color: str = Field(description="Color of the Code", default_factory=get_next_color)
 
 
 # Properties for updating
-class CodeUpdate(CodeBaseDTO, UpdateDTOBase):
+class CodeUpdate(BaseModel, UpdateDTOBase):
     name: Optional[str] = Field(description="Name of the Code", default=None)
     color: Optional[str] = Field(description="Color of the Code", default=None)
     description: Optional[str] = Field(
         description="Description of the Code", default=None
+    )
+    parent_code_id: Optional[int] = Field(
+        description="Parent of the Code", default=None
     )
 
 

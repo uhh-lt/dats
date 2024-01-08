@@ -168,6 +168,9 @@ class CRUDSourceDocument(
         return sdoc_db_obj
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
+        # Import SimSearchService here to prevent a cyclic dependency
+        from app.core.search.simsearch_service import SimSearchService
+
         sdoc_db_obj = super().remove(db=db, id=id)
 
         # remove file from repo
@@ -180,13 +183,18 @@ class CRUDSourceDocument(
             sdoc_db_obj.project_id, sdoc_id=sdoc_db_obj.id
         )
 
+        # remove from simsearch
+        SimSearchService().remove_sdoc_from_index(sdoc_db_obj.doctype, sdoc_db_obj.id)
+
         return sdoc_db_obj
 
     def remove_by_project(self, db: Session, *, proj_id: int) -> List[int]:
+        # Import SimSearchService here to prevent a cyclic dependency
+        from app.core.search.simsearch_service import SimSearchService
+
         # find all sdocs to be removed
         query = db.query(self.model).filter(self.model.project_id == proj_id)
         removed_orms = query.all()
-        ids = [removed_orm.id for removed_orm in removed_orms]
 
         # create actions
         for removed_orm in removed_orms:
@@ -197,18 +205,22 @@ class CRUDSourceDocument(
                 before_state=before_state,
             )
 
-        # delete the sdocs
-        query.delete()
-        db.commit()
-
         # remove files from repo
         RepoService().remove_all_project_sdoc_files(proj_id=proj_id)
 
         # remove from elasticsearch
-        for sdoc_id in ids:
+        for sdoc in removed_orms:
             ElasticSearchService().delete_document_from_index(
-                proj_id=proj_id, sdoc_id=sdoc_id
+                proj_id=proj_id, sdoc_id=sdoc.id
             )
+
+            SimSearchService().remove_sdoc_from_index(sdoc.doctype, sdoc.id)
+
+        ids = [removed_orm.id for removed_orm in removed_orms]
+
+        # delete the sdocs
+        query.delete()
+        db.commit()
 
         return ids
 

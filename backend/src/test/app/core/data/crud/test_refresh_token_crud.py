@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -17,7 +17,7 @@ def test_create_and_use_refresh_token(session: SQLService, user: int) -> None:
         # revoke() should refresh our ORM object so we don't
         # need to re-read it from the DB
         assert refresh_token.revoked_at is not None
-        assert refresh_token.revoked_at < datetime.utcnow()
+        assert refresh_token.revoked_at < datetime.now(UTC)
 
 
 def test_cant_use_revoked_token(session: SQLService, user: int) -> None:
@@ -43,4 +43,4 @@ def test_cant_use_revoked_token(session: SQLService, user: int) -> None:
             db, second_token.token
         )
         assert revoked_second_token.revoked_at is not None
-        assert revoked_second_token.revoked_at < datetime.utcnow()
+        assert revoked_second_token.revoked_at < datetime.now(UTC)

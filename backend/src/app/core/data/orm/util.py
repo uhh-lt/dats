@@ -34,7 +34,12 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
 
     if isinstance(orm, ObjectHandleORM):
         with SQLService().db_session() as db:
-            orm = crud_object_handle.resolve_handled_object(db=db, handle=orm)
+            maybe_orm = crud_object_handle.resolve_handled_object(db=db, handle=orm)
+
+            if maybe_orm is None:
+                return None
+
+            orm = maybe_orm
 
     with SQLService().db_session() as db:
         if inspect(orm).detached:
