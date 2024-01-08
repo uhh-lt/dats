@@ -91,7 +91,7 @@ def add_readability_watermark(html_content: str) -> str:
 
 
 def build_html_cleaning_pipeline(
-    pipeline: List[Callable[[str], str]]
+    pipeline: List[Callable[[str], str]],
 ) -> Callable[[str], str]:
     def x(html_content: str) -> str:
         for f in pipeline:
