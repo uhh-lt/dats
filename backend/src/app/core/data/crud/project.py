@@ -21,6 +21,7 @@ from app.core.data.orm.project import ProjectORM
 from app.core.data.orm.user import UserORM
 from app.core.data.repo.repo_service import RepoService
 from app.core.db.sql_service import SQLService
+from app.core.search.simsearch_service import SimSearchService
 
 
 class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
@@ -67,6 +68,8 @@ class CRUDProject(CRUDBase[ProjectORM, ProjectCreate, ProjectUpdate]):
         proj_db_obj = super().remove(db=db, id=id)
         # 2) delete the files from repo
         RepoService().purge_project_data(proj_id=id)
+        # 3) Remove embeddings
+        SimSearchService().remove_all_project_embeddings(id)
 
         return proj_db_obj
 

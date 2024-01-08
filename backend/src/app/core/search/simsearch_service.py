@@ -201,6 +201,16 @@ class SimSearchService(metaclass=SingletonMeta):
                 vector=image_emb,
             )
 
+    def remove_sdoc_from_index(self, doctype: str, sdoc_id: int):
+        match doctype:
+            case DocType.text:
+                self.remove_text_sdoc_from_index(sdoc_id)
+            case DocType.image:
+                self.remove_image_sdoc_from_index(sdoc_id)
+            case _:
+                # Other doctypes are not used for simsearch
+                pass
+
     def remove_image_sdoc_from_index(
         self,
         sdoc_id: int,
@@ -214,7 +224,6 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def remove_text_sdoc_from_index(
         self,
-        proj_id: int,
         sdoc_id: int,
     ) -> None:
         obj_ids = self._get_sentence_object_ids_by_sdoc_id(sdoc_id=sdoc_id)
