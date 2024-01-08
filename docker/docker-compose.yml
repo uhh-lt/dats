@@ -6,7 +6,6 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dwtsuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dwts123}
-      POSTGRES_DB: dwts
     ports:
       - "${POSTGRES_EXPOSED:-5432}:5432"
     volumes:

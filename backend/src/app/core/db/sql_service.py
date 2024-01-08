@@ -3,12 +3,11 @@ from typing import Generator
 
 from loguru import logger
 from pydantic import PostgresDsn
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy_utils import create_database, database_exists, drop_database
 
-from app.core.data.orm.orm_base import ORMBase
 from app.core.db.import_all_orms import *  # noqa: F401, F403
 from app.util.singleton_meta import SingletonMeta
 from config import conf
@@ -37,6 +36,10 @@ class SQLService(metaclass=SingletonMeta):
             cls.__engine: Engine = engine
             cls.session_maker = sessionmaker(autoflush=False, bind=engine)
 
+            if kwargs.get("reset_database") is True:
+                logger.warning("Dropping existing DB!")
+                drop_database(cls.__engine.url)
+
             return super(SQLService, cls).__new__(cls)
 
         except Exception as e:
@@ -51,23 +54,25 @@ class SQLService(metaclass=SingletonMeta):
         logger.warning("Dropping existing DB!")
         drop_database(self.__engine.url)
 
-    # This method is unused and only left here for historic reference
-    def _create_database_and_tables(self, drop_if_exists: bool = False) -> None:
-        logger.info("Setting up PostgresSQL DB and tables...")
-        if drop_if_exists and database_exists(self.__engine.url):
-            logger.warning("Dropping existing DB!")
-            drop_database(self.__engine.url)
-
+    def create_database_if_not_exists(self):
         if not database_exists(self.__engine.url):
             # create the DB
             create_database(self.__engine.url)
             logger.debug("Created DB!")
 
-            # create all tables from SQLAlchemy ORM Models
-            ORMBase.metadata.create_all(self.__engine)
-            logger.debug("Created Tables!")
+    def database_contains_data(self):
+        if not database_exists(self.__engine.url):
+            return False
 
-        logger.info("Done setting up PostgresSQL DB and tables!")
+        inspector = inspect(self.__engine)
+        schemas = inspector.get_schema_names()
+
+        for schema in schemas:
+            print("schema: %s" % schema)
+            if len(inspector.get_table_names(schema=schema)) > 0:
+                return True
+
+        return False
 
     @contextmanager
     def db_session(self) -> Generator[Session, None, None]:
