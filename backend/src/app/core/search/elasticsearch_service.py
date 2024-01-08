@@ -232,8 +232,8 @@ class ElasticSearchService(metaclass=SingletonMeta):
         return num_indexed
 
     def get_esdocs_by_sdoc_ids(
-        self, *, proj_id: int, sdoc_ids: Set[int], fields: Set[str] = None
-    ) -> Optional[List[ElasticSearchDocumentRead]]:
+        self, *, proj_id: int, sdoc_ids: Set[int], fields: Set[str]
+    ) -> List[ElasticSearchDocumentRead]:
         if not fields.union(self.doc_index_fields):
             raise NoSuchFieldInIndexError(
                 index=self.__get_index_name(proj_id=proj_id, index_type="doc"),
@@ -259,7 +259,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         return esdocs
 
     def get_esdoc_by_sdoc_id(
-        self, *, proj_id: int, sdoc_id: int, fields: Set[str] = None
+        self, *, proj_id: int, sdoc_id: int, fields: Set[str]
     ) -> Optional[ElasticSearchDocumentRead]:
         if not fields.union(self.doc_index_fields):
             raise NoSuchFieldInIndexError(
@@ -336,7 +336,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
     def update_memo_in_index(
         self, *, proj_id: int, update: ElasticSearchMemoUpdate
-    ) -> ElasticSearchMemoRead:
+    ) -> Optional[ElasticSearchMemoRead]:
         memo_id = update.memo_id
         old_memo = self.get_esmemo_by_memo_id(proj_id=proj_id, memo_id=memo_id)
         if old_memo is None:
@@ -393,7 +393,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
         if isinstance(limit, int) and (limit > 10000 or limit < 1):
             raise ValueError("Limit must be a positive Integer smaller than 10000!")
-        elif isinstance(skip, int) and (skip > 10000 or limit < 1):
+        elif isinstance(skip, int) and (skip > 10000 or skip < 1):
             raise ValueError("Skip must be a positive Integer smaller than 10000!")
         elif limit is None or skip is None:
             # use scroll api

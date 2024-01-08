@@ -29,7 +29,7 @@ class BackgroundJobBaseCreate(BackgroundJobBase):
 
 
 # Properties to update
-class BackgroundJobBaseUpdate(BackgroundJobBase):
+class BackgroundJobBaseUpdate(BaseModel):
     status: Optional[BackgroundJobStatus] = Field(
         default=None, description="Status of the BackgroundJob"
     )

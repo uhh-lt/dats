@@ -8,7 +8,7 @@ class PreProProjectStatus(BaseModel):
         description="Project ID this PreProProjectStatus refers to."
     )
     active_prepro_job_ids: List[str] = Field(
-        description="List of active PreprocessingJob UUIDs", default_factory=[]
+        description="List of active PreprocessingJob UUIDs", default_factory=lambda: []
     )
     num_active_prepro_job_payloads: int = Field(
         description="Number of active PreprocessingJobPayloads"

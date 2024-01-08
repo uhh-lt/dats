@@ -41,7 +41,7 @@ class ActionBaseDTO(BaseModel):
 
 # Properties for creation
 class ActionCreate(ActionBaseDTO):
-    user_id: int = Field(description="User the Memo belongs to")
+    user_id: Optional[int] = Field(description="User the Memo belongs to")
     project_id: int = Field(description="Project the Memo belongs to")
 
 

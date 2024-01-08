@@ -11,7 +11,7 @@ class CurrentCodeBaseDTO(BaseModel):
 
 
 # Properties for creation
-class CurrentCodeCreate(CurrentCodeBaseDTO):
+class CurrentCodeCreate(BaseModel):
     code_id: int = Field(description="Code of the CurrentCode", default=None)
 
 

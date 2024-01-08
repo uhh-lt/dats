@@ -22,15 +22,19 @@ class DocumentTagBaseDTO(BaseModel):
 # Properties for creation
 class DocumentTagCreate(DocumentTagBaseDTO):
     project_id: int = Field(description="Project the DocumentTag belongs to")
-    color: Optional[str] = Field(
-        description="Color of the Code", default_factory=get_next_color
-    )
+    color: str = Field(description="Color of the Code", default_factory=get_next_color)
 
 
 # Properties for updating
-class DocumentTagUpdate(DocumentTagBaseDTO, UpdateDTOBase):
+class DocumentTagUpdate(BaseModel, UpdateDTOBase):
     title: Optional[str] = Field(description="Title of the DocumentTag", default=None)
     color: Optional[str] = Field(description="Color of the DocumentTag", default=None)
+    description: Optional[str] = Field(
+        description="Description of the DocumentTag", default=None
+    )
+    parent_tag_id: Optional[int] = Field(
+        description="Parent of the DocumentTag", default=None
+    )
 
 
 # Properties for reading (as in ORM)

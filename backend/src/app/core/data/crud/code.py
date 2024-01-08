@@ -111,7 +111,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
     def read_by_name_and_user_and_project(
         self, db: Session, code_name: str, user_id: int, proj_id: int
-    ) -> CodeORM:
+    ) -> Optional[CodeORM]:
         return (
             db.query(self.model)
             .filter(
@@ -213,7 +213,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
 
         return ids
 
-    def _get_action_user_id_from_orm(self, db_obj: CodeORM) -> int:
+    def _get_action_user_id_from_orm(self, db_obj: CodeORM) -> Optional[int]:
         return db_obj.user_id
 
     def _get_action_state_from_orm(self, db_obj: CodeORM) -> Optional[str]:
