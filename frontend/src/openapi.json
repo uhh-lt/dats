@@ -1814,6 +1814,38 @@
         }
       }
     },
+    "/doctag/sdoc_counts": {
+      "post": {
+        "tags": ["documentTag"],
+        "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
+        "operationId": "get_sdoc_counts",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": { "type": "integer" },
+                  "type": "object",
+                  "title": "Response Documenttag-Get Sdoc Counts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/adoc": {
       "put": {
         "tags": ["annotationDocument"],
