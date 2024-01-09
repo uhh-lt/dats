@@ -339,6 +339,16 @@ class CRUDSourceDocument(
             if linked_sdoc_id is not None
         ]
 
+    def get_tags_of_multiple(
+        self, db: Session, sdoc_ids: List[int]
+    ) -> List[DocumentTagORM]:
+        return (
+            db.query(DocumentTagORM)
+            .join(DocumentTagORM.source_documents)
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .all()
+        )
+
     def _get_action_state_from_orm(self, db_obj: SourceDocumentORM) -> Optional[str]:
         with SQLService().db_session() as db:
             metadata = crud_sdoc_meta.read_by_sdoc(db, sdoc_id=db_obj.id)

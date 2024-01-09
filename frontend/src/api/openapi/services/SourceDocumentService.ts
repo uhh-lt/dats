@@ -326,6 +326,27 @@ export class SourceDocumentService {
   }
 
   /**
+   * Returns all DocumentTags linked with any of the given SourceDocuments
+   * @returns DocumentTagRead Successful Response
+   * @throws ApiError
+   */
+  public static getAllTagsOfMultipleDocs({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Array<DocumentTagRead>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/sdoc/multi/tags",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
    * Links a DocumentTag with the SourceDocument
    * Links a DocumentTag with the SourceDocument with the given ID if it exists
    * @returns SourceDocumentRead Successful Response

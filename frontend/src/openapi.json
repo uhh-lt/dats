@@ -1378,6 +1378,38 @@
         }
       }
     },
+    "/sdoc/multi/tags": {
+      "post": {
+        "tags": ["sourceDocument"],
+        "summary": "Returns all DocumentTags linked with any of the given SourceDocuments",
+        "operationId": "get_all_tags_of_multiple_docs",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+                  "type": "array",
+                  "title": "Response Sourcedocument-Get All Tags Of Multiple Docs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
     "/sdoc/{sdoc_id}/tag/{tag_id}": {
       "patch": {
         "tags": ["sourceDocument"],

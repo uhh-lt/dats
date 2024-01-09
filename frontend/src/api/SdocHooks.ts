@@ -1,8 +1,7 @@
-import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { Word } from "react-wordcloud";
 import queryClient from "../plugins/ReactQueryClient";
-import useStableQueries from "../utils/useStableQueries";
 import { QueryKey } from "./QueryKey";
 import {
   AnnotationDocumentRead,
@@ -140,16 +139,8 @@ const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
   );
 
 const useGetAllDocumentTagsBatch = (sdocIds: number[]) =>
-  useStableQueries(
-    useQueries({
-      queries: sdocIds.map((sdocId) => ({
-        queryKey: [QueryKey.SDOC_TAGS, sdocId],
-        queryFn: () =>
-          SourceDocumentService.getAllTags({
-            sdocId: sdocId,
-          }),
-      })),
-    }),
+  useQuery<DocumentTagRead[], Error>([QueryKey.SDOC_TAGS, sdocIds], () =>
+    SourceDocumentService.getAllTagsOfMultipleDocs({ requestBody: sdocIds }),
   );
 
 const useRemoveDocumentTag = () =>

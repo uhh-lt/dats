@@ -17,7 +17,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import LabelIcon from "@mui/icons-material/Label";
 import SearchIcon from "@mui/icons-material/Search";
 import { useParams } from "react-router-dom";
-import { flatMap, isEqual } from "lodash";
+import { isEqual } from "lodash";
 import ProjectHooks from "../../../../../api/ProjectHooks";
 import SdocHooks from "../../../../../api/SdocHooks";
 import TagHooks from "../../../../../api/TagHooks";
@@ -57,7 +57,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
   // global server state (react-query)
   const allTags = ProjectHooks.useGetAllTags(projId);
-  const documentTagsBatch = SdocHooks.useGetAllDocumentTagsBatch(documentIds);
+  const documentTags = SdocHooks.useGetAllDocumentTagsBatch(documentIds).data;
 
   // mutations
   const updateTagsMutation = TagHooks.useBulkUpdateDocumentTags();
@@ -70,23 +70,18 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   const [checked, setChecked] = useState<Map<number, CheckboxState>>(new Map<number, CheckboxState>());
 
   // computed state
-  const documentTagsData = useMemo(() => {
-    const isUndefined = documentTagsBatch.some((a) => !a.data);
-    if (isUndefined) return undefined;
-    return documentTagsBatch.map((a) => a.data!);
-  }, [documentTagsBatch]);
-
   const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {
     return allTags.data?.filter((tag) => tag.title.toLowerCase().startsWith(search.toLowerCase()));
   }, [allTags.data, search]);
 
   const initialCheckedTags = useMemo(() => {
-    if (allTags.data && documentTagsData) {
-      const maxTags = documentTagsData.length;
+    if (allTags.data && documentTags !== undefined) {
+      // TODO this is not correct
+      const maxTags = documentIds.length;
       // init map with all tags
       const m = new Map<number, number>(allTags.data.map((t) => [t.id, 0]));
-      // convert list of list of DocumentTags to list of DocumentTagIds
-      const x = flatMap(documentTagsData, (docTagList) => docTagList.map((t) => t.id));
+      // convert list of DocumentTags to list of DocumentTagIds
+      const x = documentTags.map((tag) => tag.id);
       // count the DocumentTagIds
       x.forEach((docTagId) => {
         m.set(docTagId, (m.get(docTagId) || 0) + 1);
@@ -104,7 +99,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
       );
     }
     return undefined;
-  }, [documentTagsData, allTags.data]);
+  }, [documentTags, allTags.data, documentIds]);
 
   const hasChanged = useMemo(() => !isEqual(initialCheckedTags, checked), [initialCheckedTags, checked]);
 

@@ -263,6 +263,19 @@ async def get_all_tags(
     ]
 
 
+@router.post(
+    "/multi/tags",
+    response_model=List[DocumentTagRead],
+    summary="Returns all DocumentTags linked with any of the given SourceDocuments",
+)
+async def get_all_tags_of_multiple_docs(
+    *, db: Session = Depends(get_db_session), sdoc_ids: List[int]
+) -> List[DocumentTagRead]:
+    # TODO only if the user has access
+    tag_orms = crud_sdoc.get_tags_of_multiple(db, sdoc_ids)
+    return [DocumentTagRead.model_validate(tag_orm) for tag_orm in tag_orms]
+
+
 @router.delete(
     "/{sdoc_id}/tags",
     response_model=SourceDocumentRead,
