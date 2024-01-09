@@ -2,6 +2,7 @@ name: dwts
 channels:
   - conda-forge
   - pytorch
+  - nvidia
   - defaults
 dependencies:
   - alembic=1.12.1
@@ -48,9 +49,10 @@ dependencies:
   - tqdm=4.66.1
   - twisted=22.10.0
   - uvicorn=0.23.2
-  - pytorch::pytorch=2.1.2
+  - pytorch::pytorch>=2.1
+  - pytorch::pytorch-cuda=11.7
   - conda-forge::cudatoolkit=11.8.0
-  - conda-forge::transformers=4.36.2
+  - conda-forge::transformers>=4.3
   - conda-forge::sentence-transformers>=2.2.2
   - pip:
       - -r requirements.txt
