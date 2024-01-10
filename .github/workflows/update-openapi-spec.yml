@@ -1,6 +1,10 @@
 name: Update OpenAPI spec
 on:
   # Triggers the workflow on pull request events
+  push:
+    branches:
+      - main
+      - mwp_v1
   pull_request:
     paths:
       - "backend/**"
