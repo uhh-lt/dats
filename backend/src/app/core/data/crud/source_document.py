@@ -86,7 +86,9 @@ class CRUDSourceDocument(
             )
         else:
             sdoc_data_read = SourceDocumentDataRead.model_validate(data)
-        return SourceDocumentWithDataRead(**(sdoc_read.dict() | sdoc_data_read.dict()))
+        return SourceDocumentWithDataRead(
+            **(sdoc_read.model_dump() | sdoc_data_read.model_dump())
+        )
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
         # Import SimSearchService here to prevent a cyclic dependency
