@@ -32,4 +32,10 @@ repos:
     hooks:
       - id: prettier
         files: \.([jt]sx?|json)$ # *.js, *.jsx, *.ts, *.tsx, *.json
-        args: [--print-width, "120"]
+        args: [
+            --print-width,
+            "120",
+            # Without this, prettier will create a `node_modules` folder in the repository root
+            "--cache-location",
+            "frontend/node_modules/.cache/prettier",
+          ]
