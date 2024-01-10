@@ -6,6 +6,7 @@ on:
       - "backend/**"
       - ".github/**"
       - "docker/**"
+      - "frontend/**"
 
 jobs:
   update-openapi-spec:
