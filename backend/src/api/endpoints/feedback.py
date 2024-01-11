@@ -34,7 +34,7 @@ async def create_feedback(
     user = crud_user.read(db=db, id=feedback.user_id)
     await MailService().send_feedback_received_mail(
         user=UserRead.model_validate(user),
-        feedback=feedback,
+        feedback=fb,
     )
     return fb
 
@@ -45,31 +45,37 @@ async def create_feedback(
     summary="Returns the Feedback with the given ID.",
 )
 def get_by_id(*, feedback_id: str, authz_user: AuthzUser = Depends()) -> FeedbackRead:
-    authz_user.assert_is_same_user(SYSTEM_USER_ID)
+    feedback = RedisService().load_feedback(key=feedback_id)
+    authz_user.assert_true(
+        authz_user.user.id == SYSTEM_USER_ID or authz_user.user.id == feedback.user_id
+    )
 
-    return RedisService().load_feedback(key=feedback_id)
+    return feedback
 
 
 @router.get(
     "",
     response_model=List[FeedbackRead],
-    summary="Returns the Metadata with the given ID.",
+    summary="Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
 )
 def get_all(authz_user: AuthzUser = Depends()) -> List[FeedbackRead]:
-    authz_user.assert_is_same_user(SYSTEM_USER_ID)
-
-    return RedisService().get_all_feedbacks()
+    if authz_user.user.id == SYSTEM_USER_ID:
+        return RedisService().get_all_feedbacks()
+    else:
+        return RedisService().get_all_feedbacks_of_user(authz_user.user.id)
 
 
 @router.get(
     "/user/{user_id}",
     response_model=List[FeedbackRead],
-    summary="Returns the Metadata of the User with the given ID.",
+    summary="Returns the Feedback of the User with the given ID.",
 )
 def get_all_by_user(
     *, user_id: int, authz_user: AuthzUser = Depends()
 ) -> List[FeedbackRead]:
-    authz_user.assert_is_same_user(SYSTEM_USER_ID)
+    authz_user.assert_true(
+        authz_user.user.id == SYSTEM_USER_ID or authz_user.user.id == user_id
+    )
     return RedisService().get_all_feedbacks_of_user(user_id)
 
 
