@@ -43,7 +43,7 @@ def create_new_doc_tag(
         parent_tag = crud_document_tag.read(db, doc_tag.parent_tag_id)
         validate.validate_condition(
             parent_tag.project_id == doc_tag.project_id,
-            "Tag parent needs to be in the same project",
+            "Parent tag needs to be in the same project",
         )
 
     db_obj = crud_document_tag.create(db=db, create_dto=doc_tag)
