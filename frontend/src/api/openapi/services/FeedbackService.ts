@@ -10,7 +10,7 @@ import { request as __request } from "../core/request";
 
 export class FeedbackService {
   /**
-   * Returns the Metadata with the given ID.
+   * Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.
    * @returns FeedbackRead Successful Response
    * @throws ApiError
    */
@@ -57,7 +57,7 @@ export class FeedbackService {
   }
 
   /**
-   * Returns the Metadata of the User with the given ID.
+   * Returns the Feedback of the User with the given ID.
    * @returns FeedbackRead Successful Response
    * @throws ApiError
    */

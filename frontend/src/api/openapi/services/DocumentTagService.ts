@@ -183,7 +183,7 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the document tag with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
