@@ -79,6 +79,9 @@ def search_code_stats(
     sort_by_global: bool = False,
     authz_user: AuthzUser = Depends(),
 ) -> List[SpanEntityStat]:
+    if len(sdoc_ids) == 0:
+        return []
+
     authz_user.assert_in_same_project_as(Crud.CODE, code_id)
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
 
@@ -130,6 +133,9 @@ def search_tag_stats(
     sort_by_global: bool = False,
     authz_user: AuthzUser = Depends(),
 ) -> List[TagStat]:
+    if len(sdoc_ids) == 0:
+        return []
+
     authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
 
     tag_stats = SearchService().compute_tag_statistics(sdoc_ids=set(sdoc_ids))
