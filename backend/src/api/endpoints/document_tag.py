@@ -202,7 +202,7 @@ def get_memos(
     "/{tag_id}/memo/{user_id}",
     response_model=MemoRead,
     summary=(
-        "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
+        "Returns the Memo attached to the document tag with the given ID of the User with the"
         " given ID if it exists."
     ),
 )
