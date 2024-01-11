@@ -14,10 +14,10 @@ from app.core.db.sql_service import SQLService
 
 
 def test_assert_true(authz_user: AuthzUser):
-    authz_user.assert_condition(True, "")
+    authz_user.assert_true(True, "")
 
     with pytest.raises(ForbiddenError):
-        authz_user.assert_condition(False, "")
+        authz_user.assert_true(False, "")
 
 
 def test_assert_in_project(

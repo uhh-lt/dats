@@ -70,7 +70,7 @@ class AuthzUser:
         # Since we pre-load user projects, this should require no db query
         user_project_ids = {proj.id for proj in self.user.projects}
 
-        self.assert_condition(required_project_ids.issubset(user_project_ids))
+        self.assert_true(required_project_ids.issubset(user_project_ids))
 
     def assert_object_has_same_user_id(self, crud: Crud, object_id: int | str):
         orm_object = self.read_crud(crud, object_id)
@@ -82,7 +82,7 @@ class AuthzUser:
         self.assert_is_same_user(user_id)
 
     def assert_is_same_user(self, other_user_id: int):
-        self.assert_condition(self.user.id == other_user_id)
+        self.assert_true(self.user.id == other_user_id)
 
     def assert_in_project(self, project_id: int):
         # Since we're eager-loading user projects in crud_user.read_by_email,
@@ -91,11 +91,11 @@ class AuthzUser:
             (proj for proj in self.user.projects if proj.id == project_id), None
         )
 
-        self.assert_condition(
+        self.assert_true(
             authorized_project is not None, f"User needs to be in project {project_id}"
         )
 
-    def assert_condition(self, is_authorized: bool, note: str = ""):
+    def assert_true(self, is_authorized: bool, note: str = ""):
         self.log_check(is_authorized, note)
 
         if not is_authorized:
