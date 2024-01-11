@@ -1,5 +1,9 @@
 name: Check backend database schema
 on:
+  push:
+    branches:
+      - main
+      - mwp_v1
   pull_request:
     paths:
       - "backend/**"
