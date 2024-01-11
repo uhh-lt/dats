@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -27,12 +28,19 @@ def create_new_metadata(
     db: Session = Depends(get_db_session),
     metadata: SourceDocumentMetadataCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> SourceDocumentMetadataRead:
     authz_user.assert_in_same_project_as(
         Crud.PROJECT_METADATA, metadata.project_metadata_id
     )
     authz_user.assert_in_same_project_as(
         Crud.SOURCE_DOCUMENT, metadata.source_document_id
+    )
+    validate.validate_objects_in_same_project(
+        [
+            (Crud.SOURCE_DOCUMENT, metadata.source_document_id),
+            (Crud.PROJECT_METADATA, metadata.project_metadata_id),
+        ]
     )
 
     db_metadata = crud_sdoc_meta.create(db=db, create_dto=metadata)
