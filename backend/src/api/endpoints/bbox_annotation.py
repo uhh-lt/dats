@@ -9,6 +9,7 @@ from api.dependencies import (
     resolve_code_param,
 )
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -153,6 +154,7 @@ def add_memo(
     bbox_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
     bbox_anno = crud_bbox_anno.read(db, bbox_id)
     authz_user.assert_is_same_user(memo.user_id)
@@ -160,8 +162,9 @@ def add_memo(
     authz_user.assert_in_project(
         bbox_anno.annotation_document.source_document.project_id
     )
-    authz_user.assert_condition(
-        bbox_anno.annotation_document.source_document.project_id == memo.project_id
+    validate.validate_condition(
+        bbox_anno.annotation_document.source_document.project_id == memo.project_id,
+        "memo and bbox annotation project don't match",
     )
 
     db_obj = crud_memo.create_for_bbox_annotation(

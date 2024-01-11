@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.code import crud_code
@@ -118,15 +119,14 @@ def add_memo(
     code_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
     code = crud_code.read(db, code_id)
     authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(code.project_id)
     authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_condition(memo.project_id == code.project_id)
 
-    code = crud_code.read(db, code_id)
-    authz_user.assert_condition(
+    validate.validate_condition(
         code.project_id == memo.project_id, "Memo project needs to match code project"
     )
 

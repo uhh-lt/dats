@@ -3,6 +3,7 @@
 
 import os
 from contextlib import asynccontextmanager
+from http import HTTPStatus
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,7 @@ from psycopg2.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 from uvicorn.main import uvicorn
 
+from api.validation import InvalidError
 from app.core.authorization.authz_user import ForbiddenError
 
 from app.core.startup import startup  # isort: skip
@@ -244,6 +246,11 @@ async def integrity_error_handler(_, exc: IntegrityError):
 @app.exception_handler(ForbiddenError)
 def forbidden_error_handler(_, exc: ForbiddenError):
     return PlainTextResponse(str(exc), status_code=403)
+
+
+@app.exception_handler(InvalidError)
+def invalid_error_handler(_, exc: InvalidError):
+    return PlainTextResponse(str(exc), status_code=HTTPStatus.BAD_REQUEST)
 
 
 # include the endpoint routers

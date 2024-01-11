@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, resolve_code_param
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.memo import crud_memo
@@ -35,12 +36,13 @@ def add_span_annotation(
     span: SpanAnnotationCreateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
     authz_user.assert_in_same_project_as(Crud.CODE, span.code_id)
     authz_user.assert_in_same_project_as(
         Crud.ANNOTATION_DOCUMENT, span.annotation_document_id
     )
-    authz_user.assert_objects_in_same_project(
+    validate.validate_objects_in_same_project(
         [
             (Crud.CODE, span.code_id),
             (Crud.ANNOTATION_DOCUMENT, span.annotation_document_id),
@@ -101,10 +103,11 @@ def update_by_id(
     span_anno: SpanAnnotationUpdateWithCodeId,
     resolve_code: bool = Depends(resolve_code_param),
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> Union[SpanAnnotationRead, SpanAnnotationReadResolved]:
     authz_user.assert_in_same_project_as(Crud.SPAN_ANNOTATION, span_id)
     authz_user.assert_in_same_project_as(Crud.CODE, span_anno.code_id)
-    authz_user.assert_objects_in_same_project(
+    validate.validate_objects_in_same_project(
         [(Crud.SPAN_ANNOTATION, span_id), (Crud.CODE, span_anno.code_id)]
     )
 
@@ -246,6 +249,7 @@ def add_memo(
     span_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
     span_anno = crud_span_anno.read(db, span_id)
     authz_user.assert_is_same_user(memo.user_id)
@@ -253,7 +257,7 @@ def add_memo(
         span_anno.annotation_document.source_document.project_id
     )
     authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_condition(
+    validate.validate_condition(
         span_anno.annotation_document.source_document.project_id == memo.project_id
     )
 

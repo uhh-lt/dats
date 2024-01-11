@@ -9,6 +9,7 @@ from api.dependencies import (
     skip_limit_params,
 )
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
@@ -461,11 +462,12 @@ def add_memo(
     proj_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
     authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(proj_id)
     authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_condition(proj_id == memo.project_id)
+    validate.validate_condition(proj_id == memo.project_id)
 
     db_obj = crud_memo.create_for_project(db=db, project_id=proj_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.annotation_document import crud_adoc
@@ -284,10 +285,11 @@ def link_tag(
     sdoc_id: int,
     tag_id: int,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> SourceDocumentRead:
     authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
     authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
-    authz_user.assert_objects_in_same_project(
+    validate.validate_objects_in_same_project(
         [(Crud.SOURCE_DOCUMENT, sdoc_id), (Crud.DOCUMENT_TAG, tag_id)]
     )
 
@@ -325,12 +327,13 @@ def add_memo(
     sdoc_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
     sdoc = crud_sdoc.read(db, sdoc_id)
     authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(sdoc.project_id)
     authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_condition(sdoc.project_id == memo.project_id)
+    validate.validate_condition(sdoc.project_id == memo.project_id)
 
     db_obj = crud_memo.create_for_sdoc(db=db, sdoc_id=sdoc_id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.document_tag import crud_document_tag
@@ -32,6 +33,7 @@ def create_new_doc_tag(
     db: Session = Depends(get_db_session),
     doc_tag: DocumentTagCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> DocumentTagRead:
     authz_user.assert_in_project(doc_tag.project_id)
 
@@ -39,7 +41,7 @@ def create_new_doc_tag(
         authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, doc_tag.parent_tag_id)
 
         parent_tag = crud_document_tag.read(db, doc_tag.parent_tag_id)
-        authz_user.assert_condition(
+        validate.validate_condition(
             parent_tag.project_id == doc_tag.project_id,
             "Tag parent needs to be in the same project",
         )
@@ -158,12 +160,13 @@ def add_memo(
     tag_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
     tag = crud_document_tag.read(db, tag_id)
     authz_user.assert_is_same_user(memo.user_id)
     authz_user.assert_in_project(tag.project_id)
     authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_condition(
+    validate.validate_condition(
         tag.project_id == memo.project_id, "Tag and memo project need to match"
     )
 
