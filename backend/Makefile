@@ -36,7 +36,7 @@ test:
 	export REPO_ROOT=$$(mktemp -d)
 	cd src
 	export PYTHONPATH=.
-	set -o allexport; [[ -f .env.testing ]] && source .env.testing
+	set -o allexport; [[ -f ../.env.testing ]] && source ../.env.testing
 	pytest
 
 .PHONY: wipe_database
