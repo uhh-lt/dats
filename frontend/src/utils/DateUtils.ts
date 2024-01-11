@@ -1,6 +1,8 @@
 export const TIMEZONE = "Europe/Berlin";
 export const LOCALE = "de-DE";
 
+// TODO this doesn't work for some dates that specify an explicit timezone but I couldn't figure out why.
+// We should probably switch to something like date-fns
 export const dateToLocaleDate = (date: string | Date): Date => {
   const d = new Date(date);
   const offset = d.getTimezoneOffset();

@@ -9,7 +9,6 @@ import {
   UserService,
 } from "../api/openapi";
 import queryClient from "../plugins/ReactQueryClient";
-import { dateToLocaleDate } from "../utils/DateUtils";
 
 // init once
 OpenAPI.BASE = process.env.REACT_APP_SERVER || "";
@@ -39,7 +38,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
   const [accessToken, setAccessToken] = useState<string | undefined>(localStorage.getItem("dwts-access") || undefined);
 
   let expiryString = localStorage.getItem("dwts-access-expires");
-  const persistedAccessTokenExpires = expiryString ? dateToLocaleDate(expiryString) : undefined;
+  const persistedAccessTokenExpires = expiryString ? new Date(expiryString) : undefined;
   const [accessTokenExpires, setAccessTokenExpires] = useState<Date | undefined>(persistedAccessTokenExpires);
 
   const [refreshToken, setRefreshToken] = useState<string | undefined>(
@@ -67,7 +66,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     setAccessToken(authData.access_token);
 
     localStorage.setItem("dwts-access-expires", authData.access_token_expires);
-    setAccessTokenExpires(dateToLocaleDate(authData.access_token_expires));
+    setAccessTokenExpires(new Date(authData.access_token_expires));
 
     localStorage.setItem("dwts-refresh-access", authData.refresh_token);
     setRefreshToken(authData.refresh_token);
