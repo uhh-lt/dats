@@ -1,10 +1,10 @@
 import pytest
 
-from api.validation import InvalidError, validate_condition
+from api.validation import InvalidError, Validate
 
 
-def test_assert_condition():
-    validate_condition(True, "")
+def test_assert_condition(validate: Validate):
+    validate.validate_condition(True, "")
 
     with pytest.raises(InvalidError):
-        validate_condition(False, "")
+        validate.validate_condition(False, "")

@@ -12,6 +12,7 @@ from fastapi.datastructures import Headers
 from loguru import logger
 from sqlalchemy.orm import Session
 
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
@@ -212,6 +213,13 @@ def authz_user(
     authz_user = AuthzUser(request=mock_request, user=user_orm, db=rollbacked_session)
 
     return authz_user
+
+
+@pytest.fixture
+def validate(rollbacked_session: Session) -> Validate:
+    validate = Validate(db=rollbacked_session)
+
+    return validate
 
 
 @pytest.fixture
