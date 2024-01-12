@@ -118,6 +118,8 @@ const useBulkUpdateDocumentTags = () =>
         });
         queryClient.invalidateQueries([QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId]);
         queryClient.invalidateQueries([QueryKey.SEARCH_TAG_STATISTICS]); // todo: zu unspezifisch!
+        // Invalidate cache of tag statistics query
+        queryClient.invalidateQueries([QueryKey.TAG_SDOC_COUNT]);
       },
     },
   );
@@ -147,6 +149,12 @@ const useCreateMemo = () =>
     },
   });
 
+const useGetTagDocumentCounts = (sdocIds: number[]) =>
+  useQuery<Map<number, number>, Error>([QueryKey.TAG_SDOC_COUNT, sdocIds], async () => {
+    const stringRecord = await DocumentTagService.getSdocCounts({ requestBody: sdocIds });
+    return new Map(Object.entries(stringRecord).map(([key, val]) => [parseInt(key, 10), val]));
+  });
+
 const TagHooks = {
   useGetTag,
   useCreateTag,
@@ -155,6 +163,7 @@ const TagHooks = {
   useBulkUpdateDocumentTags,
   useBulkLinkDocumentTags,
   useBulkUnlinkDocumentTags,
+  useGetTagDocumentCounts,
   //memos
   useGetMemos,
   useGetMemo,

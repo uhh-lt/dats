@@ -65,6 +65,8 @@ export const QueryKey = {
   SDOC_BY_ADOC: "sdocByAdoc",
   // all tags of a document (by document id)
   SDOC_TAGS: "sdocTags",
+  // Count how many source documents each tag has
+  TAG_SDOC_COUNT: "sdocTagCount",
   // all adocs of a document (by document id)
   SDOC_ADOCS: "sdocAdocs",
   // adoc of a document (by document id, user id)

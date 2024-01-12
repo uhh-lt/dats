@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -177,3 +177,15 @@ async def get_sdoc_ids_by_tag_id(
 ) -> List[int]:
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return [sdoc.id for sdoc in db_obj.source_documents]
+
+
+@router.post(
+    "/sdoc_counts",
+    response_model=Dict[int, int],
+    summary="Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
+)
+async def get_sdoc_counts(
+    *, db: Session = Depends(get_db_session), sdoc_ids: List[int]
+) -> Dict[int, int]:
+    # TODO only if the user has access
+    return crud_document_tag.get_tag_sdoc_counts(db, sdoc_ids)

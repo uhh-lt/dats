@@ -1,7 +1,7 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import srsly
-from sqlalchemy import delete
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
@@ -15,6 +15,7 @@ from app.core.data.orm.document_tag import (
     DocumentTagORM,
     SourceDocumentDocumentTagLinkTable,
 )
+from app.core.data.orm.source_document import SourceDocumentORM
 
 
 class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpdate]):
@@ -154,6 +155,34 @@ class CRUDDocumentTag(CRUDBase[DocumentTagORM, DocumentTagCreate, DocumentTagUpd
             )
 
         return len(del_rows)
+
+    # Return a dictionary in the following format:
+    # tag id => count of documents that have this tag
+    # for all tags in the database
+    def get_tag_sdoc_counts(self, db: Session, sdoc_ids: List[int]) -> Dict[int, int]:
+        # Get the source documents matching the `sdoc_ids` parameter
+        # and count how many of them have each tag
+        sdocs_query = (
+            select(DocumentTagORM.id, func.count(SourceDocumentORM.id).label("count"))
+            .join(DocumentTagORM.source_documents)
+            .filter(SourceDocumentORM.id.in_(sdoc_ids))
+            .group_by(DocumentTagORM.id)
+            .subquery()
+        )
+
+        # Get *all* tags in the database and join the matching sdoc count from the subquery,
+        # using 0 as a default instead of `NULL`
+        query = select(
+            DocumentTagORM.id, func.coalesce(sdocs_query.c.count, 0)
+        ).join_from(
+            DocumentTagORM,
+            sdocs_query,
+            DocumentTagORM.id == sdocs_query.c.id,
+            isouter=True,
+        )
+        rows = db.execute(query)
+
+        return dict((tag_id, count) for tag_id, count in rows)
 
     def _get_action_state_from_orm(self, db_obj: DocumentTagORM) -> Optional[str]:
         return srsly.json_dumps(DocumentTagRead.model_validate(db_obj).model_dump())
