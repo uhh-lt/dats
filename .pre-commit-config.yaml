@@ -10,7 +10,7 @@ repos:
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.1.9
+    rev: v0.1.11
     hooks:
       # Run the linter.
       - id: ruff
@@ -32,4 +32,10 @@ repos:
     hooks:
       - id: prettier
         files: \.([jt]sx?|json)$ # *.js, *.jsx, *.ts, *.tsx, *.json
-        args: [--print-width, "120"]
+        args: [
+            --print-width,
+            "120",
+            # Without this, prettier will create a `node_modules` folder in the repository root
+            "--cache-location",
+            "frontend/node_modules/.cache/prettier",
+          ]

@@ -218,4 +218,25 @@ export class DocumentTagService {
       },
     });
   }
+
+  /**
+   * Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list
+   * @returns number Successful Response
+   * @throws ApiError
+   */
+  public static getSdocCounts({
+    requestBody,
+  }: {
+    requestBody: Array<number>;
+  }): CancelablePromise<Record<string, number>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/doctag/sdoc_counts",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }

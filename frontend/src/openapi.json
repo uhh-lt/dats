@@ -1665,7 +1665,7 @@
     "/doctag/{tag_id}/memo/{user_id}": {
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.",
+        "summary": "Returns the Memo attached to the document tag with the given ID of the User with the given ID if it exists.",
         "operationId": "get_user_memo",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1711,6 +1711,38 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
+      }
+    },
+    "/doctag/sdoc_counts": {
+      "post": {
+        "tags": ["documentTag"],
+        "summary": "Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list",
+        "operationId": "get_sdoc_counts",
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "items": { "type": "integer" }, "type": "array", "title": "Sdoc Ids" } }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": { "type": "integer" },
+                  "type": "object",
+                  "title": "Response Documenttag-Get Sdoc Counts"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/adoc": {
@@ -3547,7 +3579,7 @@
     "/feedback": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns the Metadata with the given ID.",
+        "summary": "Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.",
         "operationId": "get_all",
         "responses": {
           "200": {
@@ -3615,7 +3647,7 @@
     "/feedback/user/{user_id}": {
       "get": {
         "tags": ["feedback"],
-        "summary": "Returns the Metadata of the User with the given ID.",
+        "summary": "Returns the Feedback of the User with the given ID.",
         "operationId": "get_all_by_user",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -5199,11 +5231,7 @@
       "CodeCreate": {
         "properties": {
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
-          "color": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Color",
-            "description": "Color of the Code"
-          },
+          "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": { "type": "string", "title": "Description", "description": "Description of the Code" },
           "parent_code_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
@@ -5448,11 +5476,7 @@
       "DocumentTagCreate": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the DocumentTag" },
-          "color": {
-            "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Color",
-            "description": "Color of the Code"
-          },
+          "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Description",
@@ -6129,7 +6153,6 @@
         "type": "object",
         "required": [
           "project_id",
-          "active_prepro_job_ids",
           "num_active_prepro_job_payloads",
           "erroneous_prepro_job_payload_ids",
           "num_sdocs_finished",
