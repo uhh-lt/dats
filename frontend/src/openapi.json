@@ -5082,11 +5082,10 @@
             "type": "integer",
             "title": "Project Id",
             "description": "Project the AnalysisTable belongs to"
-          },
-          "user_id": { "type": "integer", "title": "User Id", "description": "User the AnalysisTable belongs to" }
+          }
         },
         "type": "object",
-        "required": ["title", "content", "table_type", "project_id", "user_id"],
+        "required": ["title", "content", "table_type", "project_id"],
         "title": "AnalysisTableCreate"
       },
       "AnalysisTableRead": {
