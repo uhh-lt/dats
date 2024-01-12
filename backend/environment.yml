@@ -48,6 +48,7 @@ dependencies:
   - srsly=2.4.8
   - tqdm=4.66.1
   - twisted=22.10.0
+  - umap-learn=0.5.5
   - uvicorn=0.23.2
   - pytorch::pytorch>=2.1
   - pytorch::pytorch-cuda=11.7
