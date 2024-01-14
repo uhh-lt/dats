@@ -31,6 +31,8 @@ import Settings from "../views/settings/Settings";
 import Whiteboard from "../views/whiteboard/Whiteboard";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency";
+import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard";
+import CotaView from "../views/analysis/ConceptsOverTime/CotaView";
 
 const router = createBrowserRouter([
   {
@@ -171,6 +173,14 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/table/:tableId",
         element: <TableView />,
+      },
+      {
+        path: "/project/:projectId/analysis/concepts-over-time-analysis",
+        element: <CotaDashboard />,
+      },
+      {
+        path: "/project/:projectId/analysis/concepts-over-time-analysis/:cotaId",
+        element: <CotaView />,
       },
       {
         path: "/project/:projectId/whiteboard",

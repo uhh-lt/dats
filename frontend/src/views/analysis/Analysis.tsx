@@ -64,6 +64,15 @@ function Analysis() {
             </Grid>
 
             <Grid item>
+              <AnalysisCard
+                to={"concepts-over-time-analysis"}
+                title={"Concepts Over Time Analysis"}
+                description={"Analyse concepts overr time."}
+                color={"#77dd77"}
+              />
+            </Grid>
+
+            <Grid item>
               <AnalysisCard to={"table"} title={"Table"} description={"Analyse with tables."} color={"#77dd77"} />
             </Grid>
             {range(0, 2).map((i) => (

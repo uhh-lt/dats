@@ -14,6 +14,7 @@ import logbookReducer from "../views/logbook/logbookSlice";
 import searchFilterReducer from "../views/search/searchFilterSlice";
 import searchReducer from "../views/search/searchSlice";
 import settingsReducer from "../views/settings/settingsSlice";
+import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice";
 
 const persistConfig = {
   key: "root",
@@ -39,6 +40,7 @@ export const store = configureStore({
     timelineAnalysisFilter: timelineAnalysisFilterReducer,
     wordFrequency: wordFrequencyReducer,
     wordFrequencyFilter: wordFrequencyFilterReducer,
+    cota: cotaReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
