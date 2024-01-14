@@ -137,6 +137,13 @@ export const QueryKey = {
   // all project, user TABLEs (by user id and project id)
   TABLES_PROJECT_USER: "tablesProjectUser",
 
+  // a single COTA (by COTA id)
+  COTA: "cota",
+  // all project, user COTAs (by user id and project id)
+  COTAS_PROJECT_USER: "cotasProjectUser",
+  // a single COTARefinementJob (by refinement job id)
+  COTA_REFINEMENT_JOB: "cotaRefinementJob",
+
   // a single WHITEBOARD (by WHITEBOARD id)
   WHITEBOARD: "whiteboard",
   // all project WHITEBOARDs (by project id)
