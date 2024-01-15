@@ -53,6 +53,8 @@ export default function SearchResultCardsView({
   // calculate cards per page
   React.useLayoutEffect(() => {
     if (searchResults instanceof SentenceSimilaritySearchResults) {
+      // TODO This means that there is effectively no pagination.
+      // Should we remove it?
       dispatch(SearchActions.setRowsPerPage(searchResults.getAggregatedNumberOfHits()));
       return;
     }

@@ -3,11 +3,12 @@ from typing import Dict, List, Optional, Set
 
 from sqlalchemy import Integer, String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute, Session
 
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import (
+    SearchColumns,
     SimSearchImageHit,
     SimSearchQuery,
     SimSearchSentenceHit,
@@ -26,12 +27,9 @@ from app.core.data.orm.span_text import SpanTextORM
 from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.filters.columns import (
-    AbstractColumns,
     ColumnInfo,
-    create_metadata_column_info,
 )
 from app.core.filters.filtering import Filter, apply_filtering
-from app.core.filters.filtering_operators import FilterOperator, FilterValueType
 from app.core.filters.sorting import Sort, apply_sorting
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.simsearch_service import SimSearchService
@@ -46,92 +44,6 @@ def aggregate_ids(column: InstrumentedAttribute, label: str):
     ).label(label)
 
 
-class SearchColumns(str, AbstractColumns):
-    SOURCE_DOCUMENT_TYPE = "SC_SOURCE_DOCUMENT_TYPE"
-    SOURCE_DOCUMENT_FILENAME = "SC_SOURCE_DOCUMENT_FILENAME"
-    DOCUMENT_TAG_ID_LIST = "SC_DOCUMENT_TAG_ID_LIST"
-    CODE_ID_LIST = "SC_CODE_ID_LIST"
-    USER_ID_LIST = "SC_USER_ID_LIST"
-    SPAN_ANNOTATIONS = "SC_SPAN_ANNOTATIONS"
-
-    def get_filter_column(self, **kwargs):
-        subquery_dict = kwargs["subquery_dict"]
-
-        match self:
-            case SearchColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
-            case SearchColumns.SOURCE_DOCUMENT_TYPE:
-                return SourceDocumentORM.doctype
-            case SearchColumns.DOCUMENT_TAG_ID_LIST:
-                return subquery_dict[SearchColumns.DOCUMENT_TAG_ID_LIST]
-            case SearchColumns.CODE_ID_LIST:
-                return subquery_dict[SearchColumns.CODE_ID_LIST]
-            case SearchColumns.USER_ID_LIST:
-                return subquery_dict[SearchColumns.USER_ID_LIST]
-            case SearchColumns.SPAN_ANNOTATIONS:
-                return subquery_dict[SearchColumns.SPAN_ANNOTATIONS]
-
-    def get_filter_operator(self) -> FilterOperator:
-        match self:
-            case SearchColumns.SOURCE_DOCUMENT_FILENAME:
-                return FilterOperator.STRING
-            case SearchColumns.SOURCE_DOCUMENT_TYPE:
-                return FilterOperator.ID
-            case SearchColumns.DOCUMENT_TAG_ID_LIST:
-                return FilterOperator.ID_LIST
-            case SearchColumns.CODE_ID_LIST:
-                return FilterOperator.ID_LIST
-            case SearchColumns.USER_ID_LIST:
-                return FilterOperator.ID_LIST
-            case SearchColumns.SPAN_ANNOTATIONS:
-                return FilterOperator.ID_LIST
-
-    def get_filter_value_type(self) -> FilterValueType:
-        match self:
-            case SearchColumns.SOURCE_DOCUMENT_FILENAME:
-                return FilterValueType.INFER_FROM_OPERATOR
-            case SearchColumns.SOURCE_DOCUMENT_TYPE:
-                return FilterValueType.DOC_TYPE
-            case SearchColumns.DOCUMENT_TAG_ID_LIST:
-                return FilterValueType.TAG_ID
-            case SearchColumns.CODE_ID_LIST:
-                return FilterValueType.CODE_ID
-            case SearchColumns.USER_ID_LIST:
-                return FilterValueType.USER_ID
-            case SearchColumns.SPAN_ANNOTATIONS:
-                return FilterValueType.SPAN_ANNOTATION
-
-    def get_sort_column(self, **kwargs):
-        match self:
-            case SearchColumns.SOURCE_DOCUMENT_FILENAME:
-                return SourceDocumentORM.filename
-            case SearchColumns.SOURCE_DOCUMENT_TYPE:
-                return SourceDocumentORM.doctype
-            case SearchColumns.DOCUMENT_TAG_ID_LIST:
-                return None
-            case SearchColumns.CODE_ID_LIST:
-                return None
-            case SearchColumns.USER_ID_LIST:
-                return None
-            case SearchColumns.SPAN_ANNOTATIONS:
-                return None
-
-    def get_label(self) -> str:
-        match self:
-            case SearchColumns.SOURCE_DOCUMENT_FILENAME:
-                return "Document name"
-            case SearchColumns.SOURCE_DOCUMENT_TYPE:
-                return "Type"
-            case SearchColumns.DOCUMENT_TAG_ID_LIST:
-                return "Tags"
-            case SearchColumns.CODE_ID_LIST:
-                return "Code"
-            case SearchColumns.USER_ID_LIST:
-                return "Annotated by"
-            case SearchColumns.SPAN_ANNOTATIONS:
-                return "Span annotations"
-
-
 class SearchService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqls = SQLService()
@@ -140,7 +52,7 @@ class SearchService(metaclass=SingletonMeta):
 
     def search_info(self, project_id) -> List[ColumnInfo[SearchColumns]]:
         with self.sqls.db_session() as db:
-            metadata_column_info = create_metadata_column_info(
+            metadata_column_info = crud_project_meta.create_metadata_column_info(
                 db=db,
                 project_id=project_id,
                 allowed_doctypes=[
@@ -163,60 +75,9 @@ class SearchService(metaclass=SingletonMeta):
         sorts: List[Sort[SearchColumns]],
     ) -> List[int]:
         with self.sqls.db_session() as db:
-            tag_ids_agg = aggregate_ids(
-                DocumentTagORM.id, label=SearchColumns.DOCUMENT_TAG_ID_LIST
+            filtered_sdoc_ids = self._get_filtered_sdoc_ids(
+                db, project_id, filter, sorts
             )
-            code_ids_agg = aggregate_ids(CodeORM.id, SearchColumns.CODE_ID_LIST)
-            user_ids_agg = aggregate_ids(UserORM.id, SearchColumns.USER_ID_LIST)
-            span_annotation_tuples_agg = cast(
-                array_agg(
-                    func.distinct(array([cast(CodeORM.id, String), SpanTextORM.text])),
-                ),
-                ARRAY(String, dimensions=2),
-            ).label(SearchColumns.SPAN_ANNOTATIONS)
-
-            subquery = (
-                db.query(
-                    SourceDocumentORM.id,
-                    tag_ids_agg,
-                    code_ids_agg,
-                    user_ids_agg,
-                    span_annotation_tuples_agg,
-                )
-                # isouter=True is important, otherwise we will only get sdocs with tags
-                .join(SourceDocumentORM.document_tags, isouter=True)
-                .join(SourceDocumentORM.annotation_documents)
-                .join(AnnotationDocumentORM.user)
-                # isouter=True is important, otherwise we will only get sdocs with annotations
-                .join(AnnotationDocumentORM.span_annotations, isouter=True)
-                .join(SpanAnnotationORM.span_text, isouter=True)
-                .join(SpanAnnotationORM.current_code, isouter=True)
-                .join(CurrentCodeORM.code, isouter=True)
-                .join(SourceDocumentORM.metadata_)
-                .join(SourceDocumentMetadataORM.project_metadata)
-                .group_by(SourceDocumentORM.id)
-                .filter(SourceDocumentORM.project_id == project_id)
-                .subquery()
-            )
-
-            query = db.query(
-                SourceDocumentORM.id,
-            ).join(subquery, SourceDocumentORM.id == subquery.c.id)
-
-            query = apply_filtering(
-                query=query, filter=filter, db=db, subquery_dict=subquery.c
-            )
-
-            query = apply_sorting(query=query, sorts=sorts, db=db)
-
-            # query = query.order_by(
-            #     SourceDocumentORM.id
-            # )  # this is very important, otherwise pagination will not work!
-            # query, pagination = apply_pagination(
-            #     query=query, page_number=page + 1, page_size=page_size
-            # )
-
-        filtered_sdoc_ids = [row[0] for row in query.all()]
 
         if search_query.strip() == "":
             return filtered_sdoc_ids
@@ -230,6 +91,69 @@ class SearchService(metaclass=SingletonMeta):
             )
 
             return [hit.sdoc_id for hit in elastic_hits.hits]
+
+    def _get_filtered_sdoc_ids(
+        self,
+        db: Session,
+        project_id: int,
+        filter: Filter[SearchColumns],
+        sorts: Optional[List[Sort[SearchColumns]]] = None,
+    ) -> List[int]:
+        tag_ids_agg = aggregate_ids(
+            DocumentTagORM.id, label=SearchColumns.DOCUMENT_TAG_ID_LIST
+        )
+        code_ids_agg = aggregate_ids(CodeORM.id, SearchColumns.CODE_ID_LIST)
+        user_ids_agg = aggregate_ids(UserORM.id, SearchColumns.USER_ID_LIST)
+        span_annotation_tuples_agg = cast(
+            array_agg(
+                func.distinct(array([cast(CodeORM.id, String), SpanTextORM.text])),
+            ),
+            ARRAY(String, dimensions=2),
+        ).label(SearchColumns.SPAN_ANNOTATIONS)
+
+        subquery = (
+            db.query(
+                SourceDocumentORM.id,
+                tag_ids_agg,
+                code_ids_agg,
+                user_ids_agg,
+                span_annotation_tuples_agg,
+            )
+            # isouter=True is important, otherwise we will only get sdocs with tags
+            .join(SourceDocumentORM.document_tags, isouter=True)
+            .join(SourceDocumentORM.annotation_documents)
+            .join(AnnotationDocumentORM.user)
+            # isouter=True is important, otherwise we will only get sdocs with annotations
+            .join(AnnotationDocumentORM.span_annotations, isouter=True)
+            .join(SpanAnnotationORM.span_text, isouter=True)
+            .join(SpanAnnotationORM.current_code, isouter=True)
+            .join(CurrentCodeORM.code, isouter=True)
+            .join(SourceDocumentORM.metadata_)
+            .join(SourceDocumentMetadataORM.project_metadata)
+            .group_by(SourceDocumentORM.id)
+            .filter(SourceDocumentORM.project_id == project_id)
+            .subquery()
+        )
+
+        query = db.query(
+            SourceDocumentORM.id,
+        ).join(subquery, SourceDocumentORM.id == subquery.c.id)
+
+        query = apply_filtering(
+            query=query, filter=filter, db=db, subquery_dict=subquery.c
+        )
+
+        if sorts is not None:
+            query = apply_sorting(query=query, sorts=sorts, db=db)
+
+        # query = query.order_by(
+        #     SourceDocumentORM.id
+        # )  # this is very important, otherwise pagination will not work!
+        # query, pagination = apply_pagination(
+        #     query=query, page_number=page + 1, page_size=page_size
+        # )
+
+        return [row[0] for row in query.all()]
 
     def compute_tag_statistics(
         self,
@@ -412,9 +336,21 @@ class SearchService(metaclass=SingletonMeta):
         ]
 
     def find_similar_sentences(
-        self, query: SimSearchQuery
+        self,
+        query: SimSearchQuery,
     ) -> List[SimSearchSentenceHit]:
-        return self.sss.find_similar_sentences(query=query)
+        with self.sqls.db_session() as db:
+            filtered_sdoc_ids = self._get_filtered_sdoc_ids(
+                db, query.proj_id, query.filter
+            )
+        return self.sss.find_similar_sentences(filtered_sdoc_ids, query=query)
 
-    def find_similar_images(self, query: SimSearchQuery) -> List[SimSearchImageHit]:
-        return self.sss.find_similar_images(query=query)
+    def find_similar_images(
+        self,
+        query: SimSearchQuery,
+    ) -> List[SimSearchImageHit]:
+        with self.sqls.db_session() as db:
+            filtered_sdoc_ids = self._get_filtered_sdoc_ids(
+                db, query.proj_id, query.filter
+            )
+        return self.sss.find_similar_images(filtered_sdoc_ids, query=query)

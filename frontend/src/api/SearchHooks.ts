@@ -14,6 +14,8 @@ import {
   SpanEntityStat,
   TagStat,
 } from "./openapi";
+import { GridSortModel } from "@mui/x-data-grid";
+import { QueryType } from "../views/search/QueryType";
 
 export abstract class SearchResults<T extends Iterable<any>> {
   constructor(protected results: T) {
@@ -79,68 +81,92 @@ export enum SearchResultsType {
   SENTENCES,
 }
 
-// const sentenceSimilaritySearchQueryFn = async (
-//   projectId: number,
-//   query: number | string
-// ): Promise<SentenceSimilaritySearchResults> => {
-//   const result = await SearchService.findSimilarSentences({
-//     requestBody: {
-//       proj_id: projectId,
-//       query: query,
-//       top_k: 10,
-//     },
-//   });
+const sentenceSimilaritySearchQueryFn =
+  (projectId: number, query: number | string, filter: MyFilter<SearchColumns>) =>
+  async (): Promise<SentenceSimilaritySearchResults> => {
+    const result = await SearchService.findSimilarSentences({
+      requestBody: {
+        proj_id: projectId,
+        query,
+        filter,
+        threshold: 0.9,
+        top_k: 10,
+      },
+    });
 
-//   // combine multiple results (sentences) per document
-//   const combinedSDocHits = new Map<number, SimSearchSentenceHit[]>();
-//   result.forEach((hit) => {
-//     const hits = combinedSDocHits.get(hit.sdoc_id) || [];
-//     hits.push(hit);
-//     combinedSDocHits.set(hit.sdoc_id, hits);
-//   });
+    // combine multiple results (sentences) per document
+    const combinedSDocHits = new Map<number, SimSearchSentenceHit[]>();
+    result.forEach((hit) => {
+      const hits = combinedSDocHits.get(hit.sdoc_id) || [];
+      hits.push(hit);
+      combinedSDocHits.set(hit.sdoc_id, hits);
+    });
 
-//   return new SentenceSimilaritySearchResults(combinedSDocHits);
-// };
+    return new SentenceSimilaritySearchResults(combinedSDocHits);
+  };
 
-// const imageSimilaritySearchQueryFn = async (
-//   projectId: number,
-//   query: number | string
-// ): Promise<ImageSimilaritySearchResults> => {
-//   const results = await SearchService.findSimilarImages({
-//     requestBody: {
-//       proj_id: projectId,
-//       query: query,
-//       top_k: 10,
-//     },
-//   });
+const imageSimilaritySearchQueryFn =
+  (projectId: number, query: number | string, filter: MyFilter<SearchColumns>) =>
+  async (): Promise<ImageSimilaritySearchResults> => {
+    const results = await SearchService.findSimilarImages({
+      requestBody: {
+        proj_id: projectId,
+        query,
+        filter,
+        threshold: 0.9,
+        top_k: 10,
+      },
+    });
 
-//   return new ImageSimilaritySearchResults(results);
-// };
+    return new ImageSimilaritySearchResults(results);
+  };
 
-const useSearchDocumentsNew = (projectId: number | null | undefined) => {
+const lexicalSearchQueryFn = (
+  projectId: number,
+  searchQuery: string,
+  expertMode: boolean,
+  filter: MyFilter<SearchColumns>,
+  sortModel: GridSortModel,
+) => {
+  return async () => {
+    const sdocIds = await SearchService.searchSdocs({
+      projectId: projectId!,
+      searchQuery,
+      expertMode,
+      requestBody: {
+        filter: filter as MyFilter<SearchColumns>,
+        sorts: sortModel
+          .filter((sort) => sort.sort)
+          .map((sort) => ({ column: sort.field as SearchColumns, direction: sort.sort as SortDirection })),
+      },
+    });
+    return new LexicalSearchResults(sdocIds);
+  };
+};
+
+const useSearchDocumentsNew = (projectId: number) => {
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
   const sortModel = useAppSelector((state) => state.search.sortModel);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const expertMode = useAppSelector((state) => state.search.expertMode);
+  const searchType = useAppSelector((state) => state.search.searchType);
 
-  console.log(filter);
+  let searchFn: () => Promise<LexicalSearchResults | ImageSimilaritySearchResults | SentenceSimilaritySearchResults>;
+  switch (searchType) {
+    case QueryType.LEXICAL:
+      searchFn = lexicalSearchQueryFn(projectId, searchQuery, expertMode, filter as MyFilter<SearchColumns>, sortModel);
+      break;
+    case QueryType.SEMANTIC_IMAGES:
+      searchFn = imageSimilaritySearchQueryFn(projectId, searchQuery, filter as MyFilter<SearchColumns>);
+      break;
+    case QueryType.SEMANTIC_SENTENCES:
+      searchFn = sentenceSimilaritySearchQueryFn(projectId, searchQuery, filter as MyFilter<SearchColumns>);
+      break;
+  }
 
-  return useQuery<LexicalSearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, sortModel, searchQuery],
-    async () => {
-      const sdocIds = await SearchService.searchSdocs({
-        projectId: projectId!,
-        searchQuery: searchQuery,
-        expertMode: expertMode,
-        requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
-          sorts: sortModel
-            .filter((sort) => sort.sort)
-            .map((sort) => ({ column: sort.field as SearchColumns, direction: sort.sort as SortDirection })),
-        },
-      });
-      return new LexicalSearchResults(sdocIds);
-    },
+  return useQuery<LexicalSearchResults | ImageSimilaritySearchResults | SentenceSimilaritySearchResults, Error>(
+    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, sortModel, searchQuery, searchType],
+    searchFn,
     {
       enabled: !!projectId,
       keepPreviousData: true,

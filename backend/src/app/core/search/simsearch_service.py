@@ -308,6 +308,7 @@ class SimSearchService(metaclass=SingletonMeta):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
+        sdoc_ids_to_search: List[int],
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[Dict[str, Any]]:
@@ -340,7 +341,18 @@ class SimSearchService(metaclass=SingletonMeta):
             .with_limit(top_k)
         )
 
-        return query.do()["data"]["Get"][self.class_names[index_type]]
+        query.with_where(
+            {
+                "operator": "ContainsAny",
+                "path": "sdoc_id",
+                "valueInt": sdoc_ids_to_search,
+            }
+        )
+
+        results = query.do()["data"]["Get"][self.class_names[index_type]]
+        if results is None:
+            results = []
+        return results
 
     def _encode_query(
         self,
@@ -386,8 +398,7 @@ class SimSearchService(metaclass=SingletonMeta):
         return query_params
 
     def find_similar_sentences(
-        self,
-        query: SimSearchQuery,
+        self, sdoc_ids_to_search: List[int], query: SimSearchQuery
     ) -> List[SimSearchSentenceHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query.query),
@@ -398,6 +409,7 @@ class SimSearchService(metaclass=SingletonMeta):
             query_emb=query_emb,
             top_k=query.top_k,
             threshold=query.threshold,
+            sdoc_ids_to_search=sdoc_ids_to_search,
         )
         return [
             SimSearchSentenceHit(
@@ -409,8 +421,7 @@ class SimSearchService(metaclass=SingletonMeta):
         ]
 
     def find_similar_images(
-        self,
-        query: SimSearchQuery,
+        self, sdoc_ids_to_search: List[int], query: SimSearchQuery
     ) -> List[SimSearchImageHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query.query),
@@ -421,6 +432,7 @@ class SimSearchService(metaclass=SingletonMeta):
             query_emb=query_emb,
             top_k=query.top_k,
             threshold=query.threshold,
+            sdoc_ids_to_search=sdoc_ids_to_search,
         )
         return [
             SimSearchImageHit(

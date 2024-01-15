@@ -6420,10 +6420,14 @@
             "title": "Threshold",
             "description": "The minimum distance to use for the sim search.",
             "default": 0
+          },
+          "filter": {
+            "allOf": [{ "$ref": "#/components/schemas/Filter_SearchColumns_" }],
+            "description": "Only search through documents matching this filter"
           }
         },
         "type": "object",
-        "required": ["proj_id", "query"],
+        "required": ["proj_id", "query", "filter"],
         "title": "SimSearchQuery"
       },
       "SimSearchSentenceHit": {

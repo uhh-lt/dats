@@ -149,7 +149,6 @@ export const QueryKey = {
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",
   SEARCH_TAG_STATISTICS: "searchTagStatistics",
-  SEARCH_SENTENCE_SIMILARITY: "searchSentenceSimilarity",
 
   ANALYSIS_CODE_FREQUENCIES: "analysisCodeFrequencies",
   ANALYSIS_CODE_OCCURRENCES: "analysisCodeOccurrences",

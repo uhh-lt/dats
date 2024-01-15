@@ -69,6 +69,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleSentenceSimilaritySearch = () => {
+    // TODO implement this
     alert("Not implemented yet");
     // dispatch(SearchActions.setResultModalites([DocType.TEXT]));
     closeContextMenu();

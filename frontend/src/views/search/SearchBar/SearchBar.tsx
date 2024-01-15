@@ -75,16 +75,9 @@ function SearchBar({ placeholder }: SearchBarProps) {
   };
 
   const onSubmit: SubmitHandler<SearchFormValues> = (data) => {
-    switch (searchType) {
-      case QueryType.LEXICAL:
-        dispatch(SearchActions.onChangeSearchQuery(data.query));
-        dispatch(SearchActions.clearSelectedDocuments());
-        navigateIfNecessary(`/project/${projectId}/search/`);
-        break;
-      case QueryType.SEMANTIC:
-        alert("not implemented!");
-        break;
-    }
+    dispatch(SearchActions.onChangeSearchQuery(data.query));
+    dispatch(SearchActions.clearSelectedDocuments());
+    navigateIfNecessary(`/project/${projectId}/search/`);
 
     handleClose();
     reset({
@@ -166,8 +159,9 @@ function SearchBar({ placeholder }: SearchBarProps) {
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={expertMode}
+                      checked={expertMode && searchType === QueryType.LEXICAL}
                       onChange={(event) => dispatch(SearchActions.onChangeExpertMode(event.target.checked))}
+                      disabled={searchType !== QueryType.LEXICAL}
                     />
                   }
                   label="Expert search"
@@ -195,17 +189,11 @@ function SearchBar({ placeholder }: SearchBarProps) {
                   row
                   aria-labelledby="radio-buttons-group-query"
                   value={searchType}
-                  onChange={(event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
+                  onChange={(_event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
                   name="radio-buttons-group"
                 >
                   {Object.values(QueryType).map((qt) => (
-                    <FormControlLabel
-                      key={qt}
-                      value={qt}
-                      control={<Radio />}
-                      label={qt}
-                      disabled={qt === QueryType.SEMANTIC}
-                    />
+                    <FormControlLabel key={qt} value={qt} control={<Radio />} label={qt} />
                   ))}
                 </RadioGroup>
               </FormControl>

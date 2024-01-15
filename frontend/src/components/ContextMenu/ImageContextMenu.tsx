@@ -45,6 +45,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
   };
 
   const handleSentenceSimilaritySearch = () => {
+    // TODO implement this
     alert("Not implemented yet");
     // dispatch(SearchActions.setResultModalites([DocType.TEXT]));
     closeContextMenu();
