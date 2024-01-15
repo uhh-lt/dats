@@ -19,4 +19,8 @@ export type SimSearchQuery = {
    * The minimum distance to use for the sim search.
    */
   threshold?: number;
+  /**
+   * If specified, limit the search to the source documents with the given ids
+   */
+  filter_sdocs?: Array<number> | null;
 };

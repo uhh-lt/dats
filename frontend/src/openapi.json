@@ -6704,6 +6704,11 @@
             "title": "Threshold",
             "description": "The minimum distance to use for the sim search.",
             "default": 0
+          },
+          "filter_sdocs": {
+            "anyOf": [{ "items": { "type": "integer" }, "type": "array" }, { "type": "null" }],
+            "title": "Filter Sdocs",
+            "description": "If specified, limit the search to the source documents with the given ids"
           }
         },
         "type": "object",

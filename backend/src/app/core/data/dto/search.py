@@ -222,6 +222,10 @@ class SimSearchQuery(BaseModel):
         ge=0.0,
         le=1.0,
     )
+    filter_sdocs: Optional[List[int]] = Field(
+        description="If specified, limit the search to the source documents with the given ids",
+        default=None,
+    )
 
 
 class SimSearchHit(BaseModel):
