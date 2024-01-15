@@ -6130,16 +6130,10 @@
             "type": "integer",
             "title": "User Id",
             "description": "User the ConceptOverTimeAnalysis belongs to"
-          },
-          "concepts": {
-            "items": { "$ref": "#/components/schemas/COTAConcept" },
-            "type": "array",
-            "title": "Concepts",
-            "description": "List of Concepts that are part of the ConceptOverTimeAnalysis"
           }
         },
         "type": "object",
-        "required": ["name", "project_id", "user_id", "concepts"],
+        "required": ["name", "project_id", "user_id"],
         "title": "COTACreate"
       },
       "COTARead": {
@@ -6155,6 +6149,10 @@
             "type": "integer",
             "title": "Project Id",
             "description": "Project the ConceptOverTimeAnalysis belongs to"
+          },
+          "settings": {
+            "allOf": [{ "$ref": "#/components/schemas/COTASettings" }],
+            "description": "Settings of the ConceptOverTimeAnalysis."
           },
           "concepts": {
             "items": { "$ref": "#/components/schemas/COTAConcept" },
@@ -6182,7 +6180,17 @@
           }
         },
         "type": "object",
-        "required": ["name", "id", "user_id", "project_id", "concepts", "search_space", "created", "updated"],
+        "required": [
+          "name",
+          "id",
+          "user_id",
+          "project_id",
+          "settings",
+          "concepts",
+          "search_space",
+          "created",
+          "updated"
+        ],
         "title": "COTARead"
       },
       "COTARefinementHyperparameters": {
@@ -6266,11 +6274,34 @@
             "description": "Concept ID this sentence belongs to"
           },
           "x": { "type": "number", "title": "X", "description": "X coordinate of the Sentence in the search space" },
-          "y": { "type": "number", "title": "Y", "description": "Y coordinate of the Sentence in the search space" }
+          "y": { "type": "number", "title": "Y", "description": "Y coordinate of the Sentence in the search space" },
+          "date": { "type": "string", "format": "date-time", "title": "Date", "description": "date of the sdoc" }
         },
         "type": "object",
-        "required": ["sentence_id", "sdoc_id", "concept_similarities", "concept_annotation", "x", "y"],
+        "required": ["sentence_id", "sdoc_id", "concept_similarities", "concept_annotation", "x", "y", "date"],
         "title": "COTASentence"
+      },
+      "COTASettings": {
+        "properties": {
+          "group_by": {
+            "allOf": [{ "$ref": "#/components/schemas/DateGroupBy" }],
+            "description": "Group by date",
+            "default": "YEAR"
+          },
+          "date_metadata_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Date Metadata Id",
+            "description": "ID of the Project Date Metadata that is used for the ConceptOverTimeAnalysis"
+          },
+          "threshold": {
+            "type": "number",
+            "title": "Threshold",
+            "description": "Threshold of the ConceptOverTimeAnalysis",
+            "default": 0.9
+          }
+        },
+        "type": "object",
+        "title": "COTASettings"
       },
       "COTAUpdate": {
         "properties": {
@@ -6278,6 +6309,10 @@
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Name",
             "description": "Name of the ConceptOverTimeAnalysis"
+          },
+          "settings": {
+            "anyOf": [{ "$ref": "#/components/schemas/COTASettings" }, { "type": "null" }],
+            "description": "Settings of the ConceptOverTimeAnalysis."
           },
           "concepts": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/COTAConcept" }, "type": "array" }, { "type": "null" }],
