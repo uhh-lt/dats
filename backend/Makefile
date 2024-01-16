@@ -30,14 +30,7 @@ migrate:
 
 .PHONY: test
 test:
-	ENV_NAME=dwts source _activate_current_env.sh
-	# Tests will wipe all data; use a temporary repo root
-	# to protect our development files
-	export REPO_ROOT=$$(mktemp -d)
-	cd src
-	export PYTHONPATH=.
-	set -o allexport; [[ -f ../.env.testing ]] && source ../.env.testing
-	pytest
+	src/run_tests.sh
 
 .PHONY: wipe_database
 wipe_all_data:
