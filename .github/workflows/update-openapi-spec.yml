@@ -22,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Checkout PR
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr checkout ${{ github.event.pull_request.number }}
@@ -58,6 +59,7 @@ jobs:
         working-directory: frontend
         run: npm run build
       - uses: EndBug/add-and-commit@v9
+        if: github.event_name == 'pull_request'
         with:
           add: "frontend/src/api"
           message: "Update OpenAPI spec and client"
