@@ -75,7 +75,7 @@ function TimelineAnalysisSettings() {
             variant="outlined"
             value={projectMetadataId}
             onChange={handleChangeMetadataId}
-            helperText={<ValidDocumentsChecker projectId={projectId} />}
+            helperText={<ValidDocumentsChecker projectId={projectId} dateMetadataId={projectMetadataId} />}
             error={filteredProjectMetadata?.length === 0}
             disabled={filteredProjectMetadata?.length === 0}
           >
