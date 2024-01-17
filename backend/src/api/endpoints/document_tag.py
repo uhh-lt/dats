@@ -60,6 +60,7 @@ def link_multiple_tags(
     db: Session = Depends(get_db_session),
     multi_link: SourceDocumentDocumentTagMultiLink,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> int:
     # TODO this is a little inefficient, but at the moment
     # the fronend is never sending more than one id at a time
@@ -68,6 +69,11 @@ def link_multiple_tags(
     )
     authz_user.assert_in_same_project_as_many(
         Crud.DOCUMENT_TAG, multi_link.document_tag_ids
+    )
+
+    validate.validate_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in multi_link.source_document_ids]
+        + [(Crud.DOCUMENT_TAG, tag_id) for tag_id in multi_link.document_tag_ids]
     )
 
     return crud_document_tag.link_multiple_document_tags(
@@ -87,12 +93,18 @@ def unlink_multiple_tags(
     db: Session = Depends(get_db_session),
     multi_link: SourceDocumentDocumentTagMultiLink,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> int:
     authz_user.assert_in_same_project_as_many(
         Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
     )
     authz_user.assert_in_same_project_as_many(
         Crud.DOCUMENT_TAG, multi_link.document_tag_ids
+    )
+
+    validate.validate_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in multi_link.source_document_ids]
+        + [(Crud.DOCUMENT_TAG, tag_id) for tag_id in multi_link.document_tag_ids]
     )
 
     return crud_document_tag.unlink_multiple_document_tags(

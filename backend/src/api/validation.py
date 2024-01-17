@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -25,7 +25,7 @@ class Validate:
     ):
         self.db = db
 
-    def validate_objects_in_same_project(self, specs: List[Tuple[Crud, int | str]]):
+    def validate_objects_in_same_project(self, specs: Sequence[Tuple[Crud, int | str]]):
         orms = [self.read_crud(spec[0], spec[1]) for spec in specs]
 
         project_ids = {get_parent_project_id(orm) for orm in orms}
