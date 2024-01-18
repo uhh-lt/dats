@@ -22,7 +22,7 @@ export type SimSearchQuery = {
    */
   threshold?: number;
   /**
-   * Only search through documents matching this filter
+   * Only return documents matching this filter
    */
   filter: Filter_SearchColumns_;
 };
