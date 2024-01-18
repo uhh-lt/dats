@@ -12,7 +12,7 @@ interface SearchState {
   rowsPerPage: number;
   resultModalities: DocType[];
   searchType: QueryType;
-  searchQuery: string;
+  searchQuery: string | number;
   isTableView: boolean;
   sortModel: GridSortModel;
   expertMode: boolean;
@@ -131,7 +131,7 @@ export const searchSlice = createSlice({
     },
 
     // search
-    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
+    onChangeSearchQuery: (state, action: PayloadAction<string | number>) => {
       state.searchQuery = action.payload;
     },
     onClearSearch: (state) => {

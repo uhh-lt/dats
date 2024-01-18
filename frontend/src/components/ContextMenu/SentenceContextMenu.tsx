@@ -11,10 +11,11 @@ import {
 } from "@mui/material";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AttachedObjectType, SpanAnnotationReadResolved } from "../../api/openapi";
+import { AttachedObjectType, DocType, SpanAnnotationReadResolved } from "../../api/openapi";
 import MemoListItemButton from "../../features/Memo/MemoListItemButton";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
 import { SearchActions } from "../../views/search/searchSlice";
+import { QueryType } from "../../views/search/QueryType";
 
 interface SentenceContextMenuProps {}
 
@@ -69,18 +70,21 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleSentenceSimilaritySearch = () => {
-    // TODO implement this
-    alert("Not implemented yet");
-    // dispatch(SearchActions.setResultModalites([DocType.TEXT]));
+    dispatch(SearchActions.setResultModalites([DocType.TEXT]));
+    dispatch(SearchActions.onChangeSearchQuery(sentence || ""));
+    dispatch(SearchActions.setSearchType(QueryType.SEMANTIC_SENTENCES));
+    dispatch(SearchActions.clearSelectedDocuments());
     closeContextMenu();
-    // navigate("../search");
+    navigate("../search");
   };
 
   const handleImageSimilaritySearch = () => {
-    alert("Not implemented yet");
-    // dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
+    dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
+    dispatch(SearchActions.onChangeSearchQuery(sentence || ""));
+    dispatch(SearchActions.setSearchType(QueryType.SEMANTIC_IMAGES));
+    dispatch(SearchActions.clearSelectedDocuments());
     closeContextMenu();
-    // navigate("../search");
+    navigate("../search");
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {

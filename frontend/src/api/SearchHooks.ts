@@ -154,7 +154,13 @@ const useSearchDocumentsNew = (projectId: number) => {
   let searchFn: () => Promise<LexicalSearchResults | ImageSimilaritySearchResults | SentenceSimilaritySearchResults>;
   switch (searchType) {
     case QueryType.LEXICAL:
-      searchFn = lexicalSearchQueryFn(projectId, searchQuery, expertMode, filter as MyFilter<SearchColumns>, sortModel);
+      searchFn = lexicalSearchQueryFn(
+        projectId,
+        searchQuery.toString(),
+        expertMode,
+        filter as MyFilter<SearchColumns>,
+        sortModel,
+      );
       break;
     case QueryType.SEMANTIC_IMAGES:
       searchFn = imageSimilaritySearchQueryFn(projectId, searchQuery, filter as MyFilter<SearchColumns>);
