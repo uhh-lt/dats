@@ -5,6 +5,9 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.document_tag import (
@@ -23,12 +26,26 @@ router = APIRouter(
 @router.put(
     "",
     response_model=DocumentTagRead,
-    summary="Creates a new DocumentTag",
-    description="Creates a new DocumentTag and returns it with the generated ID.",
+    summary="Creates a new DocumentTag and returns it with the generated ID.",
 )
-async def create_new_doc_tag(
-    *, db: Session = Depends(get_db_session), doc_tag: DocumentTagCreate
+def create_new_doc_tag(
+    *,
+    db: Session = Depends(get_db_session),
+    doc_tag: DocumentTagCreate,
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> DocumentTagRead:
+    authz_user.assert_in_project(doc_tag.project_id)
+
+    if doc_tag.parent_tag_id is not None and doc_tag.parent_tag_id != -1:
+        authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, doc_tag.parent_tag_id)
+
+        parent_tag = crud_document_tag.read(db, doc_tag.parent_tag_id)
+        validate.validate_condition(
+            parent_tag.project_id == doc_tag.project_id,
+            "Parent tag needs to be in the same project",
+        )
+
     db_obj = crud_document_tag.create(db=db, create_dto=doc_tag)
     return DocumentTagRead.model_validate(db_obj)
 
@@ -36,15 +53,29 @@ async def create_new_doc_tag(
 @router.patch(
     "/bulk/link",
     response_model=int,
-    summary="Links multiple DocumentTags with the SourceDocuments",
-    description="Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
+    summary="Links multiple DocumentTags with the SourceDocuments and returns the number of new Links",
 )
-async def link_multiple_tags(
+def link_multiple_tags(
     *,
     db: Session = Depends(get_db_session),
     multi_link: SourceDocumentDocumentTagMultiLink,
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> int:
-    # TODO Flo: only if the user has access?
+    # TODO this is a little inefficient, but at the moment
+    # the fronend is never sending more than one id at a time
+    authz_user.assert_in_same_project_as_many(
+        Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
+    )
+    authz_user.assert_in_same_project_as_many(
+        Crud.DOCUMENT_TAG, multi_link.document_tag_ids
+    )
+
+    validate.validate_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in multi_link.source_document_ids]
+        + [(Crud.DOCUMENT_TAG, tag_id) for tag_id in multi_link.document_tag_ids]
+    )
+
     return crud_document_tag.link_multiple_document_tags(
         db=db,
         sdoc_ids=multi_link.source_document_ids,
@@ -55,15 +86,27 @@ async def link_multiple_tags(
 @router.delete(
     "/bulk/unlink",
     response_model=int,
-    summary="Unlinks all DocumentTags with the SourceDocuments",
-    description="Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
+    summary="Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.",
 )
-async def unlink_multiple_tags(
+def unlink_multiple_tags(
     *,
     db: Session = Depends(get_db_session),
     multi_link: SourceDocumentDocumentTagMultiLink,
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> int:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as_many(
+        Crud.SOURCE_DOCUMENT, multi_link.source_document_ids
+    )
+    authz_user.assert_in_same_project_as_many(
+        Crud.DOCUMENT_TAG, multi_link.document_tag_ids
+    )
+
+    validate.validate_objects_in_same_project(
+        [(Crud.SOURCE_DOCUMENT, sdoc_id) for sdoc_id in multi_link.source_document_ids]
+        + [(Crud.DOCUMENT_TAG, tag_id) for tag_id in multi_link.document_tag_ids]
+    )
+
     return crud_document_tag.unlink_multiple_document_tags(
         db=db,
         sdoc_ids=multi_link.source_document_ids,
@@ -74,13 +117,16 @@ async def unlink_multiple_tags(
 @router.get(
     "/{tag_id}",
     response_model=DocumentTagRead,
-    summary="Returns the DocumentTag",
-    description="Returns the DocumentTag with the given ID.",
+    summary="Returns the DocumentTag with the given ID.",
 )
-async def get_by_id(
-    *, db: Session = Depends(get_db_session), tag_id: int
+def get_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> DocumentTagRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return DocumentTagRead.model_validate(db_obj)
 
@@ -88,10 +134,9 @@ async def get_by_id(
 @router.patch(
     "/{tag_id}",
     response_model=DocumentTagRead,
-    summary="Updates the DocumentTag",
-    description="Updates the DocumentTag with the given ID.",
+    summary="Updates the DocumentTag with the given ID.",
 )
-async def update_by_id(
+def update_by_id(
     *, db: Session = Depends(get_db_session), tag_id: int, doc_tag: DocumentTagUpdate
 ) -> DocumentTagRead:
     # TODO Flo: only if the user has access?
@@ -102,13 +147,16 @@ async def update_by_id(
 @router.delete(
     "/{tag_id}",
     response_model=DocumentTagRead,
-    summary="Deletes the DocumentTag",
-    description="Deletes the DocumentTag with the given ID.",
+    summary="Deletes the DocumentTag with the given ID.",
 )
-async def delete_by_id(
-    *, db: Session = Depends(get_db_session), tag_id: int
+def delete_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> DocumentTagRead:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+
     db_obj = crud_document_tag.remove(db=db, id=tag_id)
     return DocumentTagRead.model_validate(db_obj)
 
@@ -116,13 +164,24 @@ async def delete_by_id(
 @router.put(
     "/{tag_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the DocumentTag",
-    description="Adds a Memo to the DocumentTag with the given ID if it exists",
+    summary="Adds a Memo to the DocumentTag with the given ID if it exists",
 )
-async def add_memo(
-    *, db: Session = Depends(get_db_session), tag_id: int, memo: MemoCreate
+def add_memo(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    memo: MemoCreate,
+    authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
-    # TODO Flo: only if the user has access?
+    tag = crud_document_tag.read(db, tag_id)
+    authz_user.assert_is_same_user(memo.user_id)
+    authz_user.assert_in_project(tag.project_id)
+    authz_user.assert_in_project(memo.project_id)
+    validate.validate_condition(
+        tag.project_id == memo.project_id, "Tag and memo project need to match"
+    )
+
     db_obj = crud_memo.create_for_document_tag(
         db=db, doc_tag_id=tag_id, create_dto=memo
     )
@@ -137,13 +196,16 @@ async def add_memo(
 @router.get(
     "/{tag_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo attached to the DocumentTag",
-    description="Returns the Memo attached to the DocumentTag with the given ID if it exists.",
+    summary="Returns the Memo attached to the DocumentTag with the given ID if it exists.",
 )
-async def get_memos(
-    *, db: Session = Depends(get_db_session), tag_id: int
+def get_memos(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[MemoRead]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return get_object_memos(db_obj=db_obj)
 
@@ -151,15 +213,20 @@ async def get_memos(
 @router.get(
     "/{tag_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-    description=(
-        "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
+    summary=(
+        "Returns the Memo attached to the document tag with the given ID of the User with the"
         " given ID if it exists."
     ),
 )
-async def get_user_memo(
-    *, db: Session = Depends(get_db_session), tag_id: int, user_id: int
+def get_user_memo(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    user_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> MemoRead:
+    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return get_object_memo_for_user(db_obj=db_obj, user_id=user_id)
 
@@ -167,14 +234,18 @@ async def get_user_memo(
 @router.get(
     "/{tag_id}/sdocs",
     response_model=List[int],
-    summary="Returns all SourceDocument IDs attached to the Tag with the given ID",
-    description=(
+    summary=(
         "Returns all SourceDocument IDs attached to the Tag with the given ID if it exists."
     ),
 )
-async def get_sdoc_ids_by_tag_id(
-    *, db: Session = Depends(get_db_session), tag_id: int
+def get_sdoc_ids_by_tag_id(
+    *,
+    db: Session = Depends(get_db_session),
+    tag_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
+    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
+
     db_obj = crud_document_tag.read(db=db, id=tag_id)
     return [sdoc.id for sdoc in db_obj.source_documents]
 

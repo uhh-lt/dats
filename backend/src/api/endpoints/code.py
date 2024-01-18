@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.code import crud_code
@@ -21,10 +22,9 @@ router = APIRouter(
 @router.put(
     "",
     response_model=CodeRead,
-    summary="Creates a new Code",
-    description="Creates a new Code and returns it with the generated ID.",
+    summary="Creates a new Code and returns it with the generated ID.",
 )
-async def create_new_code(
+def create_new_code(
     *,
     db: Session = Depends(get_db_session),
     code: CodeCreate,
@@ -32,7 +32,7 @@ async def create_new_code(
 ) -> CodeRead:
     authz_user.assert_is_same_user(code.user_id)
     authz_user.assert_in_project(code.project_id)
-    if code.parent_code_id is not None:
+    if code.parent_code_id is not None and code.parent_code_id != -1:
         authz_user.assert_in_same_project_as(Crud.CODE, code.parent_code_id)
 
     db_code = crud_code.create(db=db, create_dto=code)
@@ -42,10 +42,9 @@ async def create_new_code(
 @router.get(
     "/current/{current_code_id}",
     response_model=CodeRead,
-    summary="Returns the Code linked by the CurrentCode",
-    description="Returns the Code linked by the CurrentCode with the given ID.",
+    summary="Returns the Code linked by the CurrentCode with the given ID.",
 )
-async def get_code_by_current_code_id(
+def get_code_by_current_code_id(
     *,
     db: Session = Depends(get_db_session),
     current_code_id: int,
@@ -60,10 +59,9 @@ async def get_code_by_current_code_id(
 @router.get(
     "/{code_id}",
     response_model=CodeRead,
-    summary="Returns the Code",
-    description="Returns the Code with the given ID.",
+    summary="Returns the Code with the given ID.",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -78,10 +76,9 @@ async def get_by_id(
 @router.patch(
     "/{code_id}",
     response_model=CodeRead,
-    summary="Updates the Code",
-    description="Updates the Code with the given ID.",
+    summary="Updates the Code with the given ID.",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -97,10 +94,9 @@ async def update_by_id(
 @router.delete(
     "/{code_id}",
     response_model=CodeRead,
-    summary="Deletes the Code",
-    description="Deletes the Code with the given ID.",
+    summary="Deletes the Code with the given ID.",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -115,22 +111,22 @@ async def delete_by_id(
 @router.put(
     "/{code_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the Code",
-    description="Adds a Memo to the Code with the given ID if it exists",
+    summary="Adds a Memo to the Code with the given ID if it exists",
 )
-async def add_memo(
+def add_memo(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
-    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
-    authz_user.assert_in_project(memo.project_id)
-    authz_user.assert_is_same_user(memo.user_id)
-
     code = crud_code.read(db, code_id)
-    authz_user.assert_bool(
+    authz_user.assert_is_same_user(memo.user_id)
+    authz_user.assert_in_project(code.project_id)
+    authz_user.assert_in_project(memo.project_id)
+
+    validate.validate_condition(
         code.project_id == memo.project_id, "Memo project needs to match code project"
     )
 
@@ -146,10 +142,9 @@ async def add_memo(
 @router.get(
     "/{code_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo attached to the Code",
-    description="Returns the Memo attached to the Code with the given ID if it exists.",
+    summary="Returns the Memo attached to the Code with the given ID if it exists.",
 )
-async def get_memos(
+def get_memos(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
@@ -164,13 +159,12 @@ async def get_memos(
 @router.get(
     "/{code_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the SpanAnnotation of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the SpanAnnotation with the given ID of the User with the"
         " given ID if it exists."
     ),
 )
-async def get_user_memo(
+def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,

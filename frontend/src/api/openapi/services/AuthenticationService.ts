@@ -12,7 +12,6 @@ import { request as __request } from "../core/request";
 
 export class AuthenticationService {
   /**
-   * Registers a new User
    * Registers a new User and returns it with the generated ID.
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -30,7 +29,6 @@ export class AuthenticationService {
   }
 
   /**
-   * Returns the JWT access token for the provided user login data
    * Returns the JWT access token for the provided user login data if the login was successful. This is usually only called from an OAuth2 client!
    * @returns UserAuthorizationHeaderData Successful Response
    * @throws ApiError
@@ -52,7 +50,6 @@ export class AuthenticationService {
   }
 
   /**
-   * Log out the user from the given session.
    * Revokes the refresh token associated with the given session.
    * @returns any Successful Response
    * @throws ApiError
@@ -71,7 +68,6 @@ export class AuthenticationService {
   }
 
   /**
-   * Obtain a new access token.
    * Uses the given refresh token to obtain a new access token.
    * @returns UserAuthorizationHeaderData Successful Response
    * @throws ApiError

@@ -23,8 +23,7 @@ router = APIRouter(prefix="/authentication", tags=["authentication"])
 @router.post(
     "/register",
     response_model=UserRead,
-    summary="Registers a new User",
-    description="Registers a new User and returns it with the generated ID.",
+    summary="Registers a new User and returns it with the generated ID.",
 )
 async def register(
     *, db: Session = Depends(get_db_session), user: UserCreate
@@ -48,13 +47,12 @@ async def register(
 @router.post(
     "/login",
     response_model=UserAuthorizationHeaderData,
-    summary="Returns the JWT access token for the provided user login data",
-    description=(
+    summary=(
         "Returns the JWT access token for the provided user login data if the login was successful. "
         "This is usually only called from an OAuth2 client!"
     ),
 )
-async def login(
+def login(
     *,
     db: Session = Depends(get_db_session),
     user_login_form_data: OAuth2PasswordRequestForm = Depends(),
@@ -81,8 +79,7 @@ async def login(
 
 @router.post(
     "/logout",
-    summary="Log out the user from the given session.",
-    description=("Revokes the refresh token associated with the given session."),
+    summary="Revokes the refresh token associated with the given session.",
 )
 def logout(
     *, db: Session = Depends(get_db_session), dto: RefreshAccessTokenData = Depends()
@@ -93,10 +90,9 @@ def logout(
 
 @router.post(
     "/refresh_access",
-    summary="Obtain a new access token.",
-    description=("Uses the given refresh token to obtain a new access token."),
+    summary="Uses the given refresh token to obtain a new access token.",
 )
-async def refresh_access_token(
+def refresh_access_token(
     *, db: Session = Depends(get_db_session), dto: RefreshAccessTokenData = Depends()
 ) -> UserAuthorizationHeaderData:
     token = crud_refresh_token.read_and_verify(db, dto.refresh_token)

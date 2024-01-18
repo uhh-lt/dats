@@ -13,7 +13,6 @@ import { request as __request } from "../core/request";
 
 export class UserService {
   /**
-   * Returns the current user
    * Returns the current (logged in) user
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -26,7 +25,6 @@ export class UserService {
   }
 
   /**
-   * Returns the User
    * Returns the User with the given ID if it exists
    * @returns PublicUserRead Successful Response
    * @throws ApiError
@@ -45,7 +43,6 @@ export class UserService {
   }
 
   /**
-   * Updates the User
    * Updates the User with the given ID if it exists
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -72,7 +69,6 @@ export class UserService {
   }
 
   /**
-   * Removes the User
    * Removes the User with the given ID if it exists
    * @returns UserRead Successful Response
    * @throws ApiError
@@ -91,7 +87,6 @@ export class UserService {
   }
 
   /**
-   * Returns all Users
    * Returns all Users that exist in the system
    * @returns PublicUserRead Successful Response
    * @throws ApiError
@@ -123,7 +118,6 @@ export class UserService {
   }
 
   /**
-   * Returns all Projects of the User
    * Returns all Projects of the User with the given ID
    * @returns ProjectRead Successful Response
    * @throws ApiError
@@ -142,7 +136,6 @@ export class UserService {
   }
 
   /**
-   * Returns sdoc ids of sdocs the User recently modified (annotated)
    * Returns the top k sdoc ids that the User recently modified (annotated)
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError

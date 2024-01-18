@@ -67,7 +67,7 @@ def get_parent_project_id(orm: ORMBase) -> Optional[int]:
     raise NotImplementedError(f"Unknown ORM: {type(orm)}")
 
 
-def get_orm_user_id(orm: ORMBase) -> Optional[int]:
+def get_orm_user_id(orm: ORMBase) -> int:
     proj_id = getattr(orm, "user_id", None)
     if proj_id is not None:
         return proj_id

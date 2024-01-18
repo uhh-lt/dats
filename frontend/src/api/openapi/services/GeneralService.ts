@@ -19,7 +19,6 @@ export class GeneralService {
   }
 
   /**
-   * Root To Docs
    * Redirection to /docs
    * @returns any Successful Response
    * @throws ApiError

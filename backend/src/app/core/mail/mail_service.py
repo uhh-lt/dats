@@ -22,6 +22,7 @@ class MailService(metaclass=SingletonMeta):
                 VALIDATE_CERTS=conf.mail.validate_certs == "True",
             )
         )
+        cls.feedback_mail_address = conf.mail.mail
         return super(MailService, cls).__new__(cls)
 
     async def send_mail(self, email: EmailStr, subject: str, body: str):
@@ -61,7 +62,9 @@ class MailService(metaclass=SingletonMeta):
             </p>
             <p>Best regards,<br>DWTS Notification Service</p>
             """
-        await self.send_mail(email=self.mail, subject=subject, body=body)
+        await self.send_mail(
+            email=self.feedback_mail_address, subject=subject, body=body
+        )
 
     async def send_feedback_response_mail(
         self, user: UserRead, feedback: FeedbackRead, message: str

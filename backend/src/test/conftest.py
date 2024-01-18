@@ -4,16 +4,17 @@
 import os
 import random
 import string
-
-# Allow app to detect if it's running inside tests
 from typing import Callable, Generator
 
 import pytest
 from fastapi import Request
 from fastapi.datastructures import Headers
 from loguru import logger
+from sqlalchemy.orm import Session
 
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
+from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
 from app.core.db.sql_service import SQLService
 from app.core.startup import startup
@@ -38,7 +39,7 @@ if not STARTUP_DONE:
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
-from app.core.data.dto.code import CodeCreate, CodeRead
+from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserCreate, UserRead
 
@@ -54,8 +55,7 @@ def anyio_backend():
     return "asyncio"
 
 
-@pytest.fixture
-def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
+def code_fixture_base(session: SQLService, project: int, user: int) -> CodeORM:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -69,7 +69,12 @@ def code(session: SQLService, project: int, user: int) -> Generator[int, None, N
 
     with session.db_session() as sess:
         db_code = crud_code.create(db=sess, create_dto=code)
-        code_obj = CodeRead.model_validate(db_code)
+    return db_code
+
+
+@pytest.fixture
+def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
+    code_obj = code_fixture_base(session, project, user)
 
     yield code_obj.id
 
@@ -78,8 +83,36 @@ def code(session: SQLService, project: int, user: int) -> Generator[int, None, N
 
 
 @pytest.fixture
+def make_code(
+    session: SQLService, project: int, user: int
+) -> Generator[Callable[[], CodeORM], None, None]:
+    created_codes = []
+
+    def factory():
+        code = code_fixture_base(session, project, user)
+        created_codes.append(code)
+        return code
+
+    yield factory
+
+    with session.db_session() as sess:
+        for code in created_codes:
+            crud_code.remove(db=sess, id=code.id)
+
+
+@pytest.fixture
 def session() -> SQLService:
     return SQLService()
+
+
+@pytest.fixture
+def rollbacked_session(session: SQLService) -> Generator[Session, None, None]:
+    db = session.session_maker()
+
+    yield db
+
+    db.rollback()
+    db.close()
 
 
 def project_fixture_base(session: SQLService, user: int) -> ProjectORM:
@@ -173,12 +206,20 @@ def make_user(session: SQLService) -> Generator[Callable[[], UserRead], None, No
 
 
 @pytest.fixture
-def authz_user(user: int, session: SQLService, mock_request: Request) -> AuthzUser:
-    with session.db_session() as db:
-        user_orm = crud_user.read(db, user)
-        authz_user = AuthzUser(request=mock_request, user=user_orm, db=db)
+def authz_user(
+    user: int, rollbacked_session: Session, mock_request: Request
+) -> AuthzUser:
+    user_orm = crud_user.read(rollbacked_session, user)
+    authz_user = AuthzUser(request=mock_request, user=user_orm, db=rollbacked_session)
 
-        return authz_user
+    return authz_user
+
+
+@pytest.fixture
+def validate(rollbacked_session: Session) -> Validate:
+    validate = Validate(db=rollbacked_session)
+
+    return validate
 
 
 @pytest.fixture

@@ -16,7 +16,6 @@ import { request as __request } from "../core/request";
 export class AnnotationDocumentService {
   /**
    * Creates an AnnotationDocument
-   * Creates an AnnotationDocument
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
    */
@@ -37,7 +36,6 @@ export class AnnotationDocumentService {
   }
 
   /**
-   * Returns the AnnotationDocument
    * Returns the AnnotationDocument with the given ID if it exists
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
@@ -56,7 +54,6 @@ export class AnnotationDocumentService {
   }
 
   /**
-   * Removes the AnnotationDocument
    * Removes the AnnotationDocument with the given ID if it exists
    * @returns AnnotationDocumentRead Successful Response
    * @throws ApiError
@@ -75,7 +72,6 @@ export class AnnotationDocumentService {
   }
 
   /**
-   * Returns all SpanAnnotations in the AnnotationDocument
    * Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns any Successful Response
    * @throws ApiError
@@ -118,7 +114,6 @@ export class AnnotationDocumentService {
   }
 
   /**
-   * Removes all SpanAnnotations in the AnnotationDocument
    * Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns number Successful Response
    * @throws ApiError
@@ -137,7 +132,6 @@ export class AnnotationDocumentService {
   }
 
   /**
-   * Returns all BBoxAnnotations in the AnnotationDocument
    * Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns any Successful Response
    * @throws ApiError
@@ -180,7 +174,6 @@ export class AnnotationDocumentService {
   }
 
   /**
-   * Removes all BBoxAnnotations in the AnnotationDocument
    * Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns number Successful Response
    * @throws ApiError
@@ -199,7 +192,6 @@ export class AnnotationDocumentService {
   }
 
   /**
-   * Returns all SpanGroups in the AnnotationDocument
    * Returns all SpanGroups in the AnnotationDocument with the given ID if it exists
    * @returns SpanGroupRead Successful Response
    * @throws ApiError

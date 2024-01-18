@@ -1,12 +1,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { Body_search_search_code_stats } from "../models/Body_search_search_code_stats";
 import type { Body_search_search_sdocs } from "../models/Body_search_search_sdocs";
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
-import type { MemoTitleQuery } from "../models/MemoTitleQuery";
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
 import type { SimSearchQuery } from "../models/SimSearchQuery";
@@ -20,7 +18,6 @@ import { request as __request } from "../core/request";
 
 export class SearchService {
   /**
-   * Returns Search Info.
    * Returns Search Info.
    * @returns ColumnInfo_SearchColumns_ Successful Response
    * @throws ApiError
@@ -43,7 +40,6 @@ export class SearchService {
   }
 
   /**
-   * Returns all SourceDocument IDs that match the query parameters.
    * Returns all SourceDocument Ids that match the query parameters.
    * @returns number Successful Response
    * @throws ApiError
@@ -77,7 +73,6 @@ export class SearchService {
 
   /**
    * Returns SpanEntityStats for the given SourceDocuments.
-   * Returns SpanEntityStats for the given SourceDocuments.
    * @returns SpanEntityStat Successful Response
    * @throws ApiError
    */
@@ -87,7 +82,7 @@ export class SearchService {
     sortByGlobal = false,
   }: {
     codeId: number;
-    requestBody: Body_search_search_code_stats;
+    requestBody: Array<number>;
     sortByGlobal?: boolean;
   }): CancelablePromise<Array<SpanEntityStat>> {
     return __request(OpenAPI, {
@@ -106,7 +101,6 @@ export class SearchService {
   }
 
   /**
-   * Returns KeywordStats for the given SourceDocuments.
    * Returns KeywordStats for the given SourceDocuments.
    * @returns KeywordStat Successful Response
    * @throws ApiError
@@ -139,7 +133,6 @@ export class SearchService {
   }
 
   /**
-   * Returns TagStat for the given SourceDocuments.
    * Returns Stat for the given SourceDocuments.
    * @returns TagStat Successful Response
    * @throws ApiError
@@ -166,7 +159,6 @@ export class SearchService {
   }
 
   /**
-   * Returns all Memos where the content matches the query via lexical search
    * Returns all Memos where the content matches the query via lexical search
    * @returns PaginatedMemoSearchResults Successful Response
    * @throws ApiError
@@ -202,43 +194,6 @@ export class SearchService {
   }
 
   /**
-   * Returns all Memos where the title matches the query via lexical search
-   * Returns all Memos where the title matches the query via lexical search
-   * @returns PaginatedMemoSearchResults Successful Response
-   * @throws ApiError
-   */
-  public static searchMemosByTitleQuery({
-    requestBody,
-    skip,
-    limit,
-  }: {
-    requestBody: MemoTitleQuery;
-    /**
-     * The number of elements to skip (offset)
-     */
-    skip?: number | null;
-    /**
-     * The maximum number of returned elements
-     */
-    limit?: number | null;
-  }): CancelablePromise<PaginatedMemoSearchResults> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/search/lexical/memo/title",
-      query: {
-        skip: skip,
-        limit: limit,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-
-  /**
-   * Returns similar sentences according to a textual or visual query.
    * Returns similar sentences according to a textual or visual query.
    * @returns SimSearchSentenceHit Successful Response
    * @throws ApiError
@@ -260,7 +215,6 @@ export class SearchService {
   }
 
   /**
-   * Returns similar images according to a textual or visual query.
    * Returns similar images according to a textual or visual query.
    * @returns SimSearchImageHit Successful Response
    * @throws ApiError

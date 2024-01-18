@@ -12,7 +12,6 @@ import { request as __request } from "../core/request";
 export class WhiteboardService {
   /**
    * Creates an Whiteboard
-   * Creates an Whiteboard
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
    */
@@ -29,7 +28,6 @@ export class WhiteboardService {
   }
 
   /**
-   * Returns the Whiteboard
    * Returns the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
@@ -48,7 +46,6 @@ export class WhiteboardService {
   }
 
   /**
-   * Updates the Whiteboard
    * Updates the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
@@ -75,7 +72,6 @@ export class WhiteboardService {
   }
 
   /**
-   * Removes the Whiteboard
    * Removes the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
@@ -94,7 +90,6 @@ export class WhiteboardService {
   }
 
   /**
-   * Returns Whiteboards of the Project
    * Returns the Whiteboards of the Project with the given ID
    * @returns WhiteboardRead Successful Response
    * @throws ApiError
@@ -113,7 +108,6 @@ export class WhiteboardService {
   }
 
   /**
-   * Returns Whiteboards of the Project of the User
    * Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists
    * @returns WhiteboardRead Successful Response
    * @throws ApiError

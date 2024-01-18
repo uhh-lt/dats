@@ -9,6 +9,7 @@ from api.dependencies import (
     resolve_code_param,
 )
 from api.util import get_object_memo_for_user, get_object_memos
+from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.bbox_annotation import crud_bbox_anno
@@ -31,9 +32,8 @@ router = APIRouter(
     "",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
     summary="Creates a BBoxAnnotation",
-    description="Creates a BBoxAnnotation",
 )
-async def add_bbox_annotation(
+def add_bbox_annotation(
     *,
     db: Session = Depends(get_db_session),
     bbox: BBoxAnnotationCreateWithCodeId,
@@ -59,10 +59,9 @@ async def add_bbox_annotation(
 @router.get(
     "/{bbox_id}",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
-    summary="Returns the BBoxAnnotation",
-    description="Returns the BBoxAnnotation with the given ID.",
+    summary="Returns the BBoxAnnotation with the given ID.",
 )
-async def get_by_id(
+def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
@@ -85,10 +84,9 @@ async def get_by_id(
 @router.patch(
     "/{bbox_id}",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
-    summary="Updates the BBoxAnnotation",
-    description="Updates the BBoxAnnotation with the given ID.",
+    summary="Updates the BBoxAnnotation with the given ID.",
 )
-async def update_by_id(
+def update_by_id(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
@@ -113,10 +111,9 @@ async def update_by_id(
 @router.delete(
     "/{bbox_id}",
     response_model=Union[BBoxAnnotationRead, BBoxAnnotationReadResolvedCode],
-    summary="Deletes the BBoxAnnotation",
-    description="Deletes the BBoxAnnotation with the given ID.",
+    summary="Deletes the BBoxAnnotation with the given ID.",
 )
-async def delete_by_id(
+def delete_by_id(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
@@ -131,10 +128,9 @@ async def delete_by_id(
 @router.get(
     "/{bbox_id}/code",
     response_model=CodeRead,
-    summary="Returns the Code of the BBoxAnnotation",
-    description="Returns the Code of the BBoxAnnotation with the given ID if it exists.",
+    summary="Returns the Code of the BBoxAnnotation with the given ID if it exists.",
 )
-async def get_code(
+def get_code(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
@@ -150,19 +146,26 @@ async def get_code(
 @router.put(
     "/{bbox_id}/memo",
     response_model=MemoRead,
-    summary="Adds a Memo to the BBoxAnnotation",
-    description="Adds a Memo to the BBoxAnnotation with the given ID if it exists",
+    summary="Adds a Memo to the BBoxAnnotation with the given ID if it exists",
 )
-async def add_memo(
+def add_memo(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
     memo: MemoCreate,
     authz_user: AuthzUser = Depends(),
+    validate: Validate = Depends(),
 ) -> MemoRead:
-    authz_user.assert_in_project(memo.project_id)
+    bbox_anno = crud_bbox_anno.read(db, bbox_id)
     authz_user.assert_is_same_user(memo.user_id)
-    authz_user.assert_in_same_project_as(Crud.BBOX_ANNOTATION, bbox_id)
+    authz_user.assert_in_project(memo.project_id)
+    authz_user.assert_in_project(
+        bbox_anno.annotation_document.source_document.project_id
+    )
+    validate.validate_condition(
+        bbox_anno.annotation_document.source_document.project_id == memo.project_id,
+        "memo and bbox annotation project don't match",
+    )
 
     db_obj = crud_memo.create_for_bbox_annotation(
         db=db, bbox_anno_id=bbox_id, create_dto=memo
@@ -178,10 +181,9 @@ async def add_memo(
 @router.get(
     "/{bbox_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memos attached to the BBoxAnnotation",
-    description="Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
+    summary="Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.",
 )
-async def get_memos(
+def get_memos(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
@@ -197,13 +199,12 @@ async def get_memos(
 @router.get(
     "/{bbox_id}/memo/{user_id}",
     response_model=MemoRead,
-    summary="Returns the Memo attached to the BBoxAnnotation of the User with the given ID",
-    description=(
+    summary=(
         "Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the"
         " given ID if it exists."
     ),
 )
-async def get_user_memo(
+def get_user_memo(
     *,
     db: Session = Depends(get_db_session),
     bbox_id: int,
@@ -222,12 +223,11 @@ async def get_user_memo(
 @router.get(
     "/code/{code_id}/user/{user_id}",
     response_model=List[BBoxAnnotationRead],
-    summary="Returns BBoxAnnotations with the given Code of the User with the given ID",
-    description=(
+    summary=(
         "Returns BBoxAnnotations with the given Code of the User with the given ID"
     ),
 )
-async def get_by_user_code(
+def get_by_user_code(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,

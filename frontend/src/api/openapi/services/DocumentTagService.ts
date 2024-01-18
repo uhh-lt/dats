@@ -14,7 +14,6 @@ import { request as __request } from "../core/request";
 
 export class DocumentTagService {
   /**
-   * Creates a new DocumentTag
    * Creates a new DocumentTag and returns it with the generated ID.
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -36,7 +35,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Links multiple DocumentTags with the SourceDocuments
    * Links multiple DocumentTags with the SourceDocuments and returns the number of new Links
    * @returns number Successful Response
    * @throws ApiError
@@ -58,7 +56,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Unlinks all DocumentTags with the SourceDocuments
    * Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.
    * @returns number Successful Response
    * @throws ApiError
@@ -80,7 +77,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns the DocumentTag
    * Returns the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -99,7 +95,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Updates the DocumentTag
    * Updates the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -126,7 +121,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Deletes the DocumentTag
    * Deletes the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
    * @throws ApiError
@@ -145,7 +139,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Adds a Memo to the DocumentTag
    * Adds a Memo to the DocumentTag with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -172,7 +165,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns the Memo attached to the DocumentTag
    * Returns the Memo attached to the DocumentTag with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
@@ -191,8 +183,7 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns the Memo attached to the SpanAnnotation of the User with the given ID
-   * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
+   * Returns the Memo attached to the document tag with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
@@ -211,7 +202,6 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns all SourceDocument IDs attached to the Tag with the given ID
    * Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.
    * @returns number Successful Response
    * @throws ApiError

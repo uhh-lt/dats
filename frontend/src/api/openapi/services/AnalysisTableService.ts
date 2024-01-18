@@ -12,7 +12,6 @@ import { request as __request } from "../core/request";
 export class AnalysisTableService {
   /**
    * Creates an AnalysisTable
-   * Creates an AnalysisTable
    * @returns AnalysisTableRead Successful Response
    * @throws ApiError
    */
@@ -29,7 +28,6 @@ export class AnalysisTableService {
   }
 
   /**
-   * Returns the AnalysisTable
    * Returns the AnalysisTable with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
    * @throws ApiError
@@ -48,7 +46,6 @@ export class AnalysisTableService {
   }
 
   /**
-   * Updates the Analysis Table
    * Updates the Analysis Table with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
    * @throws ApiError
@@ -75,7 +72,6 @@ export class AnalysisTableService {
   }
 
   /**
-   * Removes the AnalysisTable
    * Removes the AnalysisTable with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
    * @throws ApiError
@@ -94,7 +90,6 @@ export class AnalysisTableService {
   }
 
   /**
-   * Returns AnalysisTables of the Project of the User
    * Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
    * @throws ApiError

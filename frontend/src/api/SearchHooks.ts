@@ -6,8 +6,6 @@ import {
   KeywordStat,
   MemoContentQuery,
   MemoRead,
-  MemoTitleQuery,
-  PaginatedMemoSearchResults,
   SearchColumns,
   SearchService,
   SimSearchImageHit,
@@ -150,25 +148,18 @@ const useSearchDocumentsNew = (projectId: number | null | undefined) => {
   );
 };
 
-const useSearchCodeStats = (
-  codeId: number,
-  userId: number | null | undefined,
-  sdocIds: number[],
-  sortStatsByGlobal: boolean,
-) =>
+const useSearchCodeStats = (codeId: number, sdocIds: number[], sortStatsByGlobal: boolean, enabled: boolean) =>
   useQuery<SpanEntityStat[], Error>(
-    [QueryKey.SEARCH_ENTITY_STATISTICS, codeId, userId, Array.from(sdocIds).sort(), sortStatsByGlobal],
+    [QueryKey.SEARCH_ENTITY_STATISTICS, codeId, Array.from(sdocIds).sort(), sortStatsByGlobal],
     () =>
       SearchService.searchCodeStats({
         codeId: codeId,
-        requestBody: {
-          user_ids: [userId!],
-          sdoc_ids: sdocIds,
-        },
+        requestBody: sdocIds,
+
         sortByGlobal: sortStatsByGlobal,
       }),
     {
-      enabled: !!userId,
+      enabled,
     },
   );
 
@@ -207,23 +198,10 @@ const useSearchMemoContent = (params: MemoContentQuery) =>
     },
   );
 
-const useSearchMemoTitle = (params: MemoTitleQuery) =>
-  useQuery<PaginatedMemoSearchResults, Error>(
-    [QueryKey.MEMOS_BY_TITLE_SEARCH, params.title_query],
-    () =>
-      SearchService.searchMemosByTitleQuery({
-        requestBody: params,
-      }),
-    {
-      enabled: params.title_query.length > 0,
-    },
-  );
-
 const SearchHooks = {
   useSearchCodeStats,
   useSearchKeywordStats,
   useSearchTagStats,
-  useSearchMemoTitle,
   useSearchMemoContent,
   useSearchDocumentsNew,
 };

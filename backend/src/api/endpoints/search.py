@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session, skip_limit_params
+from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.dto.search import (
     MemoContentQuery,
-    MemoTitleQuery,
     PaginatedMemoSearchResults,
     SimSearchImageHit,
     SimSearchQuery,
@@ -31,30 +32,31 @@ es = ElasticSearchService()
     "/sdoc_info",
     response_model=List[ColumnInfo[SearchColumns]],
     summary="Returns Search Info.",
-    description="Returns Search Info.",
 )
-async def search_sdocs_info(
-    *,
-    project_id: int,
+def search_sdocs_info(
+    *, project_id: int, authz_user: AuthzUser = Depends()
 ) -> List[ColumnInfo[SearchColumns]]:
+    authz_user.assert_in_project(project_id)
+
     return SearchService().search_info(project_id=project_id)
 
 
 @router.post(
     "/sdoc",
     response_model=List[int],
-    summary="Returns all SourceDocument IDs that match the query parameters.",
-    description="Returns all SourceDocument Ids that match the query parameters.",
+    summary="Returns all SourceDocument Ids that match the query parameters.",
 )
-async def search_sdocs(
+def search_sdocs(
     *,
     search_query: str,
     project_id: int,
     expert_mode: bool,
     filter: Filter[SearchColumns],
     sorts: List[Sort[SearchColumns]],
+    authz_user: AuthzUser = Depends(),
 ) -> List[int]:
-    # TODO Flo: only if the user has access?
+    authz_user.assert_in_project(project_id)
+
     return SearchService().search(
         search_query=search_query,
         expert_mode=expert_mode,
@@ -68,20 +70,25 @@ async def search_sdocs(
     "/code_stats",
     response_model=List[SpanEntityStat],
     summary="Returns SpanEntityStats for the given SourceDocuments.",
-    description="Returns SpanEntityStats for the given SourceDocuments.",
 )
-async def search_code_stats(
+def search_code_stats(
     *,
     db: Session = Depends(get_db_session),
     code_id: int,
-    user_ids: List[int],
     sdoc_ids: List[int],
     sort_by_global: bool = False,
+    authz_user: AuthzUser = Depends(),
 ) -> List[SpanEntityStat]:
+    if len(sdoc_ids) == 0:
+        return []
+
+    authz_user.assert_in_same_project_as(Crud.CODE, code_id)
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+
     # TODO Flo for large corpora this gets very slow. Hence we have to set a limit and in future implement some lazy
     #  loading or scrolling in the frontend with skip and limit.
     code_stats = SearchService().compute_code_statistics(
-        code_id=code_id, user_ids=set(user_ids), sdoc_ids=set(sdoc_ids)
+        code_id=code_id, sdoc_ids=set(sdoc_ids)
     )
     if sort_by_global:
         code_stats.sort(key=lambda x: x.global_count, reverse=True)
@@ -92,17 +99,21 @@ async def search_code_stats(
     "/keyword_stats",
     response_model=List[KeywordStat],
     summary="Returns KeywordStats for the given SourceDocuments.",
-    description="Returns KeywordStats for the given SourceDocuments.",
 )
-async def search_keyword_stats(
+def search_keyword_stats(
     *,
     project_id: int,
     sdoc_ids: List[int],
     sort_by_global: bool = False,
     top_k: int = 50,
+    authz_user: AuthzUser = Depends(),
 ) -> List[KeywordStat]:
     if len(sdoc_ids) == 0:
         return []
+
+    authz_user.assert_in_project(project_id)
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+
     keyword_stats = SearchService().compute_keyword_statistics(
         proj_id=project_id, sdoc_ids=set(sdoc_ids), top_k=top_k
     )
@@ -114,15 +125,19 @@ async def search_keyword_stats(
 @router.post(
     "/tag_stats",
     response_model=List[TagStat],
-    summary="Returns TagStat for the given SourceDocuments.",
-    description="Returns Stat for the given SourceDocuments.",
+    summary="Returns Stat for the given SourceDocuments.",
 )
-async def search_tag_stats(
+def search_tag_stats(
     *,
-    db: Session = Depends(get_db_session),
     sdoc_ids: List[int],
     sort_by_global: bool = False,
+    authz_user: AuthzUser = Depends(),
 ) -> List[TagStat]:
+    if len(sdoc_ids) == 0:
+        return []
+
+    authz_user.assert_in_same_project_as_many(Crud.SOURCE_DOCUMENT, sdoc_ids)
+
     tag_stats = SearchService().compute_tag_statistics(sdoc_ids=set(sdoc_ids))
     if sort_by_global:
         tag_stats.sort(key=lambda x: x.global_count, reverse=True)
@@ -133,13 +148,15 @@ async def search_tag_stats(
     "/lexical/memo/content",
     response_model=PaginatedMemoSearchResults,
     summary="Returns all Memos where the content matches the query via lexical search",
-    description="Returns all Memos where the content matches the query via lexical search",
 )
-async def search_memos_by_content_query(
+def search_memos_by_content_query(
     *,
     content_query: MemoContentQuery,
     skip_limit: Dict[str, int] = Depends(skip_limit_params),
+    authz_user: AuthzUser = Depends(),
 ) -> PaginatedMemoSearchResults:
+    authz_user.assert_in_project(content_query.proj_id)
+
     return es.search_memos_by_content_query(
         proj_id=content_query.proj_id,
         query=content_query.content_query,
@@ -150,32 +167,15 @@ async def search_memos_by_content_query(
 
 
 @router.post(
-    "/lexical/memo/title",
-    response_model=PaginatedMemoSearchResults,
-    summary="Returns all Memos where the title matches the query via lexical search",
-    description="Returns all Memos where the title matches the query via lexical search",
-)
-async def search_memos_by_title_query(
-    *,
-    title_query: MemoTitleQuery,
-    skip_limit: Dict[str, int] = Depends(skip_limit_params),
-) -> PaginatedMemoSearchResults:
-    return es.search_memos_by_title_query(
-        proj_id=title_query.proj_id,
-        user_id=title_query.user_id,
-        query=title_query.title_query,
-        starred=title_query.starred,
-        **skip_limit,
-    )
-
-
-@router.post(
     "/simsearch/sentences",
     response_model=List[SimSearchSentenceHit],
     summary="Returns similar sentences according to a textual or visual query.",
-    description="Returns similar sentences according to a textual or visual query.",
 )
-async def find_similar_sentences(query: SimSearchQuery) -> List[SimSearchSentenceHit]:
+def find_similar_sentences(
+    query: SimSearchQuery, authz_user: AuthzUser = Depends()
+) -> List[SimSearchSentenceHit]:
+    authz_user.assert_in_project(query.proj_id)
+
     return ss.find_similar_sentences(query=query)
 
 
@@ -183,7 +183,10 @@ async def find_similar_sentences(query: SimSearchQuery) -> List[SimSearchSentenc
     "/simsearch/images",
     response_model=List[SimSearchImageHit],
     summary="Returns similar images according to a textual or visual query.",
-    description="Returns similar images according to a textual or visual query.",
 )
-async def find_similar_images(query: SimSearchQuery) -> List[SimSearchImageHit]:
+def find_similar_images(
+    query: SimSearchQuery, authz_user: AuthzUser = Depends()
+) -> List[SimSearchImageHit]:
+    authz_user.assert_in_project(query.proj_id)
+
     return ss.find_similar_images(query=query)

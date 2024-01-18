@@ -11,7 +11,6 @@ import { request as __request } from "../core/request";
 export class ExportService {
   /**
    * Returns the ExportJob for the given Parameters
-   * Returns the ExportJob for the given Parameters
    * @returns ExportJobRead Successful Response
    * @throws ApiError
    */
@@ -32,7 +31,6 @@ export class ExportService {
   }
 
   /**
-   * Returns the ExportJob for the given ID
    * Returns the ExportJob for the given ID if it exists
    * @returns ExportJobRead Successful Response
    * @throws ApiError

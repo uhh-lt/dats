@@ -12,7 +12,6 @@ import { request as __request } from "../core/request";
 
 export class SdocMetadataService {
   /**
-   * Creates new Metadata
    * Creates a new Metadata and returns it with the generated ID.
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
@@ -34,7 +33,6 @@ export class SdocMetadataService {
   }
 
   /**
-   * Returns the Metadata
    * Returns the Metadata with the given ID.
    * @returns SourceDocumentMetadataReadResolved Successful Response
    * @throws ApiError
@@ -53,7 +51,6 @@ export class SdocMetadataService {
   }
 
   /**
-   * Updates the Metadata
    * Updates the Metadata with the given ID.
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError
@@ -80,7 +77,6 @@ export class SdocMetadataService {
   }
 
   /**
-   * Deletes the Metadata
    * Deletes the Metadata with the given ID.
    * @returns SourceDocumentMetadataRead Successful Response
    * @throws ApiError

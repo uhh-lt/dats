@@ -42,7 +42,9 @@ function CodeStatsWithoutData(props: CodeStatsProps) {
   const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
 
   // global server state (react-query)
-  const codeStats = SearchHooks.useSearchCodeStats(props.codeId, user?.id, props.sdocIds, sortStatsByGlobal);
+  // TODO does it make sense to only show code stats for the current user here?
+  // I think keyword and tag stats show counts for all users
+  const codeStats = SearchHooks.useSearchCodeStats(props.codeId, props.sdocIds, sortStatsByGlobal, !!user?.id);
 
   if (codeStats.isSuccess) {
     return <CodeStatsWithData codeStats={codeStats.data} {...props} />;
