@@ -15,8 +15,9 @@ OpenAPI.BASE = process.env.REACT_APP_SERVER || "";
 OpenAPI.TOKEN = localStorage.getItem("dwts-access") || undefined;
 
 export enum LoginStatus {
-  LOGGED_IN,
-  LOGGED_OUT,
+  LOGGED_IN = "logged_in",
+  LOADING = "loading",
+  LOGGED_OUT = "logged_out",
 }
 
 interface AuthContextType {
@@ -136,8 +137,10 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
   let status;
   const definitelyLoggedIn = user !== undefined || internalUser.isSuccess;
   const verifyingAccessToken = (internalUser.isLoading || internalUser.isFetching) && accessToken !== undefined;
-  if (definitelyLoggedIn || verifyingAccessToken) {
+  if (definitelyLoggedIn) {
     status = LoginStatus.LOGGED_IN;
+  } else if (verifyingAccessToken) {
+    status = LoginStatus.LOADING;
   } else {
     status = LoginStatus.LOGGED_OUT;
   }
