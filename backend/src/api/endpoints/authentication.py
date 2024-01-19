@@ -97,6 +97,8 @@ def refresh_access_token(
 ) -> UserAuthorizationHeaderData:
     token = crud_refresh_token.read_and_verify(db, dto.refresh_token)
     crud_refresh_token.revoke(db, token)
+    # Remove very old refresh tokens to prevent our database from filling up
+    crud_refresh_token.remove_old_refresh_tokens(db, token.user_id)
 
     (access_token, access_token_expires) = generate_jwt(token.user)
     new_token = crud_refresh_token.generate(db, token.user.id)
