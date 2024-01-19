@@ -437,7 +437,7 @@ class SimSearchService(metaclass=SingletonMeta):
 
     def get_sentence_embeddings(
         self, search_tuples: List[Tuple[int, int]]
-    ) -> List[List[float]]:
+    ) -> np.ndarray:
         # First prepare the query to run through data
         def run_batch(batch):
             query = (
@@ -497,4 +497,4 @@ class SimSearchService(metaclass=SingletonMeta):
             if len(batch) == 0:
                 break
 
-        return embeddings
+        return np.array(embeddings)
