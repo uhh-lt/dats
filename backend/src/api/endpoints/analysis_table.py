@@ -11,7 +11,6 @@ from app.core.data.dto.analysis_table import (
     AnalysisTableCreate,
     AnalysisTableRead,
     AnalysisTableUpdate,
-    InternalAnalysisTableCreate,
 )
 
 router = APIRouter(
@@ -34,13 +33,10 @@ async def create(
     authz_user: AuthzUser = Depends(),
 ) -> AnalysisTableRead:
     authz_user.assert_in_project(analysis_table.project_id)
-
-    create_with_user = InternalAnalysisTableCreate(
-        **analysis_table.model_dump(), user_id=authz_user.user.id
-    )
+    analysis_table.user_id = authz_user.user.id
 
     return AnalysisTableRead.model_validate(
-        crud_analysis_table.create(db=db, create_dto=create_with_user)
+        crud_analysis_table.create(db=db, create_dto=analysis_table)
     )
 
 

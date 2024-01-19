@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.core.data.dto.dto_base import UpdateDTOBase
 from app.core.data.table_type import TableType
@@ -16,10 +17,15 @@ class AnalysisTableBaseDTO(BaseModel):
 # Properties for creation
 class AnalysisTableCreate(AnalysisTableBaseDTO):
     project_id: int = Field(description="Project the AnalysisTable belongs to")
+    user_id: Optional[int] = Field(
+        description="User the AnalysisTable belongs to. Do not send any value for this field, it is automatically set by the backend.",
+        default=None,
+    )
 
-
-class InternalAnalysisTableCreate(AnalysisTableCreate):
-    user_id: int = Field(description="User the AnalysisTable belongs to")
+    @field_validator("user_id")
+    @classmethod
+    def user_id_must_be_none(cls, val: Optional[int]) -> Optional[int]:
+        return None
 
 
 # Properties for updating
