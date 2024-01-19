@@ -6150,9 +6150,13 @@
             "title": "Project Id",
             "description": "Project the ConceptOverTimeAnalysis belongs to"
           },
-          "settings": {
-            "allOf": [{ "$ref": "#/components/schemas/COTASettings" }],
-            "description": "Settings of the ConceptOverTimeAnalysis."
+          "timeline_settings": {
+            "allOf": [{ "$ref": "#/components/schemas/COTATimelineSettings" }],
+            "description": "Timeline Analysis Settings of the ConceptOverTimeAnalysis."
+          },
+          "training_settings": {
+            "allOf": [{ "$ref": "#/components/schemas/COTATrainingSettings" }],
+            "description": "Timeline Training Settings of the ConceptOverTimeAnalysis."
           },
           "concepts": {
             "items": { "$ref": "#/components/schemas/COTAConcept" },
@@ -6185,7 +6189,8 @@
           "id",
           "user_id",
           "project_id",
-          "settings",
+          "timeline_settings",
+          "training_settings",
           "concepts",
           "search_space",
           "created",
@@ -6281,7 +6286,7 @@
         "required": ["sentence_id", "sdoc_id", "concept_similarities", "concept_annotation", "x", "y", "date"],
         "title": "COTASentence"
       },
-      "COTASettings": {
+      "COTATimelineSettings": {
         "properties": {
           "group_by": {
             "allOf": [{ "$ref": "#/components/schemas/DateGroupBy" }],
@@ -6301,7 +6306,44 @@
           }
         },
         "type": "object",
-        "title": "COTASettings"
+        "title": "COTATimelineSettings"
+      },
+      "COTATrainingSettings": {
+        "properties": {
+          "search_space_topk": {
+            "type": "integer",
+            "title": "Search Space Topk",
+            "description": "Number of sentences to use as search space per concept."
+          },
+          "search_space_threshold": {
+            "type": "number",
+            "title": "Search Space Threshold",
+            "description": "Threshold to filter sentences from the search space."
+          },
+          "min_required_annotations_per_concept": {
+            "type": "integer",
+            "title": "Min Required Annotations Per Concept",
+            "description": "Minimum number of annotations per concept required to train the CEM."
+          },
+          "dimensionality_reduction_algorithm": {
+            "allOf": [{ "$ref": "#/components/schemas/DimensionalityReductionAlgorithm" }],
+            "description": "Dimensionality Reduction Algorithm used for the ConceptOverTimeAnalysis"
+          },
+          "layers": { "type": "integer", "title": "Layers", "description": "Number of layers of the CEM." },
+          "dimensions": { "type": "integer", "title": "Dimensions", "description": "Number of dimensions of the CEM." },
+          "epochs": { "type": "integer", "title": "Epochs", "description": "Number of epochs to train" }
+        },
+        "type": "object",
+        "required": [
+          "search_space_topk",
+          "search_space_threshold",
+          "min_required_annotations_per_concept",
+          "dimensionality_reduction_algorithm",
+          "layers",
+          "dimensions",
+          "epochs"
+        ],
+        "title": "COTATrainingSettings"
       },
       "COTAUpdate": {
         "properties": {
@@ -6310,9 +6352,13 @@
             "title": "Name",
             "description": "Name of the ConceptOverTimeAnalysis"
           },
-          "settings": {
-            "anyOf": [{ "$ref": "#/components/schemas/COTASettings" }, { "type": "null" }],
-            "description": "Settings of the ConceptOverTimeAnalysis."
+          "timeline_settings": {
+            "anyOf": [{ "$ref": "#/components/schemas/COTATimelineSettings" }, { "type": "null" }],
+            "description": "Timeline Settings of the ConceptOverTimeAnalysis."
+          },
+          "training_settings": {
+            "anyOf": [{ "$ref": "#/components/schemas/COTATrainingSettings" }, { "type": "null" }],
+            "description": "Training Settings of the ConceptOverTimeAnalysis."
           },
           "concepts": {
             "anyOf": [{ "items": { "$ref": "#/components/schemas/COTAConcept" }, "type": "array" }, { "type": "null" }],
@@ -6589,6 +6635,11 @@
         "type": "string",
         "enum": ["DATE_EQUALS", "DATE_GT", "DATE_LT", "DATE_GTE", "DATE_LTE"],
         "title": "DateOperator"
+      },
+      "DimensionalityReductionAlgorithm": {
+        "type": "string",
+        "enum": ["umap", "pca", "tsne"],
+        "title": "DimensionalityReductionAlgorithm"
       },
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
       "DocumentTagCreate": {
@@ -8670,16 +8721,20 @@
         "type": "object",
         "properties": {
           "project_id": { "title": "Project Id", "type": "integer", "description": "The ID of the Project." },
-          "base_model_name": {
+          "train_model_name": {
             "type": "string",
-            "title": "Base Model Name",
-            "description": "The name of the base model.",
-            "default": "sentence-transformers/clip-ViT-B-32-multilingual-v1"
+            "title": "Train Model Name",
+            "description": "The name of the model."
           },
-          "new_model_name": { "type": "string", "title": "New Model Name", "description": "The name of the new model." }
+          "train_dataloader_name": {
+            "type": "string",
+            "title": "Train Dataloader Name",
+            "description": "The name of the training dataloader."
+          },
+          "epochs": { "type": "integer", "title": "Epochs", "description": "The epochs to train." }
         },
         "type": "object",
-        "required": ["project_id", "new_model_name"],
+        "required": ["project_id", "train_model_name", "train_dataloader_name", "epochs"],
         "title": "TrainerJobParameters"
       },
       "TrainerJobRead": {
