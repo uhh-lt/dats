@@ -56,6 +56,12 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
       return;
     }
 
+    if (internalUser.isError && internalUser.error instanceof ApiError && internalUser.error.status === 403) {
+      // Our credentials are invalid, we're not logged in anymore.
+      setUser(undefined);
+      return;
+    }
+
     if (internalUser?.data?.id !== user?.id) {
       setUser(internalUser.data);
     }
