@@ -2,6 +2,7 @@ import random
 import string
 
 import pytest
+from sqlalchemy.orm import Session
 
 from api.util import get_object_memo_for_user, get_object_memos
 from app.core.data.crud.code import crud_code
@@ -9,10 +10,9 @@ from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
-from app.core.db.sql_service import SQLService
 
 
-def test_create_get_delete_code(session: SQLService, project: int, user: int) -> None:
+def test_create_get_delete_code(db: Session, project: int, user: int) -> None:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -25,15 +25,13 @@ def test_create_get_delete_code(session: SQLService, project: int, user: int) ->
     )
 
     # create code
-    with session.db_session() as sess:
-        db_code = crud_code.create(db=sess, create_dto=code)
-        new_code = CodeRead.model_validate(db_code)
+    db_code = crud_code.create(db=db, create_dto=code)
+    new_code = CodeRead.model_validate(db_code)
     code_id = new_code.id
 
     # get code
-    with session.db_session() as sess:
-        db_obj = crud_code.read(db=sess, id=code_id)
-        get_code = [CodeRead.model_validate(db_obj)]
+    db_obj = crud_code.read(db=db, id=code_id)
+    get_code = [CodeRead.model_validate(db_obj)]
 
     assert len(get_code) == 1
     assert get_code[0].name == name
@@ -41,25 +39,22 @@ def test_create_get_delete_code(session: SQLService, project: int, user: int) ->
     assert get_code[0].color == color
 
     # delete code
-    with session.db_session() as sess:
-        crud_code.remove(db=sess, id=code_id)
+    crud_code.remove(db=db, id=code_id)
 
     # try to get already removed code
-    with session.db_session() as sess:
-        with pytest.raises(NoSuchElementError):
-            db_obj = crud_code.read(db=sess, id=code_id)
+    with pytest.raises(NoSuchElementError):
+        db_obj = crud_code.read(db=db, id=code_id)
 
 
-def test_update_code(session: SQLService, code: int) -> None:
+def test_update_code(db: Session, code: int) -> None:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
 
     # update all fields
     code_new = CodeUpdate(name=name, description=description, color=color)
-    with session.db_session() as sess:
-        db_obj = crud_code.update(db=sess, id=code, update_dto=code_new)
-        get_code = [CodeRead.model_validate(db_obj)]
+    db_obj = crud_code.update(db=db, id=code, update_dto=code_new)
+    get_code = [CodeRead.model_validate(db_obj)]
 
     assert len(get_code) == 1
     assert get_code[0].name == name
@@ -68,9 +63,8 @@ def test_update_code(session: SQLService, code: int) -> None:
 
     # update nothing
     code_new2 = CodeUpdate()
-    with session.db_session() as sess:
-        db_obj = crud_code.update(db=sess, id=code, update_dto=code_new2)
-        get_code2 = [CodeRead.model_validate(db_obj)]
+    db_obj = crud_code.update(db=db, id=code, update_dto=code_new2)
+    get_code2 = [CodeRead.model_validate(db_obj)]
 
     assert len(get_code2) == 1
     assert get_code2[0].name == name
@@ -78,7 +72,7 @@ def test_update_code(session: SQLService, code: int) -> None:
     assert get_code2[0].color == color
 
 
-def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -> None:
+def test_add_get_memo(db: Session, code: int, project: int, user: int) -> None:
     title = "".join(random.choices(string.ascii_letters, k=15))
     content = "".join(random.choices(string.ascii_letters, k=30))
     starred = False
@@ -86,16 +80,15 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
     memo = MemoCreate(
         title=title, content=content, user_id=user, project_id=project, starred=starred
     )
-    with session.db_session() as sess:
-        db_obj = crud_memo.create_for_code(db=sess, code_id=code, create_dto=memo)
-        memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
-        memo_new = [
-            MemoRead(
-                **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-                attached_object_id=db_obj.id,
-                attached_object_type=AttachedObjectType.code,
-            )
-        ]
+    db_obj = crud_memo.create_for_code(db=db, code_id=code, create_dto=memo)
+    memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
+    memo_new = [
+        MemoRead(
+            **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
+            attached_object_id=db_obj.id,
+            attached_object_type=AttachedObjectType.code,
+        )
+    ]
 
     assert len(memo_new) == 1
     assert memo_new[0].title == title
@@ -103,9 +96,8 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
     assert memo_new[0].starred == starred
 
     # get memo
-    with session.db_session() as sess:
-        db_obj = crud_code.read(db=sess, id=code)
-        memos = get_object_memos(db_obj=db_obj)
+    db_obj = crud_code.read(db=db, id=code)
+    memos = get_object_memos(db_obj=db_obj)
 
     # print(f'{memos=}')
 
@@ -116,13 +108,11 @@ def test_add_get_memo(session: SQLService, code: int, project: int, user: int) -
 
     # get not existing memo
     with pytest.raises(NoSuchElementError):
-        with session.db_session() as sess:
-            db_obj = crud_code.read(db=sess, id=31337)
+        db_obj = crud_code.read(db=db, id=31337)
 
     # get user memo
-    with session.db_session() as sess:
-        db_obj = crud_code.read(db=sess, id=code)
-        memos_user = [get_object_memo_for_user(db_obj=db_obj, user_id=user)]
+    db_obj = crud_code.read(db=db, id=code)
+    memos_user = [get_object_memo_for_user(db_obj=db_obj, user_id=user)]
 
     assert len(memos_user) == 1
     assert memos_user[0].title == title

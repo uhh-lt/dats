@@ -10,7 +10,6 @@ from app.core.data.crud.project import crud_project
 from app.core.data.dto.user import UserRead
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
-from app.core.db.sql_service import SQLService
 
 
 def test_assert_true(authz_user: AuthzUser):
@@ -20,12 +19,10 @@ def test_assert_true(authz_user: AuthzUser):
         authz_user.assert_true(False, "")
 
 
-def test_assert_in_project(
-    user: int, project: int, rollbacked_session: Session, authz_user: AuthzUser
-):
+def test_assert_in_project(user: int, project: int, db: Session, authz_user: AuthzUser):
     authz_user.assert_in_project(project)
 
-    crud_project.dissociate_user(rollbacked_session, proj_id=project, user_id=user)
+    crud_project.dissociate_user(db, proj_id=project, user_id=user)
 
     with pytest.raises(ForbiddenError):
         authz_user.assert_in_project(project)
@@ -44,42 +41,39 @@ def test_assert_is_same_user(
 def test_assert_object_has_same_user_id(
     authz_user: AuthzUser,
     code: int,
-    session: SQLService,
+    db: Session,
     make_user: Callable[[], UserRead],
 ):
     # TODO test this function for other ORMs
     authz_user.assert_object_has_same_user_id(Crud.CODE, code)
 
-    with session.db_session() as db:
-        new_user = make_user()
-        code_orm = crud_code.read(db, code)
-        previous_user = code_orm.user
-        code_orm.user_id = new_user.id
-        db.commit()
+    new_user = make_user()
+    code_orm = crud_code.read(db, code)
+    previous_user = code_orm.user
+    code_orm.user_id = new_user.id
+    db.commit()
 
-        with pytest.raises(ForbiddenError):
-            authz_user.assert_object_has_same_user_id(Crud.CODE, code)
+    with pytest.raises(ForbiddenError):
+        authz_user.assert_object_has_same_user_id(Crud.CODE, code)
 
-        # Without this, the code cleanup will fail
-        # due to the user cleanup removing the code through
-        # a cascade
-        code_orm.user_id = previous_user.id
-        db.commit()
+    # Without this, the code cleanup will fail
+    # due to the user cleanup removing the code through
+    # a cascade
+    code_orm.user_id = previous_user.id
+    db.commit()
 
 
 def test_assert_in_same_project_as(
     authz_user: AuthzUser,
     code: int,
     make_project: Callable[[], ProjectORM],
-    rollbacked_session: Session,
+    db: Session,
 ):
     authz_user.assert_in_same_project_as(Crud.CODE, code)
 
     project = make_project()
-    crud_project.dissociate_user(
-        rollbacked_session, user_id=authz_user.user.id, proj_id=project.id
-    )
-    code_orm = crud_code.read(rollbacked_session, code)
+    crud_project.dissociate_user(db, user_id=authz_user.user.id, proj_id=project.id)
+    code_orm = crud_code.read(db, code)
     previous_project = code_orm.project
     code_orm.project_id = project.id
 
@@ -101,7 +95,7 @@ def test_assert_in_same_project_as(
 def test_assert_in_same_project_as_many(
     authz_user: AuthzUser,
     code: int,
-    rollbacked_session: Session,
+    db: Session,
     make_project: Callable[[], ProjectORM],
     make_code: Callable[[], CodeORM],
 ):
@@ -110,10 +104,8 @@ def test_assert_in_same_project_as_many(
     authz_user.assert_in_same_project_as_many(Crud.CODE, [])
 
     project = make_project()
-    crud_project.dissociate_user(
-        rollbacked_session, user_id=authz_user.user.id, proj_id=project.id
-    )
-    code_orm = crud_code.read(rollbacked_session, code)
+    crud_project.dissociate_user(db, user_id=authz_user.user.id, proj_id=project.id)
+    code_orm = crud_code.read(db, code)
     previous_project = code_orm.project
     code_orm.project_id = project.id
 
