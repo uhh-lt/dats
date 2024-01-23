@@ -10,6 +10,7 @@ import pytest
 from fastapi import Request
 from fastapi.datastructures import Headers
 from loguru import logger
+from pytest import FixtureRequest
 from sqlalchemy.orm import Session
 
 from api.validation import Validate
@@ -55,46 +56,35 @@ def anyio_backend():
     return "asyncio"
 
 
-def code_fixture_base(db: Session, project: int, user: int) -> CodeORM:
-    name = "".join(random.choices(string.ascii_letters, k=15))
-    description = "".join(random.choices(string.ascii_letters, k=30))
-    color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
-    code = CodeCreate(
-        name=name,
-        color=color,
-        description=description,
-        project_id=project,
-        user_id=user,
-    )
-
-    db_code = crud_code.create(db=db, create_dto=code)
-    return db_code
-
-
 @pytest.fixture
-def code(db: Session, project: int, user: int) -> Generator[int, None, None]:
-    code_obj = code_fixture_base(db, project, user)
-
-    yield code_obj.id
-
-    crud_code.remove(db=db, id=code_obj.id)
+def code(make_code) -> int:
+    return make_code().id
 
 
 @pytest.fixture
 def make_code(
-    db: Session, project: int, user: int
-) -> Generator[Callable[[], CodeORM], None, None]:
-    created_codes = []
-
+    db: Session, project: int, user: int, request: FixtureRequest
+) -> Callable[[], CodeORM]:
     def factory():
-        code = code_fixture_base(db, project, user)
-        created_codes.append(code)
-        return code
+        name = "".join(random.choices(string.ascii_letters, k=15))
+        description = "".join(random.choices(string.ascii_letters, k=30))
+        color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
+        code = CodeCreate(
+            name=name,
+            color=color,
+            description=description,
+            project_id=project,
+            user_id=user,
+        )
 
-    yield factory
+        db_code = crud_code.create(db=db, create_dto=code)
+        code_id = db_code.id
 
-    for code in created_codes:
-        crud_code.remove(db=db, id=code.id)
+        request.addfinalizer(lambda: crud_code.remove(db=db, id=code_id))
+
+        return db_code
+
+    return factory
 
 
 @pytest.fixture
@@ -112,90 +102,68 @@ def db(sql_service: SQLService) -> Generator[Session, None, None]:
     db.close()
 
 
-def project_fixture_base(db: Session, user: int) -> ProjectORM:
-    title = "".join(random.choices(string.ascii_letters, k=15))
-    description = "Test description"
-
-    system_user = UserRead.model_validate(crud_user.read(db, SYSTEM_USER_ID))
-    project = crud_project.create(
-        db=db,
-        create_dto=ProjectCreate(
-            title=title,
-            description=description,
-        ),
-        creating_user=system_user,
-    )
-    crud_project.associate_user(db=db, proj_id=project.id, user_id=user)
-
-    return project
-
-
 @pytest.fixture
-def project(db: Session, user: int) -> Generator[int, None, None]:
-    project_id = project_fixture_base(db, user).id
-    yield project_id
-
-    crud_project.remove(db=db, id=project_id)
+def project(make_project) -> int:
+    return make_project().id
 
 
 @pytest.fixture
 def make_project(
-    db: Session, user: int
-) -> Generator[Callable[[], ProjectORM], None, None]:
-    created_projects = []
-
+    db: Session, user: int, request: FixtureRequest
+) -> Callable[[], ProjectORM]:
     def factory():
-        project = project_fixture_base(db, user)
-        created_projects.append(project)
+        title = "".join(random.choices(string.ascii_letters, k=15))
+        description = "Test description"
+
+        system_user = UserRead.model_validate(crud_user.read(db, SYSTEM_USER_ID))
+        project = crud_project.create(
+            db=db,
+            create_dto=ProjectCreate(
+                title=title,
+                description=description,
+            ),
+            creating_user=system_user,
+        )
+        crud_project.associate_user(db=db, proj_id=project.id, user_id=user)
+
+        project_id = project.id
+
+        request.addfinalizer(lambda: crud_project.remove(db, id=project_id))
+
         return project
 
-    yield factory
-
-    for project in created_projects:
-        crud_project.remove(db=db, id=project.id)
-
-
-def user_fixture_base(db: Session) -> UserRead:
-    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
-    first_name = "".join(random.choices(string.ascii_letters, k=15))
-    last_name = "".join(random.choices(string.ascii_letters, k=15))
-    password = "".join(random.choices(string.ascii_letters, k=15))
-
-    user = UserCreate(
-        email=email, first_name=first_name, last_name=last_name, password=password
-    )
-
-    # create user
-    db_user = crud_user.create(db=db, create_dto=user)
-    user = UserRead.model_validate(db_user)
-
-    return user
+    return factory
 
 
 @pytest.fixture
-def user(db: Session) -> Generator[int, None, None]:
-    user = user_fixture_base(db)
-    yield user.id
-    crud_user.remove(db=db, id=user.id)
+def user(make_user: Callable[[], UserRead]) -> int:
+    return make_user().id
 
 
 # This fixture allows a single test to easily create
 # multiple users.
 @pytest.fixture
-def make_user(
-    db: Session,
-) -> Generator[Callable[[], UserRead], None, None]:
-    created_users = []
+def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserRead]:
+    def factory():
+        email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+        first_name = "".join(random.choices(string.ascii_letters, k=15))
+        last_name = "".join(random.choices(string.ascii_letters, k=15))
+        password = "".join(random.choices(string.ascii_letters, k=15))
 
-    def func():
-        user = user_fixture_base(db)
-        created_users.append(user)
+        user = UserCreate(
+            email=email, first_name=first_name, last_name=last_name, password=password
+        )
+
+        # create user
+        db_user = crud_user.create(db=db, create_dto=user)
+        user = UserRead.model_validate(db_user)
+        user_id = user.id
+
+        request.addfinalizer(lambda: crud_user.remove(db=db, id=user_id))
+
         return user
 
-    yield func
-
-    for user in created_users:
-        crud_user.remove(db=db, id=user.id)
+    return factory
 
 
 @pytest.fixture
