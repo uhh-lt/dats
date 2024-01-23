@@ -4,10 +4,11 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.refresh_token import crud_refresh_token
+from app.core.data.orm.user import UserORM
 
 
-def test_create_and_use_refresh_token(db: Session, user: int) -> None:
-    refresh_token = crud_refresh_token.generate(db, user)
+def test_create_and_use_refresh_token(db: Session, user: UserORM) -> None:
+    refresh_token = crud_refresh_token.generate(db, user.id)
 
     crud_refresh_token.read_and_verify(db, refresh_token.token)
     crud_refresh_token.revoke(db, refresh_token)
@@ -19,9 +20,9 @@ def test_create_and_use_refresh_token(db: Session, user: int) -> None:
     assert refresh_token.revoked_at < datetime.now(UTC)
 
 
-def test_cant_use_revoked_token(db: Session, user: int) -> None:
-    refresh_token = crud_refresh_token.generate(db, user)
-    second_token = crud_refresh_token.generate(db, user)
+def test_cant_use_revoked_token(db: Session, user: UserORM) -> None:
+    refresh_token = crud_refresh_token.generate(db, user.id)
+    second_token = crud_refresh_token.generate(db, user.id)
     crud_refresh_token.revoke(db, refresh_token)
 
     # Check that token was revoked

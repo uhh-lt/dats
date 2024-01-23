@@ -17,6 +17,7 @@ from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.startup import startup
 from config import conf
@@ -63,7 +64,7 @@ def code(make_code) -> CodeORM:
 
 @pytest.fixture
 def make_code(
-    db: Session, project: ProjectORM, user: int, request: FixtureRequest
+    db: Session, project: ProjectORM, user: UserORM, request: FixtureRequest
 ) -> Callable[[], CodeORM]:
     def factory():
         name = "".join(random.choices(string.ascii_letters, k=15))
@@ -74,7 +75,7 @@ def make_code(
             color=color,
             description=description,
             project_id=project.id,
-            user_id=user,
+            user_id=user.id,
         )
 
         db_code = crud_code.create(db=db, create_dto=code)
@@ -109,7 +110,7 @@ def project(make_project) -> ProjectORM:
 
 @pytest.fixture
 def make_project(
-    db: Session, user: int, request: FixtureRequest
+    db: Session, user: UserORM, request: FixtureRequest
 ) -> Callable[[], ProjectORM]:
     def factory():
         title = "".join(random.choices(string.ascii_letters, k=15))
@@ -124,7 +125,7 @@ def make_project(
             ),
             creating_user=system_user,
         )
-        crud_project.associate_user(db=db, proj_id=project.id, user_id=user)
+        crud_project.associate_user(db=db, proj_id=project.id, user_id=user.id)
 
         project_id = project.id
 
@@ -136,14 +137,14 @@ def make_project(
 
 
 @pytest.fixture
-def user(make_user: Callable[[], UserRead]) -> int:
-    return make_user().id
+def user(make_user: Callable[[], UserORM]) -> UserORM:
+    return make_user()
 
 
 # This fixture allows a single test to easily create
 # multiple users.
 @pytest.fixture
-def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserRead]:
+def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserORM]:
     def factory():
         email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
         first_name = "".join(random.choices(string.ascii_letters, k=15))
@@ -156,20 +157,18 @@ def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserRead]:
 
         # create user
         db_user = crud_user.create(db=db, create_dto=user)
-        user = UserRead.model_validate(db_user)
-        user_id = user.id
+        user_id = db_user.id
 
         request.addfinalizer(lambda: crud_user.remove(db=db, id=user_id))
 
-        return user
+        return db_user
 
     return factory
 
 
 @pytest.fixture
-def authz_user(user: int, db: Session, mock_request: Request) -> AuthzUser:
-    user_orm = crud_user.read(db, user)
-    authz_user = AuthzUser(request=mock_request, user=user_orm, db=db)
+def authz_user(user: UserORM, db: Session, mock_request: Request) -> AuthzUser:
+    authz_user = AuthzUser(request=mock_request, user=user, db=db)
 
     return authz_user
 

@@ -17,6 +17,7 @@ from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, Mem
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.user import UserCreate, UserRead
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from config import conf
 
@@ -125,10 +126,8 @@ def test_create_remove_project(db: Session) -> None:
 # project user
 
 
-def test_project_users(db: Session, project: ProjectORM, user: int) -> None:
-    users = crud_project.read(db=db, id=project.id)
-
-    project_users = [UserRead.model_validate(user) for user in users.users]
+def test_project_users(db: Session, project: ProjectORM, user: UserORM) -> None:
+    project_users = [UserRead.model_validate(user) for user in project.users]
 
     assert len(project_users) == 2
 
@@ -159,7 +158,7 @@ def test_project_users(db: Session, project: ProjectORM, user: int) -> None:
     project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
 
     assert len(project_users) == 2
-    assert project_users[1].id == user
+    assert project_users[1].id == user.id
 
 
 # project codes
@@ -224,10 +223,10 @@ def test_get_remove_project_system_user_codes(db: Session, project: ProjectORM) 
 
 
 def test_get_add_remove_memos_project(
-    db: Session, project: ProjectORM, user: int
+    db: Session, project: ProjectORM, user: UserORM
 ) -> None:
     db_objs = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project.id, only_starred=False
+        db=db, user_id=user.id, proj_id=project.id, only_starred=False
     )
     memo_list = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
@@ -242,7 +241,7 @@ def test_get_add_remove_memos_project(
     memo1 = MemoCreate(
         title=title1,
         content=content1,
-        user_id=user,
+        user_id=user.id,
         project_id=project.id,
         starred=starred1,
     )
@@ -252,6 +251,8 @@ def test_get_add_remove_memos_project(
     )
     db.add(project)
     db.refresh(project)
+    db.add(user)
+    db.refresh(user)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
@@ -268,7 +269,7 @@ def test_get_add_remove_memos_project(
     memo2 = MemoCreate(
         title=title2,
         content=content2,
-        user_id=user,
+        user_id=user.id,
         project_id=project.id,
         starred=starred2,
     )
@@ -278,6 +279,8 @@ def test_get_add_remove_memos_project(
     )
     db.add(project)
     db.refresh(project)
+    db.add(user)
+    db.refresh(user)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
@@ -288,14 +291,14 @@ def test_get_add_remove_memos_project(
     # print(f'{memo2_obj=}')
 
     db_objs_unstarred = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project.id, only_starred=False
+        db=db, user_id=user.id, proj_id=project.id, only_starred=False
     )
     memo_list_unstarred = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
         for db_obj in db_objs_unstarred
     ]
     db_objs_starred = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project.id, only_starred=True
+        db=db, user_id=user.id, proj_id=project.id, only_starred=True
     )
     memo_list_starred = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
@@ -308,9 +311,9 @@ def test_get_add_remove_memos_project(
 
     # remove memos
 
-    crud_memo.remove_by_user_and_project(db=db, user_id=user, proj_id=project.id)
+    crud_memo.remove_by_user_and_project(db=db, user_id=user.id, proj_id=project.id)
     db_objs = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project.id, only_starred=False
+        db=db, user_id=user.id, proj_id=project.id, only_starred=False
     )
     memo_list = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs

@@ -12,9 +12,12 @@ from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.user import UserORM
 
 
-def test_create_get_delete_code(db: Session, project: ProjectORM, user: int) -> None:
+def test_create_get_delete_code(
+    db: Session, project: ProjectORM, user: UserORM
+) -> None:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -23,7 +26,7 @@ def test_create_get_delete_code(db: Session, project: ProjectORM, user: int) -> 
         color=color,
         description=description,
         project_id=project.id,
-        user_id=user,
+        user_id=user.id,
     )
 
     # create code
@@ -75,7 +78,7 @@ def test_update_code(db: Session, code: CodeORM) -> None:
 
 
 def test_add_get_memo(
-    db: Session, code: CodeORM, project: ProjectORM, user: int
+    db: Session, code: CodeORM, project: ProjectORM, user: UserORM
 ) -> None:
     title = "".join(random.choices(string.ascii_letters, k=15))
     content = "".join(random.choices(string.ascii_letters, k=30))
@@ -84,7 +87,7 @@ def test_add_get_memo(
     memo = MemoCreate(
         title=title,
         content=content,
-        user_id=user,
+        user_id=user.id,
         project_id=project.id,
         starred=starred,
     )
@@ -120,7 +123,7 @@ def test_add_get_memo(
 
     # get user memo
     db_obj = crud_code.read(db=db, id=code.id)
-    memos_user = [get_object_memo_for_user(db_obj=db_obj, user_id=user)]
+    memos_user = [get_object_memo_for_user(db_obj=db_obj, user_id=user.id)]
 
     assert len(memos_user) == 1
     assert memos_user[0].title == title
