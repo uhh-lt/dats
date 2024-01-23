@@ -57,8 +57,8 @@ def anyio_backend():
 
 
 @pytest.fixture
-def code(make_code) -> int:
-    return make_code().id
+def code(make_code) -> CodeORM:
+    return make_code()
 
 
 @pytest.fixture

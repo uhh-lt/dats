@@ -9,6 +9,7 @@ from app.core.data.crud.user import crud_user
 from app.core.data.dto.code import CodeRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import UserCreate, UserRead, UserUpdate
+from app.core.data.orm.code import CodeORM
 
 
 def test_create_delete_user(db: Session) -> None:
@@ -72,7 +73,7 @@ def test_get_user_projects(db: Session, project: int, user: int) -> None:
 
 
 # TODO: Fails on teardown because the codes gets removed here already!
-def test_get_delete_user_codes(db: Session, code: int, user: int) -> None:
+def test_get_delete_user_codes(db: Session, code: CodeORM, user: int) -> None:
     db_obj = crud_user.read(db=db, id=user)
     user_codes = [CodeRead.model_validate(code) for code in db_obj.codes]
 
@@ -87,7 +88,7 @@ def test_get_delete_user_codes(db: Session, code: int, user: int) -> None:
 
 
 # TODO: Fails on teardown because the codes gets removed here already!
-def test_delete_user_codes(db: Session, user: int, code: int) -> None:
+def test_delete_user_codes(db: Session, user: int, code: CodeORM) -> None:
     db_obj = crud_user.read(db=db, id=user)
     codes = [CodeRead.model_validate(code) for code in db_obj.codes]
 
