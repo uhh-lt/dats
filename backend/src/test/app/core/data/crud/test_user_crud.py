@@ -10,6 +10,7 @@ from app.core.data.dto.code import CodeRead
 from app.core.data.dto.project import ProjectRead
 from app.core.data.dto.user import UserCreate, UserRead, UserUpdate
 from app.core.data.orm.code import CodeORM
+from app.core.data.orm.project import ProjectORM
 
 
 def test_create_delete_user(db: Session) -> None:
@@ -64,12 +65,12 @@ def test_update_user(db: Session, user: int) -> None:
     assert user_read.password != password  # password is hashed
 
 
-def test_get_user_projects(db: Session, project: int, user: int) -> None:
+def test_get_user_projects(db: Session, project: ProjectORM, user: int) -> None:
     db_obj = crud_user.read(db=db, id=user)
     user_projects = [ProjectRead.model_validate(proj) for proj in db_obj.projects]
 
     assert len(user_projects) == 1
-    assert user_projects[0].id == project
+    assert user_projects[0].id == project.id
 
 
 # TODO: Fails on teardown because the codes gets removed here already!

@@ -11,9 +11,10 @@ from app.core.data.crud.memo import crud_memo
 from app.core.data.dto.code import CodeCreate, CodeRead, CodeUpdate
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.orm.code import CodeORM
+from app.core.data.orm.project import ProjectORM
 
 
-def test_create_get_delete_code(db: Session, project: int, user: int) -> None:
+def test_create_get_delete_code(db: Session, project: ProjectORM, user: int) -> None:
     name = "".join(random.choices(string.ascii_letters, k=15))
     description = "".join(random.choices(string.ascii_letters, k=30))
     color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
@@ -21,7 +22,7 @@ def test_create_get_delete_code(db: Session, project: int, user: int) -> None:
         name=name,
         color=color,
         description=description,
-        project_id=project,
+        project_id=project.id,
         user_id=user,
     )
 
@@ -73,13 +74,19 @@ def test_update_code(db: Session, code: CodeORM) -> None:
     assert get_code2[0].color == color
 
 
-def test_add_get_memo(db: Session, code: CodeORM, project: int, user: int) -> None:
+def test_add_get_memo(
+    db: Session, code: CodeORM, project: ProjectORM, user: int
+) -> None:
     title = "".join(random.choices(string.ascii_letters, k=15))
     content = "".join(random.choices(string.ascii_letters, k=30))
     starred = False
 
     memo = MemoCreate(
-        title=title, content=content, user_id=user, project_id=project, starred=starred
+        title=title,
+        content=content,
+        user_id=user,
+        project_id=project.id,
+        starred=starred,
     )
     db_obj = crud_memo.create_for_code(db=db, code_id=code.id, create_dto=memo)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)

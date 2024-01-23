@@ -19,13 +19,15 @@ def test_assert_true(authz_user: AuthzUser):
         authz_user.assert_true(False, "")
 
 
-def test_assert_in_project(user: int, project: int, db: Session, authz_user: AuthzUser):
-    authz_user.assert_in_project(project)
+def test_assert_in_project(
+    user: int, project: ProjectORM, db: Session, authz_user: AuthzUser
+):
+    authz_user.assert_in_project(project.id)
 
-    crud_project.dissociate_user(db, proj_id=project, user_id=user)
+    crud_project.dissociate_user(db, proj_id=project.id, user_id=user)
 
     with pytest.raises(ForbiddenError):
-        authz_user.assert_in_project(project)
+        authz_user.assert_in_project(project.id)
 
 
 def test_assert_is_same_user(

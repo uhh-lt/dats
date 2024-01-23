@@ -16,6 +16,7 @@ from app.core.data.dto.document_tag import DocumentTagRead
 from app.core.data.dto.memo import AttachedObjectType, MemoCreate, MemoInDB, MemoRead
 from app.core.data.dto.project import ProjectCreate, ProjectRead, ProjectUpdate
 from app.core.data.dto.user import UserCreate, UserRead
+from app.core.data.orm.project import ProjectORM
 from app.core.db.sql_service import SQLService
 from config import conf
 
@@ -38,35 +39,33 @@ def get_number_of_system_codes() -> int:
     return __count_codes_recursively(conf.system_codes, 0, set())
 
 
-def test_update_project(db: Session, sql_service: SQLService, project: int) -> None:
+def test_update_project(
+    db: Session, sql_service: SQLService, project: ProjectORM
+) -> None:
     title2 = "".join(random.choices(string.ascii_letters, k=15))
     description2 = "Meow"
 
     # update project title
-    crud_project.update(db=db, id=project, update_dto=ProjectUpdate(title=title2))
+    crud_project.update(db=db, id=project.id, update_dto=ProjectUpdate(title=title2))
 
-    p = ProjectRead.model_validate(crud_project.read(db=db, id=project))
-
-    assert p.id == project
-    assert p.title == title2
+    assert project.title == title2
 
     # update project description
     crud_project.update(
-        db=db, id=project, update_dto=ProjectUpdate(description=description2)
+        db=db, id=project.id, update_dto=ProjectUpdate(description=description2)
     )
 
-    p = ProjectRead.model_validate(crud_project.read(db=db, id=project))
-
-    assert p.id == project
-    assert p.title == title2
-    assert p.description == description2
+    assert project.title == title2
+    assert project.description == description2
 
     # try update title to None
     with pytest.raises(IntegrityError):
         # Use a throwaway session that will become unusable due
         # to the exeption
         with sql_service.db_session() as db:
-            crud_project.update(db=db, id=project, update_dto=ProjectUpdate(title=None))
+            crud_project.update(
+                db=db, id=project.id, update_dto=ProjectUpdate(title=None)
+            )
 
     # try update description to None
     with pytest.raises(IntegrityError):
@@ -74,15 +73,12 @@ def test_update_project(db: Session, sql_service: SQLService, project: int) -> N
         # to the exeption
         with sql_service.db_session() as db:
             crud_project.update(
-                db=db, id=project, update_dto=ProjectUpdate(description=None)
+                db=db, id=project.id, update_dto=ProjectUpdate(description=None)
             )
 
     # check if nothing has changed
-    p = ProjectRead.model_validate(crud_project.read(db=db, id=project))
-
-    assert p.id == project
-    assert p.title == title2
-    assert p.description == description2
+    assert project.title == title2
+    assert project.description == description2
 
 
 def test_create_remove_project(db: Session) -> None:
@@ -129,8 +125,8 @@ def test_create_remove_project(db: Session) -> None:
 # project user
 
 
-def test_project_users(db: Session, project: int, user: int) -> None:
-    users = crud_project.read(db=db, id=project)
+def test_project_users(db: Session, project: ProjectORM, user: int) -> None:
+    users = crud_project.read(db=db, id=project.id)
 
     project_users = [UserRead.model_validate(user) for user in users.users]
 
@@ -149,9 +145,9 @@ def test_project_users(db: Session, project: int, user: int) -> None:
     db_user = crud_user.create(db=db, create_dto=user_three)
     user_three_orm = UserRead.model_validate(db_user)
 
-    crud_project.associate_user(db=db, proj_id=project, user_id=user_three_orm.id)
+    crud_project.associate_user(db=db, proj_id=project.id, user_id=user_three_orm.id)
 
-    proj_db_obj = crud_project.read(db=db, id=project)
+    proj_db_obj = crud_project.read(db=db, id=project.id)
     project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
 
     assert len(project_users) == 3
@@ -159,7 +155,7 @@ def test_project_users(db: Session, project: int, user: int) -> None:
 
     crud_user.remove(db=db, id=user_three_orm.id)
 
-    proj_db_obj = crud_project.read(db=db, id=project)
+    proj_db_obj = crud_project.read(db=db, id=project.id)
     project_users = [UserRead.model_validate(user) for user in proj_db_obj.users]
 
     assert len(project_users) == 2
@@ -169,8 +165,8 @@ def test_project_users(db: Session, project: int, user: int) -> None:
 # project codes
 
 
-def test_get_remove_project_codes(db: Session, project: int) -> None:
-    proj_db_obj = crud_project.read(db=db, id=project)
+def test_get_remove_project_codes(db: Session, project: ProjectORM) -> None:
+    proj_db_obj = crud_project.read(db=db, id=project.id)
 
     s = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
 
@@ -178,9 +174,9 @@ def test_get_remove_project_codes(db: Session, project: int) -> None:
 
     # removes all project codes
 
-    crud_code.remove_by_project(db=db, proj_id=project)
+    crud_code.remove_by_project(db=db, proj_id=project.id)
 
-    proj_db_obj = crud_project.read(db=db, id=project)
+    proj_db_obj = crud_project.read(db=db, id=project.id)
     s = [CodeRead.model_validate(code) for code in proj_db_obj.codes]
 
     assert len(s) == 0
@@ -189,8 +185,8 @@ def test_get_remove_project_codes(db: Session, project: int) -> None:
 # project tags
 
 
-def test_get_project_tags(db: Session, project: int) -> None:
-    proj_db_obj = crud_project.read(db=db, id=project)
+def test_get_project_tags(db: Session, project: ProjectORM) -> None:
+    proj_db_obj = crud_project.read(db=db, id=project.id)
     s = [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
 
     assert len(s) == 0
@@ -199,11 +195,11 @@ def test_get_project_tags(db: Session, project: int) -> None:
 # user codes
 
 
-def test_get_remove_project_system_user_codes(db: Session, project: int) -> None:
+def test_get_remove_project_system_user_codes(db: Session, project: ProjectORM) -> None:
     s = [
         CodeRead.model_validate(code_db_obj)
         for code_db_obj in crud_code.read_by_user_and_project(
-            db=db, user_id=SYSTEM_USER_ID, proj_id=project
+            db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
         )
     ]
 
@@ -211,11 +207,13 @@ def test_get_remove_project_system_user_codes(db: Session, project: int) -> None
 
     # remove user codes
 
-    crud_code.remove_by_user_and_project(db=db, user_id=SYSTEM_USER_ID, proj_id=project)
+    crud_code.remove_by_user_and_project(
+        db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
+    )
     s = [
         CodeRead.model_validate(code_db_obj)
         for code_db_obj in crud_code.read_by_user_and_project(
-            db=db, user_id=SYSTEM_USER_ID, proj_id=project
+            db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
         )
     ]
 
@@ -225,9 +223,11 @@ def test_get_remove_project_system_user_codes(db: Session, project: int) -> None
 # user memos
 
 
-def test_get_add_remove_memos_project(db: Session, project: int, user: int) -> None:
+def test_get_add_remove_memos_project(
+    db: Session, project: ProjectORM, user: int
+) -> None:
     db_objs = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project, only_starred=False
+        db=db, user_id=user, proj_id=project.id, only_starred=False
     )
     memo_list = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs
@@ -243,15 +243,19 @@ def test_get_add_remove_memos_project(db: Session, project: int, user: int) -> N
         title=title1,
         content=content1,
         user_id=user,
-        project_id=project,
+        project_id=project.id,
         starred=starred1,
     )
 
-    db_obj = crud_memo.create_for_project(db=db, project_id=project, create_dto=memo1)
+    db_obj = crud_memo.create_for_project(
+        db=db, project_id=project.id, create_dto=memo1
+    )
+    db.add(project)
+    db.refresh(project)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=project,
+        attached_object_id=project.id,
         attached_object_type=AttachedObjectType.project,
     )
 
@@ -265,29 +269,33 @@ def test_get_add_remove_memos_project(db: Session, project: int, user: int) -> N
         title=title2,
         content=content2,
         user_id=user,
-        project_id=project,
+        project_id=project.id,
         starred=starred2,
     )
 
-    db_obj = crud_memo.create_for_project(db=db, project_id=project, create_dto=memo2)
+    db_obj = crud_memo.create_for_project(
+        db=db, project_id=project.id, create_dto=memo2
+    )
+    db.add(project)
+    db.refresh(project)
     memo_as_in_db_dto = MemoInDB.model_validate(db_obj)
     MemoRead(
         **memo_as_in_db_dto.model_dump(exclude={"attached_to"}),
-        attached_object_id=project,
+        attached_object_id=project.id,
         attached_object_type=AttachedObjectType.project,
     )
 
     # print(f'{memo2_obj=}')
 
     db_objs_unstarred = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project, only_starred=False
+        db=db, user_id=user, proj_id=project.id, only_starred=False
     )
     memo_list_unstarred = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
         for db_obj in db_objs_unstarred
     ]
     db_objs_starred = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project, only_starred=True
+        db=db, user_id=user, proj_id=project.id, only_starred=True
     )
     memo_list_starred = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj)
@@ -300,9 +308,9 @@ def test_get_add_remove_memos_project(db: Session, project: int, user: int) -> N
 
     # remove memos
 
-    crud_memo.remove_by_user_and_project(db=db, user_id=user, proj_id=project)
+    crud_memo.remove_by_user_and_project(db=db, user_id=user, proj_id=project.id)
     db_objs = crud_memo.read_by_user_and_project(
-        db=db, user_id=user, proj_id=project, only_starred=False
+        db=db, user_id=user, proj_id=project.id, only_starred=False
     )
     memo_list = [
         crud_memo.get_memo_read_dto_from_orm(db=db, db_obj=db_obj) for db_obj in db_objs

@@ -63,7 +63,7 @@ def code(make_code) -> CodeORM:
 
 @pytest.fixture
 def make_code(
-    db: Session, project: int, user: int, request: FixtureRequest
+    db: Session, project: ProjectORM, user: int, request: FixtureRequest
 ) -> Callable[[], CodeORM]:
     def factory():
         name = "".join(random.choices(string.ascii_letters, k=15))
@@ -73,7 +73,7 @@ def make_code(
             name=name,
             color=color,
             description=description,
-            project_id=project,
+            project_id=project.id,
             user_id=user,
         )
 
@@ -103,8 +103,8 @@ def db(sql_service: SQLService) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def project(make_project) -> int:
-    return make_project().id
+def project(make_project) -> ProjectORM:
+    return make_project()
 
 
 @pytest.fixture
