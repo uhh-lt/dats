@@ -49,8 +49,7 @@ export type { DocumentTagCreate } from "./models/DocumentTagCreate";
 export type { DocumentTagRead } from "./models/DocumentTagRead";
 export type { DocumentTagUpdate } from "./models/DocumentTagUpdate";
 export { ExportFormat } from "./models/ExportFormat";
-export type { ExportJobParameters_Input } from "./models/ExportJobParameters_Input";
-export type { ExportJobParameters_Output } from "./models/ExportJobParameters_Output";
+export type { ExportJobParameters } from "./models/ExportJobParameters";
 export type { ExportJobRead } from "./models/ExportJobRead";
 export { ExportJobType } from "./models/ExportJobType";
 export type { FeedbackCreate } from "./models/FeedbackCreate";
@@ -99,6 +98,7 @@ export type { SingleDocAllUserAnnotationsExportJobParams } from "./models/Single
 export type { SingleDocSingleUserAnnotationsExportJobParams } from "./models/SingleDocSingleUserAnnotationsExportJobParams";
 export type { SingleProjectAllDataExportJobParams } from "./models/SingleProjectAllDataExportJobParams";
 export type { SingleProjectAllTagsExportJobParams } from "./models/SingleProjectAllTagsExportJobParams";
+export type { SingleProjectSelectedSdocsParams } from "./models/SingleProjectSelectedSdocsParams";
 export type { SingleUserAllCodesExportJobParams } from "./models/SingleUserAllCodesExportJobParams";
 export type { SingleUserAllDataExportJobParams } from "./models/SingleUserAllDataExportJobParams";
 export type { SingleUserAllMemosExportJobParams } from "./models/SingleUserAllMemosExportJobParams";

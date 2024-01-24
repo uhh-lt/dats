@@ -4209,7 +4209,7 @@
         "summary": "Returns the ExportJob for the given Parameters",
         "operationId": "start_export_job",
         "requestBody": {
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobParameters-Input" } } },
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ExportJobParameters" } } },
           "required": true
         },
         "responses": {
@@ -5561,7 +5561,7 @@
         "title": "DocumentTagUpdate"
       },
       "ExportFormat": { "type": "string", "enum": ["CSV", "JSON"], "title": "ExportFormat" },
-      "ExportJobParameters-Input": {
+      "ExportJobParameters": {
         "properties": {
           "export_job_type": {
             "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
@@ -5573,9 +5573,10 @@
             "default": "CSV"
           },
           "specific_export_job_parameters": {
-            "anyOf": [
+            "oneOf": [
               { "$ref": "#/components/schemas/SingleProjectAllDataExportJobParams" },
               { "$ref": "#/components/schemas/SingleProjectAllTagsExportJobParams" },
+              { "$ref": "#/components/schemas/SingleProjectSelectedSdocsParams" },
               { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserAllCodesExportJobParams" },
               { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
@@ -5584,37 +5585,21 @@
               { "$ref": "#/components/schemas/SingleDocSingleUserAnnotationsExportJobParams" }
             ],
             "title": "Specific Export Job Parameters",
-            "description": "Specific parameters for the export job w.r.t it's type"
-          }
-        },
-        "type": "object",
-        "required": ["export_job_type", "specific_export_job_parameters"],
-        "title": "ExportJobParameters"
-      },
-      "ExportJobParameters-Output": {
-        "properties": {
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)"
-          },
-          "export_format": {
-            "anyOf": [{ "$ref": "#/components/schemas/ExportFormat" }, { "type": "null" }],
-            "description": "The format of the exported data.",
-            "default": "CSV"
-          },
-          "specific_export_job_parameters": {
-            "anyOf": [
-              { "$ref": "#/components/schemas/SingleProjectAllDataExportJobParams" },
-              { "$ref": "#/components/schemas/SingleProjectAllTagsExportJobParams" },
-              { "$ref": "#/components/schemas/SingleUserAllDataExportJobParams" },
-              { "$ref": "#/components/schemas/SingleUserAllCodesExportJobParams" },
-              { "$ref": "#/components/schemas/SingleUserAllMemosExportJobParams" },
-              { "$ref": "#/components/schemas/SingleUserLogbookExportJobParams" },
-              { "$ref": "#/components/schemas/SingleDocAllUserAnnotationsExportJobParams" },
-              { "$ref": "#/components/schemas/SingleDocSingleUserAnnotationsExportJobParams" }
-            ],
-            "title": "Specific Export Job Parameters",
-            "description": "Specific parameters for the export job w.r.t it's type"
+            "description": "Specific parameters for the export job w.r.t it's type",
+            "discriminator": {
+              "propertyName": "export_job_type",
+              "mapping": {
+                "SINGLE_DOC_ALL_USER_ANNOTATIONS": "#/components/schemas/SingleDocAllUserAnnotationsExportJobParams",
+                "SINGLE_DOC_SINGLE_USER_ANNOTATIONS": "#/components/schemas/SingleDocSingleUserAnnotationsExportJobParams",
+                "SINGLE_PROJECT_ALL_DATA": "#/components/schemas/SingleProjectAllDataExportJobParams",
+                "SINGLE_PROJECT_ALL_TAGS": "#/components/schemas/SingleProjectAllTagsExportJobParams",
+                "SINGLE_PROJECT_SELECTED_SDOCS": "#/components/schemas/SingleProjectSelectedSdocsParams",
+                "SINGLE_USER_ALL_CODES": "#/components/schemas/SingleUserAllCodesExportJobParams",
+                "SINGLE_USER_ALL_DATA": "#/components/schemas/SingleUserAllDataExportJobParams",
+                "SINGLE_USER_ALL_MEMOS": "#/components/schemas/SingleUserAllMemosExportJobParams",
+                "SINGLE_USER_LOGBOOK": "#/components/schemas/SingleUserLogbookExportJobParams"
+              }
+            }
           }
         },
         "type": "object",
@@ -5635,7 +5620,7 @@
           },
           "id": { "type": "string", "title": "Id", "description": "ID of the ExportJob" },
           "parameters": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobParameters-Output" }],
+            "allOf": [{ "$ref": "#/components/schemas/ExportJobParameters" }],
             "description": "The parameters of the export job that defines what to export!"
           },
           "created": {
@@ -5654,6 +5639,7 @@
         "enum": [
           "SINGLE_PROJECT_ALL_DATA",
           "SINGLE_PROJECT_ALL_TAGS",
+          "SINGLE_PROJECT_SELECTED_SDOCS",
           "SINGLE_USER_ALL_DATA",
           "SINGLE_USER_ALL_CODES",
           "SINGLE_USER_ALL_MEMOS",
@@ -6451,11 +6437,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_DOC_ALL_USER_ANNOTATIONS"
-          },
+          "export_job_type": { "const": "SINGLE_DOC_ALL_USER_ANNOTATIONS", "title": "Export Job Type" },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -6463,7 +6445,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "sdoc_id"],
+        "required": ["project_id", "export_job_type", "sdoc_id"],
         "title": "SingleDocAllUserAnnotationsExportJobParams"
       },
       "SingleDocSingleUserAnnotationsExportJobParams": {
@@ -6473,11 +6455,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS"
-          },
+          "export_job_type": { "const": "SINGLE_DOC_SINGLE_USER_ANNOTATIONS", "title": "Export Job Type" },
           "sdoc_id": {
             "type": "integer",
             "title": "Sdoc Id",
@@ -6490,7 +6468,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "sdoc_id", "user_id"],
+        "required": ["project_id", "export_job_type", "sdoc_id", "user_id"],
         "title": "SingleDocSingleUserAnnotationsExportJobParams"
       },
       "SingleProjectAllDataExportJobParams": {
@@ -6500,14 +6478,10 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_PROJECT_ALL_DATA"
-          }
+          "export_job_type": { "const": "SINGLE_PROJECT_ALL_DATA", "title": "Export Job Type" }
         },
         "type": "object",
-        "required": ["project_id"],
+        "required": ["project_id", "export_job_type"],
         "title": "SingleProjectAllDataExportJobParams"
       },
       "SingleProjectAllTagsExportJobParams": {
@@ -6517,15 +6491,30 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_PROJECT_ALL_TAGS"
+          "export_job_type": { "const": "SINGLE_PROJECT_ALL_TAGS", "title": "Export Job Type" }
+        },
+        "type": "object",
+        "required": ["project_id", "export_job_type"],
+        "title": "SingleProjectAllTagsExportJobParams"
+      },
+      "SingleProjectSelectedSdocsParams": {
+        "properties": {
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "The ID of the Project to export from"
+          },
+          "export_job_type": { "const": "SINGLE_PROJECT_SELECTED_SDOCS", "title": "Export Job Type" },
+          "sdoc_ids": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdoc Ids",
+            "description": "IDs of the source documents to export"
           }
         },
         "type": "object",
-        "required": ["project_id"],
-        "title": "SingleProjectAllTagsExportJobParams"
+        "required": ["project_id", "export_job_type", "sdoc_ids"],
+        "title": "SingleProjectSelectedSdocsParams"
       },
       "SingleUserAllCodesExportJobParams": {
         "properties": {
@@ -6534,11 +6523,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_USER_ALL_CODES"
-          },
+          "export_job_type": { "const": "SINGLE_USER_ALL_CODES", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -6546,7 +6531,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "user_id"],
+        "required": ["project_id", "export_job_type", "user_id"],
         "title": "SingleUserAllCodesExportJobParams"
       },
       "SingleUserAllDataExportJobParams": {
@@ -6556,11 +6541,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_USER_ALL_DATA"
-          },
+          "export_job_type": { "const": "SINGLE_USER_ALL_DATA", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -6568,7 +6549,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "user_id"],
+        "required": ["project_id", "export_job_type", "user_id"],
         "title": "SingleUserAllDataExportJobParams"
       },
       "SingleUserAllMemosExportJobParams": {
@@ -6578,11 +6559,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_USER_ALL_MEMOS"
-          },
+          "export_job_type": { "const": "SINGLE_USER_ALL_MEMOS", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -6590,7 +6567,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "user_id"],
+        "required": ["project_id", "export_job_type", "user_id"],
         "title": "SingleUserAllMemosExportJobParams"
       },
       "SingleUserLogbookExportJobParams": {
@@ -6600,11 +6577,7 @@
             "title": "Project Id",
             "description": "The ID of the Project to export from"
           },
-          "export_job_type": {
-            "allOf": [{ "$ref": "#/components/schemas/ExportJobType" }],
-            "description": "The type of the export job (what to export)",
-            "default": "SINGLE_USER_LOGBOOK"
-          },
+          "export_job_type": { "const": "SINGLE_USER_LOGBOOK", "title": "Export Job Type" },
           "user_id": {
             "type": "integer",
             "title": "User Id",
@@ -6612,7 +6585,7 @@
           }
         },
         "type": "object",
-        "required": ["project_id", "user_id"],
+        "required": ["project_id", "export_job_type", "user_id"],
         "title": "SingleUserLogbookExportJobParams"
       },
       "SortDirection": { "type": "string", "enum": ["asc", "desc"], "title": "SortDirection" },

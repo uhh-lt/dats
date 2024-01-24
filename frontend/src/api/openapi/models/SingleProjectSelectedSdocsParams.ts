@@ -2,14 +2,14 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type SingleUserAllMemosExportJobParams = {
+export type SingleProjectSelectedSdocsParams = {
   /**
    * The ID of the Project to export from
    */
   project_id: number;
   export_job_type: any;
   /**
-   * The ID of the User to get the data from.
+   * IDs of the source documents to export
    */
-  user_id: number;
+  sdoc_ids: Array<number>;
 };

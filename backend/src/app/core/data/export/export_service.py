@@ -1,6 +1,6 @@
 import zipfile
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 from loguru import logger
@@ -103,6 +103,7 @@ class ExportService(metaclass=SingletonMeta):
         cls.export_method_for_job_type: Dict[ExportJobType, Callable[..., str]] = {
             ExportJobType.SINGLE_PROJECT_ALL_DATA: cls._export_all_data_from_proj,
             ExportJobType.SINGLE_PROJECT_ALL_TAGS: cls._export_all_tags_from_proj,
+            ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS: cls._export_selected_sdocs_from_proj,
             ExportJobType.SINGLE_USER_ALL_DATA: cls._export_user_data_from_proj,
             ExportJobType.SINGLE_USER_ALL_CODES: cls._export_user_codes_from_proj,
             ExportJobType.SINGLE_USER_ALL_MEMOS: cls._export_user_memos_from_proj,
@@ -114,7 +115,7 @@ class ExportService(metaclass=SingletonMeta):
         return super(ExportService, cls).__new__(cls)
 
     def __create_export_zip(
-        self, fn: Union[str, Path], exported_files: List[Union[str, Path]]
+        self, fn: Union[str, Path], exported_files: Sequence[Union[str, Path]]
     ) -> Path:
         fn = Path(fn)
         if not fn.suffix == ".zip":
@@ -961,6 +962,16 @@ class ExportService(metaclass=SingletonMeta):
         logger.error(msg)
         raise NoDataToExportError(msg)
 
+    def _export_selected_sdocs_from_proj(
+        self, db: Session, project_id: int, sdoc_ids: List[int]
+    ) -> str:
+        files = self.__get_raw_sdocs_files_for_export(db, sdoc_ids=sdoc_ids)
+        zip = self.__create_export_zip(
+            f"{len(files)}_exported_documents_project_{project_id}.zip", files
+        )
+
+        return self.repo.get_temp_file_url(zip.name, relative=True)
+
     def _assert_all_requested_data_exists(
         self, export_params: ExportJobParameters
     ) -> None:
@@ -981,6 +992,7 @@ class ExportService(metaclass=SingletonMeta):
         self._assert_all_requested_data_exists(export_params=export_params)
 
         exj_create = ExportJobCreate(parameters=export_params)
+        print(exj_create)
         try:
             exj_read = self.redis.store_export_job(export_job=exj_create)
         except Exception as e:

@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Union
+from typing import List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -16,6 +16,7 @@ class ExportFormat(str, Enum):
 class ExportJobType(str, Enum):
     SINGLE_PROJECT_ALL_DATA = "SINGLE_PROJECT_ALL_DATA"
     SINGLE_PROJECT_ALL_TAGS = "SINGLE_PROJECT_ALL_TAGS"
+    SINGLE_PROJECT_SELECTED_SDOCS = "SINGLE_PROJECT_SELECTED_SDOCS"
 
     SINGLE_USER_ALL_DATA = "SINGLE_USER_ALL_DATA"
     SINGLE_USER_ALL_CODES = "SINGLE_USER_ALL_CODES"
@@ -34,72 +35,45 @@ class SpecificExportJobParameters(BaseModel):
 
 
 class SingleProjectAllDataExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_PROJECT_ALL_DATA,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_PROJECT_ALL_DATA]
 
 
 class SingleProjectAllTagsExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_PROJECT_ALL_TAGS,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_PROJECT_ALL_TAGS]
+
+
+class SingleProjectSelectedSdocsParams(SpecificExportJobParameters):
+    export_job_type: Literal[ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS]
+    sdoc_ids: List[int] = Field(description="IDs of the source documents to export")
 
 
 class SingleUserAllDataExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_USER_ALL_DATA,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_USER_ALL_DATA]
     user_id: int = Field(description="The ID of the User to get the data from.")
 
 
 class SingleUserAllCodesExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_USER_ALL_CODES,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_USER_ALL_CODES]
     user_id: int = Field(description="The ID of the User to get the data from.")
 
 
 class SingleUserAllMemosExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_USER_ALL_MEMOS,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_USER_ALL_MEMOS]
     user_id: int = Field(description="The ID of the User to get the data from.")
 
 
 class SingleUserLogbookExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_USER_LOGBOOK,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_USER_LOGBOOK]
     user_id: int = Field(description="The ID of the User to get the data from.")
 
 
 class SingleDocAllUserAnnotationsExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_DOC_ALL_USER_ANNOTATIONS]
     sdoc_id: int = Field(description="The ID of the SDocument to get the data from.")
 
 
 class SingleDocSingleUserAnnotationsExportJobParams(SpecificExportJobParameters):
-    export_job_type: ExportJobType = Field(
-        default=ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS,
-        # Literal=True, #TODO: What else?
-        description="The type of the export job (what to export)",
-    )
+    export_job_type: Literal[ExportJobType.SINGLE_DOC_SINGLE_USER_ANNOTATIONS]
     sdoc_id: int = Field(description="The ID of the SDocument to get the data from.")
     user_id: int = Field(description="The ID of the User to get the data from.")
 
@@ -115,13 +89,17 @@ class ExportJobParameters(BaseModel):
     specific_export_job_parameters: Union[
         SingleProjectAllDataExportJobParams,
         SingleProjectAllTagsExportJobParams,
+        SingleProjectSelectedSdocsParams,
         SingleUserAllDataExportJobParams,
         SingleUserAllCodesExportJobParams,
         SingleUserAllMemosExportJobParams,
         SingleUserLogbookExportJobParams,
         SingleDocAllUserAnnotationsExportJobParams,
         SingleDocSingleUserAnnotationsExportJobParams,
-    ] = Field(description="Specific parameters for the export job w.r.t it's type")
+    ] = Field(
+        description="Specific parameters for the export job w.r.t it's type",
+        discriminator="export_job_type",
+    )
 
 
 # Properties shared across all DTOs

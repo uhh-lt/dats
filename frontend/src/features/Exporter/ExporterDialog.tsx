@@ -25,7 +25,7 @@ import ProjectHooks from "../../api/ProjectHooks";
 import {
   BackgroundJobStatus,
   ExportFormat,
-  ExportJobParameters_Input,
+  ExportJobParameters,
   SingleDocAllUserAnnotationsExportJobParams,
   SingleDocSingleUserAnnotationsExportJobParams,
   SingleProjectAllDataExportJobParams,
@@ -72,10 +72,7 @@ export interface ExporterInfo {
   sdocId: number;
 }
 
-const exporterInfoToExporterJobParameters = (
-  exporterData: ExporterInfo,
-  projectId: number,
-): ExportJobParameters_Input => {
+const exporterInfoToExporterJobParameters = (exporterData: ExporterInfo, projectId: number): ExportJobParameters => {
   switch (exporterData.type) {
     case "Project":
       return {
