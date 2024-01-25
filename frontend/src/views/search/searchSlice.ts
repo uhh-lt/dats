@@ -14,7 +14,7 @@ interface SearchState {
   rowsPerPage: number;
   resultModalities: DocType[];
   searchType: QueryType;
-  searchQuery: string;
+  searchQuery: string | number;
   isTableView: boolean;
   sortModel: GridSortModel;
   gridDensity: GridDensity;
@@ -138,7 +138,7 @@ export const searchSlice = createSlice({
     },
 
     // search
-    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
+    onChangeSearchQuery: (state, action: PayloadAction<string | number>) => {
       state.searchQuery = action.payload;
     },
     onClearSearch: (state) => {
@@ -148,6 +148,22 @@ export const searchSlice = createSlice({
     },
     onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
       state.expertMode = action.payload;
+    },
+    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string | number; searchType: QueryType }>) => {
+      switch (action.payload.searchType) {
+        case QueryType.SEMANTIC_IMAGES:
+          state.resultModalities = [DocType.IMAGE];
+          break;
+        case QueryType.SEMANTIC_SENTENCES:
+          state.resultModalities = [DocType.TEXT];
+          break;
+        case QueryType.LEXICAL:
+          state.resultModalities = [DocType.TEXT];
+          break;
+      }
+      state.searchType = action.payload.searchType;
+      state.selectedDocumentIds = [];
+      state.searchQuery = action.payload.query;
     },
   },
 });

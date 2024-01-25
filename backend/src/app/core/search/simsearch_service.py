@@ -145,9 +145,7 @@ class SimSearchService(metaclass=SingletonMeta):
         query_image_path = self._get_image_path_from_sdoc_id(sdoc_id=image_sdoc_id)
         # FIXME HACK FOR LOCAL RUN
         query_image_path = Path(
-            str(query_image_path).replace(
-                "/home/demo/dwts_prod2/docker/backend_repo", "/tmp/dwts"
-            )
+            str(query_image_path).replace(conf.repo.root_directory, "/tmp/dwts")
         )
 
         encoded_query = self.rms.clip_image_embedding(
@@ -308,6 +306,7 @@ class SimSearchService(metaclass=SingletonMeta):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
+        sdoc_ids_to_search: List[int],
         top_k: int = 10,
         threshold: float = 0.0,
     ) -> List[Dict[str, Any]]:
@@ -340,7 +339,18 @@ class SimSearchService(metaclass=SingletonMeta):
             .with_limit(top_k)
         )
 
-        return query.do()["data"]["Get"][self.class_names[index_type]]
+        query.with_where(
+            {
+                "operator": "ContainsAny",
+                "path": "sdoc_id",
+                "valueInt": sdoc_ids_to_search,
+            }
+        )
+
+        results = query.do()["data"]["Get"][self.class_names[index_type]]
+        if results is None:
+            results = []
+        return results
 
     def _encode_query(
         self,
@@ -375,7 +385,7 @@ class SimSearchService(metaclass=SingletonMeta):
             "average_text_query": False,
         }
 
-        if isinstance(query, str) and query.isdigit():
+        if isinstance(query, int) or (isinstance(query, str) and query.isdigit()):
             query_params["image_query_id"] = int(query)
         elif isinstance(query, str) and not query.isdigit():
             query_params["text_query"] = [query]
@@ -386,8 +396,7 @@ class SimSearchService(metaclass=SingletonMeta):
         return query_params
 
     def find_similar_sentences(
-        self,
-        query: SimSearchQuery,
+        self, sdoc_ids_to_search: List[int], query: SimSearchQuery
     ) -> List[SimSearchSentenceHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query.query),
@@ -398,6 +407,7 @@ class SimSearchService(metaclass=SingletonMeta):
             query_emb=query_emb,
             top_k=query.top_k,
             threshold=query.threshold,
+            sdoc_ids_to_search=sdoc_ids_to_search,
         )
         return [
             SimSearchSentenceHit(
@@ -409,8 +419,7 @@ class SimSearchService(metaclass=SingletonMeta):
         ]
 
     def find_similar_images(
-        self,
-        query: SimSearchQuery,
+        self, sdoc_ids_to_search: List[int], query: SimSearchQuery
     ) -> List[SimSearchImageHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query.query),
@@ -421,6 +430,7 @@ class SimSearchService(metaclass=SingletonMeta):
             query_emb=query_emb,
             top_k=query.top_k,
             threshold=query.threshold,
+            sdoc_ids_to_search=sdoc_ids_to_search,
         )
         return [
             SimSearchImageHit(

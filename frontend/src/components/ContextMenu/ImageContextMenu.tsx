@@ -1,6 +1,11 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
+import { useAppDispatch } from "../../plugins/ReduxHooks";
+import { QueryType } from "../../views/search/QueryType";
+import { SearchActions } from "../../views/search/searchSlice";
 
 interface ImageContextMenuProps {}
 
@@ -11,7 +16,7 @@ export interface ImageContextMenuHandle {
 
 // eslint-disable-next-line no-empty-pattern
 const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProps>(({}, ref) => {
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
 
   // local state
   const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -19,7 +24,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
   const [image, setImage] = useState<number>();
 
   // global client state (redux)
-  // const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
 
   // exposed methods (via ref)
   useImperativeHandle(ref, () => ({
@@ -34,7 +39,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
     setImage(image);
   };
 
-  const closeContextMenu = (reason?: "backdropClick" | "escapeKeyDown") => {
+  const closeContextMenu = (_reason?: "backdropClick" | "escapeKeyDown") => {
     setIsPopoverOpen(false);
   };
 
@@ -45,17 +50,31 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
   };
 
   const handleSentenceSimilaritySearch = () => {
-    alert("Not implemented yet");
-    // dispatch(SearchActions.setResultModalites([DocType.TEXT]));
+    if (image === undefined) {
+      // We're fucked
+      SnackbarAPI.openSnackbar({
+        severity: "error",
+        text: "Something went wrong. This is a bug, please report it to the developers.",
+      });
+      return;
+    }
+    dispatch(SearchActions.onSearchWithSimilarity({ query: image, searchType: QueryType.SEMANTIC_SENTENCES }));
     closeContextMenu();
-    // navigate("../search");
+    navigate("../search");
   };
 
   const handleImageSimilaritySearch = () => {
-    alert("Not implemented yet");
-    // dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
+    if (image === undefined) {
+      // We're fucked
+      SnackbarAPI.openSnackbar({
+        severity: "error",
+        text: "Something went wrong. This is a bug, please report it to the developers.",
+      });
+      return;
+    }
+    dispatch(SearchActions.onSearchWithSimilarity({ query: image, searchType: QueryType.SEMANTIC_IMAGES }));
     closeContextMenu();
-    // navigate("../search");
+    navigate("../search");
   };
 
   return (

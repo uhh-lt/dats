@@ -4,7 +4,7 @@ import Portal from "@mui/material/Portal";
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks";
-import SearchHooks, { LexicalSearchResults } from "../../api/SearchHooks";
+import SearchHooks from "../../api/SearchHooks";
 import { SpanEntityStat } from "../../api/openapi";
 import TagExplorer from "../../features/TagExplorer/TagExplorer";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
@@ -40,6 +40,7 @@ function Search() {
   // redux (global client state)
   const isSplitView = useAppSelector((state) => state.search.isSplitView);
   const isTableView = useAppSelector((state) => state.search.isTableView);
+  const SearchResultsView = isTableView ? SearchResultsTableView : SearchResultCardsView;
   const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
   const dispatch = useAppDispatch();
 
@@ -49,7 +50,6 @@ function Search() {
 
   // query (global server state)
   const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId));
-  console.log(searchResults.data?.getSearchResultSDocIds() || []);
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -97,7 +97,6 @@ function Search() {
   }, [dispatch, projectCodes.data]);
 
   // render
-  console.log("rendering search");
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
@@ -134,7 +133,7 @@ function Search() {
           <SearchToolbar
             sdocId={sdocId ? parseInt(sdocId) : undefined}
             searchResultDocumentIds={searchResults.data?.getSearchResultSDocIds() || []}
-            numSearchResults={searchResults.data?.getAggregatedNumberOfHits() || 0}
+            numSearchResults={searchResults.data?.getNumberOfHits() || 0}
             isSplitView={isSplitView}
             viewDocument={viewDocument}
           />
@@ -152,18 +151,10 @@ function Search() {
                         maxWidth: "100% !important",
                       }}
                     >
-                      {!(searchResults.data instanceof LexicalSearchResults) ? (
-                        <Typography>"A critical error occured! Please reload."</Typography>
-                      ) : searchResults.data.getNumberOfHits() === 0 ? (
+                      {searchResults.data.getNumberOfHits() === 0 ? (
                         <Typography>No search results for this query...</Typography>
-                      ) : isTableView ? (
-                        <SearchResultsTableView
-                          searchResults={searchResults.data}
-                          columnInfo={columnInfo.data}
-                          handleResultClick={handleResultClick}
-                        />
                       ) : (
-                        <SearchResultCardsView
+                        <SearchResultsView
                           searchResults={searchResults.data}
                           columnInfo={columnInfo.data}
                           handleResultClick={handleResultClick}

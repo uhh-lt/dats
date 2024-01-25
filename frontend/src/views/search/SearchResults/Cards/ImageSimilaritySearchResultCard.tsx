@@ -24,7 +24,7 @@ function ImageSimilaritySearchResultCard({ hit, ...props }: ImageSimilaritySearc
                 DOC TYPE {sdoc.doctype} IS NOT SUPPORTED for ImageSimilaritySearchResultCard :(
               </Typography>
             ) : (
-              <Tooltip title={`Score: ${hit.score}`}>
+              <Tooltip title={`Score: ${hit.score.toFixed(4)}`}>
                 <CardMedia
                   sx={{ mb: 1.5, border: `5px solid ${simSearchColorScale(hit.score)}` }}
                   component="img"

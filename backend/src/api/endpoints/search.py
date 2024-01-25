@@ -9,6 +9,7 @@ from app.core.data.crud import Crud
 from app.core.data.dto.search import (
     MemoContentQuery,
     PaginatedMemoSearchResults,
+    SearchColumns,
     SimSearchImageHit,
     SimSearchQuery,
     SimSearchSentenceHit,
@@ -18,7 +19,7 @@ from app.core.filters.columns import ColumnInfo
 from app.core.filters.filtering import Filter
 from app.core.filters.sorting import Sort
 from app.core.search.elasticsearch_service import ElasticSearchService
-from app.core.search.search_service import SearchColumns, SearchService
+from app.core.search.search_service import SearchService
 
 router = APIRouter(
     prefix="/search", dependencies=[Depends(get_current_user)], tags=["search"]

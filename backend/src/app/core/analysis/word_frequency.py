@@ -3,6 +3,7 @@ from typing import List
 from sqlalchemy import String, cast, distinct, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
+from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.analysis import WordFrequencyResult, WordFrequencyStat
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
@@ -17,7 +18,6 @@ from app.core.db.sql_service import SQLService
 from app.core.filters.columns import (
     AbstractColumns,
     ColumnInfo,
-    create_metadata_column_info,
 )
 from app.core.filters.filtering import Filter, apply_filtering
 from app.core.filters.filtering_operators import FilterOperator, FilterValueType
@@ -160,7 +160,7 @@ def word_frequency_info(
     project_id: int,
 ) -> List[ColumnInfo[WordFrequencyColumns]]:
     with SQLService().db_session() as db:
-        metadata_column_info = create_metadata_column_info(
+        metadata_column_info = crud_project_meta.create_metadata_column_info(
             db=db, project_id=project_id, allowed_doctypes=[DocType.text]
         )
     return [
