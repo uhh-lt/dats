@@ -7,7 +7,13 @@ the [D-WISE Project](https://www.dwise.uni-hamburg.de/)
 
 _Please also have a look at our [Wiki](https://github.com/uhh-lt/dwts/wiki) for more information and How-To's_
 
+## NAACL 2024 System Demonstration
+
+- Video: [docs/cota.mp4](docs/cota.mp4)
+- Live Demo: [https://naacl-dwts.ltdemos.informatik.uni-hamburg.de/](https://naacl-dwts.ltdemos.informatik.uni-hamburg.de/)
+
 ## Try it out!
+
 - test the online demo at [https://dwts.ltdemos.informatik.uni-hamburg.de/](https://dwts.ltdemos.informatik.uni-hamburg.de/)
 - host it on your own machine with `docker compose`
   - clone this repository: `git clone https://github.com/uhh-lt/dwts.git`
@@ -16,7 +22,9 @@ _Please also have a look at our [Wiki](https://github.com/uhh-lt/dwts/wiki) for 
   - visit [http://localhost:3000/](http://localhost:3000/) in your browser
 
 ## Tech Stack
+
 ![TechStack](docs/DWTS_Arch-backend-techstack.drawio.png)
 
 ## License
+
 Apache 2.0 - See [license file](LICENSE) for details
