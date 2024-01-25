@@ -156,7 +156,7 @@ vit_gpt2:
 blip2:
   model: "salesforce/blip2-opt-2.7b"
   device: ${oc.env:RAY_PROCESSING_DEVICE_BLIP2, cuda}
-  precision_bit: 8 # 8/16/32
+  precision_bit: ${oc.env:RAY_BLIP2_PRECISION_BIT, 8} # 8/16/32
   image_captioning:
     max_caption_length: 16
     num_beams: 4

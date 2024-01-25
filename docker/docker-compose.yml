@@ -190,6 +190,8 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
+    profiles:
+      - ray
 
   dwts-backend-api:
     image: uhhlt/dwts_backend:${DWTS_BACKEND_DOCKER_VERSION:-debian_dev_latest}
