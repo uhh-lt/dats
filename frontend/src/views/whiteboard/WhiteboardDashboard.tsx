@@ -108,7 +108,7 @@ function WhiteboardDashboard() {
     },
   ];
 
-  // CRUD whiteboard actions
+  // CRUD actions
   const handleCreateWhiteboard = (title: string) => {
     if (!user?.id) return;
 
@@ -118,7 +118,7 @@ function WhiteboardDashboard() {
         requestBody: {
           project_id: projectId,
           user_id: user.id,
-          title: title,
+          title,
           content: JSON.stringify(content),
         },
       },
@@ -151,7 +151,7 @@ function WhiteboardDashboard() {
           },
         },
         {
-          onSuccess(data, variables, context) {
+          onSuccess(_data, _variables, _context) {
             SnackbarAPI.openSnackbar({
               text: `Duplicated whiteboard '${whiteboard.title}'`,
               severity: "success",
@@ -165,7 +165,7 @@ function WhiteboardDashboard() {
 
   const handleDeleteClick = (id: GridRowId) => () => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the Whiteboard ${id}? This action cannot be undone!`,
+      text: `Do you really want to remove the whiteboard ${id}? This action cannot be undone!`,
       onAccept: () => {
         deleteWhiteboard.mutate(
           {

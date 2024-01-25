@@ -15,7 +15,7 @@ import {
   GridRowModes,
   GridRowModesModel,
 } from "@mui/x-data-grid";
-import { useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useParams } from "react-router";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
@@ -26,6 +26,8 @@ import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
 import CreateTableCard from "./CreateTableCard";
 import { TableType2Template } from "./templates";
+import { dateToLocaleString } from "../../../utils/DateUtils";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 
 function TableDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -58,6 +60,7 @@ function TableDashboard() {
       field: "updated",
       headerName: "Last modified",
       flex: 0.5,
+      valueGetter: (params) => dateToLocaleString(params.value as string),
     },
     {
       field: "actions",
@@ -108,8 +111,8 @@ function TableDashboard() {
     },
   ];
 
-  // CRUD table actions
-  const handleCreateTable = (tableType: TableType) => {
+  // CRUD actions
+  const handleCreateTable = (tableType: TableType, title: string) => {
     if (!user?.id) return;
 
     const content = [{ id: uuidv4(), name: `Table sheet 1`, content: TableType2Template[tableType] }];
@@ -118,15 +121,15 @@ function TableDashboard() {
         requestBody: {
           project_id: projectId,
           user_id: user.id,
-          title: "New Table",
+          title,
           content: JSON.stringify(content),
           table_type: tableType,
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(_data, _variables, _context) {
           SnackbarAPI.openSnackbar({
-            text: `Create new table '${data.title}'`,
+            text: `Created new table '${title}'`,
             severity: "success",
           });
         },
@@ -134,47 +137,56 @@ function TableDashboard() {
     );
   };
 
-  const handleDuplicateTable = (id: number) => () => {
-    if (!user?.id || !userTables.data) return;
+  const handleDuplicateTable = useCallback(
+    (id: number) => () => {
+      if (!user?.id || !userTables.data) return;
 
-    const table = userTables.data.find((table) => table.id === id);
-    if (!table) return;
+      const table = userTables.data.find((table) => table.id === id);
+      if (!table) return;
 
-    createTable.mutate(
-      {
-        requestBody: {
-          project_id: projectId,
-          user_id: user.id,
-          title: table.title + " (copy)",
-          content: JSON.stringify(table.content),
-          table_type: table.table_type,
+      const mutation = createTable.mutate;
+      mutation(
+        {
+          requestBody: {
+            project_id: projectId,
+            user_id: user.id,
+            title: table.title + " (copy)",
+            content: JSON.stringify(table.content),
+            table_type: table.table_type,
+          },
         },
-      },
-      {
-        onSuccess(data, variables, context) {
-          SnackbarAPI.openSnackbar({
-            text: `Duplicated table '${table.title}'`,
-            severity: "success",
-          });
+        {
+          onSuccess(_data, _variables, _context) {
+            SnackbarAPI.openSnackbar({
+              text: `Duplicated table '${table.title}'`,
+              severity: "success",
+            });
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [createTable.mutate, projectId, user, userTables.data],
+  );
 
   const handleDeleteClick = (id: GridRowId) => () => {
-    deleteTable.mutate(
-      {
-        analysisTableId: id as number,
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Do you really want to remove the table ${id}? This action cannot be undone!`,
+      onAccept: () => {
+        deleteTable.mutate(
+          {
+            analysisTableId: id as number,
+          },
+          {
+            onSuccess(data, variables, context) {
+              SnackbarAPI.openSnackbar({
+                text: `Deleted table '${data.title}'`,
+                severity: "success",
+              });
+            },
+          },
+        );
       },
-      {
-        onSuccess(data, variables, context) {
-          SnackbarAPI.openSnackbar({
-            text: `Deleted table '${data.title}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   const processRowUpdate = (newRow: GridRowModel<TableRead>) => {
@@ -245,22 +257,22 @@ function TableDashboard() {
               <CreateTableCard
                 title="Empty table"
                 description="Create an empty table with no template"
-                onClick={() => handleCreateTable(TableType.CUSTOM)}
+                onClick={() => handleCreateTable(TableType.CUSTOM, "New table")}
               />
               <CreateTableCard
                 title="Interpretation table"
                 description="Create a table with the interpretation template"
-                onClick={() => handleCreateTable(TableType.INTERPRETATION)}
+                onClick={() => handleCreateTable(TableType.INTERPRETATION, "New interpretation table")}
               />
               <CreateTableCard
                 title="Phenomenon table"
                 description="Create a table with the phenomenon template"
-                onClick={() => handleCreateTable(TableType.PHENOMENON)}
+                onClick={() => handleCreateTable(TableType.PHENOMENON, "New phenomenon table")}
               />
               <CreateTableCard
                 title="Situation table"
                 description="Create a table with the situation template"
-                onClick={() => handleCreateTable(TableType.SITUATION)}
+                onClick={() => handleCreateTable(TableType.SITUATION, "New situation table")}
               />
             </Box>
           </CardContent>
