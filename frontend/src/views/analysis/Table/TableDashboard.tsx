@@ -24,7 +24,7 @@ import { TableType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import CreateTableCard from "./CreateTableCard";
+import CreateEntityCard from "../../../features/AnalysisDashboard/CreateTableCard";
 import { TableType2Template } from "./templates";
 import { dateToLocaleString } from "../../../utils/DateUtils";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
@@ -254,22 +254,22 @@ function TableDashboard() {
           <CardHeader title="Create table" />
           <CardContent className="myFlexFillAllContainer">
             <Box height="100%" overflow="auto" whiteSpace="nowrap">
-              <CreateTableCard
+              <CreateEntityCard
                 title="Empty table"
                 description="Create an empty table with no template"
                 onClick={() => handleCreateTable(TableType.CUSTOM, "New table")}
               />
-              <CreateTableCard
+              <CreateEntityCard
                 title="Interpretation table"
                 description="Create a table with the interpretation template"
                 onClick={() => handleCreateTable(TableType.INTERPRETATION, "New interpretation table")}
               />
-              <CreateTableCard
+              <CreateEntityCard
                 title="Phenomenon table"
                 description="Create a table with the phenomenon template"
                 onClick={() => handleCreateTable(TableType.PHENOMENON, "New phenomenon table")}
               />
-              <CreateTableCard
+              <CreateEntityCard
                 title="Situation table"
                 description="Create a table with the situation template"
                 onClick={() => handleCreateTable(TableType.SITUATION, "New situation table")}

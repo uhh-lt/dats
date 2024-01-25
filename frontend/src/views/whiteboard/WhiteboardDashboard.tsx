@@ -23,8 +23,8 @@ import { useAuth } from "../../auth/AuthProvider";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import { AppBarContext } from "../../layouts/TwoBarLayout";
 import { dateToLocaleString } from "../../utils/DateUtils";
-import CreateWhiteboardCard from "./CreateWhiteboardCard";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI";
+import CreateEntityCard from "../../features/AnalysisDashboard/CreateTableCard";
 
 function WhiteboardDashboard() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -248,17 +248,17 @@ function WhiteboardDashboard() {
           <CardHeader title="Create whiteboard" />
           <CardContent className="myFlexFillAllContainer">
             <Box height="100%" overflow="auto" whiteSpace="nowrap">
-              <CreateWhiteboardCard
+              <CreateEntityCard
                 title="Empty whiteboard"
                 description="Create an empty whiteboard with no template"
                 onClick={() => handleCreateWhiteboard("New Whiteboard")}
               />
-              <CreateWhiteboardCard
+              <CreateEntityCard
                 title="Code whiteboard"
                 description="Create a whiteboard with all of your codes"
                 onClick={() => handleCreateWhiteboard("New Code Whiteboard")}
               />
-              <CreateWhiteboardCard
+              <CreateEntityCard
                 title="Image whiteboard"
                 description="Create a whiteboard with images"
                 onClick={() => handleCreateWhiteboard("New Image Whiteboard")}

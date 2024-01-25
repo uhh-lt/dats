@@ -6,7 +6,7 @@ interface CreateTableCardProps {
   onClick: () => void;
 }
 
-function CreateTableCard({ title, description, onClick }: CreateTableCardProps) {
+function CreateEntityCard({ title, description, onClick }: CreateTableCardProps) {
   return (
     <Card
       style={{
@@ -34,4 +34,4 @@ function CreateTableCard({ title, description, onClick }: CreateTableCardProps) 
   );
 }
 
-export default CreateTableCard;
+export default CreateEntityCard;
