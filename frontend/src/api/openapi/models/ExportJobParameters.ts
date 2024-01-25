@@ -8,12 +8,13 @@ import type { SingleDocAllUserAnnotationsExportJobParams } from "./SingleDocAllU
 import type { SingleDocSingleUserAnnotationsExportJobParams } from "./SingleDocSingleUserAnnotationsExportJobParams";
 import type { SingleProjectAllDataExportJobParams } from "./SingleProjectAllDataExportJobParams";
 import type { SingleProjectAllTagsExportJobParams } from "./SingleProjectAllTagsExportJobParams";
+import type { SingleProjectSelectedSdocsParams } from "./SingleProjectSelectedSdocsParams";
 import type { SingleUserAllCodesExportJobParams } from "./SingleUserAllCodesExportJobParams";
 import type { SingleUserAllDataExportJobParams } from "./SingleUserAllDataExportJobParams";
 import type { SingleUserAllMemosExportJobParams } from "./SingleUserAllMemosExportJobParams";
 import type { SingleUserLogbookExportJobParams } from "./SingleUserLogbookExportJobParams";
 
-export type ExportJobParameters_Input = {
+export type ExportJobParameters = {
   /**
    * The type of the export job (what to export)
    */
@@ -28,6 +29,7 @@ export type ExportJobParameters_Input = {
   specific_export_job_parameters:
     | SingleProjectAllDataExportJobParams
     | SingleProjectAllTagsExportJobParams
+    | SingleProjectSelectedSdocsParams
     | SingleUserAllDataExportJobParams
     | SingleUserAllCodesExportJobParams
     | SingleUserAllMemosExportJobParams

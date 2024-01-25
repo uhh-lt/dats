@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
-import type { ExportJobParameters_Output } from "./ExportJobParameters_Output";
+import type { ExportJobParameters } from "./ExportJobParameters";
 
 export type ExportJobRead = {
   /**
@@ -21,7 +21,7 @@ export type ExportJobRead = {
   /**
    * The parameters of the export job that defines what to export!
    */
-  parameters: ExportJobParameters_Output;
+  parameters: ExportJobParameters;
   /**
    * Created timestamp of the ExportJob
    */

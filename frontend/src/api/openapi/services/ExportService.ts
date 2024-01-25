@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ExportJobParameters_Input } from "../models/ExportJobParameters_Input";
+import type { ExportJobParameters } from "../models/ExportJobParameters";
 import type { ExportJobRead } from "../models/ExportJobRead";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -17,7 +17,7 @@ export class ExportService {
   public static startExportJob({
     requestBody,
   }: {
-    requestBody: ExportJobParameters_Input;
+    requestBody: ExportJobParameters;
   }): CancelablePromise<ExportJobRead> {
     return __request(OpenAPI, {
       method: "POST",

@@ -1,14 +1,17 @@
 import { AppBar, AppBarProps, Box, Toolbar, Typography } from "@mui/material";
+import { useRef } from "react";
 import { useParams } from "react-router-dom";
 import { AttachedObjectType } from "../../../api/openapi";
 import DocumentNavigation from "../../../components/DocumentNavigation";
 import ExporterButton from "../../../features/Exporter/ExporterButton";
 import MemoButton from "../../../features/Memo/MemoButton";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
+import SearchFilterDialog from "../SearchFilterDialog";
 import AnnotateButton from "./ToolBarElements/AnnotateButton";
 import BackButton from "./ToolBarElements/BackButton";
 import DeleteButton from "./ToolBarElements/DeleteButton";
 import DownloadButton from "./ToolBarElements/DownloadButton";
+import DownloadSdocsButton from "./ToolBarElements/DownloadSdocsButton";
 import TableNavigation from "./ToolBarElements/TableNavigation";
 import TagMenuButton from "./ToolBarElements/TagMenu/TagMenuButton";
 import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
@@ -16,8 +19,6 @@ import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton
 import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
 import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
 import ToggleTableView from "./ToolBarElements/ToggleTableViewButton";
-import SearchFilterDialog from "../SearchFilterDialog";
-import { useRef } from "react";
 
 interface DocumentViewerToolbarProps {
   sdocId: number | undefined | null;
@@ -83,6 +84,7 @@ function SearchToolbar({
                 </Typography>
                 <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
                 <DeleteButton sdocIds={selectedDocumentIds} navigateTo="../search" />
+                <DownloadSdocsButton sdocIds={selectedDocumentIds} />
               </>
             )}
             <SearchFilterDialog anchorEl={filterDialogAnchorRef.current} />
