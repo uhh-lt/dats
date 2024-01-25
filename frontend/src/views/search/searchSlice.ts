@@ -1,7 +1,9 @@
+import { GridDensity, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { persistReducer } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import { DocType, SourceDocumentMetadataReadResolved } from "../../api/openapi";
 import { QueryType } from "./QueryType";
-import { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
 
 interface SearchState {
   selectedDocumentIds: number[];
@@ -15,6 +17,7 @@ interface SearchState {
   searchQuery: string;
   isTableView: boolean;
   sortModel: GridSortModel;
+  gridDensity: GridDensity;
   expertMode: boolean;
 }
 
@@ -30,6 +33,7 @@ const initialState: SearchState = {
   searchQuery: "",
   isTableView: false,
   sortModel: [],
+  gridDensity: "standard",
   expertMode: false,
 };
 
@@ -83,6 +87,9 @@ export const searchSlice = createSlice({
     },
     toggleShowTags: (state) => {
       state.isShowTags = !state.isShowTags;
+    },
+    setTableDensity: (state, action: PayloadAction<GridDensity>) => {
+      state.gridDensity = action.payload;
     },
     // pagination
     setRowsPerPage: (state, action: PayloadAction<number>) => {
@@ -151,4 +158,10 @@ export const SearchActions = searchSlice.actions;
 // selectors
 export const getSelectedDocumentIds = (state: SearchState) => state.selectedDocumentIds;
 
-export default searchSlice.reducer;
+export default persistReducer(
+  {
+    key: "search",
+    storage,
+  },
+  searchSlice.reducer,
+);

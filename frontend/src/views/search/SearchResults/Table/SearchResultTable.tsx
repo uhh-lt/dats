@@ -3,12 +3,12 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { useMemo } from "react";
 import { ColumnInfo_SearchColumns_, SearchColumns } from "../../../../api/openapi";
 import { useAuth } from "../../../../auth/AuthProvider";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
-import { SearchActions } from "../../searchSlice";
+import SdocAnnotatorsRenderer from "../../../../components/DataGrid/SdocAnnotatorsRenderer";
 import SdocMetadataRenderer from "../../../../components/DataGrid/SdocMetadataRenderer";
 import SdocRenderer from "../../../../components/DataGrid/SdocRenderer";
 import SdocTagsRenderer from "../../../../components/DataGrid/SdocTagRenderer";
-import SdocAnnotatorsRenderer from "../../../../components/DataGrid/SdocAnnotatorsRenderer";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
+import { SearchActions } from "../../searchSlice";
 import SearchTableToolbar from "./SearchTableToolbar";
 
 interface SearchResultsTableProps {
@@ -27,6 +27,7 @@ function SearchResultsTable({ onRowClick, onRowContextMenu, sdocIds, columnInfo 
   const page = useAppSelector((state) => state.search.page);
   const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
   const sortModel = useAppSelector((state) => state.search.sortModel);
+  const gridDensity = useAppSelector((state) => state.search.gridDensity);
   const dispatch = useAppDispatch();
 
   // actions
@@ -141,6 +142,12 @@ function SearchResultsTable({ onRowClick, onRowContextMenu, sdocIds, columnInfo 
         sortingMode="server"
         sortModel={sortModel}
         onSortModelChange={(model) => dispatch(SearchActions.onSortModelChange(model))}
+        onStateChange={(state) => {
+          if (gridDensity !== state.density.value) {
+            dispatch(SearchActions.setTableDensity(state.density.value));
+          }
+        }}
+        density={gridDensity}
         // column hiding: hide metadata columns by default
         initialState={{
           columns: {
