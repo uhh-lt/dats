@@ -97,7 +97,6 @@ function Search() {
   }, [dispatch, projectCodes.data]);
 
   // render
-  console.log("rendering search");
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
@@ -134,10 +133,7 @@ function Search() {
           <SearchToolbar
             sdocId={sdocId ? parseInt(sdocId) : undefined}
             searchResultDocumentIds={searchResults.data?.getSearchResultSDocIds() || []}
-            // TODO: This might be confusing for users, e.g. when there
-            // are only 4 cards on the page, but the search bar says
-            // "10 results found".
-            numSearchResults={searchResults.data?.getAggregatedNumberOfHits() || 0}
+            numSearchResults={searchResults.data?.getNumberOfHits() || 0}
             isSplitView={isSplitView}
             viewDocument={viewDocument}
           />

@@ -145,9 +145,7 @@ class SimSearchService(metaclass=SingletonMeta):
         query_image_path = self._get_image_path_from_sdoc_id(sdoc_id=image_sdoc_id)
         # FIXME HACK FOR LOCAL RUN
         query_image_path = Path(
-            str(query_image_path).replace(
-                "/home/demo/dwts_prod2/docker/backend_repo", "/tmp/dwts"
-            )
+            str(query_image_path).replace(conf.repo.root_directory, "/tmp/dwts")
         )
 
         encoded_query = self.rms.clip_image_embedding(
@@ -387,7 +385,7 @@ class SimSearchService(metaclass=SingletonMeta):
             "average_text_query": False,
         }
 
-        if isinstance(query, str) and query.isdigit():
+        if isinstance(query, int) or (isinstance(query, str) and query.isdigit()):
             query_params["image_query_id"] = int(query)
         elif isinstance(query, str) and not query.isdigit():
             query_params["text_query"] = [query]

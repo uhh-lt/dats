@@ -2,9 +2,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DocType } from "../../api/openapi";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
+import { QueryType } from "../../views/search/QueryType";
 import { SearchActions } from "../../views/search/searchSlice";
 
 interface ImageContextMenuProps {}
@@ -58,9 +58,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
       });
       return;
     }
-    dispatch(SearchActions.setResultModalites([DocType.TEXT]));
-    dispatch(SearchActions.clearSelectedDocuments());
-    dispatch(SearchActions.onChangeSearchQuery(image));
+    dispatch(SearchActions.onSearchWithSimilarity({ query: image, searchType: QueryType.SEMANTIC_SENTENCES }));
     closeContextMenu();
     navigate("../search");
   };
@@ -74,9 +72,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
       });
       return;
     }
-    dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
-    dispatch(SearchActions.clearSelectedDocuments());
-    dispatch(SearchActions.onChangeSearchQuery(image));
+    dispatch(SearchActions.onSearchWithSimilarity({ query: image, searchType: QueryType.SEMANTIC_IMAGES }));
     closeContextMenu();
     navigate("../search");
   };

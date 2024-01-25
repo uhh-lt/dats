@@ -142,6 +142,22 @@ export const searchSlice = createSlice({
     onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
       state.expertMode = action.payload;
     },
+    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string | number; searchType: QueryType }>) => {
+      switch (action.payload.searchType) {
+        case QueryType.SEMANTIC_IMAGES:
+          state.resultModalities = [DocType.IMAGE];
+          break;
+        case QueryType.SEMANTIC_SENTENCES:
+          state.resultModalities = [DocType.TEXT];
+          break;
+        case QueryType.LEXICAL:
+          state.resultModalities = [DocType.TEXT];
+          break;
+      }
+      state.searchType = action.payload.searchType;
+      state.selectedDocumentIds = [];
+      state.searchQuery = action.payload.query;
+    },
   },
 });
 

@@ -29,10 +29,6 @@ export abstract class SearchResults<T extends Iterable<any>> {
   abstract getSearchResultSDocIds(): number[];
 
   abstract getNumberOfHits(): number;
-
-  getAggregatedNumberOfHits(): number {
-    return this.getNumberOfHits();
-  }
 }
 
 export class LexicalSearchResults extends SearchResults<number[]> {
@@ -54,13 +50,8 @@ export class SentenceSimilaritySearchResults extends SimilaritySearchResults<Map
   getSearchResultSDocIds(): number[] {
     return Array.from(this.results.keys());
   }
-
   getNumberOfHits(): number {
     return this.results.size;
-  }
-
-  getAggregatedNumberOfHits(): number {
-    return Array.from(this.results.values()).flat().length;
   }
 }
 
@@ -89,8 +80,8 @@ const sentenceSimilaritySearchQueryFn =
         proj_id: projectId,
         query,
         filter,
-        threshold: 0.9,
-        top_k: 10,
+        threshold: 0.5,
+        top_k: 100,
       },
     });
 
@@ -113,8 +104,8 @@ const imageSimilaritySearchQueryFn =
         proj_id: projectId,
         query,
         filter,
-        threshold: 0.9,
-        top_k: 10,
+        threshold: 0.5,
+        top_k: 100,
       },
     });
 

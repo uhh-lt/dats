@@ -3,13 +3,20 @@ import * as React from "react";
 import { useCallback, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useParams } from "react-router-dom";
-import { SearchResults, SentenceSimilaritySearchResults } from "../../../../api/SearchHooks";
+import {
+  ImageSimilaritySearchResults,
+  LexicalSearchResults,
+  SearchResults,
+  SentenceSimilaritySearchResults,
+} from "../../../../api/SearchHooks";
 import { ColumnInfo_SearchColumns_ } from "../../../../api/openapi";
 import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
 import { SearchActions } from "../../searchSlice";
 import SearchResultContextMenu from "../SearchResultContextMenu";
 import LexicalSearchResultCard from "./LexicalSearchResultCard";
+import SentenceSimilaritySearchResultCard from "./SentenceSimilaritySearchResultCard";
+import ImageSimilaritySearchResultCard from "./ImageSimilaritySearchResultCard";
 
 interface SearchResultCardsViewProps {
   searchResults: SearchResults<any>;
@@ -53,12 +60,8 @@ export default function SearchResultCardsView({
   // calculate cards per page
   React.useLayoutEffect(() => {
     if (searchResults instanceof SentenceSimilaritySearchResults) {
-      // TODO This means that there is effectively no pagination.
-      // Should we remove it?
-      dispatch(SearchActions.setRowsPerPage(searchResults.getAggregatedNumberOfHits()));
-      return;
-    }
-    if (width && height) {
+      dispatch(SearchActions.setRowsPerPage(5));
+    } else if (width && height) {
       let numCardsX = Math.floor(width / 300);
       numCardsX = width - numCardsX * 300 - (numCardsX - 1) * 15 > 0 ? numCardsX : numCardsX - 1;
 
@@ -66,7 +69,6 @@ export default function SearchResultCardsView({
       numCardsY = height - numCardsY * 370 - (numCardsY - 1) * 15 > 0 ? numCardsY : numCardsY - 1;
 
       dispatch(SearchActions.setRowsPerPage(numCardsX * numCardsY));
-      return;
     }
   }, [dispatch, width, height, searchResults]);
 
@@ -93,18 +95,47 @@ export default function SearchResultCardsView({
         height: "100%",
       }}
     >
-      {searchResults
-        .getSearchResultSDocIds()
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        .map((sdocId) => (
-          <LexicalSearchResultCard
-            key={sdocId}
-            sdocId={sdocId}
-            handleClick={(sdoc) => handleResultClick(sdoc.id)}
-            handleOnContextMenu={openContextMenu}
-            handleOnCheckboxChange={handleChange}
-          />
-        ))}
+      {searchResults instanceof LexicalSearchResults ? (
+        searchResults
+          .getSearchResultSDocIds()
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((sdocId) => (
+            <LexicalSearchResultCard
+              key={sdocId}
+              sdocId={sdocId}
+              handleClick={(sdoc) => handleResultClick(sdoc.id)}
+              handleOnContextMenu={openContextMenu}
+              handleOnCheckboxChange={handleChange}
+            />
+          ))
+      ) : searchResults instanceof SentenceSimilaritySearchResults ? (
+        Array.from(searchResults.getResults().entries())
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map(([sdocId, hits]) => (
+            <SentenceSimilaritySearchResultCard
+              hits={hits}
+              sdocId={sdocId}
+              handleClick={(sdoc) => handleResultClick(sdoc.id)}
+              handleOnContextMenu={openContextMenu}
+              handleOnCheckboxChange={handleChange}
+            />
+          ))
+      ) : searchResults instanceof ImageSimilaritySearchResults ? (
+        searchResults
+          .getResults()
+          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .map((hit) => (
+            <ImageSimilaritySearchResultCard
+              hit={hit}
+              sdocId={hit.sdoc_id}
+              handleClick={(sdoc) => handleResultClick(sdoc.id)}
+              handleOnContextMenu={openContextMenu}
+              handleOnCheckboxChange={handleChange}
+            />
+          ))
+      ) : (
+        <></>
+      )}
       <SearchResultContextMenu
         projectId={projectId}
         sdocId={contextMenuData}

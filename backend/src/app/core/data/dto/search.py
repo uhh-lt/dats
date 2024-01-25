@@ -304,7 +304,7 @@ class SimSearchQuery(BaseModel):
     )
     top_k: int = Field(
         description="The number of results to return.",
-        default=10,
+        default=100,
     )
     threshold: float = Field(
         description="The minimum distance to use for the sim search.",
