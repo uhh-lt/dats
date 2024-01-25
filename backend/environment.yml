@@ -54,5 +54,6 @@ dependencies:
   - uvicorn=0.23.2
   - conda-forge::transformers>=4.3
   - conda-forge::sentence-transformers>=2.2.2
+  - setfit=1.0.3
   - pip:
       - -r requirements.txt
