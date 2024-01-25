@@ -15,8 +15,9 @@ OpenAPI.BASE = process.env.REACT_APP_SERVER || "";
 OpenAPI.TOKEN = localStorage.getItem("dwts-access") || undefined;
 
 export enum LoginStatus {
-  LOGGED_IN,
-  LOGGED_OUT,
+  LOGGED_IN = "logged_in",
+  LOADING = "loading",
+  LOGGED_OUT = "logged_out",
 }
 
 interface AuthContextType {
@@ -55,6 +56,12 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
       return;
     }
 
+    if (internalUser.isError && internalUser.error instanceof ApiError && internalUser.error.status === 403) {
+      // Our credentials are invalid, we're not logged in anymore.
+      setUser(undefined);
+      return;
+    }
+
     if (internalUser?.data?.id !== user?.id) {
       setUser(internalUser.data);
     }
@@ -83,13 +90,10 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
   }, []);
 
   const logout = useCallback(async () => {
-    if (refreshToken === undefined) {
-      console.error("Can't refresh access token, no refresh token set");
-      return;
-    }
-
     try {
-      await AuthenticationService.logout({ refreshToken });
+      if (refreshToken !== undefined) {
+        await AuthenticationService.logout({ refreshToken });
+      }
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) {
         // refresh token expired, keep logging the user out
@@ -119,8 +123,15 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
         console.error("Can't refresh access token, no refresh token set");
         return;
       }
-      const authData = await AuthenticationService.refreshAccessToken({ refreshToken });
-      updateAuthData(authData);
+      try {
+        const authData = await AuthenticationService.refreshAccessToken({ refreshToken });
+        updateAuthData(authData);
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 403) {
+          // Refresh token expired, it's time to log out
+          logout();
+        }
+      }
     };
 
     // Refresh 60 seconds before the access token expires
@@ -131,13 +142,15 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     }, msToWait);
 
     return () => clearTimeout(handle);
-  }, [accessTokenExpires, refreshToken]);
+  }, [accessTokenExpires, refreshToken, logout]);
 
   let status;
   const definitelyLoggedIn = user !== undefined || internalUser.isSuccess;
   const verifyingAccessToken = (internalUser.isLoading || internalUser.isFetching) && accessToken !== undefined;
-  if (definitelyLoggedIn || verifyingAccessToken) {
+  if (definitelyLoggedIn) {
     status = LoginStatus.LOGGED_IN;
+  } else if (verifyingAccessToken) {
+    status = LoginStatus.LOADING;
   } else {
     status = LoginStatus.LOGGED_OUT;
   }

@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from typing import Never
 
-from sqlalchemy import update
+from sqlalchemy import and_, delete, or_, update
 from sqlalchemy.orm import Session, joinedload
 
 from api.util import credentials_exception
@@ -63,6 +63,23 @@ class CRUDRefreshToken(CRUDBase[RefreshTokenORM, RefreshTokenCreate, Never]):
         db.commit()
         db.refresh(token)
         return token
+
+    def remove_old_refresh_tokens(self, db: Session, user_id: int):
+        remove_tokens_older_than = datetime.now(UTC) - timedelta(
+            seconds=int(conf.api.auth.jwt.refresh_ttl) * 3
+        )
+        query = delete(RefreshTokenORM).filter(
+            and_(
+                or_(
+                    RefreshTokenORM.revoked_at < remove_tokens_older_than,
+                    RefreshTokenORM.expires_at < remove_tokens_older_than,
+                ),
+                RefreshTokenORM.user_id == user_id,
+            )
+        )
+        db.execute(query)
+
+        db.commit()
 
 
 crud_refresh_token = CRUDRefreshToken(RefreshTokenORM)
