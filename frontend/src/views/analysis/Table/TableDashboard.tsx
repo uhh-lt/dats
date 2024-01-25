@@ -117,7 +117,6 @@ function TableDashboard() {
       {
         requestBody: {
           project_id: projectId,
-          user_id: user.id,
           title: "New Table",
           content: JSON.stringify(content),
           table_type: tableType,
@@ -144,7 +143,6 @@ function TableDashboard() {
       {
         requestBody: {
           project_id: projectId,
-          user_id: user.id,
           title: table.title + " (copy)",
           content: JSON.stringify(table.content),
           table_type: table.table_type,

@@ -22,7 +22,7 @@ export type AnalysisTableCreate = {
    */
   project_id: number;
   /**
-   * User the AnalysisTable belongs to
+   * User the AnalysisTable belongs to. Do not send any value for this field, it is automatically set by the backend.
    */
-  user_id: number;
+  user_id?: number | null;
 };

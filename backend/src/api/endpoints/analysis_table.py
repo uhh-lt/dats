@@ -32,7 +32,7 @@ def create(
     authz_user: AuthzUser = Depends(),
 ) -> AnalysisTableRead:
     authz_user.assert_in_project(analysis_table.project_id)
-    authz_user.assert_is_same_user(analysis_table.user_id)
+    analysis_table.user_id = authz_user.user.id
 
     return AnalysisTableRead.model_validate(
         crud_analysis_table.create(db=db, create_dto=analysis_table)
