@@ -44,5 +44,6 @@ dependencies:
   - anyio=3.7.1
   - debugpy=1.8.0
   - umap-learn=0.5.5
+  - setfit=1.0.3
   - pip:
       - -r requirements.txt
