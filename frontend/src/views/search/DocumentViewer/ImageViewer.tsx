@@ -108,11 +108,6 @@ function ImageViewerWithData({
         (exit) => exit.remove(),
       );
 
-    // add click listener
-    rect.on("click", (event, d) => {
-      console.log(d);
-    });
-
     // add & remove text
     text
       .data(data, (datum) => datum.id)

@@ -40,7 +40,6 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
   const [isEditing, setIsEditing] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    console.log(event);
     if (event.detail >= 2) {
       setIsEditing(true);
     }
@@ -51,7 +50,6 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
   ) => {
     // @ts-ignore
     const value: string = event.target.value;
-    console.log(value);
     reactFlowInstance.setEdges((edges) =>
       edges.map((edge) => {
         if (edge.id === props.id) {

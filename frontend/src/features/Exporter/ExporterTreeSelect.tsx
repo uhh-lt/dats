@@ -64,8 +64,6 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
     }
   }, [tree, codeFilter]);
 
-  console.log(tree);
-
   // effects
   // automatically expand filtered nodes
   useEffect(() => {

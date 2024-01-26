@@ -41,8 +41,6 @@ export const useTimelineAnalysis = () => {
 
   // TODO: Is this memo stable? or is it computed every re-render?
   const { counts, date2concept2ids, isSuccess } = useMemo(() => {
-    console.log("memomemomomo");
-
     if (!timelineAnalysis.every((query) => query.isSuccess))
       return { counts: [], date2concept2ids: {}, isSuccess: false };
     const timelineAnalysisResults = timelineAnalysis.map((query) => query.data!);

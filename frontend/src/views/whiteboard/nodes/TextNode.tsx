@@ -21,7 +21,6 @@ function TextNode(props: NodeProps<TextData>) {
   ) => {
     // @ts-ignore
     const value: string = event.target.value;
-    console.log(value);
     reactFlowInstance.setNodes((nodes) =>
       nodes.map((node) => {
         if (node.id === props.id) {

@@ -52,8 +52,6 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   const handleUpdateAnnotation = () => {
     if (!selectedCode || !annotation) return;
 
-    console.log("anono", annotation);
-
     updateAnnotationMutation.mutate(
       {
         bboxToUpdate: annotation,
