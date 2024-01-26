@@ -1,12 +1,11 @@
-import React, { useMemo, useState } from "react";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { LoadingButton } from "@mui/lab";
 import {
   Autocomplete,
   Box,
   CardContent,
-  Checkbox,
   Divider,
-  FormControlLabel,
-  FormGroup,
   IconButton,
   List,
   ListItem,
@@ -18,17 +17,15 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { PublicUserRead } from "../../../api/openapi";
+import React, { useMemo, useState } from "react";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { LoadingButton } from "@mui/lab";
 import UserHooks from "../../../api/UserHooks";
-import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
+import { PublicUserRead } from "../../../api/openapi";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import { ProjectProps } from "./ProjectProps";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import { ProjectProps } from "./ProjectProps";
+import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
 
 function ProjectUsers({ project }: ProjectProps) {
   const [selectedUser, setSelectedUser] = useState<PublicUserRead | null>(null);
@@ -141,9 +138,6 @@ function ProjectUsers({ project }: ProjectProps) {
               Add
             </LoadingButton>
           </Box>
-          <Typography variant="h6" color="inherit" component="div" sx={{ flex: "1 1 0" }}>
-            Permission for User 1
-          </Typography>
         </Stack>
       </Toolbar>
       <Divider />
@@ -152,40 +146,28 @@ function ProjectUsers({ project }: ProjectProps) {
         <CardContent>An error occurred while loading project users for project {project.id}...</CardContent>
       )}
       {projectUsers.isSuccess && (
-        <Stack direction="row" spacing={2} className="myFlexFillAllContainer">
-          <Box style={{ float: "left", width: "50%", overflow: "auto" }}>
-            <List style={{ maxHeight: "100%" }}>
-              {projectUsers.data.map((user) => (
-                <ListItem
-                  disablePadding
-                  key={user.id}
-                  onContextMenu={onContextMenu(user.id)}
-                  secondaryAction={
-                    <Tooltip title={"Remove user from project"}>
-                      <span>
-                        <IconButton onClick={() => handleClickRemoveUser(user.id)}>
-                          <DeleteIcon />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  }
-                >
-                  <ListItemButton>
-                    <ListItemText primary={user.first_name + " " + user.last_name} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-          <Box style={{ overflow: "auto" }}>
-            <FormGroup>
-              <FormControlLabel control={<Checkbox defaultChecked />} label="Can Search?" />
-              <FormControlLabel control={<Checkbox defaultChecked />} label="Can upload files?" />
-              <FormControlLabel control={<Checkbox defaultChecked />} label="Can delete files?" />
-              <FormControlLabel control={<Checkbox defaultChecked />} label="Can annotate?" />
-            </FormGroup>
-          </Box>
-        </Stack>
+        <List style={{ maxHeight: "100%" }}>
+          {projectUsers.data.map((user) => (
+            <ListItem
+              disablePadding
+              key={user.id}
+              onContextMenu={onContextMenu(user.id)}
+              secondaryAction={
+                <Tooltip title={"Remove user from project"}>
+                  <span>
+                    <IconButton onClick={() => handleClickRemoveUser(user.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              }
+            >
+              <ListItemButton>
+                <ListItemText primary={user.first_name + " " + user.last_name} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
       )}
       <ProjectUsersContextMenu
         position={contextMenuPosition}
