@@ -6,12 +6,11 @@ interface CreateTableCardProps {
   onClick: () => void;
 }
 
-function CreateTableCard({ title, description, onClick }: CreateTableCardProps) {
+function CreateEntityCard({ title, description, onClick }: CreateTableCardProps) {
   return (
     <Card
       style={{
         width: "250px",
-        height: "calc(100% - 8px)",
         marginRight: "16px",
         display: "inline-block",
         whiteSpace: "normal",
@@ -34,4 +33,4 @@ function CreateTableCard({ title, description, onClick }: CreateTableCardProps) 
   );
 }
 
-export default CreateTableCard;
+export default CreateEntityCard;

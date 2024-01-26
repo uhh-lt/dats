@@ -3,7 +3,6 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Card, CardContent, CardHeader, Container, Portal, Typography } from "@mui/material";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -15,20 +14,21 @@ import {
   GridRowModes,
   GridRowModesModel,
 } from "@mui/x-data-grid";
-import { useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "react-router";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import TableHooks, { TableRead } from "../../../api/TableHooks";
 import { TableType } from "../../../api/openapi";
 import { useAuth } from "../../../auth/AuthProvider";
+import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard";
+import CreateEntityCard from "../../../features/AnalysisDashboard/CreateTableCard";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import CreateTableCard from "./CreateTableCard";
+import { dateToLocaleString } from "../../../utils/DateUtils";
 import { TableType2Template } from "./templates";
 
 function TableDashboard() {
-  const appBarContainerRef = useContext(AppBarContext);
   const navigate = useNavigate();
 
   // global client state
@@ -58,6 +58,7 @@ function TableDashboard() {
       field: "updated",
       headerName: "Last modified",
       flex: 0.5,
+      valueGetter: (params) => dateToLocaleString(params.value as string),
     },
     {
       field: "actions",
@@ -108,8 +109,8 @@ function TableDashboard() {
     },
   ];
 
-  // CRUD table actions
-  const handleCreateTable = (tableType: TableType) => {
+  // CRUD actions
+  const handleCreateTable = (tableType: TableType, title: string) => {
     if (!user?.id) return;
 
     const content = [{ id: uuidv4(), name: `Table sheet 1`, content: TableType2Template[tableType] }];
@@ -118,15 +119,15 @@ function TableDashboard() {
         requestBody: {
           project_id: projectId,
           user_id: user.id,
-          title: "New Table",
+          title,
           content: JSON.stringify(content),
           table_type: tableType,
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(_data, _variables, _context) {
           SnackbarAPI.openSnackbar({
-            text: `Create new table '${data.title}'`,
+            text: `Created new table '${title}'`,
             severity: "success",
           });
         },
@@ -134,47 +135,56 @@ function TableDashboard() {
     );
   };
 
-  const handleDuplicateTable = (id: number) => () => {
-    if (!user?.id || !userTables.data) return;
+  const handleDuplicateTable = useCallback(
+    (id: number) => () => {
+      if (!user?.id || !userTables.data) return;
 
-    const table = userTables.data.find((table) => table.id === id);
-    if (!table) return;
+      const table = userTables.data.find((table) => table.id === id);
+      if (!table) return;
 
-    createTable.mutate(
-      {
-        requestBody: {
-          project_id: projectId,
-          user_id: user.id,
-          title: table.title + " (copy)",
-          content: JSON.stringify(table.content),
-          table_type: table.table_type,
+      const mutation = createTable.mutate;
+      mutation(
+        {
+          requestBody: {
+            project_id: projectId,
+            user_id: user.id,
+            title: table.title + " (copy)",
+            content: JSON.stringify(table.content),
+            table_type: table.table_type,
+          },
         },
-      },
-      {
-        onSuccess(data, variables, context) {
-          SnackbarAPI.openSnackbar({
-            text: `Duplicated table '${table.title}'`,
-            severity: "success",
-          });
+        {
+          onSuccess(_data, _variables, _context) {
+            SnackbarAPI.openSnackbar({
+              text: `Duplicated table '${table.title}'`,
+              severity: "success",
+            });
+          },
         },
-      },
-    );
-  };
+      );
+    },
+    [createTable.mutate, projectId, user, userTables.data],
+  );
 
   const handleDeleteClick = (id: GridRowId) => () => {
-    deleteTable.mutate(
-      {
-        analysisTableId: id as number,
+    ConfirmationAPI.openConfirmationDialog({
+      text: `Do you really want to remove the table ${id}? This action cannot be undone!`,
+      onAccept: () => {
+        deleteTable.mutate(
+          {
+            analysisTableId: id as number,
+          },
+          {
+            onSuccess(data, variables, context) {
+              SnackbarAPI.openSnackbar({
+                text: `Deleted table '${data.title}'`,
+                severity: "success",
+              });
+            },
+          },
+        );
       },
-      {
-        onSuccess(data, variables, context) {
-          SnackbarAPI.openSnackbar({
-            text: `Deleted table '${data.title}'`,
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
 
   const processRowUpdate = (newRow: GridRowModel<TableRead>) => {
@@ -226,77 +236,58 @@ function TableDashboard() {
     }
   };
 
+  const createCards = (
+    <>
+      <CreateEntityCard
+        title="Empty table"
+        description="Create an empty table with no template"
+        onClick={() => handleCreateTable(TableType.CUSTOM, "New table")}
+      />
+      <CreateEntityCard
+        title="Interpretation table"
+        description="Create a table with the interpretation template"
+        onClick={() => handleCreateTable(TableType.INTERPRETATION, "New interpretation table")}
+      />
+      <CreateEntityCard
+        title="Phenomenon table"
+        description="Create a table with the phenomenon template"
+        onClick={() => handleCreateTable(TableType.PHENOMENON, "New phenomenon table")}
+      />
+      <CreateEntityCard
+        title="Situation table"
+        description="Create a table with the situation template"
+        onClick={() => handleCreateTable(TableType.SITUATION, "New situation table")}
+      />
+    </>
+  );
+
   return (
-    <Box bgcolor={"grey.200"} className="h100">
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
-          Table Dashboard
-        </Typography>
-      </Portal>
-      <Container maxWidth="xl" className="h100" style={{ display: "flex", flexDirection: "column" }} sx={{ py: 2 }}>
-        <Card
-          sx={{ width: "100%", height: "50%", maxHeight: "400px", mb: 2 }}
-          elevation={2}
-          className="myFlexFillAllContainer myFlexContainer"
-        >
-          <CardHeader title="Create table" />
-          <CardContent className="myFlexFillAllContainer">
-            <Box height="100%" overflow="auto" whiteSpace="nowrap">
-              <CreateTableCard
-                title="Empty table"
-                description="Create an empty table with no template"
-                onClick={() => handleCreateTable(TableType.CUSTOM)}
-              />
-              <CreateTableCard
-                title="Interpretation table"
-                description="Create a table with the interpretation template"
-                onClick={() => handleCreateTable(TableType.INTERPRETATION)}
-              />
-              <CreateTableCard
-                title="Phenomenon table"
-                description="Create a table with the phenomenon template"
-                onClick={() => handleCreateTable(TableType.PHENOMENON)}
-              />
-              <CreateTableCard
-                title="Situation table"
-                description="Create a table with the situation template"
-                onClick={() => handleCreateTable(TableType.SITUATION)}
-              />
-            </Box>
-          </CardContent>
-        </Card>
-        <Card
-          sx={{ width: "100%", minHeight: "225.5px" }}
-          elevation={2}
-          className="myFlexFillAllContainer myFlexContainer"
-        >
-          <CardHeader title="Load table" />
-          <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-            <div className="h100" style={{ width: "100%" }}>
-              <DataGrid
-                rows={userTables.data || []}
-                columns={columns}
-                autoPageSize
-                getRowId={(row) => row.id}
-                onRowClick={handleRowClick}
-                hideFooterSelectedRowCount
-                style={{ border: "none" }}
-                initialState={{
-                  sorting: {
-                    sortModel: [{ field: "updated", sort: "desc" }],
-                  },
-                }}
-                editMode="row"
-                rowModesModel={rowModesModel}
-                onRowModesModelChange={(newRowModesModel) => setRowModesModel(newRowModesModel)}
-                onRowEditStop={handleRowEditStop}
-                processRowUpdate={processRowUpdate}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+    <AnalysisDashboard
+      pageTitle="Table Dashboard"
+      headerTitle="Create table"
+      headerCards={createCards}
+      bodyTitle="Load table"
+    >
+      <DataGrid
+        rows={userTables.data || []}
+        columns={columns}
+        autoPageSize
+        getRowId={(row) => row.id}
+        onRowClick={handleRowClick}
+        hideFooterSelectedRowCount
+        style={{ border: "none" }}
+        initialState={{
+          sorting: {
+            sortModel: [{ field: "updated", sort: "desc" }],
+          },
+        }}
+        editMode="row"
+        rowModesModel={rowModesModel}
+        onRowModesModelChange={(newRowModesModel) => setRowModesModel(newRowModesModel)}
+        onRowEditStop={handleRowEditStop}
+        processRowUpdate={processRowUpdate}
+      />
+    </AnalysisDashboard>
   );
 }
 

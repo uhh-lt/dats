@@ -3,7 +3,6 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
-import { Box, Card, CardContent, CardHeader, Container, Portal, Typography } from "@mui/material";
 import {
   DataGrid,
   GridActionsCellItem,
@@ -15,19 +14,18 @@ import {
   GridRowModes,
   GridRowModesModel,
 } from "@mui/x-data-grid";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "react-router";
 import { useNavigate } from "react-router-dom";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
 import { useAuth } from "../../auth/AuthProvider";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { dateToLocaleString } from "../../utils/DateUtils";
-import CreateWhiteboardCard from "./CreateWhiteboardCard";
+import AnalysisDashboard from "../../features/AnalysisDashboard/AnalysisDashboard";
+import CreateEntityCard from "../../features/AnalysisDashboard/CreateTableCard";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
+import { dateToLocaleString } from "../../utils/DateUtils";
 
 function WhiteboardDashboard() {
-  const appBarContainerRef = useContext(AppBarContext);
   const navigate = useNavigate();
 
   // global client state
@@ -108,7 +106,7 @@ function WhiteboardDashboard() {
     },
   ];
 
-  // CRUD whiteboard actions
+  // CRUD actions
   const handleCreateWhiteboard = (title: string) => {
     if (!user?.id) return;
 
@@ -118,7 +116,7 @@ function WhiteboardDashboard() {
         requestBody: {
           project_id: projectId,
           user_id: user.id,
-          title: title,
+          title,
           content: JSON.stringify(content),
         },
       },
@@ -151,7 +149,7 @@ function WhiteboardDashboard() {
           },
         },
         {
-          onSuccess(data, variables, context) {
+          onSuccess(_data, _variables, _context) {
             SnackbarAPI.openSnackbar({
               text: `Duplicated whiteboard '${whiteboard.title}'`,
               severity: "success",
@@ -165,7 +163,7 @@ function WhiteboardDashboard() {
 
   const handleDeleteClick = (id: GridRowId) => () => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the Whiteboard ${id}? This action cannot be undone!`,
+      text: `Do you really want to remove the whiteboard ${id}? This action cannot be undone!`,
       onAccept: () => {
         deleteWhiteboard.mutate(
           {
@@ -232,72 +230,53 @@ function WhiteboardDashboard() {
     }
   };
 
+  const createCards = (
+    <>
+      <CreateEntityCard
+        title="Empty whiteboard"
+        description="Create an empty whiteboard with no template"
+        onClick={() => handleCreateWhiteboard("New Whiteboard")}
+      />
+      <CreateEntityCard
+        title="Code whiteboard"
+        description="Create a whiteboard with all of your codes"
+        onClick={() => handleCreateWhiteboard("New Code Whiteboard")}
+      />
+      <CreateEntityCard
+        title="Image whiteboard"
+        description="Create a whiteboard with images"
+        onClick={() => handleCreateWhiteboard("New Image Whiteboard")}
+      />
+    </>
+  );
+
   return (
-    <Box bgcolor={"grey.200"} className="h100">
-      <Portal container={appBarContainerRef?.current}>
-        <Typography variant="h6" color="inherit" component="div">
-          Whiteboard Dashboard
-        </Typography>
-      </Portal>
-      <Container maxWidth="xl" className="h100" style={{ display: "flex", flexDirection: "column" }} sx={{ py: 2 }}>
-        <Card
-          sx={{ width: "100%", height: "50%", maxHeight: "400px", mb: 2 }}
-          elevation={2}
-          className="myFlexFillAllContainer myFlexContainer"
-        >
-          <CardHeader title="Create whiteboard" />
-          <CardContent className="myFlexFillAllContainer">
-            <Box height="100%" overflow="auto" whiteSpace="nowrap">
-              <CreateWhiteboardCard
-                title="Empty whiteboard"
-                description="Create an empty whiteboard with no template"
-                onClick={() => handleCreateWhiteboard("New Whiteboard")}
-              />
-              <CreateWhiteboardCard
-                title="Code whiteboard"
-                description="Create a whiteboard with all of your codes"
-                onClick={() => handleCreateWhiteboard("New Code Whiteboard")}
-              />
-              <CreateWhiteboardCard
-                title="Image whiteboard"
-                description="Create a whiteboard with images"
-                onClick={() => handleCreateWhiteboard("New Image Whiteboard")}
-              />
-            </Box>
-          </CardContent>
-        </Card>
-        <Card
-          sx={{ width: "100%", minHeight: "225.5px" }}
-          elevation={2}
-          className="myFlexFillAllContainer myFlexContainer"
-        >
-          <CardHeader title="Load whiteboard" />
-          <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-            <div className="h100" style={{ width: "100%" }}>
-              <DataGrid
-                rows={projectWhiteboards.data || []}
-                columns={columns}
-                autoPageSize
-                getRowId={(row) => row.id}
-                onRowClick={handleRowClick}
-                hideFooterSelectedRowCount
-                style={{ border: "none" }}
-                initialState={{
-                  sorting: {
-                    sortModel: [{ field: "updated", sort: "desc" }],
-                  },
-                }}
-                editMode="row"
-                rowModesModel={rowModesModel}
-                onRowModesModelChange={(newRowModesModel) => setRowModesModel(newRowModesModel)}
-                onRowEditStop={handleRowEditStop}
-                processRowUpdate={processRowUpdate}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+    <AnalysisDashboard
+      pageTitle="Whiteboard Dashboard"
+      headerTitle="Create whiteboard"
+      headerCards={createCards}
+      bodyTitle="Load whiteboard"
+    >
+      <DataGrid
+        rows={projectWhiteboards.data || []}
+        columns={columns}
+        autoPageSize
+        getRowId={(row) => row.id}
+        onRowClick={handleRowClick}
+        hideFooterSelectedRowCount
+        style={{ border: "none" }}
+        initialState={{
+          sorting: {
+            sortModel: [{ field: "updated", sort: "desc" }],
+          },
+        }}
+        editMode="row"
+        rowModesModel={rowModesModel}
+        onRowModesModelChange={(newRowModesModel) => setRowModesModel(newRowModesModel)}
+        onRowEditStop={handleRowEditStop}
+        processRowUpdate={processRowUpdate}
+      />
+    </AnalysisDashboard>
   );
 }
 
