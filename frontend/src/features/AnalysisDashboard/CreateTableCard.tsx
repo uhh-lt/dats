@@ -11,7 +11,6 @@ function CreateEntityCard({ title, description, onClick }: CreateTableCardProps)
     <Card
       style={{
         width: "250px",
-        height: "calc(100% - 8px)",
         marginRight: "16px",
         display: "inline-block",
         whiteSpace: "normal",
