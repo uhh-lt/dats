@@ -143,7 +143,12 @@ function CodeTreeView({
   };
 
   return (
-    <TreeView defaultCollapseIcon={<ArrowDropDownIcon />} defaultExpandIcon={<ArrowRightIcon />} {...props}>
+    <TreeView
+      className="filterTree"
+      defaultCollapseIcon={<ArrowDropDownIcon />}
+      defaultExpandIcon={<ArrowRightIcon />}
+      {...props}
+    >
       {data.children && renderTree(data.children)}
     </TreeView>
   );
