@@ -17,6 +17,7 @@ import ProjectUsers from "./ProjectUsers";
 import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 import ProjectMetadata from "./ProjectMetadata";
+import ProjectDuplicateDocuments from "./ProjectDuplicateDocuments";
 
 function ProjectUpdate() {
   const { user } = useAuth();
@@ -89,6 +90,7 @@ function ProjectUpdate() {
             <Tab label="Tags" value="5" />
             <Tab label="Metadata" value="6" />
             <Tab label="Background Tasks" value="7" />
+            <Tab label="Duplicate Finder" value="8" />
           </Tabs>
         </AppBar>
         {project.isLoading && <CardContent>Loading project...</CardContent>}
@@ -115,6 +117,9 @@ function ProjectUpdate() {
             </TabPanel>
             <TabPanel value="7" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectBackgroundTasks project={project.data} />
+            </TabPanel>
+            <TabPanel value="8" sx={{ p: 0 }} className="myFlexFillAllContainer">
+              <ProjectDuplicateDocuments project={project.data} />
             </TabPanel>
           </React.Fragment>
         )}

@@ -220,6 +220,9 @@ const useGetMetadata = (projectId: number) =>
     }),
   );
 
+// duplicates
+const useFindDuplicateTextDocuments = () => useMutation(ProjectService.findDuplicateTextSdocs);
+
 const ProjectHooks = {
   // tags
   useGetAllTags,
@@ -247,6 +250,8 @@ const ProjectHooks = {
   useQueryActions,
   // metadata
   useGetMetadata,
+  // duplicates
+  useFindDuplicateTextDocuments,
 };
 
 export default ProjectHooks;

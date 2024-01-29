@@ -10,6 +10,7 @@ from api.dependencies import (
 )
 from api.util import get_object_memo_for_user, get_object_memos
 from api.validation import Validate
+from app.core.analysis.duplicate_finder_service import DuplicateFinderService
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud.action import crud_action
 from app.core.data.crud.code import crud_code
@@ -559,3 +560,21 @@ def get_all_metadata(
     db_objs = crud_project_meta.read_by_project(db=db, proj_id=proj_id)
     metadata = [ProjectMetadataRead.model_validate(meta) for meta in db_objs]
     return metadata
+
+
+@router.post(
+    "/{proj_id}/find_duplicate_text_sdocs",
+    response_model=List[List[int]],
+    summary="Returns groups of duplicate sdoc ids.",
+)
+def find_duplicate_text_sdocs(
+    *,
+    db: Session = Depends(get_db_session),
+    proj_id: int,
+    max_different_words: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[List[int]]:
+    authz_user.assert_in_project(proj_id)
+    return DuplicateFinderService().find_duplicate_text_sdocs(
+        project_id=proj_id, max_different_words=max_different_words
+    )
