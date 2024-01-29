@@ -18,7 +18,7 @@ const queryClient = new QueryClient({
       let title = messageFromStringOrFunction(mutation.meta?.errorMessage, error);
       let text = "An unknown error occurred. This is a bug. Please report it to the developers!";
       if (error instanceof ApiError) {
-        text = error.message + (error.body.detail ? ": " + error.body.detail : "");
+        text = error.message + (error.body ? ": " + error.body : "");
       }
       SnackbarAPI.openSnackbar({
         text,
