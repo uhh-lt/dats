@@ -23,7 +23,6 @@ import UserHooks from "../../../api/UserHooks";
 import { PublicUserRead } from "../../../api/openapi";
 import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { ProjectProps } from "./ProjectProps";
 import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
 
@@ -55,13 +54,7 @@ function ProjectUsers({ project }: ProjectProps) {
         userId: selectedUser.id,
       },
       {
-        onSuccess: (user) => {
-          SnackbarAPI.openSnackbar({
-            text: "Successfully added user " + user.first_name + "!",
-            severity: "success",
-          });
-          setSelectedUser(null);
-        },
+        onSuccess: (_user) => setSelectedUser(null),
       },
     );
   };
@@ -72,20 +65,10 @@ function ProjectUsers({ project }: ProjectProps) {
     ConfirmationAPI.openConfirmationDialog({
       text: `Do you really want to remove the User ${userId} from this project? You can add her again.`,
       onAccept: () => {
-        removeUserMutation.mutate(
-          {
-            projId: project.id,
-            userId: userId,
-          },
-          {
-            onSuccess: (data) => {
-              SnackbarAPI.openSnackbar({
-                text: "Successfully removed user " + data.first_name + "!",
-                severity: "success",
-              });
-            },
-          },
-        );
+        removeUserMutation.mutate({
+          projId: project.id,
+          userId: userId,
+        });
       },
     });
   };

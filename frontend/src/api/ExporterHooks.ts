@@ -5,7 +5,7 @@ import { QueryKey } from "./QueryKey";
 const useStartExportJob = () =>
   useMutation(ExportService.startExportJob, {
     meta: {
-      errorDescription: "Failed to gather documents for export",
+      errorMessage: "Failed to gather documents for export",
     },
   });
 

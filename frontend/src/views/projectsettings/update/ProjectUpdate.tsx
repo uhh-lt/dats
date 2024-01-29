@@ -8,16 +8,15 @@ import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 import ProjectCodes from "./ProjectCodes";
 import ProjectDetails from "./ProjectDetails";
 import ProjectDocuments from "./ProjectDocuments";
+import ProjectDuplicateDocuments from "./ProjectDuplicateDocuments";
+import ProjectMetadata from "./ProjectMetadata";
 import ProjectTags from "./ProjectTags";
 import ProjectUsers from "./ProjectUsers";
 import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import ProjectMetadata from "./ProjectMetadata";
-import ProjectDuplicateDocuments from "./ProjectDuplicateDocuments";
 
 function ProjectUpdate() {
   const { user } = useAuth();
@@ -43,13 +42,7 @@ function ProjectUpdate() {
           deleteProjectMutation.mutate(
             { projId: project.data.id, userId: user.id },
             {
-              onSuccess: (data) => {
-                SnackbarAPI.openSnackbar({
-                  text: "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
-                  severity: "success",
-                });
-                navigate(`/projectsettings`);
-              },
+              onSuccess: (_data) => navigate(`/projectsettings`),
             },
           );
         },

@@ -9,6 +9,9 @@ const useStartCrawlerJob = () =>
       // force refetch of all crawler jobs when adding a new one
       queryClient.invalidateQueries([QueryKey.PROJECT_CRAWLER_JOBS, job.parameters.project_id]);
     },
+    meta: {
+      successMessage: (data: CrawlerJobRead) => `Started URL Import as a new background task (ID: ${data.id})`,
+    },
   });
 
 const usePollCrawlerJob = (crawlerJobId: string | undefined, initialData: CrawlerJobRead | undefined) => {
