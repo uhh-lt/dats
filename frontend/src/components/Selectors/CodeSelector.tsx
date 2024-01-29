@@ -163,7 +163,7 @@ function CodeBrowserWithMultiselect({
   Omit<MultiSelectTreeViewProps, "multiselect" | "selected" | "onNodeSelect">) {
   // code selection
   const [selected, setSelected] = useState<string[]>([]);
-  const handleSelect = (event: React.SyntheticEvent, nodeIds: string[]) => {
+  const handleSelect = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
     const newSelectedCodeIds = [...selected];
     for (const nodeId of nodeIds) {
       if (newSelectedCodeIds.indexOf(nodeId) === -1) {
@@ -189,10 +189,10 @@ function CodeBrowserWithSingleselect({
   CodeTreeViewProps &
   Omit<SingleSelectTreeViewProps, "multiselect" | "selected" | "onNodeSelect">) {
   // code selection
-  const [selected, setSelected] = useState<string>("");
-  const handleSelect = (event: React.SyntheticEvent, nodeId: string) => {
+  const [selected, setSelected] = useState<string | string[]>("");
+  const handleSelect = (event: React.SyntheticEvent, nodeId: string | string[]) => {
     setSelected(nodeId);
-    const codeIds = [parseInt(nodeId)];
+    const codeIds = [parseInt(nodeId[0])];
     setSelectedCodes(codes.filter((code) => codeIds.indexOf(code.id) !== -1));
   };
 

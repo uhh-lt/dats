@@ -1,9 +1,9 @@
-import TreeView, { TreeViewProps } from "@mui/lab/TreeView";
+import { TreeItemProps, TreeView, TreeViewProps } from "@mui/x-tree-view";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import * as React from "react";
 import FolderIcon from "@mui/icons-material/Folder";
-import TreeItem, { treeItemClasses, TreeItemProps } from "@mui/lab/TreeItem";
+import { TreeItem, treeItemClasses } from "@mui/x-tree-view";
 import { SvgIconProps } from "@mui/material/SvgIcon";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -105,7 +105,7 @@ function TagTreeView({
   openContextMenu,
   onTagClick,
   ...props
-}: TagTreeViewProps & TreeViewProps) {
+}: TagTreeViewProps & TreeViewProps<boolean>) {
   const renderTree = (nodes: ITagTree[]) => {
     return nodes.map((node) => (
       <StyledTreeItem

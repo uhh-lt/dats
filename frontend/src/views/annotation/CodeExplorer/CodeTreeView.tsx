@@ -1,9 +1,9 @@
-import TreeView, { TreeViewProps } from "@mui/lab/TreeView";
+import { TreeView, TreeViewProps } from "@mui/x-tree-view/TreeView";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import * as React from "react";
 import FolderIcon from "@mui/icons-material/Folder";
-import TreeItem, { treeItemClasses, TreeItemProps } from "@mui/lab/TreeItem";
+import { TreeItem, treeItemClasses, TreeItemProps } from "@mui/x-tree-view";
 import { SvgIconProps } from "@mui/material/SvgIcon";
 import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
@@ -105,7 +105,7 @@ function CodeTreeView({
   openContextMenu,
   onCodeClick,
   ...props
-}: CodeTreeViewProps & TreeViewProps) {
+}: CodeTreeViewProps & TreeViewProps<boolean>) {
   const renderTree = (nodes: ICodeTree[]) => {
     return nodes.map((node) => (
       <StyledTreeItem
@@ -143,7 +143,12 @@ function CodeTreeView({
   };
 
   return (
-    <TreeView defaultCollapseIcon={<ArrowDropDownIcon />} defaultExpandIcon={<ArrowRightIcon />} {...props}>
+    <TreeView
+      className="filterTree"
+      defaultCollapseIcon={<ArrowDropDownIcon />}
+      defaultExpandIcon={<ArrowRightIcon />}
+      {...props}
+    >
       {data.children && renderTree(data.children)}
     </TreeView>
   );

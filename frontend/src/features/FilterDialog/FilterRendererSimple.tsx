@@ -2,7 +2,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { TreeItem, TreeView } from "@mui/lab";
+import { TreeItem, TreeView } from "@mui/x-tree-view";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
 import { LogicalOperator } from "../../api/openapi";
 import { useAppDispatch } from "../../plugins/ReduxHooks";
