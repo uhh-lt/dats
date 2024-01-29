@@ -40,5 +40,6 @@ dependencies:
   - anyio=3.7.1
   - debugpy=1.8.0
   - networkx=3.2.1
+  - scikit-learn=1.3.2
   - pip:
       - -r requirements.txt
