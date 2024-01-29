@@ -20,6 +20,7 @@ from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.crud.span_annotation import crud_span_anno
 from app.core.data.crud.span_group import crud_span_group
 from app.core.data.crud.span_text import crud_span_text
+from app.core.data.crud.timeline_analysis import crud_timeline_analysis
 from app.core.data.crud.user import crud_user
 from app.core.data.crud.whiteboard import crud_whiteboard
 
@@ -45,5 +46,6 @@ class Crud(Enum):
     SPAN_ANNOTATION = crud_span_anno
     SPAN_GROUP = crud_span_group
     SPAN_TEXT = crud_span_text
+    TIMELINE_ANALYSIS = crud_timeline_analysis
     USER = crud_user
     WHITEBOARD = crud_whiteboard

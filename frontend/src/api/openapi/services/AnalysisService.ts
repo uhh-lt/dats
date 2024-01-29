@@ -12,7 +12,7 @@ import type { ColumnInfo_AnnotatedSegmentsColumns_ } from "../models/ColumnInfo_
 import type { ColumnInfo_TimelineAnalysisColumns_ } from "../models/ColumnInfo_TimelineAnalysisColumns_";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
 import type { DateGroupBy } from "../models/DateGroupBy";
-import type { Filter_TimelineAnalysisColumns_ } from "../models/Filter_TimelineAnalysisColumns_";
+import type { Filter_TimelineAnalysisColumns__Input } from "../models/Filter_TimelineAnalysisColumns__Input";
 import type { TimelineAnalysisResultNew } from "../models/TimelineAnalysisResultNew";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 
@@ -220,7 +220,7 @@ export class AnalysisService {
     projectId: number;
     groupBy: DateGroupBy;
     projectMetadataId: number;
-    requestBody: Filter_TimelineAnalysisColumns_;
+    requestBody: Filter_TimelineAnalysisColumns__Input;
   }): CancelablePromise<Array<TimelineAnalysisResultNew>> {
     return __request(OpenAPI, {
       method: "POST",
