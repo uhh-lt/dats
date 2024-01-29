@@ -969,6 +969,41 @@
         }
       }
     },
+    "/project/{proj_id}/find_duplicate_text_sdocs": {
+      "post": {
+        "tags": ["project"],
+        "summary": "Returns groups of duplicate sdoc ids.",
+        "operationId": "find_duplicate_text_sdocs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          { "name": "proj_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Proj Id" } },
+          {
+            "name": "max_different_words",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Max Different Words" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "array", "items": { "type": "integer" } },
+                  "title": "Response Project-Find Duplicate Text Sdocs"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/sdoc/{sdoc_id}": {
       "get": {
         "tags": ["sourceDocument"],
@@ -6397,7 +6432,7 @@
             "type": "integer",
             "title": "Top K",
             "description": "The number of results to return.",
-            "default": 10
+            "default": 100
           },
           "threshold": {
             "type": "number",
@@ -6409,7 +6444,7 @@
           },
           "filter": {
             "allOf": [{ "$ref": "#/components/schemas/Filter_SearchColumns_" }],
-            "description": "Only search through documents matching this filter"
+            "description": "Only return documents matching this filter"
           }
         },
         "type": "object",
