@@ -31,6 +31,7 @@ import Settings from "../views/settings/Settings";
 import Whiteboard from "../views/whiteboard/Whiteboard";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency";
+import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard";
 
 const router = createBrowserRouter([
   {
@@ -154,6 +155,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/project/:projectId/analysis/timeline",
+        element: <TimelineAnalysisDashboard />,
+      },
+      {
+        path: "/project/:projectId/analysis/timeline/:analysisId",
         element: <TimelineAnalysis />,
       },
       {
