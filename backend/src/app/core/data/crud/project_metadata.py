@@ -57,6 +57,13 @@ class CRUDProjectMetadata(
             )
             return db_obj
         else:
+            # There's no way to reasonably convert the
+            # values of existing sdoc metadatas,
+            # so we have to remove them.
+            # the frontend warns users about this.
+            crud_sdoc_meta.delete_by_project_metadata(
+                db, project_metadata_id=metadata_id
+            )
             # update metadata
             metadata_orm = super().update(db, id=metadata_id, update_dto=update_dto)
             return metadata_orm

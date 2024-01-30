@@ -3,8 +3,8 @@ import { Add } from "@mui/icons-material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { LoadingButton, TabContext, TabPanel } from "@mui/lab";
 import { Box, Divider, MenuItem, Stack, Tab, Tabs, TextField } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
-import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import React, { useCallback, useState } from "react";
+import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import ProjectHooks from "../../../api/ProjectHooks";
 import ProjectMetadataHooks from "../../../api/ProjectMetadataHooks";
 import {
@@ -14,6 +14,7 @@ import {
   ProjectMetadataRead,
   ProjectMetadataUpdate,
 } from "../../../api/openapi";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { ProjectProps } from "./ProjectProps";
@@ -94,22 +95,14 @@ function ProjectMetadataRowWithData({ projectMetadata }: { projectMetadata: Proj
     register,
     handleSubmit,
     formState: { errors },
-    reset,
+    resetField,
+    control,
   } = useForm<ProjectMetadataUpdate>({
-    defaultValues: {
+    values: {
       key: projectMetadata.key,
       metatype: projectMetadata.metatype,
     },
   });
-
-  // effects
-  // initialize form when metadata changes
-  useEffect(() => {
-    reset({
-      key: projectMetadata.key,
-      metatype: projectMetadata.metatype,
-    });
-  }, [projectMetadata, reset]);
 
   // form handling
   const updateMutation = ProjectMetadataHooks.useUpdateMetadata();
@@ -118,16 +111,29 @@ function ProjectMetadataRowWithData({ projectMetadata }: { projectMetadata: Proj
       // only update if data has changed!
       if (projectMetadata.metatype !== data.metatype || projectMetadata.key !== data.key) {
         const mutation = updateMutation.mutate;
-        mutation({
-          metadataId: projectMetadata.id,
-          requestBody: {
-            metatype: data.metatype,
-            key: data.key,
-          },
-        });
+        const actuallyMutate = () =>
+          mutation({
+            metadataId: projectMetadata.id,
+            requestBody: {
+              metatype: data.metatype,
+              key: data.key,
+            },
+          });
+        if (projectMetadata.metatype !== data.metatype) {
+          ConfirmationAPI.openConfirmationDialog({
+            text: "Changing the type of this metadata will remove its existing entries. This action cannot be undone. Do you want to proceed?",
+            onAccept: actuallyMutate,
+            onReject() {
+              console.log("rej");
+              resetField("metatype");
+            },
+          });
+        } else {
+          actuallyMutate();
+        }
       }
     },
-    [projectMetadata.id, projectMetadata.key, projectMetadata.metatype, updateMutation.mutate],
+    [projectMetadata.id, projectMetadata.key, projectMetadata.metatype, updateMutation.mutate, resetField],
   );
   const handleError: SubmitErrorHandler<ProjectMetadataUpdate> = useCallback((data) => console.error(data), []);
 
@@ -143,23 +149,36 @@ function ProjectMetadataRowWithData({ projectMetadata }: { projectMetadata: Proj
         onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
         sx={{ flexGrow: 1, flexBasis: 1 }}
       />
-      <TextField
-        {...register("metatype", { required: "Value is required" })}
-        error={Boolean(errors.metatype)}
-        helperText={<ErrorMessage errors={errors} name="metatype" />}
-        select
-        variant="standard"
-        defaultValue={projectMetadata.metatype}
-        disabled={projectMetadata.read_only}
-        onBlur={() => handleSubmit(handleUpdateMetadata, handleError)()}
-        sx={{ flexGrow: 1, flexBasis: 1 }}
-      >
-        {Object.values(MetaType).map((metaType) => (
-          <MenuItem key={metaType} value={metaType}>
-            {metaType}
-          </MenuItem>
-        ))}
-      </TextField>
+      <Controller
+        name="metatype"
+        control={control}
+        rules={{
+          required: "Value is required",
+        }}
+        render={({ field: { onBlur, onChange, value } }) => (
+          <TextField
+            error={Boolean(errors.metatype)}
+            helperText={<ErrorMessage errors={errors} name="metatype" />}
+            select
+            variant="standard"
+            defaultValue={projectMetadata.metatype}
+            disabled={projectMetadata.read_only}
+            onChange={onChange}
+            onBlur={() => {
+              onBlur();
+              handleSubmit(handleUpdateMetadata, handleError)();
+            }}
+            value={value}
+            sx={{ flexGrow: 1, flexBasis: 1 }}
+          >
+            {Object.values(MetaType).map((metaType) => (
+              <MenuItem key={metaType} value={metaType}>
+                {metaType}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
+      />
       <ProjectMetadataDeleteButton metadataId={projectMetadata.id} disabled={projectMetadata.read_only} />
     </Stack>
   );
@@ -225,6 +244,7 @@ function ProjectMetadataRowCreate({ docType, projectId }: { docType: DocType; pr
         label="Metadata type"
         select
         variant="standard"
+        defaultValue=""
         sx={{ flexGrow: 1, flexBasis: 1 }}
       >
         {Object.values(MetaType).map((metaType) => (
