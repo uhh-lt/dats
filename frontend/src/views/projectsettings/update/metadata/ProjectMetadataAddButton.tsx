@@ -4,7 +4,6 @@ import { Grid } from "@mui/material";
 import { useCallback } from "react";
 import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks";
 import { DocType, MetaType } from "../../../../api/openapi";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 
 interface ProjectMetadataAddButtonProps {
   projectId: number;
@@ -19,31 +18,15 @@ function ProjectMetadataAddButton({ projectId, key, docType, metaType }: Project
 
   const handleAddMetadata = useCallback(() => {
     const mutation = createMutation.mutate;
-    mutation(
-      {
-        requestBody: {
-          project_id: projectId,
-          read_only: false,
-          key: key,
-          doctype: docType,
-          metatype: metaType,
-        },
+    mutation({
+      requestBody: {
+        project_id: projectId,
+        read_only: false,
+        key: key,
+        doctype: docType,
+        metatype: metaType,
       },
-      {
-        onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
-            text: `Added metadata to Project ${data.project_id}`,
-            severity: "success",
-          });
-        },
-        onError: (error: any) => {
-          SnackbarAPI.openSnackbar({
-            text: error.status === 409 ? "Key already exists" : "Could not add metadata",
-            severity: "error",
-          });
-        },
-      },
-    );
+    });
   }, [createMutation.mutate, projectId, key, docType, metaType]);
 
   return (

@@ -26,7 +26,6 @@ import EditableDocumentName, {
 import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
 import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
 import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
 import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "./ProjectDocumentsContextMenu";
@@ -101,11 +100,7 @@ function ProjectDocuments({ project }: ProjectProps) {
           },
         },
         {
-          onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
-              text: `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,
-              severity: "success",
-            });
+          onSuccess: (_data) => {
             // FIXME: selbst mit initialen Timeout vor neuem rerender gibt das Backend für in_progress false zurück
             setTimeout(() => {
               setWaiting(false);

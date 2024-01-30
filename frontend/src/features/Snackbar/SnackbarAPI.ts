@@ -4,6 +4,7 @@ import eventBus from "../../EventBus";
 export interface SnackbarEvent {
   severity: AlertProps["severity"];
   text: string;
+  title?: string;
 }
 
 function openSnackbar(data: SnackbarEvent) {

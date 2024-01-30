@@ -386,7 +386,6 @@ function TableViewContent({ table }: TableViewContentProps) {
             outsideClickDeselects={false}
             licenseKey="non-commercial-and-evaluation" // for non-commercial use only
             afterChange={(changes, source) => {
-              console.log(source);
               if (!hasChanged && source === "edit") {
                 setHasChanged(true);
               }

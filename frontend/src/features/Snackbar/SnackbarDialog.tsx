@@ -1,19 +1,17 @@
-import { Snackbar } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
+import { AlertTitle, Snackbar } from "@mui/material";
+import MuiAlert from "@mui/material/Alert";
+import { useCallback, useEffect, useState } from "react";
 import eventBus from "../../EventBus";
-import MuiAlert, { AlertProps } from "@mui/material/Alert";
 import { SnackbarEvent } from "./SnackbarAPI";
 
 export default function SnackbarDialog() {
+  const [event, setEvent] = useState<SnackbarEvent | undefined>();
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState("");
-  const [severity, setSeverity] = useState<AlertProps["severity"]>("success");
 
   const openSnackbar = useCallback((event: CustomEventInit) => {
     const snackbarEvent: SnackbarEvent = event.detail;
     setOpen(true);
-    setText(snackbarEvent.text);
-    setSeverity(snackbarEvent.severity);
+    setEvent(snackbarEvent);
   }, []);
 
   useEffect(() => {
@@ -35,9 +33,18 @@ export default function SnackbarDialog() {
       onClose={closeSnackbar}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
     >
-      <MuiAlert elevation={6} variant="filled" onClose={closeSnackbar} severity={severity} sx={{ width: "100%" }}>
-        {text}
-      </MuiAlert>
+      {event && (
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={closeSnackbar}
+          severity={event.severity}
+          sx={{ width: "100%" }}
+        >
+          {event.title ? <AlertTitle>{event.title}</AlertTitle> : <></>}
+          {event.text}
+        </MuiAlert>
+      )}
     </Snackbar>
   );
 }

@@ -6,7 +6,6 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 import { ProjectProps } from "./ProjectProps";
 
 function ProjectDetails({ project }: ProjectProps) {
@@ -31,24 +30,14 @@ function ProjectDetails({ project }: ProjectProps) {
   const handleProjectUpdate = (data: any) => {
     if (!user?.id) return;
 
-    updateProjectMutation.mutate(
-      {
-        userId: user.id!,
-        projId: project.id,
-        requestBody: {
-          title: data.name,
-          description: data.description,
-        },
+    updateProjectMutation.mutate({
+      userId: user.id!,
+      projId: project.id,
+      requestBody: {
+        title: data.name,
+        description: data.description,
       },
-      {
-        onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
-            text: "Successfully Updated Project with id " + data.id + "!",
-            severity: "success",
-          });
-        },
-      },
-    );
+    });
   };
   const handleError = (error: any) => {
     console.error(error);

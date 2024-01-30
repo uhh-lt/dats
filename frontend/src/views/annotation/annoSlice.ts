@@ -33,7 +33,6 @@ export const annoSlice = createSlice({
       if (action.payload.length === 0) {
         return;
       }
-      console.log(action.payload);
       const codeId = action.payload[0];
       const hiddenCodeIds = state.hiddenCodeIds;
       if (hiddenCodeIds.indexOf(codeId) === -1) {

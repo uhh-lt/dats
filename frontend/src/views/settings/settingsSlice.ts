@@ -60,7 +60,6 @@ export const settingsSlice = createSlice({
       if (action.payload.length === 0) {
         return;
       }
-      console.log(action.payload);
       const codeId = action.payload[0];
       const disabledCodeIds = state.disabledCodeIds;
       if (disabledCodeIds.indexOf(codeId) === -1) {

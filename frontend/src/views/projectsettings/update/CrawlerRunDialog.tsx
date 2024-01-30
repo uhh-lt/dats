@@ -5,7 +5,6 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextFie
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import CrawlerHooks from "../../../api/CrawlerHooks";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
 
 interface CrawlerRunDialogProps {
   projectId: number;
@@ -66,13 +65,7 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
         requestBody: { project_id: projectId, urls: data.urls.split("\n") },
       },
       {
-        onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
-            text: `Started URL Import as a new background task (ID: ${data.id})`,
-            severity: "success",
-          });
-          closeDialog();
-        },
+        onSuccess: () => closeDialog(),
       },
     );
   };
