@@ -1,7 +1,10 @@
+import time
 from typing import List
 
 import networkx as nx
 import numpy as np
+from loguru import logger
+from scipy import sparse
 from sklearn.metrics.pairwise import manhattan_distances
 
 from app.core.data.doc_type import DocType
@@ -19,6 +22,8 @@ class DuplicateFinderService(metaclass=SingletonMeta):
     def find_duplicate_text_sdocs(
         self, project_id: int, max_different_words: int
     ) -> List[List[int]]:
+        logger.info("Finding duplicate text sdocs")
+        t0 = time.time()
         with self.sqls.db_session() as db:
             result = (
                 db.query(WordFrequencyORM)
@@ -29,47 +34,64 @@ class DuplicateFinderService(metaclass=SingletonMeta):
                 )
                 .all()
             )
+        t1 = time.time()
+        logger.info("query took: ", t1 - t0)
 
+        t0 = time.time()
         # unique words in project
-        words = list(set([r.word for r in result]))
-        words.sort()
+        words = set([r.word.lower() for r in result])
         word2idx = {w: i for i, w in enumerate(words)}
+        vocab_size = len(words)
 
         # process result to map
         sdoc_id2word_id2word_freq = {}
         for wf in result:
-            if wf.sdoc_id not in sdoc_id2word_id2word_freq:
-                sdoc_id2word_id2word_freq[wf.sdoc_id] = {}
-            sdoc_id2word_id2word_freq[wf.sdoc_id][word2idx[wf.word]] = wf.count
+            word_id2_word_freq = sdoc_id2word_id2word_freq.get(wf.sdoc_id, {})
+            word_id2_word_freq[word2idx[wf.word.lower()]] = wf.count
+            sdoc_id2word_id2word_freq[wf.sdoc_id] = word_id2_word_freq
 
         # X.create document vectors
-        document_vectors = []
         idx2sdoc_id = {}
+        values = []
+        indices = []
+        index = []
         for idx, sdoc_id in enumerate(sdoc_id2word_id2word_freq.keys()):
             word_id2_word_freq = sdoc_id2word_id2word_freq[sdoc_id]
-            sdoc_vector = [
-                word_id2_word_freq[word_id] if word_id in word_id2_word_freq else 0
-                for word_id in range(len(words))
-            ]
+
+            indices.extend(word_id2_word_freq.keys())
+            values.extend(word_id2_word_freq.values())
+            index.extend([idx] * len(word_id2_word_freq))
+
             idx2sdoc_id[idx] = sdoc_id
-            document_vectors.append(sdoc_vector)
-        document_vectors = np.array(document_vectors)
+
+        document_vectors = sparse.csc_matrix(
+            (values, (index, indices)), shape=(len(idx2sdoc_id), vocab_size)
+        )
+        t1 = time.time()
+        logger.info("document vector creation took: ", t1 - t0)
+        logger.info("vocab size: ", vocab_size)
+        logger.info("document_vectors shape: ", document_vectors.shape)
 
         # compute distances
+        t0 = time.time()
         word_dists = manhattan_distances(document_vectors, document_vectors)
+        t1 = time.time()
+        logger.info("manhatten distance took: ", t1 - t0)
 
         # mask out self distances and one half of the matrix
-        minuses = np.ones_like(word_dists) * -1
-        zeroed_minuses = np.triu(minuses, k=0)
+        zeroed_minuses = np.triu(np.ones_like(word_dists) * -1, k=0)
         zeroed_word_dists = np.tril(word_dists, k=-1)
         masked_word_dists = zeroed_word_dists + zeroed_minuses
 
         # find duplicates
+        t0 = time.time()
         duplicate_pairs = np.transpose(
             np.where(
                 (masked_word_dists <= max_different_words) & (masked_word_dists >= 0)
             )
         ).tolist()
+        t1 = time.time()
+        logger.info("finding duplicates took: ", t1 - t0)
 
         # map back to sdoc_ids
         duplicate_sdoc_id_pairs = [
@@ -78,17 +100,12 @@ class DuplicateFinderService(metaclass=SingletonMeta):
 
         # we now create a graph with sdocs as nodes and edges between duplicates
         # we will use this graph to identify connected components, each subgraph is a group of duplicates
-        duplicate_sdoc_ids = list(
-            set(
-                [pair[0] for pair in duplicate_sdoc_id_pairs]
-                + [pair[1] for pair in duplicate_sdoc_id_pairs]
-            )
-        )
+        t0 = time.time()
         G = nx.Graph()
-        G.add_nodes_from(duplicate_sdoc_ids)
         G.add_edges_from(duplicate_sdoc_id_pairs)
         G.to_undirected()
-        subgraphs = list(nx.connected_components(G))
-        subgraph_nodes = [list(subgraph) for subgraph in subgraphs]
+        subgraph_nodes = [list(subgraph) for subgraph in nx.connected_components(G)]
+        t1 = time.time()
+        logger.info("graph grouping took: ", t1 - t0)
 
         return subgraph_nodes
