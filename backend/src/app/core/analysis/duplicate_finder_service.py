@@ -35,7 +35,7 @@ class DuplicateFinderService(metaclass=SingletonMeta):
                 .all()
             )
         t1 = time.time()
-        logger.info("query took: ", t1 - t0)
+        logger.info(f"query took: {t1 - t0}")
 
         t0 = time.time()
         # unique words in project
@@ -68,15 +68,15 @@ class DuplicateFinderService(metaclass=SingletonMeta):
             (values, (index, indices)), shape=(len(idx2sdoc_id), vocab_size)
         )
         t1 = time.time()
-        logger.info("document vector creation took: ", t1 - t0)
-        logger.info("vocab size: ", vocab_size)
-        logger.info("document_vectors shape: ", document_vectors.shape)
+        logger.info(f"document vector creation took: {t1 - t0}")
+        logger.info(f"vocab size: {vocab_size}")
+        logger.info(f"document_vectors shape: {document_vectors.shape}")
 
         # compute distances
         t0 = time.time()
         word_dists = manhattan_distances(document_vectors, document_vectors)
         t1 = time.time()
-        logger.info("manhatten distance took: ", t1 - t0)
+        logger.info(f"manhatten distance took: {t1 - t0}")
 
         # mask out self distances and one half of the matrix
         zeroed_minuses = np.triu(np.ones_like(word_dists) * -1, k=0)
@@ -91,7 +91,7 @@ class DuplicateFinderService(metaclass=SingletonMeta):
             )
         ).tolist()
         t1 = time.time()
-        logger.info("finding duplicates took: ", t1 - t0)
+        logger.info(f"finding duplicates took: {t1 - t0}")
 
         # map back to sdoc_ids
         duplicate_sdoc_id_pairs = [
@@ -106,6 +106,6 @@ class DuplicateFinderService(metaclass=SingletonMeta):
         G.to_undirected()
         subgraph_nodes = [list(subgraph) for subgraph in nx.connected_components(G)]
         t1 = time.time()
-        logger.info("graph grouping took: ", t1 - t0)
+        logger.info(f"graph grouping took: {t1 - t0}")
 
         return subgraph_nodes
