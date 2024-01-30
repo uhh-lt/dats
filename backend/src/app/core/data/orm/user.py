@@ -5,6 +5,7 @@ from sqlalchemy import DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.data.orm.orm_base import ORMBase
+from app.core.data.orm.timeline_analysis import TimelineAnalysisORM
 
 if TYPE_CHECKING:
     from app.core.data.orm.action import ActionORM
@@ -51,6 +52,10 @@ class UserORM(ORMBase):
 
     analysis_tables: Mapped[List["AnalysisTableORM"]] = relationship(
         "AnalysisTableORM", back_populates="user", passive_deletes=True
+    )
+
+    timeline_analysis: Mapped[List["TimelineAnalysisORM"]] = relationship(
+        "TimelineAnalysisORM", back_populates="user", passive_deletes=True
     )
 
     whiteboards: Mapped[List["WhiteboardORM"]] = relationship(

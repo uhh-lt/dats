@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import List, Tuple
 
+import pandas as pd
 from sqlalchemy import String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
 
@@ -197,12 +199,54 @@ def timeline_analysis(
         def preprend_zero(x: int):
             return "0" + str(x) if x < 10 else str(x)
 
+        # map from date (YYYY, YYYY-MM, or YYYY-MM-DD) to num sdocs
+        result_dict = {
+            "-".join(map(lambda x: preprend_zero(x), row[1:])): row[0]
+            for row in result_rows
+        }
+
+        # find the date range (earliest and latest date)
+        datequery = (
+            db.query(SourceDocumentMetadataORM.date_value)
+            .join(SourceDocumentMetadataORM.source_document)
+            .filter(
+                SourceDocumentORM.project_id == project_id,
+                SourceDocumentMetadataORM.project_metadata_id == project_metadata_id,
+                SourceDocumentMetadataORM.date_value.isnot(None),
+            )
+            .order_by(SourceDocumentMetadataORM.date_value.asc())
+        )
+        date_results = [row[0] for row in datequery.all()]
+
+        if len(date_results) == 0:
+            return []
+
+        # create a date range (used for x-axis)
+        parse_str = "%Y"
+        freq = "Y"
+        if group_by == DateGroupBy.MONTH:
+            parse_str = "%Y-%m"
+            freq = "M"
+        elif group_by == DateGroupBy.DAY:
+            parse_str = "%Y-%m-%d"
+            freq = "D"
+
+        date_list = (
+            pd.date_range(
+                date_results[0], date_results[-1], freq=freq, inclusive="both"
+            )
+            .strftime(parse_str)
+            .to_list()
+        )
+        date_list.append(datetime.strftime(date_results[-1], parse_str))
+        date_list = sorted(list(set(date_list)))
+
+        # prepare the result
         result = [
             TimelineAnalysisResultNew(
-                sdoc_ids=row[0],
-                date="-".join(map(lambda x: preprend_zero(x), row[1:])),
+                sdoc_ids=result_dict[date] if date in result_dict else [],
+                date=date,
             )
-            for row in result_rows
+            for date in date_list
         ]
-        result.sort(key=lambda x: x.date)
         return result

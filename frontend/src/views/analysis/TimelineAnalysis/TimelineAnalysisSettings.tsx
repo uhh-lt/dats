@@ -7,12 +7,15 @@ import IconButton from "@mui/material/IconButton";
 import React from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { DateGroupBy, DocType, MetaType } from "../../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { TimelineAnalysisActions } from "./timelineAnalysisSlice";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks";
+import { DateGroupBy, DocType, MetaType, TimelineAnalysisRead } from "../../../api/openapi";
 import ValidDocumentsChecker from "./ValidDocumentsChecker";
 
-function TimelineAnalysisSettings() {
+interface TimelineAnalysisSettingsProps {
+  timelineAnalysis: TimelineAnalysisRead;
+}
+
+function TimelineAnalysisSettings({ timelineAnalysis }: TimelineAnalysisSettingsProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state (react-query)
@@ -21,21 +24,40 @@ function TimelineAnalysisSettings() {
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );
 
-  // global client state (redux)
-  const groupBy = useAppSelector((state) => state.timelineAnalysis.groupBy);
-  const projectMetadataId = useAppSelector((state) => state.timelineAnalysis.projectMetadataId);
-  const resultType = useAppSelector((state) => state.timelineAnalysis.resultType);
-  const dispatch = useAppDispatch();
-
   // handlers (for ui)
+  const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
   const handleGroupByChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(TimelineAnalysisActions.setGroupBy(event.target.value as DateGroupBy));
+    updateTimelineAnalysisMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+      requestBody: {
+        settings: {
+          ...timelineAnalysis.settings,
+          group_by: event.target.value as DateGroupBy,
+        },
+      },
+    });
   };
   const handleChangeMetadataId = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(TimelineAnalysisActions.setProjectMetadataKey(parseInt(event.target.value)));
+    updateTimelineAnalysisMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+      requestBody: {
+        settings: {
+          ...timelineAnalysis.settings,
+          date_metadata_id: parseInt(event.target.value),
+        },
+      },
+    });
   };
   const handleChangeResultType = (event: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch(TimelineAnalysisActions.setResultType(event.target.value));
+    updateTimelineAnalysisMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+      requestBody: {
+        settings: {
+          ...timelineAnalysis.settings,
+          result_type: event.target.value,
+        },
+      },
+    });
   };
 
   return (
@@ -57,7 +79,7 @@ function TimelineAnalysisSettings() {
             fullWidth
             label={"Group by"}
             variant="outlined"
-            value={groupBy}
+            value={timelineAnalysis.settings.group_by}
             onChange={handleGroupByChange}
             helperText="Specify the aggregation of the results."
           >
@@ -73,7 +95,7 @@ function TimelineAnalysisSettings() {
             fullWidth
             label={"Date metadata"}
             variant="outlined"
-            value={projectMetadataId}
+            value={timelineAnalysis.settings.date_metadata_id || -1}
             onChange={handleChangeMetadataId}
             helperText={<ValidDocumentsChecker projectId={projectId} />}
             error={filteredProjectMetadata?.length === 0}
@@ -100,7 +122,7 @@ function TimelineAnalysisSettings() {
             fullWidth
             label={"Result type"}
             variant="outlined"
-            value={resultType}
+            value={timelineAnalysis.settings.result_type}
             onChange={handleChangeResultType}
             helperText="Specify the type of the results."
             disabled

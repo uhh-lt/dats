@@ -138,6 +138,10 @@ export const QueryKey = {
   TABLE: "table",
   // all project, user TABLEs (by user id and project id)
   TABLES_PROJECT_USER: "tablesProjectUser",
+  // A single timeline analysis (by id)
+  TIMELINE_ANALYSIS: "timelineAnalysis",
+  // All analyses from a single user in a given project
+  TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
 
   // a single WHITEBOARD (by WHITEBOARD id)
   WHITEBOARD: "whiteboard",

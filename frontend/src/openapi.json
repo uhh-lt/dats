@@ -4035,7 +4035,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_" } }
+            "application/json": { "schema": { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input" } }
           }
         },
         "responses": {
@@ -4764,6 +4764,141 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ProjectMetadataRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/timelineAnalysis": {
+      "put": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Creates an TimelineAnalysis",
+        "operationId": "create",
+        "requestBody": {
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisCreate" } } },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
+      }
+    },
+    "/timelineAnalysis/{timeline_analysis_id}": {
+      "get": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Returns the TimelineAnalysis with the given ID if it exists",
+        "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Updates the TimelineAnalysis with the given ID if it exists",
+        "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisUpdate" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Removes the TimelineAnalysis with the given ID if it exists",
+        "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/timelineAnalysis/project/{project_id}/user/{user_id}": {
+      "get": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Returns the TimelineAnalysis of the Project with the given ID and the User with the given ID if it exists",
+        "operationId": "get_by_project_and_user",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "User Id" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TimelineAnalysisRead" },
+                  "title": "Response Timelineanalysis-Get By Project And User"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -5887,13 +6022,31 @@
         "required": ["items", "logic_operator"],
         "title": "Filter[SearchColumns]"
       },
-      "Filter_TimelineAnalysisColumns_": {
+      "Filter_TimelineAnalysisColumns_-Input": {
         "properties": {
           "items": {
             "items": {
               "anyOf": [
                 { "$ref": "#/components/schemas/FilterExpression_TimelineAnalysisColumns_" },
-                { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_" }
+                { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input" }
+              ]
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "type": "object",
+        "required": ["items", "logic_operator"],
+        "title": "Filter[TimelineAnalysisColumns]"
+      },
+      "Filter_TimelineAnalysisColumns_-Output": {
+        "properties": {
+          "items": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_TimelineAnalysisColumns_" },
+                { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Output" }
               ]
             },
             "type": "array",
@@ -7330,6 +7483,89 @@
         ],
         "title": "TimelineAnalysisColumns"
       },
+      "TimelineAnalysisConcept-Input": {
+        "properties": {
+          "id": { "type": "string", "title": "Id", "description": "ID of the Concept" },
+          "name": { "type": "string", "title": "Name", "description": "Name of the Concept" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the Concept" },
+          "color": { "type": "string", "title": "Color", "description": "Color of the Concept" },
+          "visible": { "type": "boolean", "title": "Visible", "description": "Visibility of the Concept" },
+          "filter": {
+            "allOf": [{ "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input" }],
+            "description": "The filter of the Concept"
+          }
+        },
+        "type": "object",
+        "required": ["id", "name", "description", "color", "visible", "filter"],
+        "title": "TimelineAnalysisConcept"
+      },
+      "TimelineAnalysisConcept-Output": {
+        "properties": {
+          "id": { "type": "string", "title": "Id", "description": "ID of the Concept" },
+          "name": { "type": "string", "title": "Name", "description": "Name of the Concept" },
+          "description": { "type": "string", "title": "Description", "description": "Description of the Concept" },
+          "color": { "type": "string", "title": "Color", "description": "Color of the Concept" },
+          "visible": { "type": "boolean", "title": "Visible", "description": "Visibility of the Concept" },
+          "filter": {
+            "allOf": [{ "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Output" }],
+            "description": "The filter of the Concept"
+          }
+        },
+        "type": "object",
+        "required": ["id", "name", "description", "color", "visible", "filter"],
+        "title": "TimelineAnalysisConcept"
+      },
+      "TimelineAnalysisCreate": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the TimelineAnalysis" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the TimelineAnalysis belongs to"
+          },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the TimelineAnalysis belongs to" }
+        },
+        "type": "object",
+        "required": ["name", "project_id", "user_id"],
+        "title": "TimelineAnalysisCreate"
+      },
+      "TimelineAnalysisRead": {
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "Name of the TimelineAnalysis" },
+          "id": { "type": "integer", "title": "Id", "description": "ID of the TimelineAnalysis" },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the TimelineAnalysis belongs to" },
+          "project_id": {
+            "type": "integer",
+            "title": "Project Id",
+            "description": "Project the TimelineAnalysis belongs to"
+          },
+          "settings": {
+            "allOf": [{ "$ref": "#/components/schemas/TimelineAnalysisSettings" }],
+            "description": "Timeline Analysis Settings of the TimelineAnalysis."
+          },
+          "concepts": {
+            "items": { "$ref": "#/components/schemas/TimelineAnalysisConcept-Output" },
+            "type": "array",
+            "title": "Concepts",
+            "description": "List of Concepts that are part of the TimelineAnalysis"
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created",
+            "description": "Created timestamp of the TimelineAnalysis"
+          },
+          "updated": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated",
+            "description": "Updated timestamp of the TimelineAnalysis"
+          }
+        },
+        "type": "object",
+        "required": ["name", "id", "user_id", "project_id", "settings", "concepts", "created", "updated"],
+        "title": "TimelineAnalysisRead"
+      },
       "TimelineAnalysisResultNew": {
         "properties": {
           "date": { "type": "string", "title": "Date", "description": "The date." },
@@ -7343,6 +7579,51 @@
         "type": "object",
         "required": ["date", "sdoc_ids"],
         "title": "TimelineAnalysisResultNew"
+      },
+      "TimelineAnalysisResultType": { "const": "document", "title": "TimelineAnalysisResultType" },
+      "TimelineAnalysisSettings": {
+        "properties": {
+          "group_by": {
+            "allOf": [{ "$ref": "#/components/schemas/DateGroupBy" }],
+            "description": "Group by date",
+            "default": "YEAR"
+          },
+          "date_metadata_id": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Date Metadata Id",
+            "description": "ID of the Project Date Metadata that is used for the TimelineAnalysis"
+          },
+          "result_type": {
+            "allOf": [{ "$ref": "#/components/schemas/TimelineAnalysisResultType" }],
+            "description": "ResultType of the TimelineAnalysis",
+            "default": "document"
+          }
+        },
+        "type": "object",
+        "title": "TimelineAnalysisSettings"
+      },
+      "TimelineAnalysisUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Name of the TimelineAnalysis"
+          },
+          "settings": {
+            "anyOf": [{ "$ref": "#/components/schemas/TimelineAnalysisSettings" }, { "type": "null" }],
+            "description": "Settings of the TimelineAnalysis."
+          },
+          "concepts": {
+            "anyOf": [
+              { "items": { "$ref": "#/components/schemas/TimelineAnalysisConcept-Input" }, "type": "array" },
+              { "type": "null" }
+            ],
+            "title": "Concepts",
+            "description": "List of Concepts that are part of the TimelineAnalysis"
+          }
+        },
+        "type": "object",
+        "title": "TimelineAnalysisUpdate"
       },
       "UserAuthorizationHeaderData": {
         "properties": {
