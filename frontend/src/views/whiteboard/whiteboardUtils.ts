@@ -83,9 +83,6 @@ export const duplicateCustomNodes = (
     };
   });
 
-  console.log("nodes", nodes);
-  console.log("newNodes", newNodes);
-
   return newNodes;
 };
 

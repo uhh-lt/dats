@@ -2,7 +2,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { ExportJobRead, BackgroundJobStatus, ExportService } from "./openapi";
 import { QueryKey } from "./QueryKey";
 
-const useStartExportJob = () => useMutation(ExportService.startExportJob);
+const useStartExportJob = () =>
+  useMutation(ExportService.startExportJob, {
+    meta: {
+      errorMessage: "Failed to gather documents for export",
+    },
+  });
 
 const useGetExportJob = (exportJobId: string | undefined) => {
   // filter out all disabled code ids

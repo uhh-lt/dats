@@ -18,27 +18,16 @@ export default function DownloadSdocsButton({ sdocIds }: DownloadSdocsButtonProp
   const exportJob = ExporterHooks.useGetExportJob(startExport.data?.id);
 
   const onClick = () => {
-    startExport.mutate(
-      {
-        requestBody: {
+    startExport.mutate({
+      requestBody: {
+        export_job_type: ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS,
+        specific_export_job_parameters: {
+          project_id: projectId,
           export_job_type: ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS,
-          specific_export_job_parameters: {
-            project_id: projectId,
-            export_job_type: ExportJobType.SINGLE_PROJECT_SELECTED_SDOCS,
-            sdoc_ids: sdocIds,
-          },
+          sdoc_ids: sdocIds,
         },
       },
-      {
-        onError: (e) => {
-          console.error(e);
-          SnackbarAPI.openSnackbar({
-            text: "Gathering files for download failed",
-            severity: "error",
-          });
-        },
-      },
-    );
+    });
   };
 
   useEffect(() => {

@@ -27,6 +27,7 @@ def start_export_job(
     authz_user.assert_in_project(
         export_params.specific_export_job_parameters.project_id
     )
+    raise Exception("test")
 
     return prepare_and_start_export_job_async(export_params=export_params)
 

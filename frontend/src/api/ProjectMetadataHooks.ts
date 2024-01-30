@@ -9,6 +9,10 @@ const useCreateMetadata = () =>
       queryClient.invalidateQueries([QueryKey.PROJECT_METADATA, data.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_METADATAS, data.project_id]);
     },
+    meta: {
+      successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,
+      errorMessage: (error: any) => (error.status === 409 ? "Key already exists" : "Could not add metadata"),
+    },
   });
 
 const useGetMetadata = (metadataId: number | null | undefined) =>
@@ -25,6 +29,10 @@ const useUpdateMetadata = () =>
     onSuccess: (metadata) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_METADATA, metadata.id]);
       queryClient.invalidateQueries([QueryKey.PROJECT_METADATAS, metadata.project_id]);
+    },
+    meta: {
+      successMessage: (projectMetadata: ProjectMetadataRead) =>
+        `Updated projectMetadata ${projectMetadata.id} for project ${projectMetadata.project_id}`,
     },
   });
 

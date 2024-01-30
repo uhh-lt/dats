@@ -121,6 +121,7 @@ export const searchSlice = createSlice({
     },
 
     // filtering
+    // TODO are these actions for logging only? Why do they exist?
     onAddKeywordFilter: (state, action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string }>) => {
       console.log("added keywod filter!");
     },

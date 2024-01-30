@@ -8,6 +8,7 @@ import {
   DocumentTagRead,
   MemoRead,
   PaginatedSourceDocumentReads,
+  PreprocessingJobRead,
   ProjectCreate,
   ProjectMetadataRead,
   ProjectRead,
@@ -50,6 +51,10 @@ const useUploadDocument = () =>
       queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, variables.projId]);
       queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS_INFINITE, variables.projId]);
     },
+    meta: {
+      successMessage: (data: PreprocessingJobRead) =>
+        `Successfully uploaded ${data.payloads.length} documents and started PreprocessingJob ${data.id} in the background!`,
+    },
   });
 
 const useGetProjectDocuments = (projectId: number) =>
@@ -83,6 +88,10 @@ const useCreateProject = () =>
       onSuccess: (project, variables) => {
         queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
       },
+      meta: {
+        successMessage: (project: ProjectRead) =>
+          "Successfully Created Project " + project.title + " with id " + project.id + "!",
+      },
     },
   );
 
@@ -99,6 +108,9 @@ const useUpdateProject = () =>
         queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
         queryClient.invalidateQueries([QueryKey.PROJECT, data.id]);
       },
+      meta: {
+        successMessage: (data: ProjectRead) => `Successfully Updated Project with id ${data.id}!`,
+      },
     },
   );
 
@@ -108,6 +120,10 @@ const useDeleteProject = () =>
     {
       onSuccess: (data, variables) => {
         queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
+      },
+      meta: {
+        successMessage: (data: ProjectRead) =>
+          "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
       },
     },
   );
@@ -130,6 +146,9 @@ const useAddUser = () =>
       queryClient.invalidateQueries([QueryKey.PROJECT_USERS, variables.projId]);
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.id]);
     },
+    meta: {
+      successMessage: (user: UserRead) => "Successfully added user " + user.first_name + "!",
+    },
   });
 
 const useRemoveUser = () =>
@@ -137,6 +156,9 @@ const useRemoveUser = () =>
     onSuccess: (user, variables) => {
       queryClient.invalidateQueries([QueryKey.PROJECT_USERS, variables.projId]);
       queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.id]);
+    },
+    meta: {
+      successMessage: (data: UserRead) => "Successfully removed user " + data.first_name + "!",
     },
   });
 
@@ -220,6 +242,9 @@ const useGetMetadata = (projectId: number) =>
     }),
   );
 
+// duplicates
+const useFindDuplicateTextDocuments = () => useMutation(ProjectService.findDuplicateTextSdocs);
+
 const ProjectHooks = {
   // tags
   useGetAllTags,
@@ -247,6 +272,8 @@ const ProjectHooks = {
   useQueryActions,
   // metadata
   useGetMetadata,
+  // duplicates
+  useFindDuplicateTextDocuments,
 };
 
 export default ProjectHooks;

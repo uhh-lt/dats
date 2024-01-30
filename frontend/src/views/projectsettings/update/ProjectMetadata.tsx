@@ -118,23 +118,13 @@ function ProjectMetadataRowWithData({ projectMetadata }: { projectMetadata: Proj
       // only update if data has changed!
       if (projectMetadata.metatype !== data.metatype || projectMetadata.key !== data.key) {
         const mutation = updateMutation.mutate;
-        mutation(
-          {
-            metadataId: projectMetadata.id,
-            requestBody: {
-              metatype: data.metatype,
-              key: data.key,
-            },
+        mutation({
+          metadataId: projectMetadata.id,
+          requestBody: {
+            metatype: data.metatype,
+            key: data.key,
           },
-          {
-            onSuccess: (projectMetadata) => {
-              SnackbarAPI.openSnackbar({
-                text: `Updated projectMetadata ${projectMetadata.id} for project ${projectMetadata.project_id}`,
-                severity: "success",
-              });
-            },
-          },
-        );
+        });
       }
     },
     [projectMetadata.id, projectMetadata.key, projectMetadata.metatype, updateMutation.mutate],

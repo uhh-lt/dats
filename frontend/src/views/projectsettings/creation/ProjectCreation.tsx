@@ -1,3 +1,7 @@
+import { ErrorMessage } from "@hookform/error-message";
+import CloseIcon from "@mui/icons-material/Close";
+import SaveIcon from "@mui/icons-material/Save";
+import { LoadingButton } from "@mui/lab";
 import {
   AppBar,
   Box,
@@ -11,15 +15,9 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import React from "react";
 import { useForm } from "react-hook-form";
-import SaveIcon from "@mui/icons-material/Save";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import CloseIcon from "@mui/icons-material/Close";
 import { Link, useNavigate } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
-import { ErrorMessage } from "@hookform/error-message";
-import { LoadingButton } from "@mui/lab";
 import { useAuth } from "../../../auth/AuthProvider";
 
 function ProjectCreation() {
@@ -46,13 +44,7 @@ function ProjectCreation() {
         },
       },
       {
-        onSuccess: (project) => {
-          SnackbarAPI.openSnackbar({
-            text: "Successfully Created Project " + project.title + " with id " + project.id + "!",
-            severity: "success",
-          });
-          navigate(`/projectsettings/${project.id}`);
-        },
+        onSuccess: (project) => navigate(`/projectsettings/${project.id}`),
       },
     );
   };
