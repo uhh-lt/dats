@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { DateGroupBy } from "../../../api/openapi";
+import { DateGroupBy, LogicalOperator, TimelineAnalysisConcept_Output } from "../../../api/openapi";
 
-export interface TimelineAnalysisConcept {
+export interface TimelineAnalysisConceptOLD {
   id: string;
   name: string;
   color: string;
@@ -17,8 +17,8 @@ export interface TimelineAnalysisState {
   projectMetadataId: number;
   metadataCheckerOpen: boolean;
   conceptEditorOpen: boolean;
-  currentConcept: TimelineAnalysisConcept;
-  concepts: TimelineAnalysisConcept[];
+  currentConcept: TimelineAnalysisConcept_Output;
+  concepts: TimelineAnalysisConceptOLD[];
   provenanceDate: string | undefined;
   provenanceConcept: string | undefined;
   resultType: string;
@@ -36,8 +36,11 @@ const initialState: TimelineAnalysisState = {
     name: "",
     color: "#ff0000",
     visible: true,
-    type: "filter",
-    data: "root",
+    description: "",
+    filter: {
+      items: [],
+      logic_operator: LogicalOperator.AND,
+    },
   },
   concepts: [],
   provenanceDate: undefined,
@@ -62,23 +65,23 @@ export const timelineAnalysisSlice = createSlice({
     setMetadataCheckerOpen: (state, action: PayloadAction<boolean>) => {
       state.metadataCheckerOpen = action.payload;
     },
-    setCurrentConcept: (state, action: PayloadAction<TimelineAnalysisConcept>) => {
+    setCurrentConcept: (state, action: PayloadAction<TimelineAnalysisConcept_Output>) => {
       state.currentConcept = action.payload;
     },
     resetCurrentConcept: (state) => {
       state.currentConcept = initialState.currentConcept;
     },
-    setConcepts: (state, action: PayloadAction<TimelineAnalysisConcept[]>) => {
+    setConcepts: (state, action: PayloadAction<TimelineAnalysisConceptOLD[]>) => {
       state.concepts = action.payload.slice();
     },
-    toggleConceptVisibility: (state, action: PayloadAction<TimelineAnalysisConcept>) => {
+    toggleConceptVisibility: (state, action: PayloadAction<TimelineAnalysisConceptOLD>) => {
       const concept = state.concepts.find((c) => c.name === action.payload.name);
       if (concept) {
         concept.visible = !concept.visible;
       }
       state.concepts = state.concepts.slice();
     },
-    deleteConcept: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
+    deleteConcept: (state, action: PayloadAction<{ concept: TimelineAnalysisConceptOLD }>) => {
       const index = state.concepts.findIndex((c) => c.name === action.payload.concept.name);
       if (index !== -1) {
         state.concepts.splice(index, 1);
@@ -110,19 +113,11 @@ export const timelineAnalysisSlice = createSlice({
         data: action.payload.conceptData,
       });
     },
-    onStartConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
+    onStartConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept_Output }>) => {
       state.conceptEditorOpen = true;
       state.currentConcept = action.payload.concept;
     },
-    onFinishConceptEdit: (state, action: PayloadAction<{ concept: TimelineAnalysisConcept }>) => {
-      const index = state.concepts.findIndex((c) => c.id === action.payload.concept.id);
-      if (index === -1) {
-        console.error(`Concept ${action.payload.concept.id} not found`);
-      } else {
-        state.concepts[index] = action.payload.concept;
-        state.concepts = state.concepts.slice();
-      }
-
+    onFinishConceptEdit: (state) => {
       state.conceptEditorOpen = false;
       state.currentConcept = initialState.currentConcept;
     },

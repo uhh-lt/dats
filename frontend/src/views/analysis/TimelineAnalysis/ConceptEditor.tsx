@@ -3,14 +3,14 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, 
 import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output";
 import { useAppSelector } from "../../../plugins/ReduxHooks";
 import ColorUtils from "../../../utils/ColorUtils";
 import ConceptFilterEditor from "./ConceptFilterEditor";
-import { TimelineAnalysisConcept } from "./timelineAnalysisSlice";
 
 interface ConceptEditorProps {
-  onUpdate: (concept: TimelineAnalysisConcept) => void;
-  onCancel: (concept: TimelineAnalysisConcept) => void;
+  onUpdate: (concept: TimelineAnalysisConcept_Output) => void;
+  onCancel: (concept: TimelineAnalysisConcept_Output) => void;
 }
 
 function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
@@ -24,7 +24,7 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
     formState: { errors },
     reset,
     setValue,
-  } = useForm<TimelineAnalysisConcept>();
+  } = useForm<TimelineAnalysisConcept_Output>();
 
   // redux
   const currentConcept = useAppSelector((state) => state.timelineAnalysis.currentConcept);
@@ -46,15 +46,10 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
   };
 
   // form handling
-  const handleUpdate: SubmitHandler<TimelineAnalysisConcept> = (data) => {
+  const handleUpdate: SubmitHandler<TimelineAnalysisConcept_Output> = (data) => {
     onUpdate(data);
   };
-  const handleError: SubmitErrorHandler<TimelineAnalysisConcept> = (data) => console.error(data);
-
-  useEffect(() => {
-    register("data", { required: "Data is required", validate: (v) => v.length > 0 });
-    register("type", { required: "Type is required" });
-  });
+  const handleError: SubmitErrorHandler<TimelineAnalysisConcept_Output> = (data) => console.error(data);
 
   return (
     <Dialog open={conceptEditorOpen} onClose={handleClose} fullWidth maxWidth="md">
@@ -97,7 +92,7 @@ function ConceptEditor({ onUpdate, onCancel }: ConceptEditorProps) {
                 setColor(newColor); // set value of color picker (and box)
               }}
             />
-            {currentConcept.type === "filter" && <ConceptFilterEditor rootFilterId={currentConcept.data} />}
+            <ConceptFilterEditor />
           </Stack>
         </DialogContent>
         <DialogActions>

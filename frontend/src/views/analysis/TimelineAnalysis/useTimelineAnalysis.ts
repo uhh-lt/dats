@@ -1,8 +1,7 @@
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { AnalysisService, TimelineAnalysisColumns } from "../../../api/openapi";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { useParams } from "react-router-dom";
+import { AnalysisService, TimelineAnalysisColumns, TimelineAnalysisRead } from "../../../api/openapi";
 import { MyFilter } from "../../../features/FilterDialog/filterUtils";
 
 export interface TimelineAnalysisCount {
@@ -10,42 +9,40 @@ export interface TimelineAnalysisCount {
   [key: string]: number | string;
 }
 
-export const useTimelineAnalysis = () => {
+export const useTimelineAnalysis = (timelineAnalysis: TimelineAnalysisRead) => {
   // global client state (react router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
-  // global client state (redux)
-  const groupBy = useAppSelector((state) => state.timelineAnalysis.groupBy);
-  const projectMetadatId = useAppSelector((state) => state.timelineAnalysis.projectMetadataId);
-  const concepts = useAppSelector((state) => state.timelineAnalysis.concepts);
-  const filter = useAppSelector((state) => state.timelineAnalysisFilter.filter);
-
-  const timelineAnalysis = useQueries({
-    queries: concepts.map((concept) => {
+  const timeline = useQueries({
+    queries: timelineAnalysis.concepts.map((concept) => {
       return {
-        queryKey: [projectId, groupBy, projectMetadatId, filter[concept.data]],
+        queryKey: [
+          projectId,
+          timelineAnalysis.settings.group_by,
+          timelineAnalysis.settings.date_metadata_id,
+          concept.filter,
+        ],
         queryFn: () => {
           return AnalysisService.timelineAnalysis2({
             projectId,
-            groupBy,
-            projectMetadataId: projectMetadatId,
-            requestBody: filter[concept.data] as MyFilter<TimelineAnalysisColumns>, // if concept.type === "filter", data is the root filter id
+            groupBy: timelineAnalysis.settings.group_by!,
+            projectMetadataId: timelineAnalysis.settings.date_metadata_id!,
+            requestBody: concept.filter as MyFilter<TimelineAnalysisColumns>, // if concept.type === "filter", data is the root filter id
           });
         },
       };
     }),
   });
 
-  const isLoading = timelineAnalysis.some((query) => query.isLoading);
-  const isError = timelineAnalysis.some((query) => query.isError);
+  const isLoading = timeline.some((query) => query.isLoading);
+  const isError = timeline.some((query) => query.isError);
 
   // TODO: Is this memo stable? or is it computed every re-render?
   const { counts, date2concept2ids, isSuccess } = useMemo(() => {
     console.log("memomemomomo");
 
-    if (!timelineAnalysis.every((query) => query.isSuccess))
-      return { counts: [], date2concept2ids: {}, isSuccess: false };
-    const timelineAnalysisResults = timelineAnalysis.map((query) => query.data!);
+    if (!timeline.every((query) => query.isSuccess)) return { counts: [], date2concept2ids: {}, isSuccess: false };
+    const timelineAnalysisResults = timeline.map((query) => query.data!);
 
     // merge results
     // the keys of the intermediate result
@@ -60,7 +57,7 @@ export const useTimelineAnalysis = () => {
     }, {});
 
     timelineAnalysisResults.forEach((taResult, index) => {
-      const concept = concepts[index]; //  The order returned by useQueries is the same as the input order.
+      const concept = timelineAnalysis.concepts[index]; //  The order returned by useQueries is the same as the input order.
 
       taResult.forEach((result) => {
         date2concept2counts[result.date][concept.name] = result.sdoc_ids.length;
@@ -77,7 +74,7 @@ export const useTimelineAnalysis = () => {
     });
 
     return { counts, date2concept2ids, isSuccess: true };
-  }, [concepts, timelineAnalysis]);
+  }, [timelineAnalysis.concepts, timeline]);
 
   return { isSuccess, isLoading, isError, counts, date2concept2ids };
 };

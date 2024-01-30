@@ -24,7 +24,22 @@ export interface FilterState {
 }
 
 const filterReducer = {
-  onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
+  onStartFilterEdit: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ rootFilterId: string; filter?: MyFilter }>,
+  ) => {
+    // init filter if it does not exist
+    if (!state.filter[action.payload.rootFilterId]) {
+      if (action.payload.filter) {
+        state.filter[action.payload.rootFilterId] = action.payload.filter;
+      } else {
+        state.filter[action.payload.rootFilterId] = {
+          id: action.payload.rootFilterId,
+          items: [],
+          logic_operator: LogicalOperator.AND,
+        };
+      }
+    }
     state.editableFilter = JSON.parse(JSON.stringify(state.filter[action.payload.rootFilterId]));
 
     // add a default filter expression if the filter is empty
@@ -59,7 +74,6 @@ const filterReducer = {
     delete state.filter[action.payload.rootFilterId];
   },
   addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
-    // const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       filterItem.items = [
@@ -76,7 +90,6 @@ const filterReducer = {
     state: Draft<FilterState>,
     action: PayloadAction<{ filterId: string; addEnd?: boolean }>,
   ) => {
-    // const newFilter = JSON.parse(JSON.stringify(filter)) as MyFilter;
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilter(filterItem)) {
       if (action.payload.addEnd) {

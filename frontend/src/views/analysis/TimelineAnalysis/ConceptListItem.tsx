@@ -5,13 +5,13 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Box, ListItem, Tooltip } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
-import { TimelineAnalysisConcept } from "./timelineAnalysisSlice";
+import { TimelineAnalysisConcept_Output } from "../../../api/openapi";
 
 interface ConceptListItemProps {
-  concept: TimelineAnalysisConcept;
-  onEditClick: (concept: TimelineAnalysisConcept) => void;
-  onDeleteClick: (concept: TimelineAnalysisConcept) => void;
-  onToggleVisibilityClick: (concept: TimelineAnalysisConcept) => void;
+  concept: TimelineAnalysisConcept_Output;
+  onEditClick: (conceptId: string) => void;
+  onDeleteClick: (conceptId: string) => void;
+  onToggleVisibilityClick: (conceptId: string) => void;
 }
 
 function ConceptListItem({ concept, onEditClick, onDeleteClick, onToggleVisibilityClick }: ConceptListItemProps) {
@@ -24,17 +24,17 @@ function ConceptListItem({ concept, onEditClick, onDeleteClick, onToggleVisibili
               title={concept.visible ? "Hide concept in timeline analysis" : "Show concept in timeline analysis"}
               enterDelay={500}
             >
-              <IconButton aria-label="visible" onClick={() => onToggleVisibilityClick(concept)}>
+              <IconButton aria-label="visible" onClick={() => onToggleVisibilityClick(concept.id)}>
                 {concept.visible ? <VisibilityIcon /> : <VisibilityOffIcon />}
               </IconButton>
             </Tooltip>
             <Tooltip title={"Edit concept"} enterDelay={500}>
-              <IconButton aria-label="edit" onClick={() => onEditClick(concept)}>
+              <IconButton aria-label="edit" onClick={() => onEditClick(concept.id)}>
                 <EditIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title={"Delete concept"} enterDelay={500}>
-              <IconButton edge="end" aria-label="delete" onClick={() => onDeleteClick(concept)}>
+              <IconButton edge="end" aria-label="delete" onClick={() => onDeleteClick(concept.id)}>
                 <DeleteIcon />
               </IconButton>
             </Tooltip>

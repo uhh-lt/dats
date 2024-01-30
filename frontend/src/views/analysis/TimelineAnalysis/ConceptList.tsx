@@ -9,52 +9,125 @@ import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks";
+import {
+  LogicalOperator,
+  TimelineAnalysisColumns,
+  TimelineAnalysisConcept_Output,
+  TimelineAnalysisRead,
+} from "../../../api/openapi";
+import { MyFilter } from "../../../features/FilterDialog/filterUtils";
+import { useAppDispatch, useAppStore } from "../../../plugins/ReduxHooks";
 import ConceptEditor from "./ConceptEditor";
 import ConceptListItem from "./ConceptListItem";
-import { TimelineAnalysisActions, TimelineAnalysisConcept } from "./timelineAnalysisSlice";
-import { useInitTimelineAnalysisFilterSlice } from "./useInitTimelineAnalysisFilterSlice";
 import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice";
+import { TimelineAnalysisActions } from "./timelineAnalysisSlice";
+import { useInitTimelineAnalysisFilterSlice } from "./useInitTimelineAnalysisFilterSlice";
 
-function ConceptList() {
+interface ConceptListProps {
+  timelineAnalysis: TimelineAnalysisRead;
+}
+
+function ConceptList({ timelineAnalysis }: ConceptListProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global client state (redux)
-  const concepts = useAppSelector((state) => state.timelineAnalysis.concepts);
   const dispatch = useAppDispatch();
 
   // init filter slice
   useInitTimelineAnalysisFilterSlice({ projectId });
 
   // actions
-  // we need to keep both slices in sync: timelineAnalysisFilterSlice and timelineAnalysisSlice
+  const updateTimelineAnalysisMutation = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
   const handleAddConcept = () => {
-    const rootFilterId = uuidv4();
-    dispatch(TimelineAnalysisFilterActions.addRootFilter({ rootFilterId }));
-    dispatch(TimelineAnalysisActions.onCreateNewConcept({ conceptData: rootFilterId }));
+    timelineAnalysis.concepts.push({
+      id: uuidv4(),
+      name: `New Concept #${timelineAnalysis.concepts.length + 1}`,
+      visible: true,
+      color: "#000000",
+      description: "",
+      filter: {
+        items: [],
+        logic_operator: LogicalOperator.AND,
+      },
+    });
+    updateTimelineAnalysisMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+      requestBody: {
+        concepts: [...timelineAnalysis.concepts],
+      },
+    });
   };
 
-  const handleEditConcept = (concept: TimelineAnalysisConcept) => {
-    dispatch(TimelineAnalysisFilterActions.onStartFilterEdit({ rootFilterId: concept.data }));
-    dispatch(TimelineAnalysisActions.onStartConceptEdit({ concept }));
+  const handleEditConcept = (conceptId: string) => {
+    const concept = timelineAnalysis.concepts.find((c) => c.id === conceptId);
+    if (concept) {
+      dispatch(TimelineAnalysisActions.onStartConceptEdit({ concept }));
+      dispatch(
+        TimelineAnalysisFilterActions.onStartFilterEdit({
+          rootFilterId: conceptId,
+          filter: { ...concept.filter, id: conceptId } as MyFilter<TimelineAnalysisColumns>,
+        }),
+      );
+    }
   };
 
-  const handleApplyConceptChanges = (concept: TimelineAnalysisConcept) => {
+  const store = useAppStore();
+  const handleApplyConceptChanges = (concept: TimelineAnalysisConcept_Output) => {
+    const index = timelineAnalysis.concepts.findIndex((c) => c.id === concept.id);
+    if (index === -1) {
+      console.error(`Concept ${concept.id} not found`);
+    } else {
+      const updatedFilter = store.getState().timelineAnalysisFilter.editableFilter as MyFilter<TimelineAnalysisColumns>;
+      timelineAnalysis.concepts[index] = {
+        ...concept,
+        filter: updatedFilter,
+      };
+      console.log(timelineAnalysis.concepts[index]);
+      updateTimelineAnalysisMutation.mutate({
+        timelineAnalysisId: timelineAnalysis.id,
+        requestBody: {
+          concepts: [...timelineAnalysis.concepts],
+        },
+      });
+    }
     dispatch(TimelineAnalysisFilterActions.onFinishFilterEdit());
-    dispatch(TimelineAnalysisActions.onFinishConceptEdit({ concept }));
+    dispatch(TimelineAnalysisActions.onFinishConceptEdit());
   };
 
-  const handleCancelConceptChanges = (concept: TimelineAnalysisConcept) => {
+  const handleCancelConceptChanges = (concept: TimelineAnalysisConcept_Output) => {
     dispatch(TimelineAnalysisActions.onCancelConceptEdit());
   };
 
-  const handleDeleteConcept = (concept: TimelineAnalysisConcept) => {
-    dispatch(TimelineAnalysisActions.deleteConcept({ concept }));
-    dispatch(TimelineAnalysisFilterActions.deleteRootFilter({ rootFilterId: concept.data }));
+  const handleDeleteConcept = (conceptId: string) => {
+    const index = timelineAnalysis.concepts.findIndex((c) => c.id === conceptId);
+    if (index !== -1) {
+      timelineAnalysis.concepts.splice(index, 1);
+    }
+    updateTimelineAnalysisMutation.mutate({
+      timelineAnalysisId: timelineAnalysis.id,
+      requestBody: {
+        concepts: [...timelineAnalysis.concepts],
+      },
+    });
   };
 
-  const handleToggleVisibilityConcept = (concept: TimelineAnalysisConcept) => {
-    dispatch(TimelineAnalysisActions.toggleConceptVisibility(concept));
+  const handleToggleVisibilityConcept = (conceptId: string) => {
+    const index = timelineAnalysis.concepts.findIndex((c) => c.id === conceptId);
+    if (index === -1) {
+      console.error(`Concept ${conceptId} not found`);
+    } else {
+      timelineAnalysis.concepts[index] = {
+        ...timelineAnalysis.concepts[index],
+        visible: !timelineAnalysis.concepts[index].visible,
+      };
+      updateTimelineAnalysisMutation.mutate({
+        timelineAnalysisId: timelineAnalysis.id,
+        requestBody: {
+          concepts: [...timelineAnalysis.concepts],
+        },
+      });
+    }
   };
 
   return (
@@ -80,9 +153,9 @@ function ConceptList() {
                 <ListItemText primary="Add new concept" />
               </ListItemButton>
             </ListItem>
-            {concepts.map((concept, index) => (
+            {timelineAnalysis.concepts.map((concept, index) => (
               <ConceptListItem
-                key={concept.name}
+                key={concept.id}
                 concept={concept}
                 onEditClick={handleEditConcept}
                 onDeleteClick={handleDeleteConcept}
