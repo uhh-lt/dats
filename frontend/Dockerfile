@@ -20,7 +20,7 @@ RUN npm ci --omit optional --legacy-peer-deps
 COPY . .
 
 # build
-RUN npm run generate && npm run build
+RUN npm run build
 
 # STAGE 2: BUILD IMAGE
 FROM nginx:stable-alpine
