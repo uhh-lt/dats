@@ -17,7 +17,7 @@ RUN apt-get update -q &&\
 
 # install micromamba for anaconda python package management
 ARG MICROMAMBA_VERSION=1.5.1
-RUN wget https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION} -O mamba.tar.bz2
+RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/${MICROMAMBA_VERSION} -o mamba.tar.bz2
 RUN tar -xvj -f mamba.tar.bz2 bin/micromamba
 RUN rm mamba.tar.bz2
 
