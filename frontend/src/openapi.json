@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Discourse Analysis Tool Suite API", "version": "0.0.9" },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "0.0.10" },
   "paths": {
     "/heartbeat": {
       "get": {
