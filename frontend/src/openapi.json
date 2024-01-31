@@ -1,10 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": {
-    "title": "D-WISE Tool Suite Backend API",
-    "description": "The REST API for the D-WISE Tool Suite Backend.",
-    "version": "beta_mwp_1"
-  },
+  "info": { "title": "Discourse Analysis Tool Suite API", "version": "0.0.3" },
   "paths": {
     "/heartbeat": {
       "get": {

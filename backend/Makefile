@@ -37,3 +37,8 @@ wipe_all_data:
 	ENV_NAME=dwts source _activate_current_env.sh
 	cd src
 	python wipe_database.py
+
+.PHONY: release
+update_version:
+	ENV_NAME=dwts source _activate_current_env.sh
+	python update_version.py --version $(VERSION)

@@ -100,9 +100,6 @@ async def lifespan(app: FastAPI):
 
 # create the FastAPI app
 app = FastAPI(
-    # title="D-WISE Tool Suite Backend API",
-    # description="The REST API for the D-WISE Tool Suite Backend",
-    # version="alpha_mwp_1",
     generate_unique_id_function=custom_generate_unique_id,
     lifespan=lifespan,
 )
@@ -111,12 +108,9 @@ app = FastAPI(
 # customize openapi schema
 # we need to add some DTOs manually, because they are not used in any endpoint, but needed in the frontend nonetheless
 def custom_openapi():
-    # if app.openapi_schema:
-    #     return app.openapi_schema
     openapi_schema = get_openapi(
-        title="D-WISE Tool Suite Backend API",
-        version="beta_mwp_1",
-        description="The REST API for the D-WISE Tool Suite Backend.",
+        title="Discourse Analysis Tool Suite API",
+        version=conf.api.version,
         routes=app.routes,
     )
     openapi_schema["components"]["schemas"][

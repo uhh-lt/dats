@@ -2,17 +2,7 @@ const fs = require("fs");
 const http = require("http");
 const exec = require("child_process").exec;
 
-// settings
-let port = 18120;
-const argv = require("minimist")(process.argv.slice(2));
-if (Object.keys(argv).includes("p")) {
-  port = argv["p"];
-} else if (Object.keys(argv).includes("port")) {
-  port = argv["port"];
-} else {
-  console.error("Please specify port of the DWTS Backend API using -p <PORT> or --port <PORT>");
-  process.exit();
-}
+require("dotenv").config({ path: ".env.development" });
 
 // 1. remove existing openapi file
 const openapiFilePath = "src/openapi.json";
@@ -22,8 +12,13 @@ if (fs.existsSync(openapiFilePath)) {
 }
 
 // 2. download new openapi json file
+const backendUrl = process.env.REACT_APP_SERVER;
+if (backendUrl === "" || backendUrl === undefined) {
+  console.error("REACT_APP_SERVER .env variable is not set, don't know how to reach the backend!");
+  process.exit(1);
+}
 http
-  .get(`http://0.0.0.0:${port}/openapi.json`, (res) => {
+  .get(`${backendUrl}/openapi.json`, (res) => {
     const { statusCode } = res;
     const contentType = res.headers["content-type"];
 
