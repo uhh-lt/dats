@@ -3,7 +3,7 @@
 set -euo pipefail
 
 if [ "${1:-}" = "" ]; then
-    echo "Please provide a version parameter, e.g. release.sh v.0.0.3"
+    echo "Please provide a version parameter, e.g. release.sh 0.0.3"
     exit 1
 fi
 
