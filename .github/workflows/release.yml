@@ -35,6 +35,13 @@ jobs:
           push: true
           tags: |
             "uhhlt/dwts_frontend:${{ github.ref_name }}"
+      - name: Build and push ray container
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend/src/app/preprocessing/ray_model_worker
+          push: true
+          tags: |
+            "uhhlt/dwts_ray:${{ github.ref_name }}"
 
       - name: Create Release
         uses: ncipollo/release-action@v1
