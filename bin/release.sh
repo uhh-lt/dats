@@ -24,4 +24,5 @@ cd ..
 git add backend/src/configs/version.yaml frontend/package.json frontend/src/openapi.json
 git commit -m "Release v$1"
 git tag v"$1"
+git push
 git push --tags
