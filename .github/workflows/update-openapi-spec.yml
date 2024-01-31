@@ -53,8 +53,8 @@ jobs:
       - name: Update spec
         working-directory: frontend
         run: |
-          node updateAPI.js -p 5500
-          npm run generate-dev
+          REACT_APP_SERVER=http://localhost:5500 node bin/updateAPI.js
+          npm run generate-api
       - name: Check that frontend builds without error
         working-directory: frontend
         run: npm run build

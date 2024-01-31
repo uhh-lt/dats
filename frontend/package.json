@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.9.0",
@@ -50,9 +50,9 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
-    "update-api": "node updateAPI.js -p 19220",
-    "generate": "openapi --input src/openapi.json --useOptions --output src/api/openapi",
-    "generate-dev": "node generateAPI.js"
+    "update-api": "node bin/updateAPI.js",
+    "generate-api": "node bin/generateAPI.js",
+    "update-version": "npm run update-api && node bin/updateVersion.js"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -74,6 +74,7 @@
     "@types/lodash": "^4.14.182",
     "@types/react": "^18.0.12",
     "@types/react-dom": "^18.0.5",
+    "dotenv": "^16.4.1",
     "eslint": "8.54.0",
     "eslint-config-react-app": "7.0.1",
     "minimist": "^1.2.7",

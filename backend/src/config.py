@@ -9,6 +9,8 @@ __conf_file__ = os.getenv(
     "DWISE_BACKEND_CONFIG", "./configs/default_localhost_dev.yaml"
 )
 conf = OmegaConf.load(__conf_file__)
+version_conf = OmegaConf.load("./configs/version.yaml")
+conf = OmegaConf.merge(conf, version_conf)
 
 # setup loguru logging
 logger.remove()
