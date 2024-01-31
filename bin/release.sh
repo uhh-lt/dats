@@ -21,7 +21,7 @@ cd ../frontend
 npm run update-version
 
 cd ..
-git tag v"$1"
 git add backend/src/configs/version.yaml frontend/package.json frontend/src/openapi.json
 git commit -m "Release v$1"
+git tag v"$1"
 git push --tags

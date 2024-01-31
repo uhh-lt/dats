@@ -7,7 +7,6 @@ on:
 
 jobs:
   build_release:
-    if: github.ref == 'refs/heads/mwp_v1'
     name: build_release
     runs-on: ubuntu-latest
     steps:
