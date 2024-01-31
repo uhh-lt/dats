@@ -14,7 +14,6 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-print(args.version)
 version_conf.api.version = args.version
 
 OmegaConf.save(version_conf, "./src/configs/version.yaml")
