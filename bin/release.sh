@@ -18,7 +18,7 @@ make update_version VERSION="$1"
 read -p "Please restart the backend to make sure its OpenAPI spec is up to date. Afterwards, press any key to continue. " -n 1 -r
 
 cd ../frontend
-npm run update-version
+npm run generate
 
 cd ..
 git add backend/src/configs/version.yaml frontend/package.json frontend/src/openapi.json

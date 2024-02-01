@@ -52,7 +52,8 @@
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
     "update-api": "node bin/updateAPI.js",
     "generate-api": "node bin/generateAPI.js",
-    "update-version": "npm run update-api && node bin/updateVersion.js"
+    "update-version": "node bin/updateVersion.js",
+    "generate": "npm run update-api && npm run generate-api && npm run update-version"
   },
   "eslintConfig": {
     "extends": "react-app"

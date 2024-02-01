@@ -20,6 +20,7 @@ import AutoStoriesIcon from "@mui/icons-material/AutoStories";
 import { Link as RouterLink } from "react-router-dom";
 import { LoginStatus, useAuth } from "../../auth/AuthProvider";
 import ExporterListItemButton from "../../features/Exporter/ExporterListItemButton";
+import { OpenAPI } from "../../api/openapi";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 
@@ -50,12 +51,9 @@ export default function TemporaryDrawer() {
       role="presentation"
       onClick={toggleDrawer(anchor, false)}
       onKeyDown={toggleDrawer(anchor, false)}
+      className="h100"
     >
-      {/*<List>*/}
-      {/*  <ListSubheader component="div">Corpora</ListSubheader>*/}
-      {/*  <ImportDocumentListButton />*/}
-      {/*</List>*/}
-      <List>
+      <List className="h100">
         {loginStatus === LoginStatus.LOGGED_IN && (
           <>
             <ListItem disablePadding>
@@ -106,6 +104,10 @@ export default function TemporaryDrawer() {
         </ListItem>
 
         <ExporterListItemButton />
+
+        <ListItem sx={{ position: "absolute", bottom: 0 }}>
+          <ListItemText primary={`Version ${OpenAPI.VERSION}`} />
+        </ListItem>
       </List>
     </Box>
   );
