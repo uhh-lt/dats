@@ -11,12 +11,16 @@ function cleanup() {
 }
 trap "cleanup" EXIT
 
+SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
+
 # Read test-specific environment variables from configuration
-set -o allexport; [[ -f .env.testing ]] && source .env.testing
+set -o allexport
+source $SCRIPT_DIR/../.env
+[[ -f .env.testing ]] && source $SCRIPT_DIR/../.env.testing
 
 # Find the absolute path for the elasticsearch config as that
 # is the only thing docker will accept
-ELASTICSEARCH_CONFIG=$(realpath -e "$(dirname "${BASH_SOURCE[0]}")/../../docker/elasticsearch.yml")
+ELASTICSEARCH_CONFIG=$(realpath -e "$SCRIPT_DIR/../../docker/elasticsearch.yml")
 
 TEST_CONTAINER_ID=$(date +%s)
 
@@ -64,4 +68,4 @@ cd src
 # Wait for elasticsearch to start
 ./test_es.sh
 
-pytest
+pytest "$@"

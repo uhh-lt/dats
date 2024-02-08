@@ -28,9 +28,11 @@ migrate:
 	cd src
 	python run_migrations.py
 
+# For running specific tests, use the following style:
+# make test pytest_args=test/app/core/data/crud/test_user_crud.py::test_create_delete_user
 .PHONY: test
 test:
-	src/run_tests.sh
+	src/run_tests.sh $(pytest_args)
 
 .PHONY: wipe_database
 wipe_all_data:

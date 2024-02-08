@@ -10,12 +10,14 @@ import pytest
 from fastapi import Request
 from fastapi.datastructures import Headers
 from loguru import logger
+from pytest import FixtureRequest
 from sqlalchemy.orm import Session
 
 from api.validation import Validate
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.orm.code import CodeORM
 from app.core.data.orm.project import ProjectORM
+from app.core.data.orm.user import UserORM
 from app.core.db.sql_service import SQLService
 from app.core.startup import startup
 from config import conf
@@ -55,59 +57,45 @@ def anyio_backend():
     return "asyncio"
 
 
-def code_fixture_base(session: SQLService, project: int, user: int) -> CodeORM:
-    name = "".join(random.choices(string.ascii_letters, k=15))
-    description = "".join(random.choices(string.ascii_letters, k=30))
-    color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
-    code = CodeCreate(
-        name=name,
-        color=color,
-        description=description,
-        project_id=project,
-        user_id=user,
-    )
-
-    with session.db_session() as sess:
-        db_code = crud_code.create(db=sess, create_dto=code)
-    return db_code
-
-
 @pytest.fixture
-def code(session: SQLService, project: int, user: int) -> Generator[int, None, None]:
-    code_obj = code_fixture_base(session, project, user)
-
-    yield code_obj.id
-
-    with session.db_session() as sess:
-        crud_code.remove(db=sess, id=code_obj.id)
+def code(make_code) -> CodeORM:
+    return make_code()
 
 
 @pytest.fixture
 def make_code(
-    session: SQLService, project: int, user: int
-) -> Generator[Callable[[], CodeORM], None, None]:
-    created_codes = []
-
+    db: Session, project: ProjectORM, user: UserORM, request: FixtureRequest
+) -> Callable[[], CodeORM]:
     def factory():
-        code = code_fixture_base(session, project, user)
-        created_codes.append(code)
-        return code
+        name = "".join(random.choices(string.ascii_letters, k=15))
+        description = "".join(random.choices(string.ascii_letters, k=30))
+        color = f"rgb({random.randint(0, 255)},{random.randint(0, 255)},{random.randint(0, 255)})"
+        code = CodeCreate(
+            name=name,
+            color=color,
+            description=description,
+            project_id=project.id,
+            user_id=user.id,
+        )
 
-    yield factory
+        db_code = crud_code.create(db=db, create_dto=code)
+        code_id = db_code.id
 
-    with session.db_session() as sess:
-        for code in created_codes:
-            crud_code.remove(db=sess, id=code.id)
+        request.addfinalizer(lambda: crud_code.remove(db=db, id=code_id))
+
+        return db_code
+
+    return factory
 
 
 @pytest.fixture
-def session() -> SQLService:
+def sql_service() -> SQLService:
     return SQLService()
 
 
 @pytest.fixture
-def rollbacked_session(session: SQLService) -> Generator[Session, None, None]:
-    db = session.session_maker()
+def db(sql_service: SQLService) -> Generator[Session, None, None]:
+    db = sql_service.session_maker()
 
     yield db
 
@@ -115,109 +103,79 @@ def rollbacked_session(session: SQLService) -> Generator[Session, None, None]:
     db.close()
 
 
-def project_fixture_base(session: SQLService, user: int) -> ProjectORM:
-    title = "".join(random.choices(string.ascii_letters, k=15))
-    description = "Test description"
+@pytest.fixture
+def project(make_project) -> ProjectORM:
+    return make_project()
 
-    with session.db_session() as sess:
-        system_user = UserRead.model_validate(crud_user.read(sess, SYSTEM_USER_ID))
+
+@pytest.fixture
+def make_project(
+    db: Session, user: UserORM, request: FixtureRequest
+) -> Callable[[], ProjectORM]:
+    def factory():
+        title = "".join(random.choices(string.ascii_letters, k=15))
+        description = "Test description"
+
+        system_user = UserRead.model_validate(crud_user.read(db, SYSTEM_USER_ID))
         project = crud_project.create(
-            db=sess,
+            db=db,
             create_dto=ProjectCreate(
                 title=title,
                 description=description,
             ),
             creating_user=system_user,
         )
-        crud_project.associate_user(db=sess, proj_id=project.id, user_id=user)
+        crud_project.associate_user(db=db, proj_id=project.id, user_id=user.id)
 
-    return project
+        project_id = project.id
 
+        request.addfinalizer(lambda: crud_project.remove(db, id=project_id))
 
-@pytest.fixture
-def project(session: SQLService, user: int) -> Generator[int, None, None]:
-    project_id = project_fixture_base(session, user).id
-    yield project_id
-
-    with session.db_session() as sess:
-        crud_project.remove(db=sess, id=project_id)
-
-
-@pytest.fixture
-def make_project(
-    session: SQLService, user: int
-) -> Generator[Callable[[], ProjectORM], None, None]:
-    created_projects = []
-
-    def factory():
-        project = project_fixture_base(session, user)
-        created_projects.append(project)
         return project
 
-    yield factory
-
-    with session.db_session() as sess:
-        for project in created_projects:
-            crud_project.remove(db=sess, id=project.id)
-
-
-def user_fixture_base(session: SQLService) -> UserRead:
-    email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
-    first_name = "".join(random.choices(string.ascii_letters, k=15))
-    last_name = "".join(random.choices(string.ascii_letters, k=15))
-    password = "".join(random.choices(string.ascii_letters, k=15))
-
-    user = UserCreate(
-        email=email, first_name=first_name, last_name=last_name, password=password
-    )
-
-    with session.db_session() as sess:
-        # create user
-        db_user = crud_user.create(db=sess, create_dto=user)
-        user = UserRead.model_validate(db_user)
-
-        return user
+    return factory
 
 
 @pytest.fixture
-def user(session: SQLService) -> Generator[int, None, None]:
-    user = user_fixture_base(session)
-    yield user.id
-    with session.db_session() as sess:
-        crud_user.remove(db=sess, id=user.id)
+def user(make_user: Callable[[], UserORM]) -> UserORM:
+    return make_user()
 
 
 # This fixture allows a single test to easily create
 # multiple users.
 @pytest.fixture
-def make_user(session: SQLService) -> Generator[Callable[[], UserRead], None, None]:
-    created_users = []
+def make_user(db: Session, request: FixtureRequest) -> Callable[[], UserORM]:
+    def factory():
+        email = f'{"".join(random.choices(string.ascii_letters, k=15))}@gmail.com'
+        first_name = "".join(random.choices(string.ascii_letters, k=15))
+        last_name = "".join(random.choices(string.ascii_letters, k=15))
+        password = "".join(random.choices(string.ascii_letters, k=15))
 
-    def func():
-        user = user_fixture_base(session)
-        created_users.append(user)
-        return user
+        user = UserCreate(
+            email=email, first_name=first_name, last_name=last_name, password=password
+        )
 
-    yield func
+        # create user
+        db_user = crud_user.create(db=db, create_dto=user)
+        user_id = db_user.id
 
-    with session.db_session() as db:
-        for user in created_users:
-            crud_user.remove(db=db, id=user.id)
+        request.addfinalizer(lambda: crud_user.remove(db=db, id=user_id))
+
+        return db_user
+
+    return factory
 
 
 @pytest.fixture
-def authz_user(
-    user: int, rollbacked_session: Session, mock_request: Request
-) -> AuthzUser:
-    user_orm = crud_user.read(rollbacked_session, user)
-    authz_user = AuthzUser(request=mock_request, user=user_orm, db=rollbacked_session)
+def authz_user(user: UserORM, db: Session, mock_request: Request) -> AuthzUser:
+    authz_user = AuthzUser(request=mock_request, user=user, db=db)
 
     return authz_user
 
 
 @pytest.fixture
-def validate(rollbacked_session: Session) -> Validate:
-    validate = Validate(db=rollbacked_session)
+def validate(db: Session) -> Validate:
+    validate = Validate(db=db)
 
     return validate
 
