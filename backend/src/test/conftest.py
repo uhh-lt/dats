@@ -7,6 +7,7 @@ import string
 from typing import Callable, Generator
 
 import pytest
+import requests
 from fastapi import Request
 from fastapi.datastructures import Headers
 from loguru import logger
@@ -328,7 +329,10 @@ def api_document(client: TestClient):
             headers = user["AuthHeader"]
             files = []
             for filename in uploadList:
-                files.append(("uploaded_files", (filename, open(filename, "rb"))))
+                request_download = requests.get(filename[0])
+                files.append(
+                    ("uploaded_files", (filename[1], request_download.content))
+                )
             response = client.put(
                 f"/project/{project["id"]}/sdoc", headers=headers, files=files
             ).json()
