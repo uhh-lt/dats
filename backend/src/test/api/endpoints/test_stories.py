@@ -150,30 +150,61 @@ def test_document(api_user, api_project, api_document):
     alice = api_user.userList["alice"]
     project1 = api_project.projectList["project1"]
 
-    # Upload text documents
-    textd1 = "helloWorld.txt"
-    textd2 = "filetwo.txt"
+    # Upload text to project1
+    # https://de.wikipedia.org/wiki/Erde
+    textd1 = ("https://de.wikipedia.org/wiki/Erde", "Erde – Wikipedia.html")
+    # https://de.wikipedia.org/wiki/Hauskatze
+    textd2 = ("https://de.wikipedia.org/wiki/Hauskatze", "Hauskatze – Wikipedia.html")
     doc_response = api_document.create([textd1, textd2], alice, project1)
-    textd1 = doc_response[textd1]
-    textd2 = doc_response[textd2]
+    textd1 = doc_response[textd1[1]]
+    textd2 = doc_response[textd2[1]]
 
-    # Upload image documents
-    imaged1 = "kittyOne.jpg"
-    imaged2 = "cutze.png"
+    # Upload image to project1
+    # https://commons.wikimedia.org/wiki/File:Charles_Fran%C3%A7ois_Daubigny_-_The_Coming_Storm;_Early_Spring_-_Walters_37163.jpg
+    imaged1 = (
+        "https://upload.wikimedia.org/wikipedia/commons/f/f0/Charles_Fran%C3%A7ois_Daubigny_-_The_Coming_Storm%3B_Early_Spring_-_Walters_37163.jpg",
+        "Charles_Fran%C3%A7ois_Daubigny_-_The_Coming_Storm%3B_Early_Spring_-_Walters_37163.jpg",
+    )
+
+    # https://commons.wikimedia.org/wiki/File:Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG
+    imaged2 = (
+        "https://upload.wikimedia.org/wikipedia/commons/6/68/Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG",
+        "Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG",
+    )
     image_response = api_document.create([imaged1, imaged2], alice, project1)
-    imaged1 = image_response[imaged1]
-    imaged2 = image_response[imaged2]
+    imaged1 = image_response[imaged1[1]]
+    imaged2 = image_response[imaged2[1]]
 
-    # Upload video documents
-    videod1 = "highres.mp4"
-    videod2 = "webm.webm"
+    # Upload video to project1
+    # https://commons.wikimedia.org/wiki/File:Welche_Form_hat_das_Universum%3F.webm
+    videod1 = (
+        "https://upload.wikimedia.org/wikipedia/commons/1/18/Welche_Form_hat_das_Universum%3F.webm",
+        "Welche_Form_hat_das_Universum%3F.webm",
+    )
+
+    # https://commons.wikimedia.org/wiki/File:Lurraren_ilargiak.webm
+    videod2 = (
+        "https://upload.wikimedia.org/wikipedia/commons/b/b7/Lurraren_ilargiak.webm",
+        "Lurraren_ilargiak.webm",
+    )
+
     video_response = api_document.create([videod1, videod2], alice, project1)
-    videod1 = video_response[videod1]
-    videod2 = video_response[videod2]
+    videod1 = video_response[videod1[1]]
+    videod2 = video_response[videod2[1]]
 
-    # Upload audio documents
-    audiod1 = "pcm.wav"
-    audiod2 = "mp3.mp3"
+    # Upload audio to project1
+    # https://commons.wikimedia.org/wiki/File:Audio_file_of_Retrato_de_Maria_Quit%C3%A9ria_de_Jesus_Medeiros.ogg
+    audiod1 = (
+        "https://upload.wikimedia.org/wikipedia/commons/4/4c/Audio_file_of_Retrato_de_Maria_Quit%C3%A9ria_de_Jesus_Medeiros.ogg",
+        "Audio_file_of_Retrato_de_Maria_Quit%C3%A9ria_de_Jesus_Medeiros.ogg",
+    )
+
+    # https://commons.wikimedia.org/wiki/File:Nl-Zandvoort_(Gelderland)-article.ogg
+    audiod2 = (
+        "https://upload.wikimedia.org/wikipedia/commons/e/e1/Nl-Zandvoort_%28Gelderland%29-article.ogg",
+        "Nl-Zandvoort_%28Gelderland%29-article.ogg",
+    )
+
     audio_response = api_document.create([audiod1, audiod2], alice, project1)
-    audiod1 = audio_response[audiod1]
-    audiod2 = audio_response[audiod2]
+    audiod1 = audio_response[audiod1[1]]
+    audiod2 = audio_response[audiod2[1]]
