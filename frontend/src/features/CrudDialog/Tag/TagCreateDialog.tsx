@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import eventBus from "../../../EventBus";
+import { ErrorMessage } from "@hookform/error-message";
+import SaveIcon from "@mui/icons-material/Save";
+import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Button,
@@ -12,18 +13,17 @@ import {
   TextField,
   rgbToHex,
 } from "@mui/material";
-import { SubmitHandler, useForm } from "react-hook-form";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-import { useParams } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
-import TagHooks from "../../../api/TagHooks";
-import { ErrorMessage } from "@hookform/error-message";
-import { LoadingButton } from "@mui/lab";
-import SaveIcon from "@mui/icons-material/Save";
-import { DocumentTagCreate } from "../../../api/openapi";
-import { contrastiveColors } from "../../../views/annotation/colors";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
+import eventBus from "../../../EventBus";
 import ProjectHooks from "../../../api/ProjectHooks";
+import TagHooks from "../../../api/TagHooks";
+import { DocumentTagCreate } from "../../../api/openapi";
 import TagRenderer from "../../../components/DataGrid/TagRenderer";
+import { contrastiveColors } from "../../../views/annotation/colors";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI";
 
 type TagCreateDialogPayload = {
   tagName?: string;
@@ -53,7 +53,7 @@ function TagCreateDialog() {
     formState: { errors },
     reset,
     setValue,
-    getValues,
+    control,
   } = useForm<DocumentTagCreate>({
     defaultValues: {
       parent_tag_id: -1,
@@ -133,24 +133,34 @@ function TagCreateDialog() {
         <DialogTitle>New tag</DialogTitle>
         <DialogContent>
           <Stack spacing={3}>
-            <TextField
-              fullWidth
-              select
-              label="Parent Tag"
-              variant="filled"
-              defaultValue={getValues("parent_tag_id")}
-              {...register("parent_tag_id")}
-              error={Boolean(errors.parent_tag_id)}
-              helperText={<ErrorMessage errors={errors} name="parent_tag_id" />}
-              InputLabelProps={{ shrink: true }}
-            >
-              <MenuItem value={-1}>No parent</MenuItem>
-              {tags.data?.map((tag) => (
-                <MenuItem key={tag.id} value={tag.id}>
-                  <TagRenderer tag={tag} />
-                </MenuItem>
-              ))}
-            </TextField>
+            <Controller
+              name="parent_tag_id"
+              control={control}
+              rules={{
+                required: "Value is required",
+              }}
+              render={({ field: { onBlur, onChange, value } }) => (
+                <TextField
+                  fullWidth
+                  select
+                  label="Parent Tag"
+                  variant="filled"
+                  onChange={onChange}
+                  onBlur={onBlur}
+                  value={value}
+                  error={Boolean(errors.parent_tag_id)}
+                  helperText={<ErrorMessage errors={errors} name="parent_tag_id" />}
+                  InputLabelProps={{ shrink: true }}
+                >
+                  <MenuItem value={-1}>No parent</MenuItem>
+                  {tags.data?.map((tag) => (
+                    <MenuItem key={tag.id} value={tag.id}>
+                      <TagRenderer tag={tag} />
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
+            />
             <TextField
               label="Please enter a name for the new tag"
               autoFocus

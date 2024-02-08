@@ -172,6 +172,11 @@ class CRUDSourceDocumentMetadata(
             raise NoSuchElementError(self.model, sdoc_id=sdoc_id, key=key)
         return db_obj
 
+    def delete_by_project_metadata(self, db: Session, *, project_metadata_id: int):
+        db.query(self.model).filter(
+            SourceDocumentMetadataORM.project_metadata_id == project_metadata_id
+        ).delete()
+
     def read_by_sdoc(
         self, db: Session, sdoc_id: int
     ) -> List[SourceDocumentMetadataORM]:
