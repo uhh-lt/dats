@@ -158,7 +158,7 @@ services:
       - dwts_demo_network
 
   ray:
-    image: uhhlt/dwts_ray:${RAY_DOCKER_VERSION:-debian_dev_latest}
+    image: uhhlt/dwts_ray:${DWTS_RAY_DOCKER_VERSION:-debian_dev_latest}
     command: /dwts_code_ray/ray_model_worker_entrypoint.sh
     user: ${UID:-1000}:${GID:-1000}
     environment:
