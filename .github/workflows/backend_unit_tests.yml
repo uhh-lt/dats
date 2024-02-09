@@ -52,7 +52,7 @@ jobs:
       # disable backend and frontend
       COMPOSE_PROFILES: ""
       RAY_ENABLED: False
-      POSTRES_DB: dwts-test
+      POSTGRES_DB: dwts-test
     steps:
       - name: Set Swap Space to 10GB
         uses: pierotofy/set-swap-space@master
