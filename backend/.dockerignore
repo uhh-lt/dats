@@ -1,14 +1,20 @@
-.idea
+# ignore all env files
+.env
+.env.example
+.env.testing
+.env.testing.example
+
+# ignore custom directories
+src/dev_notebooks
+src/data
+src/experiments
+
+# ignore caches
 .pytest_cache
-.run
-notebooks
-spacy_models
-backend_repo
-sample_data
-image_models
-models_cache
-notebooks
-.idea
-.pytest_cache
-.run
+
+# others
+.dockerignore
+.gitignore
 Dockerfile
+Makefile
+README.md
