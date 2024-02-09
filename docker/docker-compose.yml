@@ -173,6 +173,7 @@ services:
       RAY_PROCESSING_DEVICE_VIT_GPT2: ${RAY_PROCESSING_DEVICE_VIT_GPT2:-cuda}
       RAY_PROCESSING_DEVICE_BLIP2: ${RAY_PROCESSING_DEVICE_BLIP2:-cuda}
       RAY_PROCESSING_DEVICE_CLIP: ${RAY_PROCESSING_DEVICE_CLIP:-cuda}
+      RAY_BLIP2_PRECISION_BIT: ${RAY_BLIP2_PRECISION_BIT:-32}
     volumes:
       - ../backend/src/app/preprocessing/ray_model_worker:/dwts_code_ray
       - ./spacy_models:/spacy_models
