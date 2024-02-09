@@ -8,15 +8,19 @@ from transformers import Blip2ForConditionalGeneration, Blip2Processor
 
 from config import build_ray_model_deployment_config, conf
 
+logger = logging.getLogger("ray.serve")
+
 cc = conf.blip2
 
 DEVICE = cc.device
 MODEL = cc.model
 MAX_CAPTION_LENGTH = cc.image_captioning.max_caption_length
 NUM_BEAMS = cc.image_captioning.num_beams
-PRECISION_BIT = cc.precision_bit
-
-logger = logging.getLogger("ray.serve")
+if str(cc.precision_bit).isdigit():
+    PRECISION_BIT = int(cc.precision_bit)
+else:
+    PRECISION_BIT = 8
+    logger.info(f"Invalid PRECISION_BIT: {cc.precision_bit}. Using default 8-bit.")
 
 
 @serve.deployment(**build_ray_model_deployment_config("blip2"))
@@ -37,7 +41,7 @@ class Blip2Model:
             data_type = torch.bfloat16
             load_in_8bit = True
         else:
-            msg = f"Cannot run {MODEL} in {PRECISION_BIT}-bit on CPU"
+            msg = f"Cannot run {MODEL} in {PRECISION_BIT}-bit on {DEVICE}"
             logger.error(msg)
             raise RuntimeError(msg)
 
