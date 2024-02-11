@@ -26,6 +26,7 @@
     "material-react-table": "^2.9.2",
     "react": "^18.1.0",
     "react-colorful": "^5.6.1",
+    "react-csv-downloader": "^3.1.0",
     "react-dom": "^18.1.0",
     "react-hook-form": "^7.32.0",
     "react-i18next": "^11.17.1",
