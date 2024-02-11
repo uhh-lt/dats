@@ -50,7 +50,7 @@
       "name": "Alembic: check",
       "type": "node-terminal",
       "request": "launch",
-      "command": "alembic check",
+      "command": "micromamba activate dwts && alembic check",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     },
@@ -58,7 +58,7 @@
       "name": "Alembic: revision",
       "type": "node-terminal",
       "request": "launch",
-      "command": "alembic revision --autogenerate -m \"vscode launcher\"",
+      "command": "micromamba activate dwts && alembic revision --autogenerate -m \"vscode launcher\"",
       "cwd": "${workspaceFolder}/backend/src",
       "envFile": "${workspaceFolder}/backend/.env"
     }
