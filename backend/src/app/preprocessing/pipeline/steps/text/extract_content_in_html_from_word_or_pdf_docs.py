@@ -57,9 +57,9 @@ def __extract_content_in_html_from_pdf_docs(filepath: Path) -> Tuple[str, List[P
         logger.warning(f"File {filepath} is not a Word document!")
         return "", []
     doc = fitz.open(str(filepath))  # type: ignore
-    page_soups = []
+    pages = []
     extracted_images: List[Path] = []
-    for page in doc:
+    for page_num, page in enumerate(doc):
         # extract images and save on disk
         extracted_images_in_page = []
         if cc.preprocessing.extract_images_from_pdf:
@@ -82,9 +82,9 @@ def __extract_content_in_html_from_pdf_docs(filepath: Path) -> Tuple[str, List[P
             img_tag["src"] = img_name.name
             del img_tag["width"]
             del img_tag["height"]
-        page_soups.append(soup)
+        pages.append(f'<section pagenum="{page_num}">{str(soup)}</section>')
 
-    doc_html = "\n".join(map(lambda p: str(p), page_soups))
+    doc_html = "\n".join(pages)
     return f"<html><body>{doc_html}</body></html>", extracted_images
 
 

@@ -165,13 +165,14 @@ function Search() {
                 </Grid>
               )}
               {(isSplitView || viewDocument) && (
-                <Grid item md={isSplitView ? 6 : 12} className="h100" overflow={"auto"}>
-                  <Container sx={{ my: 2, height: "fit-content" }}>
+                <Grid item md={isSplitView ? 6 : 12} className="h100">
+                  <Container className="h100" sx={{ py: 2 }}>
                     <DocumentViewer
                       sdocId={sdocId ? parseInt(sdocId) : undefined}
                       handleTagClick={handleAddTagFilter}
                       showEntities={isShowEntities}
                       isIdleContent={<Typography>Click a document to read it :)</Typography>}
+                      className="h100"
                     />
                   </Container>
                 </Grid>

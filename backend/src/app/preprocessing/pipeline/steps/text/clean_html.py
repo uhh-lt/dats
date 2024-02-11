@@ -14,7 +14,9 @@ from app.preprocessing.pipeline.model.text.preprotextdoc import PreProTextDoc
 
 
 def clean_html_tags_and_attrs(
-    tags_to_kill: List[str], tags_to_remove: List[str], attrs_to_keep: List[str]
+    tags_to_kill: List[str],
+    tags_to_remove: List[str],
+    attrs_to_keep: List[str],
 ) -> Callable[[str], str]:
     def x(html: str) -> str:
         # use cleaner to only include relevant attributes and to remove unwanted tags
@@ -115,6 +117,7 @@ cleaning_pipeline = build_html_cleaning_pipeline(
                 "width",
                 "height",
                 "target",
+                "pagenum",
             ],
         ),
         string_replace(replace={"\n": "", "&lt;": "❮", "&gt;": "❯"}),
@@ -137,6 +140,7 @@ cleaning_with_readability_pipeline = build_html_cleaning_pipeline(
                 "width",
                 "height",
                 "target",
+                "pagenum",
             ],
         ),
         string_replace(replace={"\n": "", "&lt;": "❮", "&gt;": "❯"}),
@@ -158,7 +162,7 @@ def clean_content_in_html(cargo: PipelineCargo) -> PipelineCargo:
 
     if not has_readability_watermark(content_in_html):
         # here, we apply the same cleaning pipeline as in the crawler
-        logger.debug("Processing HTML with readability!")
+        logger.info("Processing HTML with readability!")
         content_in_html = cleaning_with_readability_pipeline(content_in_html)
 
     logger.info("Cleaning HTML document!")

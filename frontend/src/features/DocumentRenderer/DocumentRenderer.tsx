@@ -43,7 +43,7 @@ function DocumentRenderer({
       content = content.substring(0, content.length - 6);
     }
     content = content.trim();
-    const regex = /<page num="\d+">|<\/page><page num="\d+">|<\/page>/gm;
+    const regex = /<section pagenum="\d+">|<\/section><section pagenum="\d+">|<\/section>/gm;
     let splitted = content.split(regex);
     splitted = splitted.filter((s) => s.length > 0);
     return splitted;
@@ -56,7 +56,6 @@ function DocumentRenderer({
     count: numPages,
     getScrollElement: () => listRef.current,
     estimateSize: () => 155,
-    overscan: 1,
   });
 
   // Order matters. Instructions are processed in
