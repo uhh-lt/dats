@@ -1,5 +1,6 @@
 import traceback
 
+import srsly
 from loguru import logger
 from psycopg2 import OperationalError
 from sqlalchemy.orm import Session
@@ -52,6 +53,10 @@ def _create_and_persist_sdoc(db: Session, pptd: PreProTextDoc) -> SourceDocument
 def _persist_sdoc_data(
     db: Session, sdoc_db_obj: SourceDocumentORM, pptd: PreProTextDoc
 ) -> None:
+    word_frequencies_str = srsly.json_dumps(
+        [{"word": word, "count": count} for word, count in pptd.word_freqs.items()]
+    )
+
     sdoc_data = SourceDocumentDataCreate(
         id=sdoc_db_obj.id,
         content=pptd.text,
@@ -60,6 +65,7 @@ def _persist_sdoc_data(
         token_ends=[e for _, e in pptd.token_character_offsets],
         sentence_starts=[s.start for s in pptd.sentences],
         sentence_ends=[s.end for s in pptd.sentences],
+        word_frequencies=word_frequencies_str,
     )
     crud_sdoc_data.create(db=db, create_dto=sdoc_data)
 

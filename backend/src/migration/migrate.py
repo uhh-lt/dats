@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from alembic.command import upgrade
 from alembic.config import Config
+from app.core.data.crud.crud_base import NoSuchElementError
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.crud.source_document_data import crud_sdoc_data
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
@@ -75,6 +76,11 @@ def run_required_migrations():
             db_version.version = 8
             db.commit()
             print("MIGRATED IMAGE WIDTH HEIGHT!")
+        if db_version.version < 9:
+            __migrate_word_frequencies(db)
+            db_version.version = 9
+            db.commit()
+            print("MIGRATED WORD FREQUENCIES!")
 
 
 def __migrate_database_schema() -> None:
@@ -437,5 +443,52 @@ def __migrate_image_width_height(db: Session):
             __convert_string_to_int_metadata(db, height_pm)
             height_pm.metatype = MetaType.NUMBER
             db.add(height_pm)
+
+        db.commit()
+
+
+def __migrate_word_frequencies(db: Session):
+    import srsly
+
+    from app.core.data.dto.word_frequency import WordFrequencyRead
+    from app.core.data.orm.word_frequency import WordFrequencyORM
+
+    projects = db.query(ProjectORM).all()
+    for project in projects:
+        logger.info(
+            "Migration: Migrating word_frequencies project {}...",
+            project.id,
+        )
+
+        sdoc_ids = (
+            db.query(SourceDocumentORM.id)
+            .filter(
+                SourceDocumentORM.project_id == project.id,
+                SourceDocumentORM.doctype == DocType.text,
+            )
+            .all()
+        )
+        sdoc_ids = [sdoc_id[0] for sdoc_id in sdoc_ids]
+
+        for sdoc_id in sdoc_ids:
+            result = (
+                db.query(WordFrequencyORM)
+                .filter(
+                    WordFrequencyORM.sdoc_id == sdoc_id,
+                )
+                .all()
+            )
+            word_frequencies = [WordFrequencyRead.model_validate(row) for row in result]
+            word_frequencies_str = srsly.json_dumps(
+                [{"word": wf.word, "count": wf.count} for wf in word_frequencies]
+            )
+
+            # update SourceDocumentData
+            try:
+                db_obj = crud_sdoc_data.read(db=db, id=sdoc_id)
+            except NoSuchElementError:
+                continue
+            setattr(db_obj, "word_frequencies", word_frequencies_str)
+            db.add(db_obj)
 
         db.commit()
