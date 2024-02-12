@@ -21,7 +21,7 @@ cd ../frontend
 npm run generate
 
 cd ..
-git add backend/src/configs/version.yaml frontend/package.json frontend/src/openapi.json
+git add backend/src/configs/version.yaml frontend/package.json frontend/src/openapi.json frontend/src/api/openapi/core/OpenAPI.ts
 git commit -m "Release v$1"
 git tag v"$1"
 git push
