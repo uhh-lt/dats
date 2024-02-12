@@ -88,7 +88,7 @@ class CRUDBase(Generic[ORMModelType, CreateDTOType, UpdateDTOType]):
         db_obj = self.read(db=db, id=id)
         before_state = self._get_action_state_from_orm(db_obj=db_obj)
 
-        obj_data = jsonable_encoder(db_obj)
+        obj_data = jsonable_encoder(db_obj.as_dict())
         update_data = update_dto.model_dump(exclude_unset=True)
         for field in obj_data:
             if field in update_data:
