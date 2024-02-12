@@ -6,7 +6,7 @@
 SHELL := bash
 MAKEFLAGS += --warn-undefined-variables
 # Use bash strict mode http://redsymbol.net/articles/unofficial-bash-strict-mode/
-.SHELLFLAGS := -euco pipefail
+.SHELLFLAGS := -eco pipefail
 # Use a single shell process for running a whole recipe
 .ONESHELL:
 # Disable confusing, C-specific builtin rules
