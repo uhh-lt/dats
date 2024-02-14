@@ -21,7 +21,7 @@ class CRUDPreprocessingJob(
     def read(self, db: Session, uuid: str) -> PreprocessingJobORM:
         db_obj = db.query(self.model).filter(self.model.id == uuid).first()
         if db_obj is None:
-            raise NoSuchElementError(self.model, id=id)
+            raise NoSuchElementError(self.model, id=uuid)
         return db_obj
 
     def read_by_ids(self, db: Session, uuids: List[str]) -> List[PreprocessingJobORM]:
@@ -51,7 +51,7 @@ class CRUDPreprocessingJob(
     def get_status_by_id(self, db: Session, uuid: str) -> BackgroundJobStatus:
         db_str_obj = db.query(self.model.status).filter(self.model.id == uuid).scalar()
         if not db_str_obj:
-            raise NoSuchElementError(self.model, id=id)
+            raise NoSuchElementError(self.model, id=uuid)
         return BackgroundJobStatus(db_str_obj)
 
     def get_number_of_running_or_waiting_payloads(self, db: Session, uuid: str) -> int:
