@@ -9,7 +9,7 @@ import { Datas } from "react-csv-downloader/dist/esm/lib/csv";
 
 interface TimelineAnalysisExportMenuProps {
   chartName: string;
-  chartData: TimelineAnalysisCount[] | undefined;
+  chartData?: TimelineAnalysisCount[];
 }
 
 function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisExportMenuProps) {
@@ -18,7 +18,8 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
   const open = Boolean(anchorEl);
 
   const columns = useMemo(() => {
-    if (chartData === undefined) return [];
+    if (chartData === undefined || chartData === null || chartData.length === 0) return [];
+    console.log("chartData", chartData);
     let keys = Object.keys(chartData[0]);
     return keys.map((key) => ({ id: key, displayName: key }));
   }, [chartData]);
