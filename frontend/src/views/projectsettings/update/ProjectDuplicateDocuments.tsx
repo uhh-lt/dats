@@ -25,7 +25,6 @@ interface DuplicateDocumentData {
 const columns: MRT_ColumnDef<DuplicateDocumentData>[] = [
   {
     header: "File name",
-    accessorFn: (row) => row.sdocId,
     Cell: ({ row }) =>
       row.original.subRows ? (
         <>{`${row.originalSubRows?.length} duplicate documents`}</>
@@ -85,7 +84,7 @@ function ProjectDuplicateDocuments({ project }: ProjectProps) {
       };
       duplicateDocGroup.forEach((duplicateDoc) => {
         duplicateDocGroupData.subRows?.push({
-          sdocId: `$${index}-${duplicateDoc}`,
+          sdocId: `${index}-${duplicateDoc}`,
         });
       });
       result.push(duplicateDocGroupData);
@@ -153,8 +152,6 @@ function ProjectDuplicateDocuments({ project }: ProjectProps) {
       </Box>
     ),
   });
-
-  console.log(findDuplicateDocumentsMutation.data);
 
   return (
     <Box display="flex" className="myFlexContainer h100">
