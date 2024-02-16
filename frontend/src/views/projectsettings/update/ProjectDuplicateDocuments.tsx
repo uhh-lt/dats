@@ -69,6 +69,19 @@ function ProjectDuplicateDocuments({ project }: ProjectProps) {
       },
     );
   };
+  const handleSelectAllButOnePerGroup = () => {
+    let selectedSdocIds: string[] = [];
+    data.forEach((duplicateDocGroup) => {
+      if (duplicateDocGroup.subRows) {
+        selectedSdocIds = selectedSdocIds.concat(duplicateDocGroup.subRows.map((subRow) => subRow.sdocId).slice(1));
+      }
+    });
+    console.log(data);
+    console.log(selectedSdocIds);
+    setRowSelection(
+      selectedSdocIds.reduce((acc, sdocId) => ({ ...acc, [sdocId]: true }), {} as Record<string, boolean>),
+    );
+  };
 
   // computed
   const data = useMemo(() => {
@@ -129,6 +142,14 @@ function ProjectDuplicateDocuments({ project }: ProjectProps) {
     positionToolbarAlertBanner: "bottom",
     renderTopToolbarCustomActions: ({ table }) => (
       <Box sx={{ display: "flex", gap: "1rem", p: "4px" }}>
+        <Button
+          color="warning"
+          disabled={table.getIsSomeRowsSelected()}
+          onClick={handleSelectAllButOnePerGroup}
+          variant="contained"
+        >
+          Select all but 1 document per group
+        </Button>
         <Button
           color="error"
           disabled={!table.getIsSomeRowsSelected()}
