@@ -244,7 +244,7 @@ def api_user(client: TestClient):
             credentials["token_type"] = login["token_type"]
             credentials["access_token"] = login["access_token"]
             credentials["AuthHeader"] = {
-                "Authorization": f"{login["token_type"]} {login["access_token"]}"
+                "Authorization": f"{login['token_type']} {login['access_token']}"
             }
 
             self.userList[first_name] = credentials
@@ -252,7 +252,7 @@ def api_user(client: TestClient):
 
         def __del__(self):
             for user in self.userList.values():
-                client.delete(f"/user/{user["id"]}", headers=user["AuthHeader"])
+                client.delete(f"/user/{user['id']}", headers=user["AuthHeader"])
 
     return UserFactory()
 
@@ -284,10 +284,10 @@ def api_project(
             superuser = {"username": "SYSTEM@dwts.org", "password": "SYSTEM"}
             login = client.post("authentication/login", data=superuser).json()
             superuser_authheader = {
-                "Authorization": f"{login["token_type"]} {login["access_token"]}"
+                "Authorization": f"{login['token_type']} {login['access_token']}"
             }
             for project in self.projectList.values():
-                client.delete(f"/project/{project["id"]}", headers=superuser_authheader)
+                client.delete(f"/project/{project['id']}", headers=superuser_authheader)
 
     return ProjectFactory()
 
@@ -333,7 +333,7 @@ def api_document(client: TestClient):
                     ("uploaded_files", (filename[1], request_download.content))
                 )
             response = client.put(
-                f"/project/{project["id"]}/sdoc", headers=headers, files=files
+                f"/project/{project['id']}/sdoc", headers=headers, files=files
             ).json()
             docs = {}
             for file in response["payloads"]:
