@@ -376,6 +376,16 @@ def test_project_memos(client, api_user, api_project):
     )
     assert memo_response.status_code == 200
 
+    memo_get = client.get(
+        f"project/{project1['id']}/memo", headers=alice["AuthHeader"]
+    ).json()[0]
+    assert memo_get["title"] == project_memo["title"]
+    assert memo_get["content"] == project_memo["content"]
+    assert memo_get["id"] == memo_response.json()["id"]
+    assert memo_get["starred"] == project_memo["starred"]
+    assert memo_get["user_id"] == project_memo["user_id"]
+    assert memo_get["project_id"] == project_memo["project_id"]
+
 
 @pytest.mark.order(after="test_upload_documents")
 def test_annotate_sdoc(client, api_user, api_document):
