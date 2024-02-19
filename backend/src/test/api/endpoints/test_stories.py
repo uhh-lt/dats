@@ -181,11 +181,11 @@ def test_upload_documents(client, api_user, api_project, api_document):
     assert text1_prepro_status == "Finished"
     assert text2_prepro_status == "Finished"
     api_document.documentList["Erde – Wikipedia.html"]["sdoc_id"] = client.get(
-        f"project/{project1["id"]}/resolve_filename/{text_doc1[1]}",
+        f"project/{project1['id']}/resolve_filename/{text_doc1[1]}",
         headers=alice["AuthHeader"],
     ).json()
     api_document.documentList["Ferae – Wikipedia.html"]["sdoc_id"] = client.get(
-        f"project/{project1["id"]}/resolve_filename/{text_doc2[1]}",
+        f"project/{project1['id']}/resolve_filename/{text_doc2[1]}",
         headers=alice["AuthHeader"],
     ).json()
 
