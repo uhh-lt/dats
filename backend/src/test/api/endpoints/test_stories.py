@@ -164,22 +164,15 @@ def test_upload_documents(client, api_user, api_project, api_document):
     text1_prepro_job_id = text_response12[text_doc1[1]]["prepro_job_id"]
     text2_prepro_job_id = text_response12[text_doc2[1]]["prepro_job_id"]
 
-    text1_prepro_status = client.get(
-        f"prepro/{text1_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
-    text2_prepro_status = client.get(
-        f"prepro/{text2_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
+    text1_prepro_status = api_document.prepro_status(text1_prepro_job_id, alice)
+    text2_prepro_status = api_document.prepro_status(text2_prepro_job_id, alice)
     while text1_prepro_status == "Running" or text2_prepro_status == "Running":
-        text1_prepro_status = client.get(
-            f"prepro/{text1_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
-        text2_prepro_status = client.get(
-            f"prepro/{text2_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
+        text1_prepro_status = api_document.prepro_status(text1_prepro_job_id, alice)
+        text2_prepro_status = api_document.prepro_status(text2_prepro_job_id, alice)
         time.sleep(2)
     assert text1_prepro_status == "Finished"
     assert text2_prepro_status == "Finished"
+
     api_document.documentList["Erde – Wikipedia.html"]["sdoc_id"] = client.get(
         f"project/{project1['id']}/resolve_filename/{text_doc1[1]}",
         headers=alice["AuthHeader"],
@@ -205,19 +198,11 @@ def test_upload_documents(client, api_user, api_project, api_document):
     image1_prepro_job_id = image_response12[image_doc1[1]]["prepro_job_id"]
     image2_prepro_job_id = image_response12[image_doc2[1]]["prepro_job_id"]
 
-    image1_prepro_status = client.get(
-        f"prepro/{image1_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
-    image2_prepro_status = client.get(
-        f"prepro/{image2_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
+    image1_prepro_status = api_document.prepro_status(image1_prepro_job_id, alice)
+    image2_prepro_status = api_document.prepro_status(image2_prepro_job_id, alice)
     while image1_prepro_status == "Running" or image2_prepro_status == "Running":
-        image1_prepro_status = client.get(
-            f"prepro/{image1_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
-        image2_prepro_status = client.get(
-            f"prepro/{image2_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
+        image1_prepro_status = api_document.prepro_status(image1_prepro_job_id, alice)
+        image2_prepro_status = api_document.prepro_status(image2_prepro_job_id, alice)
         time.sleep(2)
     assert image1_prepro_status == "Finished"
     assert image2_prepro_status == "Finished"
@@ -239,19 +224,11 @@ def test_upload_documents(client, api_user, api_project, api_document):
     video1_prepro_job_id = video_response12[video_doc1[1]]["prepro_job_id"]
     video2_prepro_job_id = video_response12[video_doc2[1]]["prepro_job_id"]
 
-    video1_propro_status = client.get(
-        f"prepro/{video1_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
-    video2_prepro_status = client.get(
-        f"prepro/{video2_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
+    video1_propro_status = api_document.prepro_status(video1_prepro_job_id, alice)
+    video2_prepro_status = api_document.prepro_status(video2_prepro_job_id, alice)
     while video1_propro_status == "Running" or video2_prepro_status == "Running":
-        video1_propro_status = client.get(
-            f"prepro/{video1_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
-        video2_prepro_status = client.get(
-            f"prepro/{video2_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
+        video1_propro_status = api_document.prepro_status(video1_prepro_job_id, alice)
+        video2_prepro_status = api_document.prepro_status(video2_prepro_job_id, alice)
         time.sleep(1)
     assert video1_propro_status == "Finished"
     assert video2_prepro_status == "Finished"
@@ -273,19 +250,11 @@ def test_upload_documents(client, api_user, api_project, api_document):
     audio1_prepro_job_id = audio_response12[audio_doc1[1]]["prepro_job_id"]
     audio2_prepro_job_id = audio_response12[audio_doc2[1]]["prepro_job_id"]
 
-    audio1_prepro_status = client.get(
-        f"prepro/{audio1_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
-    audio2_prepro_status = client.get(
-        f"prepro/{audio2_prepro_job_id}", headers=alice["AuthHeader"]
-    ).json()["status"]
+    audio1_prepro_status = api_document.prepro_status(audio1_prepro_job_id, alice)
+    audio2_prepro_status = api_document.prepro_status(audio2_prepro_job_id, alice)
     while audio1_prepro_status == "Running" or audio2_prepro_status == "Running":
-        audio1_prepro_status = client.get(
-            f"prepro/{audio1_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
-        audio2_prepro_status = client.get(
-            f"prepro/{audio2_prepro_job_id}", headers=alice["AuthHeader"]
-        ).json()["status"]
+        audio1_prepro_status = api_document.prepro_status(audio1_prepro_job_id, alice)
+        audio2_prepro_status = api_document.prepro_status(audio2_prepro_job_id, alice)
         time.sleep(2)
     assert audio1_prepro_status == "Finished"
     assert audio2_prepro_status == "Finished"
@@ -306,19 +275,11 @@ def test_upload_documents(client, api_user, api_project, api_document):
     text3_prepro_job_id = text_response34[text_doc3[1]]["prepro_job_id"]
     text4_prepro_job_id = text_response34[text_doc4[1]]["prepro_job_id"]
 
-    text3_prepro_status = client.get(
-        f"prepro/{text3_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
-    text4_prepro_status = client.get(
-        f"prepro/{text4_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
+    text3_prepro_status = api_document.prepro_status(text3_prepro_job_id, bob)
+    text4_prepro_status = api_document.prepro_status(text4_prepro_job_id, bob)
     while text3_prepro_status == "Running" or text4_prepro_status == "Running":
-        text3_prepro_status = client.get(
-            f"prepro/{text3_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
-        text4_prepro_status = client.get(
-            f"prepro/{text4_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
+        text3_prepro_status = api_document.prepro_status(text3_prepro_job_id, bob)
+        text4_prepro_status = api_document.prepro_status(text4_prepro_job_id, bob)
         time.sleep(2)
     assert text3_prepro_status == "Finished"
     assert text4_prepro_status == "Finished"
@@ -339,19 +300,11 @@ def test_upload_documents(client, api_user, api_project, api_document):
     image3_prepro_job_id = image_response34[image_doc3[1]]["prepro_job_id"]
     image4_prepro_job_id = image_response34[image_doc4[1]]["prepro_job_id"]
 
-    image3_prepro_status = client.get(
-        f"prepro/{image3_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
-    image4_prepro_status = client.get(
-        f"prepro/{image4_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
+    image3_prepro_status = api_document.prepro_status(image3_prepro_job_id, bob)
+    image4_prepro_status = api_document.prepro_status(image4_prepro_job_id, bob)
     while image3_prepro_status == "Running" or image4_prepro_status == "Running":
-        image3_prepro_status = client.get(
-            f"prepro/{image3_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
-        image4_prepro_status = client.get(
-            f"prepro/{image4_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
+        image3_prepro_status = api_document.prepro_status(image3_prepro_job_id, bob)
+        image4_prepro_status = api_document.prepro_status(image4_prepro_job_id, bob)
         time.sleep(2)
     assert image3_prepro_status == "Finished"
     assert image4_prepro_status == "Finished"
@@ -372,19 +325,12 @@ def test_upload_documents(client, api_user, api_project, api_document):
     video_response34 = api_document.create([video_doc3, video_doc4], bob, project2)
     video3_prepro_job_id = video_response34[video_doc3[1]]["prepro_job_id"]
     video4_prepro_job_id = video_response34[video_doc4[1]]["prepro_job_id"]
-    video3_prepro_status = client.get(
-        f"prepro/{video3_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
-    video4_prepro_status = client.get(
-        f"prepro/{video4_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
+
+    video3_prepro_status = api_document.prepro_status(video3_prepro_job_id, bob)
+    video4_prepro_status = api_document.prepro_status(video4_prepro_job_id, bob)
     while video3_prepro_status == "Running" or video4_prepro_status == "Running":
-        video3_prepro_status = client.get(
-            f"prepro/{video3_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
-        video4_prepro_status = client.get(
-            f"prepro/{video4_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
+        video3_prepro_status = api_document.prepro_status(video3_prepro_job_id, bob)
+        video4_prepro_status = api_document.prepro_status(video4_prepro_job_id, bob)
         time.sleep(1)
     assert video3_prepro_status == "Finished"
     assert video4_prepro_status == "Finished"
@@ -406,19 +352,11 @@ def test_upload_documents(client, api_user, api_project, api_document):
     audio3_prepro_job_id = audio_response34[audio_doc3[1]]["prepro_job_id"]
     audio4_prepro_job_id = audio_response34[audio_doc4[1]]["prepro_job_id"]
 
-    audio3_prepro_status = client.get(
-        f"prepro/{audio3_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
-    audio4_prepro_status = client.get(
-        f"prepro/{audio4_prepro_job_id}", headers=bob["AuthHeader"]
-    ).json()["status"]
+    audio3_prepro_status = api_document.prepro_status(audio3_prepro_job_id, bob)
+    audio4_prepro_status = api_document.prepro_status(audio4_prepro_job_id, bob)
     while audio3_prepro_status == "Running" or audio4_prepro_status == "Running":
-        audio3_prepro_status = client.get(
-            f"prepro/{audio3_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
-        audio4_prepro_status = client.get(
-            f"prepro/{audio4_prepro_job_id}", headers=bob["AuthHeader"]
-        ).json()["status"]
+        audio3_prepro_status = api_document.prepro_status(audio3_prepro_job_id, bob)
+        audio4_prepro_status = api_document.prepro_status(audio4_prepro_job_id, bob)
         time.sleep(2)
     assert audio3_prepro_status == "Finished"
     assert audio4_prepro_status == "Finished"
