@@ -344,9 +344,15 @@ def api_document(client: TestClient):
                     "project_id": file["project_id"],
                     "mime_type": file["mime_type"],
                     "doc_type": file["doc_type"],
+                    "prepro_job_id": file["prepro_job_id"],
                 }
                 docs[document["filename"]] = document
             self.documentList.update(docs)
             return docs
+
+        def prepro_status(self, prepro_id, user):
+            return client.get(f"prepro/{prepro_id}", headers=user["AuthHeader"]).json()[
+                "status"
+            ]
 
     return DocumentFactory()
