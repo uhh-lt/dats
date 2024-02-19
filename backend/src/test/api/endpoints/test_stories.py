@@ -591,12 +591,153 @@ def test_annotate_sdoc(client, api_user, api_document):
 
 @pytest.mark.order(after="test_upload_documents")
 def test_bbox_annotatation(client, api_user, api_document):
-    # alice = api_user.userList["alice"]
-    # file = api_document.documentList["Erde – Wikipedia.html"]
-    # project_id = file["project_id"]
-    # filename = file["filename"]
-    # TODO Helpermethod for sdoc_id missing
-    # sdoc_id = client.get(
-    #     f"project/{project_id}/resolve_filename/{filename}", headers=alice["AuthHeader"]
-    # ).json()
-    pass
+    alice = api_user.userList["alice"]
+    image_doc1 = api_document.documentList["GG1949.png"]
+    # Alice creates an annotation document
+    adoc_create1 = {"source_document_id": image_doc1["sdoc_id"], "user_id": alice["id"]}
+    adoc_response1 = client.put(
+        "adoc", headers=alice["AuthHeader"], json=adoc_create1
+    ).json()
+    # Alice creates two image annotations in Imagedoc1
+    bbox_annotation1 = {
+        "x_min": 0,
+        "x_max": 10,
+        "y_min": 0,
+        "y_max": 25,
+        "code_id": 4,
+        "annotation_document_id": adoc_response1["id"],
+    }
+    bbox_response1 = client.put(
+        "bbox", headers=alice["AuthHeader"], json=bbox_annotation1
+    )
+    assert bbox_response1.status_code == 200
+    bbox_response1 = bbox_response1.json()
+    assert bbox_response1["x_min"] == bbox_annotation1["x_min"]
+    assert bbox_response1["x_max"] == bbox_annotation1["x_max"]
+    assert bbox_response1["y_min"] == bbox_annotation1["y_min"]
+    assert bbox_response1["y_max"] == bbox_annotation1["y_max"]
+    assert bbox_response1["code"]["id"] == bbox_annotation1["code_id"]
+    assert (
+        bbox_response1["annotation_document_id"]
+        == bbox_annotation1["annotation_document_id"]
+    )
+
+    bbox_annotation2 = {
+        "x_min": 30,
+        "x_max": 90,
+        "y_min": 20,
+        "y_max": 50,
+        "code_id": 2,
+        "annotation_document_id": adoc_response1["id"],
+    }
+    bbox_response2 = client.put(
+        "bbox", headers=alice["AuthHeader"], json=bbox_annotation2
+    )
+    assert bbox_response2.status_code == 200
+    bbox_response2 = bbox_response2.json()
+    assert bbox_response2["x_min"] == bbox_annotation2["x_min"]
+    assert bbox_response2["x_max"] == bbox_annotation2["x_max"]
+    assert bbox_response2["y_min"] == bbox_annotation2["y_min"]
+    assert bbox_response2["y_max"] == bbox_annotation2["y_max"]
+    assert bbox_response2["code"]["id"] == bbox_annotation2["code_id"]
+    assert (
+        bbox_response2["annotation_document_id"]
+        == bbox_annotation2["annotation_document_id"]
+    )
+
+    bbox_annos1 = client.get(
+        f"adoc/{adoc_response1['id']}/bbox_annotations", headers=alice["AuthHeader"]
+    ).json()
+    assert len(bbox_annos1) == 2
+
+    # Bob creates an image annotation in Imagedoc1
+    bob = api_user.userList["bob"]
+
+    bbox_annotation3 = {
+        "x_min": 12,
+        "x_max": 22,
+        "y_min": 7,
+        "y_max": 700,
+        "code_id": 6,
+        "annotation_document_id": adoc_response1["id"],
+    }
+    bbox_response3 = client.put(
+        "bbox", headers=bob["AuthHeader"], json=bbox_annotation3
+    )
+    assert bbox_response3.status_code == 200
+    bbox_response3 = bbox_response3.json()
+    assert bbox_response3["x_min"] == bbox_annotation3["x_min"]
+    assert bbox_response3["x_max"] == bbox_annotation3["x_max"]
+    assert bbox_response3["y_min"] == bbox_annotation3["y_min"]
+    assert bbox_response3["y_max"] == bbox_annotation3["y_max"]
+    assert bbox_response3["code"]["id"] == bbox_annotation3["code_id"]
+    assert (
+        bbox_response3["annotation_document_id"]
+        == bbox_annotation3["annotation_document_id"]
+    )
+
+    bbox_annos1 = client.get(
+        f"adoc/{adoc_response1['id']}/bbox_annotations", headers=bob["AuthHeader"]
+    ).json()
+    assert len(bbox_annos1) == 3
+
+    # Bob creates an annotation document
+    image_doc2 = api_document.documentList[
+        "Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG"
+    ]
+    adoc_create2 = {"source_document_id": image_doc2["sdoc_id"], "user_id": alice["id"]}
+    adoc_response2 = client.put(
+        "adoc", headers=alice["AuthHeader"], json=adoc_create2
+    ).json()
+
+    # Bob creates two image annotations in Imagedoc2
+    bbox_annotation4 = {
+        "x_min": 39,
+        "x_max": 390,
+        "y_min": 700,
+        "y_max": 701,
+        "code_id": 9,
+        "annotation_document_id": adoc_response2["id"],
+    }
+    bbox_response4 = client.put(
+        "bbox", headers=bob["AuthHeader"], json=bbox_annotation4
+    )
+    assert bbox_response4.status_code == 200
+    bbox_response4 = bbox_response4.json()
+    assert bbox_response4["x_min"] == bbox_annotation4["x_min"]
+    assert bbox_response4["x_max"] == bbox_annotation4["x_max"]
+    assert bbox_response4["y_min"] == bbox_annotation4["y_min"]
+    assert bbox_response4["y_max"] == bbox_annotation4["y_max"]
+    assert bbox_response4["code"]["id"] == bbox_annotation4["code_id"]
+    assert (
+        bbox_response4["annotation_document_id"]
+        == bbox_annotation4["annotation_document_id"]
+    )
+
+    bbox_annotation5 = {
+        "x_min": 390,
+        "x_max": 600,
+        "y_min": 250,
+        "y_max": 500,
+        "code_id": 8,
+        "annotation_document_id": adoc_response2["id"],
+    }
+    bbox_response5 = client.put(
+        "bbox", headers=bob["AuthHeader"], json=bbox_annotation5
+    )
+    assert bbox_response5.status_code == 200
+    bbox_response5 = bbox_response5.json()
+    assert bbox_response5["x_min"] == bbox_annotation5["x_min"]
+    assert bbox_response5["x_max"] == bbox_annotation5["x_max"]
+    assert bbox_response5["y_min"] == bbox_annotation5["y_min"]
+    assert bbox_response5["y_max"] == bbox_annotation5["y_max"]
+    assert bbox_response5["code"]["id"] == bbox_annotation5["code_id"]
+    assert (
+        bbox_response5["annotation_document_id"]
+        == bbox_annotation5["annotation_document_id"]
+    )
+
+    bbox_annos2 = client.get(
+        f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
+    ).json()
+    assert len(bbox_annos2) == 2
