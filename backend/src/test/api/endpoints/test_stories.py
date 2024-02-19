@@ -5,18 +5,17 @@ from fastapi.testclient import TestClient
 def test_project_add_user(client: TestClient, api_user, api_project) -> None:
     alice = api_user.create("alice")
     bob = api_user.create("bob")
-    # charlie = api_user.create("charlie")
 
     project1 = api_project.create(alice, "project1")
     project2 = api_project.create(bob, "project2")
 
-    # Add Bob to project1
+    # Alice adds Bob to project1
     response_add_p1_bob = client.patch(
         f"/project/{project1['id']}/user/{bob['id']}", headers=alice["AuthHeader"]
     )
     assert response_add_p1_bob.status_code == 200
 
-    # Alice changes project2 - failure
+    # Alice updates project2 details - failure
     change_p2_failure = {"title": "this", "description": "shouldn't work"}
     response_update_p2_alice_failure = client.patch(
         f"/project/{project2['id']}",
@@ -33,27 +32,27 @@ def test_project_update(client: TestClient, api_user, api_project) -> None:
     project1 = api_project.projectList["project1"]
     project2 = api_project.projectList["project2"]
 
-    change_p2 = {"title": "this", "description": "should work"}
-    # Add Alice to project2
+    # Bob adds Alice to project2
     response_add_p2_alice = client.patch(
         f"/project/{project2['id']}/user/{alice['id']}", headers=bob["AuthHeader"]
     )
     assert response_add_p2_alice.status_code == 200
 
-    # Alice changes project2
+    # Alice updates project2 details
+    change_p2 = {"title": "this", "description": "should work"}
     response_update_p2_alice_success = client.patch(
         f"/project/{project2['id']}", headers=alice["AuthHeader"], json=change_p2
     )
     assert response_update_p2_alice_success.status_code == 200
 
-    # Change title and description of project1
+    # Alice changes title and description of project1
     change_p1 = {"title": "its weird", "description": "innit?"}
     response_update_p1 = client.patch(
         f"/project/{project1['id']}", headers=alice["AuthHeader"], json=change_p1
     )
     response_update_p1.status_code == 200
 
-    # Change title and description of project2
+    # Bob changes title and description of project2
     change_p2 = {"title": "You know the rules", "description": "and so do I"}
     response_update_p2 = client.patch(
         f"/project/{project2['id']}", headers=bob["AuthHeader"], json=change_p2
@@ -64,7 +63,7 @@ def test_project_update(client: TestClient, api_user, api_project) -> None:
 def test_user_update_remove(client: TestClient, api_user) -> None:
     charlie = api_user.create("charlie")
 
-    # Update Charlie
+    # Charlies updates details of charlie
     update_charlie = {
         "email": "bender@ilovebender.com",
         "first_name": "I.C.",
@@ -76,13 +75,13 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
     )
     assert response_update_charlie.status_code == 200
 
-    # Remove Charlie - failure (changed email)
+    # Charlie removes charlie - failure (changed email)
     response_remove_charlie_failure = client.delete(
         f"/user/{charlie['id']}", headers=charlie["AuthHeader"]
     )
     assert response_remove_charlie_failure.status_code == 404
 
-    # Relogin Charlie
+    # Charlie relogins
     relogin_charlie = {
         "username": update_charlie["email"],
         "password": update_charlie["password"],
@@ -90,13 +89,13 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
     response_relogin_charlie = client.post(
         "/authentication/login", data=relogin_charlie
     ).json()
-    AuthHeader_charlie = {
+    charlie["AuthHeader"] = {
         "Authorization": f"{response_relogin_charlie['token_type']} {response_relogin_charlie['access_token']}"
     }
 
-    # Remove Charlie
+    # Charlie removes charlie
     response_remove_charlie = client.delete(
-        f"/user/{charlie['id']}", headers=AuthHeader_charlie
+        f"/user/{charlie['id']}", headers=charlie["AuthHeader"]
     )
     assert response_remove_charlie.status_code == 200
 
