@@ -2,7 +2,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 
-@pytest.mark.order(1)
 def test_project_add_user(client: TestClient, api_user, api_project) -> None:
     alice = api_user.create("alice")
     bob = api_user.create("bob")
@@ -27,7 +26,7 @@ def test_project_add_user(client: TestClient, api_user, api_project) -> None:
     assert response_update_p2_alice_failure.status_code == 403
 
 
-@pytest.mark.order(2)
+@pytest.mark.order(after="test_project_add_user")
 def test_project_update(client: TestClient, api_user, api_project) -> None:
     alice = api_user.userList["alice"]
     bob = api_user.userList["bob"]
@@ -62,7 +61,6 @@ def test_project_update(client: TestClient, api_user, api_project) -> None:
     response_update_p2.status_code == 200
 
 
-@pytest.mark.order(3)
 def test_user_update_remove(client: TestClient, api_user) -> None:
     charlie = api_user.create("charlie")
 
@@ -103,7 +101,7 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
     assert response_remove_charlie.status_code == 200
 
 
-@pytest.mark.order(4)
+@pytest.mark.order(after="test_project_add_user")
 def test_codes_create(client: TestClient, api_user, api_project, api_code) -> None:
     project1 = api_project.projectList["project1"]
     project2 = api_project.projectList["project2"]
@@ -145,7 +143,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert codes_project2_before + 3 == codes_project2_after
 
 
-@pytest.mark.order(5)
+@pytest.mark.order(after="test_project_add_user")
 def test_upload_documents(client, api_user, api_project, api_document):
     # TODO Refactor spagetti code
     # TODO Implement helpermethod to store sdoc_id after successful upload
@@ -362,7 +360,7 @@ def test_upload_documents(client, api_user, api_project, api_document):
     assert audio4_prepro_status == "Finished"
 
 
-@pytest.mark.order(6)
+@pytest.mark.order(after="test_project_add_user")
 def test_project_memos(client, api_user, api_project):
     alice = api_user.userList["alice"]
     project1 = api_project.projectList["project1"]
@@ -379,7 +377,7 @@ def test_project_memos(client, api_user, api_project):
     assert memo_response.status_code == 200
 
 
-@pytest.mark.order(7)
+@pytest.mark.order(after="test_upload_documents")
 def test_annotate_sdoc(client, api_user, api_document):
     alice = api_user.userList["alice"]
     text_doc = api_document.documentList["Erde – Wikipedia.html"]
@@ -423,7 +421,7 @@ def test_annotate_sdoc(client, api_user, api_document):
     assert span2_response.status_code == 200
 
 
-@pytest.mark.order(8)
+@pytest.mark.order(after="test_upload_documents")
 def test_bbox_annotatation(client, api_user, api_document):
     # alice = api_user.userList["alice"]
     # file = api_document.documentList["Erde – Wikipedia.html"]
