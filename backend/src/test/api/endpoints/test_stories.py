@@ -145,8 +145,6 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 
 @pytest.mark.order(after="test_project_add_user")
 def test_upload_documents(client, api_user, api_project, api_document):
-    # TODO Refactor spagetti code
-    # TODO Implement helpermethod to store sdoc_id after successful upload
     import time
 
     alice = api_user.userList["alice"]
@@ -171,20 +169,14 @@ def test_upload_documents(client, api_user, api_project, api_document):
     assert text1_prepro_status == "Finished"
     assert text2_prepro_status == "Finished"
 
-    api_document.documentList["Erde – Wikipedia.html"]["sdoc_id"] = client.get(
-        f"project/{project1['id']}/resolve_filename/{text_doc1[1]}",
-        headers=alice["AuthHeader"],
-    ).json()
-    api_document.documentList["Ferae – Wikipedia.html"]["sdoc_id"] = client.get(
-        f"project/{project1['id']}/resolve_filename/{text_doc2[1]}",
-        headers=alice["AuthHeader"],
-    ).json()
+    api_document.get_sdoc_id(text_doc1[1], alice)
+    api_document.get_sdoc_id(text_doc2[1], alice)
 
     # Upload image to project1
-    # https://commons.wikimedia.org/wiki/File:Charles_Fran%C3%A7ois_Daubigny_-_The_Coming_Storm;_Early_Spring_-_Walters_37163.jpg
+    # https://commons.wikimedia.org/wiki/File:GG1949.png
     image_doc1 = (
-        "https://upload.wikimedia.org/wikipedia/commons/f/f0/Charles_Fran%C3%A7ois_Daubigny_-_The_Coming_Storm%3B_Early_Spring_-_Walters_37163.jpg",
-        "Charles_Fran%C3%A7ois_Daubigny_-_The_Coming_Storm%3B_Early_Spring_-_Walters_37163.jpg",
+        "https://upload.wikimedia.org/wikipedia/commons/7/78/GG1949.png",
+        "GG1949.png",
     )
     # https://commons.wikimedia.org/wiki/File:Amanecer_desde_la_cima_del_Everest_por_Carlos_Pauner.JPG
     image_doc2 = (
@@ -204,6 +196,9 @@ def test_upload_documents(client, api_user, api_project, api_document):
         time.sleep(2)
     assert image1_prepro_status == "Finished"
     assert image2_prepro_status == "Finished"
+
+    api_document.get_sdoc_id(image_doc1[1], alice)
+    api_document.get_sdoc_id(image_doc2[1], alice)
 
     # Upload video to project1
     # https://commons.wikimedia.org/wiki/File:Welche_Form_hat_das_Universum%3F.webm
@@ -231,6 +226,9 @@ def test_upload_documents(client, api_user, api_project, api_document):
     assert video1_propro_status == "Finished"
     assert video2_prepro_status == "Finished"
 
+    api_document.get_sdoc_id(video_doc1[1], alice)
+    api_document.get_sdoc_id(video_doc2[1], alice)
+
     # Upload audio to project1
     # https://commons.wikimedia.org/wiki/File:Audio_file_of_Retrato_de_Maria_Quit%C3%A9ria_de_Jesus_Medeiros.ogg
     audio_doc1 = (
@@ -257,6 +255,9 @@ def test_upload_documents(client, api_user, api_project, api_document):
     assert audio1_prepro_status == "Finished"
     assert audio2_prepro_status == "Finished"
 
+    api_document.get_sdoc_id(audio_doc1[1], alice)
+    api_document.get_sdoc_id(audio_doc2[1], alice)
+
     bob = api_user.userList["bob"]
     project2 = api_project.projectList["project2"]
 
@@ -282,6 +283,9 @@ def test_upload_documents(client, api_user, api_project, api_document):
     assert text3_prepro_status == "Finished"
     assert text4_prepro_status == "Finished"
 
+    api_document.get_sdoc_id(text_doc3[1], bob)
+    api_document.get_sdoc_id(text_doc4[1], bob)
+
     # Upload image to project2
     # https://upload.wikimedia.org/wikipedia/commons/4/41/Space_Shuttle_Columbia_launching.jpg
     image_doc3 = (
@@ -306,6 +310,9 @@ def test_upload_documents(client, api_user, api_project, api_document):
         time.sleep(2)
     assert image3_prepro_status == "Finished"
     assert image4_prepro_status == "Finished"
+
+    api_document.get_sdoc_id(image_doc3[1], bob)
+    api_document.get_sdoc_id(image_doc4[1], bob)
 
     # Upload video to project2
     # https://upload.wikimedia.org/wikipedia/commons/6/64/2012-07-18_Market_Street_-_San_Francisco.webm
@@ -333,6 +340,9 @@ def test_upload_documents(client, api_user, api_project, api_document):
     assert video3_prepro_status == "Finished"
     assert video4_prepro_status == "Finished"
 
+    api_document.get_sdoc_id(video_doc3[1], bob)
+    api_document.get_sdoc_id(video_doc4[1], bob)
+
     # Upload audio to project2
     # https://librivox.org/coffee-break-collection-25-water-by-various/
     audio_doc3 = (
@@ -358,6 +368,9 @@ def test_upload_documents(client, api_user, api_project, api_document):
         time.sleep(2)
     assert audio3_prepro_status == "Finished"
     assert audio4_prepro_status == "Finished"
+
+    api_document.get_sdoc_id(audio_doc3[1], bob)
+    api_document.get_sdoc_id(audio_doc4[1], bob)
 
 
 @pytest.mark.order(after="test_project_add_user")
@@ -391,12 +404,6 @@ def test_project_memos(client, api_user, api_project):
 def test_annotate_sdoc(client, api_user, api_document):
     alice = api_user.userList["alice"]
     text_doc = api_document.documentList["Erde – Wikipedia.html"]
-    # FIXME sdocID helpermethod missing. This is not ideal!
-    response_sdoc_id = client.get(
-        f"project/{text_doc['project_id']}/sdoc?only_finished=true&skip=0&limit=420",
-        headers=alice["AuthHeader"],
-    ).json()
-    text_doc["sdoc_id"] = response_sdoc_id["sdocs"][0]["id"]
     adoc_create = {"source_document_id": text_doc["sdoc_id"], "user_id": alice["id"]}
     adoc_response = client.put(
         "adoc", headers=alice["AuthHeader"], json=adoc_create
