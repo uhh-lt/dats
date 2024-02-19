@@ -403,12 +403,12 @@ def test_project_memos(client, api_user, api_project):
 @pytest.mark.order(after="test_upload_documents")
 def test_annotate_sdoc(client, api_user, api_document):
     alice = api_user.userList["alice"]
-    text_doc = api_document.documentList["Erde – Wikipedia.html"]
-    adoc_create = {"source_document_id": text_doc["sdoc_id"], "user_id": alice["id"]}
-    adoc_response = client.put(
-        "adoc", headers=alice["AuthHeader"], json=adoc_create
+    text_doc1 = api_document.documentList["Erde – Wikipedia.html"]
+    adoc_create1 = {"source_document_id": text_doc1["sdoc_id"], "user_id": alice["id"]}
+    adoc_response1 = client.put(
+        "adoc", headers=alice["AuthHeader"], json=adoc_create1
     ).json()
-    # Create SpanAnnotation
+    # Alice creates two Annotations in Textdoc1
     span1_annotation = {
         "begin": 0,
         "end": 20,
@@ -416,26 +416,179 @@ def test_annotate_sdoc(client, api_user, api_document):
         "end_token": 4,
         "span_text": "test",
         "code_id": 5,
-        "annotation_document_id": adoc_response["id"],
+        "annotation_document_id": adoc_response1["id"],
     }
     span1_response = client.put(
         "span", headers=alice["AuthHeader"], json=span1_annotation
     )
     assert span1_response.status_code == 200
+    span1_response = span1_response.json()
+    assert span1_annotation["begin"] == span1_response["begin"]
+    assert span1_annotation["end"] == span1_response["end"]
+    assert span1_annotation["begin_token"] == span1_response["begin_token"]
+    assert span1_annotation["end_token"] == span1_response["end_token"]
+    assert (
+        span1_annotation["annotation_document_id"]
+        == span1_response["annotation_document_id"]
+    )
+    assert alice["id"] == span1_response["user_id"]
+    assert text_doc1["sdoc_id"] == span1_response["sdoc_id"]
 
     span2_annotation = {
         "begin": 5,
         "end": 25,
-        "begin_token": 5,
+        "begin_token": 3,
         "end_token": 10,
         "span_text": "new test",
         "code_id": 6,
-        "annotation_document_id": adoc_response["id"],
+        "annotation_document_id": adoc_response1["id"],
     }
     span2_response = client.put(
         "span", headers=alice["AuthHeader"], json=span2_annotation
     )
     assert span2_response.status_code == 200
+    span2_response = span2_response.json()
+    assert span2_annotation["begin"] == span2_response["begin"]
+    assert span2_annotation["end"] == span2_response["end"]
+    assert span2_annotation["begin_token"] == span2_response["begin_token"]
+    assert span2_annotation["end_token"] == span2_response["end_token"]
+    assert (
+        span2_annotation["annotation_document_id"]
+        == span2_response["annotation_document_id"]
+    )
+    assert alice["id"] == span2_response["user_id"]
+    assert text_doc1["sdoc_id"] == span2_response["sdoc_id"]
+
+    span_annos1 = client.get(
+        f"adoc/{adoc_response1['id']}/span_annotations", headers=alice["AuthHeader"]
+    ).json()
+    assert len(span_annos1) == 2
+
+    # Alice creates an Annotation in Textdoc2
+    text_doc2 = api_document.documentList["Ferae – Wikipedia.html"]
+    adoc_create2 = {"source_document_id": text_doc2["sdoc_id"], "user_id": alice["id"]}
+    adoc_response2 = client.put(
+        "adoc", headers=alice["AuthHeader"], json=adoc_create2
+    ).json()
+    span3_annotation = {
+        "begin": 20,
+        "end": 40,
+        "begin_token": 2,
+        "end_token": 9,
+        "span_text": "new test",
+        "code_id": 6,
+        "annotation_document_id": adoc_response2["id"],
+    }
+    span3_response = client.put(
+        "span", headers=alice["AuthHeader"], json=span3_annotation
+    )
+    assert span3_response.status_code == 200
+    span3_response = span3_response.json()
+    assert span3_annotation["begin"] == span3_response["begin"]
+    assert span3_annotation["end"] == span3_response["end"]
+    assert span3_annotation["begin_token"] == span3_response["begin_token"]
+    assert span3_annotation["end_token"] == span3_response["end_token"]
+    assert (
+        span3_annotation["annotation_document_id"]
+        == span3_response["annotation_document_id"]
+    )
+    assert alice["id"] == span3_response["user_id"]
+    assert text_doc2["sdoc_id"] == span3_response["sdoc_id"]
+
+    span_annos2 = client.get(
+        f"adoc/{adoc_response2['id']}/span_annotations", headers=alice["AuthHeader"]
+    ).json()
+    assert len(span_annos2) == 1
+
+    # Bob creates two annotations in Textdoc1
+    bob = api_user.userList["bob"]
+    text_doc1 = api_document.documentList["Erde – Wikipedia.html"]
+    span4_annotation = {
+        "begin": 0,
+        "end": 10,
+        "begin_token": 0,
+        "end_token": 2,
+        "span_text": "test Span",
+        "code_id": 2,
+        "annotation_document_id": adoc_response1["id"],
+    }
+    span4_response = client.put(
+        "span", headers=bob["AuthHeader"], json=span4_annotation
+    )
+    assert span4_response.status_code == 200
+    span4_response = span4_response.json()
+    print(f"{span4_response=}")
+    assert span4_annotation["begin"] == span4_response["begin"]
+    assert span4_annotation["end"] == span4_response["end"]
+    assert span4_annotation["begin_token"] == span4_response["begin_token"]
+    assert span4_annotation["end_token"] == span4_response["end_token"]
+    assert (
+        span4_annotation["annotation_document_id"]
+        == span4_response["annotation_document_id"]
+    )
+    # assert bob["id"] == span4_response["user_id"] # TODO: https://github.com/uhh-lt/dwts/issues/362
+    assert text_doc1["sdoc_id"] == span4_response["sdoc_id"]
+
+    span5_annotation = {
+        "begin": 15,
+        "end": 40,
+        "begin_token": 10,
+        "end_token": 15,
+        "span_text": "fith annotation",
+        "code_id": 10,
+        "annotation_document_id": adoc_response1["id"],
+    }
+    span5_response = client.put(
+        "span", headers=bob["AuthHeader"], json=span5_annotation
+    )
+    assert span5_response.status_code == 200
+    span5_response = span5_response.json()
+    assert span5_annotation["begin"] == span5_response["begin"]
+    assert span5_annotation["end"] == span5_response["end"]
+    assert span5_annotation["begin_token"] == span5_response["begin_token"]
+    assert span5_annotation["end_token"] == span5_response["end_token"]
+    assert (
+        span5_annotation["annotation_document_id"]
+        == span5_response["annotation_document_id"]
+    )
+    # assert bob["id"] == span5_response["user_id"] # TODO: https://github.com/uhh-lt/dwts/issues/362
+    assert text_doc1["sdoc_id"] == span5_response["sdoc_id"]
+
+    span_annos1 = client.get(
+        f"adoc/{adoc_response1['id']}/span_annotations", headers=bob["AuthHeader"]
+    ).json()
+    assert len(span_annos1) == 4
+
+    # Bob creates an Annotation in Textdoc2
+    span6_annotation = {
+        "begin": 3,
+        "end": 30,
+        "begin_token": 2,
+        "end_token": 20,
+        "span_text": "last annotation",
+        "code_id": 1,
+        "annotation_document_id": adoc_response2["id"],
+    }
+    span6_response = client.put(
+        "span", headers=bob["AuthHeader"], json=span6_annotation
+    )
+    assert span6_response.status_code == 200
+    span6_response = span6_response.json()
+    assert span6_annotation["begin"] == span6_response["begin"]
+    assert span6_annotation["end"] == span6_response["end"]
+    assert span6_annotation["begin_token"] == span6_response["begin_token"]
+    assert span6_annotation["end_token"] == span6_response["end_token"]
+    assert (
+        span6_annotation["annotation_document_id"]
+        == span6_response["annotation_document_id"]
+    )
+    # assert bob["id"] == span6_response["user_id"] # TODO: https://github.com/uhh-lt/dwts/issues/362
+    assert text_doc2["sdoc_id"] == span6_response["sdoc_id"]
+
+    span_annos2 = client.get(
+        f"adoc/{adoc_response2['id']}/span_annotations", headers=bob["AuthHeader"]
+    ).json()
+    assert len(span_annos2) == 2
 
 
 @pytest.mark.order(after="test_upload_documents")
