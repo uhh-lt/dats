@@ -325,15 +325,18 @@ def api_document(client: TestClient):
             self.documentList = {}
 
         def create(self, uploadList: list, user: dict, project: dict):
-            headers = user["AuthHeader"]
+            user_headers = user["AuthHeader"]
             files = []
+            download_headers = {
+                "User-Agent": "MauiBot/420.0 (https://github.com/uhh-lt/dwts/; maui@bot.org)"
+            }
             for filename in uploadList:
-                request_download = requests.get(filename[0])
+                request_download = requests.get(filename[0], headers=download_headers)
                 files.append(
                     ("uploaded_files", (filename[1], request_download.content))
                 )
             response = client.put(
-                f"/project/{project['id']}/sdoc", headers=headers, files=files
+                f"/project/{project['id']}/sdoc", headers=user_headers, files=files
             ).json()
             docs = {}
             for file in response["payloads"]:
