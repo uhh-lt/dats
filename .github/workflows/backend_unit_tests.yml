@@ -53,6 +53,7 @@ jobs:
       COMPOSE_PROFILES: ""
       RAY_ENABLED: False
       POSTGRES_DB: dwts-test
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
     steps:
       - name: Set Swap Space to 10GB
         uses: pierotofy/set-swap-space@master
