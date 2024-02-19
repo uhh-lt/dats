@@ -516,7 +516,6 @@ def test_annotate_sdoc(client, api_user, api_document):
     )
     assert span4_response.status_code == 200
     span4_response = span4_response.json()
-    print(f"{span4_response=}")
     assert span4_annotation["begin"] == span4_response["begin"]
     assert span4_annotation["end"] == span4_response["end"]
     assert span4_annotation["begin_token"] == span4_response["begin_token"]
