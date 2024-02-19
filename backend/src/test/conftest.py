@@ -357,4 +357,12 @@ def api_document(client: TestClient):
                 "status"
             ]
 
+        def get_sdoc_id(self, filename, user):
+            doc = self.documentList[filename]
+            project_id = doc["project_id"]
+            doc["sdoc_id"] = client.get(
+                f"project/{project_id}/resolve_filename/{filename}",
+                headers=user["AuthHeader"],
+            ).json()
+
     return DocumentFactory()
