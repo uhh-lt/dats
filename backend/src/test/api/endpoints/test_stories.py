@@ -105,7 +105,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 
 
 @pytest.mark.order(after="test_project_add_user")
-def test_upload_documents(client, api_user, api_project, api_document):
+def test_upload_documents(client, api_user, api_project, api_document) -> None:
     import time
 
     alice = api_user.userList["alice"]
@@ -362,7 +362,7 @@ def test_project_memos(client, api_user, api_project):
 
 
 @pytest.mark.order(after="test_upload_documents")
-def test_annotate_sdoc(client, api_user, api_document):
+def test_annotate_sdoc(client, api_user, api_document) -> None:
     alice = api_user.userList["alice"]
     text_doc1 = api_document.documentList["Erde – Wikipedia.html"]
     adoc_create1 = {"source_document_id": text_doc1["sdoc_id"], "user_id": alice["id"]}
@@ -563,7 +563,7 @@ def test_annotate_sdoc(client, api_user, api_document):
 
 
 @pytest.mark.order(after="test_upload_documents")
-def test_bbox_annotatation(client, api_user, api_document):
+def test_bbox_annotatation(client, api_user, api_document) -> None:
     alice = api_user.userList["alice"]
     image_doc1 = api_document.documentList["GG1949.png"]
     # Alice creates an annotation document
