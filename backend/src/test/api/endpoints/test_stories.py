@@ -588,6 +588,17 @@ def test_annotate_sdoc(client, api_user, api_document):
     ).json()
     assert len(span_annos2) == 2
 
+    # Bob removes the span annotations for Textdoc2
+    textdoc2_spananno_clear = client.delete(
+        f"adoc/{adoc_response2['id']}/span_annotations", headers=bob["AuthHeader"]
+    )
+    assert textdoc2_spananno_clear.status_code == 200
+
+    textdoc2_spananno_clear = client.get(
+        f"adoc/{adoc_response2['id']}/span_annotations", headers=bob["AuthHeader"]
+    ).json()
+    assert len(textdoc2_spananno_clear) == 0
+
 
 @pytest.mark.order(after="test_upload_documents")
 def test_bbox_annotatation(client, api_user, api_document):
@@ -741,3 +752,14 @@ def test_bbox_annotatation(client, api_user, api_document):
         f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
     ).json()
     assert len(bbox_annos2) == 2
+
+    # Bob removes the image annotations for Imagedoc2
+    imagedoc2_bbox_clear = client.delete(
+        f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
+    )
+    assert imagedoc2_bbox_clear.status_code == 200
+
+    bbox_annos2_clear = client.get(
+        f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
+    ).json()
+    assert len(bbox_annos2_clear) == 0
