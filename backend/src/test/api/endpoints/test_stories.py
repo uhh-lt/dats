@@ -738,3 +738,45 @@ def test_feedback(client, api_user) -> None:
     # Bob creates feedback
     response_fail = client.put("feedback", headers=bob["AuthHeader"], json=feedback)
     assert response_fail.status_code == 200
+
+
+@pytest.mark.order(after="test_project_add_user")
+def test_project_metadata(client, api_user, api_project) -> None:
+    alice = api_user.userList["alice"]
+    project1 = api_project.projectList["project1"]
+    # Alice creates project metadata for project1
+    meta = {
+        "key": "magic",
+        "metatype": "STRING",
+        "read_only": False,
+        "doctype": "text",
+        "project_id": project1["id"],
+    }
+    response_create = client.put("projmeta", headers=alice["AuthHeader"], json=meta)
+    assert response_create.status_code == 200
+    id = response_create.json()["id"]
+    response_meta = client.get(f"projmeta/{id}", headers=alice["AuthHeader"]).json()
+    assert meta["key"] == response_meta["key"]
+    assert meta["metatype"] == response_meta["metatype"]
+    assert meta["read_only"] == response_meta["read_only"]
+    assert meta["doctype"] == response_meta["doctype"]
+    assert meta["project_id"] == response_meta["project_id"]
+
+    # Bob updates project metadata for project1
+    bob = api_user.userList["bob"]
+    meta_update = {"key": "reality", "metatype": "STRING"}
+    response_update = client.patch(
+        f"projmeta/{id}", headers=bob["AuthHeader"], json=meta_update
+    )
+    assert response_update.status_code == 200
+
+    response_meta = client.get(f"projmeta/{id}", headers=alice["AuthHeader"]).json()
+    assert meta_update["key"] == response_meta["key"]
+    assert meta_update["metatype"] == response_meta["metatype"]
+    assert meta["read_only"] == response_meta["read_only"]
+    assert meta["doctype"] == response_meta["doctype"]
+    assert meta["project_id"] == response_meta["project_id"]
+
+    # Bob removes the project metadata for project1
+    response_delete = client.delete(f"projmeta/{id}", headers=bob["AuthHeader"])
+    assert response_delete.status_code == 200
