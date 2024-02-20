@@ -725,3 +725,16 @@ def test_bbox_annotatation(client, api_user, api_document) -> None:
         f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
     ).json()
     assert len(bbox_annos2_clear) == 0
+
+
+@pytest.mark.order(after="test_project_add_user")
+def test_feedback(client, api_user) -> None:
+    alice = api_user.userList["alice"]
+    bob = api_user.userList["bob"]
+    feedback = {"user_content": "I really love this app!", "user_id": bob["id"]}
+    # Alice creates feedback with bobs user id - fail
+    response_fail = client.put("feedback", headers=alice["AuthHeader"], json=feedback)
+    assert response_fail.status_code == 403
+    # Bob creates feedback
+    response_fail = client.put("feedback", headers=bob["AuthHeader"], json=feedback)
+    assert response_fail.status_code == 200
