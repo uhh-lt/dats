@@ -63,7 +63,7 @@ def test_project_update(client: TestClient, api_user, api_project) -> None:
 def test_user_update_remove(client: TestClient, api_user) -> None:
     charlie = api_user.create("charlie")
 
-    # Charlies updates details of charlie
+    # Charlie updates details of user charlie
     update_charlie = {
         "email": "bender@ilovebender.com",
         "first_name": "I.C.",
@@ -75,7 +75,7 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
     )
     assert response_update_charlie.status_code == 200
 
-    # Charlie removes charlie - failure (changed email)
+    # Charlie removes user charlie - failure (changed email)
     response_remove_charlie_failure = client.delete(
         f"/user/{charlie['id']}", headers=charlie["AuthHeader"]
     )
@@ -93,7 +93,7 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
         "Authorization": f"{response_relogin_charlie['token_type']} {response_relogin_charlie['access_token']}"
     }
 
-    # Charlie removes charlie
+    # Charlie removes user charlie
     response_remove_charlie = client.delete(
         f"/user/{charlie['id']}", headers=charlie["AuthHeader"]
     )
@@ -108,7 +108,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     alice = api_user.userList["alice"]
     bob = api_user.userList["bob"]
 
-    # Create codes in project1
+    # Alice creates three codes in project1
     response_codes_project1_before = client.get(
         f"/project/{project1['id']}/code", headers=alice["AuthHeader"]
     ).json()
@@ -125,7 +125,7 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
 
     assert codes_project1_before + 3 == codes_project1_after
 
-    # Create codes in project2
+    # Bob creates three codes in project2
     response_codes_project2_before = client.get(
         f"/project/{project2['id']}/code", headers=bob["AuthHeader"]
     ).json()
@@ -149,7 +149,7 @@ def test_upload_documents(client, api_user, api_project, api_document):
     alice = api_user.userList["alice"]
     project1 = api_project.projectList["project1"]
 
-    # Upload text to project1
+    # Alice uploads two text documents to project1
     # https://de.wikipedia.org/wiki/Erde
     text_doc1 = ("https://de.wikipedia.org/wiki/Erde", "Erde – Wikipedia.html")
     # https://de.wikipedia.org/wiki/Ferae
@@ -171,7 +171,7 @@ def test_upload_documents(client, api_user, api_project, api_document):
     api_document.get_sdoc_id(text_doc1[1], alice)
     api_document.get_sdoc_id(text_doc2[1], alice)
 
-    # Upload image to project1
+    # Alice uploads two image documents to project1
     # https://commons.wikimedia.org/wiki/File:GG1949.png
     image_doc1 = (
         "https://upload.wikimedia.org/wikipedia/commons/7/78/GG1949.png",
@@ -407,7 +407,7 @@ def test_annotate_sdoc(client, api_user, api_document):
     adoc_response1 = client.put(
         "adoc", headers=alice["AuthHeader"], json=adoc_create1
     ).json()
-    # Alice creates two Annotations in Textdoc1
+    # Alice creates two annotations for Textdoc1
     span1_annotation = {
         "begin": 0,
         "end": 20,
@@ -463,7 +463,7 @@ def test_annotate_sdoc(client, api_user, api_document):
     ).json()
     assert len(span_annos1) == 2
 
-    # Alice creates an Annotation in Textdoc2
+    # Alice creates an annotation for Textdoc2
     text_doc2 = api_document.documentList["Ferae – Wikipedia.html"]
     adoc_create2 = {"source_document_id": text_doc2["sdoc_id"], "user_id": alice["id"]}
     adoc_response2 = client.put(
@@ -499,7 +499,7 @@ def test_annotate_sdoc(client, api_user, api_document):
     ).json()
     assert len(span_annos2) == 1
 
-    # Bob creates two annotations in Textdoc1
+    # Bob creates two annotations for Textdoc1
     bob = api_user.userList["bob"]
     text_doc1 = api_document.documentList["Erde – Wikipedia.html"]
     span4_annotation = {
@@ -557,7 +557,7 @@ def test_annotate_sdoc(client, api_user, api_document):
     ).json()
     assert len(span_annos1) == 4
 
-    # Bob creates an Annotation in Textdoc2
+    # Bob creates an annotation for Textdoc2
     span6_annotation = {
         "begin": 3,
         "end": 30,
@@ -598,7 +598,7 @@ def test_bbox_annotatation(client, api_user, api_document):
     adoc_response1 = client.put(
         "adoc", headers=alice["AuthHeader"], json=adoc_create1
     ).json()
-    # Alice creates two image annotations in Imagedoc1
+    # Alice creates two image annotations for Imagedoc1
     bbox_annotation1 = {
         "x_min": 0,
         "x_max": 10,
@@ -650,7 +650,7 @@ def test_bbox_annotatation(client, api_user, api_document):
     ).json()
     assert len(bbox_annos1) == 2
 
-    # Bob creates an image annotation in Imagedoc1
+    # Bob creates an image annotation for Imagedoc1
     bob = api_user.userList["bob"]
 
     bbox_annotation3 = {
@@ -690,7 +690,7 @@ def test_bbox_annotatation(client, api_user, api_document):
         "adoc", headers=alice["AuthHeader"], json=adoc_create2
     ).json()
 
-    # Bob creates two image annotations in Imagedoc2
+    # Bob creates two image annotations for Imagedoc2
     bbox_annotation4 = {
         "x_min": 39,
         "x_max": 390,
