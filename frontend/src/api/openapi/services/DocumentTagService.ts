@@ -165,7 +165,7 @@ export class DocumentTagService {
   }
 
   /**
-   * Returns the Memo attached to the DocumentTag with the given ID if it exists.
+   * Returns the Memos attached to the DocumentTag with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */

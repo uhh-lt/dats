@@ -261,7 +261,7 @@ export class SpanAnnotationService {
   }
 
   /**
-   * Returns the Memo attached to the SpanAnnotation with the given ID if it exists.
+   * Returns the Memos attached to the SpanAnnotation with the given ID if it exists.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */
