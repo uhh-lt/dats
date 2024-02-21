@@ -482,7 +482,7 @@ def add_memo(
 @router.get(
     "/{proj_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo of the current User for the Project with the given ID.",
+    summary="Returns the Memos of the current User for the Project with the given ID.",
 )
 def get_memos(
     *,
