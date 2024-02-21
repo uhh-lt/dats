@@ -83,12 +83,12 @@ def test_update_project(
 
 
 def test_create_remove_project(db: Session) -> None:
-    # check empty database
+    # check status of database
     dbs = crud_project.read_multi(db=db)
 
     p = [ProjectRead.model_validate(proj) for proj in dbs]
 
-    assert len(p) == 0
+    before = len(p)
 
     # create new project
     title = "".join(random.choices(string.ascii_letters, k=15))
@@ -106,7 +106,7 @@ def test_create_remove_project(db: Session) -> None:
 
     p = [ProjectRead.model_validate(proj) for proj in dbs]
 
-    assert len(p) == 1
+    assert len(p) == before + 1
     assert p[0].id == id
     assert p[0].title == title
     assert p[0].description == description
@@ -116,7 +116,7 @@ def test_create_remove_project(db: Session) -> None:
     dbs = crud_project.read_multi(db=db)
     p = [ProjectRead.model_validate(proj) for proj in dbs]
 
-    assert len(p) == 0
+    assert len(p) == before
 
     # try remove project second time
     with pytest.raises(NoSuchElementError):
