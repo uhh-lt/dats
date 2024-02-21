@@ -86,9 +86,9 @@ def test_create_remove_project(db: Session) -> None:
     # check status of database
     dbs = crud_project.read_multi(db=db)
 
-    p = [ProjectRead.model_validate(proj) for proj in dbs]
+    all_projects = [ProjectRead.model_validate(proj) for proj in dbs]
 
-    before = len(p)
+    before = len(all_projects)
 
     # create new project
     title = "".join(random.choices(string.ascii_letters, k=15))
@@ -104,19 +104,21 @@ def test_create_remove_project(db: Session) -> None:
     # check database again
     dbs = crud_project.read_multi(db=db)
 
-    p = [ProjectRead.model_validate(proj) for proj in dbs]
+    all_projects = [ProjectRead.model_validate(proj) for proj in dbs]
 
-    assert len(p) == before + 1
-    assert p[0].id == id
-    assert p[0].title == title
-    assert p[0].description == description
+    project = ProjectRead.model_validate(crud_project.read(db=db, id=id))
+
+    assert len(all_projects) == before + 1
+    assert project.id == id
+    assert project.title == title
+    assert project.description == description
 
     # remove project and check database
     crud_project.remove(db=db, id=id)
     dbs = crud_project.read_multi(db=db)
-    p = [ProjectRead.model_validate(proj) for proj in dbs]
+    all_projects = [ProjectRead.model_validate(proj) for proj in dbs]
 
-    assert len(p) == before
+    assert len(all_projects) == before
 
     # try remove project second time
     with pytest.raises(NoSuchElementError):
@@ -172,7 +174,6 @@ def test_get_remove_project_codes(db: Session, project: ProjectORM) -> None:
     assert len(s) == get_number_of_system_codes()
 
     # removes all project codes
-
     crud_code.remove_by_project(db=db, proj_id=project.id)
 
     proj_db_obj = crud_project.read(db=db, id=project.id)
@@ -187,6 +188,33 @@ def test_get_remove_project_codes(db: Session, project: ProjectORM) -> None:
 def test_get_project_tags(db: Session, project: ProjectORM) -> None:
     proj_db_obj = crud_project.read(db=db, id=project.id)
     s = [DocumentTagRead.model_validate(tag) for tag in proj_db_obj.document_tags]
+
+    assert len(s) == 0
+
+
+# user codes
+
+
+def test_get_remove_project_system_user_codes(db: Session, project: ProjectORM) -> None:
+    s = [
+        CodeRead.model_validate(code_db_obj)
+        for code_db_obj in crud_code.read_by_user_and_project(
+            db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
+        )
+    ]
+
+    assert len(s) == get_number_of_system_codes()
+
+    # remove user codes
+    crud_code.remove_by_user_and_project(
+        db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
+    )
+    s = [
+        CodeRead.model_validate(code_db_obj)
+        for code_db_obj in crud_code.read_by_user_and_project(
+            db=db, user_id=SYSTEM_USER_ID, proj_id=project.id
+        )
+    ]
 
     assert len(s) == 0
 
@@ -232,8 +260,6 @@ def test_get_add_remove_memos_project(
         attached_object_type=AttachedObjectType.project,
     )
 
-    # print(f'{memo1_obj=}')
-
     # add memo2
     title2 = "".join(random.choices(string.ascii_letters, k=30))
     content2 = "".join(random.choices(string.ascii_letters, k=30))
@@ -260,8 +286,6 @@ def test_get_add_remove_memos_project(
         attached_object_type=AttachedObjectType.project,
     )
 
-    # print(f'{memo2_obj=}')
-
     db_objs_unstarred = crud_memo.read_by_user_and_project(
         db=db, user_id=user.id, proj_id=project.id, only_starred=False
     )
@@ -282,7 +306,6 @@ def test_get_add_remove_memos_project(
     assert len(memo_list_starred) == 1
 
     # remove memos
-
     crud_memo.remove_by_user_and_project(db=db, user_id=user.id, proj_id=project.id)
     db_objs = crud_memo.read_by_user_and_project(
         db=db, user_id=user.id, proj_id=project.id, only_starred=False
