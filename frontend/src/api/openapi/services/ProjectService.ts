@@ -479,7 +479,7 @@ export class ProjectService {
   }
 
   /**
-   * Returns the Memo of the current User for the Project with the given ID.
+   * Returns the Memos of the current User for the Project with the given ID.
    * @returns MemoRead Successful Response
    * @throws ApiError
    */

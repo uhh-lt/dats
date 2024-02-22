@@ -275,7 +275,7 @@ def add_memo(
 @router.get(
     "/{span_id}/memo",
     response_model=List[MemoRead],
-    summary="Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
+    summary="Returns the Memos attached to the SpanAnnotation with the given ID if it exists.",
 )
 def get_memos(
     *,
