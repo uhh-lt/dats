@@ -154,43 +154,90 @@ def test_user_update_remove(client: TestClient, api_user) -> None:
 @pytest.mark.order(after="test_project_add_user")
 def test_codes_create(client: TestClient, api_user, api_project, api_code) -> None:
     project1 = api_project.projectList["project1"]
-    project2 = api_project.projectList["project2"]
-
     alice = api_user.userList["alice"]
-    bob = api_user.userList["bob"]
 
     # Alice creates three codes in project1
-    response_codes_project1_before = client.get(
+    codes_project1_before_response = client.get(
         f"/project/{project1['id']}/code", headers=alice["AuthHeader"]
     ).json()
-    codes_project1_before = len(response_codes_project1_before)
+    codes_project1_before = len(codes_project1_before_response)
 
-    _ = api_code.create("code1", alice, project1)
+    code1 = api_code.create("code1", alice, project1)
     _ = api_code.create("code2", alice, project1)
     _ = api_code.create("code3", alice, project1)
 
-    response_codes_project1_after = client.get(
+    code1_read_response = client.get(
+        f"code/{code1['id']}", headers=alice["AuthHeader"]
+    ).json()
+    assert code1_read_response["name"] == code1["name"]
+    assert code1_read_response["color"] == code1["color"]
+    assert code1_read_response["description"] == code1["description"]
+    assert code1_read_response["parent_code_id"] == code1["parent_code_id"]
+    assert code1_read_response["id"] == code1["id"]
+    assert code1_read_response["project_id"] == code1["project_id"]
+    assert code1_read_response["user_id"] == code1["user_id"]
+
+    codes_project1_after_response = client.get(
         f"/project/{project1['id']}/code", headers=alice["AuthHeader"]
     ).json()
-    codes_project1_after = len(response_codes_project1_after)
+    codes_project1_after = len(codes_project1_after_response)
 
-    assert codes_project1_before + 3 == codes_project1_after
+    assert codes_project1_after == codes_project1_before + 3
 
     # Bob creates three codes in project2
-    response_codes_project2_before = client.get(
+    bob = api_user.userList["bob"]
+    project2 = api_project.projectList["project2"]
+    codes_project2_before_response = client.get(
         f"/project/{project2['id']}/code", headers=bob["AuthHeader"]
     ).json()
-    codes_project2_before = len(response_codes_project2_before)
+    codes_project2_before = len(codes_project2_before_response)
     _ = api_code.create("code4", bob, project2)
     _ = api_code.create("code5", bob, project2)
-    _ = api_code.create("code6", bob, project2)
+    code6 = api_code.create("code6", bob, project2)
 
-    response_codes_project2_after = client.get(
+    code6_read_response = client.get(
+        f"code/{code6['id']}", headers=bob["AuthHeader"]
+    ).json()
+    assert code6_read_response["name"] == code6["name"]
+    assert code6_read_response["color"] == code6["color"]
+    assert code6_read_response["description"] == code6["description"]
+    assert code6_read_response["parent_code_id"] == code6["parent_code_id"]
+    assert code6_read_response["id"] == code6["id"]
+    assert code6_read_response["project_id"] == code6["project_id"]
+    assert code6_read_response["user_id"] == code6["user_id"]
+
+    codes_project2_after = client.get(
         f"/project/{project2['id']}/code", headers=alice["AuthHeader"]
     ).json()
-    codes_project2_after = len(response_codes_project2_after)
+    codes_project2_after = len(codes_project2_after)
 
-    assert codes_project2_before + 3 == codes_project2_after
+    assert codes_project2_after == codes_project2_before + 3
+
+    # Alice creates a memo for code1
+    code1_memo = {
+        "title": "You know the codes",
+        "content": "and so do i",
+        "user_id": alice["id"],
+        "project_id": project1["id"],
+        "starred": True,
+    }
+    code1_memo_create_response = client.put(
+        f"code/{code1['id']}/memo", headers=alice["AuthHeader"], json=code1_memo
+    )
+    assert code1_memo_create_response.status_code == 200
+    code1_memo["id"] = code1_memo_create_response.json()["id"]
+
+    code1_memo_read_response = client.get(
+        f"code/{code1['id']}/memo", headers=alice["AuthHeader"]
+    ).json()[0]
+    assert code1_memo_read_response["title"] == code1_memo["title"]
+    assert code1_memo_read_response["content"] == code1_memo["content"]
+    assert code1_memo_read_response["id"] == code1_memo["id"]
+    assert code1_memo_read_response["starred"] == code1_memo["starred"]
+    assert code1_memo_read_response["user_id"] == code1_memo["user_id"]
+    assert code1_memo_read_response["project_id"] == code1_memo["project_id"]
+    assert code1_memo_read_response["attached_object_id"] == code1["id"]
+    assert code1_memo_read_response["attached_object_type"] == "code"
 
 
 @pytest.mark.order(after="test_project_add_user")
