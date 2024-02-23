@@ -422,7 +422,9 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     alice = api_user.userList["alice"]
     project_text_doc1 = api_document.documentList[text_doc1[1]]
     adoc1_create = {
-        "source_document_id": project_text_doc1["sdoc_id"],
+        "source_document_id": project_text_doc1[
+            "sdoc_id"
+        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
         "user_id": alice["id"],
     }
     adoc1_create_response = client.put(
@@ -518,7 +520,9 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     # Alice creates an annotation for Textdoc2
     project_text_doc2 = api_document.documentList[text_doc2[1]]
     adoc_create2 = {
-        "source_document_id": project_text_doc2["sdoc_id"],
+        "source_document_id": project_text_doc2[
+            "sdoc_id"
+        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
         "user_id": alice["id"],
     }
     adoc2_create_response = client.put(
@@ -672,7 +676,9 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     project_image_doc1 = api_document.documentList[image_doc1[1]]
     # Alice creates an annotation document
     adoc1 = {
-        "source_document_id": project_image_doc1["sdoc_id"],
+        "source_document_id": project_image_doc1[
+            "sdoc_id"
+        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
         "user_id": alice["id"],
     }
     adoc_response1 = client.put("adoc", headers=alice["AuthHeader"], json=adoc1).json()
@@ -796,7 +802,9 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     # Bob creates an annotation document for Imagedoc2
     project_image_doc2 = api_document.documentList[image_doc2[1]]
     adoc_create2 = {
-        "source_document_id": project_image_doc2["sdoc_id"],
+        "source_document_id": project_image_doc2[
+            "sdoc_id"
+        ],  # FIXME https://github.com/uhh-lt/dats/issues/367
         "user_id": alice["id"],
     }
     adoc_response2 = client.put(
