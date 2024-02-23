@@ -389,6 +389,38 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     api_document.get_sdoc_id(audio_doc3[1], bob)
     api_document.get_sdoc_id(audio_doc4[1], bob)
 
+    # Alice creates a memo for text_doc1
+    project_text_doc1 = api_document.documentList[text_doc1[1]]
+    text_doc1_memo = {
+        "title": "Read this",
+        "content": "This could help you",
+        "user_id": alice["id"],
+        "project_id": project1["id"],
+        "starred": False,
+    }
+    text_doc1_memo_create_response = client.put(
+        f"sdoc/{project_text_doc1['sdoc_id']}/memo",
+        headers=alice["AuthHeader"],
+        json=text_doc1_memo,
+    )
+    assert text_doc1_memo_create_response.status_code == 200
+    text_doc1_memo["id"] = text_doc1_memo_create_response.json()["id"]
+    text_doc1_memo_read_response = client.get(
+        f"sdoc/{project_text_doc1['sdoc_id']}/memo", headers=alice["AuthHeader"]
+    ).json()[0]
+
+    assert text_doc1_memo_read_response["title"] == text_doc1_memo["title"]
+    assert text_doc1_memo_read_response["content"] == text_doc1_memo["content"]
+    assert text_doc1_memo_read_response["id"] == text_doc1_memo["id"]
+    assert text_doc1_memo_read_response["starred"] == text_doc1_memo["starred"]
+    assert text_doc1_memo_read_response["user_id"] == text_doc1_memo["user_id"]
+    assert text_doc1_memo_read_response["project_id"] == text_doc1_memo["project_id"]
+    assert (
+        text_doc1_memo_read_response["attached_object_id"]
+        == project_text_doc1["sdoc_id"]
+    )
+    assert text_doc1_memo_read_response["attached_object_type"] == "source_document"
+
 
 @pytest.mark.order(after="test_project_add_user")
 def test_project_memos(client, api_user, api_project) -> None:
