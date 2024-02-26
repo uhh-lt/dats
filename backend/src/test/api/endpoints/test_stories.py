@@ -964,3 +964,135 @@ def test_project_metadata(client, api_user, api_project) -> None:
     # Bob removes the project metadata for project1
     response_delete = client.delete(f"projmeta/{id}", headers=bob["AuthHeader"])
     assert response_delete.status_code == 200
+
+
+@pytest.mark.order(after="test_upload_documents")
+def test_documentTag_and_memo(client, api_user, api_document, api_project) -> None:
+    # Alice creates a documentTag
+    alice = api_user.userList["alice"]
+    project1 = api_project.projectList["project1"]
+    doctag1 = {
+        "title": "This is a tag",
+        "color": "blue",
+        "description": "This is the description",
+        "project_id": project1["id"],
+    }
+    doctag1_create_response = client.put(
+        "doctag", headers=alice["AuthHeader"], json=doctag1
+    )
+    assert doctag1_create_response.status_code == 200
+    doctag1["id"] = doctag1_create_response.json()["id"]
+
+    doctag1_read_response = client.get(
+        f"doctag/{doctag1['id']}", headers=alice["AuthHeader"]
+    ).json()
+
+    assert doctag1_read_response["title"] == doctag1["title"]
+    assert doctag1_read_response["color"] == doctag1["color"]
+    assert doctag1_read_response["description"] == doctag1["description"]
+    assert doctag1_read_response["parent_tag_id"] is None
+    assert doctag1_read_response["id"] == doctag1["id"]
+    assert doctag1_read_response["project_id"] == doctag1["project_id"]
+
+    # Alice updates the documentTag
+    doctag1_update = {
+        "title": "This is an updated tag",
+        "color": "azureblue with a touch of yellow",
+        "parent_tag_id": 1,
+        "project_id": project1["id"],
+    }
+    doctag1_update_response = client.patch(
+        f"doctag/{doctag1['id']}", headers=alice["AuthHeader"], json=doctag1_update
+    )
+    assert doctag1_update_response.status_code == 200
+
+    doctag1_update_read_response = client.get(
+        f"doctag/{doctag1['id']}", headers=alice["AuthHeader"]
+    ).json()
+
+    assert doctag1_update_read_response["title"] == doctag1_update["title"]
+    assert doctag1_update_read_response["color"] == doctag1_update["color"]
+    assert doctag1_read_response["description"] == doctag1["description"]
+    assert (
+        doctag1_update_read_response["parent_tag_id"] == doctag1_update["parent_tag_id"]
+    )
+    assert doctag1_update_read_response["id"] == doctag1["id"]
+    assert doctag1_update_read_response["project_id"] == doctag1_update["project_id"]
+
+    # Alice links three sdoc to a doctag and unlinks one afterwards
+    project1_textdoc1 = api_document.documentList[text_doc1[1]]
+    project1_textdoc2 = api_document.documentList[text_doc2[1]]
+    project1_imagedoc1 = api_document.documentList[image_doc1[1]]
+
+    doctag1_link = {
+        "source_document_ids": [
+            project1_textdoc1["sdoc_id"],
+            project1_textdoc2["sdoc_id"],
+            project1_imagedoc1["sdoc_id"],
+        ],
+        "document_tag_ids": [doctag1["id"]],
+    }
+    doctag1_link_response = client.patch(
+        "doctag/bulk/link", headers=alice["AuthHeader"], json=doctag1_link
+    )
+    assert doctag1_link_response.status_code == 200
+
+    doctag1_link_read_response = client.get(
+        f"doctag/{doctag1['id']}/sdocs", headers=alice["AuthHeader"]
+    ).json()
+
+    assert set(doctag1_link_read_response) == set(doctag1_link["source_document_ids"])
+
+    doctag1_unlink = {
+        "source_document_ids": [project1_imagedoc1["sdoc_id"]],
+        "document_tag_ids": [doctag1["id"]],
+    }
+
+    doctag1_unlink_response = client.request(
+        "delete", "doctag/bulk/unlink", headers=alice["AuthHeader"], json=doctag1_unlink
+    )
+    assert doctag1_unlink_response.status_code == 200
+
+    doctag1_unlink_read_response = client.get(
+        f"doctag/{doctag1['id']}/sdocs", headers=alice["AuthHeader"]
+    ).json()
+    doctag1_link_remain = doctag1_link["source_document_ids"]
+    doctag1_link_remain.remove(project1_imagedoc1["sdoc_id"])
+
+    assert set(doctag1_unlink_read_response) == set(doctag1_link_remain)
+
+    # Alice creates a memo on the documentTag
+    doctag1_memo = {
+        "title": "This is a memo about...",
+        "content": "a doctag!",
+        "user_id": alice["id"],
+        "project_id": doctag1["project_id"],
+        "starred": False,
+    }
+    doctag1_memo_create_response = client.put(
+        f"doctag/{doctag1['id']}/memo", headers=alice["AuthHeader"], json=doctag1_memo
+    )
+    assert doctag1_memo_create_response.status_code == 200
+    doctag1_memo["id"] = doctag1_memo_create_response.json()["id"]
+
+    doctag1_memo_read_response = client.get(
+        f"doctag/{doctag1['id']}/memo", headers=alice["AuthHeader"]
+    ).json()[0]
+    assert doctag1_memo_read_response["title"] == doctag1_memo["title"]
+    assert doctag1_memo_read_response["content"] == doctag1_memo["content"]
+    assert doctag1_memo_read_response["id"] == doctag1_memo["id"]
+    assert doctag1_memo_read_response["starred"] == doctag1_memo["starred"]
+    assert doctag1_memo_read_response["user_id"] == doctag1_memo["user_id"]
+    assert doctag1_memo_read_response["project_id"] == doctag1_memo["project_id"]
+    assert doctag1_memo_read_response["attached_object_id"] == doctag1["id"]
+    assert doctag1_memo_read_response["attached_object_type"] == "document_tag"
+
+    # # Alice removes the documentTag # FIXME: https://github.com/uhh-lt/dats/issues/368
+    # doctag1_delete_response = client.delete(
+    #     f"doctag/{doctag1['id']}", headers=alice["AuthHeader"]
+    # )
+
+    # assert doctag1_delete_response.status_code == 200
+    # doctag1_delete_read_response = doctag1_memo_read_response = client.get(
+    #     f"doctag/{doctag1['id']}/memo", headers=alice["AuthHeader"]
+    # )
