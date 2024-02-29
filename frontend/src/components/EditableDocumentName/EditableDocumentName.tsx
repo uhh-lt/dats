@@ -12,9 +12,9 @@ import {
 } from "@mui/material";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import SdocHooks from "../../api/SdocHooks";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import DocumentLinkToOriginal from "../../views/search/DocumentViewer/DocumentLinkToOriginal";
+import SdocHooks from "../../api/SdocHooks.ts";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import DocumentLinkToOriginal from "../../views/search/DocumentViewer/DocumentLinkToOriginal.tsx";
 
 type EditFormValues = {
   name: string;
@@ -23,7 +23,6 @@ type EditFormValues = {
 interface EditableDocumentNameProps {
   sdocId: number | undefined;
   inputProps?: InputBaseComponentProps;
-  children?: React.ReactNode;
 }
 
 export interface EditableDocumentNameHandle {
@@ -31,7 +30,7 @@ export interface EditableDocumentNameHandle {
 }
 
 const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocumentNameProps & TypographyProps>(
-  ({ sdocId, inputProps, children, ...props }, ref) => {
+  ({ sdocId, inputProps, ...props }, ref) => {
     // local state
     const [isEditing, setIsEditing] = useState(false);
 
@@ -121,7 +120,7 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
             </Tooltip>
 
             <Tooltip title="Save">
-              <IconButton type="submit" disabled={updateNameMutation.isLoading}>
+              <IconButton type="submit" disabled={updateNameMutation.isPending}>
                 <SaveIcon />
               </IconButton>
             </Tooltip>

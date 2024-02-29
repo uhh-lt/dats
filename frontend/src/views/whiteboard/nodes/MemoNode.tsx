@@ -1,33 +1,28 @@
 import { CardContent, CardHeader, MenuItem, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { Edge, Node, NodeProps, XYPosition, useReactFlow } from "reactflow";
-import MemoHooks from "../../../api/MemoHooks";
-import {
-  AttachedObjectType,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  DocumentTagRead,
-  SourceDocumentRead,
-  SpanAnnotationReadResolved,
-} from "../../../api/openapi";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
-import MemoAPI from "../../../features/Memo/MemoAPI";
-import useGetMemosAttachedObject from "../../../features/Memo/useGetMemosAttachedObject";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import {
-  BBoxAnnotationNodeData,
-  CodeNodeData,
-  DWTSNodeData,
-  MemoNodeData,
-  SdocNodeData,
-  SpanAnnotationNodeData,
-  TagNodeData,
-  isBBoxAnnotationNode,
-  isCodeNode,
-  isSdocNode,
-  isSpanAnnotationNode,
-  isTagNode,
-} from "../types";
+import MemoHooks from "../../../api/MemoHooks.ts";
+
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import useGetMemosAttachedObject from "../../../features/Memo/useGetMemosAttachedObject.ts";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import MemoRenderer from "../../../components/DataGrid/MemoRenderer.tsx";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
+import { CodeNodeData } from "../types/dbnodes/CodeNodeData.ts";
+import { MemoNodeData } from "../types/dbnodes/MemoNodeData.ts";
+import { SdocNodeData } from "../types/dbnodes/SdocNodeData.ts";
+import { SpanAnnotationNodeData } from "../types/dbnodes/SpanAnnotationNodeData.ts";
+import { TagNodeData } from "../types/dbnodes/TagNodeData.ts";
+import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode } from "../types/typeGuards.ts";
 import {
   createBBoxAnnotationNodes,
   createCodeNodes,
@@ -44,9 +39,8 @@ import {
   isMemoSdocEdge,
   isMemoSpanAnnotationEdge,
   isMemoTagEdge,
-} from "../whiteboardUtils";
-import BaseCardNode from "./BaseCardNode";
-import MemoRenderer from "../../../components/DataGrid/MemoRenderer";
+} from "../whiteboardUtils.ts";
+import BaseCardNode from "./BaseCardNode.tsx";
 
 const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
   switch (attachedObjectType) {
@@ -61,7 +55,7 @@ const isMemoAttachedObjectEdge = (attachedObjectType: AttachedObjectType) => {
     case AttachedObjectType.BBOX_ANNOTATION:
       return isMemoBBoxAnnotationEdge;
     default:
-      return (edge: Edge) => false;
+      return () => false;
   }
 };
 
@@ -78,7 +72,7 @@ const isAttachedObjectNode = (attachedObjectType: AttachedObjectType) => {
     case AttachedObjectType.BBOX_ANNOTATION:
       return isBBoxAnnotationNode;
     default:
-      return (node: Node) => false;
+      return () => false;
   }
 };
 
@@ -143,7 +137,6 @@ const createAttachedObjectNodes = (
     | SpanAnnotationReadResolved
     | BBoxAnnotationReadResolvedCode
     | SourceDocumentRead,
-  memoId: number,
   position: XYPosition,
 ): Node<DWTSNodeData>[] => {
   switch (attachedObjectType) {
@@ -189,7 +182,7 @@ const attachedObjectType2Label: Record<AttachedObjectType, string> = {
 
 function MemoNode(props: NodeProps<MemoNodeData>) {
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowInstance = useReactFlow<DWTSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -242,7 +235,7 @@ function MemoNode(props: NodeProps<MemoNodeData>) {
     if (!memo.data || !attachedObject.data) return;
 
     reactFlowService.addNodes(
-      createAttachedObjectNodes(memo.data.attached_object_type, attachedObject.data, props.data.memoId, {
+      createAttachedObjectNodes(memo.data.attached_object_type, attachedObject.data, {
         x: props.xPos,
         y: props.yPos,
       }),

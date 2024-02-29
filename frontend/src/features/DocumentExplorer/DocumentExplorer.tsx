@@ -22,16 +22,16 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import * as React from "react";
 import { useCallback, useRef, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
-import SdocHooks from "../../api/SdocHooks";
-import { AttachedObjectType } from "../../api/openapi";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import DocumentNavigation from "../../components/DocumentNavigation";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { AnnoActions } from "../../views/annotation/annoSlice";
-import MemoButton from "../Memo/MemoButton";
-import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu";
-import { docTypeToIcon } from "./docTypeToIcon";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
+import DocumentNavigation from "../../components/DocumentNavigation.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { AnnoActions } from "../../views/annotation/annoSlice.ts";
+import MemoButton from "../Memo/MemoButton.tsx";
+import DocumentExplorerContextMenu from "./DocumentExplorerContextMenu.tsx";
+import { docTypeToIcon } from "./docTypeToIcon.tsx";
 
 function DocumentExplorer({ ...props }: BoxProps) {
   // router
@@ -137,7 +137,7 @@ function DocumentExplorer({ ...props }: BoxProps) {
               }}
             >
               {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-                let sId = sdocs.data[virtualItem.index];
+                const sId = sdocs.data[virtualItem.index];
                 return (
                   <DocumentExplorerListItem
                     key={virtualItem.key}

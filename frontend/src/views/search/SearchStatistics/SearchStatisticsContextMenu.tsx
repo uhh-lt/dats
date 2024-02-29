@@ -1,6 +1,5 @@
 import { Box, Divider, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
-import { CodeRead } from "../../../api/openapi";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 
 export interface ContextMenuData {
   x: number;

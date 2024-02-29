@@ -1,13 +1,12 @@
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { Link } from "react-router-dom";
-import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
-import TagMenuMenuItem from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuMenuItem";
-import MemoMenuItem from "../Memo/MemoMenuItem";
-import { AttachedObjectType } from "../../api/openapi";
-import DeleteMenuItem from "../../views/search/ToolBar/ToolBarElements/DeleteMenuItem";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps.tsx";
+import DeleteMenuItem from "../../views/search/ToolBar/ToolBarElements/DeleteMenuItem.tsx";
+import TagMenuMenuItem from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuMenuItem.tsx";
+import MemoMenuItem from "../Memo/MemoMenuItem.tsx";
 
 // todo: refactor, this is basically the same as SearchResultContextMenu
 interface DocumentExplorerContextMenuProps extends ContextMenuProps {

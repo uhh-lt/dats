@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type SourceDocumentMetadataUpdate = {
   /**
    * Int Value of the SourceDocumentMetadata

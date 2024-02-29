@@ -2,11 +2,11 @@ import { CircularProgress, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import { ReactFlowProvider } from "reactflow";
-import WhiteboardHooks from "../../api/WhiteboardHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import EditableTypography from "../../components/NavBarTop/EditableTypography";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import WhiteboardFlow from "./WhiteboardFlow";
+import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import EditableTypography from "../../components/NavBarTop/EditableTypography.tsx";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import WhiteboardFlow from "./WhiteboardFlow.tsx";
 
 function Whiteboard() {
   // global client state

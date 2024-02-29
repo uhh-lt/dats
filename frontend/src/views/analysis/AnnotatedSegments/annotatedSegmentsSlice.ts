@@ -1,22 +1,23 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
-import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice";
+import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice.ts";
+import { MRT_PaginationState, MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
+import { RootState } from "../../../store/store.ts";
 
 export interface AnnotatedSegmentsState {
   isSplitView: boolean;
   contextSize: number;
   selectedUserIds: number[];
-  paginationModel: GridPaginationModel;
-  rowSelectionModel: number[];
-  sortModel: GridSortModel;
+  paginationModel: MRT_PaginationState;
+  rowSelectionModel: MRT_RowSelectionState;
+  sortModel: MRT_SortingState;
 }
 
 const initialState: AnnotatedSegmentsState = {
   isSplitView: false,
   contextSize: 100,
   selectedUserIds: [],
-  paginationModel: { page: 0, pageSize: 5 },
-  rowSelectionModel: [],
+  paginationModel: { pageIndex: 0, pageSize: 5 },
+  rowSelectionModel: {},
   sortModel: [],
 };
 
@@ -33,29 +34,35 @@ export const AnnotatedSegmentsSlice = createSlice({
     setSelectedUserIds: (state, action: PayloadAction<number[]>) => {
       state.selectedUserIds = action.payload;
     },
-    onPaginationModelChange: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+    onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
       state.paginationModel = action.payload;
     },
-    onSelectionModelChange: (state, action: PayloadAction<number[]>) => {
+    onSelectionModelChange: (state, action: PayloadAction<MRT_RowSelectionState>) => {
       state.rowSelectionModel = action.payload;
     },
-    onSortModelChange: (state, action: PayloadAction<GridSortModel>) => {
+    onSortModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
       state.sortModel = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(AnnotatedSegmentsFilterActions.onFinishFilterEdit, (state, action) => {
+      .addCase(AnnotatedSegmentsFilterActions.onFinishFilterEdit, (state) => {
         // reset page when filter changes
-        state.paginationModel.page = 0;
+        state.paginationModel.pageIndex = 0;
 
         // reset selection when filter changes
-        state.rowSelectionModel = [];
+        state.rowSelectionModel = {};
       })
-      .addDefaultCase((state) => {});
+      .addDefaultCase(() => {});
   },
 });
 
 export const AnnotatedSegmentsActions = AnnotatedSegmentsSlice.actions;
+
+// selectors
+export const selectAnnotationIds = (state: RootState) =>
+  Object.entries(state.annotatedSegments.rowSelectionModel)
+    .filter(([, value]) => value)
+    .map(([key]) => parseInt(key));
 
 export default AnnotatedSegmentsSlice.reducer;

@@ -1,6 +1,6 @@
 import { MutationCache, QueryClient } from "@tanstack/react-query";
-import { ApiError } from "../api/openapi";
-import SnackbarAPI from "../features/Snackbar/SnackbarAPI";
+import { ApiError } from "../api/openapi/core/ApiError.ts";
+import SnackbarAPI from "../features/Snackbar/SnackbarAPI.ts";
 
 function messageFromStringOrFunction(input: unknown, data: unknown): string | undefined {
   if (typeof input === "string") {
@@ -15,7 +15,7 @@ function messageFromStringOrFunction(input: unknown, data: unknown): string | un
 const queryClient = new QueryClient({
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
-      let title = messageFromStringOrFunction(mutation.meta?.errorMessage, error);
+      const title = messageFromStringOrFunction(mutation.meta?.errorMessage, error);
       let text = "An unknown error occurred. This is a bug. Please report it to the developers!";
       if (error instanceof ApiError) {
         text = error.message + (error.body ? ": " + error.body : "");
@@ -27,7 +27,7 @@ const queryClient = new QueryClient({
       });
     },
     onSuccess: (data, _variables, _context, mutation) => {
-      let text = messageFromStringOrFunction(mutation.meta?.successMessage, data);
+      const text = messageFromStringOrFunction(mutation.meta?.successMessage, data);
       if (text === undefined) {
         return;
       }

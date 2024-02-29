@@ -1,5 +1,5 @@
 import { Grid, Link, Typography } from "@mui/material";
-import { SUPPORT_EMAIL } from "../../../utils/GlobalConstants";
+import { SUPPORT_EMAIL } from "../../../utils/GlobalConstants.ts";
 
 export default function PasswordReset() {
   return (

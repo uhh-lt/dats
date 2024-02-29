@@ -1,23 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { MyFilter } from "../features/FilterDialog/filterUtils";
-import { useAppSelector } from "../plugins/ReduxHooks";
-import { QueryKey } from "./QueryKey";
-import {
-  KeywordStat,
-  MemoContentQuery,
-  MemoRead,
-  SearchColumns,
-  SearchService,
-  SimSearchImageHit,
-  SimSearchSentenceHit,
-  SortDirection,
-  SpanEntityStat,
-  TagStat,
-} from "./openapi";
-import { GridSortModel } from "@mui/x-data-grid";
-import { QueryType } from "../views/search/QueryType";
+import { MyFilter } from "../features/FilterDialog/filterUtils.ts";
+import { useAppSelector } from "../plugins/ReduxHooks.ts";
+import { QueryKey } from "./QueryKey.ts";
 
-export abstract class SearchResults<T extends Iterable<any>> {
+import { MRT_SortingState } from "material-react-table";
+import { QueryType } from "../views/search/QueryType.ts";
+import { KeywordStat } from "./openapi/models/KeywordStat.ts";
+import { MemoContentQuery } from "./openapi/models/MemoContentQuery.ts";
+import { MemoRead } from "./openapi/models/MemoRead.ts";
+import { SearchColumns } from "./openapi/models/SearchColumns.ts";
+import { SimSearchImageHit } from "./openapi/models/SimSearchImageHit.ts";
+import { SimSearchSentenceHit } from "./openapi/models/SimSearchSentenceHit.ts";
+import { SortDirection } from "./openapi/models/SortDirection.ts";
+import { SpanEntityStat } from "./openapi/models/SpanEntityStat.ts";
+import { TagStat } from "./openapi/models/TagStat.ts";
+import { SearchService } from "./openapi/services/SearchService.ts";
+
+export abstract class SearchResults<T extends Iterable<unknown> = number[]> {
   constructor(protected results: T) {
     this.results = results;
   }
@@ -117,7 +116,7 @@ const lexicalSearchQueryFn = (
   searchQuery: string,
   expertMode: boolean,
   filter: MyFilter<SearchColumns>,
-  sortModel: GridSortModel,
+  sortModel: MRT_SortingState,
 ) => {
   return async () => {
     const sdocIds = await SearchService.searchSdocs({
@@ -126,9 +125,10 @@ const lexicalSearchQueryFn = (
       expertMode,
       requestBody: {
         filter: filter as MyFilter<SearchColumns>,
-        sorts: sortModel
-          .filter((sort) => sort.sort)
-          .map((sort) => ({ column: sort.field as SearchColumns, direction: sort.sort as SortDirection })),
+        sorts: sortModel.map((sort) => ({
+          column: sort.id as SearchColumns,
+          direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+        })),
       },
     });
     return new LexicalSearchResults(sdocIds);
@@ -137,14 +137,21 @@ const lexicalSearchQueryFn = (
 
 const useSearchDocumentsNew = (projectId: number) => {
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
-  const sortModel = useAppSelector((state) => state.search.sortModel);
+  const sortModel = useAppSelector((state) => state.search.sortingModel);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const expertMode = useAppSelector((state) => state.search.expertMode);
   const searchType = useAppSelector((state) => state.search.searchType);
 
   let searchFn: () => Promise<LexicalSearchResults | ImageSimilaritySearchResults | SentenceSimilaritySearchResults>;
   switch (searchType) {
+    case QueryType.SEMANTIC_IMAGES:
+      searchFn = imageSimilaritySearchQueryFn(projectId, searchQuery, filter as MyFilter<SearchColumns>);
+      break;
+    case QueryType.SEMANTIC_SENTENCES:
+      searchFn = sentenceSimilaritySearchQueryFn(projectId, searchQuery, filter as MyFilter<SearchColumns>);
+      break;
     case QueryType.LEXICAL:
+    default:
       searchFn = lexicalSearchQueryFn(
         projectId,
         searchQuery.toString(),
@@ -153,73 +160,68 @@ const useSearchDocumentsNew = (projectId: number) => {
         sortModel,
       );
       break;
-    case QueryType.SEMANTIC_IMAGES:
-      searchFn = imageSimilaritySearchQueryFn(projectId, searchQuery, filter as MyFilter<SearchColumns>);
-      break;
-    case QueryType.SEMANTIC_SENTENCES:
-      searchFn = sentenceSimilaritySearchQueryFn(projectId, searchQuery, filter as MyFilter<SearchColumns>);
-      break;
   }
 
-  return useQuery<LexicalSearchResults | ImageSimilaritySearchResults | SentenceSimilaritySearchResults, Error>(
-    [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, sortModel, searchQuery, searchType],
-    searchFn,
-    {
-      enabled: !!projectId,
-      keepPreviousData: true,
-    },
-  );
+  return useQuery<LexicalSearchResults | ImageSimilaritySearchResults | SentenceSimilaritySearchResults, Error>({
+    queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, projectId, filter, sortModel, searchQuery, searchType],
+    queryFn: searchFn,
+    enabled: !!projectId,
+  });
 };
 
-const useSearchCodeStats = (codeId: number, sdocIds: number[], sortStatsByGlobal: boolean, enabled: boolean) =>
-  useQuery<SpanEntityStat[], Error>(
-    [QueryKey.SEARCH_ENTITY_STATISTICS, codeId, Array.from(sdocIds).sort(), sortStatsByGlobal],
-    () =>
+const useSearchCodeStats = (codeId: number, sdocIds: number[], sortStatsByGlobal: boolean, enabled: boolean) => {
+  const sortedSdocIds = Array.from(sdocIds).sort();
+  return useQuery<SpanEntityStat[], Error>({
+    queryKey: [QueryKey.SEARCH_ENTITY_STATISTICS, codeId, sortedSdocIds, sortStatsByGlobal],
+    queryFn: () =>
       SearchService.searchCodeStats({
         codeId: codeId,
-        requestBody: sdocIds,
-
+        requestBody: sortedSdocIds,
         sortByGlobal: sortStatsByGlobal,
       }),
-    {
-      enabled,
-    },
-  );
+    enabled,
+  });
+};
 
-const useSearchKeywordStats = (projectId: number, sdocIds: number[], sortStatsByGlobal: boolean) =>
-  useQuery<KeywordStat[], Error>(
-    [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, Array.from(sdocIds).sort(), sortStatsByGlobal],
-    () => {
+const useSearchKeywordStats = (projectId: number, sdocIds: number[], sortStatsByGlobal: boolean) => {
+  const sortedSdocIds = Array.from(sdocIds).sort();
+  return useQuery<KeywordStat[], Error>({
+    queryKey: [QueryKey.SEARCH_KEYWORD_STATISTICS, projectId, sortedSdocIds, sortStatsByGlobal],
+    queryFn: () => {
       return SearchService.searchKeywordStats({
         projectId: projectId,
-        requestBody: sdocIds,
+        requestBody: sortedSdocIds,
         sortByGlobal: sortStatsByGlobal,
       });
     },
-  );
-
-const useSearchTagStats = (sdocIds: number[], sortStatsByGlobal: boolean) =>
-  useQuery<TagStat[], Error>([QueryKey.SEARCH_TAG_STATISTICS, Array.from(sdocIds).sort(), sortStatsByGlobal], () => {
-    return SearchService.searchTagStats({
-      requestBody: sdocIds,
-      sortByGlobal: sortStatsByGlobal,
-    });
   });
+};
+
+const useSearchTagStats = (sdocIds: number[], sortStatsByGlobal: boolean) => {
+  const sortedSdocIds = Array.from(sdocIds).sort();
+  return useQuery<TagStat[], Error>({
+    queryKey: [QueryKey.SEARCH_TAG_STATISTICS, sortedSdocIds, sortStatsByGlobal],
+    queryFn: () => {
+      return SearchService.searchTagStats({
+        requestBody: sortedSdocIds,
+        sortByGlobal: sortStatsByGlobal,
+      });
+    },
+  });
+};
 
 const useSearchMemoContent = (params: MemoContentQuery) =>
-  useQuery<MemoRead[], Error>(
-    [QueryKey.MEMOS_BY_CONTENT_SEARCH, params],
-    async () => {
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.MEMOS_BY_CONTENT_SEARCH, params],
+    queryFn: async () => {
       const result = await SearchService.searchMemosByContentQuery({
         requestBody: params,
       });
 
       return result.memos;
     },
-    {
-      enabled: params.content_query.length > 0,
-    },
-  );
+    enabled: params.content_query.length > 0,
+  });
 
 const SearchHooks = {
   useSearchCodeStats,

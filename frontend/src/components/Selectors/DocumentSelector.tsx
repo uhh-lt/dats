@@ -1,22 +1,26 @@
 import { Button, CircularProgress, Tooltip } from "@mui/material";
-import { DataGrid, GridCallbackDetails, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
+import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import { useMemo, useState } from "react";
-import { DocType, SourceDocumentRead } from "../../api/openapi";
-import ProjectHooks from "../../api/ProjectHooks";
-import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon.tsx";
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", flex: 0 },
+const columns: MRT_ColumnDef<SourceDocumentRead>[] = [
   {
-    field: "doctype",
-    headerName: "Doc type",
-    flex: 0,
-    renderCell: (params) => <Tooltip title={params.value}>{docTypeToIcon[params.value as DocType]}</Tooltip>,
+    accessorKey: "id",
+    header: "ID",
+    // flex: 0
   },
   {
-    field: "filename",
-    headerName: "File name",
-    flex: 1,
+    accessorKey: "doctype",
+    header: "Doc type",
+    // flex: 0,
+    Cell: ({ row }) => <Tooltip title={row.original.doctype}>{docTypeToIcon[row.original.doctype]}</Tooltip>,
+  },
+  {
+    accessorKey: "filename",
+    header: "File name",
+    // flex: 1,
   },
 ];
 
@@ -27,23 +31,53 @@ interface DocumentSelectorProps {
 
 function DocumentSelector({ projectId, setSelectedDocuments }: DocumentSelectorProps) {
   // local state
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global server state
   const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(projectId, false);
-  const { data, total } = useMemo(() => {
-    if (!projectDocuments.data) return { data: [], total: 0 };
-    const data = projectDocuments.data.pages.map((page) => page.sdocs).flat();
+  const { allProjectDocuments, allProjectDocumentsMap, total } = useMemo(() => {
+    if (!projectDocuments.data) return { allProjectDocuments: [], allProjectDocumentsMap: {}, total: 0 };
+    const allProjectDocuments = projectDocuments.data.pages.map((page) => page.sdocs).flat();
+    const allProjectDocumentsMap = allProjectDocuments.reduce(
+      (acc, sdoc) => {
+        acc[sdoc.id.toString()] = sdoc;
+        return acc;
+      },
+      {} as Record<string, SourceDocumentRead>,
+    );
     const total = projectDocuments.data.pages[projectDocuments.data.pages.length - 1].total;
-    return { data: data, total: total };
+    return { allProjectDocuments, allProjectDocumentsMap, total };
   }, [projectDocuments.data]);
 
-  // events
-  const onSelectionChange = (selectionModel: GridRowSelectionModel, details: GridCallbackDetails<any>) => {
-    setSelectionModel(selectionModel);
-    // todo: this is probably very inefficient
-    setSelectedDocuments(data.filter((sdoc) => selectionModel.indexOf(sdoc.id) !== -1));
-  };
+  // table
+  const table = useMaterialReactTable({
+    data: allProjectDocuments,
+    columns: columns,
+    // autoPageSize
+    // sx={{ border: "none" }}
+    getRowId: (row) => row.id.toString(),
+    // state
+    state: {
+      rowSelection: rowSelectionModel,
+      isLoading: columns.length === 0,
+    },
+    // selection
+    enableRowSelection: true,
+    onRowSelectionChange: (rowSelectionUpdater) => {
+      let newRowSelectionModel: MRT_RowSelectionState;
+      if (typeof rowSelectionUpdater === "function") {
+        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
+      } else {
+        newRowSelectionModel = rowSelectionUpdater;
+      }
+      setRowSelectionModel(newRowSelectionModel);
+      setSelectedDocuments(
+        Object.entries(newRowSelectionModel)
+          .filter(([, selected]) => selected)
+          .map(([sdocId]) => allProjectDocumentsMap[sdocId]),
+      );
+    },
+  });
 
   return (
     <div style={{ height: 400, width: "100%" }}>
@@ -51,17 +85,8 @@ function DocumentSelector({ projectId, setSelectedDocuments }: DocumentSelectorP
       {projectDocuments.isError && <div>Error</div>}
       {projectDocuments.isSuccess && (
         <>
-          <DataGrid
-            rows={data}
-            columns={columns}
-            autoPageSize
-            // sx={{ border: "none" }}
-            getRowId={(row) => row.id}
-            checkboxSelection
-            rowSelectionModel={selectionModel}
-            onRowSelectionModelChange={onSelectionChange}
-          />
-          Loaded {data.length} / {total} documents.{" "}
+          <MaterialReactTable table={table} />
+          Loaded {allProjectDocuments.length} / {total} documents.{" "}
           <Button
             disabled={!projectDocuments.hasNextPage || projectDocuments.isFetchingNextPage}
             onClick={() => projectDocuments.fetchNextPage()}

@@ -2,14 +2,18 @@ import { CardContent, CardHeader, CardMedia, Divider, MenuItem, Typography } fro
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import SdocHooks from "../../../api/SdocHooks";
-import { AttachedObjectType, DocType, SourceDocumentWithDataRead } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
-import MemoAPI from "../../../features/Memo/MemoAPI";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { DWTSNodeData, SdocNodeData, isMemoNode, isTagNode } from "../types";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { DocType } from "../../../api/openapi/models/DocType.ts";
+import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { SdocNodeData } from "../types/dbnodes/SdocNodeData.ts";
+import { isMemoNode, isTagNode } from "../types/typeGuards.ts";
 import {
   createMemoNodes,
   createMemoSdocEdge,
@@ -17,15 +21,15 @@ import {
   createTagSdocEdge,
   isMemoSdocEdge,
   isTagSdocEdge,
-} from "../whiteboardUtils";
-import BaseCardNode from "./BaseCardNode";
+} from "../whiteboardUtils.ts";
+import BaseCardNode from "./BaseCardNode.tsx";
 
 function SdocNode(props: NodeProps<SdocNodeData>) {
   // global client state
   const userId = useAuth().user?.id;
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowInstance = useReactFlow<DWTSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu

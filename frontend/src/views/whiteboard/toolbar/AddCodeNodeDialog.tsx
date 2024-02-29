@@ -1,11 +1,11 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
-import { CodeRead } from "../../../api/openapi";
-import CodeSelector from "../../../components/Selectors/CodeSelector";
-import { ReactFlowService } from "../hooks/ReactFlowService";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
-import { createCodeNodes } from "../whiteboardUtils";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import CodeSelector from "../../../components/Selectors/CodeSelector.tsx";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { createCodeNodes } from "../whiteboardUtils.ts";
 
 export interface AddCodeNodeDialogProps extends AddNodeDialogProps {
   projectId: number;

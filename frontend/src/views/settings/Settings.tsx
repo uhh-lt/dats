@@ -1,19 +1,14 @@
 import { Box, Container, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { SettingsActions } from "./settingsSlice";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { SettingsActions } from "./settingsSlice.ts";
 
 function Settings() {
   // global client state (redux)
   const dispatch = useAppDispatch();
-  const searchResStyle = useAppSelector((state) => state.settings.search.searchResStyle);
   const sortStatsByGlobal = useAppSelector((state) => state.settings.search.sortStatsByGlobal);
   const tagStyle = useAppSelector((state) => state.settings.annotator.tagStyle);
 
   // ui events
-  const handleToggleSearchResultStyle = () => {
-    dispatch(SettingsActions.toggleSearchResStyle());
-  };
-
   const handleToggleStatsOrder = () => {
     dispatch(SettingsActions.toggleStatsOrder());
   };
@@ -35,10 +30,6 @@ function Settings() {
           <Typography variant="subtitle1" sx={{ mt: 1 }}>
             Text Document Style:
           </Typography>
-          <ToggleButtonGroup color="primary" value={searchResStyle} onClick={() => handleToggleSearchResultStyle()}>
-            <ToggleButton value="wordcloud">Wordcloud</ToggleButton>
-            <ToggleButton value="text">Text</ToggleButton>
-          </ToggleButtonGroup>
           <Typography variant="subtitle1" sx={{ mt: 1 }}>
             Bar Plot Ordering:
           </Typography>

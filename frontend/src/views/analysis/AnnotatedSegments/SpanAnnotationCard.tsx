@@ -9,12 +9,12 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import SdocHooks from "../../../api/SdocHooks";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
-import { AttachedObjectType } from "../../../api/openapi";
-import { openSpanAnnotationEditDialog } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
-import MemoButton from "../../../features/Memo/MemoButton";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoButton from "../../../features/Memo/MemoButton.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface SpanAnnotationCardProps {
   annotationId: number | undefined;
@@ -27,11 +27,12 @@ function SpanAnnotationCard({ annotationId, ...props }: SpanAnnotationCardProps 
 
   // global client state (redux)
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
+  const dispatch = useAppDispatch();
 
   const handleChangeCodeClick = () => {
     if (annotationId === undefined) return;
 
-    openSpanAnnotationEditDialog([annotationId]);
+    dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds: [annotationId] }));
   };
 
   return (

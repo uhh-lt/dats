@@ -1,10 +1,10 @@
 import ClearIcon from "@mui/icons-material/Clear";
-import { TreeItem } from "@mui/lab";
 import { IconButton, Stack, Tooltip } from "@mui/material";
-import FilterColumnSelector from "./FilterColumnSelector";
-import FilterOperatorSelector from "./FilterOperatorSelector";
-import FilterValueSelector from "./FilterValueSelector";
-import { ColumnInfo, FilterOperators, MyFilterExpression } from "./filterUtils";
+import { TreeItem } from "@mui/x-tree-view";
+import FilterColumnSelector from "./FilterColumnSelector.tsx";
+import FilterOperatorSelector from "./FilterOperatorSelector.tsx";
+import FilterValueSelector from "./FilterValueSelector.tsx";
+import { ColumnInfo, FilterOperators, MyFilterExpression } from "./filterUtils.ts";
 
 function FilterExpressionRenderer({
   filterExpression,
@@ -18,7 +18,7 @@ function FilterExpressionRenderer({
   onDeleteFilter(id: string): void;
   onChangeColumn(filterId: string, columnValue: string): void;
   onChangeOperator(id: string, operator: FilterOperators): void;
-  onChangeValue(id: string, value: string | number): void;
+  onChangeValue(id: string, value: string | number | boolean | string[]): void;
   column2Info: Record<string, ColumnInfo>;
 }) {
   return (

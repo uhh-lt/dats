@@ -1,17 +1,20 @@
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import AdocHooks from "../../../api/AdocHooks";
-import CodeHooks from "../../../api/CodeHooks";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
-import { AttachedObjectType } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
-import { openSpanAnnotationEditDialog } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
-import MemoAPI from "../../../features/Memo/MemoAPI";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { DWTSNodeData, SpanAnnotationNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
+import AdocHooks from "../../../api/AdocHooks.ts";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { SpanAnnotationNodeData } from "../types/dbnodes/SpanAnnotationNodeData.ts";
+import { isCodeNode, isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
   createCodeNodes,
   createCodeSpanAnnotationEdge,
@@ -22,15 +25,16 @@ import {
   isCodeSpanAnnotationEdge,
   isMemoSpanAnnotationEdge,
   isSdocSpanAnnotationEdge,
-} from "../whiteboardUtils";
-import BaseCardNode from "./BaseCardNode";
+} from "../whiteboardUtils.ts";
+import BaseCardNode from "./BaseCardNode.tsx";
 
 function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
   // global client state
   const userId = useAuth().user!.id;
+  const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowInstance = useReactFlow<DWTSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -120,7 +124,7 @@ function SpanAnnotationNode(props: NodeProps<SpanAnnotationNodeData>) {
     if (!annotation.data) return;
 
     if (event.detail >= 2) {
-      openSpanAnnotationEditDialog([annotation.data.id]);
+      dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds: [annotation.data.id] }));
     }
   };
 

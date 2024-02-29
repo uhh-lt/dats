@@ -1,5 +1,5 @@
 import { Stack, Box } from "@mui/material";
-import CodeHooks from "../../../../api/CodeHooks";
+import CodeHooks from "../../../../api/CodeHooks.ts";
 
 interface CodeBlockProps {
   codeId: number;

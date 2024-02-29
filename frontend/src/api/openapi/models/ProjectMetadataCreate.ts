@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { DocType } from "./DocType";
 import type { MetaType } from "./MetaType";
-
 export type ProjectMetadataCreate = {
   /**
    * Key of the ProjectMetadata

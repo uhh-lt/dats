@@ -9,16 +9,17 @@ import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 
 import { Button, ButtonGroup, Divider, Paper, Stack, Typography, TypographyVariant } from "@mui/material";
-import React, { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
 import { Node, useReactFlow } from "reactflow";
-import { BorderData, TextData } from "../types";
-import { BackgroundColorData } from "../types/base/BackgroundColorData";
-import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../types/typeGuards";
-import ColorTool from "./tools/ColorTool";
-import NumberTool from "./tools/NumberTool";
-import SliderTool from "./tools/SliderTool";
-import SolidDashedDottedTool from "./tools/SolidDashedDottedTool";
-import TypographyVariantTool from "./tools/TypographyVariantTool";
+import { BackgroundColorData } from "../types/base/BackgroundColorData.ts";
+import { BorderData } from "../types/base/BorderData.ts";
+import { TextData } from "../types/base/TextData.ts";
+import { hasTextData, isBackgroundColorDataArray, isBorderDataArray, isTextDataArray } from "../types/typeGuards.ts";
+import ColorTool from "./tools/ColorTool.tsx";
+import NumberTool from "./tools/NumberTool.tsx";
+import SliderTool from "./tools/SliderTool.tsx";
+import SolidDashedDottedTool from "./tools/SolidDashedDottedTool.tsx";
+import TypographyVariantTool from "./tools/TypographyVariantTool.tsx";
 
 interface NodeEditMenuProps {}
 
@@ -83,31 +84,29 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle, NodeEditMenuProps>((_, ref) 
     });
   };
 
-  const handleHorizontalAlignClick =
-    (horizontal: "left" | "center" | "right") => (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-      updateNodes((oldNode) => {
-        return {
-          ...oldNode,
-          data: {
-            ...oldNode.data,
-            horizontalAlign: horizontal,
-          },
-        };
-      });
-    };
+  const handleHorizontalAlignClick = (horizontal: "left" | "center" | "right") => () => {
+    updateNodes((oldNode) => {
+      return {
+        ...oldNode,
+        data: {
+          ...oldNode.data,
+          horizontalAlign: horizontal,
+        },
+      };
+    });
+  };
 
-  const handleVerticalAlignClick =
-    (verticalAlign: "top" | "center" | "bottom") => (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-      updateNodes((oldNode) => {
-        return {
-          ...oldNode,
-          data: {
-            ...oldNode.data,
-            verticalAlign: verticalAlign,
-          },
-        };
-      });
-    };
+  const handleVerticalAlignClick = (verticalAlign: "top" | "center" | "bottom") => () => {
+    updateNodes((oldNode) => {
+      return {
+        ...oldNode,
+        data: {
+          ...oldNode.data,
+          verticalAlign: verticalAlign,
+        },
+      };
+    });
+  };
 
   const handleBorderStyleChange = (borderStyle: "dashed" | "solid" | "dotted") => {
     updateNodes((oldNode) => {
@@ -121,24 +120,23 @@ const NodeEditMenu = forwardRef<NodeEditMenuHandle, NodeEditMenuProps>((_, ref) 
     });
   };
 
-  const handleStyleClick =
-    (style: "bold" | "italic" | "underline") => (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-      updateNodes((oldNode) => {
-        if (hasTextData(oldNode)) {
-          return {
-            ...oldNode,
-            data: {
-              ...oldNode.data,
-              ...(style === "bold" && { bold: !oldNode.data.bold }),
-              ...(style === "italic" && { italic: !oldNode.data.italic }),
-              ...(style === "underline" && { underline: !oldNode.data.underline }),
-            },
-          };
-        } else {
-          return oldNode;
-        }
-      });
-    };
+  const handleStyleClick = (style: "bold" | "italic" | "underline") => () => {
+    updateNodes((oldNode) => {
+      if (hasTextData(oldNode)) {
+        return {
+          ...oldNode,
+          data: {
+            ...oldNode.data,
+            ...(style === "bold" && { bold: !oldNode.data.bold }),
+            ...(style === "italic" && { italic: !oldNode.data.italic }),
+            ...(style === "underline" && { underline: !oldNode.data.underline }),
+          },
+        };
+      } else {
+        return oldNode;
+      }
+    });
+  };
 
   const handleColorChange = (color: string) => {
     updateNodes((oldNode) => {

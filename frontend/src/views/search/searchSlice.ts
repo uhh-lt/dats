@@ -1,24 +1,24 @@
-import { GridDensity, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { MRT_DensityState, MRT_PaginationState, MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { DocType, SourceDocumentMetadataReadResolved } from "../../api/openapi";
-import { QueryType } from "./QueryType";
+import { DocType } from "../../api/openapi/models/DocType.ts";
+import { QueryType } from "./QueryType.ts";
 
 interface SearchState {
-  selectedDocumentIds: number[];
   isSplitView: boolean;
   isShowEntities: boolean;
   isShowTags: boolean;
-  page: number;
-  rowsPerPage: number;
   resultModalities: DocType[];
   searchType: QueryType;
   searchQuery: string | number;
   isTableView: boolean;
-  sortModel: GridSortModel;
-  gridDensity: GridDensity;
   expertMode: boolean;
+  selectedDocumentIds: number[];
+  selectionModel: MRT_RowSelectionState;
+  paginationModel: MRT_PaginationState;
+  sortingModel: MRT_SortingState;
+  gridDensity: MRT_DensityState;
 }
 
 const initialState: SearchState = {
@@ -26,14 +26,17 @@ const initialState: SearchState = {
   isSplitView: false,
   isShowEntities: true,
   isShowTags: true,
-  page: 0,
-  rowsPerPage: 10,
   resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
   searchType: QueryType.LEXICAL,
   searchQuery: "",
   isTableView: false,
-  sortModel: [],
-  gridDensity: "standard",
+  selectionModel: {},
+  paginationModel: {
+    pageIndex: 0,
+    pageSize: 10,
+  },
+  sortingModel: [],
+  gridDensity: "comfortable",
   expertMode: false,
 };
 
@@ -71,8 +74,8 @@ export const searchSlice = createSlice({
     },
 
     // sorting
-    onSortModelChange: (state, action: PayloadAction<GridSortModel>) => {
-      state.sortModel = action.payload;
+    onSortModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
+      state.sortingModel = action.payload;
     },
 
     // ui
@@ -88,25 +91,24 @@ export const searchSlice = createSlice({
     toggleShowTags: (state) => {
       state.isShowTags = !state.isShowTags;
     },
-    setTableDensity: (state, action: PayloadAction<GridDensity>) => {
+    setTableDensity: (state, action: PayloadAction<MRT_DensityState>) => {
       state.gridDensity = action.payload;
     },
     // pagination
     setRowsPerPage: (state, action: PayloadAction<number>) => {
-      state.rowsPerPage = action.payload;
+      state.paginationModel.pageSize = action.payload;
     },
     setPage: (state, action: PayloadAction<number>) => {
-      state.page = action.payload;
+      state.paginationModel.pageIndex = action.payload;
     },
-    onPaginationModelChange: (state, action: PayloadAction<GridPaginationModel>) => {
-      state.page = action.payload.page;
-      state.rowsPerPage = action.payload.pageSize;
+    onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
+      state.paginationModel = action.payload;
     },
     setResultModalites: (state, action: PayloadAction<DocType[]>) => {
       state.resultModalities = action.payload.sort();
     },
     toggleModality: (state, action: PayloadAction<DocType>) => {
-      let index = state.resultModalities.indexOf(action.payload);
+      const index = state.resultModalities.indexOf(action.payload);
       if (index === -1) {
         state.resultModalities.push(action.payload);
       } else {
@@ -114,28 +116,10 @@ export const searchSlice = createSlice({
       }
       state.resultModalities = state.resultModalities.sort();
       // reset page to 0, when modalities are changed
-      state.page = 0;
+      state.paginationModel.pageIndex = 0;
     },
     setSearchType: (state, action: PayloadAction<QueryType>) => {
       state.searchType = action.payload;
-    },
-
-    // filtering
-    // TODO are these actions for logging only? Why do they exist?
-    onAddKeywordFilter: (state, action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string }>) => {
-      console.log("added keywod filter!");
-    },
-    onAddTagFilter: (state, action: PayloadAction<{ tagId: number | string }>) => {
-      console.log("added tag filter!");
-    },
-    onAddFilenameFilter: (state, action: PayloadAction<{ filename: string }>) => {
-      console.log("added filename filter!");
-    },
-    onAddSpanAnnotationFilter: (state, action: PayloadAction<{ codeId: number; spanText: string }>) => {
-      console.log("added span annotation filter!");
-    },
-    onAddMetadataFilter: (state, action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved }>) => {
-      console.log("added metadata filter!");
     },
 
     // search
@@ -165,6 +149,9 @@ export const searchSlice = createSlice({
       state.searchType = action.payload.searchType;
       state.selectedDocumentIds = [];
       state.searchQuery = action.payload.query;
+    },
+    onUpdateSelectionModel: (state, action: PayloadAction<MRT_RowSelectionState>) => {
+      state.selectionModel = action.payload;
     },
   },
 });

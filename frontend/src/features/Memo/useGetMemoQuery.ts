@@ -1,10 +1,10 @@
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
-import CodeHooks from "../../api/CodeHooks";
-import MemoHooks from "../../api/MemoHooks";
-import SdocHooks from "../../api/SdocHooks";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import TagHooks from "../../api/TagHooks";
-import { AttachedObjectType } from "../../api/openapi";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
+import CodeHooks from "../../api/CodeHooks.ts";
+import MemoHooks from "../../api/MemoHooks.ts";
+import SdocHooks from "../../api/SdocHooks.ts";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
+import TagHooks from "../../api/TagHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 
 export const useGetMemoQuery = (type: AttachedObjectType | undefined) => {
   switch (type) {

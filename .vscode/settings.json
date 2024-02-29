@@ -3,5 +3,10 @@
   "python.analysis.extraPaths": ["./backend/src"],
   "python.autoComplete.extraPaths": ["./backend/src"],
   "editor.formatOnSave": true,
-  "prettier.configPath": "./frontend/package.json"
+  "prettier.configPath": "./frontend/package.json",
+  "javascript.preferences.importModuleSpecifierEnding": "js",
+  "typescript.preferences.importModuleSpecifierEnding": "js",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  }
 }

@@ -1,5 +1,5 @@
 import { Link } from "@mui/material";
-import SdocHooks from "../../../api/SdocHooks";
+import SdocHooks from "../../../api/SdocHooks.ts";
 
 interface DocumentLinkToOriginalProps {
   sdocId: number | undefined;

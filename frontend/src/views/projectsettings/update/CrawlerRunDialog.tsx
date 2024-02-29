@@ -4,7 +4,7 @@ import { LoadingButton } from "@mui/lab";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import CrawlerHooks from "../../../api/CrawlerHooks";
+import CrawlerHooks from "../../../api/CrawlerHooks.ts";
 
 interface CrawlerRunDialogProps {
   projectId: number;
@@ -113,7 +113,7 @@ const CrawlerRunDialog = forwardRef<CrawlerRunDialogHandle, CrawlerRunDialogProp
             variant="contained"
             color="success"
             type="submit"
-            loading={startCrawlerMutation.isLoading}
+            loading={startCrawlerMutation.isPending}
             loadingPosition="start"
             startIcon={<PlayCircle />}
           >

@@ -1,4 +1,4 @@
-import { NoteNodeData } from ".";
+import { NoteNodeData } from "./customnodes/NoteNodeData.ts";
 
 export interface CustomEdgeData {
   label: NoteNodeData;

@@ -1,13 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { FeedbackCreate } from "../models/FeedbackCreate";
 import type { FeedbackRead } from "../models/FeedbackRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class FeedbackService {
   /**
    * Returns all Feedback items of the current user. If logged in as the system user, return feedback of all users.
@@ -20,7 +19,6 @@ export class FeedbackService {
       url: "/feedback",
     });
   }
-
   /**
    * Creates a new Feedback and returns it with the generated ID.
    * @returns FeedbackRead Successful Response
@@ -37,7 +35,6 @@ export class FeedbackService {
       },
     });
   }
-
   /**
    * Returns the Feedback with the given ID.
    * @returns FeedbackRead Successful Response
@@ -55,7 +52,6 @@ export class FeedbackService {
       },
     });
   }
-
   /**
    * Returns the Feedback of the User with the given ID.
    * @returns FeedbackRead Successful Response
@@ -73,7 +69,6 @@ export class FeedbackService {
       },
     });
   }
-
   /**
    * Sends an e-mail to the User that created the Feedback with the given message.
    * @returns string Successful Response

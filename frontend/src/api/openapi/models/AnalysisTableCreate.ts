@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { TableType } from "./TableType";
-
 export type AnalysisTableCreate = {
   /**
    * Title of the AnalysisTable

@@ -1,6 +1,6 @@
 import DescriptionIcon from "@mui/icons-material/Description";
 import { Stack } from "@mui/material";
-import SdocHooks from "../../../../api/SdocHooks";
+import SdocHooks from "../../../../api/SdocHooks.ts";
 import { Link } from "react-router-dom";
 
 interface SdocBlockProps {

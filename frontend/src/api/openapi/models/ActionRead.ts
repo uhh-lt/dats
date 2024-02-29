@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { ActionTargetObjectType } from "./ActionTargetObjectType";
 import type { ActionType } from "./ActionType";
-
 export type ActionRead = {
   /**
    * Type of the Action

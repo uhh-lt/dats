@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AttachedObjectType } from "../../api/openapi";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 
 interface LogbookState {
   searchTerm: string;

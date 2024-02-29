@@ -1,19 +1,19 @@
-import { ActionReducerMapBuilder, CaseReducerActions, createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { LogicalOperator } from "../../api/openapi";
+import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import {
   ColumnInfo,
-  deleteInFilter,
-  filterOperator2defaultValue,
-  filterOperator2FilterOperatorType,
   FilterOperators,
+  MyFilter,
+  MyFilterExpression,
+  deleteInFilter,
+  filterOperator2FilterOperatorType,
+  filterOperator2defaultValue,
   findInFilter,
   getDefaultOperator,
   isFilter,
   isFilterExpression,
-  MyFilter,
-  MyFilterExpression,
-} from "./filterUtils";
+} from "./filterUtils.ts";
 
 export interface FilterState {
   filter: Record<string, MyFilter>;
@@ -23,7 +23,7 @@ export interface FilterState {
   expertMode: boolean;
 }
 
-const filterReducer = {
+export const filterReducer = {
   onStartFilterEdit: (
     state: Draft<FilterState>,
     action: PayloadAction<{ rootFilterId: string; filter?: MyFilter }>,
@@ -126,7 +126,7 @@ const filterReducer = {
   changeColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
-      if (!!parseInt(action.payload.columnValue)) {
+      if (parseInt(action.payload.columnValue)) {
         // it is a Metadata column: metadata columns are stored as project_metadata.id
         filterItem.column = parseInt(action.payload.columnValue);
       } else {
@@ -150,7 +150,10 @@ const filterReducer = {
       filterItem.operator = action.payload.operator;
     }
   },
-  changeValue: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; value: any }>) => {
+  changeValue: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ filterId: string; value: string | number | boolean | string[] }>,
+  ) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.value = action.payload.value;
@@ -191,21 +194,3 @@ const filterReducer = {
 
 export type FilterReducer = typeof filterReducer;
 export type FilterActions = CaseReducerActions<FilterReducer, string>;
-
-export const createFilterSlice = ({
-  name,
-  initialState,
-  extraReducer,
-}: {
-  name: string;
-  initialState: FilterState;
-  extraReducer?: (builder: ActionReducerMapBuilder<FilterState>) => void;
-}) =>
-  createSlice({
-    name,
-    initialState,
-    reducers: filterReducer,
-    extraReducers(builder) {
-      extraReducer && extraReducer(builder);
-    },
-  });

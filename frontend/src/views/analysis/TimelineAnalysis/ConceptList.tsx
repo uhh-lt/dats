@@ -9,20 +9,19 @@ import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks";
-import {
-  LogicalOperator,
-  TimelineAnalysisColumns,
-  TimelineAnalysisConcept_Output,
-  TimelineAnalysisRead,
-} from "../../../api/openapi";
-import { MyFilter } from "../../../features/FilterDialog/filterUtils";
-import { useAppDispatch, useAppStore } from "../../../plugins/ReduxHooks";
-import ConceptEditor from "./ConceptEditor";
-import ConceptListItem from "./ConceptListItem";
-import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice";
-import { TimelineAnalysisActions } from "./timelineAnalysisSlice";
-import { useInitTimelineAnalysisFilterSlice } from "./useInitTimelineAnalysisFilterSlice";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
+
+import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
+import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
+import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
+import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { useAppDispatch, useAppStore } from "../../../plugins/ReduxHooks.ts";
+import ConceptEditor from "./ConceptEditor.tsx";
+import ConceptListItem from "./ConceptListItem.tsx";
+import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
+import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
+import { useInitTimelineAnalysisFilterSlice } from "./useInitTimelineAnalysisFilterSlice.ts";
 
 interface ConceptListProps {
   timelineAnalysis: TimelineAnalysisRead;
@@ -95,7 +94,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
     dispatch(TimelineAnalysisActions.onFinishConceptEdit());
   };
 
-  const handleCancelConceptChanges = (concept: TimelineAnalysisConcept_Output) => {
+  const handleCancelConceptChanges = () => {
     dispatch(TimelineAnalysisActions.onCancelConceptEdit());
   };
 
@@ -153,7 +152,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
                 <ListItemText primary="Add new concept" />
               </ListItemButton>
             </ListItem>
-            {timelineAnalysis.concepts.map((concept, index) => (
+            {timelineAnalysis.concepts.map((concept) => (
               <ConceptListItem
                 key={concept.id}
                 concept={concept}

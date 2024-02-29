@@ -19,7 +19,7 @@ import {
 import Avatar from "@mui/material/Avatar";
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { UserRead } from "../../api/openapi";
+import { UserRead } from "../../api/openapi/models/UserRead.ts";
 
 interface UserProfileMenuProps {
   handleLogout: () => void;

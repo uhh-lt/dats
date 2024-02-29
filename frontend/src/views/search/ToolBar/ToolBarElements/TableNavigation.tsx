@@ -6,8 +6,8 @@ import { useTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import * as React from "react";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
-import { SearchActions } from "../../searchSlice";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../searchSlice.ts";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -69,23 +69,22 @@ interface TableNavigationProps {
 function TableNavigation({ numDocuments }: TableNavigationProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
-  const page = useAppSelector((state) => state.search.page);
-  const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
+  const { pageIndex, pageSize } = useAppSelector((state) => state.search.paginationModel);
 
   // ui event handlers
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: React.MouseEvent<HTMLButtonElement, MouseEvent>, newPage: number) => {
     dispatch(SearchActions.setPage(newPage));
   };
 
-  const text = `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, numDocuments)} of ${numDocuments}`;
+  const text = `${pageIndex * pageSize + 1}-${Math.min((pageIndex + 1) * pageSize, numDocuments)} of ${numDocuments}`;
 
   return (
     <>
       {text}
       <TablePaginationActions
         count={numDocuments}
-        page={page}
-        rowsPerPage={rowsPerPage}
+        page={pageIndex}
+        rowsPerPage={pageSize}
         onPageChange={handleChangePage}
       />
     </>

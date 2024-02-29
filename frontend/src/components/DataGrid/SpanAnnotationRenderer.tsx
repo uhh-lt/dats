@@ -1,10 +1,10 @@
 import { Stack } from "@mui/material";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import { SpanAnnotationReadResolved } from "../../api/openapi";
-import CodeRenderer from "./CodeRenderer";
-import SdocRenderer, { SdocRendererSharedProps } from "./SdocRenderer";
-import SdocTagsRenderer from "./SdocTagRenderer";
-import SdocMetadataRenderer from "./SdocMetadataRenderer";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import CodeRenderer from "./CodeRenderer.tsx";
+import SdocMetadataRenderer from "./SdocMetadataRenderer.tsx";
+import SdocRenderer, { SdocRendererSharedProps } from "./SdocRenderer.tsx";
+import SdocTagsRenderer from "./SdocTagRenderer.tsx";
 
 interface SpanAnnotationRendererSharedProps {
   showCode?: boolean;

@@ -1,6 +1,6 @@
 // see https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-r
 function rgbStringToHex(rgb: string) {
-  let result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i.exec(rgb);
+  const result = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i.exec(rgb);
   return result ? rgbToHex(parseInt(result[1]), parseInt(result[2]), parseInt(result[3])) : null;
 }
 
@@ -10,12 +10,12 @@ function rgbToHex(r: number, g: number, b: number) {
 
 function hexToRgb(hex: string) {
   // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-  let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-  hex = hex.replace(shorthandRegex, function (m, r, g, b) {
+  const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+  hex = hex.replace(shorthandRegex, function (_m, r, g, b) {
     return r + r + g + g + b + b;
   });
 
-  let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
         r: parseInt(result[1], 16),

@@ -1,9 +1,9 @@
 import { Checkbox, Divider, TextField, Toolbar } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
-import CodeTreeView from "../../views/annotation/CodeExplorer/CodeTreeView";
-import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree";
-import { flatTree } from "../../views/annotation/CodeExplorer/TreeUtils";
+import CodeTreeView from "../../views/annotation/CodeExplorer/CodeTreeView.tsx";
+import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree.ts";
+import { flatTree } from "../../views/annotation/CodeExplorer/TreeUtils.ts";
 
 interface ExporterTreeSelectProps {
   tree: ICodeTree | undefined;
@@ -52,7 +52,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
         );
 
         // filter the filteredCodeTree
-        let nodes_to_remove = filteredCodeTree.all((node) => !nodesToKeep.has(node.model.code.id));
+        const nodes_to_remove = filteredCodeTree.all((node) => !nodesToKeep.has(node.model.code.id));
         nodes_to_remove.forEach((node) => {
           node.drop();
         });

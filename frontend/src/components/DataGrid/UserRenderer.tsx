@@ -1,6 +1,7 @@
 import { Stack } from "@mui/material";
-import UserHooks from "../../api/UserHooks";
-import { PublicUserRead, UserRead } from "../../api/openapi";
+import UserHooks from "../../api/UserHooks.ts";
+import { PublicUserRead } from "../../api/openapi/models/PublicUserRead.ts";
+import { UserRead } from "../../api/openapi/models/UserRead.ts";
 
 interface UserRendererProps {
   user: number | UserRead | PublicUserRead;

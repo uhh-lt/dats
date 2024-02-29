@@ -1,7 +1,7 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import { AnnotationOccurrence } from "../../../../api/openapi";
-import AnnotationSelector from "../../../../components/Selectors/AnnotationSelector";
+import { AnnotationOccurrence } from "../../../../api/openapi/models/AnnotationOccurrence.ts";
+import AnnotationSelector from "../../../../components/Selectors/AnnotationSelector.tsx";
 
 export interface AddAnnotationDialogProps {
   projectId: number;

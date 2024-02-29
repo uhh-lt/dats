@@ -1,11 +1,11 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
-import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead";
-import DocumentSelector from "../../../components/Selectors/DocumentSelector";
-import { ReactFlowService } from "../hooks/ReactFlowService";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
-import { createSdocNodes } from "../whiteboardUtils";
+import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
+import DocumentSelector from "../../../components/Selectors/DocumentSelector.tsx";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { createSdocNodes } from "../whiteboardUtils.ts";
 
 export interface AddDocumentNodeDialogProps extends AddNodeDialogProps {
   projectId: number;

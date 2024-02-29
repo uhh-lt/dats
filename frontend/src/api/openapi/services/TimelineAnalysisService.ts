@@ -1,14 +1,13 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { TimelineAnalysisCreate } from "../models/TimelineAnalysisCreate";
 import type { TimelineAnalysisRead } from "../models/TimelineAnalysisRead";
 import type { TimelineAnalysisUpdate } from "../models/TimelineAnalysisUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class TimelineAnalysisService {
   /**
    * Creates an TimelineAnalysis
@@ -30,7 +29,6 @@ export class TimelineAnalysisService {
       },
     });
   }
-
   /**
    * Returns the TimelineAnalysis with the given ID if it exists
    * @returns TimelineAnalysisRead Successful Response
@@ -52,7 +50,6 @@ export class TimelineAnalysisService {
       },
     });
   }
-
   /**
    * Updates the TimelineAnalysis with the given ID if it exists
    * @returns TimelineAnalysisRead Successful Response
@@ -78,7 +75,6 @@ export class TimelineAnalysisService {
       },
     });
   }
-
   /**
    * Removes the TimelineAnalysis with the given ID if it exists
    * @returns TimelineAnalysisRead Successful Response
@@ -100,7 +96,6 @@ export class TimelineAnalysisService {
       },
     });
   }
-
   /**
    * Returns the TimelineAnalysis of the Project with the given ID and the User with the given ID if it exists
    * @returns TimelineAnalysisRead Successful Response

@@ -1,6 +1,6 @@
 import { Stack } from "@mui/material";
-import { FeedbackRead } from "../../api/openapi";
-import FeedbackCard from "./FeedbackCard";
+import { FeedbackRead } from "../../api/openapi/models/FeedbackRead.ts";
+import FeedbackCard from "./FeedbackCard.tsx";
 
 interface FeedbackCardsProps {
   feedback: FeedbackRead[];

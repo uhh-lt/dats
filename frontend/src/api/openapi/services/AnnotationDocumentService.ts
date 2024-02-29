@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -8,11 +9,9 @@ import type { BBoxAnnotationReadResolvedCode } from "../models/BBoxAnnotationRea
 import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class AnnotationDocumentService {
   /**
    * Creates an AnnotationDocument
@@ -34,7 +33,6 @@ export class AnnotationDocumentService {
       },
     });
   }
-
   /**
    * Returns the AnnotationDocument with the given ID if it exists
    * @returns AnnotationDocumentRead Successful Response
@@ -52,7 +50,6 @@ export class AnnotationDocumentService {
       },
     });
   }
-
   /**
    * Removes the AnnotationDocument with the given ID if it exists
    * @returns AnnotationDocumentRead Successful Response
@@ -70,7 +67,6 @@ export class AnnotationDocumentService {
       },
     });
   }
-
   /**
    * Returns all SpanAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns any Successful Response
@@ -112,7 +108,6 @@ export class AnnotationDocumentService {
       },
     });
   }
-
   /**
    * Removes all SpanAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns number Successful Response
@@ -130,7 +125,6 @@ export class AnnotationDocumentService {
       },
     });
   }
-
   /**
    * Returns all BBoxAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns any Successful Response
@@ -172,7 +166,6 @@ export class AnnotationDocumentService {
       },
     });
   }
-
   /**
    * Removes all BBoxAnnotations in the AnnotationDocument with the given ID if it exists
    * @returns number Successful Response
@@ -190,7 +183,6 @@ export class AnnotationDocumentService {
       },
     });
   }
-
   /**
    * Returns all SpanGroups in the AnnotationDocument with the given ID if it exists
    * @returns SpanGroupRead Successful Response

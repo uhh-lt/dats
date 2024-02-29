@@ -1,12 +1,11 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { DocType } from "./DocType";
 import type { DocumentTagRead } from "./DocumentTagRead";
 import type { SDocStatus } from "./SDocStatus";
 import type { SourceDocumentMetadataRead } from "./SourceDocumentMetadataRead";
-
 export type SourceDocumentReadAction = {
   /**
    * Filename of the SourceDocument

@@ -1,10 +1,10 @@
-import { useAppSelector } from "../../plugins/ReduxHooks";
-import React, { useMemo } from "react";
 import { range } from "lodash";
-import { SpanAnnotationReadResolved } from "../../api/openapi";
-import Mark from "./Mark";
-import Tag from "./Tag";
-import { IToken } from "./IToken";
+import { useMemo } from "react";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { IToken } from "./IToken.ts";
+import Mark from "./Mark.tsx";
+import Tag from "./Tag.tsx";
 
 interface TokenProps {
   spanAnnotations: SpanAnnotationReadResolved[];

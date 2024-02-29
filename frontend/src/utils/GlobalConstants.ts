@@ -1,3 +1,5 @@
+import { AttachedObjectType } from "../api/openapi/models/AttachedObjectType.ts";
+
 export const SYSTEM_USER_ID = 1;
 export const SUPPORT_EMAIL = "dwise@uni-hamburg.de";
 export const EMAIL_REGEX = /^[A-Za-z0-9][A-Za-z0-9._%+-]*@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
@@ -34,3 +36,8 @@ export const USER_GUIDE_ROUTE_MAP = {
   export: { route: "export", description: "This page provides tools for exporting your project and more" },
   settings: { route: "settings", description: "This page provides tools for modifying your project settings" },
 };
+export const UNUSED_MEMO_TYPES = [
+  AttachedObjectType.ANNOTATION_DOCUMENT,
+  AttachedObjectType.PROJECT,
+  AttachedObjectType.SPAN_GROUP,
+];

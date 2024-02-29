@@ -1,11 +1,13 @@
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
-import MemoHooks from "../../api/MemoHooks";
-import { BBoxAnnotationReadResolvedCode, MemoRead } from "../../api/openapi";
-import { useAuth } from "../../auth/AuthProvider";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { MemoCreateSuccessHandler } from "./MemoAPI";
-import { MemoForm } from "./MemoForm";
+import { SubmitHandler } from "react-hook-form";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
+import MemoHooks from "../../api/MemoHooks.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+import { MemoCreateSuccessHandler } from "./MemoAPI.ts";
+import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
 export interface MemoContentProps {
   memo: MemoRead | undefined;
@@ -31,7 +33,7 @@ export function MemoContentBboxAnnotation({
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateBboxAnnotationMemo = (data: any) => {
+  const handleCreateOrUpdateBboxAnnotationMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
 
     if (memo) {
@@ -107,9 +109,9 @@ export function MemoContentBboxAnnotation({
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateBboxAnnotationMemo}
       handleDeleteMemo={handleDeleteBboxAnnotationMemo}
-      isUpdateLoading={updateMutation.isLoading}
-      isCreateLoading={createMutation.isLoading}
-      isDeleteLoading={deleteMutation.isLoading}
+      isUpdateLoading={updateMutation.isPending}
+      isCreateLoading={createMutation.isPending}
+      isDeleteLoading={deleteMutation.isPending}
     />
   );
 }

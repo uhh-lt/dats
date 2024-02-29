@@ -1,11 +1,11 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
 import { XYPosition, useReactFlow } from "reactflow";
-import { DocumentTagRead } from "../../../api/openapi";
-import TagSelector from "../../../components/Selectors/TagSelector";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
-import { createTagNodes } from "../whiteboardUtils";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import TagSelector from "../../../components/Selectors/TagSelector.tsx";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { createTagNodes } from "../whiteboardUtils.ts";
 
 export interface AddTagNodeDialogProps extends AddNodeDialogProps {
   projectId: number;

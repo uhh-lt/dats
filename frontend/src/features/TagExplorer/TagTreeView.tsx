@@ -1,16 +1,16 @@
-import TreeView, { TreeViewProps } from "@mui/lab/TreeView";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import * as React from "react";
 import FolderIcon from "@mui/icons-material/Folder";
-import TreeItem, { treeItemClasses, TreeItemProps } from "@mui/lab/TreeItem";
-import { SvgIconProps } from "@mui/material/SvgIcon";
-import { styled } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import { ITagTree } from "./ITagTree";
-import { DocumentTagRead } from "../../api/openapi";
 import LabelIcon from "@mui/icons-material/Label";
+import Box from "@mui/material/Box";
+import { SvgIconProps } from "@mui/material/SvgIcon";
+import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
+import { TreeItem, TreeItemProps, treeItemClasses } from "@mui/x-tree-view/TreeItem";
+import { TreeView, TreeViewProps } from "@mui/x-tree-view/TreeView";
+import * as React from "react";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { ITagTree } from "./ITagTree.ts";
 
 type StyledTreeItemProps = TreeItemProps & {
   labelIcon: React.ElementType<SvgIconProps>;
@@ -89,7 +89,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 }
 
 export interface TagTreeViewProps {
-  openContextMenu?: (node: ITagTree) => (event: any) => void;
+  openContextMenu?: (node: ITagTree) => (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => void;
   data: ITagTree;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
@@ -105,7 +105,7 @@ function TagTreeView({
   openContextMenu,
   onTagClick,
   ...props
-}: TagTreeViewProps & TreeViewProps) {
+}: TagTreeViewProps & TreeViewProps<boolean>) {
   const renderTree = (nodes: ITagTree[]) => {
     return nodes.map((node) => (
       <StyledTreeItem

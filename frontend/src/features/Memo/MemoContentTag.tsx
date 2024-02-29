@@ -1,12 +1,12 @@
-import React from "react";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { DocumentTagRead } from "../../api/openapi";
-import TagHooks from "../../api/TagHooks";
-import MemoHooks from "../../api/MemoHooks";
-import { MemoForm } from "./MemoForm";
-import { useAuth } from "../../auth/AuthProvider";
-import { MemoContentProps } from "./MemoContentBboxAnnotation";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
+import { SubmitHandler } from "react-hook-form";
+import MemoHooks from "../../api/MemoHooks.ts";
+import TagHooks from "../../api/TagHooks.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
+import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
 interface MemoContentTagProps {
   tag: DocumentTagRead;
@@ -26,7 +26,7 @@ export function MemoContentTag({
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateCodeMemo = (data: any) => {
+  const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
 
     if (memo) {
@@ -102,9 +102,9 @@ export function MemoContentTag({
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
       handleDeleteMemo={handleDeleteTagMemo}
-      isUpdateLoading={updateMutation.isLoading}
-      isCreateLoading={createMutation.isLoading}
-      isDeleteLoading={deleteMutation.isLoading}
+      isUpdateLoading={updateMutation.isPending}
+      isCreateLoading={createMutation.isPending}
+      isDeleteLoading={deleteMutation.isPending}
     />
   );
 }

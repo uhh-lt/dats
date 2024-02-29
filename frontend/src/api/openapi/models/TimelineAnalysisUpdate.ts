@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { TimelineAnalysisConcept_Input } from "./TimelineAnalysisConcept_Input";
 import type { TimelineAnalysisSettings } from "./TimelineAnalysisSettings";
-
 export type TimelineAnalysisUpdate = {
   /**
    * Name of the TimelineAnalysis

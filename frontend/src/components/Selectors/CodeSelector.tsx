@@ -1,12 +1,12 @@
-import { MultiSelectTreeViewProps, SingleSelectTreeViewProps } from "@mui/lab";
 import { Box, BoxProps, TextField, Toolbar } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { MultiSelectTreeViewProps, SingleSelectTreeViewProps } from "@mui/x-tree-view";
+import React, { SyntheticEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
-import ProjectHooks from "../../api/ProjectHooks";
-import { CodeRead } from "../../api/openapi";
-import CodeTreeView, { CodeTreeViewProps } from "../../views/annotation/CodeExplorer/CodeTreeView";
-import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree";
-import { codesToTree } from "../../views/annotation/CodeExplorer/TreeUtils";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import CodeTreeView, { CodeTreeViewProps } from "../../views/annotation/CodeExplorer/CodeTreeView.tsx";
+import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree.ts";
+import { codesToTree } from "../../views/annotation/CodeExplorer/TreeUtils.ts";
 
 interface CodeSelectorProps {
   projectId: number;
@@ -72,7 +72,7 @@ function CodeSelector({
         );
 
         // filter the codeTree
-        let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
+        const nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
         nodes_to_remove.forEach((node) => {
           node.drop();
         });
@@ -163,7 +163,9 @@ function CodeBrowserWithMultiselect({
   Omit<MultiSelectTreeViewProps, "multiselect" | "selected" | "onNodeSelect">) {
   // code selection
   const [selected, setSelected] = useState<string[]>([]);
-  const handleSelect = (event: React.SyntheticEvent, nodeIds: string[]) => {
+  const handleSelect = (_event: SyntheticEvent<Element, Event>, nodeIds: string | string[]) => {
+    if (!Array.isArray(nodeIds)) return;
+
     const newSelectedCodeIds = [...selected];
     for (const nodeId of nodeIds) {
       if (newSelectedCodeIds.indexOf(nodeId) === -1) {
@@ -190,9 +192,11 @@ function CodeBrowserWithSingleselect({
   Omit<SingleSelectTreeViewProps, "multiselect" | "selected" | "onNodeSelect">) {
   // code selection
   const [selected, setSelected] = useState<string>("");
-  const handleSelect = (event: React.SyntheticEvent, nodeId: string) => {
-    setSelected(nodeId);
-    const codeIds = [parseInt(nodeId)];
+  const handleSelect = (_event: SyntheticEvent<Element, Event>, nodeIds: string | string[]) => {
+    if (Array.isArray(nodeIds)) return;
+
+    setSelected(nodeIds);
+    const codeIds = [parseInt(nodeIds)];
     setSelectedCodes(codes.filter((code) => codeIds.indexOf(code.id) !== -1));
   };
 

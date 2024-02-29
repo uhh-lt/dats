@@ -2,17 +2,15 @@ import { Box, BoxProps } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo, useRef } from "react";
 import "./DocumentRenderer.css";
-// @ts-ignore
-import * as HtmlToReact from "html-to-react";
-import { SpanAnnotationReadResolved } from "../../api/openapi";
-import DocumentPage from "./DocumentPage";
-import { IToken } from "./IToken";
-import SdocAudioLink from "./SdocAudioLink";
-import SdocImageLink from "./SdocImageLink";
-import SdocVideoLink from "./SdocVideoLink";
-import Token from "./Token";
 
-const processNodeDefinitions = new HtmlToReact.ProcessNodeDefinitions(React);
+import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import DocumentPage from "./DocumentPage.tsx";
+import { IToken } from "./IToken.ts";
+import SdocAudioLink from "./SdocAudioLink.tsx";
+import SdocImageLink from "./SdocImageLink.tsx";
+import SdocVideoLink from "./SdocVideoLink.tsx";
+import Token from "./Token.tsx";
 
 interface DocumentRendererProps {
   html: string;
@@ -60,57 +58,34 @@ function DocumentRenderer({
 
   // Order matters. Instructions are processed in
   // the order they're defined
-  const processingInstructions = useMemo(() => {
+  const processingInstructions: HTMLReactParserOptions = useMemo(() => {
     if (!annotationsPerToken || !tokenData || !annotationMap) {
-      return [
-        {
-          // Anything else
-          shouldProcessNode: function (node: any) {
-            return true;
-          },
-          processNode: processNodeDefinitions.processDefaultNode,
+      return {
+        replace(domNode) {
+          if (domNode instanceof Element) {
+            return domToReact(domNode.children as DOMNode[], {});
+          }
         },
-      ];
+      };
     } else {
-      return [
-        // processing of images
-        {
-          shouldProcessNode: function (node: any) {
-            return node.name === "img";
-          },
-          processNode: function (node: any, children: any, index: any) {
-            if (node.attribs.src) {
-              const filename = node.attribs.src;
+      const options: HTMLReactParserOptions = {
+        replace(domNode) {
+          if (domNode instanceof Element && domNode.attribs) {
+            // images
+            if (domNode.name === "img" && domNode.attribs.src) {
+              const filename = domNode.attribs.src;
               return (
                 <SdocImageLink
                   key={`image-link-${filename}`}
                   filename={filename}
-                  toPrefix={isViewer ? `../search/doc/` : `../annotation/`}
-                  projectId={projectId}
+                  toPrefix={"../search/doc/"}
+                  projectId={1}
                 />
               );
             }
-          },
-        },
-        // processing of videos
-        {
-          shouldProcessNode: function (node: any) {
-            return node.name === "video";
-          },
-          processNode: function (node: any, children: any[], index: any) {
-            let filename = undefined;
-            // check if node has a src attribute
-            if (node && node.attribs && node.attribs.src) {
-              filename = node.attribs.src;
-            } else {
-              // check if node has a source child with a src attribute
-              let source = children.find((child) => child.type === "source");
-              if (source && source.props.hasOwnProperty("src")) {
-                filename = source.props.src;
-              }
-            }
-            // if a filename was found, create a link to the video
-            if (filename) {
+            //  videos
+            else if (domNode.name === "video" && domNode.attribs.src) {
+              const filename = domNode.attribs.src;
               return (
                 <SdocVideoLink
                   key={`video-link-${filename}`}
@@ -120,27 +95,9 @@ function DocumentRenderer({
                 />
               );
             }
-          },
-        },
-        // processing of audios
-        {
-          shouldProcessNode: function (node: any) {
-            return node.name === "audio";
-          },
-          processNode: function (node: any, children: any[], index: any) {
-            let filename = undefined;
-            // check if node has a src attribute
-            if (node && node.attribs && node.attribs.src) {
-              filename = node.attribs.src;
-            } else {
-              // check if node has a source child with a src attribute
-              let source = children.find((child) => child.type === "source");
-              if (source && source.props.hasOwnProperty("src")) {
-                filename = source.props.src;
-              }
-            }
-            // if a filename was found, create a link to the video
-            if (filename) {
+            // audios
+            else if (domNode.name === "audio" && domNode.attribs.src) {
+              const filename = domNode.attribs.src;
               return (
                 <SdocAudioLink
                   key={`audio-link-${filename}`}
@@ -150,75 +107,34 @@ function DocumentRenderer({
                 />
               );
             }
-          },
-        },
-        // processing of sentences
-        {
-          shouldProcessNode: function (node: any) {
-            return node.name === "sent" && node.attribs.id;
-          },
-          processNode: function (node: any, children: any, index: any) {
-            const sentenceId = parseInt(node.attribs.id);
-            return (
-              <span
-                key={`sentence-${sentenceId}`}
-                className={"sentence " + (isViewer ? "hoversentence " : "")}
-                data-sentenceid={sentenceId}
-              >
-                {children}
-              </span>
-            );
-          },
-        },
-        // processing of tokens
-        {
-          shouldProcessNode: function (node: any) {
-            return node.name === "t";
-          },
-          processNode: function (node: any, children: any, index: any) {
-            const tokenId = parseInt(node.attribs.id);
-            const token = tokenData[tokenId];
-            const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map(
-              (annotationId) => annotationMap.get(annotationId)!,
-            );
-            let result = undefined;
-            if (children.length === 2) {
-              if (children[0].type) {
-                result = (
-                  <React.Fragment key={`token-${tokenId}`}>
-                    {children[0]}
-                    <Token token={token} spanAnnotations={spanAnnotations} />
-                  </React.Fragment>
-                );
-              } else if (children[1].type) {
-                result = (
-                  <React.Fragment key={`token-${tokenId}`}>
-                    <Token token={token} spanAnnotations={spanAnnotations} />
-                    {children[1]}
-                  </React.Fragment>
-                );
-              } else {
-                console.log(children);
-                console.error("THIS IS BUGGED!");
-              }
-            } else if (children.length > 2) {
-              console.log(children);
-              console.error("THIS IS BUGGED 2!");
+            // sentences
+            else if (domNode.name === "sent" && domNode.attribs.id) {
+              const sentenceId = parseInt(domNode.attribs.id);
+              return (
+                <span
+                  key={`sentence-${sentenceId}`}
+                  className={"sentence " + (isViewer ? "hoversentence " : "")}
+                  data-sentenceid={sentenceId}
+                >
+                  {domToReact(domNode.children as DOMNode[], options)}
+                </span>
+              );
             }
-            if (!result) {
-              result = <Token key={`token-${tokenId}`} token={token} spanAnnotations={spanAnnotations} />;
+            // tokens
+            else if (domNode.name === "t" && domNode.attribs.id) {
+              const tokenId = parseInt(domNode.attribs.id);
+              const token = tokenData[tokenId];
+              const spanAnnotations = (annotationsPerToken.get(tokenId) || []).map(
+                (annotationId) => annotationMap.get(annotationId)!,
+              );
+              return <Token key={`token-${tokenId}`} token={token} spanAnnotations={spanAnnotations} />;
+            } else {
+              return domToReact(domNode.children as DOMNode[], processingInstructions);
             }
-            return result;
-          },
+          }
         },
-        {
-          // Anything else
-          shouldProcessNode: function (node: any) {
-            return true;
-          },
-          processNode: processNodeDefinitions.processDefaultNode,
-        },
-      ];
+      };
+      return options;
     }
   }, [annotationMap, annotationsPerToken, isViewer, projectId, tokenData]);
 

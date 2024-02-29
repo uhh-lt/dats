@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../../store/store";
-import { CodeRead } from "../../api/openapi";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { RootState } from "../../store/store.ts";
 
 export interface AnnoState {
   codesForSelection: CodeRead[];

@@ -1,9 +1,9 @@
 import { StackProps } from "@mui/material";
 import { useEffect } from "react";
-import { useAuth } from "../../../auth/AuthProvider";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import UserSelector from "../UserSelector";
-import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
+import { useAuth } from "../../../auth/useAuth.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import UserSelector from "../UserSelector.tsx";
+import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";
 
 interface AnnotatedSegmentsUserSelectorProps {
   projectId: number | undefined;

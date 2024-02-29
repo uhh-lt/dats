@@ -11,11 +11,14 @@ import {
 } from "@mui/material";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AttachedObjectType, DocType, SpanAnnotationReadResolved } from "../../api/openapi";
-import MemoListItemButton from "../../features/Memo/MemoListItemButton";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { SearchActions } from "../../views/search/searchSlice";
-import { QueryType } from "../../views/search/QueryType";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { DocType } from "../../api/openapi/models/DocType.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import MemoListItemButton from "../../features/Memo/MemoListItemButton.tsx";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { QueryType } from "../../views/search/QueryType.ts";
+import { SearchFilterActions } from "../../views/search/searchFilterSlice.ts";
+import { SearchActions } from "../../views/search/searchSlice.ts";
 
 interface SentenceContextMenuProps {}
 
@@ -59,14 +62,14 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
     setAnnotations(annotations);
   };
 
-  const closeContextMenu = (reason?: "backdropClick" | "escapeKeyDown") => {
+  const closeContextMenu = () => {
     setIsPopoverOpen(false);
   };
 
   // ui events
-  const handleContextMenu = (event: any) => {
+  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
-    closeContextMenu("backdropClick");
+    closeContextMenu();
   };
 
   const handleSentenceSimilaritySearch = () => {
@@ -88,7 +91,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
-    dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: anno.code.id, spanText: anno.span_text }));
+    dispatch(SearchFilterActions.onAddSpanAnnotationFilter({ codeId: anno.code.id, spanText: anno.span_text }));
     closeContextMenu();
     navigate("../search");
   };
@@ -96,7 +99,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   return (
     <Popover
       open={isPopoverOpen}
-      onClose={(event, reason) => closeContextMenu(reason)}
+      onClose={() => closeContextMenu()}
       anchorPosition={position}
       anchorReference="anchorPosition"
       anchorOrigin={{

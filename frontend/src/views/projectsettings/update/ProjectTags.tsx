@@ -1,9 +1,8 @@
 import { Box, Divider, Toolbar, Typography } from "@mui/material";
-import TagCreateDialog from "../../../features/CrudDialog/Tag/TagCreateDialog";
-import TagExplorer from "../../../features/TagExplorer/TagExplorer";
-import { ProjectProps } from "./ProjectProps";
+import TagCreateDialog from "../../../features/CrudDialog/Tag/TagCreateDialog.tsx";
+import TagExplorer from "../../../features/TagExplorer/TagExplorer.tsx";
 
-function ProjectTags({ project }: ProjectProps) {
+function ProjectTags() {
   return (
     <Box display="flex" className="myFlexContainer h100">
       <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">

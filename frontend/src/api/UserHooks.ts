@@ -1,47 +1,52 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient";
-import { AnnotationDocumentRead, AuthenticationService, ProjectRead, PublicUserRead, UserService } from "./openapi";
-import { QueryKey } from "./QueryKey";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { QueryKey } from "./QueryKey.ts";
+import { AnnotationDocumentRead } from "./openapi/models/AnnotationDocumentRead.ts";
+import { ProjectRead } from "./openapi/models/ProjectRead.ts";
+import { PublicUserRead } from "./openapi/models/PublicUserRead.ts";
+import { AuthenticationService } from "./openapi/services/AuthenticationService.ts";
+import { UserService } from "./openapi/services/UserService.ts";
 
 // project
 const useGetProjects = (userId: number | null | undefined) =>
-  useQuery<ProjectRead[], Error>(
-    [QueryKey.USER_PROJECTS, userId],
-    () => UserService.getUserProjects({ userId: userId! }),
-    {
-      enabled: !!userId,
-    },
-  );
+  useQuery<ProjectRead[], Error>({
+    queryKey: [QueryKey.USER_PROJECTS, userId],
+    queryFn: () => UserService.getUserProjects({ userId: userId! }),
+    enabled: !!userId,
+  });
 
 const useGetUser = (userId: number | null | undefined) =>
-  useQuery<PublicUserRead, Error>([QueryKey.USER, userId], () => UserService.getById({ userId: userId! }), {
+  useQuery<PublicUserRead, Error>({
+    queryKey: [QueryKey.USER, userId],
+    queryFn: () => UserService.getById({ userId: userId! }),
     enabled: !!userId,
   });
 
 const useRegister = () =>
-  useMutation(AuthenticationService.register, {
+  useMutation({
+    mutationFn: AuthenticationService.register,
     onSuccess: () => {
-      queryClient.invalidateQueries([QueryKey.USERS]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USERS] });
     },
   });
 
-const useGetAll = () => useQuery<PublicUserRead[], Error>([QueryKey.USERS], () => UserService.getAll({}));
+const useGetAll = () =>
+  useQuery<PublicUserRead[], Error>({ queryKey: [QueryKey.USERS], queryFn: () => UserService.getAll({}) });
 
 const useGetRecentActivity = (userId: number | null | undefined, k: number) => {
-  return useQuery<AnnotationDocumentRead[], Error>(
-    [QueryKey.USER_ACTIVITY, userId],
-    () => UserService.recentActivity({ userId: userId!, k: k }),
-    {
-      enabled: !!userId,
-    },
-  );
+  return useQuery<AnnotationDocumentRead[], Error>({
+    queryKey: [QueryKey.USER_ACTIVITY, userId, k],
+    queryFn: () => UserService.recentActivity({ userId: userId!, k: k }),
+    enabled: !!userId,
+  });
 };
 
 const useUpdate = () =>
-  useMutation(UserService.updateById, {
+  useMutation({
+    mutationFn: UserService.updateById,
     onSuccess: (user) => {
-      queryClient.invalidateQueries([QueryKey.USERS]);
-      queryClient.invalidateQueries([QueryKey.USER, user.id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USERS] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER, user.id] });
     },
   });
 

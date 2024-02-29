@@ -2,23 +2,24 @@ import { TabContext, TabPanel } from "@mui/lab";
 import { Box, Card, CardContent, Container, Grid, Portal, Stack, Tab, Tabs, Typography } from "@mui/material";
 import { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import SdocHooks from "../../api/SdocHooks";
-import { DocType, DocumentTagRead } from "../../api/openapi";
-import { useAuth } from "../../auth/AuthProvider";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { DocType } from "../../api/openapi/models/DocType.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { useAuth } from "../../auth/useAuth.ts";
 import EditableDocumentName, {
   EditableDocumentNameHandle,
-} from "../../components/EditableDocumentName/EditableDocumentName";
-import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton";
-import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata";
-import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip";
-import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags";
-import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector";
-import CodeExplorer from "./CodeExplorer/CodeExplorer";
-import ImageAnnotator from "./ImageAnnotator/ImageAnnotator";
-import MemoExplorer from "./MemoExplorer/MemoExplorer";
-import TextAnnotator from "./TextAnnotator/TextAnnotator";
+} from "../../components/EditableDocumentName/EditableDocumentName.tsx";
+import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton.tsx";
+import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer.tsx";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata.tsx";
+import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip.tsx";
+import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags.ts";
+import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
+import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
+import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
+import MemoExplorer from "./MemoExplorer/MemoExplorer.tsx";
+import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
 
 function Annotation() {
   // global client state (URL)
@@ -40,7 +41,7 @@ function Annotation() {
 
   // tabs
   const [tab, setTab] = useState("code");
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string): void => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
 

@@ -1,8 +1,8 @@
 import { Stack } from "@mui/material";
-import SdocHooks from "../../api/SdocHooks";
-import { UserRead } from "../../api/openapi";
-import UserRenderer from "./UserRenderer";
 import React from "react";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { UserRead } from "../../api/openapi/models/UserRead.ts";
+import UserRenderer from "./UserRenderer.tsx";
 
 interface SdocAnnotatorsRendererProps {
   sdocId?: number;

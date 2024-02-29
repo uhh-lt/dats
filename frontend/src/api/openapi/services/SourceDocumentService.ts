@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -10,11 +11,9 @@ import type { SourceDocumentRead } from "../models/SourceDocumentRead";
 import type { SourceDocumentUpdate } from "../models/SourceDocumentUpdate";
 import type { SourceDocumentWithDataRead } from "../models/SourceDocumentWithDataRead";
 import type { WordFrequencyRead } from "../models/WordFrequencyRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class SourceDocumentService {
   /**
    * Returns the SourceDocument with the given ID if it exists
@@ -42,7 +41,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Removes the SourceDocument with the given ID if it exists
    * @returns SourceDocumentRead Successful Response
@@ -60,7 +58,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Updates the SourceDocument with the given ID.
    * @returns SourceDocumentRead Successful Response
@@ -86,7 +83,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns the ids of SourceDocuments linked to the SourceDocument with the given id.
    * @returns number Successful Response
@@ -104,7 +100,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns the URL to the original file of the SourceDocument with the given ID if it exists.
    * @returns string Successful Response
@@ -137,7 +132,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns all SourceDocumentMetadata of the SourceDocument with the given ID if it exists
    * @returns SourceDocumentMetadataReadResolved Successful Response
@@ -159,7 +153,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns the SourceDocumentMetadata with the given Key if it exists.
    * @returns SourceDocumentMetadataReadResolved Successful Response
@@ -184,7 +177,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns the AnnotationDocument for the SourceDocument of the User or create the AnnotationDocument for the User if it does not exist.
    * @returns AnnotationDocumentRead Successful Response
@@ -209,7 +201,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns all AnnotationDocuments for the SourceDocument.
    * @returns AnnotationDocumentRead Successful Response
@@ -227,7 +218,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Removes all AnnotationDocuments for the SourceDocument.
    * @returns number Successful Response
@@ -245,7 +235,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns all DocumentTags linked with the SourceDocument.
    * @returns DocumentTagRead Successful Response
@@ -263,7 +252,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Unlinks all DocumentTags of the SourceDocument.
    * @returns SourceDocumentRead Successful Response
@@ -281,7 +269,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Links a DocumentTag with the SourceDocument with the given ID if it exists
    * @returns SourceDocumentRead Successful Response
@@ -300,7 +287,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Unlinks the DocumentTags from the SourceDocument.
    * @returns SourceDocumentRead Successful Response
@@ -319,7 +305,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Adds a Memo to the SourceDocument with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -345,7 +330,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns all Memo attached to the SourceDocument with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -363,7 +347,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the SourceDocument with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -382,7 +365,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the SourceDocument of the User with the given ID and all memos attached to its annotations.
    * @returns MemoRead Successful Response
@@ -407,7 +389,6 @@ export class SourceDocumentService {
       },
     });
   }
-
   /**
    * Returns the SourceDocument's word frequencies with the given ID if it exists
    * @returns WordFrequencyRead Successful Response

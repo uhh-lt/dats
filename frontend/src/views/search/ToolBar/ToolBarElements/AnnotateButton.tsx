@@ -2,7 +2,6 @@ import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import { Link } from "react-router-dom";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
-import * as React from "react";
 
 interface AnnotateButtonProps {
   projectId: number | string;
@@ -15,7 +14,7 @@ function AnnotateButton({ projectId, sdocId }: AnnotateButtonProps) {
       <IconButton
         component={Link}
         to={`/project/${projectId}/annotation/${sdocId}`}
-        onClick={(e: any) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         <BorderColorIcon />
       </IconButton>

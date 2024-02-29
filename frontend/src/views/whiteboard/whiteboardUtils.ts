@@ -1,27 +1,23 @@
 import { DefaultEdgeOptions, Edge, MarkerType, Node, XYPosition, getRectOfNodes } from "reactflow";
 import { v4 as uuidv4 } from "uuid";
-import {
-  BBoxAnnotationRead,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  DocumentTagRead,
-  MemoRead,
-  SourceDocumentRead,
-  SpanAnnotationReadResolved,
-} from "../../api/openapi";
-import {
-  BBoxAnnotationNodeData,
-  BorderNodeData,
-  CodeNodeData,
-  MemoNodeData,
-  NoteNodeData,
-  SdocNodeData,
-  SpanAnnotationNodeData,
-  TagNodeData,
-  TextNodeData,
-} from "./types";
-import { theme } from "../../plugins/ReactMUI";
-import { BackgroundColorData } from "./types/base/BackgroundColorData";
+import { BBoxAnnotationRead } from "../../api/openapi/models/BBoxAnnotationRead.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { theme } from "../../plugins/ReactMUI.ts";
+import { BackgroundColorData } from "./types/base/BackgroundColorData.ts";
+import { BorderNodeData } from "./types/customnodes/BorderNodeData.ts";
+import { NoteNodeData } from "./types/customnodes/NoteNodeData.ts";
+import { TextNodeData } from "./types/customnodes/TextNodeData.ts";
+import { BBoxAnnotationNodeData } from "./types/dbnodes/BBoxAnnotationNodeData.ts";
+import { CodeNodeData } from "./types/dbnodes/CodeNodeData.ts";
+import { MemoNodeData } from "./types/dbnodes/MemoNodeData.ts";
+import { SdocNodeData } from "./types/dbnodes/SdocNodeData.ts";
+import { SpanAnnotationNodeData } from "./types/dbnodes/SpanAnnotationNodeData.ts";
+import { TagNodeData } from "./types/dbnodes/TagNodeData.ts";
 
 const positionOffset = 50;
 
@@ -268,7 +264,7 @@ export const isDatabaseEdgeArray = (edges: Edge[]): boolean => {
   return edges.every(isDatabaseEdge);
 };
 
-export const isCustomEdge = (edge: Edge<any>): boolean => {
+export const isCustomEdge = (edge: Edge): boolean => {
   return !isDatabaseEdge(edge);
 };
 

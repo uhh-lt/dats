@@ -1,6 +1,6 @@
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
 
 interface ProjectUsersContextMenuProps {
   position: ContextMenuPosition | null;

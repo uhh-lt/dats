@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -6,11 +7,9 @@ import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadRes
 import type { SpanGroupCreate } from "../models/SpanGroupCreate";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
 import type { SpanGroupUpdate } from "../models/SpanGroupUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class SpanGroupService {
   /**
    * Creates a new SpanGroup and returns it with the generated ID.
@@ -32,7 +31,6 @@ export class SpanGroupService {
       },
     });
   }
-
   /**
    * Returns the SpanGroup with the given ID.
    * @returns any Successful Response
@@ -50,7 +48,6 @@ export class SpanGroupService {
       },
     });
   }
-
   /**
    * Updates the SpanGroup with the given ID.
    * @returns any Successful Response
@@ -76,7 +73,6 @@ export class SpanGroupService {
       },
     });
   }
-
   /**
    * Deletes the SpanGroup with the given ID.
    * @returns any Successful Response
@@ -94,7 +90,6 @@ export class SpanGroupService {
       },
     });
   }
-
   /**
    * Returns all SpanAnnotations in the SpanGroup with the given ID if it exists
    * @returns any Successful Response

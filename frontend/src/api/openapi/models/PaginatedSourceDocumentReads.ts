@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { SourceDocumentRead } from "./SourceDocumentRead";
-
 export type PaginatedSourceDocumentReads = {
   /**
    * Flag that indicates whether there are more search results.

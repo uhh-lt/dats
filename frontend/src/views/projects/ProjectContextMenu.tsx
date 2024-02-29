@@ -1,9 +1,8 @@
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
-import { Link } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { Link } from "react-router-dom";
+import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps.tsx";
 
 interface ProjectContextMenuProps extends ContextMenuProps {
   projectId: number | undefined;

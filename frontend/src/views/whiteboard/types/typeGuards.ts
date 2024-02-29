@@ -1,19 +1,17 @@
 import { Node } from "reactflow";
-import {
-  BBoxAnnotationNodeData,
-  BorderData,
-  CodeNodeData,
-  DWTSNodeData,
-  MemoNodeData,
-  SdocNodeData,
-  SpanAnnotationNodeData,
-  TagNodeData,
-  TextData,
-} from ".";
-import { BackgroundColorData } from "./base/BackgroundColorData";
+import { DWTSNodeData } from "./DWTSNodeData.ts";
+import { BackgroundColorData } from "./base/BackgroundColorData.ts";
+import { BorderData } from "./base/BorderData.ts";
+import { TextData } from "./base/TextData.ts";
+import { BBoxAnnotationNodeData } from "./dbnodes/BBoxAnnotationNodeData.ts";
+import { CodeNodeData } from "./dbnodes/CodeNodeData.ts";
+import { MemoNodeData } from "./dbnodes/MemoNodeData.ts";
+import { SdocNodeData } from "./dbnodes/SdocNodeData.ts";
+import { SpanAnnotationNodeData } from "./dbnodes/SpanAnnotationNodeData.ts";
+import { TagNodeData } from "./dbnodes/TagNodeData.ts";
 
-export const hasBorderData = (node: Node<any>): node is Node<BorderData> => {
-  let data = node.data as BorderData;
+export const hasBorderData = (node: Node): node is Node<BorderData> => {
+  const data = node.data as BorderData;
   return (
     data.borderRadius !== undefined &&
     data.borderColor !== undefined &&
@@ -22,12 +20,12 @@ export const hasBorderData = (node: Node<any>): node is Node<BorderData> => {
   );
 };
 
-export const isBorderDataArray = (nodes: Node<any>[]): nodes is Node<BorderData>[] => {
+export const isBorderDataArray = (nodes: Node[]): nodes is Node<BorderData>[] => {
   return nodes.every(hasBorderData);
 };
 
-export const hasTextData = (node: Node<any>): node is Node<TextData> => {
-  let data = node.data as TextData;
+export const hasTextData = (node: Node): node is Node<TextData> => {
+  const data = node.data as TextData;
   return (
     data.text !== undefined &&
     data.variant !== undefined &&
@@ -45,16 +43,16 @@ export const isCustomNode = (node: Node): boolean => {
   return hasTextData(node);
 };
 
-export const isTextDataArray = (nodes: Node<any>[]): nodes is Node<TextData>[] => {
+export const isTextDataArray = (nodes: Node[]): nodes is Node<TextData>[] => {
   return nodes.every(hasTextData);
 };
 
-export const hasBackgroundColorData = (node: Node<any>): node is Node<BackgroundColorData> => {
-  let data = node.data as BackgroundColorData;
+export const hasBackgroundColorData = (node: Node): node is Node<BackgroundColorData> => {
+  const data = node.data as BackgroundColorData;
   return data.bgcolor !== undefined && data.bgalpha !== undefined;
 };
 
-export const isBackgroundColorDataArray = (nodes: Node<any>[]): nodes is Node<BackgroundColorData>[] => {
+export const isBackgroundColorDataArray = (nodes: Node[]): nodes is Node<BackgroundColorData>[] => {
   return nodes.every(hasBackgroundColorData);
 };
 

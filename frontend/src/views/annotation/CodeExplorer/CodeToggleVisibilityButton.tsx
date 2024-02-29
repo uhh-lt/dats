@@ -3,10 +3,10 @@ import React from "react";
 import Tooltip from "@mui/material/Tooltip";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import ICodeTree from "./ICodeTree";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { flatTree } from "./TreeUtils";
-import { AnnoActions, isHiddenCodeId } from "../annoSlice";
+import ICodeTree from "./ICodeTree.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { flatTree } from "./TreeUtils.ts";
+import { AnnoActions, isHiddenCodeId } from "../annoSlice.ts";
 
 function CodeToggleVisibilityButton({ code, ...props }: IconButtonProps & { code: ICodeTree }) {
   // redux (global client state)

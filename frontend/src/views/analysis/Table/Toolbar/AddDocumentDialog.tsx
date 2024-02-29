@@ -1,7 +1,7 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import { SourceDocumentRead } from "../../../../api/openapi";
-import DocumentSelector from "../../../../components/Selectors/DocumentSelector";
+import { SourceDocumentRead } from "../../../../api/openapi/models/SourceDocumentRead.ts";
+import DocumentSelector from "../../../../components/Selectors/DocumentSelector.tsx";
 
 export interface AddDocumentDialogProps {
   projectId: number;

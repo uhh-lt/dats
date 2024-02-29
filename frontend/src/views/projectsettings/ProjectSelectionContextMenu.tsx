@@ -1,9 +1,8 @@
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
-import { useNavigate } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
 
 interface ProjectContextMenuProps {
   position: ContextMenuPosition | null;

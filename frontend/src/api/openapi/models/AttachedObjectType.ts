@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export enum AttachedObjectType {
   ANNOTATION_DOCUMENT = "annotation_document",
   SOURCE_DOCUMENT = "source_document",

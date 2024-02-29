@@ -22,10 +22,10 @@ import {
 import React, { useRef, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { QueryType } from "../QueryType";
-import { useNavigateIfNecessary } from "../hooks/useNavigateIfNecessary";
-import { SearchActions } from "../searchSlice";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { QueryType } from "../QueryType.ts";
+import { useNavigateIfNecessary } from "../hooks/useNavigateIfNecessary.ts";
+import { SearchActions } from "../searchSlice.ts";
 
 interface SearchFormValues {
   query: string | number;
@@ -58,7 +58,7 @@ function SearchBar({ placeholder }: SearchBarProps) {
   const open = Boolean(anchorEl);
 
   // event handlers
-  const handleFocus = (event: any) => {
+  const handleFocus: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> = (event) => {
     event.stopPropagation();
     setAnchorEl(container.current);
   };
@@ -89,7 +89,7 @@ function SearchBar({ placeholder }: SearchBarProps) {
     console.error(errors);
   };
 
-  const handleClearSearch = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClearSearch: React.MouseEventHandler<HTMLButtonElement> = () => {
     dispatch(SearchActions.onClearSearch());
     navigateIfNecessary(`/project/${projectId}/search/`);
 

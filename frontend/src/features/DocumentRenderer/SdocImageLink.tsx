@@ -1,6 +1,6 @@
 import { Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import SdocHooks from "../../api/SdocHooks";
+import SdocHooks from "../../api/SdocHooks.ts";
 
 interface SdocImageLinkProps {
   projectId: number;

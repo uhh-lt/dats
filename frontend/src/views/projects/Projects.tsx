@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import EditIcon from "@mui/icons-material/Edit";
 import {
   Box,
   Card,
@@ -13,15 +13,15 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import UserHooks from "../../api/UserHooks";
-import PreProHooks from "../../api/PreProHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import ProjectContextMenu from "./ProjectContextMenu";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import { ProjectRead } from "../../api/openapi";
-import RecentActivity from "./RecentActivity";
+import PreProHooks from "../../api/PreProHooks.ts";
+import UserHooks from "../../api/UserHooks.ts";
+import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
+import ProjectContextMenu from "./ProjectContextMenu.tsx";
+import RecentActivity from "./RecentActivity.tsx";
 
 function Projects() {
   const { user } = useAuth();
@@ -101,7 +101,7 @@ function Projects() {
 
 interface ProjectCardProps {
   project: ProjectRead;
-  onContextMenu: any;
+  onContextMenu: (projectId: number) => (event: React.MouseEvent) => void;
 }
 
 function ProjectCard({ project, onContextMenu }: ProjectCardProps) {

@@ -1,13 +1,13 @@
 import { Button } from "@mui/material";
 import React, { useCallback } from "react";
 import { XYPosition } from "reactflow";
-import { ReactFlowService } from "../hooks/ReactFlowService";
-import { createBorderNode } from "../whiteboardUtils";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
+import { createBorderNode } from "../whiteboardUtils.ts";
 
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import SquareOutlinedIcon from "@mui/icons-material/SquareOutlined";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 
 type BorderNodeType = "Rounded" | "Ellipse" | "Rectangle";
 

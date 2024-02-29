@@ -1,5 +1,5 @@
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { useTimelineAnalysisCheckQuery } from "./useTimelineAnalysisCheckQuery";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useTimelineAnalysisCheckQuery } from "./useTimelineAnalysisCheckQuery.ts";
 
 interface ValidDocumentsCheckerProps {
   projectId: number;
@@ -16,12 +16,14 @@ function ValidDocumentsChecker({ projectId }: ValidDocumentsCheckerProps) {
     return <>Specify the metadata key that denotes the date of the document.</>;
   } else if (validDocumentsCheck.isError) {
     return <>{validDocumentsCheck.error}</>;
-  } else {
+  } else if (validDocumentsCheck.isSuccess) {
     return (
       <>
         {validDocumentsCheck.data[0]} / {validDocumentsCheck.data[1]} documents have a valid date.
       </>
     );
+  } else {
+    return null;
   }
 }
 

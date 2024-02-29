@@ -1,15 +1,14 @@
-import Tooltip from "@mui/material/Tooltip";
-import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
-import * as React from "react";
 import { IconButtonProps } from "@mui/material";
-import SdocHooks from "../../../../api/SdocHooks";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
-import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../../../../plugins/ReduxHooks";
-import { SearchActions } from "../../searchSlice";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../searchSlice.ts";
 
 interface DeleteButtonProps {
   sdocIds: number[];

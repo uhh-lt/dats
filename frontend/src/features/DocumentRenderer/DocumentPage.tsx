@@ -1,23 +1,16 @@
 import { Box, BoxProps } from "@mui/material";
 import { useMemo } from "react";
-// @ts-ignore
-import { Parser } from "html-to-react";
-
-const htmlToReactParser = new Parser();
-
-const isValidNode = function () {
-  return true;
-};
+import parse, { HTMLReactParserOptions } from "html-react-parser";
 
 interface DocumentPageProps {
   html: string;
-  processingInstructions: any;
+  processingInstructions: HTMLReactParserOptions;
 }
 
 // needs data from useComputeTokenData
 function DocumentPage({ html, processingInstructions, ...props }: DocumentPageProps & BoxProps) {
   const renderedTokens = useMemo(() => {
-    return htmlToReactParser.parseWithInstructions(html, isValidNode, processingInstructions);
+    return parse(html, processingInstructions);
   }, [html, processingInstructions]);
 
   return <Box {...props}>{renderedTokens}</Box>;

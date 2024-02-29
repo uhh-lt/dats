@@ -13,10 +13,11 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { BackgroundJobStatus, PreprocessingJobPayloadRead } from "../../../../api/openapi";
-import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu";
-import { statusToTypographyColor } from "./StatusToTypographyColor";
-import { docTypeToIcon } from "../../../../features/DocumentExplorer/docTypeToIcon";
+import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
+import { PreprocessingJobPayloadRead } from "../../../../api/openapi/models/PreprocessingJobPayloadRead.ts";
+import { docTypeToIcon } from "../../../../features/DocumentExplorer/docTypeToIcon.tsx";
+import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu.tsx";
+import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
 
 interface PreProJobPayloadListItemProps {
   ppj: PreprocessingJobPayloadRead;

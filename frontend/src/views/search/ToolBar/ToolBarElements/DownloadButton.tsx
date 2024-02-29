@@ -1,9 +1,8 @@
-import Tooltip from "@mui/material/Tooltip";
-import * as React from "react";
-import { IconButton, IconButtonProps } from "@mui/material";
-import SdocHooks from "../../../../api/SdocHooks";
 import DownloadIcon from "@mui/icons-material/Download";
+import { IconButton, IconButtonProps } from "@mui/material";
+import Tooltip from "@mui/material/Tooltip";
 import { Link } from "react-router-dom";
+import SdocHooks from "../../../../api/SdocHooks.ts";
 
 interface DownloadButtonProps {
   sdocId: number;

@@ -1,16 +1,16 @@
-import TreeView, { TreeViewProps } from "@mui/lab/TreeView";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import * as React from "react";
 import FolderIcon from "@mui/icons-material/Folder";
-import TreeItem, { treeItemClasses, TreeItemProps } from "@mui/lab/TreeItem";
-import { SvgIconProps } from "@mui/material/SvgIcon";
-import { styled } from "@mui/material/styles";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import ICodeTree from "./ICodeTree";
 import SquareIcon from "@mui/icons-material/Square";
-import { CodeRead } from "../../../api/openapi";
+import Box from "@mui/material/Box";
+import { SvgIconProps } from "@mui/material/SvgIcon";
+import Typography from "@mui/material/Typography";
+import { styled } from "@mui/material/styles";
+import { TreeItem, TreeItemProps, treeItemClasses } from "@mui/x-tree-view/TreeItem";
+import { TreeView, TreeViewProps } from "@mui/x-tree-view/TreeView";
+import * as React from "react";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import ICodeTree from "./ICodeTree.ts";
 
 type StyledTreeItemProps = TreeItemProps & {
   labelIcon: React.ElementType<SvgIconProps>;
@@ -89,7 +89,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 }
 
 export interface CodeTreeViewProps {
-  openContextMenu?: (node: ICodeTree) => (event: any) => void;
+  openContextMenu?: (node: ICodeTree) => (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => void;
   data: ICodeTree;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
@@ -105,7 +105,7 @@ function CodeTreeView({
   openContextMenu,
   onCodeClick,
   ...props
-}: CodeTreeViewProps & TreeViewProps) {
+}: CodeTreeViewProps & TreeViewProps<boolean>) {
   const renderTree = (nodes: ICodeTree[]) => {
     return nodes.map((node) => (
       <StyledTreeItem

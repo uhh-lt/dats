@@ -1,12 +1,12 @@
 import { TabPanel } from "@mui/lab";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import { KeywordStat } from "../../../api/openapi";
-import { useFilterStats } from "../hooks/useFilterStats";
-import StatsDisplayButton from "./StatsDisplayButton";
-import SearchHooks from "../../../api/SearchHooks";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
 import { useParams } from "react-router-dom";
+import SearchHooks from "../../../api/SearchHooks.ts";
+import { KeywordStat } from "../../../api/openapi/models/KeywordStat.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useFilterStats } from "../hooks/useFilterStats.ts";
+import StatsDisplayButton from "./StatsDisplayButton.tsx";
 
 interface KeywordStatsProps {
   sdocIds: number[];
@@ -87,7 +87,7 @@ function KeywordStatsContent({ keywordStats, handleClick, parentRef, filterBy }:
     >
       {filteredKeywordStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let keywordStat = filteredKeywordStats[virtualItem.index];
+        const keywordStat = filteredKeywordStats[virtualItem.index];
         return (
           <StatsDisplayButton
             key={virtualItem.key}

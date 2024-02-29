@@ -1,5 +1,4 @@
-import UserHooks from "../api/UserHooks";
-import React from "react";
+import UserHooks from "../api/UserHooks.ts";
 
 interface UserNameProps {
   userId: number;

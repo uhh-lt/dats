@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface SearchSettings {
-  searchResStyle: "wordcloud" | "text";
   sortStatsByGlobal: boolean;
 }
 
@@ -17,7 +16,6 @@ export interface SettingsState {
 
 const initialState: SettingsState = {
   search: {
-    searchResStyle: "wordcloud",
     sortStatsByGlobal: false,
   },
   annotator: {
@@ -30,12 +28,6 @@ export const settingsSlice = createSlice({
   name: "settings",
   initialState,
   reducers: {
-    toggleSearchResStyle: (state) => {
-      state.search = {
-        ...state.search,
-        searchResStyle: state.search.searchResStyle === "wordcloud" ? "text" : "wordcloud",
-      };
-    },
     toggleStatsOrder: (state) => {
       state.search = {
         ...state.search,

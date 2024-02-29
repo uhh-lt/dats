@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useRef } from "react";
-import { ActionRead } from "../../api/openapi";
-import ActionCard from "./ActionCard";
+import { ActionRead } from "../../api/openapi/models/ActionRead.ts";
+import ActionCard from "./ActionCard.tsx";
 
 interface ActionCardWeekViewProps {
   actions: ActionRead[];

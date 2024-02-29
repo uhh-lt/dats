@@ -2,10 +2,10 @@ import { ErrorMessage } from "@hookform/error-message";
 import { Button, Grid, TextField, Typography } from "@mui/material";
 import { useRef } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import UserHooks from "../../../api/UserHooks";
-import { UserRead } from "../../../api/openapi";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { EMAIL_REGEX, SUPPORT_EMAIL } from "../../../utils/GlobalConstants";
+import UserHooks from "../../../api/UserHooks.ts";
+import { UserRead } from "../../../api/openapi/models/UserRead.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { EMAIL_REGEX, SUPPORT_EMAIL } from "../../../utils/GlobalConstants.ts";
 type UpdateEmailValues = {
   newemail: string;
 };

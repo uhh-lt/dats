@@ -5,7 +5,7 @@ import {
   MyFilterExpression,
   filterOperator2FilterOperatorType,
   operator2HumanReadable,
-} from "./filterUtils";
+} from "./filterUtils.ts";
 
 function FilterOperatorSelector({
   filterExpression,

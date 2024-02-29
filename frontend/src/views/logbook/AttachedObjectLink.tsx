@@ -1,16 +1,13 @@
-import React from "react";
-import {
-  AttachedObjectType,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  DocumentTagRead,
-  SourceDocumentRead,
-  SpanAnnotationReadResolved,
-} from "../../api/openapi";
+import LabelIcon from "@mui/icons-material/Label";
 import { Box, Link, Stack } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import SdocHooks from "../../api/SdocHooks";
-import LabelIcon from "@mui/icons-material/Label";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 
 interface AttachedObjectLinkProps {
   attachedObjectType: AttachedObjectType;

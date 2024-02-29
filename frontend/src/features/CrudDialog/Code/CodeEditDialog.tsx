@@ -3,23 +3,20 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import eventBus from "../../../EventBus";
-import CodeHooks from "../../../api/CodeHooks";
-import { CodeRead, CodeUpdate } from "../../../api/openapi";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import ColorUtils from "../../../utils/ColorUtils";
-import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
-import { AnnoActions } from "../../../views/annotation/annoSlice";
-import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-
-export const openCodeEditDialog = (code: CodeRead) => {
-  eventBus.dispatch("open-edit-code", code);
-};
+import CodeHooks from "../../../api/CodeHooks.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { CodeUpdate } from "../../../api/openapi/models/CodeUpdate.ts";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ColorUtils from "../../../utils/ColorUtils.ts";
+import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
+import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
+import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 type CodeEditValues = {
   parentCodeId: number | undefined;
@@ -43,53 +40,37 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   } = useForm<CodeEditValues>();
 
   // local state
-  const [code, setCode] = useState<CodeRead>();
-  const [open, setOpen] = useState(false);
   const [color, setColor] = useState("#000000");
 
   // redux
+  const open = useAppSelector((state) => state.dialog.isCodeEditDialogOpen);
+  const code = useAppSelector((state) => state.dialog.code);
   const dispatch = useAppDispatch();
 
   // computed
   const parentCodes = useMemo(() => codes.filter((code) => code.user_id !== SYSTEM_USER_ID), [codes]);
 
-  const resetForm = useCallback(
-    (code: CodeRead | undefined) => {
-      if (code) {
-        const c = ColorUtils.rgbStringToHex(code.color) || code.color;
-        reset({
-          name: code.name,
-          description: code.description,
-          color: c,
-          parentCodeId: code.parent_code_id || -1,
-        });
-        setColor(c);
-      }
-    },
-    [reset],
-  );
-
-  // listen to event
-  // create a (memoized) function that stays the same across re-renders
-  const onOpenEditCode = useCallback(
-    (event: CustomEventInit) => {
-      setOpen(true);
-      setCode(event.detail);
-      resetForm(event.detail);
-    },
-    [resetForm],
-  );
-
+  // initialize form when code changes
   useEffect(() => {
-    eventBus.on("open-edit-code", onOpenEditCode);
-    return () => {
-      eventBus.remove("open-edit-code", onOpenEditCode);
-    };
-  }, [onOpenEditCode]);
+    if (code) {
+      const c = ColorUtils.rgbStringToHex(code.color) || code.color;
+      reset({
+        name: code.name,
+        description: code.description,
+        color: c,
+        parentCodeId: code.parent_code_id || -1,
+      });
+      setColor(c);
+    }
+  }, [code, reset]);
 
   // mutations
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const deleteCodeMutation = CodeHooks.useDeleteCode();
+
+  const handleClose = () => {
+    dispatch(CRUDDialogActions.closeCodeEditDialog());
+  };
 
   // form handling
   const handleCodeUpdate: SubmitHandler<CodeEditValues> = (data) => {
@@ -122,7 +103,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               const codesToExpand = [];
               let parentCodeId = data.parent_code_id;
               while (parentCodeId) {
-                let currentParentCodeId = parentCodeId;
+                const currentParentCodeId = parentCodeId;
 
                 codesToExpand.push(parentCodeId);
                 parentCodeId = codes.find((code) => code.id === currentParentCodeId)?.parent_code_id;
@@ -130,7 +111,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             }
 
-            setOpen(false); // close dialog
+            handleClose();
             SnackbarAPI.openSnackbar({
               text: `Updated code ${data.name}`,
               severity: "success",
@@ -151,7 +132,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             { codeId: code.id },
             {
               onSuccess: (data: CodeRead) => {
-                setOpen(false); // close dialog
+                handleClose();
                 SnackbarAPI.openSnackbar({
                   text: `Deleted code ${data.name}`,
                   severity: "success",
@@ -186,7 +167,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   }
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleCodeUpdate, handleError)}>
         <DialogTitle>Edit code {code?.name}</DialogTitle>
         <DialogContent>
@@ -256,7 +237,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
-            loading={deleteCodeMutation.isLoading}
+            loading={deleteCodeMutation.isPending}
             loadingPosition="start"
             onClick={handleCodeDelete}
             sx={{ flexShrink: 0 }}
@@ -271,7 +252,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             fullWidth
             type="submit"
             disabled={!code}
-            loading={updateCodeMutation.isLoading}
+            loading={updateCodeMutation.isPending}
             loadingPosition="start"
           >
             Update Code

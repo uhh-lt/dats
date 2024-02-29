@@ -1,15 +1,13 @@
-import {
-  BooleanOperator,
-  DateOperator,
-  FilterOperator,
-  FilterValueType,
-  IDListOperator,
-  IDOperator,
-  ListOperator,
-  LogicalOperator,
-  NumberOperator,
-  StringOperator,
-} from "../../api/openapi";
+import { BooleanOperator } from "../../api/openapi/models/BooleanOperator.ts";
+import { DateOperator } from "../../api/openapi/models/DateOperator.ts";
+import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
+import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
+import { IDListOperator } from "../../api/openapi/models/IDListOperator.ts";
+import { IDOperator } from "../../api/openapi/models/IDOperator.ts";
+import { ListOperator } from "../../api/openapi/models/ListOperator.ts";
+import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
+import { NumberOperator } from "../../api/openapi/models/NumberOperator.ts";
+import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
 
 // TYPES
 
@@ -25,7 +23,7 @@ export interface MyFilterExpression<T = string> {
   id: string;
   column: T | number;
   operator: FilterOperators;
-  value: string | number | boolean | Array<string>;
+  value: boolean | string | number | string[] | string[][];
 }
 
 export interface MyFilter<T = string> {
@@ -64,14 +62,14 @@ export const isFilterExpression = (filter: MyFilter | MyFilterExpression): filte
 
 // MAPS
 
-export const filterOperator2defaultValue: Record<FilterOperator, any> = {
+export const filterOperator2defaultValue: Record<FilterOperator, boolean | string | number | string[]> = {
   [FilterOperator.BOOLEAN]: false,
   [FilterOperator.STRING]: "",
   [FilterOperator.ID]: 0,
   [FilterOperator.NUMBER]: 0,
   [FilterOperator.ID_LIST]: [],
   [FilterOperator.LIST]: [],
-  [FilterOperator.DATE]: new Date(),
+  [FilterOperator.DATE]: new Date().toISOString(),
 };
 
 export const filterOperator2FilterOperatorType: Record<FilterOperator, FilterOperatorType> = {

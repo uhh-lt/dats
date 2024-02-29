@@ -1,37 +1,55 @@
 import { Box, Button } from "@mui/material";
-import { GridToolbarColumnsButton, GridToolbarContainer, GridToolbarDensitySelector } from "@mui/x-data-grid";
+import { MRT_ShowHideColumnsButton, MRT_TableInstance, MRT_ToggleDensePaddingButton } from "material-react-table";
 import { useRef } from "react";
-import { openSpanAnnotationEditDialog } from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import AnnotatedSegmentsFilterDialog from "./AnnotatedSegmentsFilterDialog";
-import { useAllAnnotatedSegmentsQuery } from "./useAnnotatedSegmentsQuery";
 import { useParams } from "react-router-dom";
+import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import AnnotatedSegmentsFilterDialog from "./AnnotatedSegmentsFilterDialog.tsx";
+import { selectAnnotationIds } from "./annotatedSegmentsSlice.ts";
 
-function AnnotatedSegmentsTableToolbar() {
+interface AnnotatedSegmentsTableToolbarProps {
+  table: MRT_TableInstance<{ spanAnnotationId: number }>;
+}
+
+function AnnotatedSegmentsTableToolbar({ table }: AnnotatedSegmentsTableToolbarProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
   const filterDialogAnchorRef = useRef<HTMLDivElement>(null);
 
-  // global server state (react query)
-  const allAnnotatedSegmentIds = useAllAnnotatedSegmentsQuery(projectId, (data) => {
-    openSpanAnnotationEditDialog(data.span_annotation_ids);
-  });
+  // global client state
+  const userIds = useAppSelector((state) => state.annotatedSegments.selectedUserIds);
+  const filter = useAppSelector((state) => state.annotatedSegmentsFilter.filter["root"]);
 
   // global client state (redux)
-  const rowSelectionModel = useAppSelector((state) => state.annotatedSegments.rowSelectionModel);
+  const selectedAnnotationIds = useAppSelector(selectAnnotationIds);
+  const dispatch = useAppDispatch();
 
   // events
   const handleChangeCodeClick = () => {
-    openSpanAnnotationEditDialog(rowSelectionModel);
+    dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds: selectedAnnotationIds }));
   };
   const handleChangeAllCodesClick = () => {
-    allAnnotatedSegmentIds.refetch();
+    AnalysisService.annotatedSegments({
+      projectId: projectId!,
+      requestBody: {
+        filter: filter as MyFilter<AnnotatedSegmentsColumns>,
+        user_ids: userIds,
+        sorts: [],
+      },
+      page: 0,
+      pageSize: 1000,
+    }).then((data) => {
+      dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds: data.span_annotation_ids }));
+    });
   };
 
   return (
-    <GridToolbarContainer ref={filterDialogAnchorRef}>
-      {rowSelectionModel.length > 0 ? (
+    <Box>
+      {selectedAnnotationIds.length > 0 ? (
         <Button size="small" onClick={handleChangeCodeClick}>
-          Change code of {rowSelectionModel.length} annotated segments
+          Change code of {selectedAnnotationIds.length} annotated segments
         </Button>
       ) : (
         <Button size="small" onClick={handleChangeAllCodesClick}>
@@ -39,10 +57,10 @@ function AnnotatedSegmentsTableToolbar() {
         </Button>
       )}
       <AnnotatedSegmentsFilterDialog anchorEl={filterDialogAnchorRef.current} buttonProps={{ size: "small" }} />
-      <GridToolbarColumnsButton />
-      <GridToolbarDensitySelector />
+      <MRT_ShowHideColumnsButton table={table} />
+      <MRT_ToggleDensePaddingButton table={table} />
       <Box sx={{ flexGrow: 1 }} />
-    </GridToolbarContainer>
+    </Box>
   );
 }
 

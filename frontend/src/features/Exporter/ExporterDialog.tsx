@@ -19,26 +19,25 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import eventBus from "../../EventBus";
-import ExporterHooks from "../../api/ExporterHooks";
-import ProjectHooks from "../../api/ProjectHooks";
-import {
-  BackgroundJobStatus,
-  ExportFormat,
-  ExportJobParameters,
-  SingleDocAllUserAnnotationsExportJobParams,
-  SingleDocSingleUserAnnotationsExportJobParams,
-  SingleProjectAllDataExportJobParams,
-  SingleProjectAllTagsExportJobParams,
-  SingleUserAllCodesExportJobParams,
-  SingleUserAllMemosExportJobParams,
-  SingleUserLogbookExportJobParams,
-} from "../../api/openapi";
-import { ExportJobType } from "../../api/openapi/models/ExportJobType";
-import { useAuth } from "../../auth/AuthProvider";
-import UserName from "../../components/UserName";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import ExporterItemSelectList from "./ExporterItemSelectList";
+import eventBus from "../../EventBus.ts";
+import ExporterHooks from "../../api/ExporterHooks.ts";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+
+import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
+import { ExportFormat } from "../../api/openapi/models/ExportFormat.ts";
+import { ExportJobParameters } from "../../api/openapi/models/ExportJobParameters.ts";
+import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
+import { SingleDocAllUserAnnotationsExportJobParams } from "../../api/openapi/models/SingleDocAllUserAnnotationsExportJobParams.ts";
+import { SingleDocSingleUserAnnotationsExportJobParams } from "../../api/openapi/models/SingleDocSingleUserAnnotationsExportJobParams.ts";
+import { SingleProjectAllDataExportJobParams } from "../../api/openapi/models/SingleProjectAllDataExportJobParams.ts";
+import { SingleProjectAllTagsExportJobParams } from "../../api/openapi/models/SingleProjectAllTagsExportJobParams.ts";
+import { SingleUserAllCodesExportJobParams } from "../../api/openapi/models/SingleUserAllCodesExportJobParams.ts";
+import { SingleUserAllMemosExportJobParams } from "../../api/openapi/models/SingleUserAllMemosExportJobParams.ts";
+import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/SingleUserLogbookExportJobParams.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import UserName from "../../components/UserName.tsx";
+import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+import ExporterItemSelectList from "./ExporterItemSelectList.tsx";
 
 // users documents codes tags attached_to
 const enabledComponentsPerType = new Map<string, string[]>(
@@ -213,7 +212,7 @@ function ExporterDialog() {
     if (!exportJob.data) return;
     if (exportJob.data.status) {
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
-        window.open(process.env.REACT_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
+        window.open(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
         setExportJobId(undefined);
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
         SnackbarAPI.openSnackbar({
@@ -325,7 +324,10 @@ function ExporterDialog() {
               <ExporterItemSelectList
                 items={
                   projectUsers.data?.map((user) => {
-                    return { id: user.id, description: `${user.first_name} ${user.last_name}` };
+                    return {
+                      id: user.id,
+                      description: `${user.first_name} ${user.last_name}`,
+                    };
                   }) || []
                 }
                 value={exporterData.users}
@@ -358,7 +360,10 @@ function ExporterDialog() {
                 <ExporterItemSelectList
                   items={
                     projectUsers.data?.map((user) => {
-                      return { id: user.id, description: `${user.first_name} ${user.last_name}` };
+                      return {
+                        id: user.id,
+                        description: `${user.first_name} ${user.last_name}`,
+                      };
                     }) || []
                   }
                   value={exporterData.users}

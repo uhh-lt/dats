@@ -1,7 +1,7 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import { CodeRead } from "../../../../api/openapi";
-import CodeSelector from "../../../../components/Selectors/CodeSelector";
+import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
+import CodeSelector from "../../../../components/Selectors/CodeSelector.tsx";
 
 export interface AddCodeDialogProps extends ButtonProps {
   projectId: number;

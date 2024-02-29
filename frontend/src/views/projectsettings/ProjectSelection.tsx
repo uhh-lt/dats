@@ -1,3 +1,4 @@
+import AddIcon from "@mui/icons-material/Add";
 import {
   AppBar,
   Box,
@@ -11,13 +12,12 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
 import React, { useState } from "react";
 import { Link, Link as RouterLink, useParams } from "react-router-dom";
-import { useAuth } from "../../auth/AuthProvider";
-import UserHooks from "../../api/UserHooks";
-import ProjectSelectionContextMenu from "./ProjectSelectionContextMenu";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
+import UserHooks from "../../api/UserHooks.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
+import ProjectSelectionContextMenu from "./ProjectSelectionContextMenu.tsx";
 
 function ProjectSelection() {
   const { user } = useAuth();

@@ -1,7 +1,6 @@
-import React from "react";
 import { Container, Grid } from "@mui/material";
 import { Outlet } from "react-router-dom";
-import ProjectSelection from "./ProjectSelection";
+import ProjectSelection from "./ProjectSelection.tsx";
 
 function ProjectSettings() {
   return (

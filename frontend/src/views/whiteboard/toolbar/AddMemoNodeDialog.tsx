@@ -1,11 +1,11 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
-import { MemoRead } from "../../../api/openapi";
-import MemoSelector from "../../../components/Selectors/MemoSelector";
-import { ReactFlowService } from "../hooks/ReactFlowService";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
-import { createMemoNodes } from "../whiteboardUtils";
+import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
+import MemoSelector from "../../../components/Selectors/MemoSelector.tsx";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { createMemoNodes } from "../whiteboardUtils.ts";
 
 export interface AddMemoNodeDialogProps extends AddNodeDialogProps {
   projectId: number;

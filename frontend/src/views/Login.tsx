@@ -2,10 +2,16 @@ import { ErrorMessage } from "@hookform/error-message";
 import AccountCircle from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
 import { Box, Button, Card, CardActions, CardContent, TextField, Typography } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, Navigate, useLocation } from "react-router-dom";
-import { ApiError } from "../api/openapi";
-import { LoginStatus, useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth.ts";
+import { LoginStatus } from "../auth/LoginStatus.ts";
+import { ApiError } from "../api/openapi/core/ApiError.ts";
+
+interface LoginFormValues {
+  user: string;
+  password: string;
+}
 
 function Login() {
   const {
@@ -13,16 +19,15 @@ function Login() {
     handleSubmit,
     formState: { errors },
     setError,
-  } = useForm();
-  let location = useLocation();
+  } = useForm<LoginFormValues>();
+  const location = useLocation();
   const { login, loginStatus } = useAuth();
 
   // when we were redirected from <RequireAuth>, we know where the user left!
-  // @ts-ignore
-  let from = location.state?.from?.pathname || "/projects";
+  const from = location.state?.from?.pathname || "/projects";
 
   // form handling
-  const handleLogin = async (data: any) => {
+  const handleLogin: SubmitHandler<LoginFormValues> = async (data) => {
     login(data.user, data.password).catch((e: ApiError) => {
       let msg = "Server is not available!";
       if (e.status === 403) {
@@ -36,7 +41,7 @@ function Login() {
       });
     });
   };
-  const handleError = (data: any) => console.error(data);
+  const handleError: SubmitErrorHandler<LoginFormValues> = (data) => console.error(data);
 
   if (loginStatus === LoginStatus.LOGGED_IN) {
     return <Navigate to={from} replace />;
@@ -105,7 +110,7 @@ function Login() {
           </CardContent>
         </Card>
       )}
-      {process.env.REACT_APP_STABILITY === "UNSTABLE" && (
+      {import.meta.env.VITE_APP_STABILITY === "UNSTABLE" && (
         <Card sx={{ width: "66%", borderColor: "red", mt: 4 }} variant="outlined" component={"div"}>
           <CardContent>
             <Typography component="div" align="justify">

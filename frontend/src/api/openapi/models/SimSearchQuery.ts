@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { Filter_SearchColumns_ } from "./Filter_SearchColumns_";
-
 export type SimSearchQuery = {
   /**
    * The ID of the Project the SourceDocuments have to belong to.

@@ -1,11 +1,11 @@
 import { Box, Button, Grid, Stack } from "@mui/material";
 import { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { CodeRead } from "../../../api/openapi";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import CodeExplorer, { CodeExplorerHandle } from "../../annotation/CodeExplorer/CodeExplorer";
-import ForceLayout, { GraphData, LinkData } from "./ForceLayout";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import CodeExplorer, { CodeExplorerHandle } from "../../annotation/CodeExplorer/CodeExplorer.tsx";
+import ForceLayout, { GraphData, LinkData } from "./ForceLayout.tsx";
 
 function generateGraphData(selectedIds: number[], allCodes: CodeRead[]): GraphData {
   // find all selected codes in the data based on selectedIds

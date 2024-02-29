@@ -1,21 +1,23 @@
 import { Box, Card, CardContent, CardProps, Stack } from "@mui/material";
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import SdocHooks from "../../../api/SdocHooks";
-import { DocType, DocumentTagRead } from "../../../api/openapi";
+import SdocHooks from "../../../api/SdocHooks.ts";
+
+import { DocType } from "../../../api/openapi/models/DocType.ts";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import EditableDocumentName, {
   EditableDocumentNameHandle,
-} from "../../../components/EditableDocumentName/EditableDocumentName";
-import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
-import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard";
-import AudioVideoViewer from "./AudioVideoViewer";
-import { DocumentAdocSelector } from "./DocumentAdocSelector";
-import DocumentMetadata from "./DocumentMetadata/DocumentMetadata";
-import DocumentTagChip from "./DocumentTagChip";
-import ImageViewer from "./ImageViewer";
-import TextViewer from "./TextViewer";
-import { useDeletableDocumentTags } from "./useDeletableDocumentTags";
-import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments";
+} from "../../../components/EditableDocumentName/EditableDocumentName.tsx";
+import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton.tsx";
+import LexicalSearchResultCard from "../SearchResults/Cards/LexicalSearchResultCard.tsx";
+import AudioVideoViewer from "./AudioVideoViewer.tsx";
+import { DocumentAdocSelector } from "./DocumentAdocSelector.tsx";
+import DocumentMetadata from "./DocumentMetadata/DocumentMetadata.tsx";
+import DocumentTagChip from "./DocumentTagChip.tsx";
+import ImageViewer from "./ImageViewer.tsx";
+import TextViewer from "./TextViewer.tsx";
+import { useDeletableDocumentTags } from "./useDeletableDocumentTags.ts";
+import { useSelectableAnnotationDocuments } from "./useSelectableAnnotationDocuments.ts";
 
 interface DocumentViewerProps {
   sdocId: number | undefined;

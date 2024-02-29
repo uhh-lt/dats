@@ -1,14 +1,13 @@
 import { Box, Grid, Portal, Toolbar, Typography } from "@mui/material";
-import "@toast-ui/editor/dist/toastui-editor.css";
 import { useContext, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
-import { ActionRead } from "../../api/openapi";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useAppSelector } from "../../plugins/ReduxHooks";
-import ActionCardWeekView from "./ActionCardWeekView";
-import ActionDateFunctions from "./ActionDateFunctions";
-import { ActionFilters } from "./ActionFilters";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { ActionRead } from "../../api/openapi/models/ActionRead.ts";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import ActionCardWeekView from "./ActionCardWeekView.tsx";
+import ActionDateFunctions from "./ActionDateFunctions.tsx";
+import { ActionFilters } from "./ActionFilters.tsx";
 
 function Autologbook() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -44,15 +43,15 @@ function Autologbook() {
     const day2actions: Record<string, ActionRead[]> = {};
 
     for (let i = 0; i < visibleDays; i++) {
-      let date = new Date(timestampFrom);
+      const date = new Date(timestampFrom);
       date.setDate(date.getDate() + i);
-      let day = date.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
+      const day = date.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
       day2actions[day] = [];
     }
 
     actions.data.forEach((action) => {
-      let date: Date = new Date(action.executed);
-      let day = date.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
+      const date: Date = new Date(action.executed);
+      const day = date.toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
 
       if (day in day2actions) {
         day2actions[day].push(action);
@@ -62,7 +61,7 @@ function Autologbook() {
     });
 
     // sort actions here desc by date
-    for (let key in day2actions) {
+    for (const key in day2actions) {
       day2actions[key] = day2actions[key].sort((a, b) => b.executed.localeCompare(a.executed));
     }
 

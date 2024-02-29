@@ -1,4 +1,4 @@
-import { AttachedObjectType } from "../../api/openapi";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 
 export const MemoColors: Record<AttachedObjectType, string> = {
   [AttachedObjectType.CODE]: "orange",

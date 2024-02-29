@@ -1,10 +1,9 @@
 import { Menu } from "@mui/material";
-import React from "react";
-import { AttachedObjectType } from "../../api/openapi";
-import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
-import MemoMenuItem from "../Memo/MemoMenuItem";
-import { ITagTree } from "./ITagTree";
-import TagEditMenuItem from "./TagEditMenuItem";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps.tsx";
+import MemoMenuItem from "../Memo/MemoMenuItem.tsx";
+import { ITagTree } from "./ITagTree.ts";
+import TagEditMenuItem from "./TagEditMenuItem.tsx";
 
 interface TagExplorerContextMenuProps extends ContextMenuProps {
   node: ITagTree | undefined;

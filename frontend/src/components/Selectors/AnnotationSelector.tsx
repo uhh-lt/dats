@@ -1,40 +1,33 @@
-import {
-  DataGrid,
-  GridCallbackDetails,
-  GridColDef,
-  GridRowSelectionModel,
-  GridValueGetterParams,
-} from "@mui/x-data-grid";
-import * as React from "react";
-import { useState } from "react";
-import AnalysisHooks from "../../api/AnalysisHooks";
-import { AnnotationOccurrence, CodeRead } from "../../api/openapi";
-import CodeRenderer from "../DataGrid/CodeRenderer";
-import { renderTextCellExpand } from "../DataGrid/renderTextCellExpand";
-import CodeSelector from "./CodeSelector";
+import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
+import { useMemo, useState } from "react";
+import AnalysisHooks from "../../api/AnalysisHooks.ts";
+import { AnnotationOccurrence } from "../../api/openapi/models/AnnotationOccurrence.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import CodeRenderer from "../DataGrid/CodeRenderer.tsx";
+import CodeSelector from "./CodeSelector.tsx";
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID", valueGetter: (params: GridValueGetterParams) => params.row.annotation.id },
+const columns: MRT_ColumnDef<AnnotationOccurrence>[] = [
+  { accessorKey: "id", header: "ID", accessorFn: (params) => params.annotation.id },
   {
-    field: "sdoc",
-    headerName: "Document",
-    flex: 1,
-    valueGetter: (params: GridValueGetterParams) => params.row.sdoc.filename,
-    renderCell: (params) => <>{params.row.sdoc.filename}</>,
+    header: "Document",
+    // flex: 1,
+    id: "document",
+    accessorFn: (params) => params.sdoc.filename,
+    Cell: ({ row }) => <>{row.original.sdoc.filename}</>,
   },
   {
-    field: "code",
-    headerName: "Code",
-    flex: 1,
-    valueGetter: (params: GridValueGetterParams) => params.row.code.name,
-    renderCell: (params) => <CodeRenderer code={params.row.code} />,
+    header: "Code",
+    // flex: 1,
+    id: "code",
+    accessorFn: (params) => params.code.name,
+    Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
   },
   {
-    field: "text",
-    headerName: "Text",
-    flex: 4,
-    description: "The text of the annotation",
-    renderCell: renderTextCellExpand,
+    accessorKey: "text",
+    header: "Text",
+    // flex: 4,
+    // description: "The text of the annotation",
+    // renderCell: renderTextCellExpand,
   },
 ];
 
@@ -46,7 +39,7 @@ interface AnnotationSelectorProps {
 
 function AnnotationSelector({ projectId, userIds, setSelectedAnnotations }: AnnotationSelectorProps) {
   // local state
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // code selection
   const [selectedCode, setSelectedCode] = useState<CodeRead>();
@@ -56,23 +49,50 @@ function AnnotationSelector({ projectId, userIds, setSelectedAnnotations }: Anno
 
   // global server state
   const annotationOccurrences = AnalysisHooks.useAnnotationOccurrences(projectId, userIds, selectedCode?.id);
-  const data = React.useMemo(() => {
-    // we have to transform the data, better do this elsewhere?
-    if (!annotationOccurrences.data) return [];
 
-    return annotationOccurrences.data.map((row, index) => {
-      return {
-        ...row,
-        id: index,
-      };
-    });
+  // computed
+  const annotationOccurrencesMap = useMemo(() => {
+    // we have to transform the data, better do this elsewhere?
+    if (!annotationOccurrences.data) return {};
+
+    return annotationOccurrences.data.reduce(
+      (acc, annotationOccurrence) => {
+        acc[annotationOccurrence.annotation.id.toString()] = annotationOccurrence;
+        return acc;
+      },
+      {} as Record<string, AnnotationOccurrence>,
+    );
   }, [annotationOccurrences.data]);
 
-  // events
-  const onSelectionChange = (selectionModel: GridRowSelectionModel, details: GridCallbackDetails<any>) => {
-    setSelectionModel(selectionModel);
-    setSelectedAnnotations(selectionModel.map((id) => data[id as number]));
-  };
+  // table
+  const table = useMaterialReactTable({
+    data: annotationOccurrences.data || [],
+    columns: columns,
+    // autoPageSize
+    // sx={{ border: "none" }}
+    getRowId: (row) => row.annotation.id.toString(),
+    // state
+    state: {
+      rowSelection: rowSelectionModel,
+      isLoading: columns.length === 0,
+    },
+    // selection
+    enableRowSelection: true,
+    onRowSelectionChange: (rowSelectionUpdater) => {
+      let newRowSelectionModel: MRT_RowSelectionState;
+      if (typeof rowSelectionUpdater === "function") {
+        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
+      } else {
+        newRowSelectionModel = rowSelectionUpdater;
+      }
+      setRowSelectionModel(newRowSelectionModel);
+      setSelectedAnnotations(
+        Object.entries(newRowSelectionModel)
+          .filter(([, selected]) => selected)
+          .map(([annotationId]) => annotationOccurrencesMap[annotationId]),
+      );
+    },
+  });
 
   return (
     <>
@@ -83,15 +103,7 @@ function AnnotationSelector({ projectId, userIds, setSelectedAnnotations }: Anno
         height="400px"
       />
       <div style={{ height: 400, width: "100%" }}>
-        <DataGrid
-          rows={data}
-          columns={columns}
-          autoPageSize
-          getRowId={(row) => row.id}
-          checkboxSelection
-          onRowSelectionModelChange={onSelectionChange}
-          rowSelectionModel={selectionModel}
-        />
+        <MaterialReactTable table={table} />
       </div>
     </>
   );

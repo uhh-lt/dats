@@ -1,11 +1,12 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
 import { XYPosition, useReactFlow } from "reactflow";
-import { AnnotationOccurrence, DocType } from "../../../api/openapi";
-import AnnotationSelector from "../../../components/Selectors/AnnotationSelector";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { createBBoxAnnotationNodes, createSpanAnnotationNodes } from "../whiteboardUtils";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
+import { AnnotationOccurrence } from "../../../api/openapi/models/AnnotationOccurrence.ts";
+import { DocType } from "../../../api/openapi/models/DocType.ts";
+import AnnotationSelector from "../../../components/Selectors/AnnotationSelector.tsx";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { createBBoxAnnotationNodes, createSpanAnnotationNodes } from "../whiteboardUtils.ts";
 
 export interface AddAnnotationNodeDialogProps extends AddNodeDialogProps {
   projectId: number;

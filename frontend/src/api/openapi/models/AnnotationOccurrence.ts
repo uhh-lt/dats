@@ -1,12 +1,11 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { BBoxAnnotationRead } from "./BBoxAnnotationRead";
 import type { CodeRead } from "./CodeRead";
 import type { SourceDocumentRead } from "./SourceDocumentRead";
 import type { SpanAnnotationRead } from "./SpanAnnotationRead";
-
 export type AnnotationOccurrence = {
   /**
    * The Annotation

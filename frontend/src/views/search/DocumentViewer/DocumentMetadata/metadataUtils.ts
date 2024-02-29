@@ -1,4 +1,5 @@
-import { MetaType, SourceDocumentMetadataReadResolved } from "../../../../api/openapi";
+import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 
 export const getValue = (metadata: SourceDocumentMetadataReadResolved) => {
   switch (metadata.project_metadata.metatype) {

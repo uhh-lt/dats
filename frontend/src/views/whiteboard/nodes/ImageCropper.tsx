@@ -8,7 +8,7 @@ interface ImageCropperProps {
   height: number;
   targetWidth: number;
   targetHeight: number;
-  style?: any;
+  style?: React.CSSProperties;
 }
 
 const ImageCropper = memo(({ imageUrl, x, y, width, height, targetWidth, targetHeight, style }: ImageCropperProps) => {
@@ -34,7 +34,6 @@ const ImageCropper = memo(({ imageUrl, x, y, width, height, targetWidth, targetH
     }
   }, [imageUrl, x, y, width, height, targetHeight, targetWidth]);
 
-  // <img src={croppedImage} style={style} alt={"BBox"} />;
   return <canvas id={"canvas"} ref={canvasRef} style={style} />;
 });
 

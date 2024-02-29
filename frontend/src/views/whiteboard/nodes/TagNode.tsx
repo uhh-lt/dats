@@ -2,12 +2,19 @@ import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/mat
 import { intersection } from "lodash";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import SdocHooks from "../../../api/SdocHooks";
-import TagHooks from "../../../api/TagHooks";
-import { useAuth } from "../../../auth/AuthProvider";
-import TagRenderer from "../../../components/DataGrid/TagRenderer";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
-import { openTagEditDialog } from "../../../features/CrudDialog/Tag/TagEditDialog";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import TagHooks from "../../../api/TagHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import TagRenderer from "../../../components/DataGrid/TagRenderer.tsx";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { TagNodeData } from "../types/dbnodes/TagNodeData.ts";
+import { isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
   createMemoNodes,
   createMemoTagEdge,
@@ -15,20 +22,16 @@ import {
   createTagSdocEdge,
   isMemoTagEdge,
   isTagSdocEdge,
-} from "../whiteboardUtils";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { DWTSNodeData, isMemoNode, isSdocNode } from "../types";
-import { TagNodeData } from "../types/dbnodes/TagNodeData";
-import BaseCardNode from "./BaseCardNode";
-import { AttachedObjectType } from "../../../api/openapi";
-import MemoAPI from "../../../features/Memo/MemoAPI";
+} from "../whiteboardUtils.ts";
+import BaseCardNode from "./BaseCardNode.tsx";
 
 function TagNode(props: NodeProps<TagNodeData>) {
   // global client state
   const userId = useAuth().user?.id;
+  const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowInstance = useReactFlow<DWTSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -87,7 +90,7 @@ function TagNode(props: NodeProps<TagNodeData>) {
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2) {
-      openTagEditDialog(props.data.tagId);
+      dispatch(CRUDDialogActions.openTagEditDialog({ tagId: props.data.tagId }));
     }
   };
 

@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { AnalysisService } from "../../../api/openapi";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
 
 export const useTimelineAnalysisCheckQuery = (projectId: number, dateMetadataId: number) =>
-  useQuery(["timelineAnalysisCheck", projectId, dateMetadataId], () =>
-    AnalysisService.getTimelineAnalysisValidDocuments({ projectId, dateMetadataId }),
-  );
+  useQuery({
+    queryKey: ["timelineAnalysisCheck", projectId, dateMetadataId],
+    queryFn: () => AnalysisService.getTimelineAnalysisValidDocuments({ projectId, dateMetadataId }),
+  });

@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { SearchService } from "../../api/openapi";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { SearchFilterActions } from "./searchFilterSlice";
+import { SearchService } from "../../api/openapi/services/SearchService.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { SearchFilterActions } from "./searchFilterSlice.ts";
 
 const useGetSearchInfo = (projectId: number) =>
-  useQuery(["tableInfo", "search", projectId], () => SearchService.searchSdocsInfo({ projectId }));
+  useQuery({
+    queryKey: ["tableInfo", "search", projectId],
+    queryFn: () => SearchService.searchSdocsInfo({ projectId }),
+  });
 
 export const useInitSearchFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)

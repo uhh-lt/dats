@@ -53,7 +53,7 @@ jobs:
       - name: Update spec
         working-directory: frontend
         run: |
-          REACT_APP_SERVER=http://localhost:5500 node bin/updateAPI.js
+          VITE_APP_SERVER=http://localhost:5500 node bin/updateAPI.js
           npm run generate-api
       - name: Check that frontend builds without error
         working-directory: frontend

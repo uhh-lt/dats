@@ -1,14 +1,13 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { ProjectMetadataCreate } from "../models/ProjectMetadataCreate";
 import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
 import type { ProjectMetadataUpdate } from "../models/ProjectMetadataUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class ProjectMetadataService {
   /**
    * Creates a new Metadata and returns it with the generated ID.
@@ -30,7 +29,6 @@ export class ProjectMetadataService {
       },
     });
   }
-
   /**
    * Returns the Metadata with the given ID.
    * @returns ProjectMetadataRead Successful Response
@@ -48,7 +46,6 @@ export class ProjectMetadataService {
       },
     });
   }
-
   /**
    * Updates the Metadata with the given ID.
    * @returns ProjectMetadataRead Successful Response
@@ -74,7 +71,6 @@ export class ProjectMetadataService {
       },
     });
   }
-
   /**
    * Deletes the Metadata with the given ID.
    * @returns ProjectMetadataRead Successful Response

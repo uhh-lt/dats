@@ -1,7 +1,7 @@
 import PlayCircleFilledWhiteIcon from "@mui/icons-material/PlayCircleFilledWhite";
 import { Box, Link } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import SdocHooks from "../../api/SdocHooks";
+import SdocHooks from "../../api/SdocHooks.ts";
 
 interface SdocVideoLinkProps {
   projectId: number;

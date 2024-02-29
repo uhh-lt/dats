@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
-import SdocHooks from "../../api/SdocHooks";
-import { DocumentTagRead } from "../../api/openapi";
-import TagRenderer from "./TagRenderer";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import TagRenderer from "./TagRenderer.tsx";
 
 interface SdocTagsRendererProps {
   sdocId?: number;

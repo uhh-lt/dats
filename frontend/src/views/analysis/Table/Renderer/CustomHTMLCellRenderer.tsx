@@ -1,83 +1,69 @@
-// @ts-ignore
-import { Parser } from "html-to-react";
-// @ts-ignore
-import * as HtmlToReact from "html-to-react";
-import React, { useMemo } from "react";
-import CodeBlock from "./CodeBlock";
-import SdocBlock from "./SdocBlock";
-import AnnotationBlock from "./AnnotationBlock";
+import parse, { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
+import { useMemo } from "react";
+import AnnotationBlock from "./AnnotationBlock.tsx";
+import CodeBlock from "./CodeBlock.tsx";
+import SdocBlock from "./SdocBlock.tsx";
 
-const htmlToReactParser = new Parser();
-const processNodeDefinitions = new HtmlToReact.ProcessNodeDefinitions(React);
-
-const processingInstructions = (col: number, row: number) => [
-  {
-    shouldProcessNode: function (node: any) {
-      return node.name === "code";
-    },
-    processNode: function (node: any, children: any, index: any) {
-      if (node.attribs.id) {
-        const codeId = parseInt(node.attribs.id);
-        return <CodeBlock key={`col-${col}-row-${row}-index-${index}-code-${codeId}`} codeId={codeId} />;
-      } else {
-        return <span key={`col-${col}-row-${row}-index-${index}`}>Code ?</span>;
+const processingInstructions = (col: number, row: number): HTMLReactParserOptions => {
+  const options: HTMLReactParserOptions = {
+    replace(domNode, index) {
+      if (domNode instanceof Element && domNode.attribs) {
+        // code
+        if (domNode.name === "code") {
+          if (domNode.attribs.id) {
+            const codeId = parseInt(domNode.attribs.id);
+            return <CodeBlock key={`col-${col}-row-${row}-index-${index}-code-${codeId}`} codeId={codeId} />;
+          } else {
+            return <span key={`col-${col}-row-${row}-index-${index}`}>Code ?</span>;
+          }
+        }
+        // sdoc
+        else if (domNode.name === "sdoc") {
+          if (domNode.attribs.id) {
+            const sdocId = parseInt(domNode.attribs.id);
+            return <SdocBlock key={`col-${col}-row-${row}-index-${index}-sdoc-${sdocId}`} sdocId={sdocId} />;
+          } else {
+            return <span key={`col-${col}-row-${row}-index-${index}`}>Document ?</span>;
+          }
+        }
+        // annotation
+        else if (domNode.name === "annotation") {
+          if (domNode.attribs.sdocid && domNode.attribs.codeid) {
+            const codeId = parseInt(domNode.attribs.codeid);
+            const sdocId = parseInt(domNode.attribs.sdocid);
+            return (
+              <AnnotationBlock
+                key={`col-${col}-row-${row}-index-${index}-sdoc-${sdocId}-code-${codeId}`}
+                codeId={codeId}
+                sdocId={sdocId}
+                text={domToReact(domNode.children as DOMNode[], options)}
+              />
+            );
+          } else {
+            return <span key={`col-${col}-row-${row}-index-${index}`}>Annotation ?</span>;
+          }
+        }
+        // anything else
+        else {
+          return domToReact(domNode.children as DOMNode[], options);
+        }
       }
     },
-  },
-  {
-    shouldProcessNode: function (node: any) {
-      return node.name === "sdoc";
-    },
-    processNode: function (node: any, children: any, index: any) {
-      if (node.attribs.id) {
-        const sdocId = parseInt(node.attribs.id);
-        return <SdocBlock key={`col-${col}-row-${row}-index-${index}-sdoc-${sdocId}`} sdocId={sdocId} />;
-      } else {
-        return <span key={`col-${col}-row-${row}-index-${index}`}>Document ?</span>;
-      }
-    },
-  },
-  {
-    shouldProcessNode: function (node: any) {
-      return node.name === "annotation";
-    },
-    processNode: function (node: any, children: any, index: any) {
-      if (node.attribs.sdocid && node.attribs.codeid) {
-        const codeId = parseInt(node.attribs.codeid);
-        const sdocId = parseInt(node.attribs.sdocid);
-        return (
-          <AnnotationBlock
-            key={`col-${col}-row-${row}-index-${index}-sdoc-${sdocId}-code-${codeId}`}
-            codeId={codeId}
-            sdocId={sdocId}
-            text={children}
-          />
-        );
-      } else {
-        return <span key={`col-${col}-row-${row}-index-${index}`}>Annotation ?</span>;
-      }
-    },
-  },
-  {
-    // Anything else
-    shouldProcessNode: function (node: any) {
-      return true;
-    },
-    processNode: processNodeDefinitions.processDefaultNode,
-  },
-];
-
-const isValidNode = function () {
-  return true;
+  };
+  return options;
 };
 
-function CustomHTMLCellRenderer(props: any) {
+interface CustomHTMLCellRendererProps {
+  col?: number;
+  row?: number;
+  value?: string;
+}
+
+function CustomHTMLCellRenderer(props: CustomHTMLCellRendererProps) {
   const renderedTokens = useMemo(() => {
-    return htmlToReactParser.parseWithInstructions(
-      props.value,
-      isValidNode,
-      processingInstructions(props.col, props.row),
-    );
+    if (!props.col || !props.row || !props.value) return null;
+
+    return parse(props.value, processingInstructions(props.col, props.row));
   }, [props.col, props.row, props.value]);
 
   return <>{renderedTokens}</>;

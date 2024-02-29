@@ -1,4 +1,4 @@
-import { CodeRead } from "../../../api/openapi";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 
 export default interface ICodeTree {
   code: CodeRead;

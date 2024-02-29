@@ -6,15 +6,15 @@ import CardContent from "@mui/material/CardContent";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useMemo, useState } from "react";
-import { ActionRead } from "../../api/openapi";
-import UserName from "../../components/UserName";
+import { ActionRead } from "../../api/openapi/models/ActionRead.ts";
+import UserName from "../../components/UserName.tsx";
 import {
   action2TargetTitle,
   actionTarget2Title,
   actionType2Color,
   formatTimestampAsTime,
   generateActionStrings,
-} from "./utils";
+} from "./utils.ts";
 
 interface ActionCardProps {
   action: ActionRead;

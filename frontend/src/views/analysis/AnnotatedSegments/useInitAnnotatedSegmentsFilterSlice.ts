@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { AnalysisService } from "../../../api/openapi";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice.ts";
 
 const useGetAnnotatedSegmentsTableInfo = (projectId: number) =>
-  useQuery(["tableInfo", "annotatedSegments", projectId], () => AnalysisService.annotatedSegmentsInfo({ projectId }));
+  useQuery({
+    queryKey: ["tableInfo", "annotatedSegments", projectId],
+    queryFn: () => AnalysisService.annotatedSegmentsInfo({ projectId }),
+  });
 
 export const useInitAnnotatedSegmentsFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)

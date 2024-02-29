@@ -1,8 +1,8 @@
+import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
-import EditIcon from "@mui/icons-material/Edit";
-import eventBus from "../../../EventBus";
-import { CodeRead } from "../../../api/openapi";
+import eventBus from "../../../EventBus.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 
 interface CodeEditMenuItemProps {
   code: CodeRead;

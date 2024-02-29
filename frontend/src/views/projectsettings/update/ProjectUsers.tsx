@@ -18,13 +18,13 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useMemo, useState } from "react";
-import ProjectHooks from "../../../api/ProjectHooks";
-import UserHooks from "../../../api/UserHooks";
-import { PublicUserRead } from "../../../api/openapi";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import { ProjectProps } from "./ProjectProps";
-import ProjectUsersContextMenu from "./ProjectUsersContextMenu";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import UserHooks from "../../../api/UserHooks.ts";
+import { PublicUserRead } from "../../../api/openapi/models/PublicUserRead.ts";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import { ProjectProps } from "./ProjectProps.ts";
+import ProjectUsersContextMenu from "./ProjectUsersContextMenu.tsx";
 
 function ProjectUsers({ project }: ProjectProps) {
   const [selectedUser, setSelectedUser] = useState<PublicUserRead | null>(null);
@@ -54,7 +54,7 @@ function ProjectUsers({ project }: ProjectProps) {
         userId: selectedUser.id,
       },
       {
-        onSuccess: (_user) => setSelectedUser(null),
+        onSuccess: () => setSelectedUser(null),
       },
     );
   };
@@ -73,7 +73,7 @@ function ProjectUsers({ project }: ProjectProps) {
     });
   };
 
-  const handleChangeSelectedUser = (event: React.SyntheticEvent, value: PublicUserRead | null) => {
+  const handleChangeSelectedUser = (_event: React.SyntheticEvent, value: PublicUserRead | null) => {
     setSelectedUser(value);
   };
 
@@ -115,7 +115,7 @@ function ProjectUsers({ project }: ProjectProps) {
               sx={{ ml: 1 }}
               onClick={handleClickAddUser}
               disabled={selectedUser === null}
-              loading={addUserMutation.isLoading}
+              loading={addUserMutation.isPending}
               loadingPosition="start"
             >
               Add

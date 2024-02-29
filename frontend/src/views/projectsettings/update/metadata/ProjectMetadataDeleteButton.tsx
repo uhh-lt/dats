@@ -3,9 +3,9 @@ import { IconButtonProps } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
-import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
-import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI";
+import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI.ts";
+import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI.ts";
 
 interface ProjectMetadataDeleteButtonProps {
   metadataId: number;
@@ -40,7 +40,7 @@ function ProjectMetadataDeleteButton({ metadataId, ...props }: ProjectMetadataDe
   return (
     <Tooltip title="Delete">
       <span>
-        <IconButton {...props} onClick={handleDeleteMetadata} disabled={deleteMutation.isLoading || props.disabled}>
+        <IconButton {...props} onClick={handleDeleteMetadata} disabled={deleteMutation.isPending || props.disabled}>
           <DeleteIcon />
         </IconButton>
       </span>

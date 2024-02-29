@@ -1,6 +1,6 @@
 import CommentIcon from "@mui/icons-material/Comment";
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import MemoAPI, { MemoEvent } from "./MemoAPI";
+import MemoAPI, { MemoEvent } from "./MemoAPI.ts";
 
 interface MemoMenuItemProps {
   onClick: (() => void) | undefined;

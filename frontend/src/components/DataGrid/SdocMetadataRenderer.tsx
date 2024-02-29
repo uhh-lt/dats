@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import SdocHooks from "../../api/SdocHooks";
-import { MetaType, SourceDocumentMetadataReadResolved } from "../../api/openapi";
-import { dateToLocaleDateString } from "../../utils/DateUtils";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { MetaType } from "../../api/openapi/models/MetaType.ts";
+import { SourceDocumentMetadataReadResolved } from "../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { dateToLocaleDateString } from "../../utils/DateUtils.ts";
 
 interface SdocMetadataRendererProps {
   sdocId: number;

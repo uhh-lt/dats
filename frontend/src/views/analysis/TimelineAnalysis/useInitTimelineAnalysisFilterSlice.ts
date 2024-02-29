@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { AnalysisService } from "../../../api/openapi";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
 
 const useGetTimelineAnalysisInfo = (projectId: number) =>
-  useQuery(["tableInfo", "timelineAnalysis", projectId], () => AnalysisService.timelineAnalysis2Info({ projectId }));
+  useQuery({
+    queryKey: ["tableInfo", "timelineAnalysis", projectId],
+    queryFn: () => AnalysisService.timelineAnalysis2Info({ projectId }),
+  });
 
 export const useInitTimelineAnalysisFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)

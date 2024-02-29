@@ -5,27 +5,26 @@ import { LoadingButton, TabContext, TabPanel } from "@mui/lab";
 import { Box, Divider, MenuItem, Stack, Tab, Tabs, TextField } from "@mui/material";
 import React, { useCallback, useState } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import ProjectHooks from "../../../api/ProjectHooks";
-import ProjectMetadataHooks from "../../../api/ProjectMetadataHooks";
-import {
-  DocType,
-  MetaType,
-  ProjectMetadataCreate,
-  ProjectMetadataRead,
-  ProjectMetadataUpdate,
-} from "../../../api/openapi";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { ProjectProps } from "./ProjectProps";
-import ProjectMetadataDeleteButton from "./metadata/ProjectMetadataDeleteButton";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import ProjectMetadataHooks from "../../../api/ProjectMetadataHooks.ts";
+
+import { DocType } from "../../../api/openapi/models/DocType.ts";
+import { MetaType } from "../../../api/openapi/models/MetaType.ts";
+import { ProjectMetadataCreate } from "../../../api/openapi/models/ProjectMetadataCreate.ts";
+import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
+import { ProjectMetadataUpdate } from "../../../api/openapi/models/ProjectMetadataUpdate.ts";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon.tsx";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { ProjectProps } from "./ProjectProps.ts";
+import ProjectMetadataDeleteButton from "./metadata/ProjectMetadataDeleteButton.tsx";
 
 function ProjectMetadata({ project }: ProjectProps) {
   // global server state (react query)
   const projectMetadata = ProjectHooks.useGetMetadata(project.id);
 
   const [tab, setTab] = useState(DocType.TEXT);
-  const handleChangeTab = (event: React.SyntheticEvent, newValue: DocType) => {
+  const handleChangeTab = (_event: React.SyntheticEvent, newValue: DocType) => {
     setTab(newValue);
   };
 
@@ -255,7 +254,7 @@ function ProjectMetadataRowCreate({ docType, projectId }: { docType: DocType; pr
       </TextField>
       <LoadingButton
         sx={{ px: 1, justifyContent: "start", mt: "14px" }}
-        loading={createMutation.isLoading}
+        loading={createMutation.isPending}
         loadingPosition="start"
         startIcon={<Add />}
         type="submit"

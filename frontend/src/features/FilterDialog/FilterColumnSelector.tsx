@@ -1,6 +1,6 @@
 import { MenuItem, TextField } from "@mui/material";
 import { ChangeEvent } from "react";
-import { ColumnInfo, MyFilterExpression } from "./filterUtils";
+import { ColumnInfo, MyFilterExpression } from "./filterUtils.ts";
 
 function FilterColumnSelector({
   filterExpression,

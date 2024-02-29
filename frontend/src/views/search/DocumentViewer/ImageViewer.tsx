@@ -1,14 +1,12 @@
 import { Box } from "@mui/material";
 import * as d3 from "d3";
 import React, { useEffect, useMemo, useRef } from "react";
-import AdocHooks from "../../../api/AdocHooks";
-import {
-  AnnotationDocumentRead,
-  BBoxAnnotationReadResolvedCode,
-  SourceDocumentWithDataRead,
-} from "../../../api/openapi";
-import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
-import SdocHooks from "../../../api/SdocHooks";
+import AdocHooks from "../../../api/AdocHooks.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu.tsx";
 
 interface ImageViewerProps {
   sdoc: SourceDocumentWithDataRead;
@@ -67,7 +65,7 @@ function ImageViewerWithData({
     imageContextMenuRef.current?.open(position, sdoc.id);
   };
 
-  const handleZoom = (e: d3.D3ZoomEvent<any, any>) => {
+  const handleZoom = (e: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
     d3.select(gRef.current).attr("transform", e.transform.toString());
   };
 
@@ -86,7 +84,7 @@ function ImageViewerWithData({
     const scaledRatio = imgContainerHeight / height;
 
     const portWidth: number = svgRef.current!.clientWidth;
-    let xCentering = portWidth / 2 - (width * scaledRatio) / 2;
+    const xCentering = portWidth / 2 - (width * scaledRatio) / 2;
     imgRef.current!.setAttribute("x", "" + xCentering);
 
     // add & remove nodes

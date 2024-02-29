@@ -5,10 +5,10 @@ import { LoadingButton } from "@mui/lab";
 import { Button, Card, CardActions, CardContent, CardHeader, Collapse, TextField, Typography } from "@mui/material";
 import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import FeedbackHooks from "../../api/FeedbackHooks";
-import { FeedbackRead } from "../../api/openapi";
-import UserName from "../../components/UserName";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
+import FeedbackHooks from "../../api/FeedbackHooks.ts";
+import { FeedbackRead } from "../../api/openapi/models/FeedbackRead.ts";
+import UserName from "../../components/UserName.tsx";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
 
 type FeedbackReplyValues = {
   message: string;
@@ -91,7 +91,7 @@ function FeedbackCard({ feedback, showReplyTo }: FeedbackCardProps) {
                   variant="outlined"
                   startIcon={<SendIcon />}
                   type="submit"
-                  loading={replyToFeedbackMutation.isLoading}
+                  loading={replyToFeedbackMutation.isPending}
                   loadingPosition="start"
                 >
                   Send message

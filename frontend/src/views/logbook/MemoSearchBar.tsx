@@ -19,15 +19,16 @@ import {
 } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { UseFormRegister } from "react-hook-form";
-import { AttachedObjectType } from "../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { FILTER_OUT_TYPES } from "./Logbook";
-import { LogbookActions } from "./logbookSlice";
-import { MemoColors, MemoNames, MemoShortnames } from "./MemoEnumUtils";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { UNUSED_MEMO_TYPES } from "../../utils/GlobalConstants.ts";
+import { LogbookSearchForm } from "./Logbook.tsx";
+import { MemoColors, MemoNames, MemoShortnames } from "./MemoEnumUtils.ts";
+import { LogbookActions } from "./logbookSlice.ts";
 
 interface SearchBarProps {
-  register: UseFormRegister<Record<string, any>>;
-  handleSubmit: any;
+  register: UseFormRegister<LogbookSearchForm>;
+  handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   handleClearSearch: () => void;
   placeholder: string;
 }
@@ -45,7 +46,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
   const open = Boolean(anchorEl);
 
   // event handlers
-  const handleFocus = (event: any) => {
+  const handleFocus = (event: React.FocusEvent<HTMLTextAreaElement | HTMLInputElement, Element>) => {
     event.stopPropagation();
     setAnchorEl(container.current);
   };
@@ -66,7 +67,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
     handleSubmit(event);
   };
 
-  const handleClearSearchWrapper = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClearSearchWrapper = () => {
     handleClose();
     handleClearSearch();
   };
@@ -130,7 +131,7 @@ function SearchBar({ handleSubmit, register, handleClearSearch, placeholder }: S
                 <FormLabel component="legend">Attached to</FormLabel>
                 <FormGroup row>
                   {Object.values(AttachedObjectType)
-                    .filter((value) => FILTER_OUT_TYPES.indexOf(value) === -1)
+                    .filter((value) => UNUSED_MEMO_TYPES.indexOf(value) === -1)
                     .map((key) => (
                       <FormControlLabel
                         key={MemoShortnames[key]}

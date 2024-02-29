@@ -1,4 +1,3 @@
-import SdocHooks from "../../api/SdocHooks";
 import {
   AppBar,
   AppBarProps,
@@ -11,13 +10,14 @@ import {
   Stack,
   Toolbar,
 } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { AnnoActions } from "./annoSlice";
+import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { useEffect } from "react";
-import { useAuth } from "../../auth/AuthProvider";
-import Typography from "@mui/material/Typography";
-import UserName from "../../components/UserName";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import UserName from "../../components/UserName.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { AnnoActions } from "./annoSlice.ts";
 
 interface AnnotationDocumentSelectorProps {
   sdocId: number | undefined;

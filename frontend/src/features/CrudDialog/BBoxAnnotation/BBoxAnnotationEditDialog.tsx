@@ -1,17 +1,14 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../../EventBus";
-import BBoxAnnotationRenderer from "../../../components/DataGrid/BBoxAnnotationRenderer";
-import CodeSelector from "../../../components/Selectors/CodeSelector";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-import { BBoxAnnotationReadResolvedCode, CodeRead } from "../../../api/openapi";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
-
-export const openBBoxAnnotationEditDialog = (annotation: BBoxAnnotationReadResolvedCode) => {
-  eventBus.dispatch("open-edit-bboxAnnotation", annotation);
-};
+import { useEffect, useState } from "react";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import BBoxAnnotationRenderer from "../../../components/DataGrid/BBoxAnnotationRenderer.tsx";
+import CodeSelector from "../../../components/Selectors/CodeSelector.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 export interface BBoxAnnotationEditDialogProps extends ButtonProps {
   projectId: number;
@@ -19,34 +16,22 @@ export interface BBoxAnnotationEditDialogProps extends ButtonProps {
 
 function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) {
   // local state
-  const [open, setOpen] = useState(false);
   const [selectedCode, setSelectedCode] = useState<CodeRead | undefined>(undefined);
-  const [annotation, setAnnotation] = useState<BBoxAnnotationReadResolvedCode | undefined>(undefined);
 
-  // listen to event
-  // create a (memoized) function that stays the same across re-renders
-  const onOpenEditAnnotation = useCallback((event: CustomEventInit<BBoxAnnotationReadResolvedCode>) => {
-    if (!event.detail) return;
-
-    setOpen(true);
-    setAnnotation(event.detail);
-    setSelectedCode(event.detail.code);
-  }, []);
+  // global client state (redux)
+  const open = useAppSelector((state) => state.dialog.isBBoxAnnotationEditDialogOpen);
+  const annotation = useAppSelector((state) => state.dialog.bboxAnnotation);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    eventBus.on("open-edit-bboxAnnotation", onOpenEditAnnotation);
-    return () => {
-      eventBus.remove("open-edit-bboxAnnotation", onOpenEditAnnotation);
-    };
-  }, [onOpenEditAnnotation]);
+    setSelectedCode(annotation?.code);
+  }, [annotation]);
 
   // mutations
   const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
 
   const handleClose = () => {
-    setOpen(false);
-    setSelectedCode(undefined);
-    setAnnotation(undefined);
+    dispatch(CRUDDialogActions.closeBBoxAnnotationEditDialog());
   };
 
   const handleUpdateAnnotation = () => {
@@ -60,7 +45,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
         },
       },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           handleClose();
           SnackbarAPI.openSnackbar({
             text: `Updated annotation!`,
@@ -104,7 +89,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
           fullWidth
           onClick={handleUpdateAnnotation}
           disabled={!selectedCode || selectedCode?.id === annotation?.code.id}
-          loading={updateAnnotationMutation.isLoading}
+          loading={updateAnnotationMutation.isPending}
           loadingPosition="start"
         >
           Update Annotation

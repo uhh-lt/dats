@@ -1,6 +1,6 @@
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
-import { EditableDocumentNameHandle } from "./EditableDocumentName";
+import { EditableDocumentNameHandle } from "./EditableDocumentName.tsx";
 
 interface EditableDocumentNameButtonProps {
   editableDocumentNameHandle: EditableDocumentNameHandle | null;

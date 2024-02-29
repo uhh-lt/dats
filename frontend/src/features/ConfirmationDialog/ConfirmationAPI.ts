@@ -1,4 +1,4 @@
-import eventBus from "../../EventBus";
+import eventBus from "../../EventBus.ts";
 
 export interface ConfirmationEvent {
   text: string;

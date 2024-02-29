@@ -1,8 +1,8 @@
 import { AppBar, Box, BoxProps, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import SdocHooks from "../../../api/SdocHooks";
-import { useAuth } from "../../../auth/AuthProvider";
-import MemoResults from "../../logbook/MemoResults";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import MemoResults from "../../logbook/MemoResults.tsx";
 
 interface MemoExplorerProps {
   sdocId: number | undefined;

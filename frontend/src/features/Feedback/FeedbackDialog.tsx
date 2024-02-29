@@ -3,10 +3,14 @@ import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { DialogActions, DialogContent, DialogTitle, Stack, TextField } from "@mui/material";
 import React from "react";
-import { useForm } from "react-hook-form";
-import FeedbackHooks from "../../api/FeedbackHooks";
-import { UserRead } from "../../api/openapi";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import FeedbackHooks from "../../api/FeedbackHooks.ts";
+import { UserRead } from "../../api/openapi/models/UserRead.ts";
+import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+
+interface FeedbackFormValues {
+  content: string;
+}
 
 interface FeedbackDialogProps {
   setIsFeedbackDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -20,7 +24,7 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<FeedbackFormValues>();
 
   // mutations
   const createMutation = FeedbackHooks.useCreateFeedback();
@@ -31,7 +35,7 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
   };
 
   // form event handlers
-  const handleSubmitFeedback = (data: any) => {
+  const handleSubmitFeedback: SubmitHandler<FeedbackFormValues> = (data) => {
     createMutation.mutate(
       {
         requestBody: {
@@ -50,7 +54,7 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
       },
     );
   };
-  const handleError = (data: any) => console.error(data);
+  const handleError: SubmitErrorHandler<FeedbackFormValues> = (data) => console.error(data);
 
   return (
     <>
@@ -78,7 +82,7 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
               startIcon={<SaveIcon />}
               fullWidth
               type="submit"
-              loading={createMutation.isLoading}
+              loading={createMutation.isPending}
               loadingPosition="start"
             >
               Submit Feedback
