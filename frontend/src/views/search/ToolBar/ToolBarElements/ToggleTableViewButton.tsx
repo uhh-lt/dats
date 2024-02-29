@@ -1,7 +1,7 @@
 import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
-import { SearchActions } from "../../searchSlice";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
+import { SearchActions } from "../../searchSlice.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { IconButtonProps } from "@mui/material";
 import TableViewIcon from "@mui/icons-material/TableView";
 

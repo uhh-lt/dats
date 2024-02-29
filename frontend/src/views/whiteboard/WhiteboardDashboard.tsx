@@ -1,29 +1,35 @@
-import CancelIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridColDef,
-  GridEventListener,
-  GridRowEditStopReasons,
-  GridRowId,
-  GridRowModel,
-  GridRowModes,
-  GridRowModesModel,
-} from "@mui/x-data-grid";
-import { useCallback, useState } from "react";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { MRT_ColumnDef, MRT_TableOptions, MaterialReactTable, useMaterialReactTable } from "material-react-table";
+import { useCallback } from "react";
 import { useParams } from "react-router";
 import { useNavigate } from "react-router-dom";
-import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import AnalysisDashboard from "../../features/AnalysisDashboard/AnalysisDashboard";
-import CreateEntityCard from "../../features/AnalysisDashboard/CreateTableCard";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import { dateToLocaleString } from "../../utils/DateUtils";
+import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import AnalysisDashboard from "../../features/AnalysisDashboard/AnalysisDashboard.tsx";
+import CreateEntityCard from "../../features/AnalysisDashboard/CreateTableCard.tsx";
+import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import { dateToLocaleString } from "../../utils/DateUtils.ts";
+
+const columns: MRT_ColumnDef<Whiteboard>[] = [
+  { accessorKey: "id", header: "ID", enableEditing: false },
+  {
+    accessorKey: "title",
+    header: "Name",
+    // flex: 1,
+    enableEditing: true,
+  },
+  {
+    id: "updated",
+    header: "Last modified",
+    // flex: 0.5,
+    accessorFn: (params) => dateToLocaleString(params.updated as string),
+    enableEditing: false,
+  },
+];
 
 function WhiteboardDashboard() {
   const navigate = useNavigate();
@@ -35,76 +41,10 @@ function WhiteboardDashboard() {
   // global server state
   const projectWhiteboards = WhiteboardHooks.useGetProjectWhiteboards(projectId);
 
-  // local client state
-  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-
   // mutations
   const createWhiteboard = WhiteboardHooks.useCreateWhiteboard();
   const deleteWhiteboard = WhiteboardHooks.useDeleteWhiteboard();
   const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
-
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID" },
-    {
-      field: "title",
-      headerName: "Name",
-      flex: 1,
-      editable: true,
-    },
-    {
-      field: "updated",
-      headerName: "Last modified",
-      flex: 0.5,
-      valueGetter: (params) => dateToLocaleString(params.value as string),
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Actions",
-      width: 110,
-      cellClassName: "actions",
-      getActions: ({ id }) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem
-              icon={<SaveIcon />}
-              label="Save"
-              sx={{
-                color: "primary.main",
-              }}
-              onClick={handleSaveClick(id)}
-            />,
-            <GridActionsCellItem
-              icon={<CancelIcon />}
-              label="Cancel"
-              className="textPrimary"
-              onClick={handleCancelClick(id)}
-              color="inherit"
-            />,
-          ];
-        }
-
-        return [
-          <GridActionsCellItem
-            icon={<EditIcon />}
-            label="Edit"
-            className="textPrimary"
-            onClick={handleEditClick(id)}
-            color="inherit"
-          />,
-          <GridActionsCellItem
-            icon={<ContentCopyIcon />}
-            label="Duplicate"
-            onClick={handleDuplicateWhiteboard(id as number)}
-            color="inherit"
-          />,
-          <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} color="inherit" />,
-        ];
-      },
-    },
-  ];
 
   // CRUD actions
   const handleCreateWhiteboard = (title: string) => {
@@ -121,7 +61,7 @@ function WhiteboardDashboard() {
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Created new whiteboard '${data.title}'`,
             severity: "success",
@@ -149,9 +89,9 @@ function WhiteboardDashboard() {
           },
         },
         {
-          onSuccess(_data, _variables, _context) {
+          onSuccess(data) {
             SnackbarAPI.openSnackbar({
-              text: `Duplicated whiteboard '${whiteboard.title}'`,
+              text: `Duplicated whiteboard '${data.title}'`,
               severity: "success",
             });
           },
@@ -161,16 +101,16 @@ function WhiteboardDashboard() {
     [createWhiteboard.mutate, projectId, user, projectWhiteboards.data],
   );
 
-  const handleDeleteClick = (id: GridRowId) => () => {
+  const handleDeleteClick = (whiteboardId: number) => () => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the whiteboard ${id}? This action cannot be undone!`,
+      text: `Do you really want to remove the whiteboard ${whiteboardId}? This action cannot be undone!`,
       onAccept: () => {
         deleteWhiteboard.mutate(
           {
-            whiteboardId: id as number,
+            whiteboardId,
           },
           {
-            onSuccess(data, variables, context) {
+            onSuccess(data) {
               SnackbarAPI.openSnackbar({
                 text: `Deleted whiteboard '${data.title}'`,
                 severity: "success",
@@ -182,53 +122,53 @@ function WhiteboardDashboard() {
     });
   };
 
-  const processRowUpdate = (newRow: GridRowModel<Whiteboard>) => {
+  const handleSaveWhiteboard: MRT_TableOptions<Whiteboard>["onEditingRowSave"] = ({ values, table }) => {
     updateWhiteboard.mutate(
       {
-        whiteboardId: newRow.id,
+        whiteboardId: values.id,
         requestBody: {
-          title: newRow.title,
-          content: JSON.stringify(newRow.content),
+          title: values.title,
+          content: JSON.stringify(values.content),
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated whiteboard '${data.title}'`,
             severity: "success",
           });
+          table.setEditingRow(null); //exit editing mode
         },
       },
     );
-    return newRow;
   };
 
   // UI actions
-  const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
-    if (params.id in rowModesModel && rowModesModel[params.id].mode === GridRowModes.Edit) return;
-    navigate(`./${params.id}`);
+  const handleRowClick = (whiteboardId: number) => {
+    // if (params.id in rowModesModel && rowModesModel[params.id].mode === GridRowModes.Edit) return;
+    navigate(`./${whiteboardId}`);
   };
 
-  const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  };
+  // const handleEditClick = (id: GridRowId) => () => {
+  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+  // };
 
-  const handleSaveClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
+  // const handleSaveClick = (id: GridRowId) => () => {
+  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+  // };
 
-  const handleCancelClick = (id: GridRowId) => () => {
-    setRowModesModel({
-      ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    });
-  };
+  // const handleCancelClick = (id: GridRowId) => () => {
+  //   setRowModesModel({
+  //     ...rowModesModel,
+  //     [id]: { mode: GridRowModes.View, ignoreModifications: true },
+  //   });
+  // };
 
-  const handleRowEditStop: GridEventListener<"rowEditStop"> = (params, event) => {
-    if (params.reason === GridRowEditStopReasons.rowFocusOut) {
-      event.defaultMuiPrevented = true;
-    }
-  };
+  // const handleRowEditStop: GridEventListener<"rowEditStop"> = (params, event) => {
+  //   if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+  //     event.defaultMuiPrevented = true;
+  //   }
+  // };
 
   const createCards = (
     <>
@@ -250,6 +190,53 @@ function WhiteboardDashboard() {
     </>
   );
 
+  // table
+  const table = useMaterialReactTable({
+    data: projectWhiteboards.data || [],
+    columns: columns,
+    getRowId: (row) => row.id.toString(),
+    // row actions
+    muiTableBodyRowProps: ({ row }) => ({
+      onClick: () => handleRowClick(row.original.id),
+    }),
+    // row editing
+    enableEditing: true,
+    editDisplayMode: "row", // ('modal', 'cell', 'table', and 'custom' are also available)
+    onEditingRowSave: handleSaveWhiteboard,
+    // onEditingRowCancel: () => setValidationErrors({}),
+    renderRowActions: ({ row, table }) => (
+      <Box sx={{ display: "flex", gap: "1rem" }}>
+        <Tooltip title="Edit">
+          <IconButton onClick={() => table.setEditingRow(row)}>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Duplicate">
+          <IconButton onClick={() => handleDuplicateWhiteboard(row.original.id)}>
+            <ContentCopyIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete">
+          <IconButton color="error" onClick={() => handleDeleteClick(row.original.id)}>
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    ),
+    // default values
+    initialState: {
+      sorting: [
+        {
+          id: "updated",
+          desc: true,
+        },
+      ],
+    },
+    // autoPageSize
+    // hideFooterSelectedRowCount
+    // style={{ border: "none" }}
+  });
+
   return (
     <AnalysisDashboard
       pageTitle="Whiteboard Dashboard"
@@ -257,25 +244,7 @@ function WhiteboardDashboard() {
       headerCards={createCards}
       bodyTitle="Load whiteboard"
     >
-      <DataGrid
-        rows={projectWhiteboards.data || []}
-        columns={columns}
-        autoPageSize
-        getRowId={(row) => row.id}
-        onRowClick={handleRowClick}
-        hideFooterSelectedRowCount
-        style={{ border: "none" }}
-        initialState={{
-          sorting: {
-            sortModel: [{ field: "updated", sort: "desc" }],
-          },
-        }}
-        editMode="row"
-        rowModesModel={rowModesModel}
-        onRowModesModelChange={(newRowModesModel) => setRowModesModel(newRowModesModel)}
-        onRowEditStop={handleRowEditStop}
-        processRowUpdate={processRowUpdate}
-      />
+      <MaterialReactTable table={table} />
     </AnalysisDashboard>
   );
 }

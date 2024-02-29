@@ -1,9 +1,12 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ExportJobRead, BackgroundJobStatus, ExportService } from "./openapi";
-import { QueryKey } from "./QueryKey";
+import { QueryKey } from "./QueryKey.ts";
+import { BackgroundJobStatus } from "./openapi/models/BackgroundJobStatus.ts";
+import { ExportJobRead } from "./openapi/models/ExportJobRead.ts";
+import { ExportService } from "./openapi/services/ExportService.ts";
 
 const useStartExportJob = () =>
-  useMutation(ExportService.startExportJob, {
+  useMutation({
+    mutationFn: ExportService.startExportJob,
     meta: {
       errorMessage: "Failed to gather documents for export",
     },
@@ -11,32 +14,30 @@ const useStartExportJob = () =>
 
 const useGetExportJob = (exportJobId: string | undefined) => {
   // filter out all disabled code ids
-  return useQuery<ExportJobRead, Error>(
-    [QueryKey.EXPORT_JOB, exportJobId],
-    () =>
+  return useQuery<ExportJobRead, Error>({
+    queryKey: [QueryKey.EXPORT_JOB, exportJobId],
+    queryFn: () =>
       ExportService.getExportJob({
         exportJobId: exportJobId!,
       }),
-    {
-      enabled: !!exportJobId,
-      refetchInterval(data, query) {
-        if (!data) {
-          return 1000;
+    enabled: !!exportJobId,
+    refetchInterval: (query) => {
+      if (!query.state.data) {
+        return 1000;
+      }
+      if (query.state.data.status) {
+        switch (query.state.data.status) {
+          case BackgroundJobStatus.ERRORNEOUS:
+          case BackgroundJobStatus.FINISHED:
+            return false;
+          case BackgroundJobStatus.WAITING:
+          case BackgroundJobStatus.RUNNING:
+            return 1000;
         }
-        if (data.status) {
-          switch (data.status) {
-            case BackgroundJobStatus.ERRORNEOUS:
-            case BackgroundJobStatus.FINISHED:
-              return false;
-            case BackgroundJobStatus.WAITING:
-            case BackgroundJobStatus.RUNNING:
-              return 1000;
-          }
-        }
-        return false;
-      },
+      }
+      return false;
     },
-  );
+  });
 };
 
 const ExporterHooks = {

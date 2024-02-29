@@ -1,9 +1,9 @@
-import { DocumentTagRead } from "../../api/openapi";
-import { ITagTree } from "./ITagTree";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { ITagTree } from "./ITagTree.ts";
 
 export function tagsToTree(tags: DocumentTagRead[]): ITagTree {
   // map input to ITagTree
-  let newTags: ITagTree[] = tags.map((data) => {
+  const newTags: ITagTree[] = tags.map((data) => {
     return { data: data };
   });
 
@@ -19,11 +19,11 @@ export function tagsToTree(tags: DocumentTagRead[]): ITagTree {
     parent_tag_id: undefined,
   };
   // create children of the new root node (all nodes that have no parent!)
-  let children = newTags.filter((tagTree) => !tagTree.data.parent_tag_id);
-  let root: ITagTree = { data: dummyRootNode, children: children };
+  const children = newTags.filter((tagTree) => !tagTree.data.parent_tag_id);
+  const root: ITagTree = { data: dummyRootNode, children: children };
 
   // create the full tree using the other nodes
-  let nodes = newTags.filter((tagTree) => tagTree.data.parent_tag_id);
+  const nodes = newTags.filter((tagTree) => tagTree.data.parent_tag_id);
 
   root.children!.forEach((tagTree) => {
     tagsToTreeRecursion(tagTree, nodes);
@@ -34,7 +34,7 @@ export function tagsToTree(tags: DocumentTagRead[]): ITagTree {
 
 function tagsToTreeRecursion(root: ITagTree, nodes: ITagTree[]): ITagTree {
   root.children = nodes.filter((node) => node.data.parent_tag_id === root.data.id);
-  let otherNodes = nodes.filter((node) => node.data.parent_tag_id !== root.data.id);
+  const otherNodes = nodes.filter((node) => node.data.parent_tag_id !== root.data.id);
 
   root.children.forEach((tagTree) => {
     tagsToTreeRecursion(tagTree, otherNodes);
@@ -48,7 +48,7 @@ export function flatTreeWithRoot(tree: ITagTree | null): DocumentTagRead[] {
     return [];
   }
 
-  let allChildren = flatTree(tree);
+  const allChildren = flatTree(tree);
   return [tree.data, ...allChildren];
 }
 

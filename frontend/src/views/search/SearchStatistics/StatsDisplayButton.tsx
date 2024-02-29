@@ -7,7 +7,7 @@ export interface StatsDisplayButtonProps {
   totalCount: number;
   maxCount: number;
   translateY: number;
-  handleClick: Function;
+  handleClick: React.MouseEventHandler<HTMLDivElement>;
 }
 
 function StatsDisplayButton({
@@ -34,7 +34,7 @@ function StatsDisplayButton({
         display: "flex",
         alignItems: "center",
       }}
-      onClick={() => handleClick()}
+      onClick={handleClick}
     >
       <Tooltip title={term}>
         <Typography

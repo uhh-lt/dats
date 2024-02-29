@@ -11,7 +11,6 @@ export interface GenericAnchorPopoverHandle {
   close: () => void;
 }
 
-// eslint-disable-next-line no-empty-pattern
 const GenericAnchorPopover = forwardRef<GenericAnchorPopoverHandle, GenericAnchorPopoverProps>(
   ({ children, ...props }, ref) => {
     // local state
@@ -34,7 +33,7 @@ const GenericAnchorPopover = forwardRef<GenericAnchorPopoverHandle, GenericAncho
     };
 
     // ui events
-    const handleContextMenu = (event: any) => {
+    const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
       event.preventDefault();
       closeContextMenu();
     };
@@ -42,7 +41,7 @@ const GenericAnchorPopover = forwardRef<GenericAnchorPopoverHandle, GenericAncho
     return (
       <Popover
         open={isOpen}
-        onClose={(event, reason) => closeContextMenu()}
+        onClose={() => closeContextMenu()}
         anchorEl={anchorEl}
         anchorReference="anchorEl"
         onContextMenu={handleContextMenu}

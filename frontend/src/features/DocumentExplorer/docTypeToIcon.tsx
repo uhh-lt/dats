@@ -1,9 +1,8 @@
 import ArticleIcon from "@mui/icons-material/Article";
 import AudioFileIcon from "@mui/icons-material/AudioFile";
-import VideoFileIcon from "@mui/icons-material/VideoFile";
 import ImageIcon from "@mui/icons-material/Image";
-import * as React from "react";
-import { DocType } from "../../api/openapi";
+import VideoFileIcon from "@mui/icons-material/VideoFile";
+import { DocType } from "../../api/openapi/models/DocType.ts";
 
 export const docTypeToIcon: Record<DocType, React.ReactElement> = {
   [DocType.TEXT]: <ArticleIcon />,

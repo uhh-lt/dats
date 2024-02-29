@@ -1,10 +1,11 @@
-import { SearchResultProps } from "../SearchResultProps";
-import { DocType, SimSearchSentenceHit } from "../../../../api/openapi";
 import { CardProps, Typography } from "@mui/material";
-import SdocHooks from "../../../../api/SdocHooks";
-import { simSearchColorScale } from "../../utils";
 import { useMemo } from "react";
-import SearchResultCardBase from "./SearchResultCardBase";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import { DocType } from "../../../../api/openapi/models/DocType.ts";
+import { SimSearchSentenceHit } from "../../../../api/openapi/models/SimSearchSentenceHit.ts";
+import { simSearchColorScale } from "../../utils.ts";
+import { SearchResultProps } from "../SearchResultProps.ts";
+import SearchResultCardBase from "./SearchResultCardBase.tsx";
 
 export interface SentenceSimilaritySearchResultCardProps extends SearchResultProps {
   hits: SimSearchSentenceHit[];

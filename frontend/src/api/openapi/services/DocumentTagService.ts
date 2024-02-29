@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -7,11 +8,9 @@ import type { DocumentTagUpdate } from "../models/DocumentTagUpdate";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
 import type { SourceDocumentDocumentTagMultiLink } from "../models/SourceDocumentDocumentTagMultiLink";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class DocumentTagService {
   /**
    * Creates a new DocumentTag and returns it with the generated ID.
@@ -33,7 +32,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Links multiple DocumentTags with the SourceDocuments and returns the number of new Links
    * @returns number Successful Response
@@ -54,7 +52,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Unlinks all DocumentTags with the SourceDocuments and returns the number of removed Links.
    * @returns number Successful Response
@@ -75,7 +72,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Returns the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
@@ -93,7 +89,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Updates the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
@@ -119,7 +114,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Deletes the DocumentTag with the given ID.
    * @returns DocumentTagRead Successful Response
@@ -137,7 +131,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Adds a Memo to the DocumentTag with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -163,7 +156,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Returns the Memos attached to the DocumentTag with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -181,7 +173,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the document tag with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -200,7 +191,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Returns all SourceDocument IDs attached to the Tag with the given ID if it exists.
    * @returns number Successful Response
@@ -218,7 +208,6 @@ export class DocumentTagService {
       },
     });
   }
-
   /**
    * Returns a dict of all tag ids with their count of assigned source documents, counting only source documents in the given id list
    * @returns number Successful Response

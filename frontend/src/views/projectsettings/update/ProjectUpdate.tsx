@@ -6,17 +6,17 @@ import { AppBar, Box, Button, Card, CardContent, Stack, Tabs, Typography } from 
 import Tab from "@mui/material/Tab";
 import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { useAuth } from "../../../auth/AuthProvider";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import ProjectCodes from "./ProjectCodes";
-import ProjectDetails from "./ProjectDetails";
-import ProjectDocuments from "./ProjectDocuments";
-import ProjectDuplicateDocuments from "./ProjectDuplicateDocuments";
-import ProjectMetadata from "./ProjectMetadata";
-import ProjectTags from "./ProjectTags";
-import ProjectUsers from "./ProjectUsers";
-import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import ProjectCodes from "./ProjectCodes.tsx";
+import ProjectDetails from "./ProjectDetails.tsx";
+import ProjectDocuments from "./ProjectDocuments.tsx";
+import ProjectDuplicateDocuments from "./ProjectDuplicateDocuments.tsx";
+import ProjectMetadata from "./ProjectMetadata.tsx";
+import ProjectTags from "./ProjectTags.tsx";
+import ProjectUsers from "./ProjectUsers.tsx";
+import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks.tsx";
 
 function ProjectUpdate() {
   const { user } = useAuth();
@@ -28,7 +28,7 @@ function ProjectUpdate() {
 
   // state
   const [tab, setTab] = useState("1");
-  const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
+  const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => {
     setTab(newValue);
   };
 
@@ -42,7 +42,7 @@ function ProjectUpdate() {
           deleteProjectMutation.mutate(
             { projId: project.data.id, userId: user.id },
             {
-              onSuccess: (_data) => navigate(`/projectsettings`),
+              onSuccess: () => navigate(`/projectsettings`),
             },
           );
         },
@@ -66,7 +66,7 @@ function ProjectUpdate() {
               sx={{ mr: 1 }}
               onClick={handleClickRemoveProject}
               disabled={!project.isSuccess}
-              loading={deleteProjectMutation.isLoading}
+              loading={deleteProjectMutation.isPending}
               loadingPosition="start"
             >
               Delete
@@ -103,7 +103,7 @@ function ProjectUpdate() {
               <ProjectCodes project={project.data} />
             </TabPanel>
             <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
-              <ProjectTags project={project.data} />
+              <ProjectTags />
             </TabPanel>
             <TabPanel value="6" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectMetadata project={project.data} />

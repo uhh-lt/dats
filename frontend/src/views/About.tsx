@@ -1,4 +1,3 @@
-import React from "react";
 import { Container, Typography } from "@mui/material";
 
 function About() {
@@ -14,6 +13,7 @@ function About() {
         },
       }}
     >
+      ß
       <Typography variant={"h3"} gutterBottom mt={3}>
         About
       </Typography>
@@ -71,7 +71,7 @@ export default About;
 
 // Refer here on how to use react-grid-layout, if necessary in the future!
 // import { Responsive, WidthProvider } from "react-grid-layout";
-// import DocumentExplorer from "../features/document-explorer/DocumentExplorer";
+// import DocumentExplorer from "../features/document-explorer/DocumentExplorer.ts";
 // import { Box } from "@mui/material";
 //
 // const ResponsiveGridLayout = WidthProvider(Responsive);

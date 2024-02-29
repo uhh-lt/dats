@@ -17,19 +17,18 @@ import {
 } from "@mui/material";
 import React, { useContext, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { AttachedObjectType } from "../../../api/openapi";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
-import SpanAnnotationEditDialog, {
-  openSpanAnnotationEditDialog,
-} from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
-import MemoAPI from "../../../features/Memo/MemoAPI";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable";
-import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector";
-import SpanAnnotationCard from "./SpanAnnotationCard";
-import SpanAnnotationCardList from "./SpanAnnotationCardList";
-import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import SpanAnnotationEditDialog from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable.tsx";
+import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector.tsx";
+import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
+import SpanAnnotationCardList from "./SpanAnnotationCardList.tsx";
+import { AnnotatedSegmentsActions, selectAnnotationIds } from "./annotatedSegmentsSlice.ts";
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -43,7 +42,7 @@ function AnnotatedSegments() {
   // global client state (redux)
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
   const isSplitView = useAppSelector((state) => state.annotatedSegments.isSplitView);
-  const rowSelectionModel = useAppSelector((state) => state.annotatedSegments.rowSelectionModel);
+  const selectedAnnotationIds = useAppSelector(selectAnnotationIds);
   const dispatch = useAppDispatch();
 
   // actions
@@ -59,26 +58,26 @@ function AnnotatedSegments() {
   };
 
   const openSpanAnnotation = (spanAnnotationIds: number[]) => {
-    openSpanAnnotationEditDialog(spanAnnotationIds);
+    dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds }));
   };
 
   // events
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLDivElement>, spanAnnotationId: number) => {
+  const handleRowContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     contextMenuRef.current?.open({ left: event.clientX, top: event.clientY });
   };
 
   const handleContextMenuOpenMemo = () => {
-    if (rowSelectionModel.length !== 1) return;
+    if (selectedAnnotationIds.length !== 1) return;
 
     contextMenuRef.current?.close();
-    openMemo(rowSelectionModel[0]);
+    openMemo(selectedAnnotationIds[0]);
   };
 
   const handleContextMenuChangeCode = () => {
-    if (rowSelectionModel.length !== 1) return;
+    if (selectedAnnotationIds.length !== 1) return;
 
     contextMenuRef.current?.close();
-    openSpanAnnotation([rowSelectionModel[0]]);
+    openSpanAnnotation([selectedAnnotationIds[0]]);
   };
 
   return (
@@ -120,8 +119,12 @@ function AnnotatedSegments() {
 
           {!isSplitView && (
             <SpanAnnotationCard
-              key={rowSelectionModel.length > 0 ? rowSelectionModel[rowSelectionModel.length - 1] : undefined}
-              annotationId={rowSelectionModel.length > 0 ? rowSelectionModel[rowSelectionModel.length - 1] : undefined}
+              key={
+                selectedAnnotationIds.length > 0 ? selectedAnnotationIds[selectedAnnotationIds.length - 1] : undefined
+              }
+              annotationId={
+                selectedAnnotationIds.length > 0 ? selectedAnnotationIds[selectedAnnotationIds.length - 1] : undefined
+              }
               sx={{ mb: 2, flexShrink: 0 }}
             />
           )}
@@ -135,7 +138,7 @@ function AnnotatedSegments() {
             </CardContent>
           </Card>
         </Grid>
-        {isSplitView && <SpanAnnotationCardList spanAnnotationIds={rowSelectionModel} />}
+        {isSplitView && <SpanAnnotationCardList spanAnnotationIds={selectedAnnotationIds} />}
       </Grid>
       <SpanAnnotationEditDialog projectId={projectId} />
       <GenericPositionMenu ref={contextMenuRef}>

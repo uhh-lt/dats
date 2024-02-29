@@ -1,6 +1,6 @@
-import FilterDialog, { FilterDialogProps } from "../../../features/FilterDialog/FilterDialog";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice";
+import FilterDialog, { FilterDialogProps } from "../../../features/FilterDialog/FilterDialog.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice.ts";
 
 function AnnotatedSegmentsFilterDialog({ anchorEl, buttonProps }: Pick<FilterDialogProps, "anchorEl" | "buttonProps">) {
   const filter = useAppSelector((state) => state.annotatedSegmentsFilter.filter["root"]);

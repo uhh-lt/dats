@@ -1,8 +1,8 @@
-import SdocHooks from "../../api/SdocHooks";
-import { SpanAnnotationReadResolved } from "../../api/openapi";
 import { useMemo } from "react";
-import AdocHooks from "../../api/AdocHooks";
-import { IToken } from "./IToken";
+import AdocHooks from "../../api/AdocHooks.ts";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { IToken } from "./IToken.ts";
 
 function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number; annotationDocumentIds: number[] }) {
   // global server state (react query)

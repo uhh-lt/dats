@@ -1,10 +1,10 @@
 import { CardMedia, CardProps, Tooltip, Typography } from "@mui/material";
-import { SearchResultProps } from "../SearchResultProps";
-import * as React from "react";
-import { DocType, SimSearchImageHit } from "../../../../api/openapi";
-import { simSearchColorScale } from "../../utils";
-import SdocHooks from "../../../../api/SdocHooks";
-import SearchResultCardBase from "./SearchResultCardBase";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import { DocType } from "../../../../api/openapi/models/DocType.ts";
+import { SimSearchImageHit } from "../../../../api/openapi/models/SimSearchImageHit.ts";
+import { simSearchColorScale } from "../../utils.ts";
+import { SearchResultProps } from "../SearchResultProps.ts";
+import SearchResultCardBase from "./SearchResultCardBase.tsx";
 
 export interface ImageSimilaritySearchResultCardProps extends SearchResultProps {
   hit: SimSearchImageHit;

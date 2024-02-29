@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
-import FeedbackHooks from "../../api/FeedbackHooks";
-import FeedbackCards from "./FeedbackCards";
+import FeedbackHooks from "../../api/FeedbackHooks.ts";
+import FeedbackCards from "./FeedbackCards.tsx";
 
 function FeedbackUser() {
   // global client state (react-router)

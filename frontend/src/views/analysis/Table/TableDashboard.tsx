@@ -1,32 +1,21 @@
-import CancelIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
 import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridColDef,
-  GridEventListener,
-  GridRowEditStopReasons,
-  GridRowId,
-  GridRowModel,
-  GridRowModes,
-  GridRowModesModel,
-} from "@mui/x-data-grid";
-import { useCallback, useState } from "react";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { MRT_ColumnDef, MRT_TableOptions, MaterialReactTable, useMaterialReactTable } from "material-react-table";
+import { useCallback } from "react";
 import { useParams } from "react-router";
 import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import TableHooks, { TableRead } from "../../../api/TableHooks";
-import { TableType } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard";
-import CreateEntityCard from "../../../features/AnalysisDashboard/CreateTableCard";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { dateToLocaleString } from "../../../utils/DateUtils";
-import { TableType2Template } from "./templates";
+import TableHooks, { TableRead } from "../../../api/TableHooks.ts";
+import { TableType } from "../../../api/openapi/models/TableType.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard.tsx";
+import CreateEntityCard from "../../../features/AnalysisDashboard/CreateTableCard.tsx";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { dateToLocaleString } from "../../../utils/DateUtils.ts";
+import { TableType2Template } from "./templates.ts";
 
 function TableDashboard() {
   const navigate = useNavigate();
@@ -38,74 +27,24 @@ function TableDashboard() {
   // global server state
   const userTables = TableHooks.useGetUserTables(projectId, user?.id);
 
-  // local client state
-  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-
   // mutations
   const createTable = TableHooks.useCreateTable();
   const deleteTable = TableHooks.useDeleteTable();
   const updateTable = TableHooks.useUpdateTable();
 
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID" },
+  const columns: MRT_ColumnDef<TableRead>[] = [
+    { accessorKey: "id", header: "ID" },
     {
-      field: "title",
-      headerName: "Name",
-      flex: 1,
-      editable: true,
+      accessorKey: "title",
+      header: "Name",
+      // flex: 1,
+      enableEditing: true,
     },
     {
-      field: "updated",
-      headerName: "Last modified",
-      flex: 0.5,
-      valueGetter: (params) => dateToLocaleString(params.value as string),
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Actions",
-      width: 110,
-      cellClassName: "actions",
-      getActions: ({ id }) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem
-              icon={<SaveIcon />}
-              label="Save"
-              sx={{
-                color: "primary.main",
-              }}
-              onClick={handleSaveClick(id)}
-            />,
-            <GridActionsCellItem
-              icon={<CancelIcon />}
-              label="Cancel"
-              className="textPrimary"
-              onClick={handleCancelClick(id)}
-              color="inherit"
-            />,
-          ];
-        }
-
-        return [
-          <GridActionsCellItem
-            icon={<EditIcon />}
-            label="Edit"
-            className="textPrimary"
-            onClick={handleEditClick(id)}
-            color="inherit"
-          />,
-          <GridActionsCellItem
-            icon={<ContentCopyIcon />}
-            label="Duplicate"
-            onClick={handleDuplicateTable(id as number)}
-            color="inherit"
-          />,
-          <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} color="inherit" />,
-        ];
-      },
+      header: "Last modified",
+      // flex: 0.5,
+      id: "updated",
+      accessorFn: (params) => dateToLocaleString(params.updated),
     },
   ];
 
@@ -125,9 +64,9 @@ function TableDashboard() {
         },
       },
       {
-        onSuccess(_data, _variables, _context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
-            text: `Created new table '${title}'`,
+            text: `Created new table '${data.title}'`,
             severity: "success",
           });
         },
@@ -154,9 +93,9 @@ function TableDashboard() {
           },
         },
         {
-          onSuccess(_data, _variables, _context) {
+          onSuccess(data) {
             SnackbarAPI.openSnackbar({
-              text: `Duplicated table '${table.title}'`,
+              text: `Duplicated table '${data.title}'`,
               severity: "success",
             });
           },
@@ -166,16 +105,16 @@ function TableDashboard() {
     [createTable.mutate, projectId, user, userTables.data],
   );
 
-  const handleDeleteClick = (id: GridRowId) => () => {
+  const handleDeleteClick = (tableId: number) => () => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the table ${id}? This action cannot be undone!`,
+      text: `Do you really want to remove the table ${tableId}? This action cannot be undone!`,
       onAccept: () => {
         deleteTable.mutate(
           {
-            analysisTableId: id as number,
+            analysisTableId: tableId as number,
           },
           {
-            onSuccess(data, variables, context) {
+            onSuccess(data) {
               SnackbarAPI.openSnackbar({
                 text: `Deleted table '${data.title}'`,
                 severity: "success",
@@ -187,54 +126,54 @@ function TableDashboard() {
     });
   };
 
-  const processRowUpdate = (newRow: GridRowModel<TableRead>) => {
+  const handleSaveTable: MRT_TableOptions<TableRead>["onEditingRowSave"] = ({ values, table }) => {
     updateTable.mutate(
       {
-        analysisTableId: newRow.id,
+        analysisTableId: values.id,
         requestBody: {
-          title: newRow.title,
-          content: JSON.stringify(newRow.content),
-          table_type: newRow.table_type,
+          title: values.title,
+          content: JSON.stringify(values.content),
+          table_type: values.table_type,
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated table '${data.title}'`,
             severity: "success",
           });
+          table.setEditingRow(null); //exit editing mode
         },
       },
     );
-    return newRow;
   };
 
   // UI actions
-  const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
-    if (params.id in rowModesModel && rowModesModel[params.id].mode === GridRowModes.Edit) return;
-    navigate(`./${params.id}`);
+  const handleRowClick = (tableId: number) => {
+    // if (params.id in rowModesModel && rowModesModel[params.id].mode === GridRowModes.Edit) return;
+    navigate(`./${tableId}`);
   };
 
-  const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  };
+  // const handleEditClick = (id: GridRowId) => () => {
+  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+  // };
 
-  const handleSaveClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
+  // const handleSaveClick = (id: GridRowId) => () => {
+  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+  // };
 
-  const handleCancelClick = (id: GridRowId) => () => {
-    setRowModesModel({
-      ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    });
-  };
+  // const handleCancelClick = (id: GridRowId) => () => {
+  //   setRowModesModel({
+  //     ...rowModesModel,
+  //     [id]: { mode: GridRowModes.View, ignoreModifications: true },
+  //   });
+  // };
 
-  const handleRowEditStop: GridEventListener<"rowEditStop"> = (params, event) => {
-    if (params.reason === GridRowEditStopReasons.rowFocusOut) {
-      event.defaultMuiPrevented = true;
-    }
-  };
+  // const handleRowEditStop: GridEventListener<"rowEditStop"> = (params, event) => {
+  //   if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+  //     event.defaultMuiPrevented = true;
+  //   }
+  // };
 
   const createCards = (
     <>
@@ -261,6 +200,53 @@ function TableDashboard() {
     </>
   );
 
+  // table
+  const table = useMaterialReactTable({
+    data: userTables.data || [],
+    columns: columns,
+    getRowId: (row) => row.id.toString(),
+    // row actions
+    muiTableBodyRowProps: ({ row }) => ({
+      onClick: () => handleRowClick(row.original.id),
+    }),
+    // row editing
+    enableEditing: true,
+    editDisplayMode: "row", // ('modal', 'cell', 'table', and 'custom' are also available)
+    onEditingRowSave: handleSaveTable,
+    // onEditingRowCancel: () => setValidationErrors({}),
+    renderRowActions: ({ row, table }) => (
+      <Box sx={{ display: "flex", gap: "1rem" }}>
+        <Tooltip title="Edit">
+          <IconButton onClick={() => table.setEditingRow(row)}>
+            <EditIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Duplicate">
+          <IconButton onClick={() => handleDuplicateTable(row.original.id)}>
+            <ContentCopyIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Delete">
+          <IconButton color="error" onClick={() => handleDeleteClick(row.original.id)}>
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    ),
+    // default values
+    initialState: {
+      sorting: [
+        {
+          id: "updated",
+          desc: true,
+        },
+      ],
+    },
+    // autoPageSize
+    // hideFooterSelectedRowCount
+    // style={{ border: "none" }}
+  });
+
   return (
     <AnalysisDashboard
       pageTitle="Table Dashboard"
@@ -268,25 +254,7 @@ function TableDashboard() {
       headerCards={createCards}
       bodyTitle="Load table"
     >
-      <DataGrid
-        rows={userTables.data || []}
-        columns={columns}
-        autoPageSize
-        getRowId={(row) => row.id}
-        onRowClick={handleRowClick}
-        hideFooterSelectedRowCount
-        style={{ border: "none" }}
-        initialState={{
-          sorting: {
-            sortModel: [{ field: "updated", sort: "desc" }],
-          },
-        }}
-        editMode="row"
-        rowModesModel={rowModesModel}
-        onRowModesModelChange={(newRowModesModel) => setRowModesModel(newRowModesModel)}
-        onRowEditStop={handleRowEditStop}
-        processRowUpdate={processRowUpdate}
-      />
+      <MaterialReactTable table={table} />
     </AnalysisDashboard>
   );
 }

@@ -12,19 +12,18 @@ import {
   PopoverPosition,
   TextField,
   Tooltip,
+  UseAutocompleteProps,
 } from "@mui/material";
-import { forwardRef, SyntheticEvent, useEffect, useImperativeHandle, useMemo, useState } from "react";
-import CodeHooks from "../../../api/CodeHooks";
-import {
-  AttachedObjectType,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  SpanAnnotationReadResolved,
-} from "../../../api/openapi";
-import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
-import MemoButton from "../../../features/Memo/MemoButton";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { ICode } from "../TextAnnotator/ICode";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoButton from "../../../features/Memo/MemoButton.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { ICode } from "../TextAnnotator/ICode.ts";
 
 interface ICodeFilter extends CodeRead {
   title: string;
@@ -50,6 +49,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
   ({ onClose, onAdd, onEdit, onDelete }, ref) => {
     // global client state (redux)
     const codes = useAppSelector((state) => state.annotations.codesForSelection);
+    const dispatch = useAppDispatch();
 
     // local client state
     const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
@@ -110,12 +110,12 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     }, [showCodeSelection]);
 
     // event handlers
-    const handleContextMenu = (event: any) => {
+    const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
       event.preventDefault();
       closeCodeSelector("backdropClick");
     };
 
-    const handleChange = (event: SyntheticEvent<Element, Event>, newValue: ICodeFilter | string | null) => {
+    const handleChange: UseAutocompleteProps<ICodeFilter, false, false, true>["onChange"] = (_event, newValue) => {
       if (typeof newValue === "string") {
         alert("HOW DID YOU DO THIS? (Please tell Tim)");
         return;
@@ -127,7 +127,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
 
       // if code does not exist, open the code creation dialog
       if (newValue.id === -1) {
-        openCodeCreateDialog({ name: newValue.name, onSuccess: submit });
+        dispatch(CRUDDialogActions.openCodeCreateDialog({ codeName: newValue.name, codeCreateSuccessHandler: submit }));
         return;
       }
 
@@ -163,7 +163,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
     return (
       <Popover
         open={isPopoverOpen}
-        onClose={(event, reason) => closeCodeSelector(reason)}
+        onClose={(_event, reason) => closeCodeSelector(reason)}
         anchorPosition={position}
         anchorReference="anchorPosition"
         anchorOrigin={{
@@ -193,7 +193,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
           <>
             <Autocomplete
               value={autoCompleteValue}
-              onChange={(event, newValue) => handleChange(event, newValue)}
+              onChange={handleChange}
               filterOptions={(options, params) => {
                 const filtered = filter(options, params);
 
@@ -238,7 +238,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
               handleHomeEndKeys
               freeSolo
               open={isAutoCompleteOpen}
-              onClose={(event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
+              onClose={(_event, reason) => reason === "escape" && closeCodeSelector("escapeKeyDown")}
             />
           </>
         )}

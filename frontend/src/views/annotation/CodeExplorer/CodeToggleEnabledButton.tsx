@@ -3,11 +3,11 @@ import React from "react";
 import Tooltip from "@mui/material/Tooltip";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ICodeTree from "./ICodeTree";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { flatTree } from "./TreeUtils";
-import { SettingsActions } from "../../settings/settingsSlice";
-import { RootState } from "../../../store/store";
+import ICodeTree from "./ICodeTree.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { flatTree } from "./TreeUtils.ts";
+import { SettingsActions } from "../../settings/settingsSlice.ts";
+import { RootState } from "../../../store/store.ts";
 
 function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: ICodeTree | null | undefined }) {
   // redux (global client state)

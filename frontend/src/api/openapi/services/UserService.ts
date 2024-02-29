@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -6,11 +7,9 @@ import type { ProjectRead } from "../models/ProjectRead";
 import type { PublicUserRead } from "../models/PublicUserRead";
 import type { UserRead } from "../models/UserRead";
 import type { UserUpdate } from "../models/UserUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class UserService {
   /**
    * Returns the current (logged in) user
@@ -23,7 +22,6 @@ export class UserService {
       url: "/user/me",
     });
   }
-
   /**
    * Returns the User with the given ID if it exists
    * @returns PublicUserRead Successful Response
@@ -41,7 +39,6 @@ export class UserService {
       },
     });
   }
-
   /**
    * Updates the User with the given ID if it exists
    * @returns UserRead Successful Response
@@ -67,7 +64,6 @@ export class UserService {
       },
     });
   }
-
   /**
    * Removes the User with the given ID if it exists
    * @returns UserRead Successful Response
@@ -85,7 +81,6 @@ export class UserService {
       },
     });
   }
-
   /**
    * Returns all Users that exist in the system
    * @returns PublicUserRead Successful Response
@@ -116,7 +111,6 @@ export class UserService {
       },
     });
   }
-
   /**
    * Returns all Projects of the User with the given ID
    * @returns ProjectRead Successful Response
@@ -134,7 +128,6 @@ export class UserService {
       },
     });
   }
-
   /**
    * Returns the top k sdoc ids that the User recently modified (annotated)
    * @returns AnnotationDocumentRead Successful Response

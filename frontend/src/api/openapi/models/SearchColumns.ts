@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export enum SearchColumns {
   SC_SOURCE_DOCUMENT_TYPE = "SC_SOURCE_DOCUMENT_TYPE",
   SC_SOURCE_DOCUMENT_FILENAME = "SC_SOURCE_DOCUMENT_FILENAME",

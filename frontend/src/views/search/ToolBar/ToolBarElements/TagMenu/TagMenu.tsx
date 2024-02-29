@@ -1,3 +1,5 @@
+import LabelIcon from "@mui/icons-material/Label";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   Checkbox,
@@ -13,23 +15,16 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
-import LabelIcon from "@mui/icons-material/Label";
-import SearchIcon from "@mui/icons-material/Search";
-import { useParams } from "react-router-dom";
 import { isEqual } from "lodash";
-import ProjectHooks from "../../../../../api/ProjectHooks";
-import TagHooks from "../../../../../api/TagHooks";
-import { DocumentTagRead } from "../../../../../api/openapi";
-import SnackbarAPI from "../../../../../features/Snackbar/SnackbarAPI";
-import { useAppSelector } from "../../../../../plugins/ReduxHooks";
-import TagCreationButton from "./TagMenuCreateButton";
-
-export enum CheckboxState {
-  NOT_CHECKED,
-  CHECKED,
-  INDETERMINATE,
-}
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import ProjectHooks from "../../../../../api/ProjectHooks.ts";
+import TagHooks from "../../../../../api/TagHooks.ts";
+import { DocumentTagRead } from "../../../../../api/openapi/models/DocumentTagRead.ts";
+import SnackbarAPI from "../../../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppSelector } from "../../../../../plugins/ReduxHooks.ts";
+import { CheckboxState } from "./CheckboxState.ts";
+import TagCreationButton from "./TagMenuCreateButton.tsx";
 
 interface TagMenuProps {
   popoverOrigin: PopoverOrigin | undefined;
@@ -188,7 +183,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   if (hasChanged) {
     actionMenu.push(
       <ListItem disablePadding dense key={"apply"}>
-        <ListItemButton onClick={handleApplyTags} dense disabled={updateTagsMutation.isLoading}>
+        <ListItemButton onClick={handleApplyTags} dense disabled={updateTagsMutation.isPending}>
           <Typography align={"center"} sx={{ width: "100%" }}>
             Apply
           </Typography>

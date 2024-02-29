@@ -1,9 +1,8 @@
 import { AppBar, AppBarProps, FormControl, MenuItem, Select, SelectChangeEvent, Stack, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import * as React from "react";
-import { AnnotationDocumentRead } from "../../../api/openapi";
-import UserName from "../../../components/UserName";
 import { useMemo } from "react";
+import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
+import UserName from "../../../components/UserName.tsx";
 
 interface DocumentAdocSelectorProps {
   annotationDocuments: AnnotationDocumentRead[];

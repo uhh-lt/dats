@@ -1,12 +1,12 @@
-import React from "react";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { CodeRead } from "../../api/openapi";
-import CodeHooks from "../../api/CodeHooks";
-import MemoHooks from "../../api/MemoHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import { MemoForm } from "./MemoForm";
-import { MemoContentProps } from "./MemoContentBboxAnnotation";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
+import { SubmitHandler } from "react-hook-form";
+import CodeHooks from "../../api/CodeHooks.ts";
+import MemoHooks from "../../api/MemoHooks.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
+import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
 interface MemoContentCodeProps {
   code: CodeRead;
@@ -26,7 +26,7 @@ export function MemoContentCode({
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateCodeMemo = (data: any) => {
+  const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
 
     if (memo) {
@@ -102,9 +102,9 @@ export function MemoContentCode({
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
       handleDeleteMemo={handleDeleteCodeMemo}
-      isUpdateLoading={updateMutation.isLoading}
-      isCreateLoading={createMutation.isLoading}
-      isDeleteLoading={deleteMutation.isLoading}
+      isUpdateLoading={updateMutation.isPending}
+      isCreateLoading={createMutation.isPending}
+      isDeleteLoading={deleteMutation.isPending}
     />
   );
 }

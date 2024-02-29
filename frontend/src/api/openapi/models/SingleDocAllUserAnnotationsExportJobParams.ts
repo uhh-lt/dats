@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type SingleDocAllUserAnnotationsExportJobParams = {
   /**
    * The ID of the Project to export from

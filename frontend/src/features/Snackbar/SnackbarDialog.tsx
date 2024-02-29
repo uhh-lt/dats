@@ -1,8 +1,8 @@
 import { AlertTitle, Snackbar } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../EventBus";
-import { SnackbarEvent } from "./SnackbarAPI";
+import eventBus from "../../EventBus.ts";
+import { SnackbarEvent } from "./SnackbarAPI.ts";
 
 export default function SnackbarDialog() {
   const [event, setEvent] = useState<SnackbarEvent | undefined>();

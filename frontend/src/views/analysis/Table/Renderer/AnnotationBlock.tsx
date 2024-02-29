@@ -1,10 +1,10 @@
-import CodeBlock from "./CodeBlock";
-import SdocBlock from "./SdocBlock";
+import CodeBlock from "./CodeBlock.tsx";
+import SdocBlock from "./SdocBlock.tsx";
 
 interface AnnotationBlockProps {
   sdocId: number;
   codeId: number;
-  text: string;
+  text: string | React.JSX.Element | React.JSX.Element[];
 }
 
 function AnnotationBlock({ sdocId, codeId, text }: AnnotationBlockProps) {

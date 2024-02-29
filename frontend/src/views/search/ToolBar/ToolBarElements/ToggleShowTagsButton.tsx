@@ -2,9 +2,8 @@ import Tooltip from "@mui/material/Tooltip";
 import IconButton from "@mui/material/IconButton";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import * as React from "react";
-import { SearchActions } from "../../searchSlice";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
+import { SearchActions } from "../../searchSlice.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { IconButtonProps } from "@mui/material";
 
 interface ToggleShowTagsButtonProps {}

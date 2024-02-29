@@ -3,9 +3,9 @@ import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import TextSnippetIcon from "@mui/icons-material/TextSnippet";
 import { IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from "@mui/material";
 import { useMemo, useState } from "react";
-import { TimelineAnalysisCount } from "./useTimelineAnalysis";
 import CsvDownloader from "react-csv-downloader";
 import { Datas } from "react-csv-downloader/dist/esm/lib/csv";
+import { TimelineAnalysisCount } from "./useTimelineAnalysis.ts";
 
 interface TimelineAnalysisExportMenuProps {
   chartName: string;
@@ -20,7 +20,7 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
   const columns = useMemo(() => {
     if (chartData === undefined || chartData === null || chartData.length === 0) return [];
     console.log("chartData", chartData);
-    let keys = Object.keys(chartData[0]);
+    const keys = Object.keys(chartData[0]);
     return keys.map((key) => ({ id: key, displayName: key }));
   }, [chartData]);
 
@@ -32,30 +32,30 @@ function TimelineAnalysisExportMenu({ chartData, chartName }: TimelineAnalysisEx
     setAnchorEl(null);
   };
   const handleExportChartPNG = () => {
-    let chartContainers = document.getElementsByClassName("timeline-chart");
+    const chartContainers = document.getElementsByClassName("timeline-chart");
     if (chartContainers.length === 0) return;
 
-    let chartSVG = chartContainers[0].children[0];
+    const chartSVG = chartContainers[0].children[0];
 
     const width = chartSVG.clientWidth;
     const height = chartSVG.clientHeight;
-    let svgURL = new XMLSerializer().serializeToString(chartSVG);
-    let svgBlob = new Blob([svgURL], { type: "image/svg+xml;charset=utf-8" });
-    let URL = window.URL || window.webkitURL || window;
-    let blobURL = URL.createObjectURL(svgBlob);
+    const svgURL = new XMLSerializer().serializeToString(chartSVG);
+    const svgBlob = new Blob([svgURL], { type: "image/svg+xml;charset=utf-8" });
+    const URL = window.URL || window.webkitURL || window;
+    const blobURL = URL.createObjectURL(svgBlob);
 
-    let image = new Image();
+    const image = new Image();
     image.onload = () => {
-      let canvas = document.createElement("canvas");
+      const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      let context = canvas.getContext("2d");
+      const context = canvas.getContext("2d");
       if (context) {
         // Set background to white
         context.fillStyle = "#ffffff";
         context.fillRect(0, 0, width, height);
         context.drawImage(image, 0, 0, context.canvas.width, context.canvas.height);
-        let png = canvas.toDataURL("image/png", 1.0);
+        const png = canvas.toDataURL("image/png", 1.0);
 
         const a = document.createElement("a");
         a.setAttribute("download", "timeline-analysis.png");

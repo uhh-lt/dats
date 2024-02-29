@@ -1,5 +1,5 @@
-import eventBus from "../../EventBus";
-import { ExporterInfo } from "./ExporterDialog";
+import eventBus from "../../EventBus.ts";
+import { ExporterInfo } from "./ExporterDialog.tsx";
 
 function openExporterDialog(props: ExporterInfo) {
   eventBus.dispatch("open-exporter", props);

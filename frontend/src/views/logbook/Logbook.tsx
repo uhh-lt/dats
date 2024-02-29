@@ -1,25 +1,21 @@
 import { Box, Grid } from "@mui/material";
 import Portal from "@mui/material/Portal";
-import "@toast-ui/editor/dist/toastui-editor.css";
 import { useContext, useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { AttachedObjectType } from "../../api/openapi";
-import ProjectHooks from "../../api/ProjectHooks";
-import SearchHooks from "../../api/SearchHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import LogbookEditor from "./LogbookEditor";
-import { LogbookActions } from "./logbookSlice";
-import MemoResults from "./MemoResults";
-import MemoSearchBar from "./MemoSearchBar";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import SearchHooks from "../../api/SearchHooks.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { UNUSED_MEMO_TYPES } from "../../utils/GlobalConstants.ts";
+import MemoResults from "./MemoResults.tsx";
+import MemoSearchBar from "./MemoSearchBar.tsx";
+import { LogbookActions } from "./logbookSlice.ts";
 
-export const FILTER_OUT_TYPES = [
-  AttachedObjectType.ANNOTATION_DOCUMENT,
-  AttachedObjectType.PROJECT,
-  AttachedObjectType.SPAN_GROUP,
-];
+export interface LogbookSearchForm {
+  query: string;
+}
 
 // todo: implement recent activities timeline
 function Logbook() {
@@ -57,7 +53,7 @@ function Logbook() {
   );
 
   // searchbar form
-  const { register, handleSubmit, reset, setValue } = useForm();
+  const { register, handleSubmit, reset, setValue } = useForm<LogbookSearchForm>();
 
   // init form with value from global state (redux)
   useEffect(() => {
@@ -66,12 +62,12 @@ function Logbook() {
   }, [setValue]); // we only want to set the value once, not every time the searchTerm changes!
 
   // search form handling
-  const handleSearch = (data: any) => {
+  const handleSearch: SubmitHandler<LogbookSearchForm> = (data) => {
     const query: string = data.query;
     dispatch(LogbookActions.setSearchTerm(query));
   };
 
-  const handleSearchError = (data: any) => console.error(data);
+  const handleSearchError: SubmitErrorHandler<LogbookSearchForm> = (data) => console.error(data);
   const handleClearSearch = () => {
     dispatch(LogbookActions.setSearchTerm(""));
     reset();
@@ -95,7 +91,7 @@ function Logbook() {
             <MemoResults
               sx={{ pl: 1 }}
               memoIds={memos.data
-                .filter((m) => !FILTER_OUT_TYPES.includes(m.attached_object_type))
+                .filter((m) => !UNUSED_MEMO_TYPES.includes(m.attached_object_type))
                 .filter((m) => categories.includes(m.attached_object_type))
                 .map((memo) => memo.id)}
               noResultsText={`No memos match your query "${searchTerm}" :(`}
@@ -104,7 +100,7 @@ function Logbook() {
         </Grid>
         <Grid item md={6} className="h100">
           <Box className="h100" sx={{ pr: 1 }}>
-            <LogbookEditor />
+            <div>Editor currently not supported</div>
           </Box>
         </Grid>
       </Grid>

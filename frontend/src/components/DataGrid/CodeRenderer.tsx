@@ -1,7 +1,7 @@
 import SquareIcon from "@mui/icons-material/Square";
-import CodeHooks from "../../api/CodeHooks";
-import { CodeRead } from "../../api/openapi";
 import { Stack } from "@mui/material";
+import CodeHooks from "../../api/CodeHooks.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 
 interface CodeRendererProps {
   code: number | CodeRead;

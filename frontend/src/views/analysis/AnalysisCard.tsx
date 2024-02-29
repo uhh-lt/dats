@@ -1,6 +1,5 @@
 import { Card, CardActionArea, CardActions, CardContent, Typography } from "@mui/material";
 import { Link } from "react-router-dom";
-import React from "react";
 
 interface AnalysisCardProps {
   to: string;

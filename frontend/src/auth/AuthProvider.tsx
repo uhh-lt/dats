@@ -1,24 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import {
-  ApiError,
-  AuthenticationService,
-  OpenAPI,
-  UserAuthorizationHeaderData,
-  UserRead,
-  UserService,
-} from "../api/openapi";
-import queryClient from "../plugins/ReactQueryClient";
+import React, { createContext, useCallback, useEffect, useState } from "react";
+import { ApiError } from "../api/openapi/core/ApiError.ts";
+import { OpenAPI } from "../api/openapi/core/OpenAPI.ts";
+import { UserAuthorizationHeaderData } from "../api/openapi/models/UserAuthorizationHeaderData.ts";
+import { UserRead } from "../api/openapi/models/UserRead.ts";
+import { AuthenticationService } from "../api/openapi/services/AuthenticationService.ts";
+import { UserService } from "../api/openapi/services/UserService.ts";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { LoginStatus } from "./LoginStatus.ts";
 
 // init once
-OpenAPI.BASE = process.env.REACT_APP_SERVER || "";
+OpenAPI.BASE = import.meta.env.VITE_APP_SERVER || "";
 OpenAPI.TOKEN = localStorage.getItem("dwts-access") || undefined;
-
-export enum LoginStatus {
-  LOGGED_IN = "logged_in",
-  LOADING = "loading",
-  LOGGED_OUT = "logged_out",
-}
 
 interface AuthContextType {
   user: UserRead | undefined;
@@ -28,17 +21,16 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
-export const useAuth = () => useContext(AuthContext)!;
 
 interface AuthContextProps {
   children?: React.ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthContextProps): any => {
+export const AuthProvider = ({ children }: AuthContextProps) => {
   // state
   const [accessToken, setAccessToken] = useState<string | undefined>(localStorage.getItem("dwts-access") || undefined);
 
-  let expiryString = localStorage.getItem("dwts-access-expires");
+  const expiryString = localStorage.getItem("dwts-access-expires");
   const persistedAccessTokenExpires = expiryString ? new Date(expiryString) : undefined;
   const [accessTokenExpires, setAccessTokenExpires] = useState<Date | undefined>(persistedAccessTokenExpires);
 
@@ -46,7 +38,9 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
     localStorage.getItem("dwts-refresh-access") || undefined,
   );
 
-  const internalUser = useQuery<UserRead, Error>(["me", accessToken], UserService.getMe, {
+  const internalUser = useQuery<UserRead, Error>({
+    queryKey: ["me", accessToken],
+    queryFn: UserService.getMe,
     retry: false,
   });
 
@@ -85,7 +79,9 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
    * @throws ApiError
    */
   const login = useCallback(async (username: string, password: string) => {
-    const authData = await AuthenticationService.login({ formData: { username, password } });
+    const authData = await AuthenticationService.login({
+      formData: { username, password },
+    });
     updateAuthData(authData);
   }, []);
 
@@ -124,7 +120,9 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
         return;
       }
       try {
-        const authData = await AuthenticationService.refreshAccessToken({ refreshToken });
+        const authData = await AuthenticationService.refreshAccessToken({
+          refreshToken,
+        });
         updateAuthData(authData);
       } catch (e) {
         if (e instanceof ApiError && e.status === 403) {

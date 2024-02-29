@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { CodeRead } from "./CodeRead";
 import type { SourceDocumentRead } from "./SourceDocumentRead";
-
 export type CodeOccurrence = {
   /**
    * The SourceDocument where the Code occurs.

@@ -14,7 +14,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { DataGrid, GridColDef, GridValueGetterParams } from "@mui/x-data-grid";
+import { MRT_ColumnDef, MRT_PaginationState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
 import React, { Dispatch, SetStateAction, useContext, useEffect, useMemo, useState } from "react";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import {
@@ -31,50 +31,56 @@ import {
   YAxis,
 } from "recharts";
 import { Node } from "ts-tree-structure";
-import AnalysisHooks from "../../../api/AnalysisHooks";
-import CodeHooks from "../../../api/CodeHooks";
-import { CodeFrequency, CodeRead } from "../../../api/openapi";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
-import { renderTextCellExpand } from "../../../components/DataGrid/renderTextCellExpand";
-import UserName from "../../../components/UserName";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
-import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree";
-import CodeFrequencyUserSelector from "./CodeFrequencyUserSelector";
+import AnalysisHooks from "../../../api/AnalysisHooks.ts";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import { CodeFrequency } from "../../../api/openapi/models/CodeFrequency.ts";
+import { CodeOccurrence } from "../../../api/openapi/models/CodeOccurrence.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
+import UserName from "../../../components/UserName.tsx";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ICodeTree from "../../annotation/CodeExplorer/ICodeTree.ts";
+import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree.ts";
+import CodeFrequencyUserSelector from "./CodeFrequencyUserSelector.tsx";
 
-const columns: GridColDef[] = [
-  { field: "id", headerName: "ID" },
+const columns: MRT_ColumnDef<CodeOccurrence>[] = [
+  { accessorKey: "id", header: "ID" },
   {
-    field: "sdoc",
-    headerName: "Document",
-    flex: 1,
-    valueGetter: (params: GridValueGetterParams) => params.row.sdoc.filename,
-    renderCell: (params) => (
+    // accessorKey: "sdoc",
+    header: "Document",
+    // flex: 1,
+    id: "document",
+    accessorFn: (params) => params.sdoc.filename,
+    Cell: ({ row }) => (
       <Link
         component={RouterLink}
-        to={`/project/${params.row.sdoc.project_id}/search/doc/${params.row.sdoc.id}`}
+        to={`/project/${row.original.sdoc.project_id}/search/doc/${row.original.sdoc.id}`}
         underline="none"
         color="inherit"
       >
-        {params.row.sdoc.filename}
+        {row.original.sdoc.filename}
       </Link>
     ),
   },
   {
-    field: "code",
-    headerName: "Code",
-    flex: 1,
-    renderCell: (params) => <CodeRenderer code={params.row.code} />,
+    accessorKey: "code",
+    header: "Code",
+    // flex: 1,
+    Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
   },
   {
-    field: "text",
-    headerName: "Text",
-    flex: 4,
-    description: "The text of the annotation",
-    renderCell: renderTextCellExpand,
+    accessorKey: "text",
+    header: "Text",
+    // flex: 4,
+    // description: "The text of the annotation",
+    // renderCell: renderTextCellExpand,
   },
-  { field: "count", headerName: "Count", type: "number" },
+  {
+    accessorKey: "count",
+    header: "Count",
+    //  type: "number"
+  },
 ];
 
 function CodeFrequencyAnalysis() {
@@ -143,7 +149,7 @@ function CodeFrequencyAnalysis() {
 }
 
 // const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = (data: any) => {
+const renderCustomizedLabel = (data: { value: string; percent: number }) => {
   return `${data.value} (${(data.percent * 100).toFixed(0)}%)`;
 
   // const radius = data.innerRadius + (data.outerRadius - data.innerRadius) * 0.5;
@@ -166,9 +172,9 @@ interface CodeOccurrenceViewProps {
 }
 
 function CodeOccurrenceView({ projectId, codeId, userIds }: CodeOccurrenceViewProps) {
-  const [paginationModel, setPaginationModel] = useState({
+  const [paginationModel, setPaginationModel] = useState<MRT_PaginationState>({
     pageSize: 5,
-    page: 0,
+    pageIndex: 0,
   });
 
   // global server state (react-query)
@@ -181,6 +187,22 @@ function CodeOccurrenceView({ projectId, codeId, userIds }: CodeOccurrenceViewPr
   useEffect(() => {
     setPaginationModel((oldPaginationModel) => ({ ...oldPaginationModel, page: 0 }));
   }, [codeId]);
+
+  // table
+  const table = useMaterialReactTable({
+    data: codeOccurrences.data || [],
+    columns: columns,
+    // autoPageSize
+    // sx={{ border: "none" }}
+    getRowId: (row) => `sdoc-${row.sdoc.id}-code/${row.code.id}-${row.text}`,
+    // state
+    state: {
+      pagination: paginationModel,
+      isLoading: columns.length === 0,
+    },
+    // selection
+    enableRowSelection: false,
+  });
 
   return (
     <>
@@ -207,16 +229,7 @@ function CodeOccurrenceView({ projectId, codeId, userIds }: CodeOccurrenceViewPr
             }
           />
           <CardContent className="myFlexFillAllContainer" sx={{ px: 0 }}>
-            <DataGrid
-              rows={codeOccurrences.data}
-              columns={columns}
-              autoPageSize
-              sx={{ border: "none" }}
-              disableRowSelectionOnClick
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              getRowId={(row) => `sdoc-${row.sdoc.id}-code/${row.code.id}-${row.text}`}
-            />
+            <MaterialReactTable table={table} />
           </CardContent>
         </Card>
       ) : codeOccurrences.isError ? (

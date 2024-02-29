@@ -1,5 +1,5 @@
-import FeedbackHooks from "../../api/FeedbackHooks";
-import FeedbackCards from "./FeedbackCards";
+import FeedbackHooks from "../../api/FeedbackHooks.ts";
+import FeedbackCards from "./FeedbackCards.tsx";
 
 function FeedbackAll() {
   const feedback = FeedbackHooks.useGetAllFeedback();

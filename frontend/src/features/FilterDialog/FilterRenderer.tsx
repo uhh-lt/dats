@@ -2,14 +2,14 @@ import AddIcon from "@mui/icons-material/Add";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearIcon from "@mui/icons-material/Clear";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { TreeItem, TreeView } from "@mui/lab";
 import { Box, Button, IconButton, MenuItem, Stack, TextField, Tooltip } from "@mui/material";
-import { LogicalOperator } from "../../api/openapi";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import FilterExpressionRenderer from "./FilterExpressionRenderer";
+import { TreeItem, TreeView } from "@mui/x-tree-view";
+import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import FilterExpressionRenderer from "./FilterExpressionRenderer.tsx";
 import "./filter.css";
-import { FilterActions } from "./filterSlice";
-import { ColumnInfo, FilterOperators, MyFilter, isFilter, isFilterExpression } from "./filterUtils";
+import { FilterActions } from "./filterSlice.ts";
+import { ColumnInfo, FilterOperators, MyFilter, isFilter, isFilterExpression } from "./filterUtils.ts";
 
 export interface FilterRendererProps {
   editableFilter: MyFilter;
@@ -46,7 +46,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
     dispatch(filterActions.changeOperator({ filterId, operator }));
   };
 
-  const handleValueChange = (filterId: string, value: any) => {
+  const handleValueChange = (filterId: string, value: string | number | boolean | string[]) => {
     dispatch(filterActions.changeValue({ filterId, value }));
   };
 
@@ -108,7 +108,7 @@ function FilterRenderer({ editableFilter, filterActions, column2Info }: FilterRe
           }
           className="filterExpression"
         />
-        {filter.items.map((item, index) => {
+        {filter.items.map((item) => {
           if (isFilter(item)) {
             return renderFilter(item, false);
           } else if (isFilterExpression(item)) {

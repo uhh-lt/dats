@@ -1,11 +1,12 @@
 import { List, ListSubheader } from "@mui/material";
 import React from "react";
-import { BackgroundJobStatus, PreprocessingJobRead } from "../../../../api/openapi";
-import PreProHooks from "../../../../api/PreProHooks";
-import BackgroundJobListItem from "./BackgroundJobListItem";
-import PreProJobPayloadListItem from "./PreProJobPayloadListItem";
-import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu";
-import { dateToLocaleString } from "../../../../utils/DateUtils";
+import PreProHooks from "../../../../api/PreProHooks.ts";
+import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
+import { PreprocessingJobRead } from "../../../../api/openapi/models/PreprocessingJobRead.ts";
+import { dateToLocaleString } from "../../../../utils/DateUtils.ts";
+import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu.tsx";
+import BackgroundJobListItem from "./BackgroundJobListItem.tsx";
+import PreProJobPayloadListItem from "./PreProJobPayloadListItem.tsx";
 
 interface PreprocessingJobListItemProps {
   initialPreProJob: PreprocessingJobRead;

@@ -1,8 +1,7 @@
-import TagHooks from "../../../api/TagHooks";
-import { Chip, Tooltip } from "@mui/material";
-import React from "react";
-import { DocumentTagRead } from "../../../api/openapi";
 import CancelIcon from "@mui/icons-material/Cancel";
+import { Chip, Tooltip } from "@mui/material";
+import TagHooks from "../../../api/TagHooks.ts";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 
 interface DocumentTagChipProps {
   tagId: number;

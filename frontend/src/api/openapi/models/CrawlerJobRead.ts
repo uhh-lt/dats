@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { CrawlerJobParameters } from "./CrawlerJobParameters";
-
 export type CrawlerJobRead = {
   /**
    * Status of the CrawlerJob

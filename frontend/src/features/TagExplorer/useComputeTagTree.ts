@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Tree, { Node } from "ts-tree-structure";
-import ProjectHooks from "../../api/ProjectHooks";
-import { ITagTree } from "./ITagTree";
-import { tagsToTree } from "./TreeUtils";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { ITagTree } from "./ITagTree.ts";
+import { tagsToTree } from "./TreeUtils.ts";
 
 const useComputeTagTree = () => {
   const { projectId } = useParams() as { projectId: string };

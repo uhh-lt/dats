@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -16,11 +17,9 @@ import type { Filter_TimelineAnalysisColumns__Input } from "../models/Filter_Tim
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { TimelineAnalysisResultNew } from "../models/TimelineAnalysisResultNew";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class AnalysisService {
   /**
    * Returns all SourceDocument IDs that match the query parameters.
@@ -47,7 +46,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns all SourceDocument IDs that match the query parameters.
    * @returns CodeOccurrence Successful Response
@@ -76,7 +74,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns AnnotationOccurrences.
    * @returns AnnotationOccurrence Successful Response
@@ -105,7 +102,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns AnnotationSegments Info.
    * @returns ColumnInfo_AnnotatedSegmentsColumns_ Successful Response
@@ -127,7 +123,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns AnnotationSegments.
    * @returns AnnotatedSegmentResult Successful Response
@@ -159,7 +154,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns TimelineAnalysis Info.
    * @returns any[] Successful Response
@@ -184,7 +178,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns TimelineAnalysis Info.
    * @returns ColumnInfo_TimelineAnalysisColumns_ Successful Response
@@ -206,7 +199,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Perform new timeline analysis.
    * @returns TimelineAnalysisResultNew Successful Response
@@ -238,7 +230,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns WordFrequency Info.
    * @returns ColumnInfo_WordFrequencyColumns_ Successful Response
@@ -260,7 +251,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Perform word frequency analysis.
    * @returns WordFrequencyResult Successful Response

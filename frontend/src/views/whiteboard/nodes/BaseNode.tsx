@@ -2,7 +2,7 @@ import { Box, BoxProps } from "@mui/material";
 import React from "react";
 import { Handle, NodeProps, NodeResizer, Position } from "reactflow";
 import "./nodes.css";
-import { useConnectionHelper } from "../hooks/useConnectionHelper";
+import { useConnectionHelper } from "../hooks/useConnectionHelper.ts";
 
 interface BaseNodeProps {
   children: React.ReactNode;

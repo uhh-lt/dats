@@ -1,5 +1,6 @@
-import eventBus from "../../EventBus";
-import { AttachedObjectType, MemoRead } from "../../api/openapi";
+import eventBus from "../../EventBus.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 
 export type MemoCreateSuccessHandler = ((memo: MemoRead) => void) | undefined;
 

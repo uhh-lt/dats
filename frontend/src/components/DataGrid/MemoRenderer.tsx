@@ -1,7 +1,7 @@
 import CommentIcon from "@mui/icons-material/Comment";
 import { Stack, StackProps } from "@mui/material";
-import MemoHooks from "../../api/MemoHooks";
-import { MemoRead } from "../../api/openapi";
+import MemoHooks from "../../api/MemoHooks.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 
 export interface MemoRendererSharedProps {
   showIcon?: boolean;

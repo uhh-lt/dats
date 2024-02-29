@@ -1,18 +1,17 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  MemoRead,
-  SpanAnnotationRead,
-  SpanAnnotationReadResolved,
-  SpanAnnotationService,
-  SpanAnnotationUpdateWithCodeId,
-} from "./openapi";
-import { QueryKey } from "./QueryKey";
-import queryClient from "../plugins/ReactQueryClient";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { QueryKey } from "./QueryKey.ts";
+import { MemoRead } from "./openapi/models/MemoRead.ts";
+import { SpanAnnotationRead } from "./openapi/models/SpanAnnotationRead.ts";
+import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationUpdateWithCodeId } from "./openapi/models/SpanAnnotationUpdateWithCodeId.ts";
+import { SpanAnnotationService } from "./openapi/services/SpanAnnotationService.ts";
 
 export const FAKE_ANNOTATION_ID = -1;
 
 const useCreateAnnotation = () =>
-  useMutation(SpanAnnotationService.addSpanAnnotation, {
+  useMutation({
+    mutationFn: SpanAnnotationService.addSpanAnnotation,
     // optimistic updates
     onMutate: async (newSpanAnnotation) => {
       // when we create a new span annotation, we add a new annotation to a certain annotation document
@@ -20,7 +19,7 @@ const useCreateAnnotation = () =>
       const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, newSpanAnnotation.requestBody.annotation_document_id];
 
       // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-      await queryClient.cancelQueries(affectedQueryKey);
+      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
       // Snapshot the previous value
       const previousSpanAnnotations = queryClient.getQueryData(affectedQueryKey);
@@ -70,49 +69,52 @@ const useCreateAnnotation = () =>
       // Return a context object with the snapshotted value
       return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
     },
-    onError: (error: Error, newSpanAnnotation, context: any) => {
+    onError: (_error: Error, _newSpanAnnotation, context) => {
+      if (!context) return;
       // If the mutation fails, use the context returned from onMutate to roll back
       queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
     },
     // Always re-fetch after error or success:
-    onSettled: (data, error, variables, context: any) => {
-      queryClient.invalidateQueries(context.myCustomQueryKey);
+    onSettled: (_data, _error, _variables, context) => {
+      if (!context) return;
+      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
     },
   });
 
 const useGetAnnotation = (spanId: number | null | undefined) =>
-  useQuery<SpanAnnotationReadResolved, Error>(
-    [QueryKey.SPAN_ANNOTATION, spanId],
-    () =>
+  useQuery<SpanAnnotationReadResolved, Error>({
+    queryKey: [QueryKey.SPAN_ANNOTATION, spanId],
+    queryFn: () =>
       SpanAnnotationService.getById({
         spanId: spanId!,
         resolve: true,
       }) as Promise<SpanAnnotationReadResolved>,
-    { enabled: !!spanId },
-  );
+    enabled: !!spanId,
+  });
 
 const useGetByCodeAndUser = (codeId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<SpanAnnotationReadResolved[], Error>(
-    [QueryKey.SPAN_ANNOTATIONS_USER_CODE, userId, codeId],
-    () =>
+  useQuery<SpanAnnotationReadResolved[], Error>({
+    queryKey: [QueryKey.SPAN_ANNOTATIONS_USER_CODE, userId, codeId],
+    queryFn: () =>
       SpanAnnotationService.getByUserCode({
         userId: userId!,
         codeId: codeId!,
       }),
-    { enabled: !!userId && !!codeId },
-  );
+    enabled: !!userId && !!codeId,
+  });
 
 const useUpdate = () =>
-  useMutation(SpanAnnotationService.updateById, {
+  useMutation({
+    mutationFn: SpanAnnotationService.updateById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, data.id]);
-      queryClient.invalidateQueries([QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id] });
     },
   });
 
 const useOptimisticUpdateSpan = () =>
-  useMutation(
-    (variables: {
+  useMutation({
+    mutationFn: (variables: {
       spanAnnotationToUpdate: SpanAnnotationRead | SpanAnnotationReadResolved;
       requestBody: SpanAnnotationUpdateWithCodeId;
       resolve?: boolean | undefined;
@@ -122,65 +124,65 @@ const useOptimisticUpdateSpan = () =>
         requestBody: variables.requestBody,
         resolve: variables.resolve,
       }),
-    {
-      // todo: rework to only update QueryKey.SPAN_ANNOTATION (we need to change the rendering for this...)
-      // optimistic update
-      onMutate: async (updateData) => {
-        // when we update a span annotation, we update an annotation of a certain annotation document
-        // thus, we only affect the annotation document that contains the annotation we update
-        const affectedQueryKey = [
-          QueryKey.ADOC_SPAN_ANNOTATIONS,
-          updateData.spanAnnotationToUpdate.annotation_document_id,
-        ];
+    // todo: rework to only update QueryKey.SPAN_ANNOTATION (we need to change the rendering for this...)
+    // optimistic update
+    onMutate: async (updateData) => {
+      // when we update a span annotation, we update an annotation of a certain annotation document
+      // thus, we only affect the annotation document that contains the annotation we update
+      const affectedQueryKey = [
+        QueryKey.ADOC_SPAN_ANNOTATIONS,
+        updateData.spanAnnotationToUpdate.annotation_document_id,
+      ];
 
-        // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-        await queryClient.cancelQueries(affectedQueryKey);
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
-        // Snapshot the previous value
-        const previousAnnos = queryClient.getQueryData(affectedQueryKey);
+      // Snapshot the previous value
+      const previousAnnos = queryClient.getQueryData(affectedQueryKey);
 
-        // Optimistically update to the new value
-        queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
-          if (!old) {
-            return undefined;
-          }
-          const oldSpanAnnotation = old.find((anno) => anno.id === updateData.spanAnnotationToUpdate.id);
-          if (!oldSpanAnnotation) {
-            console.error("Could not find span annotation to update");
-            return old;
-          }
-          const oldSpanAnnotationIndex = old.indexOf(oldSpanAnnotation);
-          const result = Array.from(old);
-          result[oldSpanAnnotationIndex] = {
-            ...oldSpanAnnotation,
-            code: {
-              ...oldSpanAnnotation.code,
-              id: updateData.requestBody.code_id,
-            },
-          };
-          return result;
-        });
-
-        // Return a context object with the snapshotted value
-        return { previousAnnos, myCustomQueryKey: affectedQueryKey };
-      },
-      onError: (error: Error, updatedSpanAnnotation, context: any) => {
-        // If the mutation fails, use the context returned from onMutate to roll back
-        queryClient.setQueryData(context.myCustomQueryKey, context.previousAnnos);
-      },
-      // Always re-fetch after error or success:
-      onSettled: (updatedSpanAnnotation, error, variables, context: any) => {
-        if (updatedSpanAnnotation) {
-          queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, updatedSpanAnnotation.id]);
+      // Optimistically update to the new value
+      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+        if (!old) {
+          return undefined;
         }
-        queryClient.invalidateQueries(context.myCustomQueryKey);
-      },
+        const oldSpanAnnotation = old.find((anno) => anno.id === updateData.spanAnnotationToUpdate.id);
+        if (!oldSpanAnnotation) {
+          console.error("Could not find span annotation to update");
+          return old;
+        }
+        const oldSpanAnnotationIndex = old.indexOf(oldSpanAnnotation);
+        const result = Array.from(old);
+        result[oldSpanAnnotationIndex] = {
+          ...oldSpanAnnotation,
+          code: {
+            ...oldSpanAnnotation.code,
+            id: updateData.requestBody.code_id,
+          },
+        };
+        return result;
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousAnnos, myCustomQueryKey: affectedQueryKey };
     },
-  );
+    onError: (_error: Error, _updatedSpanAnnotation, context) => {
+      if (!context) return;
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(context.myCustomQueryKey, context.previousAnnos);
+    },
+    // Always re-fetch after error or success:
+    onSettled: (updatedSpanAnnotation, _error, _variables, context) => {
+      if (!context) return;
+      if (updatedSpanAnnotation) {
+        queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, updatedSpanAnnotation.id] });
+      }
+      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+    },
+  });
 
 const useUpdateSpan = () =>
-  useMutation(
-    (variables: {
+  useMutation({
+    mutationFn: (variables: {
       spanAnnotationId: number;
       requestBody: SpanAnnotationUpdateWithCodeId;
       resolve?: boolean | undefined;
@@ -190,76 +192,79 @@ const useUpdateSpan = () =>
         requestBody: variables.requestBody,
         resolve: variables.resolve,
       }),
-    {
-      onSuccess(data, variables, context) {
-        queryClient.invalidateQueries([QueryKey.SPAN_ANNOTATION, data.id]);
-        queryClient.invalidateQueries([QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id]);
-      },
+    onSuccess(data) {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SPAN_ANNOTATION, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id] });
     },
-  );
+  });
 
 const useDeleteSpan = () =>
-  useMutation(
-    (variables: { spanAnnotationToDelete: SpanAnnotationRead | SpanAnnotationReadResolved }) =>
+  useMutation({
+    mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | SpanAnnotationReadResolved }) =>
       SpanAnnotationService.deleteById({ spanId: variables.spanAnnotationToDelete.id }),
-    {
-      // optimistic updates
-      onMutate: async ({ spanAnnotationToDelete }) => {
-        // when we delete a span annotation, we remove an annotation from a certain annotation document
-        // thus, we only affect the annotation document that we are removing from
-        const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, spanAnnotationToDelete.annotation_document_id];
+    // optimistic updates
+    onMutate: async ({ spanAnnotationToDelete }) => {
+      // when we delete a span annotation, we remove an annotation from a certain annotation document
+      // thus, we only affect the annotation document that we are removing from
+      const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, spanAnnotationToDelete.annotation_document_id];
 
-        // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-        await queryClient.cancelQueries(affectedQueryKey);
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
-        // Snapshot the previous value
-        const previousSpanAnnotations = queryClient.getQueryData(affectedQueryKey);
+      // Snapshot the previous value
+      const previousSpanAnnotations = queryClient.getQueryData(affectedQueryKey);
 
-        // Optimistically update to the new value
-        queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
-          if (old === undefined) {
-            return undefined;
-          }
+      // Optimistically update to the new value
+      queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {
+        if (old === undefined) {
+          return undefined;
+        }
 
-          return old.filter((spanAnnotation) => spanAnnotation.id !== spanAnnotationToDelete.id);
-        });
+        return old.filter((spanAnnotation) => spanAnnotation.id !== spanAnnotationToDelete.id);
+      });
 
-        // Return a context object with the snapshotted value
-        return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
-      },
-      onError: (error: Error, spanAnnotationToDelete, context: any) => {
-        // If the mutation fails, use the context returned from onMutate to roll back
-        queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
-      },
-      // Always re-fetch after error or success:
-      onSettled: (data, error, variables, context: any) => {
-        queryClient.invalidateQueries(context.myCustomQueryKey);
-        queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED]); // todo: this is not optimal
-      },
+      // Return a context object with the snapshotted value
+      return { previousSpanAnnotations, myCustomQueryKey: affectedQueryKey };
     },
-  );
+    onError: (_error: Error, _spanAnnotationToDelete, context) => {
+      if (!context) return;
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(context.myCustomQueryKey, context.previousSpanAnnotations);
+    },
+    // Always re-fetch after error or success:
+    onSettled: (_data, _error, _variables, context) => {
+      if (!context) return;
+      queryClient.invalidateQueries({ queryKey: context.myCustomQueryKey });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
+    },
+  });
 
 // memo
 const useGetMemos = (spanId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>(
-    [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
-    () => SpanAnnotationService.getMemos({ spanId: spanId! }),
-    { enabled: !!spanId, retry: false },
-  );
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, spanId],
+    queryFn: () => SpanAnnotationService.getMemos({ spanId: spanId! }),
+    enabled: !!spanId,
+    retry: false,
+  });
 
 const useGetMemo = (spanId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<MemoRead, Error>(
-    [QueryKey.MEMO_SPAN_ANNOTATION, spanId, userId],
-    () => SpanAnnotationService.getUserMemo({ spanId: spanId!, userId: userId! }),
-    { enabled: !!spanId && !!userId, retry: false },
-  );
+  useQuery<MemoRead, Error>({
+    queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, spanId, userId],
+    queryFn: () => SpanAnnotationService.getUserMemo({ spanId: spanId!, userId: userId! }),
+    enabled: !!spanId && !!userId,
+    retry: false,
+  });
 
 const useCreateMemo = () =>
-  useMutation(SpanAnnotationService.addMemo, {
+  useMutation({
+    mutationFn: SpanAnnotationService.addMemo,
     onSuccess: (memo) => {
-      queryClient.invalidateQueries([QueryKey.USER_MEMOS, memo.user_id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SPAN_ANNOTATION, memo.attached_object_id, memo.user_id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_SDOC_RELATED, memo.user_id]); // todo: this is not optimal
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, memo.user_id] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKey.MEMO_SPAN_ANNOTATION, memo.attached_object_id, memo.user_id],
+      });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED, memo.user_id] }); // todo: this is not optimal
     },
   });
 

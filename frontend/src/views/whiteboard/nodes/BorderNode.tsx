@@ -1,8 +1,8 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import BaseNode from "./BaseNode";
-import { BorderNodeData } from "../types";
+import { BorderNodeData } from "../types/customnodes/BorderNodeData.ts";
+import BaseNode from "./BaseNode.tsx";
 
 function BorderNode(props: NodeProps<BorderNodeData>) {
   const reactFlowInstance = useReactFlow();
@@ -19,7 +19,7 @@ function BorderNode(props: NodeProps<BorderNodeData>) {
   const handleChangeText = (
     event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
-    // @ts-ignore
+    // @ts-expect-error event target value is always a string
     const value: string = event.target.value;
     console.log(value);
     reactFlowInstance.setNodes((nodes) =>

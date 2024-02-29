@@ -8,8 +8,8 @@ import {
   styled,
   Typography,
 } from "@mui/material";
-import SdocHooks from "../../../../api/SdocHooks";
-import DocumentMetadataRow from "./DocumentMetadataRow";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import DocumentMetadataRow from "./DocumentMetadataRow.tsx";
 
 const MyAccordion = styled((props: AccordionProps) => <Accordion disableGutters elevation={0} square {...props} />)(
   ({ theme }) => ({

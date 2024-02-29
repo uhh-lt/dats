@@ -1,13 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { MemoRead } from "../models/MemoRead";
 import type { MemoUpdate } from "../models/MemoUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class MemoService {
   /**
    * Returns the Memo with the given ID if it exists
@@ -26,7 +25,6 @@ export class MemoService {
       },
     });
   }
-
   /**
    * Updates the Memo with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -52,7 +50,6 @@ export class MemoService {
       },
     });
   }
-
   /**
    * Removes the Memo with the given ID if it exists
    * @returns MemoRead Successful Response

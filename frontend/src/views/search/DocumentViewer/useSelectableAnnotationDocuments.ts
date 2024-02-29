@@ -1,6 +1,6 @@
-import { AnnotationDocumentRead } from "../../../api/openapi";
 import { useCallback, useEffect, useState } from "react";
-import SdocHooks from "../../../api/SdocHooks";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
 
 export function useSelectableAnnotationDocuments(sdocId: number | undefined) {
   // state

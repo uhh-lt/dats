@@ -1,13 +1,12 @@
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
-import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenu/TagMenuMenuItem";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { Link } from "react-router-dom";
-import MemoMenuItem from "../../../features/Memo/MemoMenuItem";
-import { AttachedObjectType } from "../../../api/openapi";
-import DeleteMenuItem from "../ToolBar/ToolBarElements/DeleteMenuItem";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
+import MemoMenuItem from "../../../features/Memo/MemoMenuItem.tsx";
+import DeleteMenuItem from "../ToolBar/ToolBarElements/DeleteMenuItem.tsx";
+import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenu/TagMenuMenuItem.tsx";
 
 interface SearchResultContextMenuProps {
   position: ContextMenuPosition | null;

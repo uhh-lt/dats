@@ -1,9 +1,9 @@
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import { Box, Card, CardContent, Grid, IconButton, Portal, Stack, Tooltip, Typography } from "@mui/material";
 import { useContext, useRef } from "react";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import WordFrequencyFilterDialog from "./WordFrequencyFilterDialog";
-import WordFrequencyTable from "./WordFrequencyTable";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import WordFrequencyFilterDialog from "./WordFrequencyFilterDialog.tsx";
+import WordFrequencyTable from "./WordFrequencyTable.tsx";
 
 function WordFrequency() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -35,7 +35,7 @@ function WordFrequency() {
               </Stack>
             </CardContent>
           </Card>
-          <WordFrequencyTable onRowContextMenu={() => console.log("HI!")} tableContainerRef={filterDialogAnchorRef} />
+          <WordFrequencyTable tableContainerRef={filterDialogAnchorRef} />
         </Grid>
       </Grid>
     </Box>

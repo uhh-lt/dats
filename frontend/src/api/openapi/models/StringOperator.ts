@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export enum StringOperator {
   STRING_CONTAINS = "STRING_CONTAINS",
   STRING_EQUALS = "STRING_EQUALS",

@@ -3,10 +3,11 @@ import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, CardActions, CardContent, Divider, Stack, TextField } from "@mui/material";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { useAuth } from "../../../auth/AuthProvider";
-import { ProjectProps } from "./ProjectProps";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { ProjectUpdate } from "../../../api/openapi/models/ProjectUpdate.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import { ProjectProps } from "./ProjectProps.ts";
 
 function ProjectDetails({ project }: ProjectProps) {
   const { user } = useAuth();
@@ -15,31 +16,28 @@ function ProjectDetails({ project }: ProjectProps) {
     handleSubmit,
     formState: { errors },
     setValue,
-  } = useForm();
+  } = useForm<ProjectUpdate>();
 
   // mutations
   const updateProjectMutation = ProjectHooks.useUpdateProject();
 
   // form default values (only changed when project changes!)
   useEffect(() => {
-    setValue("name", project.title);
+    setValue("title", project.title);
     setValue("description", project.description);
   }, [project, setValue]);
 
   // form handling
-  const handleProjectUpdate = (data: any) => {
+  const handleProjectUpdate: SubmitHandler<ProjectUpdate> = (data) => {
     if (!user?.id) return;
 
     updateProjectMutation.mutate({
       userId: user.id!,
       projId: project.id,
-      requestBody: {
-        title: data.name,
-        description: data.description,
-      },
+      requestBody: data,
     });
   };
-  const handleError = (error: any) => {
+  const handleError: SubmitErrorHandler<ProjectUpdate> = (error) => {
     console.error(error);
   };
 
@@ -51,12 +49,12 @@ function ProjectDetails({ project }: ProjectProps) {
             label="Project name"
             variant="outlined"
             fullWidth
-            {...register("name", {
+            {...register("title", {
               required: "Project name is required",
               // validate: (value: string) => !/\s/g.test(value) || "Project name must not contain spaces",
             })}
-            error={Boolean(errors.name)}
-            helperText={<ErrorMessage errors={errors} name="name" />}
+            error={Boolean(errors.title)}
+            helperText={<ErrorMessage errors={errors} name="title" />}
           />
           <TextField
             label="Project description"
@@ -75,9 +73,6 @@ function ProjectDetails({ project }: ProjectProps) {
             placeholder="Which method(s) are you using in your project?"
             variant="outlined"
             fullWidth
-            {...register("method")}
-            error={Boolean(errors.method)}
-            helperText={<ErrorMessage errors={errors} name="method" />}
             disabled
           />
           <TextField
@@ -85,9 +80,6 @@ function ProjectDetails({ project }: ProjectProps) {
             placeholder="What kind of materials are you using in your project?"
             variant="outlined"
             fullWidth
-            {...register("materials")}
-            error={Boolean(errors.materials)}
-            helperText={<ErrorMessage errors={errors} name="materials" />}
             disabled
           />
         </Stack>
@@ -101,7 +93,7 @@ function ProjectDetails({ project }: ProjectProps) {
           startIcon={<SaveIcon />}
           sx={{ mr: 1 }}
           type="submit"
-          loading={updateProjectMutation.isLoading}
+          loading={updateProjectMutation.isPending}
           loadingPosition="start"
           disabled={!user}
         >

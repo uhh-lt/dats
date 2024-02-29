@@ -1,15 +1,14 @@
+import { AccountBox, Email, Help, Lock, Support, Visibility } from "@mui/icons-material";
 import { Container, Grid, Typography } from "@mui/material";
-import React from "react";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
-import ProfileHome from "./pages/ProfileHome";
-import PasswordReset from "./pages/PasswordReset";
-import DataPrivacy from "./pages/DataPrivacy";
-import Support from "./pages/Support";
-import { AccountBox, Email, Help, Lock, Visibility } from "@mui/icons-material";
-import { useAuth } from "../../auth/AuthProvider";
-import UpdateEmail from "./pages/UpdateEmail";
+import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import React from "react";
+import { useAuth } from "../../auth/useAuth.ts";
+import DataPrivacy from "./pages/DataPrivacy.tsx";
+import PasswordReset from "./pages/PasswordReset.tsx";
+import ProfileHome from "./pages/ProfileHome.tsx";
+import UpdateEmail from "./pages/UpdateEmail.tsx";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -50,7 +49,7 @@ function Profile() {
 
   const [value, setValue] = React.useState(0);
 
-  const handleTabsChange = (event: React.SyntheticEvent, tabsValue: number) => {
+  const handleTabsChange = (_event: React.SyntheticEvent, tabsValue: number) => {
     setValue(tabsValue);
   };
 

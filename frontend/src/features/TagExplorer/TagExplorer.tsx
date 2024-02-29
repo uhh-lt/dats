@@ -2,19 +2,19 @@ import { AppBar, Box, BoxProps, Checkbox, List, Stack, Toolbar } from "@mui/mate
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useImperativeHandle, useState } from "react";
-import { AttachedObjectType } from "../../api/openapi";
-import { useAuth } from "../../auth/AuthProvider";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import TagMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton";
-import TagEditDialog from "../CrudDialog/Tag/TagEditDialog";
-import ExporterButton from "../Exporter/ExporterButton";
-import MemoButton from "../Memo/MemoButton";
-import { ITagTree } from "./ITagTree";
-import TagEditButton from "./TagEditButton";
-import TagExplorerContextMenu from "./TagExplorerContextMenu";
-import TagTreeView from "./TagTreeView";
-import { flatTree } from "./TreeUtils";
-import useComputeTagTree from "./useComputeTagTree";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
+import TagMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
+import TagEditDialog from "../CrudDialog/Tag/TagEditDialog.tsx";
+import ExporterButton from "../Exporter/ExporterButton.tsx";
+import MemoButton from "../Memo/MemoButton.tsx";
+import { ITagTree } from "./ITagTree.ts";
+import TagEditButton from "./TagEditButton.tsx";
+import TagExplorerContextMenu from "./TagExplorerContextMenu.tsx";
+import TagTreeView from "./TagTreeView.tsx";
+import { flatTree } from "./TreeUtils.ts";
+import useComputeTagTree from "./useComputeTagTree.ts";
 
 interface TagExplorerProps {
   showToolbar?: boolean;
@@ -39,7 +39,7 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
     const [expandedTagIds, setExpandedTagIds] = useState<string[]>([]);
 
     // handle ui events
-    const handleSelectTag = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
+    const handleSelectTag = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
       const tagId = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
       setSelectedTagId(tagId);
     };
@@ -58,7 +58,7 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
     // context menu
     const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
     const [contextMenuData, setContextMenuData] = useState<ITagTree>();
-    const onContextMenu = (node: ITagTree) => (event: any) => {
+    const onContextMenu = (node: ITagTree) => (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
       event.preventDefault();
       setContextMenuPosition({ x: event.clientX, y: event.clientY });
       setContextMenuData(node);

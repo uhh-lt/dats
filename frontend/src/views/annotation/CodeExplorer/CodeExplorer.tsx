@@ -14,22 +14,22 @@ import {
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import { AttachedObjectType } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
-import ExporterButton from "../../../features/Exporter/ExporterButton";
-import MemoButton from "../../../features/Memo/MemoButton";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { AnnoActions } from "../annoSlice";
-import CodeEditButton from "./CodeEditButton";
-import CodeExplorerContextMenu from "./CodeExplorerContextMenu";
-import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton";
-import CodeTreeView from "./CodeTreeView";
-import ICodeTree from "./ICodeTree";
-import { flatTree, flatTreeWithRoot } from "./TreeUtils";
-import useComputeCodeTree from "./useComputeCodeTree";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
+import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
+import MemoButton from "../../../features/Memo/MemoButton.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { AnnoActions } from "../annoSlice.ts";
+import CodeEditButton from "./CodeEditButton.tsx";
+import CodeExplorerContextMenu from "./CodeExplorerContextMenu.tsx";
+import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton.tsx";
+import CodeTreeView from "./CodeTreeView.tsx";
+import ICodeTree from "./ICodeTree.ts";
+import { flatTree, flatTreeWithRoot } from "./TreeUtils.ts";
+import useComputeCodeTree from "./useComputeCodeTree.ts";
 
 interface CodeExplorerProps {
   showToolbar?: boolean;
@@ -58,7 +58,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
     // we tell the annotator which codes are available for selection in the combobox
     useEffect(() => {
       if (selectedCodeId && codeTree) {
-        let parentCode = codeTree.first((node) => node.model.code.id === selectedCodeId);
+        const parentCode = codeTree.first((node) => node.model.code.id === selectedCodeId);
         if (parentCode && parentCode.model) {
           // the selected code was found -> we update the codes for selection
           dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model)));
@@ -74,7 +74,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
     }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
 
     // handle ui events
-    const handleSelectCode = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
+    const handleSelectCode = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
       const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
       dispatch(AnnoActions.setSelectedParentCodeId(selectedCodeId === id ? undefined : id));
     };
@@ -95,7 +95,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
     // context menu
     const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
     const [contextMenuData, setContextMenuData] = useState<ICodeTree>();
-    const onContextMenu = (node: ICodeTree) => (event: any) => {
+    const onContextMenu = (node: ICodeTree) => (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
       event.preventDefault();
       setContextMenuPosition({ x: event.clientX, y: event.clientY });
       setContextMenuData(node);
@@ -214,7 +214,10 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
             }}
           >
             <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
-              <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ parentCodeId: selectedCodeId })}>
+              <ListItemButton
+                sx={{ px: 1.5 }}
+                onClick={() => dispatch(CRUDDialogActions.openCodeCreateDialog({ parentCodeId: selectedCodeId }))}
+              >
                 <ListItemIcon>
                   <AddIcon />
                 </ListItemIcon>

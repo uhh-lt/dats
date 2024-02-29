@@ -1,4 +1,3 @@
-import React from "react";
 import { getStraightPath, ConnectionLineComponentProps } from "reactflow";
 
 function StraightConnectionLine({ fromX, fromY, toX, toY, connectionLineStyle }: ConnectionLineComponentProps) {

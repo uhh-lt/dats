@@ -1,11 +1,10 @@
 import { Menu } from "@mui/material";
-import React from "react";
-import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem";
-import { ContextMenuProps } from "../../../components/ContextMenu/ContextMenuProps";
-import CodeEditMenuItem from "./CodeEditMenuItem";
-import MemoMenuItem from "../../../features/Memo/MemoMenuItem";
-import ICodeTree from "./ICodeTree";
-import { AttachedObjectType } from "../../../api/openapi";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuProps } from "../../../components/ContextMenu/ContextMenuProps.tsx";
+import MemoMenuItem from "../../../features/Memo/MemoMenuItem.tsx";
+import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
+import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
+import ICodeTree from "./ICodeTree.ts";
 
 interface CodeExplorerContextMenuProps extends ContextMenuProps {
   node: ICodeTree | undefined;
