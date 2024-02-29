@@ -71,6 +71,7 @@ export const dialogSlice = createSlice({
     },
     closeTagCreateDialog: (state) => {
       state.isTagCreateDialogOpen = false;
+      state.tagName = undefined;
     },
     openCodeCreateDialog: (
       state,
