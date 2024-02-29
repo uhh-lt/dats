@@ -6,7 +6,7 @@ import { CodeCreateSuccessHandler } from "./Code/CodeCreateDialog.tsx";
 interface DialogState {
   isTagEditDialogOpen: boolean;
   isTagCreateDialogOpen: boolean;
-  tagId: number;
+  tagId?: number;
   tagName?: string;
   parentTagId?: number;
   isCodeCreateDialogOpen: boolean;
@@ -26,7 +26,7 @@ const initialState: DialogState = {
   // tags
   isTagEditDialogOpen: false,
   isTagCreateDialogOpen: false,
-  tagId: -1,
+  tagId: undefined,
   tagName: undefined,
   parentTagId: undefined,
   // codes
@@ -63,7 +63,7 @@ export const dialogSlice = createSlice({
     },
     closeTagEditDialog: (state) => {
       state.isTagEditDialogOpen = false;
-      state.tagId = -1;
+      state.tagId = undefined;
     },
     openTagCreateDialog: (state, action: PayloadAction<{ tagName?: string }>) => {
       state.isTagCreateDialogOpen = true;
