@@ -1,6 +1,6 @@
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi";
 import React from "react";
-import CodeHooks from "../../../api/CodeHooks";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 
 interface SVGBBoxTextProps {
   bbox: BBoxAnnotationReadResolvedCode;

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useStore, getStraightPath, EdgeProps } from "reactflow";
 
-import { getEdgeParams } from "./edgeUtils";
+import { getEdgeParams } from "./edgeUtils.ts";
 
 function FloatingEdge({ id, source, target, markerEnd, style, selected }: EdgeProps) {
   const sourceNode = useStore(useCallback((store) => store.nodeInternals.get(source), [source]));

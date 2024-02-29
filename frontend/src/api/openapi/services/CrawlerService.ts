@@ -1,13 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { CrawlerJobParameters } from "../models/CrawlerJobParameters";
 import type { CrawlerJobRead } from "../models/CrawlerJobRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class CrawlerService {
   /**
    * Returns the CrawlerJob for the given Parameters
@@ -29,7 +28,6 @@ export class CrawlerService {
       },
     });
   }
-
   /**
    * Returns the CrawlerJob for the given ID if it exists
    * @returns CrawlerJobRead Successful Response
@@ -47,7 +45,6 @@ export class CrawlerService {
       },
     });
   }
-
   /**
    * Returns all CrawlerJobs for the given project ID if it exists
    * @returns CrawlerJobRead Successful Response

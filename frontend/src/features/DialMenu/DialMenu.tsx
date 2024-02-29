@@ -4,9 +4,9 @@ import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import { Dialog, SpeedDial, SpeedDialAction } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "../../auth/AuthProvider";
-import { HELP_MESSAGE_SUFFIX, USER_GUIDE_BASE_URL, USER_GUIDE_ROUTE_MAP } from "../../utils/GlobalConstants";
-import FeedbackDialog from "../Feedback/FeedbackDialog";
+import { useAuth } from "../../auth/useAuth.ts";
+import { HELP_MESSAGE_SUFFIX, USER_GUIDE_BASE_URL, USER_GUIDE_ROUTE_MAP } from "../../utils/GlobalConstants.ts";
+import FeedbackDialog from "../Feedback/FeedbackDialog.tsx";
 
 function DialMenu() {
   const { user } = useAuth();

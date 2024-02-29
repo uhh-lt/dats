@@ -1,24 +1,23 @@
 import { useQueryClient } from "@tanstack/react-query";
 import React, { MouseEvent, useRef, useState } from "react";
-import { QueryKey } from "../../../api/QueryKey";
-import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks";
-import {
-  AnnotationDocumentRead,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  SourceDocumentWithDataRead,
-  SpanAnnotationCreateWithCodeId,
-  SpanAnnotationReadResolved,
-} from "../../../api/openapi";
-import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer";
-import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
-import { AnnoActions } from "../annoSlice";
-import { ICode } from "./ICode";
-import { selectionIsEmpty } from "./utils";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
+import { QueryKey } from "../../../api/QueryKey.ts";
+import SpanAnnotationHooks, { FAKE_ANNOTATION_ID } from "../../../api/SpanAnnotationHooks.ts";
+
+import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SpanAnnotationCreateWithCodeId } from "../../../api/openapi/models/SpanAnnotationCreateWithCodeId.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer.tsx";
+import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu.tsx";
+import { AnnoActions } from "../annoSlice.ts";
+import { ICode } from "./ICode.ts";
+import { selectionIsEmpty } from "./utils.ts";
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentWithDataRead;
@@ -146,7 +145,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
     const affectedQueryKey = [QueryKey.ADOC_SPAN_ANNOTATIONS, requestBody.annotation_document_id];
 
     // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-    await queryClient.cancelQueries(affectedQueryKey);
+    await queryClient.cancelQueries({ queryKey: affectedQueryKey });
 
     // Add a fake annotation
     queryClient.setQueryData(affectedQueryKey, (old: SpanAnnotationReadResolved[] | undefined) => {

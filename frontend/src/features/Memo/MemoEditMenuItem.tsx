@@ -1,6 +1,6 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
-import MemoAPI, { MemoEvent } from "./MemoAPI";
+import MemoAPI, { MemoEvent } from "./MemoAPI.ts";
 import EditIcon from "@mui/icons-material/Edit";
 
 interface MemoEditMenuItemProps {
@@ -14,7 +14,7 @@ function MemoEditMenuItem({
   onClick,
   ...props
 }: MemoEvent & MemoEditMenuItemProps & MenuItemProps) {
-  const handleClickOpen = (event: any) => {
+  const handleClickOpen: React.MouseEventHandler<HTMLLIElement> = (event) => {
     event.stopPropagation();
     onClick();
     MemoAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });

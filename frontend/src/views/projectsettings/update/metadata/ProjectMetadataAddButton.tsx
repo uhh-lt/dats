@@ -2,8 +2,9 @@ import { Add } from "@mui/icons-material";
 import { LoadingButton } from "@mui/lab";
 import { Grid } from "@mui/material";
 import { useCallback } from "react";
-import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks";
-import { DocType, MetaType } from "../../../../api/openapi";
+import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
+import { DocType } from "../../../../api/openapi/models/DocType.ts";
+import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 
 interface ProjectMetadataAddButtonProps {
   projectId: number;
@@ -33,7 +34,7 @@ function ProjectMetadataAddButton({ projectId, key, docType, metaType }: Project
     <Grid item md={2}>
       <LoadingButton
         sx={{ px: 1, justifyContent: "start" }}
-        loading={createMutation.isLoading}
+        loading={createMutation.isPending}
         loadingPosition="start"
         startIcon={<Add />}
         variant="outlined"

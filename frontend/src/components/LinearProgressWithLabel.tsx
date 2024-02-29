@@ -1,5 +1,5 @@
 import { Box, LinearProgress, LinearProgressProps, Tooltip } from "@mui/material";
-import CircularProgressWithLabel from "./CircularProgressWithLabel";
+import CircularProgressWithLabel from "./CircularProgressWithLabel.tsx";
 
 interface LinearProgressWithLabelProps extends Omit<LinearProgressProps, "value"> {
   current: number;

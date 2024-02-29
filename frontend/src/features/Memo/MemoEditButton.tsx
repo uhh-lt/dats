@@ -1,6 +1,6 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import React from "react";
-import MemoAPI, { MemoEvent } from "./MemoAPI";
+import MemoAPI, { MemoEvent } from "./MemoAPI.ts";
 import EditIcon from "@mui/icons-material/Edit";
 
 function MemoEditButton({ memoId, attachedObjectType, attachedObjectId, ...props }: MemoEvent & IconButtonProps) {

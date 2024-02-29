@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { DateGroupBy, LogicalOperator, TimelineAnalysisConcept_Output } from "../../../api/openapi";
+import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
+import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
+import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
 
 export interface TimelineAnalysisConceptOLD {
   id: string;
@@ -97,9 +99,9 @@ export const timelineAnalysisSlice = createSlice({
       state.resultType = action.payload;
     },
     onCreateNewConcept: (state, action: PayloadAction<{ conceptData: string }>) => {
-      let name = "New Concept";
+      const name = "New Concept";
       let conceptIndex = 1;
-      // eslint-disable-next-line no-loop-func
+
       while (state.concepts.find((c) => c.name === `${name} (${conceptIndex})`)) {
         conceptIndex++;
       }

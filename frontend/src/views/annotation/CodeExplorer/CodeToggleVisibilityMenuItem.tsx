@@ -1,10 +1,10 @@
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import ICodeTree from "./ICodeTree";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import { flatTree } from "./TreeUtils";
-import { AnnoActions } from "../annoSlice";
+import ICodeTree from "./ICodeTree.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { flatTree } from "./TreeUtils.ts";
+import { AnnoActions } from "../annoSlice.ts";
 
 interface CodeToggleVisibilityMenuItemProps {
   code: ICodeTree;

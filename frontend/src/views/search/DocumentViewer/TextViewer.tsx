@@ -1,9 +1,12 @@
 import React, { useRef } from "react";
-import { AnnotationDocumentRead, SourceDocumentWithDataRead } from "../../../api/openapi";
-import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
-import SentenceContextMenu, { SentenceContextMenuHandle } from "../../../components/ContextMenu/SentenceContextMenu";
-import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer";
-import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData";
+import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
+import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu.tsx";
+import SentenceContextMenu, {
+  SentenceContextMenuHandle,
+} from "../../../components/ContextMenu/SentenceContextMenu.tsx";
+import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer.tsx";
+import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData.ts";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentWithDataRead;

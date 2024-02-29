@@ -1,12 +1,12 @@
-const fs = require("fs");
-const { execSync } = require("child_process");
+import { readFileSync, writeFileSync } from "fs";
+import { execSync } from "child_process";
 
-const contents = JSON.parse(fs.readFileSync("src/openapi.json"));
+const contents = JSON.parse(readFileSync("src/openapi.json"));
 const version = contents.info.version;
 
-const packageJson = JSON.parse(fs.readFileSync("package.json"));
+const packageJson = JSON.parse(readFileSync("package.json"));
 packageJson.version = version;
-fs.writeFileSync("package.json", JSON.stringify(packageJson));
+writeFileSync("package.json", JSON.stringify(packageJson));
 
 const packageLockJson = JSON.parse(fs.readFileSync("package-lock.json"));
 packageLockJson.version = version;

@@ -1,8 +1,8 @@
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { DocumentTagRead } from "../../../api/openapi";
 import { useCallback } from "react";
-import SdocHooks from "../../../api/SdocHooks";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
 
 export function useDeletableDocumentTags(sdocId: number | undefined) {
   // query

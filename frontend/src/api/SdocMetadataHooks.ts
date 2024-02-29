@@ -1,38 +1,40 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { SdocMetadataService, SourceDocumentMetadataReadResolved } from "./openapi";
-import { QueryKey } from "./QueryKey";
-import queryClient from "../plugins/ReactQueryClient";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { QueryKey } from "./QueryKey.ts";
+import { SourceDocumentMetadataReadResolved } from "./openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { SdocMetadataService } from "./openapi/services/SdocMetadataService.ts";
 
 const useCreateMetadata = () =>
-  useMutation(SdocMetadataService.createNewMetadata, {
+  useMutation({
+    mutationFn: SdocMetadataService.createNewMetadata,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATA, data.id]);
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, data.source_document_id] });
     },
   });
 
 const useGetMetadata = (metadataId: number | null | undefined) =>
-  useQuery<SourceDocumentMetadataReadResolved, Error>(
-    [QueryKey.SDOC_METADATA, metadataId],
-    () => SdocMetadataService.getById({ metadataId: metadataId! }),
-    {
-      enabled: !!metadataId,
-    },
-  );
+  useQuery<SourceDocumentMetadataReadResolved, Error>({
+    queryKey: [QueryKey.SDOC_METADATA, metadataId],
+    queryFn: () => SdocMetadataService.getById({ metadataId: metadataId! }),
+    enabled: !!metadataId,
+  });
 
 const useUpdateMetadata = () =>
-  useMutation(SdocMetadataService.updateById, {
+  useMutation({
+    mutationFn: SdocMetadataService.updateById,
     onSuccess: (metadata) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATA, metadata.id]);
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, metadata.source_document_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA, metadata.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, metadata.source_document_id] });
     },
   });
 
 const useDeleteMetadata = () =>
-  useMutation(SdocMetadataService.deleteById, {
+  useMutation({
+    mutationFn: SdocMetadataService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATA, data.id]);
-      queryClient.invalidateQueries([QueryKey.SDOC_METADATAS, data.source_document_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATA, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_METADATAS, data.source_document_id] });
     },
   });
 

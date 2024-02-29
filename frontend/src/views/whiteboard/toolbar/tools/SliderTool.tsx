@@ -6,7 +6,7 @@ interface SliderToolProps {
 }
 
 function SliderTool({ value, onValueChange }: SliderToolProps) {
-  const handleBGAlphaChange = (event: React.SyntheticEvent | Event, value: number | number[]) => {
+  const handleBGAlphaChange = (_event: React.SyntheticEvent | Event, value: number | number[]) => {
     onValueChange(value as number);
   };
 

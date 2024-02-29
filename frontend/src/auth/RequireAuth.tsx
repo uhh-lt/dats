@@ -1,9 +1,10 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { LoginStatus, useAuth } from "./AuthProvider";
+import { useAuth } from "./useAuth.ts";
+import { LoginStatus } from "./LoginStatus.ts";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
-  let auth = useAuth();
-  let location = useLocation();
+  const auth = useAuth();
+  const location = useLocation();
 
   if (auth.loginStatus !== LoginStatus.LOGGED_OUT) {
     return children;

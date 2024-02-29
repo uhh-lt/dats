@@ -1,55 +1,54 @@
 import { useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient";
-import { QueryKey } from "./QueryKey";
-import {
-  ActionQueryParameters,
-  ActionRead,
-  CodeRead,
-  DocumentTagRead,
-  MemoRead,
-  PaginatedSourceDocumentReads,
-  PreprocessingJobRead,
-  ProjectCreate,
-  ProjectMetadataRead,
-  ProjectRead,
-  ProjectService,
-  ProjectUpdate,
-  UserRead,
-} from "./openapi";
-import { useSelectEnabledCodes } from "./utils";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { QueryKey } from "./QueryKey.ts";
+
+import { useSelectEnabledCodes } from "./utils.ts";
+import { useAuth } from "../auth/useAuth.ts";
+import { ActionQueryParameters } from "./openapi/models/ActionQueryParameters.ts";
+import { ActionRead } from "./openapi/models/ActionRead.ts";
+import { CodeRead } from "./openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
+import { MemoRead } from "./openapi/models/MemoRead.ts";
+import { PaginatedSourceDocumentReads } from "./openapi/models/PaginatedSourceDocumentReads.ts";
+import { PreprocessingJobRead } from "./openapi/models/PreprocessingJobRead.ts";
+import { ProjectCreate } from "./openapi/models/ProjectCreate.ts";
+import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead.ts";
+import { ProjectRead } from "./openapi/models/ProjectRead.ts";
+import { ProjectUpdate } from "./openapi/models/ProjectUpdate.ts";
+import { UserRead } from "./openapi/models/UserRead.ts";
+import { ProjectService } from "./openapi/services/ProjectService.ts";
 
 //tags
 const useGetAllTags = (projectId: number) =>
-  useQuery<DocumentTagRead[], Error>(
-    [QueryKey.PROJECT_TAGS, projectId],
-    () =>
+  useQuery<DocumentTagRead[], Error>({
+    queryKey: [QueryKey.PROJECT_TAGS, projectId],
+    queryFn: () =>
       ProjectService.getProjectTags({
         projId: projectId,
       }),
-    {
-      select: (tag) => {
-        const arrayForSort = [...tag];
-        return arrayForSort.sort((a, b) => a.id - b.id);
-      },
+    select: (tag) => {
+      const arrayForSort = [...tag];
+      return arrayForSort.sort((a, b) => a.id - b.id);
     },
-  );
+  });
 
 const useGetProject = (projectId: number | null | undefined) =>
-  useQuery<ProjectRead, Error>(
-    [QueryKey.PROJECT, projectId],
-    () =>
+  useQuery<ProjectRead, Error>({
+    queryKey: [QueryKey.PROJECT, projectId],
+    queryFn: () =>
       ProjectService.readProject({
         projId: projectId!,
       }),
-    { enabled: !!projectId },
-  );
+    enabled: !!projectId,
+  });
 
 // sdoc
 const useUploadDocument = () =>
-  useMutation(ProjectService.uploadProjectSdoc, {
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS, variables.projId]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_SDOCS_INFINITE, variables.projId]);
+  useMutation({
+    mutationFn: ProjectService.uploadProjectSdoc,
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS, variables.projId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_SDOCS_INFINITE, variables.projId] });
     },
     meta: {
       successMessage: (data: PreprocessingJobRead) =>
@@ -58,93 +57,89 @@ const useUploadDocument = () =>
   });
 
 const useGetProjectDocuments = (projectId: number) =>
-  useQuery<PaginatedSourceDocumentReads, Error>([QueryKey.PROJECT_SDOCS, projectId], () =>
-    ProjectService.getProjectSdocs({
-      projId: projectId,
-    }),
-  );
+  useQuery<PaginatedSourceDocumentReads, Error>({
+    queryKey: [QueryKey.PROJECT_SDOCS, projectId],
+    queryFn: () =>
+      ProjectService.getProjectSdocs({
+        projId: projectId,
+      }),
+  });
 
 const useGetProjectDocumentsInfinite = (projectId: number, refetch: boolean) =>
-  useInfiniteQuery(
-    [QueryKey.PROJECT_SDOCS_INFINITE, projectId],
-    async ({ pageParam = 0 }) =>
+  useInfiniteQuery({
+    queryKey: [QueryKey.PROJECT_SDOCS_INFINITE, projectId],
+    queryFn: async ({ pageParam = 0 }) =>
       await ProjectService.getProjectSdocs({
         projId: projectId,
         skip: pageParam,
         limit: 10,
       }),
-    {
-      getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.next_page_offset : undefined),
-      refetchInterval: refetch ? 1000 : false,
-    },
-  );
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => (lastPage.has_more ? lastPage.next_page_offset : undefined),
+    refetchInterval: refetch ? 1000 : false,
+  });
 
-const useCreateProject = () =>
-  useMutation(
-    async ({ userId, requestBody }: { userId: number; requestBody: ProjectCreate }) => {
+const useCreateProject = () => {
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ requestBody }: { requestBody: ProjectCreate }) => {
       return await ProjectService.createNewProject({ requestBody });
     },
-    {
-      onSuccess: (project, variables) => {
-        queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
-      },
-      meta: {
-        successMessage: (project: ProjectRead) =>
-          "Successfully Created Project " + project.title + " with id " + project.id + "!",
-      },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_PROJECTS, user?.id] });
     },
-  );
+    meta: {
+      successMessage: (project: ProjectRead) =>
+        "Successfully Created Project " + project.title + " with id " + project.id + "!",
+    },
+  });
+};
 
 const useUpdateProject = () =>
-  useMutation(
-    (variables: { userId: number; projId: number; requestBody: ProjectUpdate }) => {
+  useMutation({
+    mutationFn: (variables: { userId: number; projId: number; requestBody: ProjectUpdate }) => {
       return ProjectService.updateProject({
         projId: variables.projId,
         requestBody: variables.requestBody,
       });
     },
-    {
-      onSuccess: (data, variables) => {
-        queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
-        queryClient.invalidateQueries([QueryKey.PROJECT, data.id]);
-      },
-      meta: {
-        successMessage: (data: ProjectRead) => `Successfully Updated Project with id ${data.id}!`,
-      },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_PROJECTS, variables.userId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT, data.id] });
     },
-  );
+    meta: {
+      successMessage: (data: ProjectRead) => `Successfully Updated Project with id ${data.id}!`,
+    },
+  });
 
 const useDeleteProject = () =>
-  useMutation(
-    (variables: { userId: number; projId: number }) => ProjectService.deleteProject({ projId: variables.projId }),
-    {
-      onSuccess: (data, variables) => {
-        queryClient.invalidateQueries([QueryKey.USER_PROJECTS, variables.userId]);
-      },
-      meta: {
-        successMessage: (data: ProjectRead) =>
-          "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
-      },
+  useMutation({
+    mutationFn: (variables: { userId: number; projId: number }) =>
+      ProjectService.deleteProject({ projId: variables.projId }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_PROJECTS, variables.userId] });
     },
-  );
+    meta: {
+      successMessage: (data: ProjectRead) => "Successfully Deleted Project " + data.title + " with id " + data.id + "!",
+    },
+  });
 
 // users
 const useGetAllUsers = (projectId: number | null | undefined) =>
-  useQuery<UserRead[], Error>(
-    [QueryKey.PROJECT_USERS, projectId],
-    () =>
+  useQuery<UserRead[], Error>({
+    queryKey: [QueryKey.PROJECT_USERS, projectId],
+    queryFn: () =>
       ProjectService.getProjectUsers({
         projId: projectId!,
       }),
-    {
-      enabled: !!projectId,
-    },
-  );
+    enabled: !!projectId,
+  });
 const useAddUser = () =>
-  useMutation(ProjectService.associateUserToProject, {
+  useMutation({
+    mutationFn: ProjectService.associateUserToProject,
     onSuccess: (user, variables) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_USERS, variables.projId]);
-      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, variables.projId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_PROJECTS, user.id] });
     },
     meta: {
       successMessage: (user: UserRead) => "Successfully added user " + user.first_name + "!",
@@ -152,10 +147,11 @@ const useAddUser = () =>
   });
 
 const useRemoveUser = () =>
-  useMutation(ProjectService.dissociateUserFromProject, {
+  useMutation({
+    mutationFn: ProjectService.dissociateUserFromProject,
     onSuccess: (user, variables) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_USERS, variables.projId]);
-      queryClient.invalidateQueries([QueryKey.USER_PROJECTS, user.id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_USERS, variables.projId] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_PROJECTS, user.id] });
     },
     meta: {
       successMessage: (data: UserRead) => "Successfully removed user " + data.first_name + "!",
@@ -165,85 +161,82 @@ const useRemoveUser = () =>
 // codes
 const useGetAllCodes = (projectId: number, returnAll: boolean = false) => {
   const selectEnabledCodes = useSelectEnabledCodes();
-  return useQuery<CodeRead[], Error>(
-    [QueryKey.PROJECT_CODES, projectId],
-    () =>
+  return useQuery<CodeRead[], Error>({
+    queryKey: [QueryKey.PROJECT_CODES, projectId],
+    queryFn: () =>
       ProjectService.getProjectCodes({
         projId: projectId,
       }),
-    {
-      select: returnAll ? undefined : selectEnabledCodes,
-    },
-  );
+    select: returnAll ? undefined : selectEnabledCodes,
+  });
 };
 
 // memo
 const useGetMemo = (projectId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<MemoRead, Error>(
-    [QueryKey.MEMO_PROJECT, projectId, userId],
-    () =>
+  useQuery<MemoRead, Error>({
+    queryKey: [QueryKey.MEMO_PROJECT, projectId, userId],
+    queryFn: () =>
       ProjectService.getUserMemo({
         projId: projectId!,
         userId: userId!,
       }),
-    {
-      retry: false,
-      enabled: !!projectId && !!userId,
-    },
-  );
+    retry: false,
+    enabled: !!projectId && !!userId,
+  });
 
 const useGetAllUserMemos = (projectId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>(
-    [QueryKey.USER_MEMOS, projectId, userId],
-    () =>
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.USER_MEMOS, projectId, userId],
+    queryFn: () =>
       ProjectService.getUserMemosOfProject({
         projId: projectId!,
         userId: userId!,
       }),
-    {
-      retry: false,
-      enabled: !!projectId && !!userId,
-    },
-  );
+    retry: false,
+    enabled: !!projectId && !!userId,
+  });
 
 const useCreateMemo = () =>
-  useMutation(ProjectService.addMemo, {
+  useMutation({
+    mutationFn: ProjectService.addMemo,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.MEMO_PROJECT, data.project_id, data.user_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_PROJECT, data.project_id, data.user_id] });
     },
   });
 
 // actions
 const useGetActions = (projectId: number, userId: number) =>
-  useQuery<Array<ActionRead>, Error>(
-    [QueryKey.ACTION, projectId, userId],
-    () =>
+  useQuery<Array<ActionRead>, Error>({
+    queryKey: [QueryKey.ACTION, projectId, userId],
+    queryFn: () =>
       ProjectService.getUserActionsOfProject({
         projId: projectId,
         userId: userId,
       }),
-    {
-      refetchOnWindowFocus: false,
-    },
-  );
+    refetchOnWindowFocus: false,
+  });
 
 const useQueryActions = (requestBody: ActionQueryParameters) =>
-  useQuery<ActionRead[], Error>([QueryKey.ACTIONS_QUERY, requestBody], () =>
-    ProjectService.queryActionsOfProject({
-      requestBody: requestBody,
-    }),
-  );
+  useQuery<ActionRead[], Error>({
+    queryKey: [QueryKey.ACTIONS_QUERY, requestBody],
+    queryFn: () =>
+      ProjectService.queryActionsOfProject({
+        requestBody: requestBody,
+      }),
+  });
 
 // metadata
 const useGetMetadata = (projectId: number) =>
-  useQuery<ProjectMetadataRead[], Error>([QueryKey.PROJECT_METADATAS, projectId], () =>
-    ProjectService.getAllMetadata({
-      projId: projectId,
-    }),
-  );
+  useQuery<ProjectMetadataRead[], Error>({
+    queryKey: [QueryKey.PROJECT_METADATAS, projectId],
+    queryFn: () =>
+      ProjectService.getAllMetadata({
+        projId: projectId,
+      }),
+  });
 
 // duplicates
-const useFindDuplicateTextDocuments = () => useMutation(ProjectService.findDuplicateTextSdocs);
+const useFindDuplicateTextDocuments = () => useMutation({ mutationFn: ProjectService.findDuplicateTextSdocs });
 
 const ProjectHooks = {
   // tags

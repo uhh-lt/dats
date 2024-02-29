@@ -1,5 +1,5 @@
-import DocumentTagChip from "../DocumentViewer/DocumentTagChip";
-import { useAddTagFilter } from "../hooks/useAddTagFilter";
+import DocumentTagChip from "../DocumentViewer/DocumentTagChip.tsx";
+import { useAddTagFilter } from "../hooks/useAddTagFilter.ts";
 
 interface SearchResultTagProps {
   tagId: number;

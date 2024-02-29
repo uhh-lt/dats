@@ -1,8 +1,8 @@
 import { Checkbox, ListItemText, MenuItem, Select, SelectChangeEvent, Stack, StackProps } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import * as React from "react";
-import ProjectHooks from "../../api/ProjectHooks";
-import UserName from "../../components/UserName";
+import React from "react";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import UserName from "../../components/UserName.tsx";
 
 interface UserSelectorProps {
   projectId: number | undefined;

@@ -6,10 +6,13 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import React from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks";
-import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks";
-import { DateGroupBy, DocType, MetaType, TimelineAnalysisRead } from "../../../api/openapi";
-import ValidDocumentsChecker from "./ValidDocumentsChecker";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
+import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
+import { DocType } from "../../../api/openapi/models/DocType.ts";
+import { MetaType } from "../../../api/openapi/models/MetaType.ts";
+import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import ValidDocumentsChecker from "./ValidDocumentsChecker.tsx";
 
 interface TimelineAnalysisSettingsProps {
   timelineAnalysis: TimelineAnalysisRead;

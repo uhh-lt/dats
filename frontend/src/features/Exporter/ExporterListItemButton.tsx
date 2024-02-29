@@ -1,6 +1,6 @@
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import ExporterAPI from "./ExporterAPI";
+import ExporterAPI from "./ExporterAPI.ts";
 import { useCallback } from "react";
 
 function ExporterListItemButton() {

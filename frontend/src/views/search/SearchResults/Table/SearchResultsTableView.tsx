@@ -1,16 +1,20 @@
 import * as React from "react";
 import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
-import { SearchResults } from "../../../../api/SearchHooks";
-import { ColumnInfo_SearchColumns_ } from "../../../../api/openapi";
-import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
-import { SearchActions } from "../../searchSlice";
-import SearchResultContextMenu from "../SearchResultContextMenu";
-import SearchResultsTable from "./SearchResultTable";
+import {
+  ImageSimilaritySearchResults,
+  LexicalSearchResults,
+  SentenceSimilaritySearchResults,
+} from "../../../../api/SearchHooks.ts";
+import { ColumnInfo_SearchColumns_ } from "../../../../api/openapi/models/ColumnInfo_SearchColumns_.ts";
+import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../searchSlice.ts";
+import SearchResultContextMenu from "../SearchResultContextMenu.tsx";
+import SearchResultsTable from "./SearchResultTable.tsx";
 
 interface SearchResultsTableViewProps {
-  searchResults: SearchResults<any>;
+  searchResults: LexicalSearchResults | SentenceSimilaritySearchResults | ImageSimilaritySearchResults;
   handleResultClick: (sdocId: number) => void;
   columnInfo: ColumnInfo_SearchColumns_[];
 }

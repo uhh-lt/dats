@@ -1,13 +1,12 @@
 import { TabPanel } from "@mui/lab";
-import { UseQueryResult } from "@tanstack/react-query";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import SearchHooks from "../../../api/SearchHooks";
-import TagHooks from "../../../api/TagHooks";
-import { DocumentTagRead, TagStat } from "../../../api/openapi";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { useFilterStats } from "../hooks/useFilterStats";
-import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton";
+import SearchHooks from "../../../api/SearchHooks.ts";
+import TagHooks from "../../../api/TagHooks.ts";
+import { TagStat } from "../../../api/openapi/models/TagStat.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useFilterStats } from "../hooks/useFilterStats.ts";
+import StatsDisplayButton, { StatsDisplayButtonProps } from "./StatsDisplayButton.tsx";
 
 interface DocumentTagStatsProps {
   sdocIds: number[];
@@ -84,7 +83,7 @@ function DocumentTagStatsContent({ tagStats, handleClick, parentRef, filterBy }:
     >
       {filteredTagStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let tagStat = filteredTagStats[virtualItem.index];
+        const tagStat = filteredTagStats[virtualItem.index];
         return (
           <DocumentTagStatButtonContent
             tagId={tagStat.tag.id}
@@ -103,13 +102,13 @@ function DocumentTagStatsContent({ tagStats, handleClick, parentRef, filterBy }:
 }
 
 function DocumentTagStatButtonContent({ tagId, ...props }: { tagId: number } & StatsDisplayButtonProps) {
-  const tag: UseQueryResult<DocumentTagRead, Error> = TagHooks.useGetTag(tagId);
+  const tag = TagHooks.useGetTag(tagId);
 
   return (
     <StatsDisplayButton
       {...props}
       disabled={!tag.isSuccess}
-      term={tag.isLoading ? "Loading..." : tag.isError ? tag.error.message : tag.data.title}
+      term={tag.isSuccess ? tag.data.title : tag.isLoading ? "Loading..." : tag.isError ? tag.error.message : "Error"}
     />
   );
 }

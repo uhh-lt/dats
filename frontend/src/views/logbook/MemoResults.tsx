@@ -2,10 +2,10 @@ import { Box, List } from "@mui/material";
 import { BoxProps } from "@mui/system";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useRef, useState } from "react";
-import { AttachedObjectType } from "../../api/openapi";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import MemoCard from "./MemoCard";
-import MemoResultsContextMenu from "./MemoResultsContextMenu";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
+import MemoCard from "./MemoCard.tsx";
+import MemoResultsContextMenu from "./MemoResultsContextMenu.tsx";
 
 interface MemoResultsProps {
   memoIds: number[];
@@ -20,7 +20,7 @@ export interface MemoCardContextMenuData {
 
 function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & BoxProps) {
   // virtualized results
-  const containerRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useVirtualizer({
     count: memoIds.length || 0,
     getScrollElement: () => containerRef.current,
@@ -60,7 +60,6 @@ function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & Bo
           {rowVirtualizer.getVirtualItems().map((virtualItem) => (
             <MemoCard
               key={virtualItem.key}
-              // @ts-ignore
               ref={(element) => rowVirtualizer.measureElement(element)}
               dataIndex={virtualItem.index}
               style={{

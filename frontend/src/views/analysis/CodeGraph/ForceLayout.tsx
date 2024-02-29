@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { CodeRead } from "../../../api/openapi";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 
 export interface GraphData {
   nodes: CodeRead[];
@@ -97,7 +97,7 @@ const ForceLayout = ({ data, width, height }: ForceDirectedGraphProps) => {
         nodes.current[index].fx = event.x;
         nodes.current[index].fy = event.y;
       })
-      .on("end", function (event: d3.D3DragEvent<SVGCircleElement, MyNode, unknown>) {
+      .on("end", function () {
         const index = parseInt(d3.select(this).node()!.dataset.index || "0");
         simulation.alphaTarget(0);
         nodes.current[index].fx = null;

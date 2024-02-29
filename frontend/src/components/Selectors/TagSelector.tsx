@@ -1,30 +1,28 @@
-import { CircularProgress } from "@mui/material";
-import { DataGrid, GridCallbackDetails, GridColDef, GridRowSelectionModel } from "@mui/x-data-grid";
-import { useState } from "react";
-import ProjectHooks from "../../api/ProjectHooks";
-import { DocumentTagRead } from "../../api/openapi";
 import LabelIcon from "@mui/icons-material/Label";
-import { renderTextCellExpand } from "../DataGrid/renderTextCellExpand";
+import { CircularProgress } from "@mui/material";
+import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
+import { useMemo, useState } from "react";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 
-const columns: GridColDef[] = [
+const columns: MRT_ColumnDef<DocumentTagRead>[] = [
   {
-    field: "color",
-    headerName: "Color",
-    flex: 0,
-    renderCell: (params) => {
-      return <LabelIcon style={{ color: params.value, blockSize: 24 }} />;
+    accessorKey: "color",
+    header: "Color",
+    // flex: 0,
+    Cell: ({ row }) => {
+      return <LabelIcon style={{ color: row.original.color, blockSize: 24 }} />;
     },
   },
   {
-    field: "title",
-    headerName: "Title",
-    flex: 1,
+    accessorKey: "title",
+    header: "Title",
+    // flex: 1,
   },
   {
-    field: "description",
-    headerName: "Description",
-    flex: 2,
-    renderCell: renderTextCellExpand,
+    accessorKey: "description",
+    header: "Description",
+    // flex: 2,
   },
 ];
 
@@ -35,34 +33,60 @@ interface TagSelectorProps {
 
 function TagSelector({ projectId, setSelectedTags }: TagSelectorProps) {
   // local state
-  const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global server state
   const projectTags = ProjectHooks.useGetAllTags(projectId);
 
-  // events
-  const onSelectionChange = (selectionModel: GridRowSelectionModel, details: GridCallbackDetails<any>) => {
-    if (!projectTags.data) return;
-    setSelectionModel(selectionModel);
-    // todo: this is probably very inefficient
-    setSelectedTags(projectTags.data.filter((tag) => selectionModel.indexOf(tag.id) !== -1));
-  };
+  // computed
+  const projectTagsMap = useMemo(() => {
+    // we have to transform the data, better do this elsewhere?
+    if (!projectTags.data) return {};
+
+    return projectTags.data.reduce(
+      (acc, projectTag) => {
+        acc[projectTag.id.toString()] = projectTag;
+        return acc;
+      },
+      {} as Record<string, DocumentTagRead>,
+    );
+  }, [projectTags.data]);
+
+  // table
+  const table = useMaterialReactTable({
+    data: projectTags.data || [],
+    columns: columns,
+    // autoPageSize
+    // sx={{ border: "none" }}
+    getRowId: (row) => row.id.toString(),
+    // state
+    state: {
+      rowSelection: rowSelectionModel,
+      isLoading: columns.length === 0,
+    },
+    // selection
+    enableRowSelection: true,
+    onRowSelectionChange: (rowSelectionUpdater) => {
+      let newRowSelectionModel: MRT_RowSelectionState;
+      if (typeof rowSelectionUpdater === "function") {
+        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
+      } else {
+        newRowSelectionModel = rowSelectionUpdater;
+      }
+      setRowSelectionModel(newRowSelectionModel);
+      setSelectedTags(
+        Object.entries(newRowSelectionModel)
+          .filter(([, selected]) => selected)
+          .map(([tagId]) => projectTagsMap[tagId]),
+      );
+    },
+  });
 
   return (
     <div style={{ height: 400, width: "100%" }}>
       {projectTags.isLoading && <CircularProgress />}
       {projectTags.isError && <div>Error</div>}
-      {projectTags.isSuccess && (
-        <DataGrid
-          rows={projectTags.data}
-          columns={columns}
-          autoPageSize
-          getRowId={(row) => row.id}
-          checkboxSelection
-          rowSelectionModel={selectionModel}
-          onRowSelectionModelChange={onSelectionChange}
-        />
-      )}
+      {projectTags.isSuccess && <MaterialReactTable table={table} />}
     </div>
   );
 }

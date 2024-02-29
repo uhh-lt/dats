@@ -1,12 +1,12 @@
 import { MenuBook } from "@mui/icons-material";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import BarChartIcon from "@mui/icons-material/BarChart";
 import BookIcon from "@mui/icons-material/Book";
 import FormatColorTextIcon from "@mui/icons-material/FormatColorText";
 import SearchIcon from "@mui/icons-material/Search";
 import BottomNavigation, { BottomNavigationProps } from "@mui/material/BottomNavigation";
 import BottomNavigationAction from "@mui/material/BottomNavigationAction";
-import * as React from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 
 function calculateValue(path: string) {
@@ -27,15 +27,15 @@ function calculateValue(path: string) {
 
 function BottomBar(props: BottomNavigationProps) {
   const location = useLocation();
-  let { projectId } = useParams();
+  const { projectId } = useParams();
   const value = calculateValue(location.pathname);
 
   // local state
-  const [searchPage, setSearchPage] = React.useState("search");
-  const [annotationPage, setAnnotationPage] = React.useState("annotation");
+  const [searchPage, setSearchPage] = useState("search");
+  const [annotationPage, setAnnotationPage] = useState("annotation");
 
   // store the current page in the local state
-  React.useEffect(() => {
+  useEffect(() => {
     if (value === 0) {
       setSearchPage("search" + location.pathname.split("/search")[1]);
     }

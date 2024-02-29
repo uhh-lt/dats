@@ -14,17 +14,19 @@ import {
 } from "@mui/material";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { CodeRead } from "../../../api/openapi";
-import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
-import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton";
-import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton";
-import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton";
-import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
-import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
-import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
-import { ProjectProps } from "./ProjectProps";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
+import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton.tsx";
+import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton.tsx";
+import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton.tsx";
+import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView.tsx";
+import ICodeTree from "../../annotation/CodeExplorer/ICodeTree.ts";
+import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils.ts";
+import { ProjectProps } from "./ProjectProps.ts";
 
 function ProjectCodes({ project }: ProjectProps) {
   // local state
@@ -40,6 +42,9 @@ function ProjectCodes({ project }: ProjectProps) {
       return prev.slice();
     });
   }, []);
+
+  // global client state (redux)
+  const dispatch = useAppDispatch();
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(project.id, true);
@@ -79,7 +84,7 @@ function ProjectCodes({ project }: ProjectProps) {
         );
 
         // filter the codeTree
-        let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
+        const nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
         nodes_to_remove.forEach((node) => {
           node.drop();
         });
@@ -98,6 +103,9 @@ function ProjectCodes({ project }: ProjectProps) {
   }, [expandCodes, nodesToExpand]);
 
   // ui event handlers
+  const handleCreateCodeClick = () => {
+    dispatch(CRUDDialogActions.openCodeCreateDialog({ codeCreateSuccessHandler: onCreateCodeSuccess }));
+  };
   const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
     expandCodes([nodeId]);
@@ -109,13 +117,13 @@ function ProjectCodes({ project }: ProjectProps) {
     newCodeIds.splice(id, 1);
     setExpandedCodeIds(newCodeIds);
   };
-  const onCreateCodeSuccess = (code: CodeRead, isNewCode: boolean) => {
+  const onCreateCodeSuccess = (code: CodeRead) => {
     // if we add a new code successfully, we want to show the code in the code explorer
     // this means, we have to expand the parent codes, so the new code is visible
     const codesToExpand = [];
     let parentCodeId = code.parent_code_id;
     while (parentCodeId) {
-      let currentParentCodeId = parentCodeId;
+      const currentParentCodeId = parentCodeId;
 
       codesToExpand.push(parentCodeId);
       parentCodeId = projectCodes.data?.find((code) => code.id === currentParentCodeId)?.parent_code_id;
@@ -149,7 +157,7 @@ function ProjectCodes({ project }: ProjectProps) {
       )}
       <List disablePadding>
         <ListItem disablePadding>
-          <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ onSuccess: onCreateCodeSuccess })}>
+          <ListItemButton sx={{ px: 1.5 }} onClick={handleCreateCodeClick}>
             <ListItemIcon>
               <AddIcon />
             </ListItemIcon>

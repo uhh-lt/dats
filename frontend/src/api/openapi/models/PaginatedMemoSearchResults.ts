@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { MemoRead } from "./MemoRead";
-
 export type PaginatedMemoSearchResults = {
   /**
    * Flag that indicates whether there are more search results.

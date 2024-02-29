@@ -1,12 +1,12 @@
-import React from "react";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { SourceDocumentRead } from "../../api/openapi";
-import SdocHooks from "../../api/SdocHooks";
-import MemoHooks from "../../api/MemoHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import { MemoForm } from "./MemoForm";
-import { MemoContentProps } from "./MemoContentBboxAnnotation";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
+import { SubmitHandler } from "react-hook-form";
+import MemoHooks from "../../api/MemoHooks.ts";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
+import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
 interface MemoContentSourceDocumentProps {
   sdoc: SourceDocumentRead;
@@ -26,7 +26,7 @@ export function MemoContentSourceDocument({
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateCodeMemo = (data: any) => {
+  const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
 
     if (memo) {
@@ -102,9 +102,9 @@ export function MemoContentSourceDocument({
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
       handleDeleteMemo={handleDeleteSdocMemo}
-      isUpdateLoading={updateMutation.isLoading}
-      isCreateLoading={createMutation.isLoading}
-      isDeleteLoading={deleteMutation.isLoading}
+      isUpdateLoading={updateMutation.isPending}
+      isCreateLoading={createMutation.isPending}
+      isDeleteLoading={deleteMutation.isPending}
     />
   );
 }

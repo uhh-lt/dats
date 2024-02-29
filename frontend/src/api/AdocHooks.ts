@@ -1,51 +1,46 @@
-import {
-  AnnotationDocumentRead,
-  AnnotationDocumentService,
-  BBoxAnnotationReadResolvedCode,
-  SpanAnnotationReadResolved,
-} from "./openapi";
-import { QueryKey } from "./QueryKey";
 import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
-import useStableQueries from "../utils/useStableQueries";
-import queryClient from "../plugins/ReactQueryClient";
-import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import useStableQueries from "../utils/useStableQueries.ts";
+import { QueryKey } from "./QueryKey.ts";
+import { AnnotationDocumentRead } from "./openapi/models/AnnotationDocumentRead.ts";
+import { BBoxAnnotationReadResolvedCode } from "./openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { SpanAnnotationReadResolved } from "./openapi/models/SpanAnnotationReadResolved.ts";
+import { AnnotationDocumentService } from "./openapi/services/AnnotationDocumentService.ts";
+import { useSelectEnabledBboxAnnotations, useSelectEnabledSpanAnnotations } from "./utils.ts";
 
 const useCreateAdoc = () =>
-  useMutation(AnnotationDocumentService.create, {
+  useMutation({
+    mutationFn: AnnotationDocumentService.create,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.SDOC_ADOCS, data.source_document_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_ADOCS, data.source_document_id] });
     },
   });
 
 const useGetAdoc = (adocId: number | null | undefined) => {
   // filter out all disabled code ids
-  return useQuery<AnnotationDocumentRead, Error>(
-    [QueryKey.ADOC, adocId],
-    () =>
+  return useQuery<AnnotationDocumentRead, Error>({
+    queryKey: [QueryKey.ADOC, adocId],
+    queryFn: () =>
       AnnotationDocumentService.getByAdocId({
         adocId: adocId!,
       }),
-    {
-      enabled: !!adocId,
-    },
-  );
+    enabled: !!adocId,
+  });
 };
 
 const useGetAllSpanAnnotations = (adocId: number | null | undefined) => {
   // filter out all disabled code ids
   const selectEnabledAnnotations = useSelectEnabledSpanAnnotations();
-  return useQuery<SpanAnnotationReadResolved[], Error>(
-    [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
-    () =>
+  return useQuery<SpanAnnotationReadResolved[], Error>({
+    queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, adocId],
+    queryFn: () =>
       AnnotationDocumentService.getAllSpanAnnotations({
         adocId: adocId!,
         resolve: true,
       }) as Promise<SpanAnnotationReadResolved[]>,
-    {
-      enabled: !!adocId,
-      select: selectEnabledAnnotations,
-    },
-  );
+    enabled: !!adocId,
+    select: selectEnabledAnnotations,
+  });
 };
 
 const useGetAllSpanAnnotationsBatch = (adocIds: number[]) => {
@@ -69,18 +64,16 @@ const useGetAllSpanAnnotationsBatch = (adocIds: number[]) => {
 const useGetAllBboxAnnotations = (adocId: number | null | undefined) => {
   // filter out all disabled code ids
   const selectEnabledAnnotations = useSelectEnabledBboxAnnotations();
-  return useQuery<BBoxAnnotationReadResolvedCode[], Error>(
-    [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
-    () =>
+  return useQuery<BBoxAnnotationReadResolvedCode[], Error>({
+    queryKey: [QueryKey.ADOC_BBOX_ANNOTATIONS, adocId],
+    queryFn: () =>
       AnnotationDocumentService.getAllBboxAnnotations({
         adocId: adocId!,
         resolve: true,
       }) as Promise<BBoxAnnotationReadResolvedCode[]>,
-    {
-      enabled: !!adocId,
-      select: selectEnabledAnnotations,
-    },
-  );
+    enabled: !!adocId,
+    select: selectEnabledAnnotations,
+  });
 };
 
 const useGetAllBboxAnnotationsBatch = (adocIds: number[]) => {

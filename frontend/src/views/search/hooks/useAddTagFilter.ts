@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import { SearchActions } from "../searchSlice";
-import { useNavigateIfNecessary } from "./useNavigateIfNecessary";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { SearchFilterActions } from "../searchFilterSlice.ts";
+import { useNavigateIfNecessary } from "./useNavigateIfNecessary.ts";
 
 export function useAddTagFilter() {
   // router
@@ -18,9 +18,7 @@ export function useAddTagFilter() {
 
   return useCallback(
     (tagId: number) => {
-      dispatch(SearchActions.onAddTagFilter({ tagId }));
-      // dispatch(SearchActions.addFilter(createDocumentTagFilter(tagId)));
-      // dispatch(SearchActions.clearSelectedDocuments());
+      dispatch(SearchFilterActions.onAddTagFilter({ tagId }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId],

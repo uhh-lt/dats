@@ -1,13 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { PreprocessingJobRead } from "../models/PreprocessingJobRead";
 import type { PreProProjectStatus } from "../models/PreProProjectStatus";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class PreproService {
   /**
    * Returns the PreprocessingJob for the given ID if it exists
@@ -26,7 +25,6 @@ export class PreproService {
       },
     });
   }
-
   /**
    * Aborts the PreprocessingJob for the given ID if it exists
    * @returns PreprocessingJobRead Successful Response
@@ -44,7 +42,6 @@ export class PreproService {
       },
     });
   }
-
   /**
    * Returns all PreprocessingJobs for the given project ID if it exists
    * @returns PreprocessingJobRead Successful Response
@@ -62,7 +59,6 @@ export class PreproService {
       },
     });
   }
-
   /**
    * Returns the PreProProjectStatus of the Project with the given ID.
    * @returns PreProProjectStatus Successful Response

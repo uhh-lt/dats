@@ -1,8 +1,8 @@
-import React, { useContext } from "react";
 import { Box, Container, Grid, Portal, Typography } from "@mui/material";
-import AnalysisCard from "./AnalysisCard";
 import { range } from "lodash";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
+import { useContext } from "react";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import AnalysisCard from "./AnalysisCard.tsx";
 
 function Analysis() {
   // global client state (context)

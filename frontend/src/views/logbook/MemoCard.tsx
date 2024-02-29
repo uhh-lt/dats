@@ -1,25 +1,25 @@
 import { Box, Card, CardActions, CardContent, CardHeader, Typography } from "@mui/material";
 import Avatar from "@mui/material/Avatar";
 import React, { forwardRef } from "react";
-import MemoHooks from "../../api/MemoHooks";
-import { AttachedObjectType } from "../../api/openapi";
-import MemoEditButton from "../../features/Memo/MemoEditButton";
-import MemoStarButton from "../../features/Memo/MemoStarButton";
-import useGetMemosAttachedObject from "../../features/Memo/useGetMemosAttachedObject";
-import AttachedObjectLink from "./AttachedObjectLink";
+import MemoHooks from "../../api/MemoHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import MemoEditButton from "../../features/Memo/MemoEditButton.tsx";
+import MemoStarButton from "../../features/Memo/MemoStarMenuItem.tsx";
+import useGetMemosAttachedObject from "../../features/Memo/useGetMemosAttachedObject.ts";
+import { dateToLocaleString } from "../../utils/DateUtils.ts";
+import AttachedObjectLink from "./AttachedObjectLink.tsx";
 import "./MemoCard.css";
-import { MemoColors, MemoShortnames } from "./MemoEnumUtils";
-import { MemoCardContextMenuData } from "./MemoResults";
-import { dateToLocaleString } from "../../utils/DateUtils";
+import { MemoColors, MemoShortnames } from "./MemoEnumUtils.ts";
+import { MemoCardContextMenuData } from "./MemoResults.tsx";
 
 interface MemoCardProps {
   memoId: number;
   onContextMenu: (data: MemoCardContextMenuData) => (event: React.MouseEvent) => void;
-  style: any;
+  style: React.CSSProperties;
   dataIndex: number;
 }
 
-const MemoCard = forwardRef<any, MemoCardProps>(({ memoId, onContextMenu, style, dataIndex }, ref) => {
+const MemoCard = forwardRef<HTMLDivElement, MemoCardProps>(({ memoId, onContextMenu, style, dataIndex }, ref) => {
   // query
   const memo = MemoHooks.useGetMemo(memoId);
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
@@ -27,18 +27,20 @@ const MemoCard = forwardRef<any, MemoCardProps>(({ memoId, onContextMenu, style,
   // ui event handlers
   const handleHoverEnter = () => {
     switch (memo.data?.attached_object_type) {
-      case AttachedObjectType.SPAN_ANNOTATION:
+      case AttachedObjectType.SPAN_ANNOTATION: {
         const spans = Array.from(document.getElementsByClassName(`span-${memo.data.attached_object_id}`));
         spans.forEach((element) => {
           element.classList.add("hovered");
         });
         break;
-      case AttachedObjectType.BBOX_ANNOTATION:
+      }
+      case AttachedObjectType.BBOX_ANNOTATION: {
         const boxes = Array.from(document.getElementsByClassName(`bbox-${memo.data.attached_object_id}`));
         boxes.forEach((element) => {
           element.classList.add("hovered");
         });
         break;
+      }
     }
   };
 

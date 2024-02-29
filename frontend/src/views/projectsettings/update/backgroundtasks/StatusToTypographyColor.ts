@@ -1,4 +1,4 @@
-import { BackgroundJobStatus } from "../../../../api/openapi";
+import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
 
 export const statusToTypographyColor: Record<
   BackgroundJobStatus,

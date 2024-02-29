@@ -1,7 +1,7 @@
 import { Grid, Typography } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
-import SpanAnnotationCard from "./SpanAnnotationCard";
+import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
 
 interface SpanAnnotationCardListProps {
   spanAnnotationIds: number[];

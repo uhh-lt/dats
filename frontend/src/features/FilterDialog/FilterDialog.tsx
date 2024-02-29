@@ -3,10 +3,10 @@ import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import { Box, Button, ButtonProps, FormControlLabel, Popover, Switch } from "@mui/material";
 import { useState } from "react";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import FilterRenderer, { FilterRendererProps } from "./FilterRenderer";
-import { MyFilter, countFilterExpressions } from "./filterUtils";
-import FilterRendererSimple from "./FilterRendererSimple";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import FilterRenderer, { FilterRendererProps } from "./FilterRenderer.tsx";
+import FilterRendererSimple from "./FilterRendererSimple.tsx";
+import { MyFilter, countFilterExpressions } from "./filterUtils.ts";
 
 export interface FilterDialogProps {
   anchorEl: HTMLElement | null;

@@ -10,7 +10,7 @@ import {
   getStraightPath,
   useReactFlow,
 } from "reactflow";
-import { CustomEdgeData } from "../types/CustomEdgeData";
+import { CustomEdgeData } from "../types/CustomEdgeData.ts";
 
 const useGetPath = (edge: EdgeProps<CustomEdgeData>): [string, number, number] => {
   const [edgePath, labelX, labelY] = useMemo(() => {
@@ -48,7 +48,7 @@ function CustomEdge(props: EdgeProps<CustomEdgeData>) {
   const handleChangeText = (
     event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
-    // @ts-ignore
+    // @ts-expect-error event target value is always a string
     const value: string = event.target.value;
     reactFlowInstance.setEdges((edges) =>
       edges.map((edge) => {

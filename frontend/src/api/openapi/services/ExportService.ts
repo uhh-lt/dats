@@ -1,13 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { ExportJobParameters } from "../models/ExportJobParameters";
 import type { ExportJobRead } from "../models/ExportJobRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class ExportService {
   /**
    * Returns the ExportJob for the given Parameters
@@ -29,7 +28,6 @@ export class ExportService {
       },
     });
   }
-
   /**
    * Returns the ExportJob for the given ID if it exists
    * @returns ExportJobRead Successful Response

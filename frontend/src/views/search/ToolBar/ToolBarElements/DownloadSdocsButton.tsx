@@ -1,10 +1,11 @@
-import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
-import ExporterHooks from "../../../../api/ExporterHooks";
-import { BackgroundJobStatus, ExportJobType } from "../../../../api/openapi";
-import { useParams } from "react-router-dom";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
+import { CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import ExporterHooks from "../../../../api/ExporterHooks.ts";
+import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
+import { ExportJobType } from "../../../../api/openapi/models/ExportJobType.ts";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI.ts";
 
 interface DownloadSdocsButtonProps {
   sdocIds: number[];
@@ -34,7 +35,7 @@ export default function DownloadSdocsButton({ sdocIds }: DownloadSdocsButtonProp
     if (!exportJob.data) return;
     if (exportJob.data.status) {
       if (exportJob.data.status === BackgroundJobStatus.FINISHED) {
-        window.open(process.env.REACT_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
+        window.open(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
         // Make sure the download doesn't start again on a re-render
         startExport.reset();
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
@@ -46,7 +47,7 @@ export default function DownloadSdocsButton({ sdocIds }: DownloadSdocsButtonProp
     }
   }, [exportJob.data, startExport]);
 
-  if (startExport.isLoading || exportJob.data?.status === BackgroundJobStatus.WAITING) {
+  if (startExport.isPending || exportJob.data?.status === BackgroundJobStatus.WAITING) {
     return <CircularProgress size={20} />;
   } else {
     return (

@@ -1,8 +1,8 @@
 import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import VerticalSplitIcon from "@mui/icons-material/VerticalSplit";
 import ReorderIcon from "@mui/icons-material/Reorder";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
-import { SearchActions } from "../../searchSlice";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../searchSlice.ts";
 
 interface ToggleSplitViewButtonProps {}
 

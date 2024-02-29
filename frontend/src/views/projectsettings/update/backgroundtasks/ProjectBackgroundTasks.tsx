@@ -1,11 +1,14 @@
 import { Box, Divider, List, Toolbar, Typography } from "@mui/material";
-import React, { useMemo, useRef } from "react";
-import CrawlerHooks from "../../../../api/CrawlerHooks";
-import { CrawlerJobRead, PreprocessingJobRead, BackgroundJobStatus, ProjectRead } from "../../../../api/openapi";
-import PreProHooks from "../../../../api/PreProHooks";
-import CrawlerJobListItem from "./CrawlerJobListItem";
-import PreProJobListItem from "./PreProJobListItem";
-import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu";
+import { useMemo, useRef } from "react";
+import CrawlerHooks from "../../../../api/CrawlerHooks.ts";
+import PreProHooks from "../../../../api/PreProHooks.ts";
+import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
+import { CrawlerJobRead } from "../../../../api/openapi/models/CrawlerJobRead.ts";
+import { PreprocessingJobRead } from "../../../../api/openapi/models/PreprocessingJobRead.ts";
+import { ProjectRead } from "../../../../api/openapi/models/ProjectRead.ts";
+import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu.tsx";
+import CrawlerJobListItem from "./CrawlerJobListItem.tsx";
+import PreProJobListItem from "./PreProJobListItem.tsx";
 
 interface ProjectBackgroundTasksProps {
   project: ProjectRead;

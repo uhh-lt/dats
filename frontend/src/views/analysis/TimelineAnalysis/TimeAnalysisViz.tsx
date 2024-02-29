@@ -9,17 +9,18 @@ import {
   Cell,
   Tooltip as ChartTooltip,
   Dot,
+  DotProps,
   Line,
   LineChart,
   ResponsiveContainer,
   XAxis,
   YAxis,
 } from "recharts";
-import { TimelineAnalysisRead } from "../../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { TimelineAnalysisActions } from "./timelineAnalysisSlice";
-import { TimelineAnalysisCount } from "./useTimelineAnalysis";
-import TimelineAnalysisExportMenu from "./TimelineAnalysisExportMenu";
+import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import TimelineAnalysisExportMenu from "./TimelineAnalysisExportMenu.tsx";
+import { TimelineAnalysisActions } from "./timelineAnalysisSlice.ts";
+import { TimelineAnalysisCount } from "./useTimelineAnalysis.ts";
 
 interface TimelineAnalysisVizProps {
   chartData: TimelineAnalysisCount[] | undefined;
@@ -101,7 +102,8 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
                     isSelected={provenanceConcept === concept.name && provenanceDate === props.payload.date}
                   />
                 )}
-                activeDot={(props) => (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                activeDot={(props: any) => (
                   <CustomizedDot
                     {...props}
                     r={5}
@@ -142,14 +144,17 @@ function TimelineAnalysisViz({ chartData, timelineAnalysis }: TimelineAnalysisVi
 
 export default TimelineAnalysisViz;
 
-const CustomizedDot = (props: any) => {
-  const { cx, cy, stroke, r, isSelected, onClick } = props;
+interface CustomizedDotProps extends DotProps {
+  isSelected: boolean;
+  onClick?: () => void;
+}
 
+const CustomizedDot = ({ cx, cy, r, stroke, isSelected, onClick }: CustomizedDotProps) => {
   return (
     <Dot
       cx={cx}
       cy={cy}
-      r={isSelected ? 2 * r : r}
+      r={isSelected && r ? 2 * r : r}
       stroke={isSelected ? "black" : undefined}
       strokeWidth={isSelected ? 2 : undefined}
       fill={stroke}

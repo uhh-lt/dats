@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export enum FilterValueType {
   SDOC_ID = "SDOC_ID",
   CODE_ID = "CODE_ID",

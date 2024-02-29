@@ -1,12 +1,12 @@
-import React from "react";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import { SpanAnnotationReadResolved } from "../../api/openapi";
-import MemoHooks from "../../api/MemoHooks";
-import { MemoForm } from "./MemoForm";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import { MemoContentProps } from "./MemoContentBboxAnnotation";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
+import { SubmitHandler } from "react-hook-form";
+import MemoHooks from "../../api/MemoHooks.ts";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
+import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
 interface MemoContentSpanAnnotationProps {
   spanAnnotation: SpanAnnotationReadResolved;
@@ -26,7 +26,7 @@ export function MemoContentSpanAnnotation({
   const deleteMutation = MemoHooks.useDeleteMemo();
 
   // form handling
-  const handleCreateOrUpdateSpanAnnotationMemo = (data: any) => {
+  const handleCreateOrUpdateSpanAnnotationMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
 
     if (memo) {
@@ -102,9 +102,9 @@ export function MemoContentSpanAnnotation({
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateSpanAnnotationMemo}
       handleDeleteMemo={handleDeleteSpanAnnotationMemo}
-      isUpdateLoading={updateMutation.isLoading}
-      isCreateLoading={createMutation.isLoading}
-      isDeleteLoading={deleteMutation.isLoading}
+      isUpdateLoading={updateMutation.isPending}
+      isCreateLoading={createMutation.isPending}
+      isDeleteLoading={deleteMutation.isPending}
     />
   );
 }

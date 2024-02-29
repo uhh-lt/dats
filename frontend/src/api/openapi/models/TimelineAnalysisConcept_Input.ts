@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { Filter_TimelineAnalysisColumns__Input } from "./Filter_TimelineAnalysisColumns__Input";
-
 export type TimelineAnalysisConcept_Input = {
   /**
    * ID of the Concept

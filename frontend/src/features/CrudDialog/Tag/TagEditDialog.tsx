@@ -1,23 +1,19 @@
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
-import React, { useCallback, useEffect, useState } from "react";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import eventBus from "../../../EventBus";
-import TagHooks from "../../../api/TagHooks";
 import { ErrorMessage } from "@hookform/error-message";
-import { LoadingButton } from "@mui/lab";
-import { HexColorPicker } from "react-colorful";
-import ColorUtils from "../../../utils/ColorUtils";
-import SaveIcon from "@mui/icons-material/Save";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead";
-import TagRenderer from "../../../components/DataGrid/TagRenderer";
-import { DocumentTagUpdate } from "../../../api/openapi";
-
-export const openTagEditDialog = (tagId: number) => {
-  eventBus.dispatch("open-edit-tag", tagId);
-};
+import SaveIcon from "@mui/icons-material/Save";
+import { LoadingButton } from "@mui/lab";
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { HexColorPicker } from "react-colorful";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import TagHooks from "../../../api/TagHooks.ts";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { DocumentTagUpdate } from "../../../api/openapi/models/DocumentTagUpdate.ts";
+import TagRenderer from "../../../components/DataGrid/TagRenderer.tsx";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ColorUtils from "../../../utils/ColorUtils.ts";
+import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
 
 interface TagEditDialogProps {
   tags: DocumentTagRead[];
@@ -40,25 +36,14 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   } = useForm<DocumentTagUpdate>();
 
   // local state
-  const [tagId, setTagId] = useState<number>();
   const [open, setOpen] = useState(false);
   const [color, setColor] = useState("#000000");
 
+  // global client state (redux)
+  const tagId = useAppSelector((state) => state.dialog.tagId);
+
   // query
   const tag = TagHooks.useGetTag(tagId);
-
-  // listen to event
-  // create a (memoized) function that stays the same across re-renders
-  const onOpenEditTag = useCallback((event: CustomEventInit) => {
-    setOpen(true);
-    setTagId(event.detail);
-  }, []);
-  useEffect(() => {
-    eventBus.on("open-edit-tag", onOpenEditTag);
-    return () => {
-      eventBus.remove("open-edit-tag", onOpenEditTag);
-    };
-  }, [onOpenEditTag]);
 
   // initialize form when tag changes
   useEffect(() => {
@@ -130,7 +115,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     }
   };
 
-  let menuItems: React.ReactNode[] = tags
+  const menuItems: React.ReactNode[] = tags
     .filter((t) => t.id !== tag.data?.id)
     .map((t) => (
       <MenuItem key={t.id} value={t.id}>
@@ -216,7 +201,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
             color="error"
             startIcon={<DeleteIcon />}
             disabled={!tag.isSuccess}
-            loading={deleteTagMutation.isLoading}
+            loading={deleteTagMutation.isPending}
             loadingPosition="start"
             onClick={handleDelete}
             sx={{ flexShrink: 0 }}
@@ -230,7 +215,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
             fullWidth
             type="submit"
             disabled={!tag.isSuccess}
-            loading={updateTagMutation.isLoading}
+            loading={updateTagMutation.isPending}
             loadingPosition="start"
           >
             Update Tag

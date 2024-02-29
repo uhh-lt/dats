@@ -1,7 +1,7 @@
 import LabelIcon from "@mui/icons-material/Label";
-import TagHooks from "../../api/TagHooks";
-import { DocumentTagRead } from "../../api/openapi";
 import { Stack, StackProps } from "@mui/material";
+import TagHooks from "../../api/TagHooks.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 
 interface TagRendererProps {
   tag: number | DocumentTagRead;

@@ -11,12 +11,12 @@ import {
   Typography,
 } from "@mui/material";
 import { ChangeEvent } from "react";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { AutologbookActions } from "./autologbookSlice";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { AutologbookActions } from "./autologbookSlice.ts";
 
 const weekString = (dayStart: number, dayEnd: number) => {
-  let start = new Date(dayStart).toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
-  let end = new Date(dayEnd).toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
+  const start = new Date(dayStart).toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
+  const end = new Date(dayEnd).toLocaleDateString("en-GB", { weekday: "long", day: "2-digit", month: "long" });
 
   return `${start} - ${end}`;
 };
@@ -33,8 +33,8 @@ function ActionDateFunctions() {
   const timestampTo = useAppSelector((state) => state.autologbook.timestampTo);
 
   const handleDateChange = (e: ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-    let dateTo = new Date(e.target.value);
-    let dateFrom = new Date(e.target.value);
+    const dateTo = new Date(e.target.value);
+    const dateFrom = new Date(e.target.value);
     dateFrom.setDate(dateFrom.getDate() - (visibleDays - 1));
 
     dispatch(AutologbookActions.setTimestampTo(dateTo.getTime()));

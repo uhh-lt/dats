@@ -2,10 +2,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { QueryType } from "../../views/search/QueryType";
-import { SearchActions } from "../../views/search/searchSlice";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { QueryType } from "../../views/search/QueryType.ts";
+import { SearchActions } from "../../views/search/searchSlice.ts";
 
 interface ImageContextMenuProps {}
 
@@ -39,14 +39,14 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
     setImage(image);
   };
 
-  const closeContextMenu = (_reason?: "backdropClick" | "escapeKeyDown") => {
+  const closeContextMenu = () => {
     setIsPopoverOpen(false);
   };
 
   // ui events
-  const handleContextMenu = (event: any) => {
+  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
-    closeContextMenu("backdropClick");
+    closeContextMenu();
   };
 
   const handleSentenceSimilaritySearch = () => {
@@ -80,7 +80,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
   return (
     <Popover
       open={isPopoverOpen}
-      onClose={(event, reason) => closeContextMenu(reason)}
+      onClose={() => closeContextMenu()}
       anchorPosition={position}
       anchorReference="anchorPosition"
       anchorOrigin={{

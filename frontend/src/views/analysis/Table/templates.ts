@@ -1,4 +1,4 @@
-import { TableType } from "../../../api/openapi";
+import { TableType } from "../../../api/openapi/models/TableType.ts";
 
 const CUSTOM_TEMPLATE = [
   ["", "", "", "", ""],

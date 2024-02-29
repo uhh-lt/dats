@@ -1,9 +1,10 @@
 import { Box, Tooltip } from "@mui/material";
 import { useMemo, useRef, useState } from "react";
 import ReactPlayer from "react-player";
-import { OnProgressProps } from "react-player/base";
-import SdocHooks from "../../../api/SdocHooks";
-import { AnnotationDocumentRead, SourceDocumentWithDataRead } from "../../../api/openapi";
+import type { OnProgressProps } from "react-player/base.d.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
+import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 
 interface AudioVideoViewerProps {
   sdoc: SourceDocumentWithDataRead;
@@ -27,8 +28,8 @@ function AudioVideoViewer({ sdoc, width, height }: AudioVideoViewerProps) {
     if (!transcriptWords.data) return;
 
     // TODO: this is not very efficient!
-    let time = state.playedSeconds * 1000;
-    let wordId = transcriptWords.data.findIndex((word) => word.start_ms >= time && time <= word.end_ms);
+    const time = state.playedSeconds * 1000;
+    const wordId = transcriptWords.data.findIndex((word) => word.start_ms >= time && time <= word.end_ms);
     setHighlightedWordId(wordId);
     if (currentHighlightedWordSpanRef.current) {
       currentHighlightedWordSpanRef.current.scrollIntoView({

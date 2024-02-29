@@ -1,7 +1,7 @@
 import { Link, Stack } from "@mui/material";
-import SdocHooks from "../../api/SdocHooks";
-import { SourceDocumentRead } from "../../api/openapi";
-import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon.tsx";
 
 export interface SdocRendererSharedProps {
   link?: boolean;

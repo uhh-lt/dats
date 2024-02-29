@@ -1,6 +1,6 @@
 import { Box, Card, CardContent, CardHeader, Container, Portal, Typography } from "@mui/material";
 import { ReactNode, useContext } from "react";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 
 interface AnalysisDashboardProps {
   children: ReactNode;

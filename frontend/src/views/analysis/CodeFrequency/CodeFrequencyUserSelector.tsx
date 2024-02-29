@@ -1,9 +1,9 @@
 import { AppBar, AppBarProps, Toolbar } from "@mui/material";
 import { useEffect } from "react";
-import { useAuth } from "../../../auth/AuthProvider";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import UserSelector from "../UserSelector";
-import { AnalysisActions } from "../analysisSlice";
+import { useAuth } from "../../../auth/useAuth.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import UserSelector from "../UserSelector.tsx";
+import { AnalysisActions } from "../analysisSlice.ts";
 
 interface CodeFrequencyUserSelectorProps {
   projectId: number | undefined;

@@ -1,21 +1,20 @@
-/* eslint-disable react/jsx-pascal-case */
 import TroubleshootIcon from "@mui/icons-material/Troubleshoot";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, Divider, TextField, Toolbar, Typography } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
-  MRT_ToggleDensePaddingButton,
   MRT_ShowHideColumnsButton,
+  MRT_ToggleDensePaddingButton,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo, useState } from "react";
-import ProjectHooks from "../../../api/ProjectHooks";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
-import { ProjectProps } from "./ProjectProps";
-import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer";
-import SdocHooks from "../../../api/SdocHooks";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
+import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer.tsx";
+import { ProjectProps } from "./ProjectProps.ts";
 
 interface DuplicateDocumentData {
   sdocId: string;
@@ -59,7 +58,7 @@ function ProjectDuplicateDocuments({ project }: ProjectProps) {
         sdocIds: sdocIds,
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess: () => {
           setRowSelection({});
           findDuplicateDocumentsMutation.mutate({
             projId: project.id,
@@ -124,7 +123,7 @@ function ProjectDuplicateDocuments({ project }: ProjectProps) {
     onRowSelectionChange: setRowSelection, //connect internal row selection state to your own
     state: {
       rowSelection,
-      isLoading: findDuplicateDocumentsMutation.isLoading,
+      isLoading: findDuplicateDocumentsMutation.isPending,
     }, //pass our managed row selection state to the table to use
     // other
     filterFromLeafRows: true, //apply filtering to all rows instead of just parent rows
@@ -196,7 +195,7 @@ function ProjectDuplicateDocuments({ project }: ProjectProps) {
           startIcon={<TroubleshootIcon />}
           sx={{ ml: 1 }}
           onClick={handleClickFindDuplicateTextDocuments}
-          loading={findDuplicateDocumentsMutation.isLoading}
+          loading={findDuplicateDocumentsMutation.isPending}
           loadingPosition="start"
         >
           Start

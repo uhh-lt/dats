@@ -4,9 +4,9 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi";
-import { useAppDispatch } from "../../../../plugins/ReduxHooks";
-import { SearchActions } from "../../searchSlice";
+import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
+import { SearchFilterActions } from "../../searchFilterSlice.ts";
 
 interface DocumentMetadataAddFilterButtonProps {
   metadata: SourceDocumentMetadataReadResolved;
@@ -22,7 +22,7 @@ function DocumentMetadataAddFilterButton({
   const dispatch = useAppDispatch();
 
   const handleAddMetadataFilter = useCallback(() => {
-    dispatch(SearchActions.onAddMetadataFilter({ metadata }));
+    dispatch(SearchFilterActions.onAddMetadataFilter({ metadata }));
     navigate("../search");
   }, [dispatch, metadata, navigate]);
 

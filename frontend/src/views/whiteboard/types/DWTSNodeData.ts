@@ -1,12 +1,12 @@
-import { BorderNodeData } from "./customnodes/BorderNodeData";
-import { NoteNodeData } from "./customnodes/NoteNodeData";
-import { TextNodeData } from "./customnodes/TextNodeData";
-import { BBoxAnnotationNodeData } from "./dbnodes/BBoxAnnotationNodeData";
-import { CodeNodeData } from "./dbnodes/CodeNodeData";
-import { MemoNodeData } from "./dbnodes/MemoNodeData";
-import { SdocNodeData } from "./dbnodes/SdocNodeData";
-import { SpanAnnotationNodeData } from "./dbnodes/SpanAnnotationNodeData";
-import { TagNodeData } from "./dbnodes/TagNodeData";
+import { BorderNodeData } from "./customnodes/BorderNodeData.ts";
+import { NoteNodeData } from "./customnodes/NoteNodeData.ts";
+import { TextNodeData } from "./customnodes/TextNodeData.ts";
+import { BBoxAnnotationNodeData } from "./dbnodes/BBoxAnnotationNodeData.ts";
+import { CodeNodeData } from "./dbnodes/CodeNodeData.ts";
+import { MemoNodeData } from "./dbnodes/MemoNodeData.ts";
+import { SdocNodeData } from "./dbnodes/SdocNodeData.ts";
+import { SpanAnnotationNodeData } from "./dbnodes/SpanAnnotationNodeData.ts";
+import { TagNodeData } from "./dbnodes/TagNodeData.ts";
 
 export type DWTSNodeData =
   | TextNodeData

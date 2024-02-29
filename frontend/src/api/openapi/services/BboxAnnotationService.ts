@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -8,11 +9,9 @@ import type { BBoxAnnotationUpdateWithCodeId } from "../models/BBoxAnnotationUpd
 import type { CodeRead } from "../models/CodeRead";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class BboxAnnotationService {
   /**
    * Creates a BBoxAnnotation
@@ -42,7 +41,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Returns the BBoxAnnotation with the given ID.
    * @returns any Successful Response
@@ -72,7 +70,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Updates the BBoxAnnotation with the given ID.
    * @returns any Successful Response
@@ -106,7 +103,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Deletes the BBoxAnnotation with the given ID.
    * @returns any Successful Response
@@ -128,7 +124,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Returns the Code of the BBoxAnnotation with the given ID if it exists.
    * @returns CodeRead Successful Response
@@ -146,7 +141,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Adds a Memo to the BBoxAnnotation with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -172,7 +166,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Returns the Memos attached to the BBoxAnnotation with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -190,7 +183,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the BBoxAnnotation with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -209,7 +201,6 @@ export class BboxAnnotationService {
       },
     });
   }
-
   /**
    * Returns BBoxAnnotations with the given Code of the User with the given ID
    * @returns BBoxAnnotationRead Successful Response

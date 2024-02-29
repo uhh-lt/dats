@@ -1,9 +1,9 @@
-import { AttachedObjectType } from "../../api/openapi";
-import TagHooks from "../../api/TagHooks";
-import CodeHooks from "../../api/CodeHooks";
-import SdocHooks from "../../api/SdocHooks";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
+import CodeHooks from "../../api/CodeHooks.ts";
+import SdocHooks from "../../api/SdocHooks.ts";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
+import TagHooks from "../../api/TagHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 
 const useGetMemosAttachedObject = (type: AttachedObjectType | undefined) => {
   switch (type) {

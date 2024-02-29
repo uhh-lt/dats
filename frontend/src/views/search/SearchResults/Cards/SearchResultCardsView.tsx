@@ -6,37 +6,29 @@ import { useParams } from "react-router-dom";
 import {
   ImageSimilaritySearchResults,
   LexicalSearchResults,
-  SearchResults,
   SentenceSimilaritySearchResults,
-} from "../../../../api/SearchHooks";
-import { ColumnInfo_SearchColumns_ } from "../../../../api/openapi";
-import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks";
-import { SearchActions } from "../../searchSlice";
-import SearchResultContextMenu from "../SearchResultContextMenu";
-import LexicalSearchResultCard from "./LexicalSearchResultCard";
-import SentenceSimilaritySearchResultCard from "./SentenceSimilaritySearchResultCard";
-import ImageSimilaritySearchResultCard from "./ImageSimilaritySearchResultCard";
+} from "../../../../api/SearchHooks.ts";
+import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition.ts";
+import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../searchSlice.ts";
+import SearchResultContextMenu from "../SearchResultContextMenu.tsx";
+import ImageSimilaritySearchResultCard from "./ImageSimilaritySearchResultCard.tsx";
+import LexicalSearchResultCard from "./LexicalSearchResultCard.tsx";
+import SentenceSimilaritySearchResultCard from "./SentenceSimilaritySearchResultCard.tsx";
 
 interface SearchResultCardsViewProps {
-  searchResults: SearchResults<any>;
+  searchResults: LexicalSearchResults | SentenceSimilaritySearchResults | ImageSimilaritySearchResults;
   handleResultClick: (sdocId: number) => void;
-  columnInfo: ColumnInfo_SearchColumns_[];
 }
 
-export default function SearchResultCardsView({
-  searchResults,
-  handleResultClick,
-  columnInfo,
-}: SearchResultCardsViewProps) {
+export default function SearchResultCardsView({ searchResults, handleResultClick }: SearchResultCardsViewProps) {
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   const { width, height, ref } = useResizeDetector();
 
   // redux (global client state)
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
-  const page = useAppSelector((state) => state.search.page);
-  const rowsPerPage = useAppSelector((state) => state.search.rowsPerPage);
+  const { pageIndex, pageSize } = useAppSelector((state) => state.search.paginationModel);
   const dispatch = useAppDispatch();
 
   // context menu
@@ -57,7 +49,7 @@ export default function SearchResultCardsView({
     setContextMenuPosition(null);
   }, []);
 
-  // calculate cards per page
+  // calculate cards per pageIndex
   React.useLayoutEffect(() => {
     if (searchResults instanceof SentenceSimilaritySearchResults) {
       dispatch(SearchActions.setRowsPerPage(5));
@@ -98,7 +90,7 @@ export default function SearchResultCardsView({
       {searchResults instanceof LexicalSearchResults ? (
         searchResults
           .getSearchResultSDocIds()
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .slice(pageIndex * pageSize, pageIndex * pageSize + pageSize)
           .map((sdocId) => (
             <LexicalSearchResultCard
               key={sdocId}
@@ -110,7 +102,7 @@ export default function SearchResultCardsView({
           ))
       ) : searchResults instanceof SentenceSimilaritySearchResults ? (
         Array.from(searchResults.getResults().entries())
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .slice(pageIndex * pageSize, pageIndex * pageSize + pageSize)
           .map(([sdocId, hits]) => (
             <SentenceSimilaritySearchResultCard
               hits={hits}
@@ -123,7 +115,7 @@ export default function SearchResultCardsView({
       ) : searchResults instanceof ImageSimilaritySearchResults ? (
         searchResults
           .getResults()
-          .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+          .slice(pageIndex * pageSize, pageIndex * pageSize + pageSize)
           .map((hit) => (
             <ImageSimilaritySearchResultCard
               hit={hit}

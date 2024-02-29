@@ -1,13 +1,12 @@
 import DeleteIcon from "@mui/icons-material/Delete";
-import * as React from "react";
-import { useCallback } from "react";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import SdocHooks from "../../../../api/SdocHooks";
-import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { SearchActions } from "../../searchSlice";
-import { useAppDispatch } from "../../../../plugins/ReduxHooks";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
+import { SearchActions } from "../../searchSlice.ts";
 
 interface DeleteMenuItemProps {
   sdocId: number | null | undefined;

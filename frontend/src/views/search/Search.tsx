@@ -3,27 +3,25 @@ import Box from "@mui/material/Box";
 import Portal from "@mui/material/Portal";
 import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
-import SearchHooks from "../../api/SearchHooks";
-import { SpanEntityStat } from "../../api/openapi";
-import TagExplorer from "../../features/TagExplorer/TagExplorer";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { SettingsActions } from "../settings/settingsSlice";
-import DocumentViewer from "./DocumentViewer/DocumentViewer";
-import SearchBar from "./SearchBar/SearchBar";
-import SearchResultCardsView from "./SearchResults/Cards/SearchResultCardsView";
-import SearchResultsTableView from "./SearchResults/Table/SearchResultsTableView";
-import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import SearchToolbar from "./ToolBar/SearchToolbar";
-import { useAddTagFilter } from "./hooks/useAddTagFilter";
-import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
-import { SearchActions } from "./searchSlice";
-import { useInitSearchFilterSlice } from "./useInitSearchFilterSlice";
-
-export function removeTrailingSlash(text: string): string {
-  return text.replace(/\/$/, "");
-}
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import SearchHooks from "../../api/SearchHooks.ts";
+import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
+import TagExplorer from "../../features/TagExplorer/TagExplorer.tsx";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { SettingsActions } from "../settings/settingsSlice.ts";
+import DocumentViewer from "./DocumentViewer/DocumentViewer.tsx";
+import SearchBar from "./SearchBar/SearchBar.tsx";
+import SearchResultCardsView from "./SearchResults/Cards/SearchResultCardsView.tsx";
+import SearchResultsTableView from "./SearchResults/Table/SearchResultsTableView.tsx";
+import SearchStatistics from "./SearchStatistics/SearchStatistics.tsx";
+import SearchToolbar from "./ToolBar/SearchToolbar.tsx";
+import { useAddTagFilter } from "./hooks/useAddTagFilter.ts";
+import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary.ts";
+import { SearchFilterActions } from "./searchFilterSlice.ts";
+import { SearchActions } from "./searchSlice.ts";
+import { useInitSearchFilterSlice } from "./useInitSearchFilterSlice.ts";
+import { removeTrailingSlash } from "./utils.ts";
 
 function Search() {
   // router
@@ -63,7 +61,7 @@ function Search() {
   const navigateIfNecessary = useNavigateIfNecessary();
   const handleResultClick = (sdocId: number) => {
     // remove doc/:docId from url (if it exists) then add new doc id
-    let url = removeTrailingSlash(location.pathname.split("/doc")[0]);
+    const url = removeTrailingSlash(location.pathname.split("/doc")[0]);
     navigate(`${url}/doc/${sdocId}`);
     dispatch(SearchActions.clearSelectedDocuments());
   };
@@ -71,14 +69,14 @@ function Search() {
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
-      dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text }));
+      dispatch(SearchFilterActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(SearchActions.onAddKeywordFilter({ keywordMetadataIds, keyword }));
+      dispatch(SearchFilterActions.onAddKeywordFilter({ keywordMetadataIds, keyword }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId, keywordMetadataIds],

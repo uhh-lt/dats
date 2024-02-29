@@ -1,6 +1,6 @@
-import FilterDialog, { FilterDialogProps } from "../../../features/FilterDialog/FilterDialog";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice";
+import FilterDialog, { FilterDialogProps } from "../../../features/FilterDialog/FilterDialog.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice.ts";
 
 function WordFrequencyFilterDialog({ anchorEl }: Pick<FilterDialogProps, "anchorEl">) {
   const filter = useAppSelector((state) => state.wordFrequencyFilter.filter["root"]);

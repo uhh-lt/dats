@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -5,11 +6,9 @@ import type { Body_authentication_login } from "../models/Body_authentication_lo
 import type { UserAuthorizationHeaderData } from "../models/UserAuthorizationHeaderData";
 import type { UserCreate } from "../models/UserCreate";
 import type { UserRead } from "../models/UserRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class AuthenticationService {
   /**
    * Registers a new User and returns it with the generated ID.
@@ -27,7 +26,6 @@ export class AuthenticationService {
       },
     });
   }
-
   /**
    * Returns the JWT access token for the provided user login data if the login was successful. This is usually only called from an OAuth2 client!
    * @returns UserAuthorizationHeaderData Successful Response
@@ -48,7 +46,6 @@ export class AuthenticationService {
       },
     });
   }
-
   /**
    * Revokes the refresh token associated with the given session.
    * @returns any Successful Response
@@ -66,7 +63,6 @@ export class AuthenticationService {
       },
     });
   }
-
   /**
    * Uses the given refresh token to obtain a new access token.
    * @returns UserAuthorizationHeaderData Successful Response

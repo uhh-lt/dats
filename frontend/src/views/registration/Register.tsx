@@ -1,4 +1,6 @@
-import React, { useRef, useState } from "react";
+import { ErrorMessage } from "@hookform/error-message";
+import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
+import { LoadingButton } from "@mui/lab";
 import {
   Box,
   Button,
@@ -13,26 +15,30 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import React, { useRef, useState } from "react";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import UserHooks from "../../api/UserHooks";
-import { ErrorMessage } from "@hookform/error-message";
-import { LoadingButton } from "@mui/lab";
-import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
-import { EMAIL_REGEX } from "../../utils/GlobalConstants";
+import UserHooks from "../../api/UserHooks.ts";
+import { UserCreate } from "../../api/openapi/models/UserCreate.ts";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import { EMAIL_REGEX } from "../../utils/GlobalConstants.ts";
+
+interface RegisterFormValues extends UserCreate {
+  confirmPassword: string;
+  confirmMail: string;
+}
 
 function Register() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
-  } = useForm();
+  } = useForm<RegisterFormValues>();
 
   // password
-  const password = useRef();
+  const password = useRef<string>();
   password.current = watch("password", "");
   const [showPassword, setShowPassword] = useState(false);
   const handleShowPasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,21 +46,21 @@ function Register() {
   };
 
   // mail
-  const mail = useRef();
-  mail.current = watch("mail", "");
+  const mail = useRef<string>();
+  mail.current = watch("email", "");
 
   // registration
   const registerUserMutation = UserHooks.useRegister();
 
   // form handling
-  const handleRegistration = (data: any) => {
+  const handleRegistration: SubmitHandler<RegisterFormValues> = (data) => {
     registerUserMutation.mutate(
       {
         requestBody: {
-          first_name: data.firstName,
-          last_name: data.lastName,
+          first_name: data.first_name,
+          last_name: data.last_name,
           password: data.password,
-          email: data.mail,
+          email: data.email,
         },
       },
       {
@@ -70,7 +76,7 @@ function Register() {
       },
     );
   };
-  const handleError = (data: any) => console.error(data);
+  const handleError: SubmitErrorHandler<UserCreate> = (data) => console.error(data);
 
   return (
     <Box
@@ -97,18 +103,18 @@ function Register() {
                 fullWidth
                 label="First name"
                 type="text"
-                {...register("firstName", { required: "First name is required" })}
-                error={Boolean(errors.firstName)}
-                helperText={<ErrorMessage errors={errors} name="firstName" />}
+                {...register("first_name", { required: "First name is required" })}
+                error={Boolean(errors.first_name)}
+                helperText={<ErrorMessage errors={errors} name="first_name" />}
               />
               <TextField
                 variant="outlined"
                 fullWidth
                 label="Last name"
                 type="text"
-                {...register("lastName", { required: "Last name is required" })}
-                error={Boolean(errors.lastName)}
-                helperText={<ErrorMessage errors={errors} name="lastName" />}
+                {...register("last_name", { required: "Last name is required" })}
+                error={Boolean(errors.last_name)}
+                helperText={<ErrorMessage errors={errors} name="last_name" />}
               />
             </Stack>
 
@@ -118,14 +124,14 @@ function Register() {
               label="E-Mail"
               type="email"
               margin="dense"
-              {...register("mail", {
+              {...register("email", {
                 required: "E-Mail is required",
                 validate: (value) => {
                   return [EMAIL_REGEX].every((pattern) => pattern.test(value)) || "Please enter a valid email address!";
                 },
               })}
-              error={Boolean(errors.mail)}
-              helperText={<ErrorMessage errors={errors} name="mail" />}
+              error={Boolean(errors.email)}
+              helperText={<ErrorMessage errors={errors} name="email" />}
             />
             <TextField
               variant="outlined"
@@ -201,7 +207,7 @@ function Register() {
               color="success"
               type="submit"
               disabled={registerUserMutation.isSuccess}
-              loading={registerUserMutation.isLoading}
+              loading={registerUserMutation.isPending}
               loadingPosition="start"
               startIcon={<AppRegistrationIcon />}
             >

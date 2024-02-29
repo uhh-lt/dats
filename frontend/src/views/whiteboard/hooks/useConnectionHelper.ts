@@ -1,5 +1,5 @@
 import { ReactFlowState, useStore } from "reactflow";
-import { isConnectionAllowed } from "../whiteboardUtils";
+import { isConnectionAllowed } from "../whiteboardUtils.ts";
 
 const connectionNodeIdSelector = (state: ReactFlowState) => state.connectionNodeId;
 const connectionHandleIdSelector = (state: ReactFlowState) => state.connectionHandleId;

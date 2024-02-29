@@ -1,7 +1,7 @@
 import { Stack } from "@mui/material";
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
-import { BBoxAnnotationReadResolvedCode } from "../../api/openapi";
-import CodeRenderer from "./CodeRenderer";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import CodeRenderer from "./CodeRenderer.tsx";
 
 interface BBoxAnnotationRendererProps {
   bboxAnnotation: number | BBoxAnnotationReadResolvedCode;

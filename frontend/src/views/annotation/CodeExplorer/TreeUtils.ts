@@ -1,9 +1,9 @@
-import { CodeRead } from "../../../api/openapi";
-import ICodeTree from "./ICodeTree";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import ICodeTree from "./ICodeTree.ts";
 
 export function codesToTree(codes: CodeRead[]): ICodeTree {
   // map input to ICodeTree
-  let newCodes: ICodeTree[] = codes.map((code) => {
+  const newCodes: ICodeTree[] = codes.map((code) => {
     return { code: code };
   });
 
@@ -20,11 +20,11 @@ export function codesToTree(codes: CodeRead[]): ICodeTree {
     parent_code_id: undefined,
   };
   // create children of the new root node (all nodes that have no parent!)
-  let children = newCodes.filter((codeTree) => !codeTree.code.parent_code_id);
-  let root: ICodeTree = { code: dummyRootNode, children: children };
+  const children = newCodes.filter((codeTree) => !codeTree.code.parent_code_id);
+  const root: ICodeTree = { code: dummyRootNode, children: children };
 
   // create the full tree using the other nodes
-  let nodes = newCodes.filter((codeTree) => codeTree.code.parent_code_id);
+  const nodes = newCodes.filter((codeTree) => codeTree.code.parent_code_id);
 
   root.children!.forEach((codeTree) => {
     codesToTreeRecursion(codeTree, nodes);
@@ -35,7 +35,7 @@ export function codesToTree(codes: CodeRead[]): ICodeTree {
 
 function codesToTreeRecursion(root: ICodeTree, nodes: ICodeTree[]): ICodeTree {
   root.children = nodes.filter((node) => node.code.parent_code_id === root.code.id);
-  let otherNodes = nodes.filter((node) => node.code.parent_code_id !== root.code.id);
+  const otherNodes = nodes.filter((node) => node.code.parent_code_id !== root.code.id);
 
   root.children.forEach((codeTree) => {
     codesToTreeRecursion(codeTree, otherNodes);
@@ -49,7 +49,7 @@ export function flatTreeWithRoot(tree: ICodeTree | null): CodeRead[] {
     return [];
   }
 
-  let allChildren = flatTree(tree);
+  const allChildren = flatTree(tree);
   return [tree.code, ...allChildren];
 }
 

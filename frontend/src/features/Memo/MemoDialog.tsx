@@ -1,23 +1,22 @@
 import { Dialog } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../EventBus";
-import {
-  AttachedObjectType,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  DocumentTagRead,
-  SourceDocumentRead,
-  SpanAnnotationReadResolved,
-} from "../../api/openapi";
-import { useAuth } from "../../auth/AuthProvider";
-import { MemoEvent } from "./MemoAPI";
-import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation";
-import { MemoContentCode } from "./MemoContentCode";
-import { MemoContentSourceDocument } from "./MemoContentSourceDocument";
-import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation";
-import { MemoContentTag } from "./MemoContentTag";
-import useGetMemosAttachedObject from "./useGetMemosAttachedObject";
-import { useGetMemoQuery } from "./useGetMemoQuery";
+import eventBus from "../../EventBus.ts";
+
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import { MemoEvent } from "./MemoAPI.ts";
+import { MemoContentBboxAnnotation } from "./MemoContentBboxAnnotation.tsx";
+import { MemoContentCode } from "./MemoContentCode.tsx";
+import { MemoContentSourceDocument } from "./MemoContentSourceDocument.tsx";
+import { MemoContentSpanAnnotation } from "./MemoContentSpanAnnotation.tsx";
+import { MemoContentTag } from "./MemoContentTag.tsx";
+import { useGetMemoQuery } from "./useGetMemoQuery.ts";
+import useGetMemosAttachedObject from "./useGetMemosAttachedObject.ts";
 
 export default function MemoDialog() {
   const { user } = useAuth();

@@ -1,4 +1,9 @@
-import React, { useState } from "react";
+import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
+import GavelIcon from "@mui/icons-material/Gavel";
+import InfoIcon from "@mui/icons-material/Info";
+import MenuIcon from "@mui/icons-material/Menu";
+import SettingsIcon from "@mui/icons-material/Settings";
 import {
   Box,
   Divider,
@@ -11,16 +16,12 @@ import {
   ListItemIcon,
   ListItemText,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import InfoIcon from "@mui/icons-material/Info";
-import GavelIcon from "@mui/icons-material/Gavel";
-import FactCheckIcon from "@mui/icons-material/FactCheck";
-import SettingsIcon from "@mui/icons-material/Settings";
-import AutoStoriesIcon from "@mui/icons-material/AutoStories";
+import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { LoginStatus, useAuth } from "../../auth/AuthProvider";
-import ExporterListItemButton from "../../features/Exporter/ExporterListItemButton";
-import { OpenAPI } from "../../api/openapi";
+import { OpenAPI } from "../../api/openapi/core/OpenAPI.ts";
+import { LoginStatus } from "../../auth/LoginStatus.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import ExporterListItemButton from "../../features/Exporter/ExporterListItemButton.tsx";
 
 type Anchor = "top" | "left" | "bottom" | "right";
 

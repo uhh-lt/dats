@@ -1,16 +1,15 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CancelablePromise } from "../core/CancelablePromise";
+import { OpenAPI } from "../core/OpenAPI";
+import { request as __request } from "../core/request";
 import type { CodeCreate } from "../models/CodeCreate";
 import type { CodeRead } from "../models/CodeRead";
 import type { CodeUpdate } from "../models/CodeUpdate";
 import type { MemoCreate } from "../models/MemoCreate";
 import type { MemoRead } from "../models/MemoRead";
-
-import type { CancelablePromise } from "../core/CancelablePromise";
-import { OpenAPI } from "../core/OpenAPI";
-import { request as __request } from "../core/request";
-
 export class CodeService {
   /**
    * Creates a new Code and returns it with the generated ID.
@@ -28,7 +27,6 @@ export class CodeService {
       },
     });
   }
-
   /**
    * Returns the Code linked by the CurrentCode with the given ID.
    * @returns CodeRead Successful Response
@@ -46,7 +44,6 @@ export class CodeService {
       },
     });
   }
-
   /**
    * Returns the Code with the given ID.
    * @returns CodeRead Successful Response
@@ -64,7 +61,6 @@ export class CodeService {
       },
     });
   }
-
   /**
    * Updates the Code with the given ID.
    * @returns CodeRead Successful Response
@@ -90,7 +86,6 @@ export class CodeService {
       },
     });
   }
-
   /**
    * Deletes the Code with the given ID.
    * @returns CodeRead Successful Response
@@ -108,7 +103,6 @@ export class CodeService {
       },
     });
   }
-
   /**
    * Adds a Memo to the Code with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -134,7 +128,6 @@ export class CodeService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the Code with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -152,7 +145,6 @@ export class CodeService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
