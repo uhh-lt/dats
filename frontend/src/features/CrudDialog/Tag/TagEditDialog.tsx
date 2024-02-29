@@ -10,10 +10,11 @@ import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { DocumentTagUpdate } from "../../../api/openapi/models/DocumentTagUpdate.ts";
 import TagRenderer from "../../../components/DataGrid/TagRenderer.tsx";
-import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../../utils/ColorUtils.ts";
 import ConfirmationAPI from "../../ConfirmationDialog/ConfirmationAPI.ts";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 interface TagEditDialogProps {
   tags: DocumentTagRead[];
@@ -36,11 +37,12 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   } = useForm<DocumentTagUpdate>();
 
   // local state
-  const [open, setOpen] = useState(false);
   const [color, setColor] = useState("#000000");
 
   // global client state (redux)
   const tagId = useAppSelector((state) => state.dialog.tagId);
+  const open = useAppSelector((state) => state.dialog.isTagEditDialogOpen);
+  const dispatch = useAppDispatch();
 
   // query
   const tag = TagHooks.useGetTag(tagId);
@@ -64,6 +66,9 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   const deleteTagMutation = TagHooks.useDeleteTag();
 
   // form handling
+  const handleClose = () => {
+    dispatch(CRUDDialogActions.closeTagEditDialog());
+  };
   const handleTagUpdate: SubmitHandler<DocumentTagUpdate> = (data) => {
     if (tag.data) {
       updateTagMutation.mutate(
@@ -78,7 +83,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
         },
         {
           onSuccess: (data) => {
-            setOpen(false); // close dialog
+            handleClose();
             SnackbarAPI.openSnackbar({
               text: `Updated tag with id ${data.id}`,
               severity: "success",
@@ -100,7 +105,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
             { tagId: tag.data.id },
             {
               onSuccess: (data) => {
-                setOpen(false); // close dialog
+                handleClose();
                 SnackbarAPI.openSnackbar({
                   text: `Deleted tag with id ${data.id}`,
                   severity: "success",
@@ -124,7 +129,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     ));
 
   return (
-    <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <form onSubmit={handleSubmit(handleTagUpdate, handleError)}>
         {tag.isLoading && <DialogTitle>Loading tag...</DialogTitle>}
         {tag.isError && <DialogTitle>Error: {tag.error.message}</DialogTitle>}
