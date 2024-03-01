@@ -7,8 +7,11 @@ import process from "process";
 // get env variables
 dotenv.config({ path: ".env.development" });
 
-// 1. remove existing openapi file
+// settings
 const openapiFilePath = "src/openapi.json";
+const prettierCacheDir = "frontend/node_modules/.cache/prettier";
+
+// 1. remove existing openapi file
 if (existsSync(openapiFilePath)) {
   unlinkSync(openapiFilePath);
   console.log("Removed existing openapi.json");
@@ -64,7 +67,7 @@ get(`${backendUrl}/openapi.json`, (res) => {
 
       // 5. prettify file
       console.log("Prettify openapi.json");
-      exec(`npx prettier --write ${openapiFilePath}`, (err, stdout, stderr) => {
+      exec(`npx prettier --write ${openapiFilePath} --cache-location ${prettierCacheDir}`, (err, stdout, stderr) => {
         if (err) {
           // node couldn't execute the command
           console.error("An error occured when trying to run prettier :(");
