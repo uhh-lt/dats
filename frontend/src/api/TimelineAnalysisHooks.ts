@@ -28,33 +28,81 @@ const useGetUserTimelineAnalysiss = (projectId: number | null | undefined, userI
 const useCreateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.create,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, data.id] });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
-      });
+    onSuccess(data) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
+            [
+              ...prevTimelineAnalysis,
+              {
+                ...data,
+              },
+            ] as TimelineAnalysisRead[],
+        );
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, data.id] });
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
     },
   });
 
 const useUpdateTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.updateById,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, data.id] });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
-      });
+    onSettled(data, _error, variables) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) => {
+            const index = prevTimelineAnalysis.findIndex((timelineAnalysis) => timelineAnalysis.id === data.id);
+            if (index === -1) {
+              return prevTimelineAnalysis;
+            }
+            return [...prevTimelineAnalysis.slice(0, index), data, ...prevTimelineAnalysis.slice(index + 1)];
+          },
+        );
+
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
+    },
+  });
+
+const useDuplicateTimelineAnalysis = () =>
+  useMutation({
+    mutationFn: TimelineAnalysisService.duplicateById,
+    onSettled(data) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) => [...prevTimelineAnalysis, data],
+        );
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
     },
   });
 
 const useDeleteTimelineAnalysis = () =>
   useMutation({
     mutationFn: TimelineAnalysisService.deleteById,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, data.id] });
-      queryClient.invalidateQueries({
-        queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
-      });
+    onSettled(data, _error, variables) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
+            prevTimelineAnalysis.filter((timelineAnalysis) => timelineAnalysis.id !== data.id),
+        );
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
     },
   });
 
@@ -63,6 +111,7 @@ const TimelineAnalysisHooks = {
   useGetUserTimelineAnalysiss,
   useCreateTimelineAnalysis,
   useUpdateTimelineAnalysis,
+  useDuplicateTimelineAnalysis,
   useDeleteTimelineAnalysis,
 };
 

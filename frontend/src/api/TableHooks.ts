@@ -42,17 +42,56 @@ const useGetUserTables = (projectId: number | null | undefined, userId: number |
 const useCreateTable = () =>
   useMutation({
     mutationFn: AnalysisTableService.create,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, data.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
+    onSettled(data, _error, variables) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
+          (prevTables: TableRead[]) =>
+            [
+              ...prevTables,
+              {
+                ...data,
+                content: [],
+              },
+            ] as TableRead[],
+        );
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, data.id] });
+      }
+      queryClient.invalidateQueries({
+        queryKey: [QueryKey.TABLES_PROJECT_USER, variables.requestBody.project_id, variables.requestBody.user_id],
+      });
     },
   });
 
 const useUpdateTable = () =>
   useMutation({
     mutationFn: AnalysisTableService.updateById,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, data.id] });
+    onSettled(data, _error, variables) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
+          (prevTables: TableRead[]) => {
+            const index = prevTables.findIndex((table) => table.id === data.id);
+            if (index === -1) {
+              return prevTables;
+            }
+            return [...prevTables.slice(0, index), data, ...prevTables.slice(index + 1)];
+          },
+        );
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
+      }
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, variables.analysisTableId] });
+    },
+  });
+
+const useDuplicateTable = () =>
+  useMutation({
+    mutationFn: AnalysisTableService.duplicateById,
+    onSuccess(data) {
+      queryClient.setQueryData(
+        [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
+        (prevTables: TableRead[]) => [...prevTables, data],
+      );
       queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
     },
   });
@@ -60,9 +99,15 @@ const useUpdateTable = () =>
 const useDeleteTable = () =>
   useMutation({
     mutationFn: AnalysisTableService.deleteById,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, data.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
+    onSettled(data, _error, variables) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id],
+          (prevTables: TableRead[]) => prevTables.filter((table) => table.id !== data.id),
+        );
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TABLES_PROJECT_USER, data.project_id, data.user_id] });
+      }
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TABLE, variables.analysisTableId] });
     },
   });
 
@@ -71,6 +116,7 @@ const TableHooks = {
   useGetUserTables,
   useCreateTable,
   useUpdateTable,
+  useDuplicateTable,
   useDeleteTable,
 };
 
