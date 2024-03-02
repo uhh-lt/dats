@@ -4547,6 +4547,32 @@
         }
       }
     },
+    "/analysisTable/duplicate/{analysis_table_id}": {
+      "post": {
+        "tags": ["analysisTable"],
+        "summary": "Duplicate the Analysis Table with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "analysis_table_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Analysis Table Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/whiteboard": {
       "put": {
         "tags": ["whiteboard"],
@@ -4708,6 +4734,32 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/whiteboard/duplicate/{whiteboard_id}": {
+      "post": {
+        "tags": ["whiteboard"],
+        "summary": "Duplicates the Whiteboard with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "whiteboard_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Whiteboard Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -4943,6 +4995,32 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/timelineAnalysis/duplicate/{timeline_analysis_id}": {
+      "post": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Duplicates the TimelineAnalysis with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -7793,7 +7871,6 @@
       "WhiteboardCreate": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -7802,13 +7879,12 @@
           "user_id": { "type": "integer", "title": "User Id", "description": "User the Whiteboard belongs to" }
         },
         "type": "object",
-        "required": ["title", "content", "project_id", "user_id"],
+        "required": ["title", "project_id", "user_id"],
         "title": "WhiteboardCreate"
       },
       "WhiteboardRead": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Whiteboard" },
           "project_id": {
             "type": "integer",
@@ -7827,19 +7903,27 @@
             "format": "date-time",
             "title": "Updated",
             "description": "Updated timestamp of the Whiteboard"
-          }
+          },
+          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" }
         },
         "type": "object",
-        "required": ["title", "content", "id", "project_id", "user_id", "created", "updated"],
+        "required": ["title", "id", "project_id", "user_id", "created", "updated", "content"],
         "title": "WhiteboardRead"
       },
       "WhiteboardUpdate": {
         "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" }
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title",
+            "description": "Title of the Whiteboard"
+          },
+          "content": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content",
+            "description": "Content of the Whiteboard"
+          }
         },
         "type": "object",
-        "required": ["title", "content"],
         "title": "WhiteboardUpdate"
       },
       "WordFrequencyColumns": {
