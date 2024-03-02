@@ -109,6 +109,25 @@ def update_by_id(
     return WhiteboardRead.model_validate(db_obj)
 
 
+@router.post(
+    "/duplicate/{whiteboard_id}",
+    response_model=WhiteboardRead,
+    summary="Duplicates the Whiteboard with the given ID if it exists",
+)
+def duplicate_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    whiteboard_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> WhiteboardRead:
+    authz_user.assert_in_same_project_as(Crud.WHITEBOARD, whiteboard_id)
+
+    db_obj = crud_whiteboard.duplicate_by_id(
+        db=db, whiteboard_id=whiteboard_id, user_id=authz_user.user.id
+    )
+    return WhiteboardRead.model_validate(db_obj)
+
+
 @router.delete(
     "/{whiteboard_id}",
     response_model=WhiteboardRead,
