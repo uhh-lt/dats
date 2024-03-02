@@ -6,9 +6,9 @@ export type WhiteboardUpdate = {
   /**
    * Title of the Whiteboard
    */
-  title: string;
+  title?: string | null;
   /**
    * Content of the Whiteboard
    */
-  content: string;
+  content?: string | null;
 };

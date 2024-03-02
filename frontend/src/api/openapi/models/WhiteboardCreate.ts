@@ -8,10 +8,6 @@ export type WhiteboardCreate = {
    */
   title: string;
   /**
-   * Content of the Whiteboard
-   */
-  content: string;
-  /**
    * Project the Whiteboard belongs to
    */
   project_id: number;

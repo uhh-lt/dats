@@ -147,8 +147,6 @@ export const QueryKey = {
   WHITEBOARD: "whiteboard",
   // all project WHITEBOARDs (by project id)
   WHITEBOARDS_PROJECT: "whiteboardsProject",
-  // all project, user WHITEBOARDs (by user id and project id)
-  WHITEBOARDS_PROJECT_USER: "whiteboardsProjectUser",
 
   SEARCH_ENTITY_STATISTICS: "searchEntityStatistics",
   SEARCH_KEYWORD_STATISTICS: "searchKeywordStatistics",

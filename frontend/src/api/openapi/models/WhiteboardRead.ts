@@ -8,10 +8,6 @@ export type WhiteboardRead = {
    */
   title: string;
   /**
-   * Content of the Whiteboard
-   */
-  content: string;
-  /**
    * ID of the Whiteboard
    */
   id: number;
@@ -31,4 +27,8 @@ export type WhiteboardRead = {
    * Updated timestamp of the Whiteboard
    */
   updated: string;
+  /**
+   * Content of the Whiteboard
+   */
+  content: string;
 };

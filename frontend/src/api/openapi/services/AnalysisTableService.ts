@@ -108,4 +108,21 @@ export class AnalysisTableService {
       },
     });
   }
+  /**
+   * Duplicate the Analysis Table with the given ID if it exists
+   * @returns AnalysisTableRead Successful Response
+   * @throws ApiError
+   */
+  public static duplicateById({ analysisTableId }: { analysisTableId: number }): CancelablePromise<AnalysisTableRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysisTable/duplicate/{analysis_table_id}",
+      path: {
+        analysis_table_id: analysisTableId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
 }
