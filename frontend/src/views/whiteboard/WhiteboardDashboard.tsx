@@ -1,69 +1,53 @@
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import EditIcon from "@mui/icons-material/Edit";
-import { Box, IconButton, Tooltip } from "@mui/material";
-import { MRT_ColumnDef, MRT_TableOptions, MaterialReactTable, useMaterialReactTable } from "material-react-table";
-import { useCallback } from "react";
+import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useParams } from "react-router";
-import { useNavigate } from "react-router-dom";
-import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
+import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import AnalysisDashboard from "../../features/AnalysisDashboard/AnalysisDashboard.tsx";
-import CreateEntityCard from "../../features/AnalysisDashboard/CreateTableCard.tsx";
+import {
+  AnaylsisDashboardRow,
+  HandleCreateAnalysis,
+  useAnalysisDashboardTable,
+} from "../../features/AnalysisDashboard/useAnalysisDashboardTable.tsx";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
-import { dateToLocaleString } from "../../utils/DateUtils.ts";
-
-const columns: MRT_ColumnDef<Whiteboard>[] = [
-  { accessorKey: "id", header: "ID", enableEditing: false },
-  {
-    accessorKey: "title",
-    header: "Name",
-    // flex: 1,
-    enableEditing: true,
-  },
-  {
-    id: "updated",
-    header: "Last modified",
-    // flex: 0.5,
-    accessorFn: (params) => dateToLocaleString(params.updated as string),
-    enableEditing: false,
-  },
-];
 
 function WhiteboardDashboard() {
-  const navigate = useNavigate();
-
   // global client state
   const { user } = useAuth();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
-  const projectWhiteboards = WhiteboardHooks.useGetProjectWhiteboards(projectId);
+  const {
+    data: projectWhiteboards,
+    isLoading: isLoadingWhiteboards,
+    isFetching: isFetchingWhiteboards,
+    isError: isLoadingWhiteboardsError,
+  } = WhiteboardHooks.useGetProjectWhiteboards(projectId);
 
   // mutations
-  const createWhiteboard = WhiteboardHooks.useCreateWhiteboard();
-  const deleteWhiteboard = WhiteboardHooks.useDeleteWhiteboard();
-  const updateWhiteboard = WhiteboardHooks.useUpdateWhiteboard();
+  const { mutate: createWhiteboard, isPending: isCreatingWhiteboard } = WhiteboardHooks.useCreateWhiteboard();
+  const {
+    mutate: deleteWhiteboard,
+    isPending: isDeletingWhiteboard,
+    variables: deletingVariables,
+  } = WhiteboardHooks.useDeleteWhiteboard();
+  const { mutate: updateWhiteboard, isPending: isUpdatingWhiteboard } = WhiteboardHooks.useUpdateWhiteboard();
+  const {
+    mutate: duplicateWhiteboard,
+    isPending: isDuplicatingWhiteboard,
+    variables: duplicatingVariables,
+  } = WhiteboardHooks.useDuplicateWhiteboard();
 
   // CRUD actions
-  const handleCreateWhiteboard = (title: string) => {
-    if (!user?.id) return;
-
-    const content: WhiteboardGraph = { nodes: [], edges: [] };
-    createWhiteboard.mutate(
+  const handleDuplicateClick = (row: MRT_Row<AnaylsisDashboardRow>) => {
+    duplicateWhiteboard(
       {
-        requestBody: {
-          project_id: projectId,
-          user_id: user.id,
-          title,
-          content: JSON.stringify(content),
-        },
+        whiteboardId: row.original.id,
       },
       {
         onSuccess(data) {
           SnackbarAPI.openSnackbar({
-            text: `Created new whiteboard '${data.title}'`,
+            text: `Duplicated whiteboard '${data.title}'`,
             severity: "success",
           });
         },
@@ -71,43 +55,13 @@ function WhiteboardDashboard() {
     );
   };
 
-  const handleDuplicateWhiteboard = useCallback(
-    (id: number) => () => {
-      if (!user?.id || !projectWhiteboards.data) return;
-
-      const whiteboard = projectWhiteboards.data.find((whiteboard) => whiteboard.id === id);
-      if (!whiteboard) return;
-
-      const mutation = createWhiteboard.mutate;
-      mutation(
-        {
-          requestBody: {
-            project_id: projectId,
-            user_id: user.id,
-            title: whiteboard.title + " (copy)",
-            content: JSON.stringify(whiteboard.content),
-          },
-        },
-        {
-          onSuccess(data) {
-            SnackbarAPI.openSnackbar({
-              text: `Duplicated whiteboard '${data.title}'`,
-              severity: "success",
-            });
-          },
-        },
-      );
-    },
-    [createWhiteboard.mutate, projectId, user, projectWhiteboards.data],
-  );
-
-  const handleDeleteClick = (whiteboardId: number) => () => {
+  const handleDeleteClick = (row: MRT_Row<AnaylsisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the whiteboard ${whiteboardId}? This action cannot be undone!`,
+      text: `Do you really want to remove the whiteboard ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteWhiteboard.mutate(
+        deleteWhiteboard(
           {
-            whiteboardId,
+            whiteboardId: row.original.id,
           },
           {
             onSuccess(data) {
@@ -122,13 +76,43 @@ function WhiteboardDashboard() {
     });
   };
 
-  const handleSaveWhiteboard: MRT_TableOptions<Whiteboard>["onEditingRowSave"] = ({ values, table }) => {
-    updateWhiteboard.mutate(
+  const handleCreateWhiteboard: HandleCreateAnalysis =
+    () =>
+    ({ values, table }) => {
+      if (!user?.id) return;
+      createWhiteboard(
+        {
+          requestBody: {
+            project_id: projectId,
+            user_id: user.id,
+            title: values.title,
+          },
+        },
+        {
+          onSuccess(data) {
+            SnackbarAPI.openSnackbar({
+              text: `Created new whiteboard '${data.title}'`,
+              severity: "success",
+            });
+            table.setCreatingRow(null); //exit creating mode
+          },
+        },
+      );
+    };
+  const handleUpdateWhiteboard: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({
+    row,
+    values,
+    table,
+  }) => {
+    if (!values.title || values.title === row.original.title) {
+      table.setEditingRow(null); //exit editing mode
+      return; // not provided OR no change
+    }
+    updateWhiteboard(
       {
-        whiteboardId: values.id,
+        whiteboardId: row.original.id,
         requestBody: {
           title: values.title,
-          content: JSON.stringify(values.content),
         },
       },
       {
@@ -143,109 +127,32 @@ function WhiteboardDashboard() {
     );
   };
 
-  // UI actions
-  const handleRowClick = (whiteboardId: number) => {
-    // if (params.id in rowModesModel && rowModesModel[params.id].mode === GridRowModes.Edit) return;
-    navigate(`./${whiteboardId}`);
-  };
-
-  // const handleEditClick = (id: GridRowId) => () => {
-  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  // };
-
-  // const handleSaveClick = (id: GridRowId) => () => {
-  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  // };
-
-  // const handleCancelClick = (id: GridRowId) => () => {
-  //   setRowModesModel({
-  //     ...rowModesModel,
-  //     [id]: { mode: GridRowModes.View, ignoreModifications: true },
-  //   });
-  // };
-
-  // const handleRowEditStop: GridEventListener<"rowEditStop"> = (params, event) => {
-  //   if (params.reason === GridRowEditStopReasons.rowFocusOut) {
-  //     event.defaultMuiPrevented = true;
-  //   }
-  // };
-
-  const createCards = (
-    <>
-      <CreateEntityCard
-        title="Empty whiteboard"
-        description="Create an empty whiteboard with no template"
-        onClick={() => handleCreateWhiteboard("New Whiteboard")}
-      />
-      <CreateEntityCard
-        title="Code whiteboard"
-        description="Create a whiteboard with all of your codes"
-        onClick={() => handleCreateWhiteboard("New Code Whiteboard")}
-      />
-      <CreateEntityCard
-        title="Image whiteboard"
-        description="Create a whiteboard with images"
-        onClick={() => handleCreateWhiteboard("New Image Whiteboard")}
-      />
-    </>
-  );
-
   // table
-  const table = useMaterialReactTable({
-    data: projectWhiteboards.data || [],
-    columns: columns,
-    getRowId: (row) => row.id.toString(),
-    // row actions
-    muiTableBodyRowProps: ({ row }) => ({
-      onClick: () => handleRowClick(row.original.id),
-    }),
-    // row editing
-    enableEditing: true,
-    editDisplayMode: "row", // ('modal', 'cell', 'table', and 'custom' are also available)
-    onEditingRowSave: handleSaveWhiteboard,
-    // onEditingRowCancel: () => setValidationErrors({}),
-    renderRowActions: ({ row, table }) => (
-      <Box sx={{ display: "flex", gap: "1rem" }}>
-        <Tooltip title="Edit">
-          <IconButton onClick={() => table.setEditingRow(row)}>
-            <EditIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Duplicate">
-          <IconButton onClick={() => handleDuplicateWhiteboard(row.original.id)}>
-            <ContentCopyIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton color="error" onClick={() => handleDeleteClick(row.original.id)}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    ),
-    // default values
-    initialState: {
-      sorting: [
-        {
-          id: "updated",
-          desc: true,
-        },
-      ],
-    },
-    // autoPageSize
-    // hideFooterSelectedRowCount
-    // style={{ border: "none" }}
+  const table = useAnalysisDashboardTable({
+    analysisName: "Whiteboard",
+    data: projectWhiteboards || [],
+    isLoadingData: isLoadingWhiteboards,
+    isFetchingData: isFetchingWhiteboards,
+    isLoadingDataError: isLoadingWhiteboardsError,
+    isCreatingAnalysis: isCreatingWhiteboard,
+    isDeletingAnalysis: isDeletingWhiteboard,
+    isDuplicatingAnalysis: isDuplicatingWhiteboard,
+    isUpdatingAnalysis: isUpdatingWhiteboard,
+    deletingAnalysisId: deletingVariables?.whiteboardId,
+    duplicatingAnalysisId: duplicatingVariables?.whiteboardId,
+    handleCreateAnalysis: handleCreateWhiteboard,
+    handleEditAnalysis: handleUpdateWhiteboard,
+    handleDeleteAnalysis: handleDeleteClick,
+    handleDuplicateAnalysis: handleDuplicateClick,
   });
 
   return (
     <AnalysisDashboard
       pageTitle="Whiteboard Dashboard"
-      headerTitle="Create whiteboard"
-      headerCards={createCards}
-      bodyTitle="Load whiteboard"
-    >
-      <MaterialReactTable table={table} />
-    </AnalysisDashboard>
+      headerTitle="Whiteboard Dashboard"
+      subheaderTitle="Manage your whiteboards"
+      table={table}
+    />
   );
 }
 
