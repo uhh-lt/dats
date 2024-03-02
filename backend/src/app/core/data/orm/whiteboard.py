@@ -21,7 +21,12 @@ class WhiteboardORM(ORMBase):
     )
 
     title: Mapped[str] = mapped_column(String, nullable=False, index=False)
-    content: Mapped[str] = mapped_column(String, nullable=False, index=False)
+    content: Mapped[str] = mapped_column(
+        String,
+        server_default='{"nodes":[],"edges":[]}',
+        nullable=False,
+        index=False,
+    )
 
     project_id: Mapped[int] = mapped_column(
         Integer,
