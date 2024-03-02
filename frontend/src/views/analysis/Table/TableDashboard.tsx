@@ -1,72 +1,81 @@
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import EditIcon from "@mui/icons-material/Edit";
-import { Box, IconButton, Tooltip } from "@mui/material";
-import { MRT_ColumnDef, MRT_TableOptions, MaterialReactTable, useMaterialReactTable } from "material-react-table";
-import { useCallback } from "react";
+import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useParams } from "react-router";
-import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import TableHooks, { TableRead } from "../../../api/TableHooks.ts";
-import { TableType } from "../../../api/openapi/models/TableType.ts";
+import TableHooks from "../../../api/TableHooks.ts";
+import { TableType } from "../../../api/openapi/index.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard.tsx";
-import CreateEntityCard from "../../../features/AnalysisDashboard/CreateTableCard.tsx";
+import {
+  AnaylsisDashboardRow,
+  HandleCreateAnalysis,
+  useAnalysisDashboardTable,
+} from "../../../features/AnalysisDashboard/useAnalysisDashboardTable.tsx";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
-import { dateToLocaleString } from "../../../utils/DateUtils.ts";
 import { TableType2Template } from "./templates.ts";
 
 function TableDashboard() {
-  const navigate = useNavigate();
-
   // global client state
   const { user } = useAuth();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
-  const userTables = TableHooks.useGetUserTables(projectId, user?.id);
+  const {
+    data: userTables,
+    isLoading: isLoadingTables,
+    isFetching: isFetchingTables,
+    isError: isLoadingTablesError,
+  } = TableHooks.useGetUserTables(projectId, user?.id);
 
   // mutations
-  const createTable = TableHooks.useCreateTable();
-  const deleteTable = TableHooks.useDeleteTable();
-  const updateTable = TableHooks.useUpdateTable();
-
-  const columns: MRT_ColumnDef<TableRead>[] = [
-    { accessorKey: "id", header: "ID" },
-    {
-      accessorKey: "title",
-      header: "Name",
-      // flex: 1,
-      enableEditing: true,
-    },
-    {
-      header: "Last modified",
-      // flex: 0.5,
-      id: "updated",
-      accessorFn: (params) => dateToLocaleString(params.updated),
-    },
-  ];
+  const { mutate: createTable, isPending: isCreatingTable } = TableHooks.useCreateTable();
+  const { mutate: deleteTable, isPending: isDeletingTable, variables: deletingVariables } = TableHooks.useDeleteTable();
+  const {
+    mutate: duplicateTable,
+    isPending: isDuplicatingTable,
+    variables: duplicatingVariables,
+  } = TableHooks.useDuplicateTable();
+  const { mutate: updateTable, isPending: isUpdatingTable } = TableHooks.useUpdateTable();
 
   // CRUD actions
-  const handleCreateTable = (tableType: TableType, title: string) => {
-    if (!user?.id) return;
+  const handleCreateAnalysis: HandleCreateAnalysis =
+    (createOption) =>
+    ({ values, table }) => {
+      if (!user?.id || !createOption) return;
 
-    const content = [{ id: uuidv4(), name: `Table sheet 1`, content: TableType2Template[tableType] }];
-    createTable.mutate(
-      {
-        requestBody: {
-          project_id: projectId,
-          user_id: user.id,
-          title,
-          content: JSON.stringify(content),
-          table_type: tableType,
+      const tableType = createOption.option as TableType;
+      const content = [{ id: uuidv4(), name: `Table sheet 1`, content: TableType2Template[tableType] }];
+      createTable(
+        {
+          requestBody: {
+            project_id: projectId,
+            user_id: user.id,
+            title: values.title,
+            content: JSON.stringify(content),
+            table_type: tableType,
+          },
         },
+        {
+          onSuccess(data) {
+            SnackbarAPI.openSnackbar({
+              text: `Created new table '${data.title}'`,
+              severity: "success",
+            });
+            table.setCreatingRow(null); //exit creating mode
+          },
+        },
+      );
+    };
+
+  const handleDuplicateAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
+    duplicateTable(
+      {
+        analysisTableId: row.original.id,
       },
       {
         onSuccess(data) {
           SnackbarAPI.openSnackbar({
-            text: `Created new table '${data.title}'`,
+            text: `Duplicated table '${data.title}'`,
             severity: "success",
           });
         },
@@ -74,44 +83,13 @@ function TableDashboard() {
     );
   };
 
-  const handleDuplicateTable = useCallback(
-    (id: number) => () => {
-      if (!user?.id || !userTables.data) return;
-
-      const table = userTables.data.find((table) => table.id === id);
-      if (!table) return;
-
-      const mutation = createTable.mutate;
-      mutation(
-        {
-          requestBody: {
-            project_id: projectId,
-            user_id: user.id,
-            title: table.title + " (copy)",
-            content: JSON.stringify(table.content),
-            table_type: table.table_type,
-          },
-        },
-        {
-          onSuccess(data) {
-            SnackbarAPI.openSnackbar({
-              text: `Duplicated table '${data.title}'`,
-              severity: "success",
-            });
-          },
-        },
-      );
-    },
-    [createTable.mutate, projectId, user, userTables.data],
-  );
-
-  const handleDeleteClick = (tableId: number) => () => {
+  const handleDeleteAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the table ${tableId}? This action cannot be undone!`,
+      text: `Do you really want to remove the table ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteTable.mutate(
+        deleteTable(
           {
-            analysisTableId: tableId as number,
+            analysisTableId: row.original.id,
           },
           {
             onSuccess(data) {
@@ -126,8 +104,8 @@ function TableDashboard() {
     });
   };
 
-  const handleSaveTable: MRT_TableOptions<TableRead>["onEditingRowSave"] = ({ values, table }) => {
-    updateTable.mutate(
+  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table }) => {
+    updateTable(
       {
         analysisTableId: values.id,
         requestBody: {
@@ -148,114 +126,35 @@ function TableDashboard() {
     );
   };
 
-  // UI actions
-  const handleRowClick = (tableId: number) => {
-    // if (params.id in rowModesModel && rowModesModel[params.id].mode === GridRowModes.Edit) return;
-    navigate(`./${tableId}`);
-  };
-
-  // const handleEditClick = (id: GridRowId) => () => {
-  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  // };
-
-  // const handleSaveClick = (id: GridRowId) => () => {
-  //   setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  // };
-
-  // const handleCancelClick = (id: GridRowId) => () => {
-  //   setRowModesModel({
-  //     ...rowModesModel,
-  //     [id]: { mode: GridRowModes.View, ignoreModifications: true },
-  //   });
-  // };
-
-  // const handleRowEditStop: GridEventListener<"rowEditStop"> = (params, event) => {
-  //   if (params.reason === GridRowEditStopReasons.rowFocusOut) {
-  //     event.defaultMuiPrevented = true;
-  //   }
-  // };
-
-  const createCards = (
-    <>
-      <CreateEntityCard
-        title="Empty table"
-        description="Create an empty table with no template"
-        onClick={() => handleCreateTable(TableType.CUSTOM, "New table")}
-      />
-      <CreateEntityCard
-        title="Interpretation table"
-        description="Create a table with the interpretation template"
-        onClick={() => handleCreateTable(TableType.INTERPRETATION, "New interpretation table")}
-      />
-      <CreateEntityCard
-        title="Phenomenon table"
-        description="Create a table with the phenomenon template"
-        onClick={() => handleCreateTable(TableType.PHENOMENON, "New phenomenon table")}
-      />
-      <CreateEntityCard
-        title="Situation table"
-        description="Create a table with the situation template"
-        onClick={() => handleCreateTable(TableType.SITUATION, "New situation table")}
-      />
-    </>
-  );
-
   // table
-  const table = useMaterialReactTable({
-    data: userTables.data || [],
-    columns: columns,
-    getRowId: (row) => row.id.toString(),
-    // row actions
-    muiTableBodyRowProps: ({ row }) => ({
-      onClick: () => handleRowClick(row.original.id),
+  const table = useAnalysisDashboardTable({
+    analysisName: "Table",
+    data: userTables || [],
+    isLoadingData: isLoadingTables,
+    isFetchingData: isFetchingTables,
+    isLoadingDataError: isLoadingTablesError,
+    isCreatingAnalysis: isCreatingTable,
+    isDeletingAnalysis: isDeletingTable,
+    isDuplicatingAnalysis: isDuplicatingTable,
+    isUpdatingAnalysis: isUpdatingTable,
+    deletingAnalysisId: deletingVariables?.analysisTableId,
+    duplicatingAnalysisId: duplicatingVariables?.analysisTableId,
+    handleCreateAnalysis,
+    handleEditAnalysis,
+    handleDeleteAnalysis,
+    handleDuplicateAnalysis,
+    analysisCreateOptions: Object.values(TableType).map((key) => {
+      return { option: key, label: key.toLocaleUpperCase() };
     }),
-    // row editing
-    enableEditing: true,
-    editDisplayMode: "row", // ('modal', 'cell', 'table', and 'custom' are also available)
-    onEditingRowSave: handleSaveTable,
-    // onEditingRowCancel: () => setValidationErrors({}),
-    renderRowActions: ({ row, table }) => (
-      <Box sx={{ display: "flex", gap: "1rem" }}>
-        <Tooltip title="Edit">
-          <IconButton onClick={() => table.setEditingRow(row)}>
-            <EditIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Duplicate">
-          <IconButton onClick={() => handleDuplicateTable(row.original.id)}>
-            <ContentCopyIcon />
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Delete">
-          <IconButton color="error" onClick={() => handleDeleteClick(row.original.id)}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    ),
-    // default values
-    initialState: {
-      sorting: [
-        {
-          id: "updated",
-          desc: true,
-        },
-      ],
-    },
-    // autoPageSize
-    // hideFooterSelectedRowCount
-    // style={{ border: "none" }}
   });
 
   return (
     <AnalysisDashboard
       pageTitle="Table Dashboard"
-      headerTitle="Create table"
-      headerCards={createCards}
-      bodyTitle="Load table"
-    >
-      <MaterialReactTable table={table} />
-    </AnalysisDashboard>
+      headerTitle="Table Dashboard"
+      subheaderTitle="Manage your tables"
+      table={table}
+    />
   );
 }
 
