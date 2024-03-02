@@ -99,6 +99,25 @@ def update_by_id(
     return TimelineAnalysisRead.model_validate(db_obj)
 
 
+@router.post(
+    "/duplicate/{timeline_analysis_id}",
+    response_model=TimelineAnalysisRead,
+    summary="Duplicates the TimelineAnalysis with the given ID if it exists",
+)
+def duplicate_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    timeline_analysis_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> TimelineAnalysisRead:
+    authz_user.assert_in_same_project_as(Crud.TIMELINE_ANALYSIS, timeline_analysis_id)
+
+    db_obj = crud_timeline_analysis.duplicate_by_id(
+        db=db, timeline_analysis_id=timeline_analysis_id, user_id=authz_user.user.id
+    )
+    return TimelineAnalysisRead.model_validate(db_obj)
+
+
 @router.delete(
     "/{timeline_analysis_id}",
     response_model=TimelineAnalysisRead,

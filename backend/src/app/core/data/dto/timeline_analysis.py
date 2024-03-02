@@ -57,6 +57,20 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
     user_id: int = Field(description="User the TimelineAnalysis belongs to")
 
 
+class TimelineAnalysiCreateAsInDB(TimelineAnalysisCreate, UpdateDTOBase):
+    settings: Optional[str] = Field(
+        description="JSON Representation of the Timeline Settings of the TimelineAnalysis.",
+        default=None,
+    )
+    concepts: Optional[str] = Field(
+        description=(
+            "JSON Representation of the list of Concepts that are "
+            "part of the TimelineAnalysis"
+        ),
+        default=None,
+    )
+
+
 class TimelineAnalysisUpdate(BaseModel, UpdateDTOBase):
     name: Optional[str] = Field(
         description="Name of the TimelineAnalysis",
