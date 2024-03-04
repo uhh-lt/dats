@@ -1,3 +1,7 @@
+.idea
+.pytest_cache
+.run
+notebooks
 spacy_models
 backend_repo
 sample_data
