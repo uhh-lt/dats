@@ -632,7 +632,7 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
     ).json()
     assert len(span_annos2) == 1
 
-    # Bob creates two annotations for Textdoc1
+    # Bob creates one annotation for adoc1 - failure
     bob = api_user.userList["bob"]
     span4_annotation = {
         "begin": 0,
@@ -643,8 +643,14 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         "code_id": 2,
         "annotation_document_id": adoc1_id,
     }
-    span4_response = client.put(
+    span4_response_failure = client.put(
         "span", headers=bob["AuthHeader"], json=span4_annotation
+    )
+    assert span4_response_failure.status_code == 403
+
+    # Alice creates two annotations for adoc1 -success
+    span4_response = client.put(
+        "span", headers=alice["AuthHeader"], json=span4_annotation
     )
     assert span4_response.status_code == 200
     span4_response = span4_response.json()
@@ -656,7 +662,6 @@ def test_span_annotation_and_memo(client, api_user, api_document) -> None:
         span4_annotation["annotation_document_id"]
         == span4_response["annotation_document_id"]
     )
-    # assert bob["id"] == span4_response["user_id"] # TODO https://github.com/uhh-lt/dwts/issues/362
     assert project_text_doc1["sdoc_id"] == span4_response["sdoc_id"]
 
     span5_annotation = {
