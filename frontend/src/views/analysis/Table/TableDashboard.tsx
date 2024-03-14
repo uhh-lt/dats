@@ -2,7 +2,7 @@ import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useParams } from "react-router";
 import { v4 as uuidv4 } from "uuid";
 import TableHooks from "../../../api/TableHooks.ts";
-import { TableType } from "../../../api/openapi/index.ts";
+import { TableType } from "../../../api/openapi/models/TableType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard.tsx";
 import {
