@@ -100,7 +100,7 @@ function SdocTable({ sdocIds }: { sdocIds: number[] }) {
   const table = useMaterialReactTable({
     columns,
     data,
-    getRowId: (row) => row.id.toString(),
+    getRowId: (row) => `${row.id}`,
     enableColumnFilters: false,
   });
   return <MaterialReactTable table={table} />;
