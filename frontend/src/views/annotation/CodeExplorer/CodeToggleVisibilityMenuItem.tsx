@@ -1,10 +1,10 @@
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import ICodeTree from "./ICodeTree.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { flatTree } from "./TreeUtils.ts";
 import { AnnoActions } from "../annoSlice.ts";
+import ICodeTree from "./ICodeTree.ts";
+import { flatTree } from "./TreeUtils.ts";
 
 interface CodeToggleVisibilityMenuItemProps {
   code: ICodeTree;
@@ -17,7 +17,7 @@ function CodeToggleVisibilityMenuItem({ code, onClick, ...props }: CodeToggleVis
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     // toggle visibility of the code and all its children
-    const codeIds = [code.code.id];
+    const codeIds = [code.data.id];
     if (code.children) {
       codeIds.push(...flatTree(code).map((c) => c.id));
     }

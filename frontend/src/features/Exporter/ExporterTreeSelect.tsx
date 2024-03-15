@@ -31,18 +31,18 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
         // find all nodes that match the filter
         filteredCodeTree.walk(
           (node) => {
-            if (node.model.code.name.startsWith(codeFilter.trim())) {
+            if (node.model.data.name.startsWith(codeFilter.trim())) {
               // keep the node
-              nodesToKeep.add(node.model.code.id);
+              nodesToKeep.add(node.model.data.id);
 
               // keep its children
-              node.children.map((child) => child.model.code.id).forEach((id) => nodesToKeep.add(id));
+              node.children.map((child) => child.model.data.id).forEach((id) => nodesToKeep.add(id));
 
               // keep its parents
               let parent = node.parent;
               while (parent) {
-                nodesToKeep.add(parent.model.code.id);
-                nodesToExpand.add(parent.model.code.id);
+                nodesToKeep.add(parent.model.data.id);
+                nodesToExpand.add(parent.model.data.id);
                 parent = parent.parent;
               }
             }
@@ -101,7 +101,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
 
   const handleToggleTreeItem = (treeItem: ICodeTree) => {
     // find tree item and all its children
-    const itemIds = [treeItem.code.id];
+    const itemIds = [treeItem.data.id];
     if (treeItem.children) {
       itemIds.push(...flatTree(treeItem).map((c) => c.id));
     }
@@ -161,9 +161,9 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
           onCollapseClick={handleCollapseClick}
           renderActions={(node) => (
             <Checkbox
-              name={node.code.name}
+              name={node.data.name}
               onChange={() => handleToggleTreeItem(node)}
-              checked={value.indexOf(node.code.id) !== -1}
+              checked={value.indexOf(node.data.id) !== -1}
             />
           )}
         />

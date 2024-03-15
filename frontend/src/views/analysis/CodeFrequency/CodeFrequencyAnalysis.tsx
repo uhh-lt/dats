@@ -259,14 +259,14 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
   const chartData = AnalysisHooks.useCodeFrequencies(
     projectId,
     userIds,
-    data.children.map((node) => node.model.code.id) || [],
+    data.children.map((node) => node.model.data.id) || [],
   );
 
   // computed
   const codeId2Code = useMemo(() => {
     const result = new Map<number, CodeRead>();
     for (const node of data.children) {
-      result.set(node.model.code.id, node.model.code);
+      result.set(node.model.data.id, node.model.data);
     }
     return result;
   }, [data]);
@@ -279,7 +279,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
 
   // ui events
   const handleClick = (codeFrequency: CodeFrequency) => {
-    setSelectedData(data.children.find((node) => node.model.code.id === codeFrequency.code_id));
+    setSelectedData(data.children.find((node) => node.model.data.id === codeFrequency.code_id));
     setSelectedCode(codeFrequency.code_id);
   };
 
@@ -292,7 +292,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
               <IconButton onClick={toggleShowPieChart}>{showPieChart ? <BarChartIcon /> : <PieChartIcon />}</IconButton>
             </Tooltip>
           }
-          title={data.model.code.name === "root" ? "Top-level codes" : data.model.code.name}
+          title={data.model.data.name === "root" ? "Top-level codes" : data.model.data.name}
           subheader={
             data.children.length > 0
               ? "Click on a bar to see the code's subcategories and add it as a filter"
@@ -319,7 +319,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
                       <Cell
                         key={`codecell-${entry.code_id}`}
                         fill={codeId2Code.get(entry.code_id)?.color || "red"}
-                        stroke={selectedData?.model.code.id === entry.code_id ? "black" : undefined}
+                        stroke={selectedData?.model.data.id === entry.code_id ? "black" : undefined}
                         strokeWidth={2}
                         style={{ cursor: "pointer" }}
                       />
@@ -350,7 +350,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
                       <Cell
                         key={`codecell-${codeFrequency.code_id}`}
                         fill={codeId2Code.get(codeFrequency.code_id)?.color || "red"}
-                        stroke={selectedData?.model.code.id === codeFrequency.code_id ? "black" : undefined}
+                        stroke={selectedData?.model.data.id === codeFrequency.code_id ? "black" : undefined}
                         strokeWidth={2}
                         style={{ cursor: "pointer" }}
                       />

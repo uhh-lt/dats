@@ -4,7 +4,7 @@ import ICodeTree from "./ICodeTree.ts";
 export function codesToTree(codes: CodeRead[]): ICodeTree {
   // map input to ICodeTree
   const newCodes: ICodeTree[] = codes.map((code) => {
-    return { code: code };
+    return { data: code };
   });
 
   // create a dummy root node that will hold the results
@@ -20,11 +20,11 @@ export function codesToTree(codes: CodeRead[]): ICodeTree {
     parent_code_id: undefined,
   };
   // create children of the new root node (all nodes that have no parent!)
-  const children = newCodes.filter((codeTree) => !codeTree.code.parent_code_id);
-  const root: ICodeTree = { code: dummyRootNode, children: children };
+  const children = newCodes.filter((codeTree) => !codeTree.data.parent_code_id);
+  const root: ICodeTree = { data: dummyRootNode, children: children };
 
   // create the full tree using the other nodes
-  const nodes = newCodes.filter((codeTree) => codeTree.code.parent_code_id);
+  const nodes = newCodes.filter((codeTree) => codeTree.data.parent_code_id);
 
   root.children!.forEach((codeTree) => {
     codesToTreeRecursion(codeTree, nodes);
@@ -34,8 +34,8 @@ export function codesToTree(codes: CodeRead[]): ICodeTree {
 }
 
 function codesToTreeRecursion(root: ICodeTree, nodes: ICodeTree[]): ICodeTree {
-  root.children = nodes.filter((node) => node.code.parent_code_id === root.code.id);
-  const otherNodes = nodes.filter((node) => node.code.parent_code_id !== root.code.id);
+  root.children = nodes.filter((node) => node.data.parent_code_id === root.data.id);
+  const otherNodes = nodes.filter((node) => node.data.parent_code_id !== root.data.id);
 
   root.children.forEach((codeTree) => {
     codesToTreeRecursion(codeTree, otherNodes);
@@ -50,13 +50,13 @@ export function flatTreeWithRoot(tree: ICodeTree | null): CodeRead[] {
   }
 
   const allChildren = flatTree(tree);
-  return [tree.code, ...allChildren];
+  return [tree.data, ...allChildren];
 }
 
 export function flatTree(tree: ICodeTree | null): CodeRead[] {
   let result: CodeRead[] = [];
   if (tree && tree.children) {
-    result = [...tree.children.map((value) => value.code), ...result];
+    result = [...tree.children.map((value) => value.data), ...result];
     tree.children.forEach((value) => {
       result = [...result, ...flatTree(value)];
     });
