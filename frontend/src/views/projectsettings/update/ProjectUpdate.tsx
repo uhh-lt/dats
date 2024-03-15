@@ -9,14 +9,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks";
 import { useAuth } from "../../../auth/AuthProvider";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import ProjectCodes from "./ProjectCodes";
 import ProjectDetails from "./ProjectDetails";
 import ProjectDocuments from "./ProjectDocuments";
-import ProjectTags from "./ProjectTags";
 import ProjectUsers from "./ProjectUsers";
 import ProjectBackgroundTasks from "./backgroundtasks/ProjectBackgroundTasks";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
 import ProjectMetadata from "./ProjectMetadata";
+import ProjectCodes from "./ProjectCodes";
+import ProjectTags from "./ProjectTags";
 
 function ProjectUpdate() {
   const { user } = useAuth();

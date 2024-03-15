@@ -5,7 +5,7 @@ import Tree from "ts-tree-structure";
 import ProjectHooks from "../../api/ProjectHooks";
 import { CodeRead } from "../../api/openapi";
 import CodeTreeView, { CodeTreeViewProps } from "../../views/annotation/CodeExplorer/CodeTreeView";
-import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree";
+import { ICodeTree } from "../../views/annotation/CodeExplorer/ICodeTree";
 import { codesToTree } from "../../views/annotation/CodeExplorer/TreeUtils";
 
 interface CodeSelectorProps {
@@ -51,18 +51,18 @@ function CodeSelector({
         // find all nodes that match the filter
         codeTree.walk(
           (node) => {
-            if (node.model.code.name.startsWith(codeFilter.trim())) {
+            if (node.model.data.name.startsWith(codeFilter.trim())) {
               // keep the node
-              nodesToKeep.add(node.model.code.id);
+              nodesToKeep.add(node.model.data.id);
 
               // keep its children
-              node.children.map((child) => child.model.code.id).forEach((id) => nodesToKeep.add(id));
+              node.children.map((child) => child.model.data.id).forEach((id) => nodesToKeep.add(id));
 
               // keep its parents
               let parent = node.parent;
               while (parent) {
-                nodesToKeep.add(parent.model.code.id);
-                nodesToExpand.add(parent.model.code.id);
+                nodesToKeep.add(parent.model.data.id);
+                nodesToExpand.add(parent.model.data.id);
                 parent = parent.parent;
               }
             }
@@ -72,7 +72,7 @@ function CodeSelector({
         );
 
         // filter the codeTree
-        let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.code.id));
+        let nodes_to_remove = codeTree.all((node) => !nodesToKeep.has(node.model.data.id));
         nodes_to_remove.forEach((node) => {
           node.drop();
         });

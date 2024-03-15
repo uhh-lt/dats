@@ -1,4 +1,3 @@
-import AddIcon from "@mui/icons-material/Add";
 import {
   Box,
   BoxProps,
@@ -6,10 +5,6 @@ import {
   Checkbox,
   Divider,
   List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Stack,
   TextField,
   Toolbar,
@@ -17,17 +12,7 @@ import {
 } from "@mui/material";
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
-import { ProjectProps } from "../../views/projectsettings/update/ProjectProps";
-import ProjectHooks from "../../api/ProjectHooks";
-import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree";
-import { codesToTree } from "../../views/annotation/CodeExplorer/TreeUtils";
-import { AttachedObjectType, CodeRead } from "../../api/openapi";
-import CodeToggleEnabledButton from "../../views/annotation/CodeExplorer/CodeToggleEnabledButton";
-import CodeCreateDialog, { openCodeCreateDialog } from "../CrudDialog/Code/CodeCreateDialog";
-import CodeTreeView from "../../views/annotation/CodeExplorer/CodeTreeView";
-import CodeToggleVisibilityButton from "../../views/annotation/CodeExplorer/CodeToggleVisibilityButton";
-import CodeEditButton from "../../views/annotation/CodeExplorer/CodeEditButton";
-import CodeEditDialog from "../CrudDialog/Code/CodeEditDialog";
+import { AttachedObjectType } from "../../api/openapi";
 import useComputeTagTree from "./useComputeTagTree";
 import { flatTree, tagsToTree } from "./TreeUtils";
 import { ITagTree } from "./ITagTree";
@@ -105,7 +90,7 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
               }
               return true;
             },
-            { strategy: "breadth" }
+            { strategy: "breadth" },
           );
 
           // filter the codeTree
@@ -270,7 +255,7 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
         )}
       </Box>
     );
-  }
+  },
 );
 
 export default TagExplorer;

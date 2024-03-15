@@ -233,7 +233,7 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
         {content}
       </Box>
     );
-  }
+  },
 );
 
 export default TagExplorer;

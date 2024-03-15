@@ -1,18 +1,10 @@
-import { CodeRead, DocumentTagRead } from "../../api/openapi";
+// import { CodeRead } from "../../../api/openapi";
+// import ICodeTree from "./ICodeTree";
 
-export interface ITree<T = void> {
-  isRoot?: boolean;
-  children?: ITree<T>[];
-  length?: number;
-  data: T;
-}
-
-export type ITagTree = ITree<DocumentTagRead>;
-
-// export function arrayToTree<T>(data: T[]): ITree<T> {
+// export function codesToTree(codes: CodeRead[]): ICodeTree {
 //   // map input to ICodeTree
-//   let newCodes: ITree<T>[] = data.map((d) => {
-//     return { data: d };
+//   let newCodes: ICodeTree[] = codes.map((code) => {
+//     return { code: code };
 //   });
 
 //   // create a dummy root node that will hold the results
@@ -35,36 +27,36 @@ export type ITagTree = ITree<DocumentTagRead>;
 //   let nodes = newCodes.filter((codeTree) => codeTree.code.parent_code_id);
 
 //   root.children!.forEach((codeTree) => {
-//     dataToTreeRecursion(codeTree, nodes);
+//     codesToTreeRecursion(codeTree, nodes);
 //   });
 
 //   return root;
 // }
 
-// function dataToTreeRecursion<T>(root: ITree<T>, nodes: ITree<T>[]): ITree<T> {
-//   root.children = nodes.filter((node) => node.getParentId() === root.getId());
-//   let otherNodes = nodes.filter((node) => node.getParentId() !== root.getId());
+// function codesToTreeRecursion(root: ICodeTree, nodes: ICodeTree[]): ICodeTree {
+//   root.children = nodes.filter((node) => node.code.parent_code_id === root.code.id);
+//   let otherNodes = nodes.filter((node) => node.code.parent_code_id !== root.code.id);
 
-//   root.children.forEach((tree) => {
-//     dataToTreeRecursion(tree, otherNodes);
+//   root.children.forEach((codeTree) => {
+//     codesToTreeRecursion(codeTree, otherNodes);
 //   });
 
 //   return root;
 // }
 
-// export function flatTreeWithRoot<T>(tree: ITree<T> | null): T[] {
+// export function flatTreeWithRoot(tree: ICodeTree | null): CodeRead[] {
 //   if (!tree) {
 //     return [];
 //   }
 
 //   let allChildren = flatTree(tree);
-//   return [tree.data, ...allChildren];
+//   return [tree.code, ...allChildren];
 // }
 
-// export function flatTree<T>(tree: ITree<T> | null): T[] {
-//   let result: T[] = [];
+// export function flatTree(tree: ICodeTree | null): CodeRead[] {
+//   let result: CodeRead[] = [];
 //   if (tree && tree.children) {
-//     result = [...tree.children.map((value) => value.data), ...result];
+//     result = [...tree.children.map((value) => value.code), ...result];
 //     tree.children.forEach((value) => {
 //       result = [...result, ...flatTree(value)];
 //     });

@@ -1,150 +1,80 @@
-import AddIcon from "@mui/icons-material/Add";
-import {
-  Box,
-  CardContent,
-  Divider,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  TextField,
-  Toolbar,
-  Typography,
-} from "@mui/material";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import Tree, { Node } from "ts-tree-structure";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { CodeRead } from "../../../api/openapi";
-import CodeCreateDialog, { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog";
-import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton";
-import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton";
-import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton";
-import CodeTreeView from "../../annotation/CodeExplorer/CodeTreeView";
-import ICodeTree from "../../annotation/CodeExplorer/ICodeTree";
-import { codesToTree } from "../../annotation/CodeExplorer/TreeUtils";
+import { Box } from "@mui/material";
 import { ProjectProps } from "./ProjectProps";
-import { filterTree } from "../../../features/TagExplorer/TreeUtils";
+import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer";
+import { useState } from "react";
+import { Node } from "ts-tree-structure";
+import { KEYWORD_CODES } from "../../../utils/GlobalConstants";
+import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
+import { AnnoActions } from "../../annotation/annoSlice";
+import { ICodeTree } from "../../annotation/CodeExplorer/ICodeTree";
+import TreeDataCreateDialog from "../../../features/CrudDialog/TreeData/TreeDataCreateDialog";
+import SquareIcon from "@mui/icons-material/Square";
+import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton";
+import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton";
 
 function ProjectCodes({ project }: ProjectProps) {
-  // local state
-  const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
+  // custom hooks
+  let { codeTree, allCodes } = useComputeCodeTree(true);
+
+  // global client state (redux)
+  const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
+  const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
+  const dispatch = useAppDispatch();
+
   const [codeFilter, setCodeFilter] = useState<string>("");
-  const expandCodes = useCallback((codesToExpand: string[]) => {
-    setExpandedCodeIds((prev) => {
-      for (const codeId of codesToExpand) {
-        if (prev.indexOf(codeId) === -1) {
-          prev.push(codeId);
-        }
-      }
-      return prev.slice();
-    });
-  }, []);
 
-  // global server state (react query)
-  const projectCodes = ProjectHooks.useGetAllCodes(project.id, true);
-
-  // computed
-  const { codeTree, nodesToExpand } = useMemo(() => {
-    if (projectCodes.data) {
-      // build the tree
-      const codeTree = new Tree().parse<ICodeTree>(codesToTree(projectCodes.data));
-      const results = filterTree({ dataTree: codeTree, dataFilter: codeFilter });
-      return { codeTree: results.dataTree as Node<ICodeTree>, nodesToExpand: results.nodesToExpand };
-    } else {
-      return { codeTree: null, nodesToExpand: new Set<number>() };
-    }
-  }, [projectCodes.data, codeFilter]);
-
-  // effects
-  // automatically expand filtered nodes
-  useEffect(() => {
-    expandCodes(Array.from(nodesToExpand).map((id) => id.toString()));
-  }, [expandCodes, nodesToExpand]);
-
-  // ui event handlers
+  // handle ui events
+  const handleSelectCode = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
+    const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
+    dispatch(AnnoActions.setSelectedParentCodeId(selectedCodeId === id ? undefined : id));
+  };
   const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
-    expandCodes([nodeId]);
+    dispatch(AnnoActions.setExpandedParentCodeIds([nodeId, ...expandedCodeIds]));
+    // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
   };
   const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
     const id = expandedCodeIds.indexOf(nodeId);
     const newCodeIds = [...expandedCodeIds];
     newCodeIds.splice(id, 1);
-    setExpandedCodeIds(newCodeIds);
-  };
-  const onCreateCodeSuccess = (code: CodeRead, isNewCode: boolean) => {
-    // if we add a new code successfully, we want to show the code in the code explorer
-    // this means, we have to expand the parent codes, so the new code is visible
-    const codesToExpand = [];
-    let parentCodeId = code.parent_code_id;
-    while (parentCodeId) {
-      let currentParentCodeId = parentCodeId;
-
-      codesToExpand.push(parentCodeId);
-      parentCodeId = projectCodes.data?.find((code) => code.id === currentParentCodeId)?.parent_code_id;
-    }
-    expandCodes(codesToExpand.map((id) => id.toString()));
+    dispatch(AnnoActions.setExpandedParentCodeIds(newCodeIds));
+    // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
   };
 
   return (
     <Box display="flex" className="myFlexContainer h100">
-      <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
-        <Typography variant="h6" color="inherit" component="div">
-          Filter codes
-        </Typography>
-        <TextField
-          sx={{ ml: 1, flex: 1 }}
-          placeholder={"type name here..."}
-          variant="outlined"
-          size="small"
-          value={codeFilter}
-          onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setCodeFilter(event.target.value);
-          }}
-        />
-        <CodeToggleEnabledButton code={codeTree?.model} />
-      </Toolbar>
-      <Divider />
-
-      {projectCodes.isLoading && <CardContent>Loading project codes...</CardContent>}
-      {projectCodes.isError && (
-        <CardContent>An error occurred while loading project codes for project {project.id}...</CardContent>
-      )}
-      <List disablePadding>
-        <ListItem disablePadding>
-          <ListItemButton sx={{ px: 1.5 }} onClick={() => openCodeCreateDialog({ onSuccess: onCreateCodeSuccess })}>
-            <ListItemIcon>
-              <AddIcon />
-            </ListItemIcon>
-            <ListItemText primary="Create new code" />
-          </ListItemButton>
-        </ListItem>
-      </List>
-      <CodeCreateDialog />
-      {projectCodes.isSuccess && codeTree && (
-        <>
-          <CodeTreeView
-            className="myFlexFillAllContainer"
-            data={codeTree.model}
-            multiSelect={false}
-            disableSelection
-            expanded={expandedCodeIds}
-            onExpandClick={handleExpandClick}
-            onCollapseClick={handleCollapseClick}
-            renderActions={(node) => (
-              <>
-                <CodeToggleVisibilityButton code={node} />
-                <CodeEditButton code={node.code} />
-                <CodeToggleEnabledButton code={node} />
-              </>
-            )}
-          />
-          <CodeEditDialog codes={projectCodes.data} />
-        </>
-      )}
+      <TreeExplorer
+        sx={{ pt: 0 }}
+        dataType={KEYWORD_CODES}
+        dataIcon={SquareIcon}
+        showButtons
+        selectedDataId={selectedCodeId}
+        expandedDataIds={expandedCodeIds}
+        dataFilter={codeFilter}
+        setDataFilter={setCodeFilter}
+        dataTree={codeTree as Node<ICodeTree>}
+        allData={allCodes}
+        handleCollapseClick={handleCollapseClick}
+        handleExpandClick={handleExpandClick}
+        handleSelectData={handleSelectCode}
+        // actions
+        renderActions={(node) => {
+          return (
+            <>
+              <CodeToggleVisibilityButton code={node as ICodeTree} />
+              <CodeToggleEnabledButton code={node as ICodeTree} />
+            </>
+          );
+        }}
+        renderFilterActions={() => (
+          <>
+            <CodeToggleEnabledButton code={codeTree?.model} />
+          </>
+        )}
+      />
+      <TreeDataCreateDialog dataType={KEYWORD_CODES} />
     </Box>
   );
 }
