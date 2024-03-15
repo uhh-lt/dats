@@ -128,14 +128,14 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
       event.stopPropagation();
 
       // get ids of the code and all its children
-      const codeIds = [node.code.id];
+      const codeIds = [node.data.id];
       if (node.children) {
         codeIds.push(...flatTree(node).map((c) => c.id));
       }
 
       // toggle the code ids
       setCheckedCodeIds((prevCheckedCodeIds) => {
-        if (prevCheckedCodeIds.includes(node.code.id)) {
+        if (prevCheckedCodeIds.includes(node.data.id)) {
           // remove all codeIds
           return prevCheckedCodeIds.filter((id) => !codeIds.includes(id));
         } else {
@@ -147,7 +147,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
 
     const isChecked = (node: ICodeTree): boolean => {
       // a node is checked if it's id as well as all of its children are in the checkedCodeIds array
-      return checkedCodeIds.indexOf(node.code.id) !== -1 && (node.children?.every(isChecked) || true);
+      return checkedCodeIds.indexOf(node.data.id) !== -1 && (node.children?.every(isChecked) || true);
     };
 
     const isIndeterminate = (node: ICodeTree) => {
@@ -180,7 +180,7 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
                 <React.Fragment>
                   {showCheckboxes ? (
                     <Checkbox
-                      key={node.code.id}
+                      key={node.data.id}
                       checked={isChecked(node)}
                       indeterminate={isIndeterminate(node)}
                       onChange={(event) => handleCheckboxChange(event, node)}
@@ -188,8 +188,8 @@ const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps
                   ) : (
                     <>
                       <CodeToggleVisibilityButton code={node} />
-                      <CodeEditButton code={node.code} />
-                      <MemoButton attachedObjectId={node.code.id} attachedObjectType={AttachedObjectType.CODE} />
+                      <CodeEditButton code={node.data} />
+                      <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.CODE} />
                     </>
                   )}
                   {}

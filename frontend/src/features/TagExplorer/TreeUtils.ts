@@ -83,53 +83,22 @@ export function filterTree({ dataTree, dataFilter }: FilterProps) {
     // find all nodes that match the filter
     dataTreeCopy.walk(
       (node) => {
-        if ("code" in node.model) {
-          if (node.model.code.name.startsWith(dataFilter.trim())) {
-            // keep the node
-            nodesToKeep.add(node.model.code.id);
+        if (
+          (node as Node<ICodeTree>).model.data.name?.startsWith(dataFilter.trim()) ||
+          (node as Node<ITagTree>).model.data.title?.startsWith(dataFilter.trim())
+        ) {
+          // keep the node
+          nodesToKeep.add(node.model.data.id);
 
-            // keep its children
-            node.children
-              .map((child) => ("code" in child.model ? child.model.code.id : child.model.data.id))
-              .forEach((id) => nodesToKeep.add(id));
+          // keep its children
+          node.children.map((child) => child.model.data.id).forEach((id) => nodesToKeep.add(id));
 
-            // keep its parents
-            let parent = node.parent;
-            while (parent) {
-              if ("code" in parent.model) {
-                nodesToKeep.add(parent.model.code.id);
-                nodesToExpand.add(parent.model.code.id);
-                parent = parent.parent;
-              } else {
-                nodesToKeep.add(parent.model.data.id);
-                nodesToExpand.add(parent.model.data.id);
-                parent = parent.parent;
-              }
-            }
-          }
-        } else {
-          if (node.model.data.title.startsWith(dataFilter.trim())) {
-            // keep the node
-            nodesToKeep.add(node.model.data.id);
-
-            // keep its children
-            node.children
-              .map((child) => ("code" in child.model ? child.model.code.id : child.model.data.id))
-              .forEach((id) => nodesToKeep.add(id));
-
-            // keep its parents
-            let parent = node.parent;
-            while (parent) {
-              if ("code" in parent.model) {
-                nodesToKeep.add(parent.model.code.id);
-                nodesToExpand.add(parent.model.code.id);
-                parent = parent.parent;
-              } else {
-                nodesToKeep.add(parent.model.data.id);
-                nodesToExpand.add(parent.model.data.id);
-                parent = parent.parent;
-              }
-            }
+          // keep its parents
+          let parent = node.parent;
+          while (parent) {
+            nodesToKeep.add(parent.model.data.id);
+            nodesToExpand.add(parent.model.data.id);
+            parent = parent.parent;
           }
         }
         return true;
@@ -138,14 +107,12 @@ export function filterTree({ dataTree, dataFilter }: FilterProps) {
     );
 
     // filter the dataTree
-    let nodes_to_remove =
-      "code" in dataTreeCopy.model
-        ? (dataTreeCopy as Node<ICodeTree>).all((node) => !nodesToKeep.has(node.model.code.id))
-        : (dataTreeCopy as Node<ITagTree>).all((node) => !nodesToKeep.has(node.model.data.id));
+    let nodes_to_remove = (dataTreeCopy as Node<ITagTree | ICodeTree>).all(
+      (node) => !nodesToKeep.has(node.model.data.id),
+    );
     nodes_to_remove.forEach((node) => {
       node.drop();
     });
-    dataTreeCopy = "code" in dataTreeCopy.model ? (dataTreeCopy as Node<ICodeTree>) : (dataTreeCopy as Node<ITagTree>);
   } else {
     dataTreeCopy = dataTree;
   }

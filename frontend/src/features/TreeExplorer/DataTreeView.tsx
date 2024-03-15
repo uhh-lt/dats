@@ -1,16 +1,19 @@
+import { TreeItemProps, TreeView, TreeViewProps } from "@mui/x-tree-view";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import FolderIcon from "@mui/icons-material/Folder";
-import SquareIcon from "@mui/icons-material/Square";
-import Box from "@mui/material/Box";
-import { SvgIconProps } from "@mui/material/SvgIcon";
-import Typography from "@mui/material/Typography";
-import { styled } from "@mui/material/styles";
-import { TreeItem, TreeItemProps, treeItemClasses } from "@mui/x-tree-view/TreeItem";
-import { TreeView, TreeViewProps } from "@mui/x-tree-view/TreeView";
 import * as React from "react";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import ICodeTree from "./ICodeTree.ts";
+import FolderIcon from "@mui/icons-material/Folder";
+import { TreeItem, treeItemClasses } from "@mui/x-tree-view";
+import { SvgIconProps, SvgIconTypeMap } from "@mui/material/SvgIcon";
+import { styled } from "@mui/material/styles";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { CodeRead, DocumentTagRead } from "../../api/openapi";
+
+import { IDataTree } from "./IDataTree";
+import { KEYWORD_TAGS } from "../../utils/GlobalConstants";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
+import AbcIcon from "@mui/icons-material/Abc";
 
 type StyledTreeItemProps = TreeItemProps & {
   labelIcon: React.ElementType<SvgIconProps>;
@@ -70,10 +73,15 @@ const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
 }));
 
 function StyledTreeItem(props: StyledTreeItemProps) {
-  const { labelIcon: LabelIcon, actions, labelText, labelIconColor, hasChildren, ...other } = props;
+  const { labelIcon: LabelIcon, actions, labelText, labelIconColor, hasChildren, onContextMenu, ...other } = props;
 
   return (
     <StyledTreeItemRoot
+      className="Tim"
+      ContentProps={{
+        className: "Tom",
+        onContextMenu: onContextMenu,
+      }}
       label={
         <Box sx={{ display: "flex", alignItems: "center", p: 0.5, pr: 0, ml: !hasChildren ? "30px" : 0 }}>
           <Box component={LabelIcon} color={labelIconColor} sx={{ mr: 1 }} />
@@ -88,32 +96,40 @@ function StyledTreeItem(props: StyledTreeItemProps) {
   );
 }
 
-export interface CodeTreeViewProps {
-  openContextMenu?: (node: ICodeTree) => (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => void;
-  data: ICodeTree;
+export interface DataTreeViewProps {
+  openContextMenu?: (node: IDataTree) => (event: any) => void;
+  data: IDataTree;
+  dataType: string;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
-  onCodeClick?: (code: CodeRead) => void;
-  renderActions?: (node: ICodeTree) => React.ReactNode;
+  onDataClick?: (data: DocumentTagRead | CodeRead) => void;
+  renderActions?: (node: IDataTree) => React.ReactNode;
+  dataIcon?: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
+    muiName: string;
+  };
 }
 
-function CodeTreeView({
+function DataTreeView({
   renderActions,
   data,
+  dataType,
   onExpandClick,
   onCollapseClick,
   openContextMenu,
-  onCodeClick,
+  onDataClick,
+  dataIcon,
   ...props
-}: CodeTreeViewProps & TreeViewProps<boolean>) {
-  const renderTree = (nodes: ICodeTree[]) => {
+}: DataTreeViewProps & TreeViewProps<boolean>) {
+  const renderTree = (nodes: IDataTree[]) => {
     return nodes.map((node) => (
       <StyledTreeItem
         hasChildren={Array.isArray(node.children) && node.children.length > 0}
         key={node.data.id}
         nodeId={node.data.id.toString()}
-        labelText={node.data.name}
-        labelIcon={Array.isArray(node.children) && node.children.length > 0 ? FolderIcon : SquareIcon}
+        labelText={dataType === KEYWORD_TAGS ? (node.data as DocumentTagRead).title : (node.data as CodeRead).name}
+        labelIcon={
+          Array.isArray(node.children) && node.children.length > 0 ? FolderIcon : dataIcon ? dataIcon : AbcIcon
+        }
         expandIcon={
           <Box
             sx={{ width: "30px", display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}
@@ -133,7 +149,7 @@ function CodeTreeView({
         labelIconColor={node.data.color}
         actions={renderActions ? renderActions(node) : undefined}
         onContextMenu={openContextMenu ? openContextMenu(node) : undefined}
-        onClick={onCodeClick ? () => onCodeClick(node.data) : undefined}
+        onClick={onDataClick ? () => onDataClick(node.data) : undefined}
       >
         {Array.isArray(node.children) && node.children.length > 0 && (
           <React.Fragment> {renderTree(node.children)}</React.Fragment>
@@ -143,15 +159,10 @@ function CodeTreeView({
   };
 
   return (
-    <TreeView
-      className="filterTree"
-      defaultCollapseIcon={<ArrowDropDownIcon />}
-      defaultExpandIcon={<ArrowRightIcon />}
-      {...props}
-    >
+    <TreeView defaultCollapseIcon={<ArrowDropDownIcon />} defaultExpandIcon={<ArrowRightIcon />} {...props}>
       {data.children && renderTree(data.children)}
     </TreeView>
   );
 }
 
-export default CodeTreeView;
+export default DataTreeView;
