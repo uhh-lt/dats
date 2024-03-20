@@ -24,6 +24,7 @@ function download_and_install_spacy_model() {
     wget -q -P "${MODEL_ROOT}" "https://github.com/explosion/spacy-models/releases/download/${MODEL}/${MODEL_TGZ}"
     if [ ! "$(sha256sum ${MODEL_ROOT}/"${MODEL_TGZ}" | awk '{print$1}')" == "${CHECKSUM_SHA_256_TGZ}" ]; then
       echo "spaCy model '${MODEL}' downloaded is corrupt!"
+      rm "${MODEL_ROOT}/${MODEL_TGZ}"
       exit 1
     fi
     echo "Installing spaCy model '${MODEL}' ..."
