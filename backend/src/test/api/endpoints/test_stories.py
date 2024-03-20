@@ -999,10 +999,22 @@ def test_bbox_annotatation_and_memo(client, api_user, api_document) -> None:
     assert len(bbox_annos2) == 2
 
     # Bob removes the image annotations for Imagedoc2
-    imagedoc2_bbox_clear = client.delete(
+    adoc2_remove_response = client.delete(
         f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
     )
-    assert imagedoc2_bbox_clear.status_code == 200
+    assert adoc2_remove_response.status_code == 200
+
+    # Alice removes the image annotations for Imagedoc1
+    adoc1_remove_response = client.delete(
+        f"adoc/{adoc_response1['id']}/bbox_annotations", headers=alice["AuthHeader"]
+    )
+    assert adoc1_remove_response.status_code == 200
+
+    # Alice removes bbox1
+    bbox1_remove_response = client.delete(
+        f"bbox/{bbox1_id}", headers=alice["AuthHeader"]
+    )
+    assert bbox1_remove_response.status_code == 200
 
     bbox_annos2_clear = client.get(
         f"adoc/{adoc_response2['id']}/bbox_annotations", headers=bob["AuthHeader"]
