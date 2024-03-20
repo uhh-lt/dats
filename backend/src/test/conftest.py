@@ -7,6 +7,7 @@ import string
 from typing import Callable, Generator
 
 import pytest
+import requests
 from fastapi import Request
 from fastapi.datastructures import Headers
 from loguru import logger
@@ -38,12 +39,15 @@ if not STARTUP_DONE:
     startup(reset_data=True)
     os.environ["STARTUP_DONE"] = "1"
 
+from fastapi.testclient import TestClient
+
 from app.core.data.crud.code import crud_code
 from app.core.data.crud.project import crud_project
 from app.core.data.crud.user import SYSTEM_USER_ID, crud_user
 from app.core.data.dto.code import CodeCreate
 from app.core.data.dto.project import ProjectCreate
 from app.core.data.dto.user import UserCreate, UserRead
+from main import app
 
 
 def pytest_sessionfinish():
@@ -195,3 +199,170 @@ def mock_request() -> Request:
         }
     )
     return request
+
+
+# API Fixtures
+@pytest.fixture(scope="session")
+def client() -> TestClient:
+    return TestClient(app)
+
+
+@pytest.fixture(scope="module")
+def api_user(client: TestClient):
+    class UserFactory:
+        def __init__(self):
+            self.userList = {}
+
+        def create(self, first_name):
+            # Create
+            email = "".join(random.choices(string.ascii_letters, k=10)) + "@aol.com"
+            password = "".join(random.choices(string.ascii_letters, k=20))
+            last_name = "".join(random.choices(string.ascii_letters, k=10))
+            credentials = {
+                "email": email,
+                "first_name": first_name,
+                "last_name": last_name,
+                "password": password,
+            }
+            response = client.post("/authentication/register", json=credentials).json()
+            credentials["id"] = response["id"]
+
+            # Login
+            grant_type = ""
+            scope = ""
+            client_id = ""
+            client_secret = ""
+            login = {
+                "grant_type": grant_type,
+                "username": credentials["email"],
+                "password": credentials["password"],
+                "scope": scope,
+                "client_id": client_id,
+                "client_secret": client_secret,
+            }
+            login = client.post("authentication/login", data=login).json()
+            credentials["token_type"] = login["token_type"]
+            credentials["access_token"] = login["access_token"]
+            credentials["AuthHeader"] = {
+                "Authorization": f"{login['token_type']} {login['access_token']}"
+            }
+
+            self.userList[first_name] = credentials
+            return credentials
+
+        def __del__(self):
+            for user in self.userList.values():
+                client.delete(f"/user/{user['id']}", headers=user["AuthHeader"])
+
+    return UserFactory()
+
+
+@pytest.fixture(scope="module")
+def api_project(
+    client: TestClient,
+):
+    class ProjectFactory:
+        def __init__(self):
+            self.projectList = {}
+
+        def create(self, user, title):
+            headers = user["AuthHeader"]
+            project = {
+                "title": title,
+                "description": "".join(random.choices(string.ascii_letters, k=100)),
+                "creator": user,
+            }
+            response = client.put("/project", headers=headers, json=project).json()
+            project["id"] = response["id"]
+            self.projectList[title] = project
+            return project
+
+        def __del__(self):
+            # TODO: Prevent user deletion before project deletion or use SYSTEM user
+            # FIXME: Using the standard SYSTEM@dwts.org user
+            # login with system user to remove all projects
+            superuser = {"username": "SYSTEM@dwts.org", "password": "SYSTEM"}
+            login = client.post("authentication/login", data=superuser).json()
+            superuser_authheader = {
+                "Authorization": f"{login['token_type']} {login['access_token']}"
+            }
+            for project in self.projectList.values():
+                client.delete(f"/project/{project['id']}", headers=superuser_authheader)
+
+    return ProjectFactory()
+
+
+@pytest.fixture(scope="module")
+def api_code(client: TestClient):
+    class CodeFactory:
+        def __init__(self):
+            self.codeList = {}
+
+        def create(self, name: string, user: dict, project: dict):
+            headers = user["AuthHeader"]
+            project_id = project["id"]
+            user_id = user["id"]
+            code = {
+                "name": name,
+                "color": "string",
+                "description": "string",
+                "parent_code_id": None,
+                "project_id": project_id,
+                "user_id": user_id,
+            }
+            response = client.put("/code", headers=headers, json=code).json()
+            code["id"] = response["id"]
+            self.codeList[name] = code
+            return code
+
+    return CodeFactory()
+
+
+@pytest.fixture(scope="module")
+def api_document(client: TestClient):
+    class DocumentFactory:
+        def __init__(self):
+            self.documentList = {}
+
+        def create(self, uploadList: list, user: dict, project: dict):
+            user_headers = user["AuthHeader"]
+            files = []
+            download_headers = {
+                "User-Agent": "MauiBot/420.0 (https://github.com/uhh-lt/dwts/; maui@bot.org)"
+            }
+            for filename in uploadList:
+                request_download = requests.get(filename[0], headers=download_headers)
+                files.append(
+                    ("uploaded_files", (filename[1], request_download.content))
+                )
+            response = client.put(
+                f"/project/{project['id']}/sdoc", headers=user_headers, files=files
+            ).json()
+            docs = {}
+            for file in response["payloads"]:
+                document = {
+                    "id": file["id"],
+                    "filename": file["filename"],
+                    "project_id": file["project_id"],
+                    "mime_type": file["mime_type"],
+                    "doc_type": file["doc_type"],
+                    "prepro_job_id": file["prepro_job_id"],
+                }
+                docs[document["filename"]] = document
+            self.documentList.update(docs)
+            return docs
+
+        def prepro_status(self, prepro_id, user):
+            return client.get(f"prepro/{prepro_id}", headers=user["AuthHeader"]).json()[
+                "status"
+            ]
+
+        def get_sdoc_id(self, filename, user):
+            doc = self.documentList[filename]
+            project_id = doc["project_id"]
+            doc["sdoc_id"] = client.get(
+                f"project/{project_id}/resolve_filename/{filename}",
+                headers=user["AuthHeader"],
+            ).json()
+
+    return DocumentFactory()

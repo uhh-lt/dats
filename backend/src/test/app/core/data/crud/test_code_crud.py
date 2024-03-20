@@ -110,8 +110,6 @@ def test_add_get_memo(
     db_obj = crud_code.read(db=db, id=code.id)
     memos = get_object_memos(db_obj=db_obj)
 
-    # print(f'{memos=}')
-
     assert len(memos) == 1
     assert memos[0].title == title
     assert memos[0].content == content
