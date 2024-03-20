@@ -241,8 +241,8 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
         f"/project/{project2['id']}/code", headers=bob["AuthHeader"]
     ).json()
     codes_project2_before = len(codes_project2_before_response)
-    _ = api_code.create("code4", bob, project2)
-    _ = api_code.create("code5", bob, project2)
+    code4 = api_code.create("code4", bob, project2)
+    code5 = api_code.create("code5", bob, project2)
     code6 = api_code.create("code6", bob, project2)
 
     code6_read_response = client.get(
@@ -288,6 +288,35 @@ def test_codes_create(client: TestClient, api_user, api_project, api_code) -> No
     assert code1_memo_read_response["project_id"] == code1_memo["project_id"]
     assert code1_memo_read_response["attached_object_id"] == code1["id"]
     assert code1_memo_read_response["attached_object_type"] == "code"
+
+    # Bob removes code4
+    code4_remove_response = client.delete(
+        f"code/{code4['id']}", headers=bob["AuthHeader"]
+    )
+    assert code4_remove_response.status_code == 200
+
+    # Bob updates code5 and removes it
+    code5_update = {
+        "name": "tick",
+        "color": "trick",
+        "description": "track",
+    }
+    code5_update_response = client.patch(
+        f"code/{code5['id']}", headers=bob["AuthHeader"], json=code5_update
+    )
+    assert code5_update_response.status_code == 200
+    code5_update_response = code5_update_response.json()
+
+    code5_remove_response = client.delete(
+        f"code/{code5['id']}", headers=bob["AuthHeader"]
+    )
+    assert code5_remove_response.status_code == 200
+
+    # Bob removes code6
+    code6_remove_response = client.delete(
+        f"code/{code6['id']}", headers=bob["AuthHeader"]
+    )
+    assert code6_remove_response.status_code == 200
 
 
 @pytest.mark.order(after="test_project_add_user")
