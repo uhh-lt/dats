@@ -115,7 +115,7 @@ def test_project_add_user(client: TestClient, api_user, api_project) -> None:
 
 
 @pytest.mark.order(after="test_project_add_user")
-def test_project_update(client: TestClient, api_user, api_project) -> None:
+def test_project_update_remove(client: TestClient, api_user, api_project) -> None:
     alice = api_user.userList["alice"]
     bob = api_user.userList["bob"]
     project1 = api_project.projectList["project1"]
@@ -147,6 +147,18 @@ def test_project_update(client: TestClient, api_user, api_project) -> None:
         f"/project/{project2['id']}", headers=bob["AuthHeader"], json=change_p2
     )
     response_update_p2.status_code == 200
+
+    # Bob updates project3 and removes it
+    project3 = api_project.create(bob, "project3")
+    change_p3 = {"title": "Its dark", "description": "and cold"}
+    response_update_p3 = client.patch(
+        f"/project/{project3['id']}", headers=bob["AuthHeader"], json=change_p3
+    )
+    response_update_p3.status_code == 200
+    response_remove_p3 = client.delete(
+        f"/project/{project3['id']}", headers=bob["AuthHeader"]
+    )
+    response_remove_p3.status_code == 200
 
 
 def test_user_update_remove(client: TestClient, api_user) -> None:
