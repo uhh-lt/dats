@@ -417,6 +417,21 @@ def test_upload_documents(client, api_user, api_project, api_document) -> None:
     api_document.get_sdoc_id(text_doc3[1], bob)
     api_document.get_sdoc_id(text_doc4[1], bob)
 
+    # Bob updates textdoc3 and removes it
+    text_doc3_rem = api_document.documentList[text_doc3[1]]
+    text_doc3_update = {"name": "new me"}
+    text_doc3_update_response = client.patch(
+        f"sdoc/{text_doc3_rem['sdoc_id']}",
+        headers=bob["AuthHeader"],
+        json=text_doc3_update,
+    )
+    assert text_doc3_update_response.status_code == 200
+
+    text_doc3_remove_response = client.delete(
+        f"sdoc/{text_doc3_rem['sdoc_id']}", headers=bob["AuthHeader"]
+    )
+    assert text_doc3_remove_response.status_code == 200
+
     # Bob uploads two image documents to project2
     image_response34 = api_document.create([image_doc3, image_doc4], bob, project2)
     image3_prepro_job_id = image_response34[image_doc3[1]]["prepro_job_id"]
