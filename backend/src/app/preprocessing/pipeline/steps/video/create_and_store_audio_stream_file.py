@@ -30,7 +30,8 @@ def create_and_store_audio_stream_file(cargo: PipelineCargo) -> PipelineCargo:
         raise e
     except ffmpeg.Error as e:
         msg = (
-            f"while creating the audio stream file {str(ppvd.audio_filepath)}!" f"\n{e}"
+            f"while creating the audio stream file {str(ppvd.audio_filepath)}!"
+            f"\n{e.stderr.decode()}"
         )
         logger.error(msg)
         raise IOError(msg)

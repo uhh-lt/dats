@@ -19,7 +19,7 @@ def convert_to_pcm(cargo: PipelineCargo) -> PipelineCargo:
             .run(quiet=True)
         )
     except ffmpeg.Error as e:
-        logger.error(e)
+        logger.error(e.stderr.decode())
 
     ppad.uncompressed_audio_filepath = wav_file
 
