@@ -5,6 +5,7 @@ Revises: 07cd5e426937
 Create Date: 2023-12-05 10:54:14.605432
 
 """
+
 from typing import Sequence, Union
 
 from sqlalchemy.dialects import postgresql
