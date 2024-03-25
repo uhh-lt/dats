@@ -1,6 +1,7 @@
 # ignore unused imports for this file
 # ruff: noqa: F401
 """we import all ORM here so that SQLAlchemy knows about them to generate the SQL tables"""
+
 from app.core.data.orm.action import ActionORM
 from app.core.data.orm.analysis_table import AnalysisTableORM
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
