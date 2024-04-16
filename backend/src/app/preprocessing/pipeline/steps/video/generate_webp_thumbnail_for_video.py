@@ -26,7 +26,10 @@ def generate_webp_thumbnail_for_video(cargo: PipelineCargo) -> PipelineCargo:
         )
 
     except ffmpeg.Error as e:
-        msg = f"FFMPEG Error while generating thumbnail for {ppvd.filename}:" f"{e}"
+        msg = (
+            f"FFMPEG Error while generating thumbnail for {ppvd.filename}:"
+            f"{e.stderr.decode()}"
+        )
         logger.error(msg)
         raise IOError(msg)
 
