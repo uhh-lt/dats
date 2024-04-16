@@ -14,15 +14,15 @@ class PipelineCargo(BaseModel):
     )
     ppj_id: str = Field(description="UUID of the PreprocessingJob")
 
-    next_steps: List[
-        SkipValidation
-    ] = Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
-        description="Next Tasks to be executed.", default_factory=list
+    next_steps: List[SkipValidation] = (
+        Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
+            description="Next Tasks to be executed.", default_factory=list
+        )
     )
-    finished_steps: List[
-        SkipValidation
-    ] = Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
-        description="Tasks that have been executed.", default_factory=list
+    finished_steps: List[SkipValidation] = (
+        Field(  # FIXME: "Hack" to ignore the cyclic dependency problem with "PipelineStep"
+            description="Tasks that have been executed.", default_factory=list
+        )
     )
 
     data: Dict[str, Any] = Field(description="data", default_factory=dict)
