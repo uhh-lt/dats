@@ -1,7 +1,7 @@
 system_user:
   first_name: ${oc.env:SYSTEM_USER_FIRST_NAME, "SYSTEM"}
   last_name: ${oc.env:SYSTEM_USER_LAST_NAME, "USER"}
-  email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@DWTS.ORG"}
+  email: ${oc.env:SYSTEM_USER_EMAIL, "SYSTEM@dwts.org"}
   password: ${oc.env:SYSTEM_USER_PASSWORD, "SYSTEM"}
 
 api:
