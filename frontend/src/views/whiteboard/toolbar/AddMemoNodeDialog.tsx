@@ -5,6 +5,7 @@ import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
 import MemoSelector from "../../../components/Selectors/MemoSelector.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
 import { createMemoNodes } from "../whiteboardUtils.ts";
 
 export interface AddMemoNodeDialogProps extends AddNodeDialogProps {
@@ -15,7 +16,6 @@ export interface AddMemoNodeDialogProps extends AddNodeDialogProps {
 
 function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoNodeDialogProps) {
   const [open, setOpen] = useState(false);
-  const [selectedMemos, setSelectedMemos] = useState<MemoRead[]>([]);
 
   const handleOpenDialogClick = () => {
     setOpen(true);
@@ -23,12 +23,11 @@ function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoN
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedMemos([]);
   };
 
-  const handleConfirmSelection = () => {
-    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
-      reactFlowService.addNodes(createMemoNodes({ memos: selectedMemos, position: position }));
+  const handleAddMemos = (memos: MemoRead[]) => {
+    const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes(createMemoNodes({ memos, position: position }));
     onClick(addNode);
     handleClose();
   };
@@ -40,12 +39,9 @@ function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoN
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select memos to add to Whiteboard</DialogTitle>
-        <MemoSelector projectId={projectId} userId={userId} setSelectedMemos={setSelectedMemos} />
+        <MemoSelector projectId={projectId} userId={userId} onAddMemos={handleAddMemos} />
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={selectedMemos.length === 0}>
-            Add {selectedMemos.length > 0 ? selectedMemos.length : null} Memos
-          </Button>
         </DialogActions>
       </Dialog>
     </>
