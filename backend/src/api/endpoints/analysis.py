@@ -122,7 +122,7 @@ def annotated_segments_info(
 def annotated_segments(
     *,
     project_id: int,
-    user_ids: List[int],
+    user_id: int,
     filter: Filter[AnnotatedSegmentsColumns],
     page: int,
     page_size: int,
@@ -133,7 +133,7 @@ def annotated_segments(
 
     return find_annotated_segments(
         project_id=project_id,
-        user_ids=user_ids,
+        user_id=user_id,
         filter=filter,
         page=page,
         page_size=page_size,
