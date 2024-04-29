@@ -41,7 +41,7 @@ class SpiderBase(scrapy.Spider):
     def generate_filename(self, response: Response) -> str:
         parsed_url = urlparse(response.url)
         article_slug = Path(parsed_url.path).stem
-        filename = slugify(f"{self.prefix}-{article_slug}")
+        filename = slugify(f"{self.prefix}-{parsed_url.netloc}-{article_slug}")
         return filename
 
     def write_raw_response(
@@ -86,8 +86,8 @@ class SpiderBase(scrapy.Spider):
         except UnicodeDecodeError:
             item["raw_html"] = response.body
 
-        item["extracted_html"] = html if html else ""
-        item["html"] = html if html else item["raw_html"]
+        if html:
+            item["extracted_html"] = html
         item["output_dir"] = str(self.output_dir)
 
         for key, value in kwargs.items():
