@@ -5,11 +5,9 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 SELENIUM_DRIVER_NAME = "chrome"
 SELENIUM_DRIVER_EXECUTABLE_PATH = which(ChromeDriverManager().install())
-SELENIUM_DRIVER_ARGUMENTS = [
-    "--headless=new"
-]  # '--headless' if using chrome instead of firefox
+SELENIUM_DRIVER_ARGUMENTS = ["--headless=new"]
 
-# Scrapy settings for incel project
+# Scrapy settings
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -82,9 +80,9 @@ ITEM_PIPELINES = {
     "crawler.pipelines.readability_pipeline.ReadabilityPipeline": 1,
     "crawler.pipelines.txtclean_pipeline.TXTCleanPipeline": 2,
     "crawler.pipelines.htmlclean_pipeline.HTMLCleanPipeline": 3,
-    "crawler.pipelines.extract_image_pipeline.ExtractImagePipeline": 4,
-    "crawler.pipelines.image_pipeline.MyImagesPipeline": 5,
-    "crawler.pipelines.replace_image_pipeline.ReplaceImagePipeline": 6,
+    # "crawler.pipelines.extract_image_pipeline.ExtractImagePipeline": 4,
+    # "crawler.pipelines.image_pipeline.MyImagesPipeline": 5,
+    # "crawler.pipelines.replace_image_pipeline.ReplaceImagePipeline": 6,
     "crawler.pipelines.write_pipeline.WritePipeline": 7,
 }
 IMAGES_STORE = "data/images"
