@@ -49,7 +49,7 @@ function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & Bo
         position={contextMenuPosition}
         handleClose={() => setContextMenuPosition(null)}
       />
-      <Box ref={containerRef} style={{ height: "100%", overflowY: "auto" }} {...props}>
+      <Box ref={containerRef} style={{ height: "90%", overflowY: "auto" }} {...props}>
         <List
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,

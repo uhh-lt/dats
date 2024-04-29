@@ -7,4 +7,5 @@ export enum DocType {
   IMAGE = "image",
   VIDEO = "video",
   AUDIO = "audio",
+  FILE = "file",
 }

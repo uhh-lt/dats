@@ -1,6 +1,6 @@
-import { IconButton, IconButtonProps, Tooltip } from "@mui/material";
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
+import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
 import React from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
@@ -16,7 +16,6 @@ function MemoStarButton({ memoId, isStarred, ...props }: MemoStarButtonProps & I
 
   // ui events
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
     updateMutation.mutate(
       {
         memoId: memoId,
@@ -37,9 +36,10 @@ function MemoStarButton({ memoId, isStarred, ...props }: MemoStarButtonProps & I
 
   return (
     <Tooltip title={isStarred ? "Marked" : "Not marked"}>
-      <span>
-        <IconButton onClick={handleClick} disabled={updateMutation.isPending} {...props}>
+      <span style={{ width: "100%" }}>
+        <IconButton size="small" onClick={handleClick} disabled={updateMutation.isPending} disableRipple {...props}>
           {isStarred ? <StarIcon /> : <StarOutlineIcon />}
+          <Typography variant="body1">Star Memo</Typography>
         </IconButton>
       </span>
     </Tooltip>

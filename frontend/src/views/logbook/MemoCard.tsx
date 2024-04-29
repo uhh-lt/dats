@@ -1,17 +1,16 @@
-import { Box, Card, CardActions, CardContent, CardHeader, Typography } from "@mui/material";
-import Avatar from "@mui/material/Avatar";
+import { Box, Card, CardContent, CardHeader, Grid, Typography } from "@mui/material";
 import React, { forwardRef } from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import MemoEditButton from "../../features/Memo/MemoEditButton.tsx";
-import MemoStarButton from "../../features/Memo/MemoStarMenuItem.tsx";
 import useGetMemosAttachedObject from "../../features/Memo/useGetMemosAttachedObject.ts";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
 import AttachedObjectLink from "./AttachedObjectLink.tsx";
 import "./MemoCard.css";
-import { MemoColors, MemoShortnames } from "./MemoEnumUtils.ts";
 import { MemoCardContextMenuData } from "./MemoResults.tsx";
 
+import SdocHooks from "../../api/SdocHooks.ts";
+import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon.tsx";
+import MemoCardActionsMenu from "./MemoCardActionsMenu.tsx";
 interface MemoCardProps {
   memoId: number;
   onContextMenu: (data: MemoCardContextMenuData) => (event: React.MouseEvent) => void;
@@ -23,7 +22,7 @@ const MemoCard = forwardRef<HTMLDivElement, MemoCardProps>(({ memoId, onContextM
   // query
   const memo = MemoHooks.useGetMemo(memoId);
   const attachedObject = useGetMemosAttachedObject(memo.data?.attached_object_type)(memo.data?.attached_object_id);
-
+  const sdoc = SdocHooks.useGetDocumentByAdocId(attachedObject.data?.id);
   // ui event handlers
   const handleHoverEnter = () => {
     switch (memo.data?.attached_object_type) {
@@ -68,38 +67,59 @@ const MemoCard = forwardRef<HTMLDivElement, MemoCardProps>(({ memoId, onContextM
         {memo.isSuccess && attachedObject.isSuccess ? (
           <>
             <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: MemoColors[memo.data.attached_object_type] }}>
-                  {MemoShortnames[memo.data.attached_object_type]}
-                </Avatar>
+              title={
+                <Grid container>
+                  <Grid item xs={1}>
+                    {docTypeToIcon[sdoc.data ? sdoc.data?.doctype : DocType.FILE]}
+                  </Grid>
+                  <Grid item xs={10}>
+                    <Typography variant={"body1"} fontWeight={600}>
+                      {memo.data.title}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={1}>
+                    <MemoCardActionsMenu memo={memo} />
+                  </Grid>
+                </Grid>
               }
-              action={<MemoStarButton memoId={memo.data.id} isStarred={memo.data.starred} />}
-              title={memo.data.title}
-              subheader={`Created: ${dateToLocaleString(memo.data.created)} Updated: ${dateToLocaleString(
-                memo.data.updated,
-              )}`}
+              subheader={
+                <>
+                  <Typography color="text.secondary"></Typography>
+                  <Typography variant="body2" sx={{ mb: 1.5 }} color="text.secondary">
+                    <AttachedObjectLink
+                      attachedObject={attachedObject.data}
+                      attachedObjectType={memo.data.attached_object_type}
+                    />
+                  </Typography>
+                </>
+              }
               sx={{ pb: 0, pt: 1 }}
               titleTypographyProps={{
-                variant: "h5",
+                variant: "body1",
+                fontWeight: 900,
               }}
             />
-            <CardContent sx={{ py: 0, my: 1, maxHeight: 300, overflowY: "hidden" }}>
-              <Typography color="text.secondary"></Typography>
-              <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                <AttachedObjectLink
-                  attachedObject={attachedObject.data}
-                  attachedObjectType={memo.data.attached_object_type}
-                />
+            <CardContent sx={{ py: 0, my: 0 }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  wordBreak: "break-word",
+                  // height: "5em",
+                  // overflow: "auto",
+                }}
+              >
+                {memo.data.content}
               </Typography>
-              <Typography variant="body1">{memo.data.content}</Typography>
             </CardContent>
-            <CardActions sx={{ px: 0.5, pt: 0, pb: 0.5 }}>
-              <MemoEditButton
-                memoId={memo.data.id}
-                attachedObjectType={memo.data.attached_object_type}
-                attachedObjectId={memo.data.attached_object_id}
-              />
-            </CardActions>
+            <CardContent>
+              <Typography variant="subtitle2" color="text.secondary" fontWeight={600} fontSize={11}>
+                {"Last modified: " +
+                  dateToLocaleString(memo.data.updated).substring(
+                    0,
+                    dateToLocaleString(memo.data.updated).indexOf(","),
+                  )}
+              </Typography>
+            </CardContent>
           </>
         ) : memo.isError ? (
           <CardHeader

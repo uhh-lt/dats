@@ -1,5 +1,5 @@
 import LabelIcon from "@mui/icons-material/Label";
-import { Box, Link, Stack } from "@mui/material";
+import { Box, Link, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
@@ -79,20 +79,29 @@ function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotation
   if (sdoc.isSuccess) {
     return (
       <>
-        attached to{" "}
-        <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
-          <span
-            style={{
-              backgroundColor: spanAnnotation.code.color,
-            }}
-          >
-            [{spanAnnotation.code.name}] {spanAnnotation.span_text}
-          </span>
-        </Link>{" "}
-        of{" "}
-        <Link component={RouterLink} to={`../search/doc/${sdoc.data.id}`} color="inherit">
-          {sdoc.data.filename}
-        </Link>
+        <Typography
+          variant="subtitle1"
+          fontSize={12}
+          fontWeight={600}
+          borderLeft={4}
+          borderColor={spanAnnotation.code.color}
+          paddingLeft={1}
+        >
+          attached to{" "}
+          <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
+            <span
+              style={{
+                backgroundColor: spanAnnotation.code.color,
+              }}
+            >
+              [{spanAnnotation.code.name}] {spanAnnotation.span_text}
+            </span>
+          </Link>{" "}
+          of{" "}
+          <Link component={RouterLink} to={`../search/doc/${sdoc.data.id}`} color="inherit">
+            {sdoc.data.filename}
+          </Link>
+        </Typography>
       </>
     );
   }
