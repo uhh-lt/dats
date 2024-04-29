@@ -1,0 +1,10 @@
+name: scrapy
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - python-magic=0.4
+  - pip=23.3.1
+  - pip:
+      - -r requirements.txt
