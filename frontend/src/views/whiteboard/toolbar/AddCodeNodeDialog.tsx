@@ -5,6 +5,7 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeSelector from "../../../components/Selectors/CodeSelector.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
 import { createCodeNodes } from "../whiteboardUtils.ts";
 
 export interface AddCodeNodeDialogProps extends AddNodeDialogProps {
@@ -14,7 +15,6 @@ export interface AddCodeNodeDialogProps extends AddNodeDialogProps {
 
 function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialogProps) {
   const [open, setOpen] = useState(false);
-  const [selectedCodes, setSelectedCodes] = useState<CodeRead[]>([]);
 
   const onOpenDialogClick = () => {
     setOpen(true);
@@ -22,12 +22,11 @@ function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialo
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedCodes([]);
   };
 
-  const handleConfirmSelection = () => {
-    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
-      reactFlowService.addNodes(createCodeNodes({ codes: selectedCodes, position: position }));
+  const handleAddCodes = (codes: CodeRead[]) => {
+    const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes(createCodeNodes({ codes, position: position }));
     onClick(addNode);
     handleClose();
   };
@@ -39,17 +38,9 @@ function AddCodeNodeDialog({ projectId, buttonProps, onClick }: AddCodeNodeDialo
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select codes to add to Whiteboard</DialogTitle>
-        <CodeSelector
-          projectId={projectId}
-          setSelectedCodes={setSelectedCodes}
-          allowMultiselect={true}
-          height="400px"
-        />
+        <CodeSelector projectId={projectId} onAddCodes={handleAddCodes} />
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={selectedCodes.length === 0}>
-            Add {selectedCodes.length > 0 ? selectedCodes.length : null} Codes
-          </Button>
         </DialogActions>
       </Dialog>
     </>

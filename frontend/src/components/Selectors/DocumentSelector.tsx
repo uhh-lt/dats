@@ -55,7 +55,7 @@ function DocumentSelector({ projectId, setSelectedDocuments }: DocumentSelectorP
     columns: columns,
     // autoPageSize
     // sx={{ border: "none" }}
-    getRowId: (row) => row.id.toString(),
+    getRowId: (row) => `${row.id}`,
     // state
     state: {
       rowSelection: rowSelectionModel,

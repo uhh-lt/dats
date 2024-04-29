@@ -1,111 +1,117 @@
-import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
-import { useMemo, useState } from "react";
-import AnalysisHooks from "../../api/AnalysisHooks.ts";
-import { AnnotationOccurrence } from "../../api/openapi/models/AnnotationOccurrence.ts";
-import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import CodeRenderer from "../DataGrid/CodeRenderer.tsx";
-import CodeSelector from "./CodeSelector.tsx";
+import {
+  MRT_ColumnDef,
+  MRT_ColumnFiltersState,
+  MRT_RowSelectionState,
+  MRT_SortingState,
+  MaterialReactTable,
+  useMaterialReactTable,
+} from "material-react-table";
+import { useState } from "react";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 
-const columns: MRT_ColumnDef<AnnotationOccurrence>[] = [
-  { accessorKey: "id", header: "ID", accessorFn: (params) => params.annotation.id },
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+
+const columns: MRT_ColumnDef<SpanAnnotationReadResolved>[] = [
+  { accessorKey: "id", header: "ID", accessorFn: (params) => params.id },
+  // {
+  //   header: "Document",
+  //   // flex: 1,
+  //   id: "document",
+  //   accessorFn: (params) => params.sdoc.filename,
+  //   Cell: ({ row }) => <>{row.original.sdoc.filename}</>,
+  // },
+  // {
+  //   header: "Code",
+  //   // flex: 1,
+  //   id: "code",
+  //   accessorFn: (params) => params.code.name,
+  //   Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
+  // },
   {
-    header: "Document",
-    // flex: 1,
-    id: "document",
-    accessorFn: (params) => params.sdoc.filename,
-    Cell: ({ row }) => <>{row.original.sdoc.filename}</>,
-  },
-  {
-    header: "Code",
-    // flex: 1,
-    id: "code",
-    accessorFn: (params) => params.code.name,
-    Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
-  },
-  {
-    accessorKey: "text",
+    accessorKey: "span_text",
     header: "Text",
-    // flex: 4,
-    // description: "The text of the annotation",
-    // renderCell: renderTextCellExpand,
+  },
+  {
+    header: "Created",
+    id: "created",
+    accessorFn: (originalRow) => new Date(originalRow.created), //convert to date for sorting and filtering
+    filterVariant: "date-range",
+    Cell: ({ cell }) => cell.getValue<Date>().toLocaleDateString(), // convert back to string for display
+  },
+  {
+    accessorKey: "updated",
+    header: "Updated",
   },
 ];
 
-interface AnnotationSelectorProps {
-  projectId: number;
-  userIds: number[];
-  setSelectedAnnotations: (annotations: AnnotationOccurrence[]) => void;
-}
+// interface AnnotationSelectorProps {
+//   projectId: number;
+//   userIds: number[];
+//   setSelectedAnnotations: (annotations: AnnotationOccurrence[]) => void;
+// }
 
-function AnnotationSelector({ projectId, userIds, setSelectedAnnotations }: AnnotationSelectorProps) {
+function AnnotationSelector() {
   // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [rowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState<string>();
+  const [sorting, setSorting] = useState<MRT_SortingState>([]);
 
-  // code selection
-  const [selectedCode, setSelectedCode] = useState<CodeRead>();
-  const handleCodeSelection = (codes: CodeRead[]) => {
-    codes.length > 0 ? setSelectedCode(codes[0]) : setSelectedCode(undefined);
-  };
+  console.log("sorting", sorting);
+  console.log("columnFilters", columnFilters);
+  console.log("globalFilter", globalFilter);
 
   // global server state
-  const annotationOccurrences = AnalysisHooks.useAnnotationOccurrences(projectId, userIds, selectedCode?.id);
-
-  // computed
-  const annotationOccurrencesMap = useMemo(() => {
-    // we have to transform the data, better do this elsewhere?
-    if (!annotationOccurrences.data) return {};
-
-    return annotationOccurrences.data.reduce(
-      (acc, annotationOccurrence) => {
-        acc[annotationOccurrence.annotation.id.toString()] = annotationOccurrence;
-        return acc;
-      },
-      {} as Record<string, AnnotationOccurrence>,
-    );
-  }, [annotationOccurrences.data]);
+  // todo: use projectId and userIds
+  const { isLoading, isError, isFetching, data: annotationOccurrences } = SpanAnnotationHooks.useGetByCodeAndUser(1, 1);
 
   // table
   const table = useMaterialReactTable({
-    data: annotationOccurrences.data || [],
+    data: annotationOccurrences || [],
     columns: columns,
-    // autoPageSize
-    // sx={{ border: "none" }}
-    getRowId: (row) => row.annotation.id.toString(),
+    getRowId: (row) => `${row.id}`,
+    enablePagination: false,
     // state
     state: {
       rowSelection: rowSelectionModel,
-      isLoading: columns.length === 0,
+      columnFilters,
+      globalFilter,
+      isLoading,
+      showAlertBanner: isError,
+      showProgressBars: isFetching,
+      sorting,
     },
+    // filtering
+    manualFiltering: true,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    // sorting
+    manualSorting: true,
+    onSortingChange: setSorting,
     // selection
-    enableRowSelection: true,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
-      setRowSelectionModel(newRowSelectionModel);
-      setSelectedAnnotations(
-        Object.entries(newRowSelectionModel)
-          .filter(([, selected]) => selected)
-          .map(([annotationId]) => annotationOccurrencesMap[annotationId]),
-      );
-    },
+    // enableRowSelection: true,
+    // onRowSelectionChange: (rowSelectionUpdater) => {
+    //   let newRowSelectionModel: MRT_RowSelectionState;
+    //   if (typeof rowSelectionUpdater === "function") {
+    //     newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
+    //   } else {
+    //     newRowSelectionModel = rowSelectionUpdater;
+    //   }
+    //   setRowSelectionModel(newRowSelectionModel);
+    //   setSelectedAnnotations(
+    //     Object.entries(newRowSelectionModel)
+    //       .filter(([, selected]) => selected)
+    //       .map(([annotationId]) => annotationOccurrencesMap[annotationId]),
+    //   );
+    // },
   });
 
   return (
-    <>
-      <CodeSelector
-        projectId={projectId}
-        setSelectedCodes={handleCodeSelection}
-        allowMultiselect={false}
-        height="400px"
-      />
-      <div style={{ height: 400, width: "100%" }}>
-        <MaterialReactTable table={table} />
-      </div>
-    </>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <MaterialReactTable table={table} />
+    </LocalizationProvider>
   );
 }
 export default AnnotationSelector;

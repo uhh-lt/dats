@@ -1,10 +1,11 @@
 import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
 import { useState } from "react";
-import { XYPosition, useReactFlow } from "reactflow";
+import { XYPosition } from "reactflow";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import TagSelector from "../../../components/Selectors/TagSelector.tsx";
-import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
 import { createTagNodes } from "../whiteboardUtils.ts";
 
 export interface AddTagNodeDialogProps extends AddNodeDialogProps {
@@ -13,12 +14,7 @@ export interface AddTagNodeDialogProps extends AddNodeDialogProps {
 }
 
 function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogProps) {
-  // whiteboard (react-flow)
-  const reactFlowInstance = useReactFlow();
-  const reactFlowService = useReactFlowService(reactFlowInstance);
-
   const [open, setOpen] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<DocumentTagRead[]>([]);
 
   const handleOpenDialogClick = () => {
     setOpen(true);
@@ -26,12 +22,11 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedTags([]);
   };
 
-  const handleConfirmSelection = () => {
-    const addTagNode = (position: XYPosition) =>
-      reactFlowService.addNodes(createTagNodes({ tags: selectedTags, position: position }));
+  const handleAddTags = (tags: DocumentTagRead[]) => {
+    const addTagNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes(createTagNodes({ tags, position: position }));
     onClick(addTagNode);
     handleClose();
   };
@@ -43,12 +38,9 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select tags to add to Whiteboard</DialogTitle>
-        <TagSelector projectId={projectId} setSelectedTags={setSelectedTags} />
+        <TagSelector projectId={projectId} onAddTags={handleAddTags} />
         <DialogActions>
           <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={selectedTags.length === 0}>
-            Add {selectedTags.length > 0 ? selectedTags.length : null} Tags
-          </Button>
         </DialogActions>
       </Dialog>
     </>

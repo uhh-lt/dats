@@ -31,6 +31,7 @@
     "@tanstack/react-query-devtools": "^5.24.0",
     "@tanstack/react-virtual": "^3.1.2",
     "d3": "^7.8.5",
+    "dayjs": "^1.11.10",
     "handsontable": "^14.1.0",
     "html-react-parser": "^5.1.8",
     "html-to-image": "^1.11.11",
