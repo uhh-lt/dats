@@ -70,7 +70,7 @@ const MemoCard = forwardRef<HTMLDivElement, MemoCardProps>(({ memoId, onContextM
               title={
                 <Grid container>
                   <Grid item xs={1}>
-                    {docTypeToIcon[sdoc.data ? sdoc.data?.doctype : DocType.FILE]}
+                    {docTypeToIcon[sdoc.data ? sdoc.data.doctype : DocType.FILE]}
                   </Grid>
                   <Grid item xs={10}>
                     <Typography variant={"body1"} fontWeight={600}>
