@@ -1,23 +1,27 @@
-import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../Snackbar/SnackbarAPI";
-import MemoHooks from "../../api/MemoHooks";
+import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import { MemoEvent } from "./MemoAPI";
+import DeleteIcon from "@mui/icons-material/Delete";
+import MemoHooks from "../../api/MemoHooks";
+import SnackbarAPI from "../Snackbar/SnackbarAPI";
+import ConfirmationAPI from "../ConfirmationDialog/ConfirmationAPI";
 
-interface MemoDeleteButtonProps {
+interface MemoDeleteMenuItemProps {
   memoTitle?: string;
+  onClick: () => void;
 }
 
-function MemoDeleteButton({
+function MemoDeleteMenuItem({
   memoId,
   memoTitle,
   attachedObjectId,
   attachedObjectType,
+  onClick,
   ...props
-}: MemoEvent & MemoDeleteButtonProps & IconButtonProps) {
+}: MemoEvent & MemoDeleteMenuItemProps & MenuItemProps) {
   const deleteMutation = MemoHooks.useDeleteMemo();
-  const handleDeleteMemo = () => {
+  const handleDeleteMemo = (event: any) => {
+    event.stopPropagation();
+    onClick();
     if (memoId) {
       ConfirmationAPI.openConfirmationDialog({
         text: `Do you really want to remove the Memo "${memoTitle}"? This action cannot be undone!`,
@@ -27,7 +31,7 @@ function MemoDeleteButton({
             {
               onSuccess: () => {
                 SnackbarAPI.openSnackbar({
-                  text: `Deleted memo ${memoTitle}`,
+                  text: `Deleted memo attached to ${attachedObjectType}`,
                   severity: "success",
                 });
               },
@@ -41,14 +45,13 @@ function MemoDeleteButton({
   };
 
   return (
-    <Tooltip title={"Delete memo"}>
-      <span>
-        <IconButton onClick={handleDeleteMemo} size={"small"} disableRipple>
-          <DeleteIcon /> <Typography variant="body1">Delete Memo</Typography>
-        </IconButton>
-      </span>
-    </Tooltip>
+    <MenuItem onClick={handleDeleteMemo} disabled={!memoId} {...props}>
+      <ListItemIcon>
+        <DeleteIcon fontSize="small" />
+      </ListItemIcon>
+      <ListItemText>Delete Memo</ListItemText>
+    </MenuItem>
   );
 }
 
-export default MemoDeleteButton;
+export default MemoDeleteMenuItem;

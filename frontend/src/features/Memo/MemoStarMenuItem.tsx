@@ -1,4 +1,5 @@
 import StarIcon from "@mui/icons-material/Star";
+import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
@@ -46,9 +47,7 @@ function MemoStarButton({ memoId, isStarred, onClick, ...props }: MemoStarButton
       disabled={updateMutation.isPending || memoId === undefined || isStarred === undefined}
       {...props}
     >
-      <ListItemIcon>
-        <StarIcon fontSize="small" />
-      </ListItemIcon>
+      <ListItemIcon>{isStarred ? <StarIcon fontSize="small" /> : <StarOutlineIcon fontSize="small" />}</ListItemIcon>
       <ListItemText>Mark/unmark memo</ListItemText>
     </MenuItem>
   );
