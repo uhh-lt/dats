@@ -40,7 +40,9 @@ class SpiderBase(scrapy.Spider):
 
     def generate_filename(self, response: Response) -> str:
         parsed_url = urlparse(response.url)
-        article_slug = Path(parsed_url.path).stem
+        article_slug = (
+            "" if parsed_url.path == "/" else Path(parsed_url.path).with_suffix("")
+        )
         filename = slugify(f"{self.prefix}-{parsed_url.netloc}-{article_slug}")
         return filename
 
