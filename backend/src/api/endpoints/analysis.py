@@ -28,6 +28,7 @@ from app.core.data.dto.analysis import (
     CodeFrequency,
     CodeOccurrence,
     DateGroupBy,
+    SampledSdocsResults,
     TimelineAnalysisResultNew,
     WordFrequencyResult,
 )
@@ -239,4 +240,24 @@ def word_frequency_analysis(
         page=page,
         page_size=page_size,
         sorts=sorts,
+    )
+
+
+@router.post(
+    "/sample_sdocs_by_tags",
+    response_model=List[SampledSdocsResults],
+    summary="Sample & Aggregate Source Documents by tags.",
+)
+def sample_sdocs_by_tags(
+    *,
+    db: Session = Depends(get_db_session),
+    project_id: int,
+    tag_groups: List[List[int]],
+    n: int,
+    frac: float,
+    authz_user: AuthzUser = Depends(),
+) -> List[SampledSdocsResults]:
+    authz_user.assert_in_project(project_id)
+    return AnalysisService().sample_sdocs_by_tags(
+        project_id=project_id, tag_ids=tag_groups, n=n, frac=frac
     )

@@ -32,6 +32,7 @@ import Whiteboard from "../views/whiteboard/Whiteboard";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
 import WordFrequency from "../views/analysis/WordFrequency/WordFrequency";
 import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard";
+import DocumentSampler from "../views/analysis/DocumentSampler/DocumentSampler";
 
 const router = createBrowserRouter([
   {
@@ -176,6 +177,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/table/:tableId",
         element: <TableView />,
+      },
+      {
+        path: "/project/:projectId/analysis/document-sampler",
+        element: <DocumentSampler />,
       },
       {
         path: "/project/:projectId/whiteboard",

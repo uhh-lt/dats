@@ -40,7 +40,12 @@ function Whiteboard() {
         {readonly ? (
           <Typography variant="h6">{whiteboard.data?.title} - READONLY</Typography>
         ) : (
-          <EditableTypography value={whiteboard.data?.title || "Loading"} onChange={handleChange} variant="h6" />
+          <EditableTypography
+            value={whiteboard.data?.title || "Loading"}
+            onChange={handleChange}
+            variant="h6"
+            whiteColor={true}
+          />
         )}
       </Portal>
       {whiteboard.isSuccess ? (

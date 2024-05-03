@@ -7,6 +7,7 @@ import {
   outlinedInputClasses,
   styled,
   useTheme,
+  StackProps,
 } from "@mui/material";
 import { Variant } from "@mui/material/styles/createTypography";
 import { FocusEventHandler, KeyboardEventHandler, useCallback, useRef, useState } from "react";
@@ -28,15 +29,20 @@ const CustomOutlinedInput = styled(OutlinedInput)(`
 interface EditableTypographyProps {
   value: string;
   onChange: (value: string) => void;
+  whiteColor: boolean;
+  stackProps?: Omit<StackProps, "direction" | "alignItems">;
 }
 
 function EditableTypography({
   value,
   onChange,
+  whiteColor,
+  stackProps,
   ...props
 }: EditableTypographyProps & Omit<TypographyProps<"div">, "onChange" | "onClick" | "component">) {
   const theme = useTheme();
   const textFieldRef = useRef<HTMLDivElement>(null);
+  const InputComponent = whiteColor ? CustomOutlinedInput : OutlinedInput;
 
   const [text, setText] = useState(value);
   const [isEditing, setIsEditing] = useState(false);
@@ -73,9 +79,9 @@ function EditableTypography({
   );
 
   return (
-    <Stack direction="row" alignItems="center">
+    <Stack direction="row" alignItems="center" {...stackProps}>
       {isEditing ? (
-        <CustomOutlinedInput
+        <InputComponent
           value={text}
           onChange={(event) => setText(event.target.value)}
           onBlur={handleChangeText}
@@ -94,7 +100,7 @@ function EditableTypography({
           <Typography {...props} color="inherit" component="div" onClick={handleClick}>
             {value}
           </Typography>
-          <IconButton onClick={() => setIsEditing(true)} sx={{ ml: 1, color: "white" }}>
+          <IconButton onClick={() => setIsEditing(true)} sx={{ ml: 1, color: whiteColor ? "white" : null }}>
             <EditIcon />
           </IconButton>
         </>

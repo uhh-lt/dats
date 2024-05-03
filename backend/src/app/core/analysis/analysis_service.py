@@ -1,12 +1,16 @@
 from typing import List
 
-from sqlalchemy import and_, func
+import pandas as pd
+from sqlalchemy import Integer, and_, case, func
+from sqlalchemy.dialects.postgresql import ARRAY, array_agg
+from sqlalchemy.orm import InstrumentedAttribute
 
 from app.core.data.crud.project import crud_project
 from app.core.data.dto.analysis import (
     AnnotationOccurrence,
     CodeFrequency,
     CodeOccurrence,
+    SampledSdocsResults,
 )
 from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
 from app.core.data.dto.code import CodeRead
@@ -15,11 +19,20 @@ from app.core.data.dto.span_annotation import SpanAnnotationRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.bbox_annotation import BBoxAnnotationORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
+from app.core.data.orm.document_tag import DocumentTagORM
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.span_annotation import SpanAnnotationORM
 from app.core.data.orm.span_text import SpanTextORM
 from app.core.db.sql_service import SQLService
 from app.util.singleton_meta import SingletonMeta
+
+
+def aggregate_ids(column: InstrumentedAttribute, label: str):
+    return func.array_remove(
+        array_agg(func.distinct(column), type_=ARRAY(Integer)),
+        None,
+        type_=ARRAY(Integer),
+    ).label(label)
 
 
 class AnalysisService(metaclass=SingletonMeta):
@@ -299,3 +312,81 @@ class AnalysisService(metaclass=SingletonMeta):
 
             # 3. return the result
             return span_code_occurrences + bbox_code_occurrences
+
+    def sample_sdocs_by_tags(
+        self, project_id: int, tag_ids: List[List[int]], n: int, frac: float
+    ) -> List[SampledSdocsResults]:
+        all_tag_ids = [tag_id for group in tag_ids for tag_id in group]
+        tag2group = {
+            tag_id: idx for idx, group in enumerate(tag_ids) for tag_id in group
+        }
+
+        with self.sqls.db_session() as db:
+            query = (
+                db.query(SourceDocumentORM.id, aggregate_ids(DocumentTagORM.id, "tags"))
+                .join(SourceDocumentORM.document_tags)
+                .where(DocumentTagORM.id.in_(all_tag_ids))
+                .group_by(SourceDocumentORM.id)
+                # this having clause ensures that the document has one tag from each group
+                .having(
+                    and_(
+                        *[
+                            func.sum(
+                                case(
+                                    (DocumentTagORM.id.in_(group_ids), 1),
+                                    else_=0,
+                                )
+                            )
+                            == 1
+                            for group_ids in tag_ids
+                        ]
+                    )
+                )
+            )
+            res = query.all()
+            if len(res) == 0:
+                return []
+
+            data = []
+            groups = set()
+            for x in res:
+                sdoc = x[0]
+                tags = x[1]
+                datum = {
+                    "sdoc": sdoc,
+                }
+                for tag_id in tags:
+                    group_id = tag2group[tag_id]
+                    datum[f"group_{group_id}"] = tag_id
+                    groups.add(f"group_{group_id}")
+                data.append(datum)
+
+            df = pd.DataFrame(data)
+            counts = df.groupby(by=list(groups))["sdoc"].apply(list).to_dict()
+            min_count = min([len(x) for x in counts.values()])
+            sample_fixed = (
+                df.groupby(by=list(groups))
+                .sample(n=min(n, min_count))
+                .groupby(by=list(groups))["sdoc"]
+                .apply(list)
+                .to_dict()
+            )
+            sample_relative = (
+                df.groupby(by=list(groups))
+                .sample(frac=frac)
+                .groupby(by=list(groups))["sdoc"]
+                .apply(list)
+                .to_dict()
+            )
+
+            result: List[SampledSdocsResults] = []
+            for group in counts.keys():
+                result.append(
+                    SampledSdocsResults(
+                        tags=[group] if isinstance(group, int) else list(group),
+                        sdocs=counts.get(group, []),
+                        sample_fixed=sample_fixed.get(group, []),
+                        sample_relative=sample_relative.get(group, []),
+                    )
+                )
+            return result

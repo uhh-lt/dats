@@ -90,6 +90,7 @@ export type { ProjectRead } from "./models/ProjectRead";
 export type { ProjectReadAction } from "./models/ProjectReadAction";
 export type { ProjectUpdate } from "./models/ProjectUpdate";
 export type { PublicUserRead } from "./models/PublicUserRead";
+export type { SampledSdocsResults } from "./models/SampledSdocsResults";
 export { SDocStatus } from "./models/SDocStatus";
 export { SearchColumns } from "./models/SearchColumns";
 export type { SimSearchImageHit } from "./models/SimSearchImageHit";
