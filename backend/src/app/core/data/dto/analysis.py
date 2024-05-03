@@ -90,6 +90,17 @@ class WordFrequencyResult(BaseModel):
     )
 
 
+class SampledSdocsResults(BaseModel):
+    tags: List[int] = Field(description="The tags aggregated by.")
+    sdocs: List[int] = Field(description="The grouped SourceDocument IDs.")
+    sample_fixed: List[int] = Field(
+        description="The fixed sample of SourceDocument IDs."
+    )
+    sample_relative: List[int] = Field(
+        description="The relative sample of SourceDocument IDs."
+    )
+
+
 class DateGroupBy(Enum):
     YEAR = "YEAR"
     MONTH = "MONTH"
