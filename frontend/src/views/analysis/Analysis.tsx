@@ -64,6 +64,15 @@ function Analysis() {
             </Grid>
 
             <Grid item>
+              <AnalysisCard
+                to={"document-sampler"}
+                title={"Document Sampler"}
+                description={"Sample documents for annotation projects."}
+                color={"#77dd77"}
+              />
+            </Grid>
+
+            <Grid item>
               <AnalysisCard to={"table"} title={"Table"} description={"Analyse with tables."} color={"#77dd77"} />
             </Grid>
             {range(0, 2).map((i) => (

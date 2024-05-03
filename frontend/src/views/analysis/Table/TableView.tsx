@@ -33,7 +33,12 @@ function TableView() {
   return (
     <>
       <Portal container={appBarContainerRef?.current}>
-        <EditableTypography value={table.data?.title || "Loading"} onChange={handleChange} variant="h6" />
+        <EditableTypography
+          value={table.data?.title || "Loading"}
+          onChange={handleChange}
+          variant="h6"
+          whiteColor={true}
+        />
       </Portal>
       {table.isSuccess ? (
         <TableViewContent key={`${projectId}-${tableId}`} table={table.data} />
