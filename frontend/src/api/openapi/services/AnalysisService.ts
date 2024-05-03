@@ -13,6 +13,7 @@ import type { ColumnInfo_TimelineAnalysisColumns_ } from "../models/ColumnInfo_T
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
 import type { DateGroupBy } from "../models/DateGroupBy";
 import type { Filter_TimelineAnalysisColumns__Input } from "../models/Filter_TimelineAnalysisColumns__Input";
+import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { TimelineAnalysisResultNew } from "../models/TimelineAnalysisResultNew";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
 
@@ -283,6 +284,38 @@ export class AnalysisService {
         project_id: projectId,
         page: page,
         page_size: pageSize,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+
+  /**
+   * Sample & Aggregate Source Documents by tags.
+   * @returns SampledSdocsResults Successful Response
+   * @throws ApiError
+   */
+  public static sampleSdocsByTags({
+    projectId,
+    n,
+    frac,
+    requestBody,
+  }: {
+    projectId: number;
+    n: number;
+    frac: number;
+    requestBody: Array<Array<number>>;
+  }): CancelablePromise<Array<SampledSdocsResults>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/sample_sdocs_by_tags",
+      query: {
+        project_id: projectId,
+        n: n,
+        frac: frac,
       },
       body: requestBody,
       mediaType: "application/json",

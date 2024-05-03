@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { QueryKey } from "./QueryKey";
 import { AnalysisService, AnnotationOccurrence, CodeFrequency, CodeOccurrence } from "./openapi";
 
@@ -41,10 +41,13 @@ const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: 
     },
   );
 
+const useSampleSdocsByTags = () => useMutation(AnalysisService.sampleSdocsByTags);
+
 const AnalysisHooks = {
   useCodeFrequencies,
   useCodeOccurrences,
   useAnnotationOccurrences,
+  useSampleSdocsByTags,
 };
 
 export default AnalysisHooks;

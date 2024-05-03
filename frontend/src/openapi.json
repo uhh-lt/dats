@@ -858,7 +858,7 @@
       },
       "get": {
         "tags": ["project"],
-        "summary": "Returns the Memo of the current User for the Project with the given ID.",
+        "summary": "Returns the Memos of the current User for the Project with the given ID.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -1667,7 +1667,7 @@
       },
       "get": {
         "tags": ["documentTag"],
-        "summary": "Returns the Memo attached to the DocumentTag with the given ID if it exists.",
+        "summary": "Returns the Memos attached to the DocumentTag with the given ID if it exists.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -2377,7 +2377,7 @@
       },
       "get": {
         "tags": ["spanAnnotation"],
-        "summary": "Returns the Memo attached to the SpanAnnotation with the given ID if it exists.",
+        "summary": "Returns the Memos attached to the SpanAnnotation with the given ID if it exists.",
         "operationId": "get_memos",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -4119,6 +4119,54 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WordFrequencyResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/sample_sdocs_by_tags": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Sample & Aggregate Source Documents by tags.",
+        "operationId": "sample_sdocs_by_tags",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "n", "in": "query", "required": true, "schema": { "type": "integer", "title": "N" } },
+          { "name": "frac", "in": "query", "required": true, "schema": { "type": "number", "title": "Frac" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": { "type": "array", "items": { "type": "integer" } },
+                "title": "Tag Groups"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SampledSdocsResults" },
+                  "title": "Response Analysis-Sample Sdocs By Tags"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -6540,6 +6588,37 @@
         "description": "A user object with information that everybody may see."
       },
       "SDocStatus": { "type": "string", "enum": ["unfinished_or_erroneous", "finished"], "title": "SDocStatus" },
+      "SampledSdocsResults": {
+        "properties": {
+          "tags": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The tags aggregated by."
+          },
+          "sdocs": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sdocs",
+            "description": "The grouped SourceDocument IDs."
+          },
+          "sample_fixed": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sample Fixed",
+            "description": "The fixed sample of SourceDocument IDs."
+          },
+          "sample_relative": {
+            "items": { "type": "integer" },
+            "type": "array",
+            "title": "Sample Relative",
+            "description": "The relative sample of SourceDocument IDs."
+          }
+        },
+        "type": "object",
+        "required": ["tags", "sdocs", "sample_fixed", "sample_relative"],
+        "title": "SampledSdocsResults"
+      },
       "SearchColumns": {
         "type": "string",
         "enum": [
