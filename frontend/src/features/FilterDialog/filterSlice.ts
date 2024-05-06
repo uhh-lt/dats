@@ -192,5 +192,18 @@ export const filterReducer = {
   },
 };
 
+// selectors
+export const selectFilterByName = (state: FilterState, rootFilterId: string) => {
+  // check if filter exists
+  if (!state.filter[rootFilterId]) {
+    return {
+      id: rootFilterId,
+      items: [],
+      logic_operator: LogicalOperator.AND,
+    };
+  }
+  return state.filter[rootFilterId];
+};
+
 export type FilterReducer = typeof filterReducer;
 export type FilterActions = CaseReducerActions<FilterReducer, string>;

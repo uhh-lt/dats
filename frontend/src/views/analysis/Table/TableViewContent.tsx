@@ -29,7 +29,6 @@ import { HotTable } from "@handsontable/react";
 import Handsontable from "handsontable/base";
 import "handsontable/dist/handsontable.full.min.css";
 import { registerAllModules } from "handsontable/registry";
-import { AnnotationOccurrence } from "../../../api/openapi/models/AnnotationOccurrence.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import GenericAnchorMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorMenu.tsx";
@@ -241,14 +240,12 @@ function TableViewContent({ table }: TableViewContentProps) {
   };
 
   // table actions: add annotations
-  const onAddAnnotations = (annotations: AnnotationOccurrence[], addRows: boolean) => {
+  const onAddSpanAnnotations = (spanAnnotationIds: number[], addRows: boolean) => {
     const hot = hotRef.current?.hotInstance;
     if (!hot) return;
 
     const cellInfo = getSelectedCellInfo(hot);
-    const dataToAdd = annotations.map(
-      (a) => `<annotation sdocId="${a.sdoc.id}" codeId="${a.code.id}">${a.text}</annotation>`,
-    );
+    const dataToAdd = spanAnnotationIds.map((spanAnnotationId) => `<annotation id="${spanAnnotationId}" />`);
     addData(hot, cellInfo, dataToAdd, addRows);
   };
 
@@ -350,9 +347,8 @@ function TableViewContent({ table }: TableViewContentProps) {
           />
           <AddAnnotationDialog
             projectId={table.project_id}
-            userIds={[table.user_id]}
             shouldOpen={() => isCellSelected(hotRef.current?.hotInstance)}
-            onConfirmSelection={onAddAnnotations}
+            onConfirmSelection={onAddSpanAnnotations}
             buttonProps={{ variant: "outlined" }}
           />
           <AddDocumentDialog

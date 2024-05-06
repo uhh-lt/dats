@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
-import { LogicalOperator } from "../../../api/openapi/models/LogicalOperator.ts";
-import { StringOperator } from "../../../api/openapi/models/StringOperator.ts";
-import { FilterState, filterReducer } from "../../../features/FilterDialog/filterSlice.ts";
+import { AnnotatedSegmentsColumns } from "../../api/openapi/models/AnnotatedSegmentsColumns.ts";
+import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
+import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
+import { FilterState, filterReducer } from "../../features/FilterDialog/filterSlice.ts";
 
 const initialState: FilterState = {
   filter: {
@@ -28,12 +28,12 @@ const initialState: FilterState = {
   expertMode: false,
 };
 
-const annotatedSegmentsFilterSlice = createSlice({
-  name: "annotatedSegmentsFilter",
+const satFilterSlice = createSlice({
+  name: "satFilter",
   initialState,
   reducers: filterReducer,
 });
 
-export const AnnotatedSegmentsFilterActions = annotatedSegmentsFilterSlice.actions;
+export const SATFilterActions = satFilterSlice.actions;
 
-export default annotatedSegmentsFilterSlice.reducer;
+export default satFilterSlice.reducer;

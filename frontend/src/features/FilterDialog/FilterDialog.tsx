@@ -11,6 +11,7 @@ import { MyFilter, countFilterExpressions } from "./filterUtils.ts";
 export interface FilterDialogProps {
   anchorEl: HTMLElement | null;
   filter: MyFilter;
+  filterName?: string;
   expertMode: boolean;
   onChangeExpertMode: (expertMode: boolean) => void;
   buttonProps?: Omit<ButtonProps, "onClick" | "startIcon">;
@@ -22,6 +23,7 @@ function FilterDialog({
   expertMode,
   onChangeExpertMode,
   buttonProps,
+  filterName = "root",
   ...props
 }: FilterDialogProps & FilterRendererProps) {
   // local client state
@@ -34,7 +36,7 @@ function FilterDialog({
   // actions
   const handleOpenEditDialog = () => {
     setOpen(true);
-    dispatch(props.filterActions.onStartFilterEdit({ rootFilterId: "root" }));
+    dispatch(props.filterActions.onStartFilterEdit({ rootFilterId: filterName }));
   };
 
   const handleApplyChanges = () => {
@@ -69,7 +71,6 @@ function FilterDialog({
             p: 1,
           },
         }}
-        sx={{ mt: "56px" }}
       >
         {expertMode ? <FilterRenderer {...props} /> : <FilterRendererSimple {...props} />}
         <Box display="flex" width="100%">
