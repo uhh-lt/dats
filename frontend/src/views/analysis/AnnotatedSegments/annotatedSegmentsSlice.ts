@@ -1,12 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice.ts";
 import { MRT_PaginationState, MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
+import { SATFilterActions } from "../../../components/SpanAnnotationTable/satFilterSlice.ts";
 import { RootState } from "../../../store/store.ts";
 
 export interface AnnotatedSegmentsState {
   isSplitView: boolean;
   contextSize: number;
-  selectedUserIds: number[];
   paginationModel: MRT_PaginationState;
   rowSelectionModel: MRT_RowSelectionState;
   sortModel: MRT_SortingState;
@@ -15,7 +14,6 @@ export interface AnnotatedSegmentsState {
 const initialState: AnnotatedSegmentsState = {
   isSplitView: false,
   contextSize: 100,
-  selectedUserIds: [],
   paginationModel: { pageIndex: 0, pageSize: 5 },
   rowSelectionModel: {},
   sortModel: [],
@@ -31,9 +29,6 @@ export const AnnotatedSegmentsSlice = createSlice({
     setContextSize: (state, action: PayloadAction<number>) => {
       state.contextSize = action.payload;
     },
-    setSelectedUserIds: (state, action: PayloadAction<number[]>) => {
-      state.selectedUserIds = action.payload;
-    },
     onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
       state.paginationModel = action.payload;
     },
@@ -46,7 +41,7 @@ export const AnnotatedSegmentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(AnnotatedSegmentsFilterActions.onFinishFilterEdit, (state) => {
+      .addCase(SATFilterActions.onFinishFilterEdit, (state) => {
         // reset page when filter changes
         state.paginationModel.pageIndex = 0;
 

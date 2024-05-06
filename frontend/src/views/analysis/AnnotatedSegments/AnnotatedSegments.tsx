@@ -1,11 +1,9 @@
 import ReorderIcon from "@mui/icons-material/Reorder";
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import VerticalSplitIcon from "@mui/icons-material/VerticalSplit";
 import {
   Box,
   Card,
   CardContent,
-  CardHeader,
   Grid,
   IconButton,
   MenuItem,
@@ -25,7 +23,6 @@ import MemoAPI from "../../../features/Memo/MemoAPI.ts";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable.tsx";
-import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector.tsx";
 import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
 import SpanAnnotationCardList from "./SpanAnnotationCardList.tsx";
 import { AnnotatedSegmentsActions, selectAnnotationIds } from "./annotatedSegmentsSlice.ts";
@@ -93,7 +90,6 @@ function AnnotatedSegments() {
             <CardContent sx={{ p: 1, pb: "8px !important" }}>
               <Stack direction="row" alignItems="center">
                 <Box sx={{ flexGrow: 1 }} />
-                <AnnotatedSegmentsUserSelector projectId={projectId} mr={1} />
                 <TextField
                   label="Context Size"
                   type="number"
@@ -101,13 +97,6 @@ function AnnotatedSegments() {
                   value={contextSize}
                   onChange={(event) => dispatch(AnnotatedSegmentsActions.setContextSize(parseInt(event.target.value)))}
                 />
-                <Tooltip title={"Export segments"}>
-                  <span>
-                    <IconButton disabled>
-                      <SaveAltIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
                 <Tooltip title="Split/not split view">
                   <IconButton onClick={handleClickSplitView}>
                     {isSplitView ? <ReorderIcon /> : <VerticalSplitIcon />}
@@ -129,14 +118,10 @@ function AnnotatedSegments() {
             />
           )}
 
-          <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer h100">
-            <CardHeader title="Annotated Segments" />
-            <CardContent className="myFlexFillAllContainer h100" style={{ padding: 0 }}>
-              <div className="h100" style={{ width: "100%" }}>
-                <AnnotatedSegmentsTable onRowContextMenu={handleRowContextMenu} />
-              </div>
-            </CardContent>
-          </Card>
+          <AnnotatedSegmentsTable
+            cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
+            onRowContextMenu={handleRowContextMenu}
+          />
         </Grid>
         {isSplitView && <SpanAnnotationCardList spanAnnotationIds={selectedAnnotationIds} />}
       </Grid>

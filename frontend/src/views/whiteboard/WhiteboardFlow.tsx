@@ -480,13 +480,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      {userId && (
-                        <AddAnnotationNodeDialog
-                          projectId={projectId}
-                          userIds={[userId]}
-                          onClick={handleChangePendingAction}
-                        />
-                      )}
+                      <AddAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       {userId && (
                         <AddMemoNodeDialog projectId={projectId} userId={userId} onClick={handleChangePendingAction} />
                       )}

@@ -1,5 +1,4 @@
-import { Checkbox, ListItemText, MenuItem, Select, SelectChangeEvent, Stack, StackProps } from "@mui/material";
-import Typography from "@mui/material/Typography";
+import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import React from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import UserName from "../../components/UserName.tsx";
@@ -9,15 +8,10 @@ interface UserSelectorProps {
   userIds: number[];
   onUserIdChange: (userIds: number[]) => void;
   title: string;
+  selectMultiple?: boolean;
 }
 
-function UserSelector({
-  projectId,
-  userIds,
-  onUserIdChange,
-  title,
-  ...props
-}: UserSelectorProps & Omit<StackProps, "direction" | "alignItems">) {
+function UserSelector({ projectId, userIds, onUserIdChange, title, selectMultiple = true }: UserSelectorProps) {
   // global server state (react query)
   const projectUsers = ProjectHooks.useGetAllUsers(projectId);
 
@@ -28,14 +22,12 @@ function UserSelector({
 
   // render
   return (
-    <Stack direction="row" alignItems="center" {...props}>
-      <Typography variant="body1" color="inherit" component="div" className="overflow-ellipsis" flexShrink={0}>
-        {title}
-      </Typography>
+    <FormControl sx={{ mx: 1 }}>
+      <InputLabel id="user-select-label">{title}</InputLabel>
       <Select
-        sx={{ ml: 1, backgroundColor: "white" }}
-        multiple
-        fullWidth
+        labelId="user-select-label"
+        label={title}
+        multiple={selectMultiple}
         size="small"
         value={userIds}
         onChange={handleChange}
@@ -59,7 +51,7 @@ function UserSelector({
             </MenuItem>
           ))}
       </Select>
-    </Stack>
+    </FormControl>
   );
 }
 
