@@ -41,11 +41,11 @@ def aggregate_ids(column: InstrumentedAttribute, label: str):
 
 
 class AnnotatedSegmentsColumns(str, AbstractColumns):
+    SPAN_TEXT = "ASC_SPAN_TEXT"
+    CODE_ID = "ASC_CODE_ID"
+    MEMO_CONTENT = "ASC_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME"
     DOCUMENT_TAG_ID_LIST = "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
-    CODE_ID = "ASC_CODE_ID"
-    SPAN_TEXT = "ASC_SPAN_TEXT"
-    MEMO_CONTENT = "ASC_MEMO_CONTENT"
 
     def get_filter_column(self, **kwargs):
         match self:
