@@ -1,8 +1,9 @@
-import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, DialogTitle, Stack } from "@mui/material";
+import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import TagSelector from "../../../components/Selectors/TagSelector.tsx";
+import TagTable from "../../../components/TagTable/TagTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -14,7 +15,9 @@ export interface AddTagNodeDialogProps extends AddNodeDialogProps {
 }
 
 function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogProps) {
+  // local state
   const [open, setOpen] = useState(false);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   const handleOpenDialogClick = () => {
     setOpen(true);
@@ -22,9 +25,10 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
 
   const handleClose = () => {
     setOpen(false);
+    setRowSelectionModel({});
   };
 
-  const handleAddTags = (tags: DocumentTagRead[]) => {
+  const handleConfirmSelection = (tags: DocumentTagRead[]) => {
     const addTagNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
       reactFlowService.addNodes(createTagNodes({ tags, position: position }));
     onClick(addTagNode);
@@ -38,10 +42,23 @@ function AddTagNodeDialog({ projectId, buttonProps, onClick }: AddTagNodeDialogP
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select tags to add to Whiteboard</DialogTitle>
-        <TagSelector projectId={projectId} onAddTags={handleAddTags} />
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-        </DialogActions>
+        <TagTable
+          projectId={projectId}
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionChange={setRowSelectionModel}
+          renderBottomToolbar={(props) => (
+            <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+              <Box flexGrow={1} />
+              <Button onClick={handleClose}>Close</Button>
+              <Button
+                onClick={() => handleConfirmSelection(props.selectedTags)}
+                disabled={props.selectedTags.length === 0}
+              >
+                Add {props.selectedTags.length > 0 ? props.selectedTags.length : null} Codes
+              </Button>
+            </Stack>
+          )}
+        />
       </Dialog>
     </>
   );
