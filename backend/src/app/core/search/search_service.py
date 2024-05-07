@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Tuple
 
 from sqlalchemy import Integer, String, cast, func
 from sqlalchemy.dialects.postgresql import ARRAY, array, array_agg
@@ -8,6 +8,8 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
 from app.core.data.dto.search import (
+    ElasticSearchDocumentHit,
+    PaginatedElasticSearchDocumentHits,
     SearchColumns,
     SimSearchImageHit,
     SimSearchQuery,
@@ -30,6 +32,7 @@ from app.core.filters.columns import (
     ColumnInfo,
 )
 from app.core.filters.filtering import Filter, apply_filtering
+from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting
 from app.core.search.elasticsearch_service import ElasticSearchService
 from app.core.search.simsearch_service import SimSearchService
@@ -71,26 +74,50 @@ class SearchService(metaclass=SingletonMeta):
         project_id: int,
         search_query: str,
         expert_mode: bool,
+        highlight: bool,
         filter: Filter[SearchColumns],
         sorts: List[Sort[SearchColumns]],
-    ) -> List[int]:
-        with self.sqls.db_session() as db:
-            filtered_sdoc_ids = self._get_filtered_sdoc_ids(
-                db, project_id, filter, sorts
-            )
-
+        page_number: Optional[int] = None,
+        page_size: Optional[int] = None,
+    ) -> PaginatedElasticSearchDocumentHits:
         if search_query.strip() == "":
-            return filtered_sdoc_ids
+            with self.sqls.db_session() as db:
+                filtered_sdoc_ids, total_results = self._get_filtered_sdoc_ids(
+                    db,
+                    project_id,
+                    filter,
+                    sorts,
+                    page_number=page_number,
+                    page_size=page_size,
+                )
+            return PaginatedElasticSearchDocumentHits(
+                hits=[
+                    ElasticSearchDocumentHit(sdoc_id=sdoc_id)
+                    for sdoc_id in filtered_sdoc_ids
+                ],
+                total_results=total_results,
+            )
         else:
-            # use elasticseach for full text seach
-            elastic_hits = ElasticSearchService().search_sdocs_by_content_query(
+            with self.sqls.db_session() as db:
+                filtered_sdoc_ids, _ = self._get_filtered_sdoc_ids(
+                    db, project_id, filter, sorts
+                )
+            # use elasticseach for full text search
+            if page_number is not None and page_size is not None:
+                skip = page_number * page_size
+                limit = page_size
+            else:
+                skip = None
+                limit = None
+            return ElasticSearchService().search_sdocs_by_content_query(
                 proj_id=project_id,
                 query=search_query,
                 sdoc_ids=set(filtered_sdoc_ids),
                 use_simple_query=not expert_mode,
+                highlight=highlight,
+                skip=skip,
+                limit=limit,
             )
-
-            return [hit.sdoc_id for hit in elastic_hits.hits]
 
     def _get_filtered_sdoc_ids(
         self,
@@ -98,7 +125,9 @@ class SearchService(metaclass=SingletonMeta):
         project_id: int,
         filter: Filter[SearchColumns],
         sorts: Optional[List[Sort[SearchColumns]]] = None,
-    ) -> List[int]:
+        page_number: Optional[int] = None,
+        page_size: Optional[int] = None,
+    ) -> Tuple[List[int], int]:
         tag_ids_agg = aggregate_ids(
             DocumentTagORM.id, label=SearchColumns.DOCUMENT_TAG_ID_LIST
         )
@@ -146,14 +175,20 @@ class SearchService(metaclass=SingletonMeta):
         if sorts is not None:
             query = apply_sorting(query=query, sorts=sorts, db=db)
 
-        # query = query.order_by(
-        #     SourceDocumentORM.id
-        # )  # this is very important, otherwise pagination will not work!
-        # query, pagination = apply_pagination(
-        #     query=query, page_number=page + 1, page_size=page_size
-        # )
+        if page_number is not None and page_size is not None:
+            query = query.order_by(
+                SourceDocumentORM.id
+            )  # this is very important, otherwise pagination will not work!
+            query, pagination = apply_pagination(
+                query=query, page_number=page_number + 1, page_size=page_size
+            )
+            total_results = pagination.total_results
+            sdoc_ids = [row[0] for row in query.all()]  # returns paginated results
+        else:
+            sdoc_ids = [row[0] for row in query.all()]  #  returns all results
+            total_results = len(sdoc_ids)
 
-        return [row[0] for row in query.all()]
+        return sdoc_ids, total_results
 
     def compute_tag_statistics(
         self,
@@ -340,7 +375,7 @@ class SearchService(metaclass=SingletonMeta):
         query: SimSearchQuery,
     ) -> List[SimSearchSentenceHit]:
         with self.sqls.db_session() as db:
-            filtered_sdoc_ids = self._get_filtered_sdoc_ids(
+            filtered_sdoc_ids, _ = self._get_filtered_sdoc_ids(
                 db, query.proj_id, query.filter
             )
         return self.sss.find_similar_sentences(filtered_sdoc_ids, query=query)
@@ -350,7 +385,7 @@ class SearchService(metaclass=SingletonMeta):
         query: SimSearchQuery,
     ) -> List[SimSearchImageHit]:
         with self.sqls.db_session() as db:
-            filtered_sdoc_ids = self._get_filtered_sdoc_ids(
+            filtered_sdoc_ids, _ = self._get_filtered_sdoc_ids(
                 db, query.proj_id, query.filter
             )
         return self.sss.find_similar_images(filtered_sdoc_ids, query=query)
