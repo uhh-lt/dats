@@ -3,10 +3,10 @@ import { LoadingButton } from "@mui/lab";
 import { MenuItem, Select, Stack } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks";
-import TagHooks from "../../../api/TagHooks";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import TagHooks from "../../../api/TagHooks.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 function BulkDocTagger() {
   // global client state (react router)
@@ -23,7 +23,7 @@ function BulkDocTagger() {
   const [selectedDocumentTagId, setSelectedDocumentTagId] = useState(-1);
 
   // mutation
-  const { mutate: linkDocumentTags, isLoading: isLinkingDocumentTags } = TagHooks.useBulkLinkDocumentTags();
+  const { mutate: linkDocumentTags, isPending: isLinkingDocumentTags } = TagHooks.useBulkLinkDocumentTags();
 
   // actions
   const bulkTagDocuments = () => {

@@ -1,10 +1,9 @@
-import { GridColDef, DataGrid } from "@mui/x-data-grid";
 import { useMemo } from "react";
-import { AttachedObjectType } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
-import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2.tsx";
+import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
+import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer.tsx";
 
 function SdocTable({ sdocIds }: { sdocIds: number[] }) {
   // global client state (react router)

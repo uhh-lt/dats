@@ -42,7 +42,10 @@ const useAnnotationOccurrences = (projectId: number, userIds: number[], codeId: 
     enabled: userIds.length > 0 && !!codeId,
   });
 
-const useSampleSdocsByTags = () => useMutation(AnalysisService.sampleSdocsByTags);
+const useSampleSdocsByTags = () =>
+  useMutation({
+    mutationFn: AnalysisService.sampleSdocsByTags,
+  });
 
 const AnalysisHooks = {
   useCodeFrequencies,
