@@ -6,6 +6,7 @@ import type { Body_search_search_sdocs } from "../models/Body_search_search_sdoc
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
+import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
 import type { SimSearchQuery } from "../models/SimSearchQuery";
@@ -38,21 +39,27 @@ export class SearchService {
     });
   }
   /**
-   * Returns all SourceDocument Ids that match the query parameters.
-   * @returns number Successful Response
+   * Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.
+   * @returns PaginatedElasticSearchDocumentHits Successful Response
    * @throws ApiError
    */
   public static searchSdocs({
     searchQuery,
     projectId,
     expertMode,
+    highlight,
     requestBody,
+    pageNumber,
+    pageSize,
   }: {
     searchQuery: string;
     projectId: number;
     expertMode: boolean;
+    highlight: boolean;
     requestBody: Body_search_search_sdocs;
-  }): CancelablePromise<Array<number>> {
+    pageNumber?: number | null;
+    pageSize?: number | null;
+  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/sdoc",
@@ -60,6 +67,9 @@ export class SearchService {
         search_query: searchQuery,
         project_id: projectId,
         expert_mode: expertMode,
+        highlight: highlight,
+        page_number: pageNumber,
+        page_size: pageSize,
       },
       body: requestBody,
       mediaType: "application/json",
