@@ -1,7 +1,7 @@
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import { IconButton, Tooltip } from "@mui/material";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface StartRefreshButtonProps {
   isRefresh: boolean;

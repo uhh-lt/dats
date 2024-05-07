@@ -1,8 +1,8 @@
 import { Box, Card, CardContent, CardContentProps, CardHeader, CardProps, Typography } from "@mui/material";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { ChartDataPoint } from "./ChartDataPoint";
-import StartRefreshButton from "./StartRefreshButton";
-import { selectIsValuesOutdated } from "./documentSamplerSlice";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { ChartDataPoint } from "./ChartDataPoint.ts";
+import StartRefreshButton from "./StartRefreshButton.tsx";
+import { selectIsValuesOutdated } from "./documentSamplerSlice.ts";
 
 interface DataCardProps {
   title: string;
