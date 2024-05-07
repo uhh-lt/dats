@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MRT_PaginationState, MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { SATFilterActions } from "../../../components/SpanAnnotationTable/satFilterSlice.ts";
-import { RootState } from "../../../store/store.ts";
 
 export interface AnnotatedSegmentsState {
   isSplitView: boolean;
@@ -53,11 +52,4 @@ export const AnnotatedSegmentsSlice = createSlice({
 });
 
 export const AnnotatedSegmentsActions = AnnotatedSegmentsSlice.actions;
-
-// selectors
-export const selectAnnotationIds = (state: RootState) =>
-  Object.entries(state.annotatedSegments.rowSelectionModel)
-    .filter(([, value]) => value)
-    .map(([key]) => parseInt(key));
-
 export default AnnotatedSegmentsSlice.reducer;

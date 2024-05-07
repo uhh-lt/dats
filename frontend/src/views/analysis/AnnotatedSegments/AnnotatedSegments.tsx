@@ -13,7 +13,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useContext, useRef } from "react";
+import React, { useContext, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
@@ -25,7 +25,7 @@ import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable.tsx";
 import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
 import SpanAnnotationCardList from "./SpanAnnotationCardList.tsx";
-import { AnnotatedSegmentsActions, selectAnnotationIds } from "./annotatedSegmentsSlice.ts";
+import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -39,7 +39,13 @@ function AnnotatedSegments() {
   // global client state (redux)
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
   const isSplitView = useAppSelector((state) => state.annotatedSegments.isSplitView);
-  const selectedAnnotationIds = useAppSelector(selectAnnotationIds);
+  const rowSelectionModel = useAppSelector((state) => state.annotatedSegments.rowSelectionModel);
+  const selectedAnnotationIds = useMemo(() => {
+    return Object.entries(rowSelectionModel)
+      .filter(([, value]) => value)
+      .map(([key]) => parseInt(key));
+  }, [rowSelectionModel]);
+
   const dispatch = useAppDispatch();
 
   // actions
