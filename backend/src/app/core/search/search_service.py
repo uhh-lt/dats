@@ -183,11 +183,9 @@ class SearchService(metaclass=SingletonMeta):
                 query=query, page_number=page_number + 1, page_size=page_size
             )
             total_results = pagination.total_results
-            sdoc_ids = [
-                row[0] for row in query.all()
-            ]  # query returns only the paginated results
+            sdoc_ids = [row[0] for row in query.all()]  # returns paginated results
         else:
-            sdoc_ids = [row[0] for row in query.all()]  # query returns all results
+            sdoc_ids = [row[0] for row in query.all()]  #  returns all results
             total_results = len(sdoc_ids)
 
         return sdoc_ids, total_results

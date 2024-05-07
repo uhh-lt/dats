@@ -583,10 +583,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         else:
             q = {"query_string": {"query": query, "default_field": "content"}}
 
-        if highlight:
-            highlight_query = {"fields": {"content": {}}}
-        else:
-            highlight_query = None
+        highlight_query = {"fields": {"content": {}}} if highlight else None
 
         return self.__search_sdocs(
             proj_id=proj_id,
