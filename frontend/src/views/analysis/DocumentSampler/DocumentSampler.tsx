@@ -1,16 +1,16 @@
 import { Grid, Portal, Typography } from "@mui/material";
 import { useContext, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
-import AnalysisHooks from "../../../api/AnalysisHooks";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import TagGroupCreator from "./TagGroupCreator";
-import DocumentsBarChart from "./DocumentsBarChart";
-import DocumentsTable from "./DocumentsTable";
-import SamplingStrategySelector from "./SamplingStrategySelector";
-import { DocumentSamplerActions } from "./documentSamplerSlice";
+import AnalysisHooks from "../../../api/AnalysisHooks.ts";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import DocumentsBarChart from "./DocumentsBarChart.tsx";
+import DocumentsTable from "./DocumentsTable.tsx";
+import SamplingStrategySelector from "./SamplingStrategySelector.tsx";
+import TagGroupCreator from "./TagGroupCreator.tsx";
+import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
 function DocumentSampler() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -82,7 +82,6 @@ function DocumentSampler() {
         <Grid item md={4} className="myFlexContainer h100">
           <TagGroupCreator
             tags={tags.data || []}
-            tagsMap={tagsMap}
             aggregationGroups={aggregationGroups}
             cardProps={{ className: "myFlexFillAllContainer", sx: { mb: 2 } }}
           />
