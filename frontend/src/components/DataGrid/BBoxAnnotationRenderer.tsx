@@ -30,7 +30,7 @@ function BBoxAnnotationRendererWithoutData({ bboxAnnotationId }: { bboxAnnotatio
 function BBoxAnnotationRendererWithData({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotationReadResolvedCode }) {
   return (
     <Stack direction="row" alignItems="center">
-      <CodeRenderer code={bboxAnnotation.code} />
+      <CodeRenderer code={bboxAnnotation.code.id} />
       {": "}
       {`${bboxAnnotation.x_min}, ${bboxAnnotation.y_min}, ${bboxAnnotation.x_max}, ${bboxAnnotation.y_max}`}
     </Stack>

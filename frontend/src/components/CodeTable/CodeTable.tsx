@@ -1,22 +1,21 @@
-import { Button, Stack } from "@mui/material";
-import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
-import { useMemo, useState } from "react";
+import {
+  MRT_ColumnDef,
+  MRT_RowSelectionState,
+  MRT_TableInstance,
+  MaterialReactTable,
+  useMaterialReactTable,
+} from "material-react-table";
+import { useMemo } from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 
 import SquareIcon from "@mui/icons-material/Square";
 
-const rowSelectionModelToIds = (rowSelectionModel: MRT_RowSelectionState) => {
-  return Object.entries(rowSelectionModel)
-    .filter(([, selected]) => selected)
-    .map(([id]) => parseInt(id));
-};
-
-const createDataTree = (dataset: CodeRead[]): CodeSelectorRow[] => {
-  const hashTable: Record<number, CodeSelectorRow> = Object.create(null);
+const createDataTree = (dataset: CodeRead[]): CodeTableRow[] => {
+  const hashTable: Record<number, CodeTableRow> = Object.create(null);
   dataset.forEach((data) => (hashTable[data.id] = { ...data, subRows: [] }));
 
-  const dataTree: CodeSelectorRow[] = [];
+  const dataTree: CodeTableRow[] = [];
   dataset.forEach((data) => {
     if (data.parent_code_id) hashTable[data.parent_code_id].subRows.push(hashTable[data.id]);
     else dataTree.push(hashTable[data.id]);
@@ -24,11 +23,11 @@ const createDataTree = (dataset: CodeRead[]): CodeSelectorRow[] => {
   return dataTree;
 };
 
-interface CodeSelectorRow extends CodeRead {
-  subRows: CodeSelectorRow[];
+interface CodeTableRow extends CodeRead {
+  subRows: CodeTableRow[];
 }
 
-const columns: MRT_ColumnDef<CodeSelectorRow>[] = [
+const columns: MRT_ColumnDef<CodeTableRow>[] = [
   {
     accessorKey: "id",
     header: "ID",
@@ -51,15 +50,32 @@ const columns: MRT_ColumnDef<CodeSelectorRow>[] = [
   },
 ];
 
-interface CodeSelectorProps {
-  projectId: number;
-  onAddCodes?: (codes: CodeRead[]) => void;
+export interface CodeTableActionProps {
+  table: MRT_TableInstance<CodeTableRow>;
+  selectedCodes: CodeRead[];
 }
 
-function CodeSelector({ projectId, onAddCodes }: CodeSelectorProps) {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+export interface CodeTableProps {
+  projectId: number;
+  // selection
+  enableMultiRowSelection?: boolean;
+  rowSelectionModel: MRT_RowSelectionState;
+  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  // toolbar
+  renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
+  renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
+  renderBottomToolbar?: (props: CodeTableActionProps) => React.ReactNode;
+}
 
+function CodeTable({
+  projectId,
+  enableMultiRowSelection = true,
+  rowSelectionModel,
+  onRowSelectionChange,
+  renderToolbarInternalActions,
+  renderTopToolbarCustomActions,
+  renderBottomToolbar,
+}: CodeTableProps) {
   // global server state
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
 
@@ -96,10 +112,10 @@ function CodeSelector({ projectId, onAddCodes }: CodeSelectorProps) {
     },
     // state
     state: {
-      isLoading: projectCodes.isLoading,
-      showAlertBanner: Object.keys(rowSelectionModel).length > 0 || projectCodes.isError,
-      showProgressBars: projectCodes.isFetching,
       rowSelection: rowSelectionModel,
+      isLoading: projectCodes.isLoading,
+      showAlertBanner: projectCodes.isError,
+      showProgressBars: projectCodes.isFetching,
     },
     // handle error
     muiToolbarAlertBannerProps: projectCodes.isError
@@ -111,32 +127,41 @@ function CodeSelector({ projectId, onAddCodes }: CodeSelectorProps) {
     // virtualization (scrolling instead of pagination)
     enablePagination: false,
     enableRowVirtualization: true,
-    enableBottomToolbar: false,
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelectionModel,
-    renderToolbarAlertBannerContent() {
-      return (
-        <Stack direction="row" gap="1rem" style={{ padding: "0.4rem 1rem" }}>
-          {Object.keys(rowSelectionModel).length} of {Object.keys(projectCodesMap).length} codes(s) selected
-          <Button style={{ padding: 0 }} size="small" onClick={() => setRowSelectionModel({})}>
-            Clear selection
-          </Button>
-          {onAddCodes && (
-            <Button
-              style={{ padding: 0 }}
-              size="small"
-              onClick={() => {
-                const selectedCodes = rowSelectionModelToIds(rowSelectionModel).map((id) => projectCodesMap[id]);
-                onAddCodes(selectedCodes);
-              }}
-            >
-              Add Codes
-            </Button>
-          )}
-        </Stack>
-      );
+    enableMultiRowSelection: enableMultiRowSelection,
+    onRowSelectionChange: (rowSelectionUpdater) => {
+      let newRowSelectionModel: MRT_RowSelectionState;
+      if (typeof rowSelectionUpdater === "function") {
+        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
+      } else {
+        newRowSelectionModel = rowSelectionUpdater;
+      }
+      onRowSelectionChange(newRowSelectionModel);
     },
+    // toolbar
+    enableBottomToolbar: true,
+    renderTopToolbarCustomActions: renderTopToolbarCustomActions
+      ? (props) =>
+          renderTopToolbarCustomActions({
+            table: props.table,
+            selectedCodes: Object.keys(rowSelectionModel).map((codeId) => projectCodesMap[codeId]),
+          })
+      : undefined,
+    renderToolbarInternalActions: renderToolbarInternalActions
+      ? (props) =>
+          renderToolbarInternalActions({
+            table: props.table,
+            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+          })
+      : undefined,
+    renderBottomToolbar: renderBottomToolbar
+      ? (props) =>
+          renderBottomToolbar({
+            table: props.table,
+            selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
+          })
+      : undefined,
     // hide columns per default
     initialState: {
       columnVisibility: {
@@ -152,4 +177,4 @@ function CodeSelector({ projectId, onAddCodes }: CodeSelectorProps) {
 
   return <MaterialReactTable table={table} />;
 }
-export default CodeSelector;
+export default CodeTable;

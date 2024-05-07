@@ -1,11 +1,11 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
-import { useEffect, useState } from "react";
+import { MRT_RowSelectionState } from "material-react-table";
+import { useState } from "react";
 import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import CodeTable from "../../../components/CodeTable/CodeTable.tsx";
 import BBoxAnnotationRenderer from "../../../components/DataGrid/BBoxAnnotationRenderer.tsx";
-import CodeSelector from "../../../components/Selectors/CodeSelector.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
@@ -16,32 +16,32 @@ export interface BBoxAnnotationEditDialogProps extends ButtonProps {
 
 function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) {
   // local state
-  const [selectedCode, setSelectedCode] = useState<CodeRead | undefined>(undefined);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const selectedCodeId =
+    Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
   // global client state (redux)
   const open = useAppSelector((state) => state.dialog.isBBoxAnnotationEditDialogOpen);
   const annotation = useAppSelector((state) => state.dialog.bboxAnnotation);
   const dispatch = useAppDispatch();
 
-  useEffect(() => {
-    setSelectedCode(annotation?.code);
-  }, [annotation]);
-
   // mutations
   const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
 
+  // actions
   const handleClose = () => {
     dispatch(CRUDDialogActions.closeBBoxAnnotationEditDialog());
+    setRowSelectionModel({});
   };
 
   const handleUpdateAnnotation = () => {
-    if (!selectedCode || !annotation) return;
+    if (!selectedCodeId || !annotation) return;
 
     updateAnnotationMutation.mutate(
       {
         bboxToUpdate: annotation,
         requestBody: {
-          code_id: selectedCode.id,
+          code_id: selectedCodeId,
         },
       },
       {
@@ -59,11 +59,10 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Change the code of the annotation</DialogTitle>
-      <CodeSelector
+      <CodeTable
         projectId={projectId}
-        setSelectedCodes={(codes) => setSelectedCode(codes.length > 0 ? codes[0] : undefined)}
-        allowMultiselect={false}
-        height="400px"
+        rowSelectionModel={rowSelectionModel}
+        onRowSelectionChange={setRowSelectionModel}
       />
       {!!annotation && (
         <>
@@ -73,9 +72,18 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
             Before:
             <BBoxAnnotationRenderer bboxAnnotation={annotation} />
             After:
-            <BBoxAnnotationRenderer
-              bboxAnnotation={selectedCode ? { ...annotation, code: selectedCode } : annotation}
-            />
+            {selectedCodeId ? (
+              <BBoxAnnotationRenderer
+                bboxAnnotation={
+                  selectedCodeId ? { ...annotation, code: { ...annotation.code, id: selectedCodeId } } : annotation
+                }
+              />
+            ) : (
+              <>
+                <br />
+                Select a code to preview the change.
+              </>
+            )}
           </Box>
         </>
       )}
@@ -88,7 +96,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
           startIcon={<SaveIcon />}
           fullWidth
           onClick={handleUpdateAnnotation}
-          disabled={!selectedCode || selectedCode?.id === annotation?.code.id}
+          disabled={!selectedCodeId || selectedCodeId === annotation?.code.id}
           loading={updateAnnotationMutation.isPending}
           loadingPosition="start"
         >
