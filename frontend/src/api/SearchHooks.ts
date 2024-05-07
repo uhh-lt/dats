@@ -119,10 +119,11 @@ const lexicalSearchQueryFn = (
   sortModel: MRT_SortingState,
 ) => {
   return async () => {
-    const sdocIds = await SearchService.searchSdocs({
+    const result = await SearchService.searchSdocs({
       projectId: projectId!,
       searchQuery,
       expertMode,
+      highlight: false,
       requestBody: {
         filter: filter as MyFilter<SearchColumns>,
         sorts: sortModel.map((sort) => ({
@@ -131,7 +132,7 @@ const lexicalSearchQueryFn = (
         })),
       },
     });
-    return new LexicalSearchResults(sdocIds);
+    return new LexicalSearchResults(result.hits.map((hit) => hit.sdoc_id));
   };
 };
 
