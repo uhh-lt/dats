@@ -1,6 +1,7 @@
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+import documentTableFilterReducer from "../components/DocumentTable/documentTableFilterSlice.ts";
 import satFilterReducer from "../components/SpanAnnotationTable/satFilterSlice.ts";
 import dialogReducer from "../features/CrudDialog/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
@@ -38,6 +39,7 @@ export const store = configureStore({
     timelineAnalysis: timelineAnalysisReducer,
     searchFilter: searchFilterReducer,
     satFilter: satFilterReducer,
+    documentTableFilter: documentTableFilterReducer,
     timelineAnalysisFilter: timelineAnalysisFilterReducer,
     wordFrequency: wordFrequencyReducer,
     wordFrequencyFilter: wordFrequencyFilterReducer,
