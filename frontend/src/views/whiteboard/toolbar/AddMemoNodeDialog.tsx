@@ -1,8 +1,9 @@
-import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, DialogTitle, Stack } from "@mui/material";
+import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
 import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
-import MemoSelector from "../../../components/Selectors/MemoSelector.tsx";
+import MemoTable from "../../../components/MemoTable/MemoTable.tsx";
 import { ReactFlowService } from "../hooks/ReactFlowService.ts";
 import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
 import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
@@ -10,12 +11,13 @@ import { createMemoNodes } from "../whiteboardUtils.ts";
 
 export interface AddMemoNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
-  userId: number;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoNodeDialogProps) {
+function AddMemoNodeDialog({ projectId, buttonProps, onClick }: AddMemoNodeDialogProps) {
+  // local state
   const [open, setOpen] = useState(false);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   const handleOpenDialogClick = () => {
     setOpen(true);
@@ -23,9 +25,10 @@ function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoN
 
   const handleClose = () => {
     setOpen(false);
+    setRowSelectionModel({});
   };
 
-  const handleAddMemos = (memos: MemoRead[]) => {
+  const handleConfirmSelection = (memos: MemoRead[]) => {
     const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
       reactFlowService.addNodes(createMemoNodes({ memos, position: position }));
     onClick(addNode);
@@ -39,10 +42,23 @@ function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoN
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select memos to add to Whiteboard</DialogTitle>
-        <MemoSelector projectId={projectId} userId={userId} onAddMemos={handleAddMemos} />
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-        </DialogActions>
+        <MemoTable
+          projectId={projectId}
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionChange={setRowSelectionModel}
+          renderBottomToolbar={(props) => (
+            <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+              <Box flexGrow={1} />
+              <Button onClick={handleClose}>Close</Button>
+              <Button
+                onClick={() => handleConfirmSelection(props.selectedMemos)}
+                disabled={props.selectedMemos.length === 0}
+              >
+                Add {props.selectedMemos.length > 0 ? props.selectedMemos.length : null} Codes
+              </Button>
+            </Stack>
+          )}
+        />
       </Dialog>
     </>
   );

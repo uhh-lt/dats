@@ -1,23 +1,22 @@
-import Button from "@mui/material/Button/Button";
-import Stack from "@mui/material/Stack/Stack";
-import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
-import { useMemo, useState } from "react";
+import {
+  MRT_ColumnDef,
+  MRT_RowSelectionState,
+  MRT_TableInstance,
+  MaterialReactTable,
+  useMaterialReactTable,
+} from "material-react-table";
+import { useMemo } from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { useAuth } from "../../auth/useAuth.ts";
 import { attachedObjectTypeToText } from "../../features/Memo/attachedObjectTypeToText.ts";
 import AttachedObjectRenderer from "../DataGrid/AttachedObjectRenderer.tsx";
 
-interface MemoSelectorRow extends MemoRead {
+interface MemoTableRow extends MemoRead {
   attachedObjectType: string;
 }
 
-const rowSelectionModelToIds = (rowSelectionModel: MRT_RowSelectionState) => {
-  return Object.entries(rowSelectionModel)
-    .filter(([, selected]) => selected)
-    .map(([id]) => parseInt(id));
-};
-
-const columns: MRT_ColumnDef<MemoSelectorRow>[] = [
+const columns: MRT_ColumnDef<MemoTableRow>[] = [
   {
     accessorKey: "id",
     header: "ID",
@@ -49,18 +48,37 @@ const columns: MRT_ColumnDef<MemoSelectorRow>[] = [
   },
 ];
 
-interface MemoSelectorProps {
-  projectId: number;
-  userId: number;
-  onAddMemos?: (memos: MemoRead[]) => void;
+export interface MemoTableActionProps {
+  table: MRT_TableInstance<MemoTableRow>;
+  selectedMemos: MemoRead[];
 }
 
-function MemoSelector({ projectId, userId, onAddMemos }: MemoSelectorProps) {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+interface MemoTableProps {
+  projectId: number;
+  // selection
+  enableMultiRowSelection?: boolean;
+  rowSelectionModel: MRT_RowSelectionState;
+  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  // toolbar
+  renderToolbarInternalActions?: (props: MemoTableActionProps) => React.ReactNode;
+  renderTopToolbarCustomActions?: (props: MemoTableActionProps) => React.ReactNode;
+  renderBottomToolbar?: (props: MemoTableActionProps) => React.ReactNode;
+}
+
+function MemoTable({
+  projectId,
+  enableMultiRowSelection = true,
+  rowSelectionModel,
+  onRowSelectionChange,
+  renderToolbarInternalActions,
+  renderTopToolbarCustomActions,
+  renderBottomToolbar,
+}: MemoTableProps) {
+  // global client state (react router)
+  const { user } = useAuth();
 
   // global server state
-  const userMemos = ProjectHooks.useGetAllUserMemos(projectId, userId);
+  const userMemos = ProjectHooks.useGetAllUserMemos(projectId, user?.id);
 
   // computed
   const { userMemosMap, userMemoRows } = useMemo(() => {
@@ -98,10 +116,10 @@ function MemoSelector({ projectId, userId, onAddMemos }: MemoSelectorProps) {
     },
     // state
     state: {
+      rowSelection: rowSelectionModel,
       isLoading: userMemos.isLoading,
       showAlertBanner: userMemos.isError,
       showProgressBars: userMemos.isFetching,
-      rowSelection: rowSelectionModel,
     },
     // handle error
     muiToolbarAlertBannerProps: userMemos.isError
@@ -113,29 +131,41 @@ function MemoSelector({ projectId, userId, onAddMemos }: MemoSelectorProps) {
     // virtualization (scrolling instead of pagination)
     enablePagination: false,
     enableRowVirtualization: true,
-    enableBottomToolbar: false,
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelectionModel,
-    renderToolbarAlertBannerContent({ selectedAlert }) {
-      return (
-        <Stack direction="row" gap="1rem" style={{ padding: "0.4rem 1rem" }}>
-          {selectedAlert}
-          {onAddMemos && (
-            <Button
-              style={{ padding: 0 }}
-              size="small"
-              onClick={() => {
-                const selectedMemos = rowSelectionModelToIds(rowSelectionModel).map((id) => userMemosMap[id]);
-                onAddMemos(selectedMemos);
-              }}
-            >
-              Add Memos
-            </Button>
-          )}
-        </Stack>
-      );
+    enableMultiRowSelection: enableMultiRowSelection,
+    onRowSelectionChange: (rowSelectionUpdater) => {
+      let newRowSelectionModel: MRT_RowSelectionState;
+      if (typeof rowSelectionUpdater === "function") {
+        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
+      } else {
+        newRowSelectionModel = rowSelectionUpdater;
+      }
+      onRowSelectionChange(newRowSelectionModel);
     },
+    // toolbar
+    enableBottomToolbar: true,
+    renderTopToolbarCustomActions: renderTopToolbarCustomActions
+      ? (props) =>
+          renderTopToolbarCustomActions({
+            table: props.table,
+            selectedMemos: Object.keys(rowSelectionModel).map((memoId) => userMemosMap[memoId]),
+          })
+      : undefined,
+    renderToolbarInternalActions: renderToolbarInternalActions
+      ? (props) =>
+          renderToolbarInternalActions({
+            table: props.table,
+            selectedMemos: Object.values(userMemosMap).filter((row) => rowSelectionModel[row.id]),
+          })
+      : undefined,
+    renderBottomToolbar: renderBottomToolbar
+      ? (props) =>
+          renderBottomToolbar({
+            table: props.table,
+            selectedMemos: Object.values(userMemosMap).filter((row) => rowSelectionModel[row.id]),
+          })
+      : undefined,
     // hide columns per default
     initialState: {
       columnVisibility: {
@@ -146,4 +176,4 @@ function MemoSelector({ projectId, userId, onAddMemos }: MemoSelectorProps) {
 
   return <MaterialReactTable table={table} />;
 }
-export default MemoSelector;
+export default MemoTable;

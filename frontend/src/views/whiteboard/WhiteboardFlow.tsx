@@ -35,7 +35,6 @@ import ProjectHooks from "../../api/ProjectHooks.ts";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
-import { useAuth } from "../../auth/useAuth.ts";
 import BBoxAnnotationEditDialog from "../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
 import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog.tsx";
 import SpanAnnotationEditDialog from "../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog.tsx";
@@ -159,7 +158,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
-  const userId = useAuth().user?.id;
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
@@ -481,9 +479,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      {userId && (
-                        <AddMemoNodeDialog projectId={projectId} userId={userId} onClick={handleChangePendingAction} />
-                      )}
+                      <AddMemoNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                     </Stack>
                   </Paper>
                   <Paper elevation={1}>
