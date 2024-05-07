@@ -372,14 +372,14 @@ class ElasticSearchService(metaclass=SingletonMeta):
         limit: Optional[int] = None,
         skip: Optional[int] = None,
         highlight: Optional[Dict[str, Any]],
-    ) -> list[ElasticSearchDocumentHit]:
+    ) -> PaginatedElasticSearchDocumentHits:
         """
         Helper function that can be reused to find SDocs or Memos with different queries.
         :param query: The ElasticSearch query object in ES Query DSL
         :param skip: The number of skipped elements
         :param limit: The maximum number of returned elements
         :return: A (possibly empty) list of Memo matching the query
-        :rtype: List[DocumentElasticSearchHit]
+        :rtype: PaginatedElasticSearchDocumentHits
         """
         if sdoc:
             idx = self.__get_index_name(proj_id=proj_id, index_type="doc")
@@ -394,14 +394,21 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
         if isinstance(limit, int) and (limit > 10000 or limit < 1):
             raise ValueError("Limit must be a positive Integer smaller than 10000!")
-        elif isinstance(skip, int) and (skip > 10000 or skip < 1):
-            raise ValueError("Skip must be a positive Integer smaller than 10000!")
-        elif limit is None or skip is None:
+        elif isinstance(skip, int) and (skip > 10000):
+            raise ValueError(
+                "Skip must be a zero or positive Integer smaller than 10000!"
+            )
+
+        if limit is None or skip is None:
             # use scroll api
             res = list(
                 helpers.scan(
                     index=idx,
-                    query={"query": query, "_source": source_fields, "highlight": highlight},
+                    query={
+                        "query": query,
+                        "_source": source_fields,
+                        "highlight": highlight,
+                    },
                     client=self.__client,
                     scroll="10m",
                     size=10000,
@@ -409,27 +416,41 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 )
             )
 
-            document_hits = []
+            hits = []
             for document in res:
-                highlights = document["highlight"]["content"] if "highlight" in document else []
+                highlights = (
+                    document["highlight"]["content"] if "highlight" in document else []
+                )
                 document_hit = ElasticSearchDocumentHit(
-                    sdoc_id = document["_id"],
-                    score = document["_score"],
-                    highlights=highlights)
-                document_hits.append(document_hit)
-            
-            return document_hits
+                    sdoc_id=document["_id"],
+                    score=document["_score"],
+                    highlights=highlights,
+                )
+                hits.append(document_hit)
+            total_results = len(hits)
 
-        # use search api
-        client_response = self.__client.search(
-            index=idx,
-            query=query,
-            size=limit,
-            from_=skip,
-            _source=source_fields,
-            highlight=highlight
+        else:
+            # use search_api
+            client_response = self.__client.search(
+                index=idx,
+                query=query,
+                size=limit,
+                from_=skip,
+                _source=source_fields,
+                highlight=highlight,
+            )
+            hits = []
+            for hit in client_response["hits"]["hits"]:
+                highlights = hit["highlight"]["content"] if "highlight" in hit else []
+                document = ElasticSearchDocumentHit(
+                    sdoc_id=hit["_id"], score=hit["_score"], highlights=highlights
+                )
+                hits.append(document)
+            total_results = client_response["hits"]["total"]["value"]
+
+        return PaginatedElasticSearchDocumentHits(
+            hits=hits, total_results=total_results
         )
-        return client_response
 
     def __search_sdocs(
         self,
@@ -439,7 +460,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         limit: Optional[int] = None,
         skip: Optional[int] = None,
         highlight: Optional[Dict[str, Any]],
-    ) -> list[ElasticSearchDocumentHit]:
+    ) -> PaginatedElasticSearchDocumentHits:
         return self.__search(
             sdoc=True,
             proj_id=proj_id,
@@ -447,7 +468,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
             limit=limit,
             skip=skip,
             source_fields=False,
-            highlight = highlight,
+            highlight=highlight,
         )
 
     def __search_memos(
@@ -508,14 +529,15 @@ class ElasticSearchService(metaclass=SingletonMeta):
             for esmemo in esmemos
         ]
 
-        has_more = limit is not None and res.hits.total.value > limit
+        next_page_offset = skip + limit
+        has_more = limit is not None and res.hits.total.value > next_page_offset
 
         return PaginatedMemoSearchResults(
             memos=memos,
             has_more=has_more,
             total=res.hits.total.value,
             current_page_offset=skip if skip is not None else 0,
-            next_page_offset=(skip + limit)
+            next_page_offset=next_page_offset
             if skip is not None and limit is not None and has_more
             else 0,
         )
@@ -549,7 +571,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         highlight: bool = False,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
-    ) -> list[ElasticSearchDocumentHit]:
+    ) -> PaginatedElasticSearchDocumentHits:
         if use_simple_query:
             q = {
                 "simple_query_string": {
@@ -560,21 +582,18 @@ class ElasticSearchService(metaclass=SingletonMeta):
             }
         else:
             q = {"query_string": {"query": query, "default_field": "content"}}
-        
+
         if highlight:
-            highlight_query ={"fields": {
-                "content": {}
-            }}
+            highlight_query = {"fields": {"content": {}}}
         else:
             highlight_query = None
-        
-        # TODO clean up this code that is not reachable anyways?
+
         return self.__search_sdocs(
             proj_id=proj_id,
             query={"bool": {"must": [{"terms": {"sdoc_id": list(sdoc_ids)}}, q]}},
             limit=limit,
             skip=skip,
-            highlight = highlight_query
+            highlight=highlight_query,
         )
 
     def search_memos_by_title_query(
