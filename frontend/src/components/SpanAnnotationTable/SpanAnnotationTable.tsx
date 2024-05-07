@@ -5,7 +5,7 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
-  MRT_TableOptions,
+  MRT_TableInstance,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -29,6 +29,12 @@ import SATToolbar, { SATToolbarProps } from "./SATToolbar.tsx";
 import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
 const fetchSize = 20;
+
+export interface SATActionProps {
+  table: MRT_TableInstance<AnnotationTableRow>;
+  selectedAnnotations: AnnotationTableRow[];
+}
+
 export interface SpanAnnotationTableProps {
   title?: string;
   projectId: number;
@@ -44,8 +50,8 @@ export interface SpanAnnotationTableProps {
   // components
   cardProps?: CardProps;
   renderToolbar?: (props: SATToolbarProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: MRT_TableOptions<AnnotationTableRow>["renderTopToolbarCustomActions"];
-  renderBottomToolbarCustomActions?: MRT_TableOptions<AnnotationTableRow>["renderBottomToolbarCustomActions"];
+  renderTopToolbarCustomActions?: (props: SATActionProps) => React.ReactNode;
+  renderBottomToolbarCustomActions?: (props: SATActionProps) => React.ReactNode;
 }
 
 function SpanAnnotationTable({
@@ -174,9 +180,22 @@ function SpanAnnotationTable({
     },
     refetchOnWindowFocus: false,
   });
-  const flatData = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
+  // create a flat array of data mapped from id to row
+  const dataMap = useMemo(
+    () =>
+      data?.pages
+        .flatMap((page) => page.data)
+        .reduce(
+          (prev, current) => {
+            prev[current.id] = current;
+            return prev;
+          },
+          {} as Record<number, AnnotationTableRow>,
+        ) ?? [],
+    [data],
+  );
   const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = flatData.length;
+  const totalFetched = Object.keys(dataMap).length;
 
   // infinite scrolling
   // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
@@ -214,7 +233,7 @@ function SpanAnnotationTable({
 
   // table
   const table = useMaterialReactTable<AnnotationTableRow>({
-    data: flatData,
+    data: Object.values(dataMap),
     columns: columns,
     getRowId: (row) => `${row.id}`,
     // state
@@ -295,7 +314,13 @@ function SpanAnnotationTable({
         }
       : undefined,
     // toolbar
-    renderTopToolbarCustomActions: renderTopToolbarCustomActions,
+    renderTopToolbarCustomActions: renderTopToolbarCustomActions
+      ? (props) =>
+          renderTopToolbarCustomActions({
+            table: props.table,
+            selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+          })
+      : undefined,
     renderToolbarInternalActions: (props) =>
       renderToolbar({ table: props.table, filterName, anchor: tableBodyRef, selectedUserId: selectedUserId }),
     renderBottomToolbar: (props) => (
@@ -303,7 +328,11 @@ function SpanAnnotationTable({
         <Typography>
           Fetched {totalFetched} of {totalDBRowCount} total rows.
         </Typography>
-        {renderBottomToolbarCustomActions && renderBottomToolbarCustomActions(props)}
+        {renderBottomToolbarCustomActions &&
+          renderBottomToolbarCustomActions({
+            table: props.table,
+            selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+          })}
       </Stack>
     ),
   });
