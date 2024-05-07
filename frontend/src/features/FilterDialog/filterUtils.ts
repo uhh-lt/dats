@@ -32,6 +32,14 @@ export interface MyFilter<T = string> {
   logic_operator: LogicalOperator;
 }
 
+export const createEmptyFilter = (id: string): MyFilter => {
+  return {
+    id,
+    items: [],
+    logic_operator: LogicalOperator.AND,
+  };
+};
+
 export type FilterOperatorType =
   | typeof IDOperator
   | typeof NumberOperator
