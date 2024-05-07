@@ -14,4 +14,4 @@ while [[ "$(curl -s -o /dev/null -I -w "%{http_code}" "${RAY}")" -ne 200 ]]; do
 done
 
 echo "Successfully conntected to ray"
-curl "${RAY}" | json_pp
+curl "${RAY}" | python -m json.tool
