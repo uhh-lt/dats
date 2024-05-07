@@ -130,11 +130,13 @@ export class AnalysisService {
    */
   public static annotatedSegments({
     projectId,
+    userId,
     page,
     pageSize,
     requestBody,
   }: {
     projectId: number;
+    userId: number;
     page: number;
     pageSize: number;
     requestBody: Body_analysis_annotated_segments;
@@ -144,6 +146,7 @@ export class AnalysisService {
       url: "/analysis/annotated_segments",
       query: {
         project_id: projectId,
+        user_id: userId,
         page: page,
         page_size: pageSize,
       },

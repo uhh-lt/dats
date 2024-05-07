@@ -3900,6 +3900,7 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
+          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
           { "name": "page", "in": "query", "required": true, "schema": { "type": "integer", "title": "Page" } },
           {
             "name": "page_size",
@@ -5186,25 +5187,25 @@
             "title": "Total Results",
             "description": "The total number of span_annotation_ids. Used for pagination."
           },
-          "span_annotation_ids": {
-            "items": { "type": "integer" },
+          "data": {
+            "items": { "$ref": "#/components/schemas/AnnotationTableRow" },
             "type": "array",
-            "title": "Span Annotation Ids",
-            "description": "The SpanAnnotation IDs."
+            "title": "Data",
+            "description": "The Annotations."
           }
         },
         "type": "object",
-        "required": ["total_results", "span_annotation_ids"],
+        "required": ["total_results", "data"],
         "title": "AnnotatedSegmentResult"
       },
       "AnnotatedSegmentsColumns": {
         "type": "string",
         "enum": [
-          "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME",
-          "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST",
-          "ASC_CODE_ID",
           "ASC_SPAN_TEXT",
-          "ASC_MEMO_CONTENT"
+          "ASC_CODE_ID",
+          "ASC_MEMO_CONTENT",
+          "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
         ],
         "title": "AnnotatedSegmentsColumns"
       },
@@ -5267,6 +5268,43 @@
         "type": "object",
         "required": ["annotation", "code", "sdoc", "text"],
         "title": "AnnotationOccurrence"
+      },
+      "AnnotationTableRow": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
+          "span_text": {
+            "type": "string",
+            "title": "Span Text",
+            "description": "The SpanText the SpanAnnotation spans."
+          },
+          "code": {
+            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
+            "description": "Code the SpanAnnotation refers to"
+          },
+          "annotation_document_id": {
+            "type": "integer",
+            "title": "Annotation Document Id",
+            "description": "AnnotationDocument the SpanAnnotation refers to"
+          },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc": {
+            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The DocumentTags of the SourceDocument."
+          },
+          "memo": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
+            "description": "The Memo of the Annotation."
+          }
+        },
+        "type": "object",
+        "required": ["id", "span_text", "code", "annotation_document_id", "user_id", "sdoc", "tags", "memo"],
+        "title": "AnnotationTableRow"
       },
       "AttachedObjectType": {
         "type": "string",
@@ -5439,7 +5477,6 @@
       },
       "Body_analysis-annotated_segments": {
         "properties": {
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
           "filter": { "$ref": "#/components/schemas/Filter_AnnotatedSegmentsColumns_" },
           "sorts": {
             "items": { "$ref": "#/components/schemas/Sort_AnnotatedSegmentsColumns_" },
@@ -5448,7 +5485,7 @@
           }
         },
         "type": "object",
-        "required": ["user_ids", "filter", "sorts"],
+        "required": ["filter", "sorts"],
         "title": "Body_analysis-annotated_segments"
       },
       "Body_analysis-code_frequencies": {
