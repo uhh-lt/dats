@@ -9,12 +9,11 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
 import { AnnotatedSegmentResult } from "../../api/openapi/models/AnnotatedSegmentResult.ts";
-import { AnnotatedSegmentsColumns } from "../../api/openapi/models/AnnotatedSegmentsColumns.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
 import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
-import { AnalysisService } from "../../api/openapi/services/AnalysisService.ts";
+import { SearchService } from "../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import { MyFilter, createEmptyFilter } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
@@ -32,7 +31,7 @@ interface DocumentTableRow {
 
 export interface DocumentTableActionProps {
   table: MRT_TableInstance<DocumentTableRow>;
-  selectedAnnotations: DocumentTableRow[];
+  selectedDocuments: DocumentTableRow[];
 }
 
 export interface DocumentTableProps {
@@ -45,7 +44,7 @@ export interface DocumentTableProps {
   sortingModel: MRT_SortingState;
   onSortingChange: (sortingModel: MRT_SortingState) => void;
   // actions
-  onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => void;
+  onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, sdocId: number) => void;
   // toolbar
   renderToolbarInternalActions?: (props: DocumentTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
@@ -66,6 +65,9 @@ function DocumentTableProps({
 }: DocumentTableProps) {
   // global client state (react router)
   const { user } = useAuth();
+
+  // query
+  const [searchQuery, setSearchQuery] = useState("");
 
   // filtering
   const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
@@ -142,20 +144,20 @@ function DocumentTableProps({
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<AnnotatedSegmentResult>({
     queryKey: [
-      "annotation-table-data",
+      "document-table-data",
       projectId,
-      selectedUserId,
-      filter, //refetch when columnFilters changes
-      sortingModel, //refetch when sorting changes
+      searchQuery, // refetch when searchQuery changes
+      filter, // refetch when columnFilters changes
+      sortingModel, // refetch when sorting changes
     ],
     queryFn: ({ pageParam }) =>
-      AnalysisService.annotatedSegments({
+      SearchService.searchSdocs({
+        searchQuery: searchQuery,
         projectId: projectId!,
-        userId: selectedUserId,
         requestBody: {
-          filter: filter as MyFilter<AnnotatedSegmentsColumns>,
+          filter: filter as MyFilter<SearchColumns>,
           sorts: sortingModel.map((sort) => ({
-            column: sort.id as AnnotatedSegmentsColumns,
+            column: sort.id as SearchColumns,
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },
@@ -223,15 +225,19 @@ function DocumentTableProps({
   const table = useMaterialReactTable<DocumentTableRow>({
     data: Object.values(dataMap),
     columns: columns,
-    getRowId: (row) => `${row.id}`,
+    getRowId: (row) => `${row.sdocId}`,
     // state
     state: {
+      globalFilter: searchQuery,
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
     },
+    // search query
+    manualFiltering: true, // turn of client-side filtering
+    onGlobalFilterChange: setSearchQuery,
     // selection
     enableRowSelection: true,
     onRowSelectionChange: (rowSelectionUpdater) => {
@@ -306,14 +312,14 @@ function DocumentTableProps({
       ? (props) =>
           renderTopToolbarCustomActions({
             table: props.table,
-            selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
     renderToolbarInternalActions: renderToolbarInternalActions
       ? (props) =>
           renderToolbarInternalActions({
             table: props.table,
-            selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
     renderBottomToolbar: (props) => (
@@ -324,7 +330,7 @@ function DocumentTableProps({
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({
             table: props.table,
-            selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
           })}
       </Stack>
     ),
