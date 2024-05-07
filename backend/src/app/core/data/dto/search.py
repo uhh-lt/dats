@@ -127,7 +127,7 @@ class ElasticSearchDocumentHit(BaseModel):
         description="The score of the SourceDocument that was found by a ES Query",
         default=None,
     )
-    highlights: Optional[list[str]] = Field(
+    highlights: list[str] = Field(
         description="The highlights found within the document.", default=[]
     )
 
