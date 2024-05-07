@@ -1,21 +1,20 @@
 import LabelIcon from "@mui/icons-material/Label";
-import { Button, Stack } from "@mui/material";
-import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialReactTable } from "material-react-table";
-import { useMemo, useState } from "react";
+import {
+  MRT_ColumnDef,
+  MRT_RowSelectionState,
+  MRT_TableInstance,
+  MaterialReactTable,
+  useMaterialReactTable,
+} from "material-react-table";
+import { useMemo } from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 
-const rowSelectionModelToIds = (rowSelectionModel: MRT_RowSelectionState) => {
-  return Object.entries(rowSelectionModel)
-    .filter(([, selected]) => selected)
-    .map(([id]) => parseInt(id));
-};
-
-const createDataTree = (dataset: DocumentTagRead[]): TagSelectorRow[] => {
-  const hashTable: Record<number, TagSelectorRow> = Object.create(null);
+const createDataTree = (dataset: DocumentTagRead[]): TagTableRow[] => {
+  const hashTable: Record<number, TagTableRow> = Object.create(null);
   dataset.forEach((data) => (hashTable[data.id] = { ...data, subRows: [] }));
 
-  const dataTree: TagSelectorRow[] = [];
+  const dataTree: TagTableRow[] = [];
   dataset.forEach((data) => {
     if (data.parent_tag_id) hashTable[data.parent_tag_id].subRows.push(hashTable[data.id]);
     else dataTree.push(hashTable[data.id]);
@@ -23,11 +22,11 @@ const createDataTree = (dataset: DocumentTagRead[]): TagSelectorRow[] => {
   return dataTree;
 };
 
-interface TagSelectorRow extends DocumentTagRead {
-  subRows: TagSelectorRow[];
+interface TagTableRow extends DocumentTagRead {
+  subRows: TagTableRow[];
 }
 
-const columns: MRT_ColumnDef<TagSelectorRow>[] = [
+const columns: MRT_ColumnDef<TagTableRow>[] = [
   {
     accessorKey: "id",
     header: "ID",
@@ -50,15 +49,32 @@ const columns: MRT_ColumnDef<TagSelectorRow>[] = [
   },
 ];
 
-interface TagSelectorProps {
-  projectId: number;
-  onAddTags?: (tags: DocumentTagRead[]) => void;
+export interface CodeTableActionProps {
+  table: MRT_TableInstance<TagTableRow>;
+  selectedTags: DocumentTagRead[];
 }
 
-function TagSelector({ projectId, onAddTags }: TagSelectorProps) {
-  // local state
-  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+interface TagTableProps {
+  projectId: number;
+  // selection
+  enableMultiRowSelection?: boolean;
+  rowSelectionModel: MRT_RowSelectionState;
+  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  // toolbar
+  renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
+  renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
+  renderBottomToolbar?: (props: CodeTableActionProps) => React.ReactNode;
+}
 
+function TagTable({
+  projectId,
+  enableMultiRowSelection = true,
+  rowSelectionModel,
+  onRowSelectionChange,
+  renderToolbarInternalActions,
+  renderTopToolbarCustomActions,
+  renderBottomToolbar,
+}: TagTableProps) {
   // global server state
   const projectTags = ProjectHooks.useGetAllTags(projectId);
 
@@ -95,10 +111,10 @@ function TagSelector({ projectId, onAddTags }: TagSelectorProps) {
     },
     // state
     state: {
-      isLoading: projectTags.isLoading,
-      showAlertBanner: Object.keys(rowSelectionModel).length > 0 || projectTags.isError,
-      showProgressBars: projectTags.isFetching,
       rowSelection: rowSelectionModel,
+      isLoading: projectTags.isLoading,
+      showAlertBanner: projectTags.isError,
+      showProgressBars: projectTags.isFetching,
     },
     // handle error
     muiToolbarAlertBannerProps: projectTags.isError
@@ -110,32 +126,41 @@ function TagSelector({ projectId, onAddTags }: TagSelectorProps) {
     // virtualization (scrolling instead of pagination)
     enablePagination: false,
     enableRowVirtualization: true,
-    enableBottomToolbar: false,
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelectionModel,
-    renderToolbarAlertBannerContent() {
-      return (
-        <Stack direction="row" gap="1rem" style={{ padding: "0.4rem 1rem" }}>
-          {Object.keys(rowSelectionModel).length} of {Object.keys(projectTagsMap).length} tag(s) selected
-          <Button style={{ padding: 0 }} size="small" onClick={() => setRowSelectionModel({})}>
-            Clear selection
-          </Button>
-          {onAddTags && (
-            <Button
-              style={{ padding: 0 }}
-              size="small"
-              onClick={() => {
-                const selectedTags = rowSelectionModelToIds(rowSelectionModel).map((id) => projectTagsMap[id]);
-                onAddTags(selectedTags);
-              }}
-            >
-              Add Tags
-            </Button>
-          )}
-        </Stack>
-      );
+    enableMultiRowSelection: enableMultiRowSelection,
+    onRowSelectionChange: (rowSelectionUpdater) => {
+      let newRowSelectionModel: MRT_RowSelectionState;
+      if (typeof rowSelectionUpdater === "function") {
+        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
+      } else {
+        newRowSelectionModel = rowSelectionUpdater;
+      }
+      onRowSelectionChange(newRowSelectionModel);
     },
+    // toolbar
+    enableBottomToolbar: true,
+    renderTopToolbarCustomActions: renderTopToolbarCustomActions
+      ? (props) =>
+          renderTopToolbarCustomActions({
+            table: props.table,
+            selectedTags: Object.keys(rowSelectionModel).map((tagId) => projectTagsMap[tagId]),
+          })
+      : undefined,
+    renderToolbarInternalActions: renderToolbarInternalActions
+      ? (props) =>
+          renderToolbarInternalActions({
+            table: props.table,
+            selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
+          })
+      : undefined,
+    renderBottomToolbar: renderBottomToolbar
+      ? (props) =>
+          renderBottomToolbar({
+            table: props.table,
+            selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
+          })
+      : undefined,
     // hide columns per default
     initialState: {
       columnVisibility: {
@@ -151,4 +176,4 @@ function TagSelector({ projectId, onAddTags }: TagSelectorProps) {
 
   return <MaterialReactTable table={table} />;
 }
-export default TagSelector;
+export default TagTable;
