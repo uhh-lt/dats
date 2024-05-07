@@ -6,6 +6,7 @@ import {
   FilterOperators,
   MyFilter,
   MyFilterExpression,
+  createEmptyFilter,
   deleteInFilter,
   filterOperator2FilterOperatorType,
   filterOperator2defaultValue,
@@ -33,11 +34,7 @@ export const filterReducer = {
       if (action.payload.filter) {
         state.filter[action.payload.rootFilterId] = action.payload.filter;
       } else {
-        state.filter[action.payload.rootFilterId] = {
-          id: action.payload.rootFilterId,
-          items: [],
-          logic_operator: LogicalOperator.AND,
-        };
+        state.filter[action.payload.rootFilterId] = createEmptyFilter(action.payload.rootFilterId);
       }
     }
     state.editableFilter = JSON.parse(JSON.stringify(state.filter[action.payload.rootFilterId]));
@@ -190,19 +187,6 @@ export const filterReducer = {
   onChangeExpertMode: (state: Draft<FilterState>, action: PayloadAction<{ expertMode: boolean }>) => {
     state.expertMode = action.payload.expertMode;
   },
-};
-
-// selectors
-export const selectFilterByName = (state: FilterState, rootFilterId: string) => {
-  // check if filter exists
-  if (!state.filter[rootFilterId]) {
-    return {
-      id: rootFilterId,
-      items: [],
-      logic_operator: LogicalOperator.AND,
-    };
-  }
-  return state.filter[rootFilterId];
 };
 
 export type FilterReducer = typeof filterReducer;

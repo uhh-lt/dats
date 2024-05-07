@@ -17,8 +17,7 @@ import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.
 import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
 import { AnalysisService } from "../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import { selectFilterByName } from "../../features/FilterDialog/filterSlice.ts";
-import { MyFilter } from "../../features/FilterDialog/filterUtils.ts";
+import { MyFilter, createEmptyFilter } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
 import UserSelector from "../../views/analysis/UserSelector.tsx";
 import CodeRenderer from "../DataGrid/CodeRenderer.tsx";
@@ -75,7 +74,7 @@ function SpanAnnotationTable({
   const [selectedUserId, setSelectedUserId] = useState<number>(user?.id || 1);
 
   // filtering
-  const filter = useAppSelector((state) => selectFilterByName(state.satFilter, filterName));
+  const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
