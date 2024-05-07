@@ -1,9 +1,9 @@
 import { CardProps } from "@mui/material";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { ChartDataPoint } from "./ChartDataPoint";
-import DataCard from "./DataCard";
 import { useCallback } from "react";
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { ChartDataPoint } from "./ChartDataPoint.ts";
+import DataCard from "./DataCard.tsx";
 
 interface DocumentsBarChartProps {
   cardProps?: CardProps;
