@@ -10,7 +10,8 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
-import { AnnotatedSegmentResult } from "../../api/openapi/models/AnnotatedSegmentResult.ts";
+import { ElasticSearchDocumentHit } from "../../api/openapi/models/ElasticSearchDocumentHit.ts";
+import { PaginatedElasticSearchDocumentHits } from "../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
 import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
@@ -25,13 +26,9 @@ import { useInitDocumentTableFilterSlice } from "./useInitDocumentTableFilterSli
 
 const fetchSize = 20;
 
-interface DocumentTableRow {
-  sdocId: number;
-}
-
 export interface DocumentTableActionProps {
-  table: MRT_TableInstance<DocumentTableRow>;
-  selectedDocuments: DocumentTableRow[];
+  table: MRT_TableInstance<ElasticSearchDocumentHit>;
+  selectedDocuments: ElasticSearchDocumentHit[];
 }
 
 export interface DocumentTableProps {
@@ -51,7 +48,7 @@ export interface DocumentTableProps {
   renderBottomToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
 }
 
-function DocumentTableProps({
+function DocumentTable({
   projectId,
   filterName,
   rowSelectionModel,
@@ -67,7 +64,7 @@ function DocumentTableProps({
   const { user } = useAuth();
 
   // query
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
   // filtering
   const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
@@ -79,11 +76,11 @@ function DocumentTableProps({
 
   // table columns
   const tableInfo = useInitDocumentTableFilterSlice({ projectId });
-  const columns: MRT_ColumnDef<DocumentTableRow>[] = useMemo(() => {
+  const columns: MRT_ColumnDef<ElasticSearchDocumentHit>[] = useMemo(() => {
     if (!tableInfo.data || !user) return [];
 
     const result = tableInfo.data.map((column) => {
-      const colDef: MRT_ColumnDef<DocumentTableRow> = {
+      const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
         id: column.column.toString(),
         header: column.label,
         enableSorting: column.sortable,
@@ -93,26 +90,26 @@ function DocumentTableProps({
         case SearchColumns.SC_SOURCE_DOCUMENT_TYPE:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderDoctypeIcon />,
-          } as MRT_ColumnDef<DocumentTableRow>;
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderDoctypeIcon />,
+          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderFilename />,
-          } as MRT_ColumnDef<DocumentTableRow>;
+            Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderFilename />,
+          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdocId} />,
-          } as MRT_ColumnDef<DocumentTableRow>;
+            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc_id} />,
+          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_USER_ID_LIST:
           return {
             ...colDef,
             flex: 2,
-            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.sdocId} />,
-          } as MRT_ColumnDef<DocumentTableRow>;
+            Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.sdoc_id} />,
+          } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_CODE_ID_LIST:
           return null;
         case SearchColumns.SC_SPAN_ANNOTATIONS:
@@ -124,25 +121,25 @@ function DocumentTableProps({
               ...colDef,
               flex: 2,
               Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.sdocId} projectMetadataId={column.column as number} />
+                <SdocMetadataRenderer sdocId={row.original.sdoc_id} projectMetadataId={column.column as number} />
               ),
-            } as MRT_ColumnDef<DocumentTableRow>;
+            } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           } else {
             return {
               ...colDef,
               flex: 1,
               Cell: () => <i>Cannot render column {column.column}</i>,
-            } as MRT_ColumnDef<DocumentTableRow>;
+            } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           }
       }
     });
 
     // unwanted columns are set to null, so we filter those out
-    return result.filter((column) => column !== null) as MRT_ColumnDef<DocumentTableRow>[];
+    return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
   }, [tableInfo.data, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<AnnotatedSegmentResult>({
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
     queryKey: [
       "document-table-data",
       projectId,
@@ -152,8 +149,10 @@ function DocumentTableProps({
     ],
     queryFn: ({ pageParam }) =>
       SearchService.searchSdocs({
-        searchQuery: searchQuery,
+        searchQuery: searchQuery || "",
         projectId: projectId!,
+        highlight: false,
+        expertMode: false,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
           sorts: sortingModel.map((sort) => ({
@@ -161,7 +160,7 @@ function DocumentTableProps({
             direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
           })),
         },
-        page: pageParam as number,
+        pageNumber: pageParam as number,
         pageSize: fetchSize,
       }),
     initialPageParam: 0,
@@ -174,13 +173,13 @@ function DocumentTableProps({
   const dataMap = useMemo(
     () =>
       data?.pages
-        .flatMap((page) => page.data)
+        .flatMap((page) => page.hits)
         .reduce(
           (prev, current) => {
-            prev[current.id] = current;
+            prev[current.sdoc_id] = current;
             return prev;
           },
-          {} as Record<number, DocumentTableRow>,
+          {} as Record<number, ElasticSearchDocumentHit>,
         ) ?? [],
     [data],
   );
@@ -222,10 +221,10 @@ function DocumentTableProps({
   };
 
   // table
-  const table = useMaterialReactTable<DocumentTableRow>({
+  const table = useMaterialReactTable<ElasticSearchDocumentHit>({
     data: Object.values(dataMap),
     columns: columns,
-    getRowId: (row) => `${row.sdocId}`,
+    getRowId: (row) => `${row.sdoc_id}`,
     // state
     state: {
       globalFilter: searchQuery,
@@ -254,7 +253,6 @@ function DocumentTableProps({
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
     rowVirtualizerOptions: { overscan: 4 },
     // filtering
-    manualFiltering: true,
     enableColumnFilters: false,
     // pagination
     enablePagination: false,
@@ -287,7 +285,7 @@ function DocumentTableProps({
     },
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
-      onContextMenu: (event) => handleRowContextMenu(event, row.original.id),
+      onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
     }),
     muiTablePaperProps: {
       elevation: 0,
@@ -312,14 +310,14 @@ function DocumentTableProps({
       ? (props) =>
           renderTopToolbarCustomActions({
             table: props.table,
-            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.sdoc_id]),
           })
       : undefined,
     renderToolbarInternalActions: renderToolbarInternalActions
       ? (props) =>
           renderToolbarInternalActions({
             table: props.table,
-            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.sdoc_id]),
           })
       : undefined,
     renderBottomToolbar: (props) => (
@@ -330,7 +328,7 @@ function DocumentTableProps({
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({
             table: props.table,
-            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.sdoc_id]),
           })}
       </Stack>
     ),
@@ -339,4 +337,4 @@ function DocumentTableProps({
   return <MaterialReactTable table={table} />;
 }
 
-export default DocumentTableProps;
+export default DocumentTable;
