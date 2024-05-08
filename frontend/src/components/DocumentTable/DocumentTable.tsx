@@ -6,6 +6,7 @@ import {
   MRT_RowVirtualizer,
   MRT_SortingState,
   MRT_TableInstance,
+  MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -16,24 +17,33 @@ import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
 import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../auth/useAuth.ts";
+import { FilterActions, FilterState } from "../../features/FilterDialog/filterSlice.ts";
 import { MyFilter, createEmptyFilter } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { RootState } from "../../store/store.ts";
 import SdocAnnotatorsRenderer from "../DataGrid/SdocAnnotatorsRenderer.tsx";
 import SdocMetadataRenderer from "../DataGrid/SdocMetadataRenderer.tsx";
 import SdocRenderer from "../DataGrid/SdocRenderer.tsx";
 import SdocTagsRenderer from "../DataGrid/SdocTagRenderer.tsx";
+import DocumentTableToolbar from "./DocumentTableToolbar.tsx";
+import { DocumentTableFilterActions } from "./documentTableFilterSlice.ts";
 import { useInitDocumentTableFilterSlice } from "./useInitDocumentTableFilterSlice.ts";
 
 const fetchSize = 20;
+
+export interface DocumentTableFilterProps {
+  filterName: string;
+  filterStateSelector: (state: RootState) => FilterState;
+  filterActions: FilterActions;
+}
 
 export interface DocumentTableActionProps {
   table: MRT_TableInstance<ElasticSearchDocumentHit>;
   selectedDocuments: ElasticSearchDocumentHit[];
 }
 
-export interface DocumentTableProps {
+interface DocumentTableProps {
   projectId: number;
-  filterName: string;
   // selection
   rowSelectionModel: MRT_RowSelectionState;
   onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
@@ -46,11 +56,16 @@ export interface DocumentTableProps {
   renderToolbarInternalActions?: (props: DocumentTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
   renderBottomToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
+  // filter
+  filterName?: string;
+  filterStateSelector?: (state: RootState) => FilterState;
+  filterActions?: FilterActions;
 }
+
+const defaultFilterStateSelector = (state: RootState) => state.documentTableFilter;
 
 function DocumentTable({
   projectId,
-  filterName,
   rowSelectionModel,
   onRowSelectionChange,
   sortingModel,
@@ -59,15 +74,19 @@ function DocumentTable({
   renderToolbarInternalActions,
   renderTopToolbarCustomActions,
   renderBottomToolbarCustomActions,
+  filterName = "root",
+  filterActions = DocumentTableFilterActions,
+  filterStateSelector = defaultFilterStateSelector,
 }: DocumentTableProps) {
   // global client state (react router)
   const { user } = useAuth();
 
-  // query
+  // search query
   const [searchQuery, setSearchQuery] = useState<string | undefined>("");
 
   // filtering
-  const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const filter =
+    useAppSelector((state) => filterStateSelector(state).filter[filterName]) || createEmptyFilter(filterName);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -76,7 +95,7 @@ function DocumentTable({
 
   // table columns
   const tableInfo = useInitDocumentTableFilterSlice({ projectId });
-  const columns: MRT_ColumnDef<ElasticSearchDocumentHit>[] = useMemo(() => {
+  const columns = useMemo(() => {
     if (!tableInfo.data || !user) return [];
 
     const result = tableInfo.data.map((column) => {
@@ -137,6 +156,40 @@ function DocumentTable({
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
   }, [tableInfo.data, user]);
+
+  // column visiblility
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState<MRT_VisibilityState>(() => {
+    return columns.reduce((acc, column) => {
+      if (!column.id) return acc;
+      // this is a normal column
+      if (isNaN(parseInt(column.id))) {
+        return acc;
+        // this is a metadata column
+      } else {
+        return {
+          ...acc,
+          [column.id]: false,
+        };
+      }
+    }, {});
+  });
+  useEffect(() => {
+    setColumnVisibilityModel(
+      columns.reduce((acc, column) => {
+        if (!column.id) return acc;
+        // this is a normal column
+        if (isNaN(parseInt(column.id))) {
+          return acc;
+          // this is a metadata column
+        } else {
+          return {
+            ...acc,
+            [column.id]: false,
+          };
+        }
+      }, {}),
+    );
+  }, [columns]);
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
@@ -230,6 +283,7 @@ function DocumentTable({
       globalFilter: searchQuery,
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
+      columnVisibility: columnVisibilityModel,
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
@@ -267,22 +321,8 @@ function DocumentTable({
       }
       onSortingChange(newSortingModel);
     },
-    // column hiding: hide metadata columns by default
-    initialState: {
-      columnVisibility: columns.reduce((acc, column) => {
-        if (!column.id) return acc;
-        // this is a normal column
-        if (isNaN(parseInt(column.id))) {
-          return acc;
-          // this is a metadata column
-        } else {
-          return {
-            ...acc,
-            [column.id]: false,
-          };
-        }
-      }, {}),
-    },
+    // column visiblility
+    onColumnVisibilityChange: setColumnVisibilityModel,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
       onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
@@ -319,7 +359,15 @@ function DocumentTable({
             table: props.table,
             selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.sdoc_id]),
           })
-      : undefined,
+      : (props) => (
+          <DocumentTableToolbar
+            table={props.table}
+            anchor={tableBodyRef}
+            filterName={filterName}
+            filterActions={filterActions}
+            filterStateSelector={filterStateSelector}
+          />
+        ),
     renderBottomToolbar: (props) => (
       <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
         <Typography>
