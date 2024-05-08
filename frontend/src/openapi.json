@@ -3211,7 +3211,7 @@
     "/search/sdoc": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns all SourceDocument Ids that match the query parameters.",
+        "summary": "Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
         "operationId": "search_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3232,6 +3232,24 @@
             "in": "query",
             "required": true,
             "schema": { "type": "boolean", "title": "Expert Mode" }
+          },
+          {
+            "name": "highlight",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Highlight" }
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Number" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
           }
         ],
         "requestBody": {
@@ -3242,9 +3260,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": {
-                "schema": { "type": "array", "items": { "type": "integer" }, "title": "Response Search-Search Sdocs" }
-              }
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
             }
           },
           "422": {
@@ -5889,6 +5905,30 @@
         "type": "object",
         "title": "DocumentTagUpdate"
       },
+      "ElasticSearchDocumentHit": {
+        "properties": {
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "The ID of the SourceDocument as it is in the SQL DB"
+          },
+          "score": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score",
+            "description": "The score of the SourceDocument that was found by a ES Query"
+          },
+          "highlights": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Highlights",
+            "description": "The highlights found within the document.",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id"],
+        "title": "ElasticSearchDocumentHit"
+      },
       "ExportFormat": { "type": "string", "enum": ["CSV", "JSON"], "title": "ExportFormat" },
       "ExportJobParameters": {
         "properties": {
@@ -6389,6 +6429,24 @@
         "type": "string",
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
         "title": "NumberOperator"
+      },
+      "PaginatedElasticSearchDocumentHits": {
+        "properties": {
+          "hits": {
+            "items": { "$ref": "#/components/schemas/ElasticSearchDocumentHit" },
+            "type": "array",
+            "title": "Hits",
+            "description": "The IDs, scores and (optional) highlights of SourceDocument search results on the requested page."
+          },
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of hits. Used for pagination."
+          }
+        },
+        "type": "object",
+        "required": ["hits", "total_results"],
+        "title": "PaginatedElasticSearchDocumentHits"
       },
       "PaginatedMemoSearchResults": {
         "properties": {
