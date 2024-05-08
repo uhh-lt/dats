@@ -28,7 +28,7 @@ import { useNavigateIfNecessary } from "../hooks/useNavigateIfNecessary.ts";
 import { SearchActions } from "../searchSlice.ts";
 
 interface SearchFormValues {
-  query: string | number;
+  query: string;
 }
 
 interface SearchBarProps {

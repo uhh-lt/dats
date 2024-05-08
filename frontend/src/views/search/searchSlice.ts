@@ -11,7 +11,7 @@ interface SearchState {
   isShowTags: boolean;
   resultModalities: DocType[];
   searchType: QueryType;
-  searchQuery: string | number;
+  searchQuery: string;
   isTableView: boolean;
   expertMode: boolean;
   selectedDocumentIds: number[];
@@ -123,7 +123,7 @@ export const searchSlice = createSlice({
     },
 
     // search
-    onChangeSearchQuery: (state, action: PayloadAction<string | number>) => {
+    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
     onClearSearch: (state) => {
@@ -134,7 +134,7 @@ export const searchSlice = createSlice({
     onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
       state.expertMode = action.payload;
     },
-    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string | number; searchType: QueryType }>) => {
+    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string; searchType: QueryType }>) => {
       switch (action.payload.searchType) {
         case QueryType.SEMANTIC_IMAGES:
           state.resultModalities = [DocType.IMAGE];
@@ -152,6 +152,7 @@ export const searchSlice = createSlice({
     },
     onUpdateSelectionModel: (state, action: PayloadAction<MRT_RowSelectionState>) => {
       state.selectionModel = action.payload;
+      state.selectedDocumentIds = Object.keys(action.payload).map((key) => parseInt(key));
     },
   },
 });
