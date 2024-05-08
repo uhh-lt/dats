@@ -34,6 +34,7 @@ import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.t
 import { SearchFilterActions } from "../../searchFilterSlice.ts";
 import { SearchActions } from "../../searchSlice.ts";
 import { useInitSearchFilterSlice } from "../../useInitSearchFilterSlice.ts";
+import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
 
 const fetchSize = 20;
 const filterStateSelector = (state: RootState) => state.searchFilter;
@@ -354,6 +355,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     renderToolbarInternalActions: ({ table }) => (
       <Stack direction={"row"} spacing={1} alignItems="center" p={0.5}>
         <MRT_ToggleGlobalFilterButton table={table} />
+        <SearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
       </Stack>
