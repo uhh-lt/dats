@@ -73,6 +73,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     const result = tableInfo.data.map((column) => {
       const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
         id: column.column.toString(),
+        accessorFn: () => null,
         header: column.label,
         enableSorting: column.sortable,
       };
@@ -190,19 +191,17 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     refetchOnWindowFocus: false,
   });
   // create a flat array of data mapped from id to row
-  const dataMap = useMemo(
-    () =>
-      data?.pages
-        .flatMap((page) => page.hits)
-        .reduce(
-          (prev, current) => {
-            prev[current.sdoc_id] = current;
-            return prev;
-          },
-          {} as Record<number, ElasticSearchDocumentHit>,
-        ) ?? [],
-    [data],
-  );
+  const { hits, dataMap } = useMemo(() => {
+    const hits = data?.pages.flatMap((page) => page.hits) ?? [];
+    const dataMap = hits.reduce(
+      (prev, current) => {
+        prev[current.sdoc_id] = current;
+        return prev;
+      },
+      {} as Record<number, ElasticSearchDocumentHit>,
+    );
+    return { hits, dataMap };
+  }, [data]);
   const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
   const totalFetched = Object.keys(dataMap).length;
 
@@ -241,7 +240,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
-    data: Object.values(dataMap),
+    data: hits,
     columns: columns,
     getRowId: (row) => `${row.sdoc_id}`,
     // state
@@ -288,7 +287,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     // pagination
     enablePagination: false,
     // sorting
-    manualSorting: true,
+    manualSorting: false,
     onSortingChange: (sortingUpdater) => {
       let newSortingModel: MRT_SortingState;
       if (typeof sortingUpdater === "function") {
