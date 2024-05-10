@@ -42,3 +42,8 @@ code {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+.search-result-highlight em {
+  background-color: yellow;
+  font-style: normal;
+}
