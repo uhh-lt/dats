@@ -1,5 +1,6 @@
-import { Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
   MRT_DensityState,
@@ -28,6 +29,7 @@ import DocumentTableFilterDialog from "../../../../components/DocumentTable/Docu
 import { MyFilter } from "../../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../../store/store.ts";
+import { QueryType } from "../../QueryType.ts";
 import DeleteButton from "../../ToolBar/ToolBarElements/DeleteButton.tsx";
 import DownloadSdocsButton from "../../ToolBar/ToolBarElements/DownloadSdocsButton.tsx";
 import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.tsx";
@@ -50,6 +52,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
 
   // global client state (redux)
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
+  const searchType = useAppSelector((state) => state.search.searchType);
   const rowSelectionModel = useAppSelector((state) => state.search.selectionModel);
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
@@ -83,19 +86,16 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         case SearchColumns.SC_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
-            flex: 2,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            flex: 2,
             Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_USER_ID_LIST:
           return {
             ...colDef,
-            flex: 2,
             Cell: ({ row }) => <SdocAnnotatorsRenderer sdocId={row.original.sdoc_id} />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_CODE_ID_LIST:
@@ -107,7 +107,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
           if (typeof column.column === "number") {
             return {
               ...colDef,
-              flex: 2,
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.sdoc_id} projectMetadataId={column.column as number} />
               ),
@@ -115,7 +114,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
           } else {
             return {
               ...colDef,
-              flex: 1,
               Cell: () => <i>Cannot render column {column.column}</i>,
             } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           }
@@ -173,7 +171,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       SearchService.searchSdocs({
         searchQuery: searchQuery || "",
         projectId: projectId!,
-        highlight: false,
+        highlight: true,
         expertMode: false,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
@@ -258,7 +256,9 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       showProgressBars: isFetching,
     },
     // search query
+    autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
+    // enableGlobalFilter: true,
     onGlobalFilterChange: (rowSelectionUpdater) => {
       let newSearchQuery: string | undefined;
       if (typeof rowSelectionUpdater === "function") {
@@ -310,6 +310,20 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     },
     // column visiblility
     onColumnVisibilityChange: setColumnVisibilityModel,
+    // detail (highlights)
+    renderDetailPanel:
+      searchType === QueryType.LEXICAL && searchQuery.trim().length > 0
+        ? ({ row }) =>
+            row.original.highlights ? (
+              <Box className="search-result-highlight">
+                {row.original.highlights.map((highlight, index) => (
+                  <Typography key={`sdoc-${row.original.sdoc_id}-highlight-${index}`} m={0.5}>
+                    {parse(highlight)}
+                  </Typography>
+                ))}
+              </Box>
+            ) : null
+        : undefined,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
       onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
@@ -354,7 +368,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     ),
     renderToolbarInternalActions: ({ table }) => (
       <Stack direction={"row"} spacing={1} alignItems="center" p={0.5}>
-        <MRT_ToggleGlobalFilterButton table={table} />
+        <MRT_ToggleGlobalFilterButton table={table} disabled={false} />
         <SearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
         <MRT_ToggleDensePaddingButton table={table} />
