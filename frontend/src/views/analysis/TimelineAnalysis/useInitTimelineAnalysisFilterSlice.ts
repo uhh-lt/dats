@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { ColumnInfo, ColumnInfoResponse } from "../../../features/FilterDialog/filterUtils.ts";
+import { ColumnInfo } from "../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { AppDispatch } from "../../../store/store.ts";
 import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
 
-const useGetTimelineAnalysisInfo = (projectId: number) =>
-  useQuery<ColumnInfoResponse>({
+const useGetTimelineAnalysisInfo = (projectId: number, dispatch: AppDispatch) =>
+  useQuery<ColumnInfo[]>({
     queryKey: ["tableInfo", "timelineAnalysis", projectId],
     queryFn: async () => {
       const result = await AnalysisService.timelineAnalysis2Info({ projectId });
@@ -22,10 +22,8 @@ const useGetTimelineAnalysisInfo = (projectId: number) =>
           [info.column]: info,
         };
       }, {});
-      return {
-        info: columnInfo,
-        map: columnInfoMap,
-      };
+      dispatch(TimelineAnalysisFilterActions.init({ columnInfoMap }));
+      return columnInfo;
     },
     staleTime: Infinity,
   });
@@ -35,14 +33,7 @@ export const useInitTimelineAnalysisFilterSlice = ({ projectId }: { projectId: n
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetTimelineAnalysisInfo(projectId);
+  const { data: columnData } = useGetTimelineAnalysisInfo(projectId, dispatch);
 
-  // effects
-  useEffect(() => {
-    if (!columnData) return;
-    dispatch(TimelineAnalysisFilterActions.init({ columnInfoMap: columnData.map }));
-    console.log("initialized timeline analysis filterSlice!");
-  }, [dispatch, columnData]);
-
-  return columnData?.info;
+  return columnData;
 };

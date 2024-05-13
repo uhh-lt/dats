@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { AnalysisService } from "../../api/openapi/services/AnalysisService.ts";
-import { ColumnInfo, ColumnInfoResponse } from "../../features/FilterDialog/filterUtils.ts";
+import { ColumnInfo } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { AppDispatch } from "../../store/store.ts";
 import { SATFilterActions } from "./satFilterSlice.ts";
 
-const useGetSATInfo = (projectId: number) =>
-  useQuery<ColumnInfoResponse>({
+const useGetSATInfo = (projectId: number, dispatch: AppDispatch) =>
+  useQuery<ColumnInfo[]>({
     queryKey: ["tableInfo", "spanAnnotationTable", projectId],
     queryFn: async () => {
       const result = await AnalysisService.annotatedSegmentsInfo({ projectId });
@@ -22,10 +22,8 @@ const useGetSATInfo = (projectId: number) =>
           [info.column]: info,
         };
       }, {});
-      return {
-        info: columnInfo,
-        map: columnInfoMap,
-      };
+      dispatch(SATFilterActions.init({ columnInfoMap }));
+      return columnInfo;
     },
     staleTime: Infinity,
   });
@@ -35,14 +33,7 @@ export const useInitSATFilterSlice = ({ projectId }: { projectId: number }) => {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetSATInfo(projectId);
+  const { data: columnData } = useGetSATInfo(projectId, dispatch);
 
-  // effects
-  useEffect(() => {
-    if (!columnData) return;
-    dispatch(SATFilterActions.init({ columnInfoMap: columnData.map }));
-    console.log("initialized span annotation table filterSlice!");
-  }, [dispatch, columnData]);
-
-  return columnData?.info;
+  return columnData;
 };
