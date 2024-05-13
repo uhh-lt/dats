@@ -1,7 +1,6 @@
 import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
-import React from "react";
 import MemoHooks from "../../api/MemoHooks.ts";
 import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
 
@@ -15,7 +14,7 @@ function MemoStarButton({ memoId, isStarred, ...props }: MemoStarButtonProps & I
   const updateMutation = MemoHooks.useUpdateMemo();
 
   // ui events
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = () => {
     updateMutation.mutate(
       {
         memoId: memoId,

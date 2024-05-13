@@ -1,8 +1,8 @@
-import TagHooks from "../../../../api/TagHooks";
-import { Chip, IconButton, Stack } from "@mui/material";
-import { DocumentTagRead } from "../../../../api/openapi";
-import LabelIcon from "@mui/icons-material/Label";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LabelIcon from "@mui/icons-material/Label";
+import { Chip, IconButton, Stack } from "@mui/material";
+import TagHooks from "../../../../api/TagHooks.ts";
+import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
 
 interface DocumentTagListProps {
   tagId: number;

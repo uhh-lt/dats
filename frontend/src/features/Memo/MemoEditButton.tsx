@@ -1,10 +1,9 @@
-import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
-import React from "react";
-import MemoAPI, { MemoEvent } from "./MemoAPI.ts";
 import EditIcon from "@mui/icons-material/Edit";
+import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
+import MemoAPI, { MemoEvent } from "./MemoAPI.ts";
 
 function MemoEditButton({ memoId, attachedObjectType, attachedObjectId, ...props }: MemoEvent & IconButtonProps) {
-  const handleClickOpen = (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+  const handleClickOpen = () => {
     MemoAPI.openMemo({ memoId, attachedObjectType, attachedObjectId });
   };
 

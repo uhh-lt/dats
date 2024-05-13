@@ -1,13 +1,13 @@
-import * as React from "react";
-import { AttachedObjectType } from "../../api/openapi";
-import RateReviewIcon from "@mui/icons-material/RateReview";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CodeIcon from "@mui/icons-material/Code";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import RateReviewIcon from "@mui/icons-material/RateReview";
 import SourceIcon from "@mui/icons-material/Source";
 import WorkspacesIcon from "@mui/icons-material/Workspaces";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import * as React from "react";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 
 export const attachedObjTypeToIcon: Record<AttachedObjectType, React.ReactElement> = {
   [AttachedObjectType.ANNOTATION_DOCUMENT]: <RateReviewIcon />,
