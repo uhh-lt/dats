@@ -1,11 +1,12 @@
-import { Divider, Grid } from "@mui/material";
+import { Divider, Grid, Typography } from "@mui/material";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
 import TagExplorer from "../../features/TagExplorer/TagExplorer.tsx";
-import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SettingsActions } from "../settings/settingsSlice.ts";
+import DocumentInformation from "./DocumentViewer/DocumentInformation/DocumentInformation.tsx";
 import SearchDocumentTable from "./SearchResults/Table/SearchDocumentTable.tsx";
 import SearchStatistics from "./SearchStatistics/SearchStatistics.tsx";
 import { useAddTagFilter } from "./hooks/useAddTagFilter.ts";
@@ -19,6 +20,7 @@ function Search() {
   // const location = useLocation();
 
   // redux (global client state)
+  const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const dispatch = useAppDispatch();
 
   // filter
@@ -112,7 +114,11 @@ function Search() {
             boxShadow: 4,
           }}
         >
-          Soon
+          <DocumentInformation
+            sdocId={selectedDocumentId}
+            isIdleContent={<Typography>Click a document to read it :)</Typography>}
+            className="h100"
+          />
         </Grid>
       </Grid>
     </>
