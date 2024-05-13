@@ -68,9 +68,9 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   // table columns
   const tableInfo = useInitSearchFilterSlice({ projectId });
   const columns = useMemo(() => {
-    if (!tableInfo.data || !user) return [];
+    if (!tableInfo || !user) return [];
 
-    const result = tableInfo.data.map((column) => {
+    const result = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
         id: column.column.toString(),
         accessorFn: () => null,
@@ -105,11 +105,11 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
           return null;
         default:
           // render metadata
-          if (typeof column.column === "number") {
+          if (!isNaN(parseInt(column.column))) {
             return {
               ...colDef,
               Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.sdoc_id} projectMetadataId={column.column as number} />
+                <SdocMetadataRenderer sdocId={row.original.sdoc_id} projectMetadataId={parseInt(column.column)} />
               ),
             } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           } else {
@@ -123,7 +123,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
 
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
-  }, [tableInfo.data, user]);
+  }, [tableInfo, user]);
 
   // column visiblility
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<MRT_VisibilityState>(() => {

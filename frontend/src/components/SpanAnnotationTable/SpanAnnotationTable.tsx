@@ -84,9 +84,9 @@ function SpanAnnotationTable({
   // table columns
   const tableInfo = useInitSATFilterSlice({ projectId });
   const columns: MRT_ColumnDef<AnnotationTableRow>[] = useMemo(() => {
-    if (!tableInfo.data || !user) return [];
+    if (!tableInfo || !user) return [];
 
-    const result = tableInfo.data.map((column) => {
+    const result = tableInfo.map((column) => {
       const colDef = {
         id: column.column.toString(),
         header: column.label,
@@ -131,11 +131,11 @@ function SpanAnnotationTable({
             accessorFn: (row) => row.span_text,
           } as MRT_ColumnDef<AnnotationTableRow>;
         default:
-          if (typeof column.column === "number") {
+          if (!isNaN(parseInt(column.column))) {
             return {
               ...colDef,
               Cell: ({ row }) => (
-                <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={column.column as number} />
+                <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={parseInt(column.column)} />
               ),
             } as MRT_ColumnDef<AnnotationTableRow>;
           } else {
@@ -148,7 +148,7 @@ function SpanAnnotationTable({
     });
 
     return result;
-  }, [tableInfo.data, user]);
+  }, [tableInfo, user]);
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<AnnotatedSegmentResult>({

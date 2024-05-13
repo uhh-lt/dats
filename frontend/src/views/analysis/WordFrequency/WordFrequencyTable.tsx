@@ -39,9 +39,9 @@ function WordFrequencyTable({ tableContainerRef }: WordFrequencyTableProps) {
 
   // computed
   const columns: MRT_ColumnDef<WordFrequencyStat>[] = useMemo(() => {
-    if (!tableInfo.data || !user) return [];
+    if (!tableInfo || !user) return [];
 
-    const result: Array<MRT_ColumnDef<WordFrequencyStat> | null> = tableInfo.data.map((column) => {
+    const result: Array<MRT_ColumnDef<WordFrequencyStat> | null> = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<WordFrequencyStat> = {
         id: column.column.toString(),
         header: column.label,
@@ -96,7 +96,7 @@ function WordFrequencyTable({ tableContainerRef }: WordFrequencyTableProps) {
 
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as MRT_ColumnDef<WordFrequencyStat>[];
-  }, [tableInfo.data, user]);
+  }, [tableInfo, user]);
 
   // table
   // if (wordFrequency.isError) {

@@ -19,6 +19,11 @@ export type ColumnInfo = {
   value: FilterValueType;
 };
 
+export interface ColumnInfoResponse {
+  info: ColumnInfo[];
+  map: Record<string, ColumnInfo>;
+}
+
 export interface MyFilterExpression<T = string> {
   id: string;
   column: T | number;
