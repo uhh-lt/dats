@@ -3,6 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
+  MRT_ColumnSizingState,
   MRT_DensityState,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
@@ -57,6 +58,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
   const columnVisibilityModel = useAppSelector((state) => state.search.columnVisibilityModel);
+  const columnSizingModel = useAppSelector((state) => state.search.columnSizingModel);
   const gridDensity = useAppSelector((state) => state.search.gridDensity);
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
   const dispatch = useAppDispatch();
@@ -83,11 +85,13 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         case SearchColumns.SC_SOURCE_DOCUMENT_TYPE:
           return {
             ...colDef,
+            size: 100,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderDoctypeIcon />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_SOURCE_DOCUMENT_FILENAME:
           return {
             ...colDef,
+            size: 360,
             Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} renderFilename />,
           } as MRT_ColumnDef<ElasticSearchDocumentHit>;
         case SearchColumns.SC_DOCUMENT_TAG_ID_LIST:
@@ -216,6 +220,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
       columnVisibility: columnVisibilityModel,
+      columnSizing: columnSizingModel,
       density: gridDensity,
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
@@ -284,6 +289,18 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       }
       dispatch(SearchActions.onColumnVisibilityChange(newVisibilityModel));
     },
+    // column resizing
+    enableColumnResizing: true,
+    columnResizeMode: "onEnd",
+    onColumnSizingChange: (sizingUpdater) => {
+      let newColumnSizingModel: MRT_ColumnSizingState;
+      if (typeof sizingUpdater === "function") {
+        newColumnSizingModel = sizingUpdater(columnSizingModel);
+      } else {
+        newColumnSizingModel = sizingUpdater;
+      }
+      dispatch(SearchActions.onColumnSizingChange(newColumnSizingModel));
+    },
     // detail (highlights)
     renderDetailPanel:
       searchType === QueryType.LEXICAL && searchQuery.trim().length > 0
@@ -300,6 +317,9 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         : undefined,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
+      onClick: () => {
+        console.log("Row clicked", row.original.sdoc_id);
+      },
       onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
     }),
     muiTablePaperProps: {
