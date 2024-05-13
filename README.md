@@ -1,6 +1,6 @@
 # Discourse Analysis Tool Suite
 
-![DATS Logo](assets/DATS_color.png)
+![DATS Logo](assets/DATS_colour.png)
 
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/uhh-lt/dats/mwp_v1.svg)](https://results.pre-commit.ci/latest/github/uhh-lt/dats/mwp_v1)
 
