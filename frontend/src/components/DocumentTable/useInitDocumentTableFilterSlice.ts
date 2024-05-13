@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
-import { ColumnInfo, ColumnInfoResponse } from "../../features/FilterDialog/filterUtils.ts";
+import { ColumnInfo } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { AppDispatch } from "../../store/store.ts";
 import { DocumentTableFilterActions } from "./documentTableFilterSlice.ts";
 
-const useGetSearchInfo = (projectId: number) =>
-  useQuery<ColumnInfoResponse>({
+const useGetSearchInfo = (projectId: number, dispatch: AppDispatch) =>
+  useQuery<ColumnInfo[]>({
     queryKey: ["tableInfo", "documentTable", projectId],
     queryFn: async () => {
       const result = await SearchService.searchSdocsInfo({ projectId });
@@ -22,10 +22,8 @@ const useGetSearchInfo = (projectId: number) =>
           [info.column]: info,
         };
       }, {});
-      return {
-        info: columnInfo,
-        map: columnInfoMap,
-      };
+      dispatch(DocumentTableFilterActions.init({ columnInfoMap }));
+      return columnInfo;
     },
     staleTime: Infinity,
   });
@@ -35,14 +33,7 @@ export const useInitDocumentTableFilterSlice = ({ projectId }: { projectId: numb
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetSearchInfo(projectId);
+  const { data: columnData } = useGetSearchInfo(projectId, dispatch);
 
-  // effects
-  useEffect(() => {
-    if (!columnData) return;
-    dispatch(DocumentTableFilterActions.init({ columnInfoMap: columnData.map }));
-    console.log("initialized document table filterSlice!");
-  }, [dispatch, columnData]);
-
-  return columnData?.info;
+  return columnData;
 };

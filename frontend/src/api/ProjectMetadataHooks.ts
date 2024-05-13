@@ -10,6 +10,7 @@ const useCreateMetadata = () =>
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATA, data.id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: ["tableInfo"] }); // tableInfo queries need to be refetched, as there is new metadata now!
     },
     meta: {
       successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,

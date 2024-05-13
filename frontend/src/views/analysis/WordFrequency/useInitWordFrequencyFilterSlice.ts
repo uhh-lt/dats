@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { ColumnInfo, ColumnInfoResponse } from "../../../features/FilterDialog/filterUtils.ts";
+import { ColumnInfo } from "../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { AppDispatch } from "../../../store/store.ts";
 import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice.ts";
 
-const useGetWordFrequencyTableInfo = (projectId: number) =>
-  useQuery<ColumnInfoResponse>({
+const useGetWordFrequencyTableInfo = (projectId: number, dispatch: AppDispatch) =>
+  useQuery<ColumnInfo[]>({
     queryKey: ["tableInfo", "wordFrequency", projectId],
     queryFn: async () => {
       const result = await AnalysisService.wordFrequencyAnalysisInfo({ projectId });
@@ -22,10 +22,8 @@ const useGetWordFrequencyTableInfo = (projectId: number) =>
           [info.column]: info,
         };
       }, {});
-      return {
-        info: columnInfo,
-        map: columnInfoMap,
-      };
+      dispatch(WordFrequencyFilterActions.init({ columnInfoMap }));
+      return columnInfo;
     },
     staleTime: Infinity,
   });
@@ -35,14 +33,7 @@ export const useInitWordFrequencyFilterSlice = ({ projectId }: { projectId: numb
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const { data: columnData } = useGetWordFrequencyTableInfo(projectId);
+  const { data: columnData } = useGetWordFrequencyTableInfo(projectId, dispatch);
 
-  // effects
-  useEffect(() => {
-    if (!columnData) return;
-    dispatch(WordFrequencyFilterActions.init({ columnInfoMap: columnData.map }));
-    console.log("initialized word frequency filterSlice!");
-  }, [dispatch, columnData]);
-
-  return columnData?.info;
+  return columnData;
 };
