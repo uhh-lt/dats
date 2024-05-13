@@ -1,5 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import {
+  MRT_ColumnSizingState,
   MRT_DensityState,
   MRT_PaginationState,
   MRT_RowSelectionState,
@@ -26,6 +27,7 @@ interface SearchState {
   paginationModel: MRT_PaginationState;
   sortingModel: MRT_SortingState;
   columnVisibilityModel: MRT_VisibilityState;
+  columnSizingModel: MRT_ColumnSizingState;
   gridDensity: MRT_DensityState;
 }
 
@@ -45,6 +47,7 @@ const initialState: SearchState = {
   },
   sortingModel: [],
   columnVisibilityModel: {},
+  columnSizingModel: {},
   gridDensity: "comfortable",
   expertMode: false,
 };
@@ -90,6 +93,10 @@ export const searchSlice = createSlice({
     // column visibility
     onColumnVisibilityChange: (state, action: PayloadAction<MRT_VisibilityState>) => {
       state.columnVisibilityModel = action.payload;
+    },
+    // column visibility
+    onColumnSizingChange: (state, action: PayloadAction<MRT_ColumnSizingState>) => {
+      state.columnSizingModel = action.payload;
     },
 
     // ui
