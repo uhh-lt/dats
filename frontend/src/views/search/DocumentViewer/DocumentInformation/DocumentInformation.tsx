@@ -1,9 +1,11 @@
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { Box, BoxProps, Button, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, BoxProps, Button, CircularProgress, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../../../api/SdocHooks.ts";
+import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType.ts";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
+import MemoAPI from "../../../../features/Memo/MemoAPI.ts";
 import MemoExplorer from "../../../annotation/MemoExplorer/MemoExplorer.tsx";
 import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.tsx";
 import DocumentMetadataRow from "../DocumentMetadata/DocumentMetadataRow.tsx";
@@ -37,106 +39,95 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
   }
 
   return (
-    <Box {...props}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          "& > *": {
-            m: 1,
-          },
-        }}
+    <Box className="myFlexContainer h100">
+      <ToggleButtonGroup
+        value={selectedButton}
+        exclusive
+        onChange={handleSelectedButton}
+        aria-label="text alignment"
+        size="small"
+        color="primary"
+        fullWidth
+        sx={{ p: 2 }}
       >
-        <ToggleButtonGroup
-          value={selectedButton}
-          exclusive
-          onChange={handleSelectedButton}
-          aria-label="text alignment"
-          size="small"
-          color="primary"
-        >
-          <ToggleButton
-            value="metadata"
-            aria-label="metadata"
-            onClick={() => setSelectedButton("metadata")}
-            sx={{ fontSize: 12 }}
-          >
-            Metadata
-          </ToggleButton>
-          <ToggleButton value="tags" aria-label="tags" onClick={() => setSelectedButton("tags")} sx={{ fontSize: 12 }}>
-            Tags
-          </ToggleButton>
-          <ToggleButton
-            value="linked_documents"
-            aria-label="linked_documents"
-            onClick={() => setSelectedButton("reldocs")}
-            sx={{ fontSize: 12 }}
-          >
-            Linked Documents
-          </ToggleButton>
-          <ToggleButton
-            value="memoexplorer"
-            aria-label="memoexplorer"
-            onClick={() => setSelectedButton("memoexplorer")}
-            sx={{ fontSize: 12 }}
-          >
-            Memo Explorer
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+        <ToggleButton value="metadata" aria-label="metadata" sx={{ fontSize: 12 }}>
+          Info
+        </ToggleButton>
+        <ToggleButton value="tags" aria-label="tags" sx={{ fontSize: 12 }}>
+          Tags
+        </ToggleButton>
+        <ToggleButton value="linked_documents" aria-label="linked_documents" sx={{ fontSize: 12 }}>
+          Links
+        </ToggleButton>
+        <ToggleButton value="memoexplorer" aria-label="memoexplorer" sx={{ fontSize: 12 }}>
+          Memos
+        </ToggleButton>
+      </ToggleButtonGroup>
       {selectedButton === "metadata" ? (
-        <>
-          <Button variant="text" size="small" sx={{ ml: 2, mb: 1 }} startIcon={<AddCircleIcon />} onClick={undefined}>
+        <Box className="myFlexFillAllContainer" sx={{ px: 2 }}>
+          <Button variant="text" size="small" startIcon={<AddCircleIcon />} onClick={undefined}>
             Add Metadata
           </Button>
-          {metadata.isLoading && <h1>Loading...</h1>}
-          {metadata.isError && <h1>{metadata.error.message}</h1>}
+          {metadata.isLoading && (
+            <Box textAlign={"center"} pt={2}>
+              <CircularProgress />
+            </Box>
+          )}
+          {metadata.isError && <span>{metadata.error.message}</span>}
           {metadata.isSuccess &&
             metadata.data
               .sort((a, b) => a.id - b.id)
               .map((data) => <DocumentMetadataRow key={data.id} metadata={data} />)}
-        </>
+        </Box>
       ) : selectedButton === "tags" ? (
-        <>
+        <Box className="myFlexFillAllContainer" sx={{ px: 2 }}>
           <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} type={"addBtn"} />
           <Stack direction="column" spacing={0.5}>
-            {documentTags.isLoading && <span>Loading tags...</span>}
+            {documentTags.isLoading && (
+              <Box textAlign={"center"} pt={2}>
+                <CircularProgress />
+              </Box>
+            )}
             {documentTags.isError && <span>{documentTags.error.message}</span>}
             {documentTags.isSuccess &&
               documentTags.data.map((tag: DocumentTagRead) => (
                 <DocumentTagRow key={tag.id} tagId={tag.id} handleDelete={handleDeleteDocumentTag} />
               ))}
           </Stack>
-        </>
+        </Box>
       ) : selectedButton === "linked_documents" ? (
-        linkedSdocIds.isSuccess &&
-        linkedSdocIds.data.length > 0 && (
-          <>
-            <Box pb={1} style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
-              <Button
-                variant="text"
-                size="small"
-                sx={{ ml: 2, mb: 1 }}
-                startIcon={<AddCircleIcon />}
-                onClick={undefined}
-              >
-                Link documents
-              </Button>
-              {linkedSdocIds.data.map((sdocId) => (
+        <Box className="myFlexFillAllContainer" sx={{ px: 2 }}>
+          <Button variant="text" size="small" startIcon={<AddCircleIcon />} onClick={undefined}>
+            Link documents
+          </Button>
+          <Stack direction="column" spacing={0.5}>
+            {linkedSdocIds.isLoading && (
+              <Box textAlign={"center"} pt={2}>
+                <CircularProgress />
+              </Box>
+            )}
+            {linkedSdocIds.isError && <span>{linkedSdocIds.error.message}</span>}
+            {linkedSdocIds.isSuccess &&
+              linkedSdocIds.data.map((sdocId) => (
                 <LinkedDocumentRow sdocId={sdocId} handleClick={() => navigate(`../search/doc/${sdocId}`)} />
               ))}
-            </Box>
-          </>
-        )
+          </Stack>
+        </Box>
       ) : (
         // Placeholder button for adding new memo
-        <>
-          <Button variant="text" size="small" sx={{ ml: 2, mb: 1 }} startIcon={<AddCircleIcon />} onClick={undefined}>
+        <Box className="myFlexFillAllContainer" sx={{ px: 2 }}>
+          <Button
+            variant="text"
+            size="small"
+            startIcon={<AddCircleIcon />}
+            onClick={() =>
+              MemoAPI.openMemo({ attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT, attachedObjectId: sdocId })
+            }
+          >
             Add Memo
           </Button>
           <MemoExplorer sdocId={sdocId} />
-        </>
+        </Box>
       )}
     </Box>
   );
