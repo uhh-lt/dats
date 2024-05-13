@@ -43,7 +43,7 @@ function WordFrequencyTable({ tableContainerRef }: WordFrequencyTableProps) {
 
     const result: Array<MRT_ColumnDef<WordFrequencyStat> | null> = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<WordFrequencyStat> = {
-        id: column.column.toString(),
+        id: column.column,
         header: column.label,
         enableSorting: column.sortable,
       };
