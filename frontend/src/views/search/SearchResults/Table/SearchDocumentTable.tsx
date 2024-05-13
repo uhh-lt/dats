@@ -55,6 +55,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const searchType = useAppSelector((state) => state.search.searchType);
   const rowSelectionModel = useAppSelector((state) => state.search.selectionModel);
+  const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
   const columnVisibilityModel = useAppSelector((state) => state.search.columnVisibilityModel);
@@ -317,10 +318,17 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         : undefined,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
-      onClick: () => {
-        console.log("Row clicked", row.original.sdoc_id);
+      onClick: (event) => {
+        if (event.detail >= 2) {
+          console.log("Navigate!");
+        } else {
+          dispatch(SearchActions.onSelectedDocumentIdChange(row.original.sdoc_id));
+        }
       },
       onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
+      sx: {
+        backgroundColor: selectedDocumentId === row.original.sdoc_id ? "lightgrey !important" : undefined,
+      },
     }),
     muiTablePaperProps: {
       elevation: 8,
