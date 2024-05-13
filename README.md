@@ -1,5 +1,7 @@
 # Discourse Analysis Tool Suite
 
+![DATS Logo](assets/DATS_color.png)
+
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/uhh-lt/dats/mwp_v1.svg)](https://results.pre-commit.ci/latest/github/uhh-lt/dats/mwp_v1)
 
 This is the repository for the Discourse Analysis Tool Suite (dats) - an outcome of
