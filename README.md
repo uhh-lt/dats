@@ -1,4 +1,4 @@
-# Discourse Analysis Tool Suite
+# Discourse Analysis Tool Suite (DATS)
 
 ![DATS Logo](assets/DATS_colour.png)
 
@@ -20,7 +20,7 @@ _Please also have a look at our [Wiki](https://github.com/uhh-lt/dats/wiki) for 
 
 ## Tech Stack
 
-![TechStack](docs/dwts_Arch-backend-techstack.drawio.png)
+![TechStack](docs/DWTS_Arch-backend-techstack.drawio.png)
 
 ## License
 
