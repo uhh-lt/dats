@@ -1,9 +1,16 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { MRT_DensityState, MRT_PaginationState, MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
+import {
+  MRT_DensityState,
+  MRT_PaginationState,
+  MRT_RowSelectionState,
+  MRT_SortingState,
+  MRT_VisibilityState,
+} from "material-react-table";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { QueryType } from "./QueryType.ts";
+import { SearchFilterActions } from "./searchFilterSlice.ts";
 
 interface SearchState {
   isSplitView: boolean;
@@ -18,6 +25,7 @@ interface SearchState {
   selectionModel: MRT_RowSelectionState;
   paginationModel: MRT_PaginationState;
   sortingModel: MRT_SortingState;
+  columnVisibilityModel: MRT_VisibilityState;
   gridDensity: MRT_DensityState;
 }
 
@@ -36,6 +44,7 @@ const initialState: SearchState = {
     pageSize: 10,
   },
   sortingModel: [],
+  columnVisibilityModel: {},
   gridDensity: "comfortable",
   expertMode: false,
 };
@@ -76,6 +85,11 @@ export const searchSlice = createSlice({
     // sorting
     onSortModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
       state.sortingModel = action.payload;
+    },
+
+    // column visibility
+    onColumnVisibilityChange: (state, action: PayloadAction<MRT_VisibilityState>) => {
+      state.columnVisibilityModel = action.payload;
     },
 
     // ui
@@ -154,6 +168,23 @@ export const searchSlice = createSlice({
       state.selectionModel = action.payload;
       state.selectedDocumentIds = Object.keys(action.payload).map((key) => parseInt(key));
     },
+  },
+  extraReducers(builder) {
+    builder.addCase(SearchFilterActions.init, (state, action) => {
+      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+        if (!column.column) return acc;
+        // this is a normal column
+        if (isNaN(parseInt(column.column))) {
+          return acc;
+          // this is a metadata column
+        } else {
+          return {
+            ...acc,
+            [column.column]: false,
+          };
+        }
+      }, {});
+    });
   },
 });
 

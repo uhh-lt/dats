@@ -88,7 +88,7 @@ function SpanAnnotationTable({
 
     const result = tableInfo.map((column) => {
       const colDef = {
-        id: column.column.toString(),
+        id: column.column,
         header: column.label,
         enableSorting: true,
       };

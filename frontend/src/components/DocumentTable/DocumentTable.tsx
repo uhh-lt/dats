@@ -100,7 +100,7 @@ function DocumentTable({
 
     const result = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
-        id: column.column.toString(),
+        id: column.column,
         header: column.label,
         enableSorting: column.sortable,
       };

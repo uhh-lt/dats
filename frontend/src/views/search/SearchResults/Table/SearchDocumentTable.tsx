@@ -14,7 +14,7 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { ElasticSearchDocumentHit } from "../../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../../api/openapi/models/SearchColumns.ts";
@@ -56,6 +56,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   const rowSelectionModel = useAppSelector((state) => state.search.selectionModel);
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
   const sortingModel = useAppSelector((state) => state.search.sortingModel);
+  const columnVisibilityModel = useAppSelector((state) => state.search.columnVisibilityModel);
   const gridDensity = useAppSelector((state) => state.search.gridDensity);
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
   const dispatch = useAppDispatch();
@@ -72,7 +73,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
 
     const result = tableInfo.map((column) => {
       const colDef: MRT_ColumnDef<ElasticSearchDocumentHit> = {
-        id: column.column.toString(),
+        id: column.column,
         accessorFn: () => null,
         header: column.label,
         enableSorting: column.sortable,
@@ -124,40 +125,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     // unwanted columns are set to null, so we filter those out
     return result.filter((column) => column !== null) as MRT_ColumnDef<ElasticSearchDocumentHit>[];
   }, [tableInfo, user]);
-
-  // column visiblility
-  const [columnVisibilityModel, setColumnVisibilityModel] = useState<MRT_VisibilityState>(() => {
-    return columns.reduce((acc, column) => {
-      if (!column.id) return acc;
-      // this is a normal column
-      if (isNaN(parseInt(column.id))) {
-        return acc;
-        // this is a metadata column
-      } else {
-        return {
-          ...acc,
-          [column.id]: false,
-        };
-      }
-    }, {});
-  });
-  useEffect(() => {
-    setColumnVisibilityModel(
-      columns.reduce((acc, column) => {
-        if (!column.id) return acc;
-        // this is a normal column
-        if (isNaN(parseInt(column.id))) {
-          return acc;
-          // this is a metadata column
-        } else {
-          return {
-            ...acc,
-            [column.id]: false,
-          };
-        }
-      }, {}),
-    );
-  }, [columns]);
 
   // table data
   const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
@@ -308,7 +275,15 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       dispatch(SearchActions.setTableDensity(newGridDensity));
     },
     // column visiblility
-    onColumnVisibilityChange: setColumnVisibilityModel,
+    onColumnVisibilityChange: (visibilityUpdater) => {
+      let newVisibilityModel: MRT_VisibilityState;
+      if (typeof visibilityUpdater === "function") {
+        newVisibilityModel = visibilityUpdater(columnVisibilityModel);
+      } else {
+        newVisibilityModel = visibilityUpdater;
+      }
+      dispatch(SearchActions.onColumnVisibilityChange(newVisibilityModel));
+    },
     // detail (highlights)
     renderDetailPanel:
       searchType === QueryType.LEXICAL && searchQuery.trim().length > 0
