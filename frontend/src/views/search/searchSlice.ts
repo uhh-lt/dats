@@ -23,6 +23,7 @@ interface SearchState {
   isTableView: boolean;
   expertMode: boolean;
   selectedDocumentIds: number[];
+  selectedDocumentId: number | undefined;
   selectionModel: MRT_RowSelectionState;
   paginationModel: MRT_PaginationState;
   sortingModel: MRT_SortingState;
@@ -33,6 +34,7 @@ interface SearchState {
 
 const initialState: SearchState = {
   selectedDocumentIds: [],
+  selectedDocumentId: undefined,
   isSplitView: false,
   isShowEntities: true,
   isShowTags: true,
@@ -57,6 +59,9 @@ export const searchSlice = createSlice({
   initialState,
   reducers: {
     // document selection
+    onSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => {
+      state.selectedDocumentId = action.payload;
+    },
     toggleDocument: (state, action: PayloadAction<number>) => {
       const selectedIndex = state.selectedDocumentIds.indexOf(action.payload);
       if (selectedIndex === -1) {
