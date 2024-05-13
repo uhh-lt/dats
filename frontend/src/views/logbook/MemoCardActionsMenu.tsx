@@ -1,12 +1,12 @@
 import { IconButton, Menu } from "@mui/material";
 import { QueryObserverSuccessResult } from "@tanstack/react-query";
-import { MemoRead } from "../../api/openapi";
 
-import { useState } from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import MemoStarMenuItem from "../../features/Memo/MemoStarMenuItem";
-import MemoEditMenuItem from "../../features/Memo/MemoEditMenuItem";
-import MemoDeleteMenuItem from "../../features/Memo/MemoDeleteMenuItem";
+import { useState } from "react";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import MemoDeleteMenuItem from "../../features/Memo/MemoDeleteMenuItem.tsx";
+import MemoEditMenuItem from "../../features/Memo/MemoEditMenuItem.tsx";
+import MemoStarMenuItem from "../../features/Memo/MemoStarMenuItem.tsx";
 interface MemoCardActionsMenuProps {
   memo: QueryObserverSuccessResult<MemoRead, Error>;
 }

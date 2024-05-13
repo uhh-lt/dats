@@ -1,8 +1,8 @@
-import { Chip, IconButton, Typography } from "@mui/material";
-import { SourceDocumentWithDataRead } from "../../../../api/openapi";
 import DeleteIcon from "@mui/icons-material/Delete";
-import SdocHooks from "../../../../api/SdocHooks";
 import NoteIcon from "@mui/icons-material/Note";
+import { Chip, IconButton, Typography } from "@mui/material";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import { SourceDocumentWithDataRead } from "../../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 
 interface LinkedDocumentRowProps {
   sdocId: number;
@@ -10,7 +10,7 @@ interface LinkedDocumentRowProps {
   handleDelete?: (sdoc: SourceDocumentWithDataRead) => void;
 }
 
-function LinkedDocumentRow({ sdocId, handleClick, handleDelete }: LinkedDocumentRowProps) {
+function LinkedDocumentRow({ sdocId, handleClick }: LinkedDocumentRowProps) {
   // query (global server state)
   const sdoc = SdocHooks.useGetDocument(sdocId);
 

@@ -9,6 +9,7 @@ import "./MemoCard.css";
 import { MemoCardContextMenuData } from "./MemoResults.tsx";
 
 import SdocHooks from "../../api/SdocHooks.ts";
+import { DocType } from "../../api/openapi/models/DocType.ts";
 import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon.tsx";
 import MemoCardActionsMenu from "./MemoCardActionsMenu.tsx";
 interface MemoCardProps {

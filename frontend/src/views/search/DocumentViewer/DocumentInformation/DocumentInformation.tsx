@@ -1,15 +1,16 @@
-import { Box, Button, Card, CardContent, CardProps, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
-import DocumentMetadataRow from "../DocumentMetadata/DocumentMetadataRow";
-import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton";
-import LinkedDocumentRow from "./LinkedDocumentRow";
-import MemoExplorer from "../../../annotation/MemoExplorer/MemoExplorer";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import SdocHooks from "../../../../api/SdocHooks";
-import { useDeletableDocumentTags } from "../useDeletableDocumentTags";
+import { Box, Button, Card, CardContent, CardProps, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { useState } from "react";
-import { DocumentTagRead } from "../../../../api/openapi";
-import DocumentTagRow from "./DocumentTagRow";
 import { useNavigate } from "react-router-dom";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
+import MemoExplorer from "../../../annotation/MemoExplorer/MemoExplorer.tsx";
+import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.tsx";
+import DocumentMetadataRow from "../DocumentMetadata/DocumentMetadataRow.tsx";
+import { useDeletableDocumentTags } from "../useDeletableDocumentTags.ts";
+import DocumentTagRow from "./DocumentTagRow.tsx";
+import LinkedDocumentRow from "./LinkedDocumentRow.tsx";
+
 interface DocumentInformationProps {
   sdocId: number | undefined;
   isIdleContent?: React.ReactNode;
@@ -30,7 +31,7 @@ export default function DocumentInformation({
   const metadata = SdocHooks.useGetMetadata(sdocId);
 
   // const [selectedBtn, setSelectedBtn] = useState<string | null>("metadata");
-  const handleSelectedButton = (event: React.MouseEvent<HTMLElement>, newBtn: string | null) => {
+  const handleSelectedButton = (_: React.MouseEvent<HTMLElement>, newBtn: string | null) => {
     setSelectedButton(newBtn);
   };
 
