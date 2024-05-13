@@ -176,13 +176,8 @@ export const filterReducer = {
       items: [],
     };
   },
-  init: (state: Draft<FilterState>, action: PayloadAction<{ columnInfo: ColumnInfo[] }>) => {
-    state.column2Info = action.payload.columnInfo.reduce((acc, columnInfo) => {
-      return {
-        ...acc,
-        [columnInfo.column]: columnInfo,
-      };
-    }, {});
+  init: (state: Draft<FilterState>, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
+    state.column2Info = action.payload.columnInfoMap;
   },
   onChangeExpertMode: (state: Draft<FilterState>, action: PayloadAction<{ expertMode: boolean }>) => {
     state.expertMode = action.payload.expertMode;

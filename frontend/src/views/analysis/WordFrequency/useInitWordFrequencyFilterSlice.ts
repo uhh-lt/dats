@@ -1,13 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { ColumnInfo, ColumnInfoResponse } from "../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice.ts";
 
 const useGetWordFrequencyTableInfo = (projectId: number) =>
-  useQuery({
+  useQuery<ColumnInfoResponse>({
     queryKey: ["tableInfo", "wordFrequency", projectId],
-    queryFn: () => AnalysisService.wordFrequencyAnalysisInfo({ projectId }),
+    queryFn: async () => {
+      const result = await AnalysisService.wordFrequencyAnalysisInfo({ projectId });
+      const columnInfo = result.map((info) => {
+        return {
+          ...info,
+          column: info.column.toString(),
+        };
+      });
+      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
+        return {
+          ...acc,
+          [info.column]: info,
+        };
+      }, {});
+      return {
+        info: columnInfo,
+        map: columnInfoMap,
+      };
+    },
+    staleTime: Infinity,
   });
 
 export const useInitWordFrequencyFilterSlice = ({ projectId }: { projectId: number }) => {
@@ -15,20 +35,14 @@ export const useInitWordFrequencyFilterSlice = ({ projectId }: { projectId: numb
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const tableInfo = useGetWordFrequencyTableInfo(projectId);
+  const { data: columnData } = useGetWordFrequencyTableInfo(projectId);
 
   // effects
   useEffect(() => {
-    if (!tableInfo.data) return;
-    dispatch(
-      WordFrequencyFilterActions.init({
-        columnInfo: tableInfo.data.map((d) => {
-          return { ...d, column: d.column.toString() };
-        }),
-      }),
-    );
+    if (!columnData) return;
+    dispatch(WordFrequencyFilterActions.init({ columnInfoMap: columnData.map }));
     console.log("initialized word frequency filterSlice!");
-  }, [dispatch, tableInfo.data]);
+  }, [dispatch, columnData]);
 
-  return tableInfo;
+  return columnData?.info;
 };

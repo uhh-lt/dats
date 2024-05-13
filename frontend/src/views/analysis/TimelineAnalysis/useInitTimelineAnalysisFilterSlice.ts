@@ -1,13 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { ColumnInfo, ColumnInfoResponse } from "../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
 
 const useGetTimelineAnalysisInfo = (projectId: number) =>
-  useQuery({
+  useQuery<ColumnInfoResponse>({
     queryKey: ["tableInfo", "timelineAnalysis", projectId],
-    queryFn: () => AnalysisService.timelineAnalysis2Info({ projectId }),
+    queryFn: async () => {
+      const result = await AnalysisService.timelineAnalysis2Info({ projectId });
+      const columnInfo = result.map((info) => {
+        return {
+          ...info,
+          column: info.column.toString(),
+        };
+      });
+      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
+        return {
+          ...acc,
+          [info.column]: info,
+        };
+      }, {});
+      return {
+        info: columnInfo,
+        map: columnInfoMap,
+      };
+    },
+    staleTime: Infinity,
   });
 
 export const useInitTimelineAnalysisFilterSlice = ({ projectId }: { projectId: number }) => {
@@ -15,20 +35,14 @@ export const useInitTimelineAnalysisFilterSlice = ({ projectId }: { projectId: n
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const tableInfo = useGetTimelineAnalysisInfo(projectId);
+  const { data: columnData } = useGetTimelineAnalysisInfo(projectId);
 
   // effects
   useEffect(() => {
-    if (!tableInfo.data) return;
-    dispatch(
-      TimelineAnalysisFilterActions.init({
-        columnInfo: tableInfo.data.map((d) => {
-          return { ...d, column: d.column.toString() };
-        }),
-      }),
-    );
+    if (!columnData) return;
+    dispatch(TimelineAnalysisFilterActions.init({ columnInfoMap: columnData.map }));
     console.log("initialized timeline analysis filterSlice!");
-  }, [dispatch, tableInfo.data]);
+  }, [dispatch, columnData]);
 
-  return tableInfo;
+  return columnData?.info;
 };

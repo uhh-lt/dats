@@ -1,13 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { AnalysisService } from "../../api/openapi/services/AnalysisService.ts";
+import { ColumnInfo, ColumnInfoResponse } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { SATFilterActions } from "./satFilterSlice.ts";
 
 const useGetSATInfo = (projectId: number) =>
-  useQuery({
+  useQuery<ColumnInfoResponse>({
     queryKey: ["tableInfo", "spanAnnotationTable", projectId],
-    queryFn: () => AnalysisService.annotatedSegmentsInfo({ projectId }),
+    queryFn: async () => {
+      const result = await AnalysisService.annotatedSegmentsInfo({ projectId });
+      const columnInfo = result.map((info) => {
+        return {
+          ...info,
+          column: info.column.toString(),
+        };
+      });
+      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
+        return {
+          ...acc,
+          [info.column]: info,
+        };
+      }, {});
+      return {
+        info: columnInfo,
+        map: columnInfoMap,
+      };
+    },
+    staleTime: Infinity,
   });
 
 export const useInitSATFilterSlice = ({ projectId }: { projectId: number }) => {
@@ -15,20 +35,14 @@ export const useInitSATFilterSlice = ({ projectId }: { projectId: number }) => {
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const tableInfo = useGetSATInfo(projectId);
+  const { data: columnData } = useGetSATInfo(projectId);
 
   // effects
   useEffect(() => {
-    if (!tableInfo.data) return;
-    dispatch(
-      SATFilterActions.init({
-        columnInfo: tableInfo.data.map((d) => {
-          return { ...d, column: d.column.toString() };
-        }),
-      }),
-    );
+    if (!columnData) return;
+    dispatch(SATFilterActions.init({ columnInfoMap: columnData.map }));
     console.log("initialized span annotation table filterSlice!");
-  }, [dispatch, tableInfo.data]);
+  }, [dispatch, columnData]);
 
-  return tableInfo;
+  return columnData?.info;
 };
