@@ -28,7 +28,7 @@ function TagMenuButton({ forceSdocId, popoverOrigin, type }: TagMenuButtonProps)
           </IconButton>
         </Tooltip>
       ) : (
-        <Button variant="text" size="small" sx={{ ml: 2, mb: 1 }} onClick={handleClick} startIcon={<AddCircleIcon />}>
+        <Button variant="text" size="small" onClick={handleClick} startIcon={<AddCircleIcon />}>
           Add Tags
         </Button>
       )}

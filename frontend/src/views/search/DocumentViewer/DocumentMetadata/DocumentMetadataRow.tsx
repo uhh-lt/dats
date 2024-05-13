@@ -1,5 +1,4 @@
 import { ErrorMessage } from "@hookform/error-message";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { Autocomplete, Box, Chip, Stack, Switch, TextField } from "@mui/material";
 import { useCallback } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
@@ -207,7 +206,6 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
 
   return (
     <Stack direction="row" alignItems="flex-end" mt={1}>
-      <InfoOutlinedIcon fontSize="medium" sx={{ my: "5px", mr: 1 }} />
       <TextField
         variant="standard"
         error={false}
@@ -215,6 +213,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
         disabled
         defaultValue={metadata.project_metadata.key}
         sx={{ flexGrow: 1, flexBasis: 1 }}
+        inputProps={{ style: { textAlign: "right", paddingRight: "8px" } }}
       />
       {inputField}
       {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
