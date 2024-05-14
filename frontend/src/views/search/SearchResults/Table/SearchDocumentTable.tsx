@@ -16,6 +16,7 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { ElasticSearchDocumentHit } from "../../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../../api/openapi/models/SearchColumns.ts";
@@ -48,6 +49,8 @@ interface DocumentTableProps {
 }
 
 function SearchDocumentTable({ projectId }: DocumentTableProps) {
+  const navigate = useNavigate();
+
   // global client state (react router)
   const { user } = useAuth();
 
@@ -320,7 +323,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     muiTableBodyRowProps: ({ row }) => ({
       onClick: (event) => {
         if (event.detail >= 2) {
-          console.log("Navigate!");
+          navigate(`/project/${projectId}/annotation/${row.original.sdoc_id}`);
         } else {
           dispatch(SearchActions.onSelectedDocumentIdChange(row.original.sdoc_id));
         }
