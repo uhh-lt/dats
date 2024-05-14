@@ -11,7 +11,7 @@ import Analysis from "../views/analysis/Analysis.tsx";
 import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments.tsx";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis.tsx";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph.tsx";
-import DocumentSampler from "../views/analysis/DocumentSampler/DocumentSampler";
+import DocumentSampler from "../views/analysis/DocumentSampler/DocumentSampler.tsx";
 import TableDashboard from "../views/analysis/Table/TableDashboard.tsx";
 import TableView from "../views/analysis/Table/TableView.tsx";
 import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis.tsx";
@@ -136,10 +136,6 @@ const router = createBrowserRouter([
       },
       {
         path: "/project/:projectId/search",
-        element: <Search />,
-      },
-      {
-        path: "/project/:projectId/search/doc/:sdocId",
         element: <Search />,
       },
       {
