@@ -5,7 +5,6 @@ from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase, NoSuchElementError
-from app.core.data.crud.document_tag import crud_document_tag
 from app.core.data.crud.source_document_metadata import crud_sdoc_meta
 from app.core.data.dto.action import ActionType
 from app.core.data.dto.document_tag import DocumentTagRead
@@ -88,84 +87,6 @@ class CRUDSourceDocument(
         else:
             sdoc_data_read = SourceDocumentDataRead.model_validate(data)
         return SourceDocumentWithDataRead(**(sdoc_read.dict() | sdoc_data_read.dict()))
-
-    def link_document_tag(
-        self, db: Session, *, sdoc_id: int, tag_id: int
-    ) -> SourceDocumentORM:
-        # create before_state
-        sdoc_db_obj = self.read(db=db, id=sdoc_id)
-        before_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
-
-        # link tag
-        doc_tag_db_obj = crud_document_tag.read(db=db, id=tag_id)
-        sdoc_db_obj.document_tags.append(doc_tag_db_obj)
-        db.add(sdoc_db_obj)
-        db.commit()
-
-        # create after state
-        db.refresh(sdoc_db_obj)
-        after_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
-
-        # create action
-        self._create_action(
-            db_obj=sdoc_db_obj,
-            action_type=ActionType.UPDATE,
-            before_state=before_state,
-            after_state=after_state,
-        )
-
-        return sdoc_db_obj
-
-    def unlink_document_tag(
-        self, db: Session, *, sdoc_id: int, tag_id: int
-    ) -> SourceDocumentORM:
-        # create before_state
-        sdoc_db_obj = self.read(db=db, id=sdoc_id)
-        before_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
-
-        # remove tag
-        doc_tag_db_obj = crud_document_tag.read(db=db, id=tag_id)
-        sdoc_db_obj.document_tags.remove(doc_tag_db_obj)
-        db.commit()
-
-        # create after state
-        db.refresh(sdoc_db_obj)
-        after_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
-
-        # create action
-        self._create_action(
-            db_obj=sdoc_db_obj,
-            action_type=ActionType.UPDATE,
-            before_state=before_state,
-            after_state=after_state,
-        )
-
-        return sdoc_db_obj
-
-    def unlink_all_document_tags(
-        self, db: Session, *, sdoc_id: int
-    ) -> SourceDocumentORM:
-        # create before_state
-        sdoc_db_obj = self.read(db=db, id=sdoc_id)
-        before_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
-
-        # remove all tags
-        sdoc_db_obj.document_tags = []
-        db.commit()
-
-        # create after state
-        db.refresh(sdoc_db_obj)
-        after_state = self._get_action_state_from_orm(db_obj=sdoc_db_obj)
-
-        # create action
-        self._create_action(
-            db_obj=sdoc_db_obj,
-            action_type=ActionType.UPDATE,
-            before_state=before_state,
-            after_state=after_state,
-        )
-
-        return sdoc_db_obj
 
     def remove(self, db: Session, *, id: int) -> SourceDocumentORM:
         # Import SimSearchService here to prevent a cyclic dependency
