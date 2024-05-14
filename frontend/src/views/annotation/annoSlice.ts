@@ -3,6 +3,7 @@ import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { RootState } from "../../store/store.ts";
 
 export interface AnnoState {
+  isAnnotationMode: boolean;
   codesForSelection: CodeRead[];
   selectedDocumentTagId: number | undefined;
   selectedCodeId: number | undefined;
@@ -13,6 +14,7 @@ export interface AnnoState {
 }
 
 const initialState: AnnoState = {
+  isAnnotationMode: false,
   codesForSelection: [],
   selectedDocumentTagId: undefined,
   selectedCodeId: undefined,
@@ -26,6 +28,9 @@ export const annoSlice = createSlice({
   name: "anno",
   initialState,
   reducers: {
+    onToggleAnnotationMode: (state) => {
+      state.isAnnotationMode = !state.isAnnotationMode;
+    },
     setCodesForSelection: (state, action: PayloadAction<CodeRead[]>) => {
       state.codesForSelection = action.payload;
     },

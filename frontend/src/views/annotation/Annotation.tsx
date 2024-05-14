@@ -1,5 +1,22 @@
+import BorderColorIcon from "@mui/icons-material/BorderColor";
+import ChromeReaderModeIcon from "@mui/icons-material/ChromeReaderMode";
 import { TabContext, TabPanel } from "@mui/lab";
-import { Box, Card, CardContent, Container, Grid, Portal, Stack, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Container,
+  Grid,
+  Portal,
+  Stack,
+  Tab,
+  Tabs,
+  ToggleButton,
+  ToggleButtonGroup,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { useContext, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
@@ -10,12 +27,17 @@ import EditableDocumentName, {
 } from "../../components/EditableDocumentName/EditableDocumentName.tsx";
 import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton.tsx";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import AudioVideoViewer from "../search/DocumentViewer/AudioVideoViewer.tsx";
 import DocumentInformation from "../search/DocumentViewer/DocumentInformation/DocumentInformation.tsx";
+import ImageViewer from "../search/DocumentViewer/ImageViewer.tsx";
+import TextViewer from "../search/DocumentViewer/TextViewer.tsx";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
 import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
 import MemoExplorer from "./MemoExplorer/MemoExplorer.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
+import { AnnoActions } from "./annoSlice.ts";
 
 function Annotation() {
   // global client state (URL)
@@ -29,9 +51,13 @@ function Annotation() {
   // global client state (context)
   const appBarContainerRef = useContext(AppBarContext);
 
+  // global client state (redux)
+  const isAnnotationMode = useAppSelector((state) => state.annotations.isAnnotationMode);
+  const dispatch = useAppDispatch();
+  console.log(isAnnotationMode);
+
   // global server state (react query)
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
-  const metadata = SdocHooks.useGetMetadata(sourceDocumentId);
   const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sourceDocumentId, user?.id);
 
   // tabs
@@ -90,43 +116,94 @@ function Annotation() {
               bgcolor: (theme) => theme.palette.background.paper,
               borderBottom: "1px solid #e8eaed",
               boxShadow: 4,
+              justifyContent: "center",
+              gap: 1,
             }}
           >
+            <ToggleButtonGroup
+              value={isAnnotationMode}
+              exclusive
+              onChange={() => dispatch(AnnoActions.onToggleAnnotationMode())}
+              aria-label="text alignment"
+              size="small"
+              color="primary"
+            >
+              <Tooltip title="Annotation Mode" placement="bottom">
+                <ToggleButton value={true} sx={{ fontSize: 12 }}>
+                  <BorderColorIcon />
+                </ToggleButton>
+              </Tooltip>
+              <Tooltip title="Reader Mode" placement="bottom">
+                <ToggleButton value={false} sx={{ fontSize: 12 }}>
+                  <ChromeReaderModeIcon />
+                </ToggleButton>
+              </Tooltip>
+            </ToggleButtonGroup>
             <AnnotationDocumentSelector sdocId={sourceDocumentId} />
           </Toolbar>
-          {/* <AnnotationDocumentSelector className="myFlexFitContentContainer" sdocId={sourceDocumentId} /> */}
           <Container className="myFlexFillAllContainer" sx={{ py: 2, overflowY: "auto" }}>
             <Card raised className="h100">
               <CardContent className="h100">
                 {sdocId ? (
                   <>
-                    {sourceDocument.isSuccess && annotationDocument.isSuccess && metadata.isSuccess ? (
-                      <>
-                        <Stack spacing={2} className="h100">
-                          <div style={{ display: "flex", alignItems: "center" }}>
-                            <EditableDocumentName
-                              sdocId={sourceDocument.data.id}
-                              variant={"h4"}
-                              style={{ margin: 0 }}
-                              inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
-                              ref={editableDocumentNameHandle}
-                            />
-                            <EditableDocumentNameButton
-                              editableDocumentNameHandle={editableDocumentNameHandle.current}
-                              sx={{ ml: 1 }}
-                            />
-                          </div>
-
-                          <Box></Box>
-                          {sourceDocument.data.doctype === DocType.IMAGE ? (
+                    {sourceDocument.isSuccess && annotationDocument.isSuccess ? (
+                      <Stack spacing={2} className="h100">
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                          <EditableDocumentName
+                            sdocId={sourceDocument.data.id}
+                            variant={"h4"}
+                            style={{ margin: 0 }}
+                            inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
+                            ref={editableDocumentNameHandle}
+                          />
+                          <EditableDocumentNameButton
+                            editableDocumentNameHandle={editableDocumentNameHandle.current}
+                            sx={{ ml: 1 }}
+                          />
+                        </div>
+                        {sourceDocument.data.doctype === DocType.IMAGE ? (
+                          isAnnotationMode ? (
                             <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
-                          ) : sourceDocument.data.doctype === DocType.TEXT ? (
+                          ) : (
+                            <ImageViewer
+                              sdoc={sourceDocument.data}
+                              adoc={annotationDocument.data}
+                              showEntities={true}
+                            />
+                          )
+                        ) : sourceDocument.data.doctype === DocType.TEXT ? (
+                          isAnnotationMode ? (
                             <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
                           ) : (
-                            <div>ERROR! This DocType is not (yet) supported!</div>
-                          )}
-                        </Stack>
-                      </>
+                            <TextViewer sdoc={sourceDocument.data} adoc={annotationDocument.data} showEntities={true} />
+                          )
+                        ) : sourceDocument.data.doctype === DocType.AUDIO ? (
+                          isAnnotationMode ? (
+                            <div>Annotation is not (yet) supported for Audio Documents.</div>
+                          ) : (
+                            <AudioVideoViewer
+                              sdoc={sourceDocument.data}
+                              adoc={annotationDocument.data}
+                              showEntities={true}
+                              height={200}
+                            />
+                          )
+                        ) : sourceDocument.data.doctype === DocType.VIDEO ? (
+                          isAnnotationMode ? (
+                            <div>Annotation is not (yet) supported for Video Documents.</div>
+                          ) : (
+                            <AudioVideoViewer
+                              sdoc={sourceDocument.data}
+                              adoc={annotationDocument.data}
+                              showEntities={true}
+                              width={800}
+                              height={600}
+                            />
+                          )
+                        ) : (
+                          <div>ERROR! This DocType is not (yet) supported!</div>
+                        )}
+                      </Stack>
                     ) : sourceDocument.isError ? (
                       <div>Error: {sourceDocument.error.message}</div>
                     ) : (
