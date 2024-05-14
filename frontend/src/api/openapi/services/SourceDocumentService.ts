@@ -253,59 +253,6 @@ export class SourceDocumentService {
     });
   }
   /**
-   * Unlinks all DocumentTags of the SourceDocument.
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static unlinksAllTags({ sdocId }: { sdocId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdoc/{sdoc_id}/tags",
-      path: {
-        sdoc_id: sdocId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Links a DocumentTag with the SourceDocument with the given ID if it exists
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static linkTag({ sdocId, tagId }: { sdocId: number; tagId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/sdoc/{sdoc_id}/tag/{tag_id}",
-      path: {
-        sdoc_id: sdocId,
-        tag_id: tagId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
-   * Unlinks the DocumentTags from the SourceDocument.
-   * @returns SourceDocumentRead Successful Response
-   * @throws ApiError
-   */
-  public static unlinkTag({ sdocId, tagId }: { sdocId: number; tagId: number }): CancelablePromise<SourceDocumentRead> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/sdoc/{sdoc_id}/tag/{tag_id}",
-      path: {
-        sdoc_id: sdocId,
-        tag_id: tagId,
-      },
-      errors: {
-        422: `Validation Error`,
-      },
-    });
-  }
-  /**
    * Adds a Memo to the SourceDocument with the given ID if it exists
    * @returns MemoRead Successful Response
    * @throws ApiError

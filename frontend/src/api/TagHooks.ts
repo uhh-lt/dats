@@ -38,6 +38,8 @@ const useDeleteTag = () =>
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_TAGS, data.project_id] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS] }); // todo welche sdocs sind eigentlich genau affected?
+      // Invalidate cache of tag statistics query
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
   });
 
@@ -52,6 +54,8 @@ const useBulkLinkDocumentTags = () =>
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
+      // Invalidate cache of tag statistics query
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
   });
 
@@ -66,6 +70,8 @@ const useBulkUnlinkDocumentTags = () =>
       });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, variables.projectId] });
       queryClient.invalidateQueries({ queryKey: [QueryKey.SEARCH_TAG_STATISTICS] }); // todo: zu unspezifisch!
+      // Invalidate cache of tag statistics query
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TAG_SDOC_COUNT] });
     },
   });
 
