@@ -1,16 +1,4 @@
-import {
-  AppBar,
-  AppBarProps,
-  Checkbox,
-  FormControl,
-  ListItemText,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Toolbar,
-} from "@mui/material";
-import Typography from "@mui/material/Typography";
+import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import * as React from "react";
 import { useEffect } from "react";
 import SdocHooks from "../../api/SdocHooks.ts";
@@ -28,7 +16,7 @@ interface AnnotationDocumentSelectorProps {
  * The selected (visible) annotation documents are stored in the redux store.
  * @param sdocId the id of the SourceDocument to select annotation documents for
  */
-export function AnnotationDocumentSelector({ sdocId, ...props }: AnnotationDocumentSelectorProps & AppBarProps) {
+export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelectorProps) {
   // global client state (context)
   const { user } = useAuth();
 
@@ -68,53 +56,35 @@ export function AnnotationDocumentSelector({ sdocId, ...props }: AnnotationDocum
 
   // render
   return (
-    <AppBar
-      position="relative"
-      variant="outlined"
-      elevation={0}
-      sx={{
-        backgroundColor: (theme) => theme.palette.grey[100],
-        color: (theme) => theme.palette.text.primary,
-        borderTop: 0,
-        ...props.sx,
-      }}
-      {...props}
-    >
-      <Toolbar variant="dense">
-        <FormControl size="small" fullWidth>
-          <Stack direction="row" sx={{ width: "100%", alignItems: "center" }}>
-            <Typography variant="body1" color="inherit" component="div" className="overflow-ellipsis" flexShrink={0}>
-              Annotations
-            </Typography>
-            <Select
-              sx={{ ml: 1, backgroundColor: "white" }}
-              multiple
-              fullWidth
-              value={visibleUserIds || []}
-              onChange={handleChange}
-              disabled={!annotationDocuments.isSuccess}
-              renderValue={(selected) =>
-                selected.map((x, index) => (
-                  <React.Fragment key={x}>
-                    <UserName userId={x} />
-                    {index < selected.length - 1 && ", "}
-                  </React.Fragment>
-                ))
-              }
-            >
-              {annotationDocuments.isSuccess &&
-                annotationDocuments.data.map((adoc) => (
-                  <MenuItem key={adoc.user_id} value={adoc.user_id}>
-                    <Checkbox checked={visibleUserIds?.indexOf(adoc.user_id) !== -1} />
-                    <ListItemText>
-                      <UserName userId={adoc.user_id} />
-                    </ListItemText>
-                  </MenuItem>
-                ))}
-            </Select>
-          </Stack>
-        </FormControl>
-      </Toolbar>
-    </AppBar>
+    <FormControl size="small">
+      <InputLabel id="annotation-user-select-label">Annotations</InputLabel>
+      <Select
+        labelId="annotation-user-select-label"
+        label={"Annotations"}
+        multiple
+        fullWidth
+        value={visibleUserIds || []}
+        onChange={handleChange}
+        disabled={!annotationDocuments.isSuccess}
+        renderValue={(selected) =>
+          selected.map((x, index) => (
+            <React.Fragment key={x}>
+              <UserName userId={x} />
+              {index < selected.length - 1 && ", "}
+            </React.Fragment>
+          ))
+        }
+      >
+        {annotationDocuments.isSuccess &&
+          annotationDocuments.data.map((adoc) => (
+            <MenuItem key={adoc.user_id} value={adoc.user_id}>
+              <Checkbox checked={visibleUserIds?.indexOf(adoc.user_id) !== -1} />
+              <ListItemText>
+                <UserName userId={adoc.user_id} />
+              </ListItemText>
+            </MenuItem>
+          ))}
+      </Select>
+    </FormControl>
   );
 }

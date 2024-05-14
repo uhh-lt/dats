@@ -3,7 +3,7 @@ import { MRT_ColumnDef, MRT_RowSelectionState, MaterialReactTable, useMaterialRe
 import { useMemo, useState } from "react";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
-import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 
 const columns: MRT_ColumnDef<SourceDocumentRead>[] = [
   {

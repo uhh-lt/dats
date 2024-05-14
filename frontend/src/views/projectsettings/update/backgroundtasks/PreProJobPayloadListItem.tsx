@@ -15,7 +15,7 @@ import {
 import React from "react";
 import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
 import { PreprocessingJobPayloadRead } from "../../../../api/openapi/models/PreprocessingJobPayloadRead.ts";
-import { docTypeToIcon } from "../../../../features/DocumentExplorer/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../../../utils/docTypeToIcon.tsx";
 import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu.tsx";
 import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
 
