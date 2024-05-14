@@ -1,14 +1,13 @@
-import { IconButton, Menu } from "@mui/material";
-import { QueryObserverSuccessResult } from "@tanstack/react-query";
-
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { IconButton, Menu } from "@mui/material";
 import { useState } from "react";
-import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
-import MemoDeleteMenuItem from "../../features/Memo/MemoDeleteMenuItem.tsx";
-import MemoEditMenuItem from "../../features/Memo/MemoEditMenuItem.tsx";
-import MemoStarMenuItem from "../../features/Memo/MemoStarMenuItem.tsx";
+import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
+import MemoDeleteMenuItem from "../MemoDeleteMenuItem.tsx";
+import MemoEditMenuItem from "../MemoEditMenuItem.tsx";
+import MemoStarMenuItem from "../MemoStarMenuItem.tsx";
+
 interface MemoCardActionsMenuProps {
-  memo: QueryObserverSuccessResult<MemoRead, Error>;
+  memo: MemoRead;
 }
 
 export default function MemoCardActionsMenu({ memo }: MemoCardActionsMenuProps) {
@@ -41,20 +40,20 @@ export default function MemoCardActionsMenu({ memo }: MemoCardActionsMenuProps) 
           "aria-labelledby": "basic-button",
         }}
       >
-        <MemoStarMenuItem onClick={handleClose} memoId={memo.data.id} isStarred={memo.data.starred} />
+        <MemoStarMenuItem onClick={handleClose} memoId={memo.id} isStarred={memo.starred} />
 
         <MemoEditMenuItem
-          memoId={memo.data.id}
-          attachedObjectType={memo.data.attached_object_type}
-          attachedObjectId={memo.data.attached_object_id}
+          memoId={memo.id}
+          attachedObjectType={memo.attached_object_type}
+          attachedObjectId={memo.attached_object_id}
           onClick={handleClose}
         />
 
         <MemoDeleteMenuItem
-          memoId={memo.data.id}
-          memoTitle={memo.data.title}
-          attachedObjectType={memo.data.attached_object_type}
-          attachedObjectId={memo.data.attached_object_id}
+          memoId={memo.id}
+          memoTitle={memo.title}
+          attachedObjectType={memo.attached_object_type}
+          attachedObjectId={memo.attached_object_id}
           onClick={handleClose}
         />
       </Menu>
