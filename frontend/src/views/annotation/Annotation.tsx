@@ -14,7 +14,6 @@ import DocumentExplorer from "../../features/DocumentExplorer/DocumentExplorer.t
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import DocumentMetadata from "../search/DocumentViewer/DocumentMetadata/DocumentMetadata.tsx";
 import DocumentTagChip from "../search/DocumentViewer/DocumentTagChip.tsx";
-import { useDeletableDocumentTags } from "../search/DocumentViewer/useDeletableDocumentTags.ts";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
 import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
@@ -37,7 +36,7 @@ function Annotation() {
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
   const metadata = SdocHooks.useGetMetadata(sourceDocumentId);
   const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sourceDocumentId, user?.id);
-  const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sourceDocumentId);
+  const documentTags = SdocHooks.useGetAllDocumentTags(sourceDocumentId);
 
   // tabs
   const [tab, setTab] = useState("code");
@@ -99,7 +98,7 @@ function Annotation() {
                             {documentTags.isError && <span>{documentTags.error.message}</span>}
                             {documentTags.isSuccess &&
                               documentTags.data.map((tag: DocumentTagRead) => (
-                                <DocumentTagChip key={tag.id} tagId={tag.id} handleDelete={handleDeleteDocumentTag} />
+                                <DocumentTagChip key={tag.id} tagId={tag.id} handleDelete={undefined} />
                               ))}
                           </div>
                           <Box>

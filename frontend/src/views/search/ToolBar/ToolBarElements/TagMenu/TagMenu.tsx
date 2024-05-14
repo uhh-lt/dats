@@ -51,7 +51,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
   // global server state (react-query)
   const allTags = ProjectHooks.useGetAllTags(projId);
-  const documentTags = TagHooks.useGetTagDocumentCounts(documentIds).data;
+  const documentTagCounts = TagHooks.useGetTagDocumentCounts(documentIds).data;
 
   // mutations
   const updateTagsMutation = TagHooks.useBulkUpdateDocumentTags();
@@ -70,11 +70,11 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
   // For each tag id, compute how the checkbox should look
   const initialCheckedTags: Map<number, CheckboxState> | undefined = useMemo(() => {
-    if (allTags.data && documentTags !== undefined) {
+    if (allTags.data && documentTagCounts !== undefined) {
       const maxTags = documentIds.length;
       // Depending on the count, set the CheckboxState
       return new Map(
-        Array.from(documentTags).map(([docTagId, docTagCount]) => [
+        Array.from(documentTagCounts).map(([docTagId, docTagCount]) => [
           docTagId,
           docTagCount === 0
             ? CheckboxState.NOT_CHECKED
@@ -85,7 +85,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
       );
     }
     return undefined;
-  }, [documentTags, allTags.data, documentIds]);
+  }, [documentTagCounts, allTags.data, documentIds]);
 
   const hasChanged = useMemo(() => !isEqual(initialCheckedTags, checked), [initialCheckedTags, checked]);
 
