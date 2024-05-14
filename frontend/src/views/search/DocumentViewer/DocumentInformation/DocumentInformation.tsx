@@ -10,7 +10,6 @@ import MemoAPI from "../../../../features/Memo/MemoAPI.ts";
 import MemoCard from "../../../../features/Memo/MemoCard/MemoCard.tsx";
 import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.tsx";
 import DocumentMetadataRow from "../DocumentMetadata/DocumentMetadataRow.tsx";
-import { useDeletableDocumentTags } from "../useDeletableDocumentTags.ts";
 import DocumentTagRow from "./DocumentTagRow.tsx";
 import LinkedDocumentRow from "./LinkedDocumentRow.tsx";
 
@@ -27,7 +26,7 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
 
   // global server state (react-query)
   const metadata = SdocHooks.useGetMetadata(sdocId);
-  const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sdocId);
+  const documentTags = SdocHooks.useGetAllDocumentTags(sdocId);
   const linkedSdocIds = SdocHooks.useGetLinkedSdocIds(sdocId);
   const memos = SdocHooks.useGetRelatedMemos(sdocId, user?.id);
 
@@ -74,20 +73,26 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
           <Button variant="text" size="small" startIcon={<AddCircleIcon />} onClick={undefined}>
             Add Metadata
           </Button>
-          {metadata.isLoading && (
-            <Box textAlign={"center"} pt={2}>
-              <CircularProgress />
-            </Box>
-          )}
-          {metadata.isError && <span>{metadata.error.message}</span>}
-          {metadata.isSuccess &&
-            metadata.data
-              .sort((a, b) => a.id - b.id)
-              .map((data) => <DocumentMetadataRow key={data.id} metadata={data} />)}
+          <Stack direction="column" spacing={0.5}>
+            {metadata.isLoading && (
+              <Box textAlign={"center"} pt={2}>
+                <CircularProgress />
+              </Box>
+            )}
+            {metadata.isError && <span>{metadata.error.message}</span>}
+            {metadata.isSuccess &&
+              metadata.data
+                .sort((a, b) => a.id - b.id)
+                .map((data) => <DocumentMetadataRow key={data.id} metadata={data} />)}
+          </Stack>
         </Box>
       ) : selectedButton === "tags" ? (
         <Box className="myFlexFillAllContainer" sx={{ px: 2 }}>
-          <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} type={"addBtn"} />
+          <TagMenuButton
+            popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+            type={"addBtn"}
+            forceSdocId={sdocId}
+          />
           <Stack direction="column" spacing={0.5}>
             {documentTags.isLoading && (
               <Box textAlign={"center"} pt={2}>
@@ -97,7 +102,7 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
             {documentTags.isError && <span>{documentTags.error.message}</span>}
             {documentTags.isSuccess &&
               documentTags.data.map((tag: DocumentTagRead) => (
-                <DocumentTagRow key={tag.id} tagId={tag.id} handleDelete={handleDeleteDocumentTag} />
+                <DocumentTagRow key={`sdoc-${sdocId}-tag${tag.id}`} sdocId={sdocId} tag={tag} />
               ))}
           </Stack>
         </Box>

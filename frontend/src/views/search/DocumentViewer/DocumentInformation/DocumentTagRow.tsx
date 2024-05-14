@@ -1,44 +1,20 @@
-import DeleteIcon from "@mui/icons-material/Delete";
-import LabelIcon from "@mui/icons-material/Label";
-import { Chip, IconButton, Stack } from "@mui/material";
-import TagHooks from "../../../../api/TagHooks.ts";
+import { Box, Stack } from "@mui/material";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
+import TagRenderer from "../../../../components/DataGrid/TagRenderer.tsx";
+import TagUnlinkButton from "../../../../features/TagExplorer/TagUnlinkButton.tsx";
 
-interface DocumentTagListProps {
-  tagId: number;
-  handleClick?: (tag: DocumentTagRead) => void;
-  handleDelete?: (tag: DocumentTagRead) => void;
+interface DocumentTagRow {
+  sdocId: number;
+  tag: DocumentTagRead;
 }
 
-function DocumentTagRow({ tagId, handleDelete }: DocumentTagListProps) {
-  const tag = TagHooks.useGetTag(tagId);
-
+function DocumentTagRow({ tag, sdocId }: DocumentTagRow) {
   return (
-    <>
-      {tag.isLoading && <Chip variant="outlined" label="Loading..." />}
-      {tag.isError && <Chip variant="outlined" label={tag.error.message} />}
-      {tag.isSuccess && (
-        <Stack direction={"row"}>
-          <IconButton disabled>
-            <LabelIcon sx={{ color: tag.data.color }} />
-          </IconButton>
-          <span
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            {tag.data.title}
-
-            <IconButton onClick={handleDelete ? () => handleDelete(tag.data) : undefined}>
-              <DeleteIcon />
-            </IconButton>
-          </span>
-        </Stack>
-      )}
-    </>
+    <Stack direction={"row"}>
+      <TagRenderer tag={tag} />
+      <Box sx={{ flexGrow: 1 }} />
+      <TagUnlinkButton sdocId={sdocId} tag={tag} />
+    </Stack>
   );
 }
 
