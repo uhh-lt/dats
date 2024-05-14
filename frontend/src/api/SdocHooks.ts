@@ -133,15 +133,6 @@ const useGetAllDocumentTags = (sdocId: number | null | undefined) =>
     enabled: !!sdocId,
   });
 
-const useRemoveDocumentTag = () =>
-  useMutation({
-    mutationFn: SourceDocumentService.unlinkTag,
-    onSuccess: (sdoc) => {
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOC_TAGS, sdoc.id] });
-      queryClient.invalidateQueries({ queryKey: [QueryKey.SDOCS_BY_PROJECT_AND_FILTERS_SEARCH, sdoc.project_id] });
-    },
-  });
-
 // adoc
 const useGetAllAnnotationDocuments = (sdocId: number | null | undefined) => {
   return useQuery<AnnotationDocumentRead[], Error>({
@@ -319,7 +310,6 @@ const SdocHooks = {
   // tags
   useGetByTagId,
   useGetAllDocumentTags,
-  useRemoveDocumentTag,
   // adoc
   useGetAllAnnotationDocuments,
   useGetOrCreateAdocOfUser,
