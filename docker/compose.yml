@@ -45,7 +45,7 @@ services:
       - dats_demo_network
 
   typesense:
-    image: typesense/typesense:0.25.1
+    image: typesense/typesense:0.26.0
     restart: on-failure
     ports:
       - "${TYPESENSE_EXPOSED:-8108}:8108"
@@ -56,6 +56,20 @@ services:
       - TYPESENSE_DATA_DIR=/data
     networks:
       - dwts_demo_network
+    profiles:
+      - typesense
+
+  qdrant:
+    image: qdrant/qdrant:1.9.2
+    ports:
+      - "${QDRANT_EXPOSED:-6333}:6333"
+      - "${QDRANT_GRPC_EXPOSED:-6334}:6334"
+    volumes:
+      - qdrant_storage_demo:/qdrant/storage
+    networks:
+      - dwts_demo_network
+    profiles:
+      - qdrant
 
   weaviate:
     command:
@@ -82,7 +96,9 @@ services:
       CLUSTER_HOSTNAME: "node1"
       LOG_LEVEL: "info"
     networks:
-      - dats_demo_network
+      - dwts_demo_network
+    profiles:
+      - weaviate
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1

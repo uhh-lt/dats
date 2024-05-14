@@ -22,10 +22,13 @@ from app.preprocessing.ray_model_worker.dto.clip import (
     ClipTextEmbeddingInput,
 )
 from app.util.singleton_meta import SingletonMeta
+from app.core.search.qdrant_service import QdrantService
 from config import conf
 
 
-class SimSearchService(metaclass=SingletonMeta):
+class SimSearchService(QdrantService,metaclass=SingletonMeta):
+    pass
+class SimSearchService2(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls._sentence_class_name = "Sentence"
         cls._image_class_name = "Image"

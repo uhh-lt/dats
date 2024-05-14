@@ -38,6 +38,7 @@ dependencies:
   - python-magic=0.4
   - python-multipart=0.0.5
   - python=3.11
+  - qdrant-client=1.9.1
   - readability-lxml=0.8.1
   - redis-py=4.3
   - rope=1.9.0

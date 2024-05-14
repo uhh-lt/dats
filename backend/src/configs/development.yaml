@@ -54,6 +54,16 @@ weaviate:
   host: localhost
   port: ${oc.env:WEAVIATE_PORT, 13132}
 
+typesense:
+  host: ${oc.env:TYPESENSE_HOST, 127.0.0.1}
+  port: ${oc.env:TYPESENSE_PORT, 8108}
+  api_key: ${oc.env:TYPESENSE_API_KEY, dwts123}
+
+qdrant:
+  host: ${oc.env:QDRANT_HOST, 127.0.0.1}
+  port: ${oc.env:QDRANT_PORT, 6333}
+  grpc_port: ${oc.env:QDRANT_GRPC_PORT, 6334}
+
 postgres:
   host: localhost
   port: ${oc.env:POSTGRES_PORT, 13122}

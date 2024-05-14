@@ -121,7 +121,6 @@ def __init_services__(
 
     # create CRUDs
     from app.core.data.crud import Crud  # noqa: F401
-
     # import and init ElasticSearch
     from app.core.db.elasticsearch_service import ElasticSearchService
 
@@ -158,6 +157,15 @@ def __init_services__(
     from app.core.data.llm.llm_service import LLMService
 
     LLMService()
+    # import and init TypesenseService
+    # from app.core.search.typesense_service import TypesenseService
+
+    # TypesenseService(flush=reset_database)
+
+    # import and init QdrantService
+    from app.core.search.qdrant_service import QdrantService
+
+    QdrantService(flush=reset_database)
 
 
 def __create_system_user__() -> None:
