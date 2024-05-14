@@ -9,7 +9,7 @@ import CodeRenderer from "../../components/DataGrid/CodeRenderer.tsx";
 import TagRenderer from "../../components/DataGrid/TagRenderer.tsx";
 import UserRenderer from "../../components/DataGrid/UserRenderer.tsx";
 import { isValidDateString } from "../../utils/DateUtils.ts";
-import { docTypeToIcon } from "../DocumentExplorer/docTypeToIcon.tsx";
+import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 import { ColumnInfo, MyFilterExpression } from "./filterUtils.ts";
 
 interface SharedFilterValueSelectorProps {
