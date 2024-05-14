@@ -1,24 +1,25 @@
-from typing import Dict, List, Tuple
 from time import perf_counter_ns
+from typing import Dict, List, Tuple
 
-from app.core.db.sql_service import SQLService
-from app.util.singleton_meta import SingletonMeta
-from app.core.search.simsearch_service import SimSearchService
 import numpy as np
 
-from app.core.data.orm import (
-    SpanAnnotationORM,
-    SourceDocumentORM,
-    AnnotationDocumentORM,
-    CurrentCodeORM,
-    SourceDocumentDataORM,
-)
+from app.core.data.orm.annotation_document import AnnotationDocumentORM
+from app.core.data.orm.code import CurrentCodeORM
+from app.core.data.orm.source_document import SourceDocumentORM
+from app.core.data.orm.source_document_data import SourceDocumentDataORM
+from app.core.data.orm.span_annotation import SpanAnnotationORM
+from app.core.db.sql_service import SQLService
+from app.core.search.simsearch_service import SimSearchService
+
+# from app.core.search.typesense_service import TypesenseService
+from app.util.singleton_meta import SingletonMeta
 
 
 class AnnoScalingService(metaclass=SingletonMeta):
     def __new__(cls, *args, **kwargs):
         cls.sqls = SQLService()
         cls.sim = SimSearchService()
+        # cls.ts = TypesenseService()
 
         return super(AnnoScalingService, cls).__new__(cls)
 

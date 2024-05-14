@@ -38,7 +38,7 @@ services:
       - dwts_demo_network
 
   typesense:
-    image: typesense/typesense:0.25.1
+    image: typesense/typesense:0.26.0
     restart: on-failure
     ports:
       - "${TYPESENSE_EXPOSED:-8108}:8108"
@@ -49,6 +49,20 @@ services:
       - TYPESENSE_DATA_DIR=/data
     networks:
       - dwts_demo_network
+    profiles:
+      - typesense
+
+  qdrant:
+    image: qdrant/qdrant:1.9.2
+    ports:
+      - "${QDRANT_EXPOSED:-6333}:6333"
+      - "${QDRANT_GRPC_EXPOSED:-6334}:6334"
+    volumes:
+      - qdrant_storage_demo:/qdrant/storage
+    networks:
+      - dwts_demo_network
+    profiles:
+      - qdrant
 
   weaviate:
     command:
@@ -73,6 +87,8 @@ services:
       LOG_LEVEL: "info"
     networks:
       - dwts_demo_network
+    profiles:
+      - weaviate
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
@@ -147,6 +163,9 @@ services:
       RAY_PROTOCOL: ${RAY_PROTOCOL:-http}
       WEAVIATE_HOST: ${WEAVIATE_HOST:-weaviate}
       WEAVIATE_PORT: ${WEAVIATE_PORT:-8080}
+      QDRANT_HOST: ${QDRANT_HOST:-qdrant}
+      QDRANT_PORT: ${QDRANT_PORT:-6333}
+      QDRANT_GRPC_PORT: ${QDRANT_GRPC_PORT:-6334}
       TYPESENSE_HOST: ${TYPESENSE_HOST:-typesense}
       TYPESENSE_PORT: ${TYPESENSE_PORT:-8108}
       TYPESENSE_API_KEY: ${TYPESENSE_API_KEY:-=dwts123}
@@ -206,7 +225,7 @@ services:
       resources:
         reservations:
           devices:
-            - capabilities: [gpu]
+            - capabilities: [ gpu ]
     profiles:
       - ray
 

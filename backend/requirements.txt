@@ -4,3 +4,4 @@ Scrapy==2.10.0
 scrapy-playwright==0.0.31
 Twisted==22.10.0
 weaviate-client==3.24.1
+typesense==0.21.0

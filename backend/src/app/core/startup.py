@@ -130,6 +130,16 @@ def __init_services__(
 
     SimSearchService(flush=reset_database)
 
+    # import and init TypesenseService
+    # from app.core.search.typesense_service import TypesenseService
+
+    # TypesenseService(flush=reset_database)
+
+    # import and init QdrantService
+    from app.core.search.qdrant_service import QdrantService
+
+    QdrantService(flush=reset_database)
+
 
 def __create_system_user__() -> None:
     from app.core.data.crud.user import crud_user
