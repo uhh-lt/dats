@@ -5,8 +5,9 @@ import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType.ts";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
+import { useAuth } from "../../../../auth/useAuth.ts";
 import MemoAPI from "../../../../features/Memo/MemoAPI.ts";
-import MemoExplorer from "../../../annotation/MemoExplorer/MemoExplorer.tsx";
+import MemoCard from "../../../../features/Memo/MemoCard/MemoCard.tsx";
 import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.tsx";
 import DocumentMetadataRow from "../DocumentMetadata/DocumentMetadataRow.tsx";
 import { useDeletableDocumentTags } from "../useDeletableDocumentTags.ts";
@@ -20,13 +21,18 @@ interface DocumentInformationProps {
 
 export default function DocumentInformation({ sdocId, isIdleContent, ...props }: DocumentInformationProps & BoxProps) {
   const navigate = useNavigate();
-  // queries
-  const linkedSdocIds = SdocHooks.useGetLinkedSdocIds(sdocId);
+
+  // global client state (context)
+  const { user } = useAuth();
+
+  // global server state (react-query)
+  const metadata = SdocHooks.useGetMetadata(sdocId);
   const { documentTags, handleDeleteDocumentTag } = useDeletableDocumentTags(sdocId);
+  const linkedSdocIds = SdocHooks.useGetLinkedSdocIds(sdocId);
+  const memos = SdocHooks.useGetRelatedMemos(sdocId, user?.id);
 
   // toggle visibility through button group
   const [selectedButton, setSelectedButton] = useState<string | null>("metadata");
-  const metadata = SdocHooks.useGetMetadata(sdocId);
 
   // const [selectedBtn, setSelectedBtn] = useState<string | null>("metadata");
   const handleSelectedButton = (_: React.MouseEvent<HTMLElement>, newBtn: string | null) => {
@@ -39,7 +45,7 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
   }
 
   return (
-    <Box className="myFlexContainer h100">
+    <Box className="myFlexContainer h100" {...props}>
       <ToggleButtonGroup
         value={selectedButton}
         exclusive
@@ -116,17 +122,38 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
       ) : (
         // Placeholder button for adding new memo
         <Box className="myFlexFillAllContainer" sx={{ px: 2 }}>
-          <Button
-            variant="text"
-            size="small"
-            startIcon={<AddCircleIcon />}
-            onClick={() =>
-              MemoAPI.openMemo({ attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT, attachedObjectId: sdocId })
-            }
-          >
-            Add Memo
-          </Button>
-          <MemoExplorer sdocId={sdocId} />
+          {memos.isLoading && (
+            <Box textAlign={"center"} pt={2}>
+              <CircularProgress />
+            </Box>
+          )}
+          {memos.isError && <span>{memos.error.message}</span>}
+          {memos.isSuccess && (
+            <>
+              {memos.data.filter((memo) => memo.attached_object_type === AttachedObjectType.SOURCE_DOCUMENT).length ===
+              0 ? (
+                <Button
+                  variant="text"
+                  size="small"
+                  startIcon={<AddCircleIcon />}
+                  onClick={() =>
+                    MemoAPI.openMemo({
+                      attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
+                      attachedObjectId: sdocId,
+                    })
+                  }
+                >
+                  Add Document Memo
+                </Button>
+              ) : (
+                <Stack direction="column" spacing={0.5}>
+                  {memos.data.map((memo) => (
+                    <MemoCard memo={memo} />
+                  ))}
+                </Stack>
+              )}
+            </>
+          )}
         </Box>
       )}
     </Box>
