@@ -18,7 +18,7 @@ export type CodeCreate = {
   /**
    * Parent of the Code
    */
-  parent_code_id?: number | null;
+  parent_id?: number | null;
   /**
    * Project the Code belongs to
    */

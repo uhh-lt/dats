@@ -18,5 +18,5 @@ export type CodeUpdate = {
   /**
    * Parent of the Code
    */
-  parent_code_id?: number | null;
+  parent_id?: number | null;
 };

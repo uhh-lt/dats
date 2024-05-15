@@ -4,9 +4,9 @@
 /* eslint-disable */
 export type DocumentTagUpdate = {
   /**
-   * Title of the DocumentTag
+   * Name of the DocumentTag
    */
-  title?: string | null;
+  name?: string | null;
   /**
    * Color of the DocumentTag
    */
@@ -18,5 +18,5 @@ export type DocumentTagUpdate = {
   /**
    * Parent of the DocumentTag
    */
-  parent_tag_id?: number | null;
+  parent_id?: number | null;
 };
