@@ -16,7 +16,7 @@ const createDataTree = (dataset: DocumentTagRead[]): TagTableRow[] => {
 
   const dataTree: TagTableRow[] = [];
   dataset.forEach((data) => {
-    if (data.parent_tag_id) hashTable[data.parent_tag_id].subRows.push(hashTable[data.id]);
+    if (data.parent_id) hashTable[data.parent_id].subRows.push(hashTable[data.id]);
     else dataTree.push(hashTable[data.id]);
   });
   return dataTree;

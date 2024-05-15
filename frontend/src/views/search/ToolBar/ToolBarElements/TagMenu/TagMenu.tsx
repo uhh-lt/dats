@@ -65,7 +65,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
   // computed state
   const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {
-    return allTags.data?.filter((tag) => tag.title.toLowerCase().startsWith(search.toLowerCase()));
+    return allTags.data?.filter((tag) => tag.name.toLowerCase().startsWith(search.toLowerCase()));
   }, [allTags.data, search]);
 
   // For each tag id, compute how the checkbox should look
@@ -197,7 +197,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   } else if (
     search.trim().length > 0 &&
     !hasChanged &&
-    filteredTags?.map((tag) => tag.title)?.indexOf(search.trim()) === -1
+    filteredTags?.map((tag) => tag.name)?.indexOf(search.trim()) === -1
   ) {
     actionMenu.push(<TagMenuCreationButton tagName={search} dense key={"create-new2"} />);
   }
@@ -236,7 +236,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
         <Box sx={{ maxHeight: "240px", overflowY: "auto" }}>
           {filteredTags?.map((tag) => {
-            const labelId = `tag-menu-list-label-${tag.title}`;
+            const labelId = `tag-menu-list-label-${tag.name}`;
 
             return (
               <ListItem
@@ -260,7 +260,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
                   <ListItemIcon sx={{ minWidth: "32px" }}>
                     <LabelIcon style={{ color: tag.color }} />
                   </ListItemIcon>
-                  <ListItemText id={labelId} primary={tag.title} />
+                  <ListItemText id={labelId} primary={tag.name} />
                 </ListItemButton>
               </ListItem>
             );

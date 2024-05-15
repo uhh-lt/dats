@@ -48,7 +48,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   const code = CodeHooks.useGetCode(props.data.codeId);
   const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
   const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
-  const parentCode = CodeHooks.useGetCode(code.data?.parent_code_id);
+  const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
   const memo = CodeHooks.useGetMemo(props.data.codeId, userId);
 
   // TODO: This is not optimal!
@@ -57,7 +57,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
   const childCodes = useMemo(() => {
-    return projectCodes.data?.filter((projectcode) => projectcode.parent_code_id === props.data.codeId) ?? [];
+    return projectCodes.data?.filter((projectcode) => projectcode.parent_id === props.data.codeId) ?? [];
   }, [props.data.codeId, projectCodes.data]);
 
   // effects

@@ -17,7 +17,7 @@ const createDataTree = (dataset: CodeRead[]): CodeTableRow[] => {
 
   const dataTree: CodeTableRow[] = [];
   dataset.forEach((data) => {
-    if (data.parent_code_id) hashTable[data.parent_code_id].subRows.push(hashTable[data.id]);
+    if (data.parent_id) hashTable[data.parent_id].subRows.push(hashTable[data.id]);
     else dataTree.push(hashTable[data.id]);
   });
   return dataTree;

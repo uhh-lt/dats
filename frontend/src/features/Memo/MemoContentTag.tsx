@@ -41,7 +41,7 @@ export function MemoContentTag({
         {
           onSuccess: () => {
             SnackbarAPI.openSnackbar({
-              text: `Updated memo for tag ${tag.title}`,
+              text: `Updated memo for tag ${tag.name}`,
               severity: "success",
             });
             closeDialog();
@@ -62,7 +62,7 @@ export function MemoContentTag({
         {
           onSuccess: (data) => {
             SnackbarAPI.openSnackbar({
-              text: `Created memo for tag ${tag.title}`,
+              text: `Created memo for tag ${tag.name}`,
               severity: "success",
             });
             if (onMemoCreateSuccess) onMemoCreateSuccess(data);
@@ -82,7 +82,7 @@ export function MemoContentTag({
             {
               onSuccess: () => {
                 SnackbarAPI.openSnackbar({
-                  text: `Deleted memo for tag ${tag.title}`,
+                  text: `Deleted memo for tag ${tag.name}`,
                   severity: "success",
                 });
                 closeDialog();
@@ -98,7 +98,7 @@ export function MemoContentTag({
 
   return (
     <MemoForm
-      title={`Memo for tag ${tag.title}`}
+      title={`Memo for tag ${tag.name}`}
       memo={memo}
       handleCreateOrUpdateMemo={handleCreateOrUpdateCodeMemo}
       handleDeleteMemo={handleDeleteTagMemo}

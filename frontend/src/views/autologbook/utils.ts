@@ -56,7 +56,7 @@ export const action2TargetTitle = (action: ActionRead): string | null | undefine
       case ActionTargetObjectType.PROJECT:
         return (parsedObject as ProjectRead).title;
       case ActionTargetObjectType.DOCUMENT_TAG:
-        return (parsedObject as DocumentTagRead).title;
+        return (parsedObject as DocumentTagRead).name;
       case ActionTargetObjectType.SOURCE_DOCUMENT:
         return (parsedObject as SourceDocumentRead).filename;
       case ActionTargetObjectType.SPAN_ANNOTATION: {

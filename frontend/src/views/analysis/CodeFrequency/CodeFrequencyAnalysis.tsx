@@ -40,7 +40,7 @@ import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
 import UserName from "../../../components/UserName.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import ICodeTree from "../../annotation/CodeExplorer/ICodeTree.ts";
+import { ICodeTree } from "../../annotation/CodeExplorer/ICodeTree.ts";
 import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree.ts";
 import CodeFrequencyUserSelector from "./CodeFrequencyUserSelector.tsx";
 

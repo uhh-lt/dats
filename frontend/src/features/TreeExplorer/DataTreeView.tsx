@@ -11,7 +11,6 @@ import * as React from "react";
 import AbcIcon from "@mui/icons-material/Abc";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
-import { KEYWORD_TAGS } from "../../utils/GlobalConstants.ts";
 import { IDataTree } from "./IDataTree.ts";
 
 type StyledTreeItemProps = TreeItemProps & {
@@ -98,7 +97,6 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 export interface DataTreeViewProps {
   openContextMenu?: (node: IDataTree) => React.MouseEventHandler<HTMLLIElement>;
   data: IDataTree;
-  dataType: string;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onDataClick?: (data: DocumentTagRead | CodeRead) => void;
@@ -109,7 +107,6 @@ export interface DataTreeViewProps {
 function DataTreeView({
   renderActions,
   data,
-  dataType,
   onExpandClick,
   onCollapseClick,
   openContextMenu,
@@ -123,7 +120,7 @@ function DataTreeView({
         hasChildren={Array.isArray(node.children) && node.children.length > 0}
         key={node.data.id}
         nodeId={node.data.id.toString()}
-        labelText={dataType === KEYWORD_TAGS ? (node.data as DocumentTagRead).title : (node.data as CodeRead).name}
+        labelText={node.data.name}
         labelIcon={
           Array.isArray(node.children) && node.children.length > 0 ? FolderIcon : dataIcon ? dataIcon : AbcIcon
         }

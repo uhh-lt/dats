@@ -60,7 +60,7 @@ function BulkDocTagger() {
         {documentTags.data?.map((tag) => (
           <MenuItem key={tag.id} value={tag.id.toString()}>
             <LabelIcon fontSize="small" style={{ color: tag.color, marginRight: "8px" }} />
-            {tag.title}
+            {tag.name}
           </MenuItem>
         ))}
       </Select>

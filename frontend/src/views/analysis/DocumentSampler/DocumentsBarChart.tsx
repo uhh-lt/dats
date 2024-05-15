@@ -17,7 +17,7 @@ function DocumentsBarChart({ cardProps, onChartRefresh }: DocumentsBarChartProps
     (chartData: ChartDataPoint[]) => (
       <ResponsiveContainer>
         <BarChart data={chartData}>
-          <XAxis dataKey={(chartDatum: ChartDataPoint) => chartDatum.tags.map((tag) => tag.title).join(", ")} />
+          <XAxis dataKey={(chartDatum: ChartDataPoint) => chartDatum.tags.map((tag) => tag.name).join(", ")} />
           <YAxis />
           <CartesianGrid stroke="#eee" />
           <Tooltip />

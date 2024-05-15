@@ -18,7 +18,7 @@ function DocumentTagChip({ tagId, handleClick, handleDelete }: DocumentTagChipPr
       {tag.isError && <Chip variant="outlined" label={tag.error.message} />}
       {tag.isSuccess && (
         <Chip
-          label={tag.data.title}
+          label={tag.data.name}
           variant="outlined"
           onClick={handleClick ? () => handleClick(tag.data) : undefined}
           onDelete={handleDelete ? () => handleDelete(tag.data) : undefined}

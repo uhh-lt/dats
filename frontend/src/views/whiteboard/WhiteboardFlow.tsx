@@ -240,7 +240,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             {
               codeId: sourceNode.data.codeId,
               requestBody: {
-                parent_code_id: targetNode.data.codeId,
+                parent_id: targetNode.data.codeId,
               },
             },
             {

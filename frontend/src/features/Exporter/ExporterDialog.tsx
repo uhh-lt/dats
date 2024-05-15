@@ -410,7 +410,7 @@ function ExporterDialog() {
             <ExporterItemSelectList
               items={
                 projectTags.data?.map((tag) => {
-                  return { id: tag.id, description: `${tag.title}` };
+                  return { id: tag.id, description: `${tag.name}` };
                 }) || []
               }
               value={exporterData.tags}
