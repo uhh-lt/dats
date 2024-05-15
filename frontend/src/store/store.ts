@@ -5,7 +5,7 @@ import documentTableFilterReducer from "../components/DocumentTable/documentTabl
 import satFilterReducer from "../components/SpanAnnotationTable/satFilterSlice.ts";
 import dialogReducer from "../features/CrudDialog/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
-import documentSamplerReducer from "../views/analysis/DocumentSampler/documentSamplerSlice";
+import documentSamplerReducer from "../views/analysis/DocumentSampler/documentSamplerSlice.ts";
 import timelineAnalysisFilterReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisFilterSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
 import wordFrequencyFilterReducer from "../views/analysis/WordFrequency/wordFrequencyFilterSlice.ts";

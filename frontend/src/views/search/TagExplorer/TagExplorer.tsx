@@ -2,7 +2,6 @@ import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
 import { useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import TagCreateDialog from "../../../features/CrudDialog/Tag/TagCreateDialog.tsx";
 import TagEditDialog from "../../../features/CrudDialog/Tag/TagEditDialog.tsx";
 import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
 import MemoButton from "../../../features/Memo/MemoButton.tsx";
@@ -63,7 +62,6 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
           <TagEditDialog tags={allTags.data} />
         </>
       )}
-      <TagCreateDialog />
     </Box>
   );
 }
