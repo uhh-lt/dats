@@ -47,11 +47,7 @@ function SdocRendererWithData({
   );
 
   if (link) {
-    return (
-      <Link href={`/project/${sdoc.project_id}/search/doc/${sdoc.id}`} target="_blank">
-        {content}
-      </Link>
-    );
+    return <Link href={`/project/${sdoc.project_id}/annotation/${sdoc.id}`}>{content}</Link>;
   }
   return content;
 }

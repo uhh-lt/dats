@@ -7,11 +7,11 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import { useMemo } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
-import MemoRenderer2 from "../../../components/DataGrid/MemoRenderer2.tsx";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
-import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer.tsx";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import MemoRenderer2 from "../DataGrid/MemoRenderer2.tsx";
+import SdocRenderer from "../DataGrid/SdocRenderer.tsx";
+import SdocTagsRenderer from "../DataGrid/SdocTagRenderer.tsx";
 
 interface SdocTableRow {
   sdocId: number;
@@ -26,8 +26,9 @@ function SimpleSdocTable({ sdocIds }: { sdocIds: number[] }) {
   const columns: MRT_ColumnDef<SdocTableRow>[] = useMemo(
     () => [
       {
-        id: "Type",
         header: "Type",
+        id: "Type",
+
         Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdocId} renderDoctypeIcon />,
       },
       {

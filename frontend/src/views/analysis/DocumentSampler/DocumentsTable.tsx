@@ -1,8 +1,8 @@
 import { CardProps } from "@mui/material";
+import SimpleSdocTable from "../../../components/DocumentTable/SimpleSdocTable.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import BulkDocTagger from "./BulkDocTagger.tsx";
 import DataCard from "./DataCard.tsx";
-import SimpleSdocTable from "./SimpleSdocTable.tsx";
 
 interface DocumentsTableProps {
   cardProps?: CardProps;

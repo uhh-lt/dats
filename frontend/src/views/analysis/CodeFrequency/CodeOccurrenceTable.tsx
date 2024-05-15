@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, Link } from "@mui/material";
+import { Card, CardContent, CardHeader } from "@mui/material";
 import {
   MRT_ColumnDef,
   MRT_RowVirtualizer,
@@ -10,10 +10,10 @@ import {
   useMaterialReactTable,
 } from "material-react-table";
 import React, { useRef } from "react";
-import { Link as RouterLink } from "react-router-dom";
 import AnalysisHooks from "../../../api/AnalysisHooks.ts";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import { CodeOccurrence } from "../../../api/openapi/models/CodeOccurrence.ts";
+import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
 import UserName from "../../../components/UserName.tsx";
 import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
 
@@ -28,16 +28,7 @@ const columns: MRT_ColumnDef<CodeOccurrence>[] = [
     header: "Document",
     id: "document",
     accessorFn: (params) => params.sdoc.filename,
-    Cell: ({ row }) => (
-      <Link
-        component={RouterLink}
-        to={`/project/${row.original.sdoc.project_id}/annotation/${row.original.sdoc.id}`}
-        underline="none"
-        color="inherit"
-      >
-        {row.original.sdoc.filename}
-      </Link>
-    ),
+    Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc} link renderFilename />,
   },
   {
     header: "Code",
