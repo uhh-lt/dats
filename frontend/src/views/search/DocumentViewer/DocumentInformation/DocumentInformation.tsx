@@ -52,7 +52,7 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
         </Box>
         <Box className="myFlexFillAllContainer">
           <TabPanel value="info" sx={{ p: 1 }} className="h100">
-            <Button variant="text" size="small" startIcon={<AddCircleIcon />} onClick={undefined}>
+            <Button variant="text" size="small" startIcon={<AddCircleIcon />} disabled>
               Add Metadata
             </Button>
             <Stack direction="column" spacing={0.5}>
