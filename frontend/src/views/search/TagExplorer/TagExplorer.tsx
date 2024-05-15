@@ -10,7 +10,6 @@ import TagEditButton from "../../../features/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../../features/TagExplorer/useComputeTagTree.ts";
 import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
-import { KEYWORD_TAGS } from "../../../utils/GlobalConstants.ts";
 import TagMenuCreateButton from "../ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
 
 interface TagExplorerNewProps {
@@ -31,7 +30,6 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
         <>
           <TreeExplorer
             sx={{ pt: 0 }}
-            dataType={KEYWORD_TAGS}
             dataIcon={LabelIcon}
             // data
             allData={allTags.data}

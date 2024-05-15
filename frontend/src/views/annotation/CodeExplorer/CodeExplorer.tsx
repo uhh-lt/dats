@@ -9,7 +9,6 @@ import MemoButton from "../../../features/Memo/MemoButton.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
 import { flatTreeWithRoot } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { KEYWORD_CODES } from "../../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../annoSlice.ts";
 import CodeCreateListItemButton from "./CodeCreateListItemButton.tsx";
 import CodeEditButton from "./CodeEditButton.tsx";
@@ -66,7 +65,6 @@ function CodeExplorer(props: BoxProps) {
         <>
           <TreeExplorer
             sx={{ pt: 0 }}
-            dataType={KEYWORD_CODES}
             dataIcon={SquareIcon}
             // data
             allData={allCodes.data}

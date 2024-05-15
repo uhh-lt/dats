@@ -8,7 +8,6 @@ import MemoButton from "../../../features/Memo/MemoButton.tsx";
 import TagEditButton from "../../../features/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../../features/TagExplorer/useComputeTagTree.ts";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
-import { KEYWORD_TAGS } from "../../../utils/GlobalConstants.ts";
 import TagMenuCreateButton from "../../search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
 
 function ProjectTags() {
@@ -25,7 +24,6 @@ function ProjectTags() {
         <>
           <TreeExplorer
             sx={{ pt: 0 }}
-            dataType={KEYWORD_TAGS}
             dataIcon={LabelIcon}
             // data
             allData={allTags.data}

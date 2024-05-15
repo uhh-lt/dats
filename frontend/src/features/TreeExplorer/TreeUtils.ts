@@ -7,7 +7,6 @@ import { IDataTree } from "./IDataTree.ts";
 interface FilterProps {
   dataTree: Node<IDataTree>;
   dataFilter: string;
-  dataType: string;
 }
 
 export function dataToTree(data: (DocumentTagRead | CodeRead)[]): IDataTree {

@@ -15,7 +15,6 @@ interface DataExplorerProps {
   // data
   allData: CodeRead[] | DocumentTagRead[];
   dataTree: Node<IDataTree>;
-  dataType: string;
   dataIcon: React.ElementType<SvgIconProps>;
   // checkboxes
   showCheckboxes?: boolean;
@@ -55,7 +54,6 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
       allData,
       dataFilter,
       onDataFilterChange,
-      dataType,
       onSelectedDataIdChange,
       renderActions,
       renderListActions,
@@ -154,18 +152,6 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
             </Toolbar>
           </AppBar>
         )}
-        {showFilter && (
-          <TreeDataFilter
-            actions={renderFilterActions && renderFilterActions()}
-            allData={allData}
-            setNodesToExpand={setNodesToExpand}
-            setFilteredDataTree={setFilteredDataTree}
-            dataFilter={dataFilter}
-            dataTree={dataTree}
-            dataType={dataType}
-            onDataFilterChange={onDataFilterChange}
-          />
-        )}
         {renderListActions && (
           <Stack
             direction="row"
@@ -178,6 +164,17 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
           >
             {renderListActions()}
           </Stack>
+        )}
+        {showFilter && (
+          <TreeDataFilter
+            actions={renderFilterActions && renderFilterActions()}
+            allData={allData}
+            setNodesToExpand={setNodesToExpand}
+            setFilteredDataTree={setFilteredDataTree}
+            dataFilter={dataFilter}
+            dataTree={dataTree}
+            onDataFilterChange={onDataFilterChange}
+          />
         )}
         <DataTreeView
           dataIcon={dataIcon}

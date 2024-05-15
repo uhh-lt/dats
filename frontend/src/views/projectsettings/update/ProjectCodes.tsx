@@ -5,7 +5,6 @@ import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
 import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
-import { KEYWORD_CODES } from "../../../utils/GlobalConstants.ts";
 import CodeCreateListItemButton from "../../annotation/CodeExplorer/CodeCreateListItemButton.tsx";
 import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton.tsx";
 import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton.tsx";
@@ -26,7 +25,6 @@ function ProjectCodes() {
         <>
           <TreeExplorer
             sx={{ pt: 0 }}
-            dataType={KEYWORD_CODES}
             dataIcon={SquareIcon}
             // data
             allData={allCodes.data}
