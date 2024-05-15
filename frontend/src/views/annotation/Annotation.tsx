@@ -141,81 +141,87 @@ function Annotation() {
             </ToggleButtonGroup>
             <AnnotationDocumentSelector sdocId={sourceDocumentId} />
           </Toolbar>
-          <Container className="myFlexFillAllContainer" sx={{ py: 2, overflowY: "auto" }}>
-            <Card raised className="h100">
-              <CardContent className="h100">
-                {sdocId ? (
-                  <>
-                    {sourceDocument.isSuccess && annotationDocument.isSuccess ? (
-                      <Stack spacing={2} className="h100">
-                        <div style={{ display: "flex", alignItems: "center" }}>
-                          <EditableDocumentName
-                            sdocId={sourceDocument.data.id}
-                            variant={"h4"}
-                            style={{ margin: 0 }}
-                            inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
-                            ref={editableDocumentNameHandle}
-                          />
-                          <EditableDocumentNameButton
-                            editableDocumentNameHandle={editableDocumentNameHandle.current}
-                            sx={{ ml: 1 }}
-                          />
-                        </div>
-                        {sourceDocument.data.doctype === DocType.IMAGE ? (
-                          isAnnotationMode ? (
-                            <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
-                          ) : (
-                            <ImageViewer
-                              sdoc={sourceDocument.data}
-                              adoc={annotationDocument.data}
-                              showEntities={true}
+          <Box className="myFlexFillAllContainer">
+            <Container sx={{ py: 2 }}>
+              <Card raised>
+                <CardContent>
+                  {sdocId ? (
+                    <>
+                      {sourceDocument.isSuccess && annotationDocument.isSuccess ? (
+                        <Stack spacing={2}>
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <EditableDocumentName
+                              sdocId={sourceDocument.data.id}
+                              variant={"h4"}
+                              style={{ margin: 0 }}
+                              inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
+                              ref={editableDocumentNameHandle}
                             />
-                          )
-                        ) : sourceDocument.data.doctype === DocType.TEXT ? (
-                          isAnnotationMode ? (
-                            <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
-                          ) : (
-                            <TextViewer sdoc={sourceDocument.data} adoc={annotationDocument.data} showEntities={true} />
-                          )
-                        ) : sourceDocument.data.doctype === DocType.AUDIO ? (
-                          isAnnotationMode ? (
-                            <div>Annotation is not (yet) supported for Audio Documents.</div>
-                          ) : (
-                            <AudioVideoViewer
-                              sdoc={sourceDocument.data}
-                              adoc={annotationDocument.data}
-                              showEntities={true}
-                              height={200}
+                            <EditableDocumentNameButton
+                              editableDocumentNameHandle={editableDocumentNameHandle.current}
+                              sx={{ ml: 1 }}
                             />
-                          )
-                        ) : sourceDocument.data.doctype === DocType.VIDEO ? (
-                          isAnnotationMode ? (
-                            <div>Annotation is not (yet) supported for Video Documents.</div>
+                          </div>
+                          {sourceDocument.data.doctype === DocType.IMAGE ? (
+                            isAnnotationMode ? (
+                              <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
+                            ) : (
+                              <ImageViewer
+                                sdoc={sourceDocument.data}
+                                adoc={annotationDocument.data}
+                                showEntities={true}
+                              />
+                            )
+                          ) : sourceDocument.data.doctype === DocType.TEXT ? (
+                            isAnnotationMode ? (
+                              <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
+                            ) : (
+                              <TextViewer
+                                sdoc={sourceDocument.data}
+                                adoc={annotationDocument.data}
+                                showEntities={true}
+                              />
+                            )
+                          ) : sourceDocument.data.doctype === DocType.AUDIO ? (
+                            isAnnotationMode ? (
+                              <div>Annotation is not (yet) supported for Audio Documents.</div>
+                            ) : (
+                              <AudioVideoViewer
+                                sdoc={sourceDocument.data}
+                                adoc={annotationDocument.data}
+                                showEntities={true}
+                                height={200}
+                              />
+                            )
+                          ) : sourceDocument.data.doctype === DocType.VIDEO ? (
+                            isAnnotationMode ? (
+                              <div>Annotation is not (yet) supported for Video Documents.</div>
+                            ) : (
+                              <AudioVideoViewer
+                                sdoc={sourceDocument.data}
+                                adoc={annotationDocument.data}
+                                showEntities={true}
+                                width={800}
+                                height={600}
+                              />
+                            )
                           ) : (
-                            <AudioVideoViewer
-                              sdoc={sourceDocument.data}
-                              adoc={annotationDocument.data}
-                              showEntities={true}
-                              width={800}
-                              height={600}
-                            />
-                          )
-                        ) : (
-                          <div>ERROR! This DocType is not (yet) supported!</div>
-                        )}
-                      </Stack>
-                    ) : sourceDocument.isError ? (
-                      <div>Error: {sourceDocument.error.message}</div>
-                    ) : (
-                      <div>Loading...</div>
-                    )}
-                  </>
-                ) : (
-                  <div>Please select a document from the Document Explorer :)</div>
-                )}
-              </CardContent>
-            </Card>
-          </Container>
+                            <div>ERROR! This DocType is not (yet) supported!</div>
+                          )}
+                        </Stack>
+                      ) : sourceDocument.isError ? (
+                        <div>Error: {sourceDocument.error.message}</div>
+                      ) : (
+                        <div>Loading...</div>
+                      )}
+                    </>
+                  ) : (
+                    <div>Please select a document from the Document Explorer :)</div>
+                  )}
+                </CardContent>
+              </Card>
+            </Container>
+          </Box>
         </Grid>
         <Grid
           item
