@@ -79,7 +79,7 @@ class TimelineAnalysisColumns(str, AbstractColumns):
             case TimelineAnalysisColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
             case TimelineAnalysisColumns.DOCUMENT_TAG_ID_LIST:
-                return DocumentTagORM.title
+                return DocumentTagORM.name
             case TimelineAnalysisColumns.CODE_ID_LIST:
                 return None
             case TimelineAnalysisColumns.USER_ID_LIST:

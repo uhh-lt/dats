@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class DocumentTagORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    title: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, index=True)
     description: Mapped[Optional[str]] = mapped_column(String, index=True)
     color: Mapped[Optional[str]]
     created: Mapped[Optional[datetime]] = mapped_column(
@@ -52,12 +52,10 @@ class DocumentTagORM(ORMBase):
     )
 
     # hierarchy reference
-    parent_tag_id: Mapped[Optional[int]] = mapped_column(
+    parent_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("documenttag.id", ondelete="CASCADE")
     )
-    parent_tag: Mapped["DocumentTagORM"] = relationship(
-        "DocumentTagORM", remote_side=[id]
-    )
+    parent: Mapped["DocumentTagORM"] = relationship("DocumentTagORM", remote_side=[id])
 
 
 class SourceDocumentDocumentTagLinkTable(ORMBase):

@@ -364,7 +364,7 @@ class ExportService(metaclass=SingletonMeta):
 
         elif isinstance(attached_to, DocumentTagORM):
             dto = DocumentTagRead.model_validate(attached_to)
-            data["tag_name"] = [dto.title]
+            data["tag_name"] = [dto.name]
             data["tag_id"] = [dto.id]
 
         elif isinstance(attached_to, SpanAnnotationORM):
@@ -449,7 +449,7 @@ class ExportService(metaclass=SingletonMeta):
         applied_to_sdoc_filenames = [sdoc.filename for sdoc in tag.source_documents]
         data = {
             "tag_id": [tag_dto.id],
-            "tag_name": [tag_dto.title],
+            "tag_name": [tag_dto.name],
             "description": [tag_dto.description],
             "color": [tag_dto.color],
             "created": [tag_dto.created],
@@ -505,10 +505,10 @@ class ExportService(metaclass=SingletonMeta):
         code = crud_code.read(db=db, id=code_id)
         user_dto = UserRead.model_validate(code.user)
         code_dto = CodeRead.model_validate(code)
-        parent_code_id = code_dto.parent_code_id
+        parent_code_id = code_dto.parent_id
         parent_code_name = None
         if parent_code_id is not None:
-            parent_code_name = CodeRead.model_validate(code.parent_code).name
+            parent_code_name = CodeRead.model_validate(code.parent).name
 
         data = {
             "code_id": [code_dto.id],
