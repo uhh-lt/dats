@@ -2,17 +2,14 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
-import MemoButton from "../../../features/Memo/MemoButton.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
 import { flatTreeWithRoot } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../annoSlice.ts";
 import CodeCreateListItemButton from "./CodeCreateListItemButton.tsx";
-import CodeEditButton from "./CodeEditButton.tsx";
-import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton.tsx";
+import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
 function CodeExplorer(props: BoxProps) {
@@ -80,13 +77,7 @@ function CodeExplorer(props: BoxProps) {
             selectedDataId={selectedCodeId}
             onSelectedDataIdChange={handleSelectCode}
             // actions
-            renderActions={(node) => (
-              <>
-                <CodeToggleVisibilityButton code={node} />
-                <CodeEditButton code={node.data as CodeRead} />
-                <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.CODE} />
-              </>
-            )}
+            renderActions={(node) => <CodeExplorerMenu code={node} />}
             renderListActions={() => (
               <>
                 <CodeCreateListItemButton parentCodeId={undefined} />
