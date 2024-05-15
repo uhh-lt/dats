@@ -2,6 +2,7 @@ import { AppBar, Box, BoxProps, Checkbox, Divider, List, Stack, TextField, Toolb
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import { forwardRef, useImperativeHandle, useState } from "react";
+import { Node } from "ts-tree-structure";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
@@ -38,9 +39,9 @@ const TagExplorer = forwardRef<TagExplorerHandle, TagExplorerProps & BoxProps>(
     const [tagFilter, setTagFilter] = useState<string>("");
 
     // custom hooks
-    let { tagTree, allTags } = useComputeTagTree();
+    const { tagTree, allTags } = useComputeTagTree();
 
-    let { nodesToExpand, filteredTagTree } = React.useMemo(() => {
+    const { nodesToExpand, filteredTagTree } = React.useMemo(() => {
       if (allTags.data) {
         const filteredData = filterTree({
           dataTree: tagTree as Node<ITagTree>,

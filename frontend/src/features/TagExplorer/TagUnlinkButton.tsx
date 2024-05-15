@@ -13,7 +13,7 @@ function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: 
   // actions
   const handleDeleteDocumentTag = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the DocumentTag "${tag.title}" from SourceDocument ${sdocId} ? You can reassign this tag later!`,
+      text: `Do you really want to remove the DocumentTag "${tag.name}" from SourceDocument ${sdocId} ? You can reassign this tag later!`,
       onAccept: () => {
         removeTagMutation(
           {

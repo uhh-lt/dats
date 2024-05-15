@@ -112,7 +112,7 @@ function TagTreeView({
         hasChildren={Array.isArray(node.children) && node.children.length > 0}
         key={node.data.id}
         nodeId={node.data.id.toString()}
-        labelText={node.data.title}
+        labelText={node.data.name}
         labelIcon={Array.isArray(node.children) && node.children.length > 0 ? FolderIcon : LabelIcon}
         expandIcon={
           <Box

@@ -34,7 +34,7 @@ function TagRendererWithData({
   return (
     <Stack direction="row" alignItems="center" {...props}>
       <LabelIcon style={{ color: tag.color }} />
-      {tag.title}
+      {tag.name}
     </Stack>
   );
 }

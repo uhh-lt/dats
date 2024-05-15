@@ -17,14 +17,14 @@ export function codesToTree(codes: CodeRead[]): ICodeTree {
     user_id: -1,
     id: -1,
     color: "",
-    parent_code_id: undefined,
+    parent_id: undefined,
   };
   // create children of the new root node (all nodes that have no parent!)
-  const children = newCodes.filter((codeTree) => !codeTree.data.parent_code_id);
+  const children = newCodes.filter((codeTree) => !codeTree.data.parent_id);
   const root: ICodeTree = { data: dummyRootNode, children: children };
 
   // create the full tree using the other nodes
-  const nodes = newCodes.filter((codeTree) => codeTree.data.parent_code_id);
+  const nodes = newCodes.filter((codeTree) => codeTree.data.parent_id);
 
   root.children!.forEach((codeTree) => {
     codesToTreeRecursion(codeTree, nodes);
@@ -34,8 +34,8 @@ export function codesToTree(codes: CodeRead[]): ICodeTree {
 }
 
 function codesToTreeRecursion(root: ICodeTree, nodes: ICodeTree[]): ICodeTree {
-  root.children = nodes.filter((node) => node.data.parent_code_id === root.data.id);
-  const otherNodes = nodes.filter((node) => node.data.parent_code_id !== root.data.id);
+  root.children = nodes.filter((node) => node.data.parent_id === root.data.id);
+  const otherNodes = nodes.filter((node) => node.data.parent_id !== root.data.id);
 
   root.children.forEach((codeTree) => {
     codesToTreeRecursion(codeTree, otherNodes);

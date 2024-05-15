@@ -58,7 +58,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
         name: code.name,
         description: code.description,
         color: c,
-        parentCodeId: code.parent_code_id || -1,
+        parentCodeId: code.parent_id || -1,
       });
       setColor(c);
     }
@@ -85,7 +85,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
           ...requestBody,
           name: data.name,
           description: data.description,
-          parent_code_id: data.parentCodeId,
+          parent_id: data.parentCodeId,
         };
       }
 
@@ -97,16 +97,16 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
         {
           onSuccess: (data: CodeRead) => {
             // check if we updated the parent code
-            if (data.parent_code_id !== code.parent_code_id) {
+            if (data.parent_id !== code.parent_id) {
               // if we edited a code successfully, we want to show the code in the code explorer
               // this means, we might have to expand the parent codes, so the new code is visible
               const codesToExpand = [];
-              let parentCodeId = data.parent_code_id;
+              let parentCodeId = data.parent_id;
               while (parentCodeId) {
                 const currentParentCodeId = parentCodeId;
 
                 codesToExpand.push(parentCodeId);
-                parentCodeId = codes.find((code) => code.id === currentParentCodeId)?.parent_code_id;
+                parentCodeId = codes.find((code) => code.id === currentParentCodeId)?.parent_id;
               }
               dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             }
@@ -178,7 +178,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
               select
               label="Parent Code"
               variant="filled"
-              defaultValue={code?.parent_code_id || -1}
+              defaultValue={code?.parent_id || -1}
               {...register("parentCodeId")}
               error={Boolean(errors.parentCodeId)}
               helperText={<ErrorMessage errors={errors} name="parentCodeId" />}

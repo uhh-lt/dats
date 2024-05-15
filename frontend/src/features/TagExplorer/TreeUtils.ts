@@ -1,7 +1,7 @@
 import { cloneDeep } from "lodash";
 import { Node } from "ts-tree-structure";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
-import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree.ts";
+import { ICodeTree } from "../../views/annotation/CodeExplorer/ICodeTree.ts";
 import { ITagTree } from "./ITagTree.ts";
 
 interface FilterProps {
@@ -19,19 +19,19 @@ export function tagsToTree(tags: DocumentTagRead[]): ITagTree {
   const dummyRootNode: DocumentTagRead = {
     created: "",
     description: "This is the root node",
-    title: "root",
+    name: "root",
     project_id: -1,
     updated: "",
     id: -1,
     color: "",
-    parent_tag_id: undefined,
+    parent_id: undefined,
   };
   // create children of the new root node (all nodes that have no parent!)
-  const children = newTags.filter((tagTree) => !tagTree.data.parent_tag_id);
+  const children = newTags.filter((tagTree) => !tagTree.data.parent_id);
   const root: ITagTree = { data: dummyRootNode, children: children };
 
   // create the full tree using the other nodes
-  const nodes = newTags.filter((tagTree) => tagTree.data.parent_tag_id);
+  const nodes = newTags.filter((tagTree) => tagTree.data.parent_id);
 
   root.children!.forEach((tagTree) => {
     tagsToTreeRecursion(tagTree, nodes);
@@ -41,8 +41,8 @@ export function tagsToTree(tags: DocumentTagRead[]): ITagTree {
 }
 
 function tagsToTreeRecursion(root: ITagTree, nodes: ITagTree[]): ITagTree {
-  root.children = nodes.filter((node) => node.data.parent_tag_id === root.data.id);
-  const otherNodes = nodes.filter((node) => node.data.parent_tag_id !== root.data.id);
+  root.children = nodes.filter((node) => node.data.parent_id === root.data.id);
+  const otherNodes = nodes.filter((node) => node.data.parent_id !== root.data.id);
 
   root.children.forEach((tagTree) => {
     tagsToTreeRecursion(tagTree, otherNodes);
@@ -72,7 +72,7 @@ export function flatTree(tree: ITagTree | null): DocumentTagRead[] {
 }
 
 export function filterTree({ dataTree, dataFilter }: FilterProps) {
-  let nodesToExpand = new Set<number>();
+  const nodesToExpand = new Set<number>();
 
   // clone tree using lodash
   let dataTreeCopy = cloneDeep(dataTree);
@@ -83,10 +83,7 @@ export function filterTree({ dataTree, dataFilter }: FilterProps) {
     // find all nodes that match the filter
     dataTreeCopy.walk(
       (node) => {
-        if (
-          (node as Node<ICodeTree>).model.data.name?.startsWith(dataFilter.trim()) ||
-          (node as Node<ITagTree>).model.data.title?.startsWith(dataFilter.trim())
-        ) {
+        if (node.model.data.name?.startsWith(dataFilter.trim())) {
           // keep the node
           nodesToKeep.add(node.model.data.id);
 
@@ -107,7 +104,7 @@ export function filterTree({ dataTree, dataFilter }: FilterProps) {
     );
 
     // filter the dataTree
-    let nodes_to_remove = (dataTreeCopy as Node<ITagTree | ICodeTree>).all(
+    const nodes_to_remove = (dataTreeCopy as Node<ITagTree | ICodeTree>).all(
       (node) => !nodesToKeep.has(node.model.data.id),
     );
     nodes_to_remove.forEach((node) => {

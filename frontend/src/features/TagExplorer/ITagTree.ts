@@ -25,14 +25,14 @@ export type ITagTree = ITree<DocumentTagRead>;
 //     user_id: -1,
 //     id: -1,
 //     color: "",
-//     parent_code_id: undefined,
+//     parent_id: undefined,
 //   };
 //   // create children of the new root node (all nodes that have no parent!)
-//   let children = newCodes.filter((codeTree) => !codeTree.code.parent_code_id);
+//   let children = newCodes.filter((codeTree) => !codeTree.code.parent_id);
 //   let root: ICodeTree = { code: dummyRootNode, children: children };
 
 //   // create the full tree using the other nodes
-//   let nodes = newCodes.filter((codeTree) => codeTree.code.parent_code_id);
+//   let nodes = newCodes.filter((codeTree) => codeTree.code.parent_id);
 
 //   root.children!.forEach((codeTree) => {
 //     dataToTreeRecursion(codeTree, nodes);

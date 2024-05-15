@@ -48,8 +48,8 @@ function TagCreateDialog() {
     control,
   } = useForm<DocumentTagCreate>({
     defaultValues: {
-      parent_tag_id: -1,
-      title: "",
+      parent_id: -1,
+      name: "",
       color: "#000000",
       description: "",
       project_id: projectId,
@@ -70,9 +70,9 @@ function TagCreateDialog() {
     // reset
     const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
     reset({
-      title: tagName || "",
+      name: tagName || "",
       color: randomHexColor,
-      parent_tag_id: parentTagId ? parentTagId : -1,
+      parent_id: parentTagId ? parentTagId : -1,
     });
     setColor(randomHexColor);
   }, [parentTagId, reset, tagName]);
@@ -90,17 +90,17 @@ function TagCreateDialog() {
     createTagMutation.mutate(
       {
         requestBody: {
-          title: data.title,
+          name: data.name,
           description: data.description || "",
           color: data.color,
-          parent_tag_id: data.parent_tag_id,
+          parent_id: data.parent_id,
           project_id: projectId,
         },
       },
       {
         onSuccess: (data) => {
           SnackbarAPI.openSnackbar({
-            text: `Added tag ${data.title}`,
+            text: `Added tag ${data.name}`,
             severity: "success",
           });
 
@@ -118,7 +118,7 @@ function TagCreateDialog() {
         <DialogContent>
           <Stack spacing={3}>
             <Controller
-              name="parent_tag_id"
+              name="parent_id"
               control={control}
               rules={{
                 required: "Value is required",
@@ -132,8 +132,8 @@ function TagCreateDialog() {
                   onChange={onChange}
                   onBlur={onBlur}
                   value={value}
-                  error={Boolean(errors.parent_tag_id)}
-                  helperText={<ErrorMessage errors={errors} name="parent_tag_id" />}
+                  error={Boolean(errors.parent_id)}
+                  helperText={<ErrorMessage errors={errors} name="parent_id" />}
                   InputLabelProps={{ shrink: true }}
                 >
                   <MenuItem value={-1}>No parent</MenuItem>
@@ -150,8 +150,8 @@ function TagCreateDialog() {
               autoFocus
               fullWidth
               variant="standard"
-              {...register("title", { required: "Tag title is required" })}
-              error={Boolean(errors?.title)}
+              {...register("name", { required: "Tag name is required" })}
+              error={Boolean(errors?.name)}
               helperText={<ErrorMessage errors={errors} name="color" />}
               InputLabelProps={{ shrink: true }}
             />

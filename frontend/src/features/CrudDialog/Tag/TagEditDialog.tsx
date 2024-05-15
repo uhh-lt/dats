@@ -52,10 +52,10 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
     if (tag.data) {
       const c = ColorUtils.rgbStringToHex(tag.data.color) || tag.data.color;
       reset({
-        title: tag.data.title,
+        name: tag.data.name,
         description: tag.data.description,
         color: tag.data.color,
-        parent_tag_id: tag.data.parent_tag_id || -1,
+        parent_id: tag.data.parent_id || -1,
       });
       setColor(c);
     }
@@ -74,10 +74,10 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
       updateTagMutation.mutate(
         {
           requestBody: {
-            title: data.title,
+            name: data.name,
             description: data.description,
             color: data.color,
-            parent_tag_id: data.parent_tag_id,
+            parent_id: data.parent_id,
           },
           tagId: tag.data.id,
         },
@@ -99,7 +99,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   const handleDelete = () => {
     if (tag.data) {
       ConfirmationAPI.openConfirmationDialog({
-        text: `Do you really want to delete the tag "${tag.data.title}"? This action cannot be undone!`,
+        text: `Do you really want to delete the tag "${tag.data.name}"? This action cannot be undone!`,
         onAccept: () => {
           deleteTagMutation.mutate(
             { tagId: tag.data.id },
@@ -133,7 +133,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
       <form onSubmit={handleSubmit(handleTagUpdate, handleError)}>
         {tag.isLoading && <DialogTitle>Loading tag...</DialogTitle>}
         {tag.isError && <DialogTitle>Error: {tag.error.message}</DialogTitle>}
-        {tag.isSuccess && <DialogTitle>Edit tag {tag.data.title}</DialogTitle>}
+        {tag.isSuccess && <DialogTitle>Edit tag {tag.data.name}</DialogTitle>}
         <DialogContent>
           <Stack spacing={3}>
             <TextField
@@ -142,10 +142,10 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
               select
               label="Parent Code"
               variant="filled"
-              defaultValue={tag.data?.parent_tag_id || -1}
-              {...register("parent_tag_id")}
-              error={Boolean(errors.parent_tag_id)}
-              helperText={<ErrorMessage errors={errors} name="parent_tag_id" />}
+              defaultValue={tag.data?.parent_id || -1}
+              {...register("parent_id")}
+              error={Boolean(errors.parent_id)}
+              helperText={<ErrorMessage errors={errors} name="parent_id" />}
               InputLabelProps={{ shrink: true }}
             >
               <MenuItem key={-1} value={-1}>
@@ -157,9 +157,9 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
               label="Name"
               fullWidth
               variant="standard"
-              {...register("title", { required: "Tag title is required" })}
-              error={Boolean(errors?.title)}
-              helperText={<>{errors?.title ? errors.title.message : ""}</>}
+              {...register("name", { required: "Tag name is required" })}
+              error={Boolean(errors?.name)}
+              helperText={<>{errors?.name ? errors.name.message : ""}</>}
               disabled={!tag.isSuccess}
               InputLabelProps={{ shrink: true }}
             />

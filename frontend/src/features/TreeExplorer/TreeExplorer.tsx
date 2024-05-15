@@ -151,7 +151,6 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
           </Stack>
         )}
         <DataTreeView
-          dataType={dataType}
           dataIcon={dataIcon}
           className="myFlexFillAllContainer"
           // data

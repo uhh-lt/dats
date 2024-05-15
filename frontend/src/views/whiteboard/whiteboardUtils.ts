@@ -208,7 +208,7 @@ export const createCodeNodes = ({
   return codes.map((code, index) => ({
     id: `code-${code.id}`,
     type: "code",
-    data: { ...defaultDatabaseNodeData, codeId: code.id, parentCodeId: code.parent_code_id },
+    data: { ...defaultDatabaseNodeData, codeId: code.id, parentCodeId: code.parent_id },
     position: { x: (position?.x || 0) + index * positionOffset, y: (position?.y || 0) + index * positionOffset },
   }));
 };

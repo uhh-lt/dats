@@ -91,10 +91,10 @@ function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCr
                 dispatch(DocumentSamplerActions.onUpdateGroupTags({ groupName, tags: newValue }));
               }}
               options={tags}
-              getOptionLabel={(option) => option.title}
+              getOptionLabel={(option) => option.name}
               getOptionDisabled={(option) => selectedTagIds.includes(option.id)}
               renderTags={(tagValue, getTagProps) =>
-                tagValue.map((option, index) => <Chip label={option.title} {...getTagProps({ index })} />)
+                tagValue.map((option, index) => <Chip label={option.name} {...getTagProps({ index })} />)
               }
               style={{ flexGrow: 2, width: "100%" }}
               sx={{ mr: 1 }}

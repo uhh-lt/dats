@@ -114,7 +114,7 @@ function CodeCreateDialog() {
             color: data.color,
             project_id: parseInt(projectId),
             user_id: user.id,
-            parent_code_id: pcid,
+            parent_id: pcid,
           },
         },
         {
@@ -127,12 +127,12 @@ function CodeCreateDialog() {
             // if we add a new code successfully, we want to show the code in the code explorer
             // this means, we have to expand the parent codes, so the new code is visible
             const codesToExpand = [];
-            let parentCodeId = data.parent_code_id;
+            let parentCodeId = data.parent_id;
             while (parentCodeId) {
               const currentParentCodeId = parentCodeId;
 
               codesToExpand.push(parentCodeId);
-              parentCodeId = codes.data?.find((code) => code.id === currentParentCodeId)?.parent_code_id;
+              parentCodeId = codes.data?.find((code) => code.id === currentParentCodeId)?.parent_id;
             }
             dispatch(AnnoActions.expandCodes(codesToExpand.map((id) => id.toString())));
             if (onSuccessHandler) onSuccessHandler(data, true);

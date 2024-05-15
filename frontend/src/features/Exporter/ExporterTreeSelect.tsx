@@ -3,7 +3,6 @@ import { Checkbox, Divider, TextField, Toolbar } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { KEYWORD_CODES } from "../../utils/GlobalConstants.ts";
 import { ICodeTree } from "../../views/annotation/CodeExplorer/ICodeTree.ts";
 import { flatTree } from "../../views/annotation/CodeExplorer/TreeUtils.ts";
 import DataTreeView from "../TreeExplorer/DataTreeView.tsx";
@@ -156,7 +155,6 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
       <Divider />
       {filteredCodeTree && (
         <DataTreeView
-          dataType={KEYWORD_CODES}
           dataIcon={SquareIcon}
           data={filteredCodeTree.model}
           multiSelect={false}

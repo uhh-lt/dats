@@ -94,7 +94,7 @@ function Annotation() {
             </Box>
             <Box className="myFlexFillAllContainer">
               <TabPanel value="code" style={{ padding: 0 }} className="h100">
-                <CodeExplorer showButtons={true} />
+                <CodeExplorer />
               </TabPanel>
               <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
                 <MemoExplorer sdocId={sourceDocumentId} />
