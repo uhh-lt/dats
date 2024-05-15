@@ -117,11 +117,12 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
             {memos.isSuccess && (
               <>
                 {memos.data.filter((memo) => memo.attached_object_type === AttachedObjectType.SOURCE_DOCUMENT)
-                  .length === 0 ? (
+                  .length === 0 && (
                   <Button
                     variant="text"
                     size="small"
                     startIcon={<AddCircleIcon />}
+                    sx={{ mb: 1 }}
                     onClick={() =>
                       MemoAPI.openMemo({
                         attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
@@ -131,13 +132,12 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
                   >
                     Add Document Memo
                   </Button>
-                ) : (
-                  <Stack direction="column" spacing={0.5}>
-                    {memos.data.map((memo) => (
-                      <MemoCard memo={memo} />
-                    ))}
-                  </Stack>
                 )}
+                <Stack direction="column" spacing={0.5}>
+                  {memos.data.map((memo) => (
+                    <MemoCard memo={memo} />
+                  ))}
+                </Stack>
               </>
             )}
           </TabPanel>
