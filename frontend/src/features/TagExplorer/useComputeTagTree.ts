@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Tree, { Node } from "ts-tree-structure";
 import ProjectHooks from "../../api/ProjectHooks.ts";
-import { ITagTree } from "./ITagTree.ts";
-import { tagsToTree } from "./TreeUtils.ts";
+import { IDataTree } from "../TreeExplorer/IDataTree.ts";
+import { dataToTree } from "../TreeExplorer/TreeUtils.ts";
 
 const useComputeTagTree = () => {
   const { projectId } = useParams() as { projectId: string };
@@ -14,10 +14,10 @@ const useComputeTagTree = () => {
   const allTags = ProjectHooks.useGetAllTags(projId);
 
   // computed
-  const tagTree: Node<ITagTree> | null = useMemo(() => {
+  const tagTree: Node<IDataTree> | null = useMemo(() => {
     if (allTags.data) {
       const tree = new Tree();
-      return tree.parse<ITagTree>(tagsToTree(allTags.data));
+      return tree.parse<IDataTree>(dataToTree(allTags.data));
     } else {
       return null;
     }

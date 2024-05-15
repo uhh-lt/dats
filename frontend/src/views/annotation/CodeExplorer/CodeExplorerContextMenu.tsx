@@ -1,13 +1,14 @@
 import { Menu } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { ContextMenuProps } from "../../../components/ContextMenu/ContextMenuProps.tsx";
 import MemoMenuItem from "../../../features/Memo/MemoMenuItem.tsx";
+import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
 import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
-import { ICodeTree } from "./ICodeTree.ts";
 
 interface CodeExplorerContextMenuProps extends ContextMenuProps {
-  node: ICodeTree | undefined;
+  node: IDataTree | undefined;
 }
 
 function CodeExplorerContextMenu({ position, handleClose, node }: CodeExplorerContextMenuProps) {
@@ -26,7 +27,7 @@ function CodeExplorerContextMenu({ position, handleClose, node }: CodeExplorerCo
       {node && (
         <>
           <CodeToggleVisibilityMenuItem code={node} onClick={handleClose} />
-          <CodeEditMenuItem code={node.data} onClick={handleClose} />
+          <CodeEditMenuItem code={node.data as CodeRead} onClick={handleClose} />
           <MemoMenuItem
             attachedObjectId={node.data.id}
             attachedObjectType={AttachedObjectType.CODE}

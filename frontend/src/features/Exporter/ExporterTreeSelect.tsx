@@ -3,12 +3,12 @@ import { Checkbox, Divider, TextField, Toolbar } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
-import { ICodeTree } from "../../views/annotation/CodeExplorer/ICodeTree.ts";
-import { flatTree } from "../../views/annotation/CodeExplorer/TreeUtils.ts";
 import DataTreeView from "../TreeExplorer/DataTreeView.tsx";
+import { IDataTree } from "../TreeExplorer/IDataTree.ts";
+import { flatTree } from "../TreeExplorer/TreeUtils.ts";
 
 interface ExporterTreeSelectProps {
-  tree: ICodeTree | undefined;
+  tree: IDataTree | undefined;
   value: number[];
   onChange: (value: number[]) => void;
 }
@@ -23,7 +23,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
   const { filteredCodeTree, nodesToExpand } = useMemo(() => {
     if (tree) {
       // build the tree
-      const filteredCodeTree = new Tree().parse<ICodeTree>(structuredClone(tree));
+      const filteredCodeTree = new Tree().parse<IDataTree>(structuredClone(tree));
 
       const nodesToExpand = new Set<number>();
 
@@ -101,7 +101,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
     }
   };
 
-  const handleToggleTreeItem = (treeItem: ICodeTree) => {
+  const handleToggleTreeItem = (treeItem: IDataTree) => {
     // find tree item and all its children
     const itemIds = [treeItem.data.id];
     if (treeItem.children) {
@@ -165,7 +165,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
           renderActions={(node) => (
             <Checkbox
               name={(node.data as CodeRead).name}
-              onChange={() => handleToggleTreeItem(node as ICodeTree)}
+              onChange={() => handleToggleTreeItem(node as IDataTree)}
               checked={value.indexOf(node.data.id) !== -1}
             />
           )}

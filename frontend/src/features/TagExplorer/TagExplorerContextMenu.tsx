@@ -2,11 +2,11 @@ import { Menu } from "@mui/material";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps.tsx";
 import MemoMenuItem from "../Memo/MemoMenuItem.tsx";
-import { ITagTree } from "./ITagTree.ts";
+import { IDataTree } from "../TreeExplorer/IDataTree.ts";
 import TagEditMenuItem from "./TagEditMenuItem.tsx";
 
 interface TagExplorerContextMenuProps extends ContextMenuProps {
-  node: ITagTree | undefined;
+  node: IDataTree | undefined;
 }
 
 function TagExplorerContextMenu({ position, handleClose, node }: TagExplorerContextMenuProps) {

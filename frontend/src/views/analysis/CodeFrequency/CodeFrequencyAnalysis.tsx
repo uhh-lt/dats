@@ -38,9 +38,9 @@ import { CodeOccurrence } from "../../../api/openapi/models/CodeOccurrence.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
 import UserName from "../../../components/UserName.tsx";
+import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { ICodeTree } from "../../annotation/CodeExplorer/ICodeTree.ts";
 import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree.ts";
 import CodeFrequencyUserSelector from "./CodeFrequencyUserSelector.tsx";
 
@@ -247,12 +247,12 @@ interface CodeFrequencyViewProps {
   projectId: number;
   userIds: number[];
   setSelectedCode: Dispatch<SetStateAction<number | undefined>>;
-  data: Node<ICodeTree>;
+  data: Node<IDataTree>;
 }
 
 function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFrequencyViewProps) {
   // local state
-  const [selectedData, setSelectedData] = useState<Node<ICodeTree>>();
+  const [selectedData, setSelectedData] = useState<Node<IDataTree>>();
   const [showPieChart, toggleShowPieChart] = React.useReducer((previous) => !previous, false);
 
   // global server state (react-query)
@@ -266,7 +266,7 @@ function CodeFrequencyView({ projectId, userIds, data, setSelectedCode }: CodeFr
   const codeId2Code = useMemo(() => {
     const result = new Map<number, CodeRead>();
     for (const node of data.children) {
-      result.set(node.model.data.id, node.model.data);
+      result.set(node.model.data.id, node.model.data as CodeRead);
     }
     return result;
   }, [data]);

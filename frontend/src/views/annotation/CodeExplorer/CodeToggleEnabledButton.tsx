@@ -3,13 +3,13 @@ import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import React from "react";
+import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
+import { flatTree } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { SettingsActions } from "../../settings/settingsSlice.ts";
-import { ICodeTree } from "./ICodeTree.ts";
-import { flatTree } from "./TreeUtils.ts";
 
-function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: ICodeTree | null | undefined }) {
+function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: IDataTree | null | undefined }) {
   // redux (global client state)
   const isDisabled = useAppSelector((state: RootState) =>
     code ? state.settings.disabledCodeIds.indexOf(code.data.id) !== -1 : false,
@@ -21,7 +21,7 @@ function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: I
 
     if (!code) return;
 
-    // toggle visibility of the code and all its children
+    // toggle enabled of the code and all its children
     const codeIds = [code.data.id];
     if (code.children) {
       codeIds.push(...flatTree(code).map((c) => c.id));

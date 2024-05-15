@@ -1,6 +1,7 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import React, { useCallback, useState } from "react";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
 import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
@@ -9,7 +10,6 @@ import CodeCreateListItemButton from "../../annotation/CodeExplorer/CodeCreateLi
 import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton.tsx";
 import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton.tsx";
-import { ICodeTree } from "../../annotation/CodeExplorer/ICodeTree.ts";
 import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree.ts";
 
 function ProjectCodes() {
@@ -65,9 +65,9 @@ function ProjectCodes() {
             // actions
             renderActions={(node) => (
               <>
-                <CodeEditButton code={(node as ICodeTree).data} />
-                <CodeToggleVisibilityButton code={node as ICodeTree} />
-                <CodeToggleEnabledButton code={node as ICodeTree} />
+                <CodeEditButton code={node.data as CodeRead} />
+                <CodeToggleVisibilityButton code={node} />
+                <CodeToggleEnabledButton code={node} />
               </>
             )}
             renderListActions={() => (
