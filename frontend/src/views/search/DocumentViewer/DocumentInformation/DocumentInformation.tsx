@@ -1,8 +1,7 @@
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { TabContext, TabPanel } from "@mui/lab";
-import { Box, BoxProps, Button, CircularProgress, Stack, Tab, Tabs } from "@mui/material";
+import { Box, BoxProps, Button, CircularProgress, List, Stack, Tab, Tabs } from "@mui/material";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType.ts";
 import { DocumentTagRead } from "../../../../api/openapi/models/DocumentTagRead.ts";
@@ -12,7 +11,7 @@ import MemoCard from "../../../../features/Memo/MemoCard/MemoCard.tsx";
 import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.tsx";
 import DocumentMetadataRow from "../DocumentMetadata/DocumentMetadataRow.tsx";
 import DocumentTagRow from "./DocumentTagRow.tsx";
-import LinkedDocumentRow from "./LinkedDocumentRow.tsx";
+import SdocListItem from "./SdocListItem.tsx";
 
 interface DocumentInformationProps {
   sdocId: number | undefined;
@@ -20,8 +19,6 @@ interface DocumentInformationProps {
 }
 
 export default function DocumentInformation({ sdocId, isIdleContent, ...props }: DocumentInformationProps & BoxProps) {
-  const navigate = useNavigate();
-
   // global client state (context)
   const { user } = useAuth();
 
@@ -91,7 +88,7 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
             </Stack>
           </TabPanel>
           <TabPanel value="links" sx={{ p: 1 }} className="h100">
-            <Button variant="text" size="small" startIcon={<AddCircleIcon />} onClick={undefined}>
+            <Button variant="text" size="small" startIcon={<AddCircleIcon />} disabled>
               Link documents
             </Button>
             <Stack direction="column" spacing={0.5}>
@@ -101,10 +98,13 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
                 </Box>
               )}
               {linkedSdocIds.isError && <span>{linkedSdocIds.error.message}</span>}
-              {linkedSdocIds.isSuccess &&
-                linkedSdocIds.data.map((sdocId) => (
-                  <LinkedDocumentRow sdocId={sdocId} handleClick={() => navigate(`../search/doc/${sdocId}`)} />
-                ))}
+              {linkedSdocIds.isSuccess && (
+                <List>
+                  {linkedSdocIds.data.map((sdocId) => (
+                    <SdocListItem key={sdocId} sdocId={sdocId} />
+                  ))}
+                </List>
+              )}
             </Stack>
           </TabPanel>
           <TabPanel value="memos" sx={{ p: 1 }} className="h100">
