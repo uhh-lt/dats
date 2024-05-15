@@ -1,10 +1,11 @@
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
 import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
 import { flatTree } from "../../../features/TreeExplorer/TreeUtils.ts";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../annoSlice.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { AnnoActions, isHiddenCodeId } from "../annoSlice.ts";
 
 interface CodeToggleVisibilityMenuItemProps {
   code: IDataTree;
@@ -13,7 +14,9 @@ interface CodeToggleVisibilityMenuItemProps {
 
 function CodeToggleVisibilityMenuItem({ code, onClick, ...props }: CodeToggleVisibilityMenuItemProps & MenuItemProps) {
   // redux (global client state)
+  const isHidden = useAppSelector(isHiddenCodeId(code.data.id));
   const dispatch = useAppDispatch();
+
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
     // toggle visibility of the code and all its children
@@ -28,7 +31,7 @@ function CodeToggleVisibilityMenuItem({ code, onClick, ...props }: CodeToggleVis
   return (
     <MenuItem onClick={handleClick} {...props}>
       <ListItemIcon>
-        <VisibilityIcon fontSize="small" />
+        {!isHidden ? <VisibilityIcon fontSize="small" /> : <VisibilityOffIcon fontSize="small" />}
       </ListItemIcon>
       <ListItemText>Toggle code visibility</ListItemText>
     </MenuItem>
