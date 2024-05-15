@@ -1,6 +1,6 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import { useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
 import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
@@ -19,29 +19,6 @@ function ProjectCodes() {
   // local state
   const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
   const [codeFilter, setCodeFilter] = useState<string>("");
-  const expandCodes = useCallback((codesToExpand: string[]) => {
-    setExpandedCodeIds((prev) => {
-      for (const codeId of codesToExpand) {
-        if (prev.indexOf(codeId) === -1) {
-          prev.push(codeId);
-        }
-      }
-      return prev.slice();
-    });
-  }, []);
-
-  // handle ui events
-  const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
-    event.stopPropagation();
-    expandCodes([nodeId]);
-  };
-  const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
-    event.stopPropagation();
-    const id = expandedCodeIds.indexOf(nodeId);
-    const newCodeIds = [...expandedCodeIds];
-    newCodeIds.splice(id, 1);
-    setExpandedCodeIds(newCodeIds);
-  };
 
   return (
     <Box className="h100">
@@ -57,11 +34,10 @@ function ProjectCodes() {
             // filter
             showFilter
             dataFilter={codeFilter}
-            setDataFilter={setCodeFilter}
+            onDataFilterChange={setCodeFilter}
             // expansion
             expandedDataIds={expandedCodeIds}
-            handleCollapseClick={handleCollapseClick}
-            handleExpandClick={handleExpandClick}
+            onExpandedDataIdsChange={setExpandedCodeIds}
             // actions
             renderActions={(node) => (
               <>

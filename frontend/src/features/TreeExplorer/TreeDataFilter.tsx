@@ -13,7 +13,7 @@ interface TreeDataFilterProps {
   setFilteredDataTree: React.Dispatch<React.SetStateAction<Node<IDataTree>>>;
   dataTree: Node<IDataTree>;
   dataFilter: string;
-  setDataFilter: React.Dispatch<React.SetStateAction<string>>;
+  onDataFilterChange: (newDataFilter: string) => void;
   dataType: string;
   actions: React.ReactNode;
 }
@@ -24,7 +24,7 @@ export function TreeDataFilter({
   setFilteredDataTree,
   dataTree,
   dataFilter,
-  setDataFilter,
+  onDataFilterChange,
   dataType,
   actions,
 }: TreeDataFilterProps) {
@@ -51,7 +51,7 @@ export function TreeDataFilter({
           size="small"
           value={dataFilter}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-            setDataFilter(event.target.value);
+            onDataFilterChange(event.target.value);
           }}
         />
         {actions}

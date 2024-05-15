@@ -8,7 +8,7 @@ import { SettingsActions } from "../settings/settingsSlice.ts";
 import DocumentInformation from "./DocumentViewer/DocumentInformation/DocumentInformation.tsx";
 import SearchDocumentTable from "./SearchResults/Table/SearchDocumentTable.tsx";
 import SearchStatistics from "./SearchStatistics/SearchStatistics.tsx";
-import TagExplorerNew from "./TagExplorerNew.tsx";
+import TagExplorerNew from "./TagExplorer/TagExplorer.tsx";
 import { useAddTagFilter } from "./hooks/useAddTagFilter.ts";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary.ts";
 import { SearchFilterActions } from "./searchFilterSlice.ts";
