@@ -13,9 +13,7 @@ class CodeBaseDTO(BaseModel):
     name: str = Field(description="Name of the Code")
     color: str = Field(description="Color of the Code")
     description: str = Field(description="Description of the Code")
-    parent_code_id: Optional[int] = Field(
-        description="Parent of the Code", default=None
-    )
+    parent_id: Optional[int] = Field(description="Parent of the Code", default=None)
 
 
 # Properties for creation
@@ -32,9 +30,7 @@ class CodeUpdate(BaseModel, UpdateDTOBase):
     description: Optional[str] = Field(
         description="Description of the Code", default=None
     )
-    parent_code_id: Optional[int] = Field(
-        description="Parent of the Code", default=None
-    )
+    parent_id: Optional[int] = Field(description="Parent of the Code", default=None)
 
 
 # Properties for reading (as in ORM)

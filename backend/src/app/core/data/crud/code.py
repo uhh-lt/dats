@@ -17,8 +17,8 @@ from config import conf
 
 class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
     def create(self, db: Session, *, create_dto: CodeCreate) -> CodeORM:
-        if create_dto.parent_code_id == -1:
-            create_dto.parent_code_id = None
+        if create_dto.parent_id == -1:
+            create_dto.parent_id = None
 
         dto_obj_data = jsonable_encoder(create_dto)
         # first create the code
@@ -58,7 +58,7 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
                     description=code_dict[code_name]["desc"],
                     project_id=proj_id,
                     user_id=SYSTEM_USER_ID,
-                    parent_code_id=parent_code_id,
+                    parent_id=parent_code_id,
                 )
 
                 if not self.exists_by_name_and_user_and_project(
@@ -163,8 +163,8 @@ class CRUDCode(CRUDBase[CodeORM, CodeCreate, CodeUpdate]):
         )
 
     def update(self, db: Session, *, id: int, update_dto: CodeUpdate) -> CodeORM | None:
-        if update_dto.parent_code_id == -1:
-            update_dto.parent_code_id = None
+        if update_dto.parent_id == -1:
+            update_dto.parent_id = None
         return super().update(db, id=id, update_dto=update_dto)
 
     def remove_by_user_and_project(
