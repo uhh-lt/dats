@@ -1,7 +1,7 @@
 import SquareIcon from "@mui/icons-material/Square";
 import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
@@ -38,7 +38,7 @@ function CodeExplorer(props: BoxProps) {
         dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model) as CodeRead[]));
       } else {
         // the selected code was not found -> the selected code was invalid (probabily because of local storage / project change...)
-        dispatch(AnnoActions.setSelectedParentCodeId(undefined));
+        dispatch(AnnoActions.setSelectedCodeId(undefined));
       }
     } else if (allCodes.data) {
       dispatch(AnnoActions.setCodesForSelection(allCodes.data));
@@ -48,20 +48,16 @@ function CodeExplorer(props: BoxProps) {
   }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
 
   // handle ui events
+  const handleExpandedDataIdsChange = useCallback(
+    (newCodeIds: string[]) => {
+      dispatch(AnnoActions.setExpandedCodeIds(newCodeIds));
+    },
+    [dispatch],
+  );
+
   const handleSelectCode = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
     const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
-    dispatch(AnnoActions.setSelectedParentCodeId(selectedCodeId === id ? undefined : id));
-  };
-  const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
-    event.stopPropagation();
-    dispatch(AnnoActions.expandCode(nodeId));
-  };
-  const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
-    event.stopPropagation();
-    const id = expandedCodeIds.indexOf(nodeId);
-    const newCodeIds = [...expandedCodeIds];
-    newCodeIds.splice(id, 1);
-    dispatch(AnnoActions.setExpandedParentCodeIds(newCodeIds));
+    dispatch(AnnoActions.setSelectedCodeId(selectedCodeId === id ? undefined : id));
   };
 
   return (
@@ -78,14 +74,13 @@ function CodeExplorer(props: BoxProps) {
             // filter
             showFilter
             dataFilter={codeFilter}
-            setDataFilter={setCodeFilter}
+            onDataFilterChange={setCodeFilter}
             // expansion
             expandedDataIds={expandedCodeIds}
-            handleCollapseClick={handleCollapseClick}
-            handleExpandClick={handleExpandClick}
+            onExpandedDataIdsChange={handleExpandedDataIdsChange}
             // selection
             selectedDataId={selectedCodeId}
-            handleSelectData={handleSelectCode}
+            onSelectedDataIdChange={handleSelectCode}
             // actions
             renderActions={(node) => (
               <>

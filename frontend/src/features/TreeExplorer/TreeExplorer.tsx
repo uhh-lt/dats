@@ -1,7 +1,7 @@
 import { AppBar, Box, BoxProps, Checkbox, Stack, SvgIconProps, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { Node } from "ts-tree-structure";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
@@ -12,24 +12,29 @@ import { flatTree } from "./TreeUtils.ts";
 
 interface DataExplorerProps {
   toolbarTitle?: string;
-  showCheckboxes?: boolean;
-  showFilter?: boolean;
-  onDataClick?: (dataId: number) => void;
-  selectedDataId?: number | undefined;
-  expandedDataIds: string[];
-  setExpandedDataIds?: React.Dispatch<React.SetStateAction<string[]>>;
-  dataTree: Node<IDataTree>;
+  // data
   allData: CodeRead[] | DocumentTagRead[];
-  dataFilter: string;
-  setDataFilter: React.Dispatch<React.SetStateAction<string>>;
+  dataTree: Node<IDataTree>;
   dataType: string;
-  handleSelectData?: (event: React.SyntheticEvent, nodeId: string | string[]) => void;
-  handleExpandClick: (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
-  handleCollapseClick: (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
+  dataIcon: React.ElementType<SvgIconProps>;
+  // checkboxes
+  showCheckboxes?: boolean;
+  // expansion
+  expandedDataIds: string[];
+  onExpandedDataIdsChange: (newExpandedDataIds: string[]) => void;
+  // selection
+  selectedDataId?: number | undefined;
+  onSelectedDataIdChange?: (event: React.SyntheticEvent, nodeId: string | string[]) => void;
+  // filter
+  showFilter?: boolean;
+  dataFilter: string;
+  onDataFilterChange: (newDataFilter: string) => void;
+  // actions
+  onDataClick?: (dataId: number) => void;
+  // render actions
   renderActions?: (node: IDataTree) => React.ReactNode;
   renderListActions?: () => React.ReactNode;
   renderFilterActions?: () => React.ReactNode;
-  dataIcon: React.ElementType<SvgIconProps>;
 }
 
 export interface TreeDataExplorerHandle {
@@ -45,15 +50,13 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
       onDataClick,
       selectedDataId,
       expandedDataIds,
-      setExpandedDataIds,
+      onExpandedDataIdsChange,
       dataTree,
       allData,
       dataFilter,
-      setDataFilter,
+      onDataFilterChange,
       dataType,
-      handleSelectData,
-      handleExpandClick,
-      handleCollapseClick,
+      onSelectedDataIdChange,
       renderActions,
       renderListActions,
       renderFilterActions,
@@ -62,17 +65,43 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
     },
     ref,
   ) => {
-    const [nodesToExpand, setNodesToExpand] = useState<Set<number>>(new Set());
+    // filter feature
     const [filteredDataTree, setFilteredDataTree] = useState<Node<IDataTree>>(dataTree);
 
-    // effects
+    // expansion feature
+    const [nodesToExpand, setNodesToExpand] = useState<Set<number>>(new Set());
+    const expandData = useCallback(
+      (dataIdsToExpand: string[]) => {
+        const prev = expandedDataIds.slice();
+        for (const dataId of dataIdsToExpand) {
+          if (prev.indexOf(dataId) === -1) {
+            prev.push(dataId);
+          }
+        }
+        onExpandedDataIdsChange(prev);
+      },
+      [onExpandedDataIdsChange, expandedDataIds],
+    );
     // automatically expand filtered nodes
     useEffect(() => {
-      if (setExpandedDataIds && nodesToExpand)
-        setExpandedDataIds(() => Array.from(nodesToExpand).map((id) => id.toString()));
-    }, [nodesToExpand, setExpandedDataIds]);
+      if (nodesToExpand) {
+        onExpandedDataIdsChange(Array.from(nodesToExpand).map((id) => id.toString()));
+      }
+    }, [nodesToExpand, onExpandedDataIdsChange]);
+    // expand actions
+    const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
+      event.stopPropagation();
+      expandData([nodeId]);
+    };
+    const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
+      event.stopPropagation();
+      const id = expandedDataIds.indexOf(nodeId);
+      const newDataIds = [...expandedDataIds];
+      newDataIds.splice(id, 1);
+      onExpandedDataIdsChange(newDataIds);
+    };
 
-    // checkboxes
+    // checkboxes feature
     const [checkedDataIds, setCheckedDataIds] = useState<number[]>([]);
 
     const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>, node: IDataTree) => {
@@ -134,7 +163,7 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
             dataFilter={dataFilter}
             dataTree={dataTree}
             dataType={dataType}
-            setDataFilter={setDataFilter}
+            onDataFilterChange={onDataFilterChange}
           />
         )}
         {renderListActions && (
@@ -157,14 +186,16 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
           data={filteredDataTree.model}
           // selection
           multiSelect={false}
-          disableSelection={!handleSelectData && !selectedDataId}
+          disableSelection={!onSelectedDataIdChange && !selectedDataId}
           selected={selectedDataId?.toString() || ""}
-          onNodeSelect={handleSelectData}
+          onNodeSelect={onSelectedDataIdChange}
           // expand / collapse
           expanded={expandedDataIds}
           onExpandClick={handleExpandClick}
           onCollapseClick={handleCollapseClick}
+          // actions
           onDataClick={onDataClick ? (data) => onDataClick(data.id) : undefined}
+          // render actions
           renderActions={(node) => (
             <>
               {showCheckboxes && (

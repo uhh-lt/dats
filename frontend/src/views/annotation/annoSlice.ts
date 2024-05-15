@@ -58,16 +58,11 @@ export const annoSlice = createSlice({
       }
       state.hiddenCodeIds = hiddenCodeIds;
     },
-    setSelectedParentCodeId: (state, action: PayloadAction<number | undefined>) => {
+    setSelectedCodeId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedCodeId = action.payload;
     },
-    setExpandedParentCodeIds: (state, action: PayloadAction<string[]>) => {
+    setExpandedCodeIds: (state, action: PayloadAction<string[]>) => {
       state.expandedCodeIds = action.payload;
-    },
-    expandCode: (state, action: PayloadAction<string>) => {
-      if (state.expandedCodeIds.indexOf(action.payload) === -1) {
-        state.expandedCodeIds.push(action.payload);
-      }
     },
     expandCodes: (state, action: PayloadAction<string[]>) => {
       for (const codeId of action.payload) {
