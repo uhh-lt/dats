@@ -3,7 +3,7 @@ import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/materi
 import React from "react";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../annoSlice.ts";
-import ICodeTree from "./ICodeTree.ts";
+import { ICodeTree } from "./ICodeTree.ts";
 import { flatTree } from "./TreeUtils.ts";
 
 interface CodeToggleVisibilityMenuItemProps {

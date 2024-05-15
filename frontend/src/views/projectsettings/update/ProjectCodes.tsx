@@ -1,74 +1,90 @@
+import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
-import React, { useState } from "react";
-import { Node } from "ts-tree-structure";
-import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import React, { useCallback, useState } from "react";
+import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
+import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
+import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
+import { KEYWORD_CODES } from "../../../utils/GlobalConstants.ts";
+import CodeCreateListItemButton from "../../annotation/CodeExplorer/CodeCreateListItemButton.tsx";
+import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton.tsx";
 import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton.tsx";
-import ICodeTree from "../../annotation/CodeExplorer/ICodeTree.ts";
-import { ProjectProps } from "./ProjectProps.ts";
+import { ICodeTree } from "../../annotation/CodeExplorer/ICodeTree.ts";
+import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree.ts";
 
-function ProjectCodes({ project }: ProjectProps) {
+function ProjectCodes() {
   // custom hooks
-  let { codeTree, allCodes } = useComputeCodeTree(true);
+  const { codeTree, allCodes } = useComputeCodeTree(true);
 
-  // global client state (redux)
-  const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
-  const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
-  const dispatch = useAppDispatch();
-
+  // local state
+  const [expandedCodeIds, setExpandedCodeIds] = useState<string[]>([]);
   const [codeFilter, setCodeFilter] = useState<string>("");
+  const expandCodes = useCallback((codesToExpand: string[]) => {
+    setExpandedCodeIds((prev) => {
+      for (const codeId of codesToExpand) {
+        if (prev.indexOf(codeId) === -1) {
+          prev.push(codeId);
+        }
+      }
+      return prev.slice();
+    });
+  }, []);
 
   // handle ui events
-  const handleSelectCode = (event: React.SyntheticEvent, nodeIds: string[] | string) => {
-    const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
-    dispatch(AnnoActions.setSelectedParentCodeId(selectedCodeId === id ? undefined : id));
-  };
   const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
-    dispatch(AnnoActions.setExpandedParentCodeIds([nodeId, ...expandedCodeIds]));
-    // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
+    expandCodes([nodeId]);
   };
   const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
     const id = expandedCodeIds.indexOf(nodeId);
     const newCodeIds = [...expandedCodeIds];
     newCodeIds.splice(id, 1);
-    dispatch(AnnoActions.setExpandedParentCodeIds(newCodeIds));
-    // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
+    setExpandedCodeIds(newCodeIds);
   };
 
   return (
-    <Box display="flex" className="myFlexContainer h100">
-      <TreeExplorer
-        sx={{ pt: 0 }}
-        dataType={KEYWORD_CODES}
-        dataIcon={SquareIcon}
-        showButtons
-        selectedDataId={selectedCodeId}
-        expandedDataIds={expandedCodeIds}
-        dataFilter={codeFilter}
-        setDataFilter={setCodeFilter}
-        dataTree={codeTree as Node<ICodeTree>}
-        allData={allCodes}
-        handleCollapseClick={handleCollapseClick}
-        handleExpandClick={handleExpandClick}
-        handleSelectData={handleSelectCode}
-        // actions
-        renderActions={(node) => {
-          return (
-            <>
-              <CodeToggleVisibilityButton code={node as ICodeTree} />
-              <CodeToggleEnabledButton code={node as ICodeTree} />
-            </>
-          );
-        }}
-        renderFilterActions={() => (
-          <>
-            <CodeToggleEnabledButton code={codeTree?.model} />
-          </>
-        )}
-      />
-      <TreeDataCreateDialog dataType={KEYWORD_CODES} />
+    <Box className="h100">
+      {allCodes.isSuccess && codeTree && (
+        <>
+          <TreeExplorer
+            sx={{ pt: 0 }}
+            dataType={KEYWORD_CODES}
+            dataIcon={SquareIcon}
+            // data
+            allData={allCodes.data}
+            dataTree={codeTree}
+            // filter
+            showFilter
+            dataFilter={codeFilter}
+            setDataFilter={setCodeFilter}
+            // expansion
+            expandedDataIds={expandedCodeIds}
+            handleCollapseClick={handleCollapseClick}
+            handleExpandClick={handleExpandClick}
+            // actions
+            renderActions={(node) => (
+              <>
+                <CodeEditButton code={(node as ICodeTree).data} />
+                <CodeToggleVisibilityButton code={node as ICodeTree} />
+                <CodeToggleEnabledButton code={node as ICodeTree} />
+              </>
+            )}
+            renderListActions={() => (
+              <>
+                <CodeCreateListItemButton parentCodeId={undefined} />
+              </>
+            )}
+            renderFilterActions={() => (
+              <>
+                <CodeToggleEnabledButton code={codeTree?.model} />
+              </>
+            )}
+          />
+          <CodeEditDialog codes={allCodes.data} />
+        </>
+      )}
+      <CodeCreateDialog />
     </Box>
   );
 }

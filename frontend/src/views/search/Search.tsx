@@ -3,12 +3,12 @@ import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
-import TagExplorer from "../../features/TagExplorer/TagExplorer.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SettingsActions } from "../settings/settingsSlice.ts";
 import DocumentInformation from "./DocumentViewer/DocumentInformation/DocumentInformation.tsx";
 import SearchDocumentTable from "./SearchResults/Table/SearchDocumentTable.tsx";
 import SearchStatistics from "./SearchStatistics/SearchStatistics.tsx";
+import TagExplorerNew from "./TagExplorerNew.tsx";
 import { useAddTagFilter } from "./hooks/useAddTagFilter.ts";
 import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary.ts";
 import { SearchFilterActions } from "./searchFilterSlice.ts";
@@ -84,7 +84,7 @@ function Search() {
             boxShadow: 4,
           }}
         >
-          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} showButtons />
+          <TagExplorerNew sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}

@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions, isHiddenCodeId } from "../annoSlice.ts";
-import ICodeTree from "./ICodeTree.ts";
+import { ICodeTree } from "./ICodeTree.ts";
 import { flatTree } from "./TreeUtils.ts";
 
 function CodeToggleVisibilityButton({ code, ...props }: IconButtonProps & { code: ICodeTree }) {

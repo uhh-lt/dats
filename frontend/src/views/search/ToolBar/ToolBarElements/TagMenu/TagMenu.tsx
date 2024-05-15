@@ -24,7 +24,7 @@ import { DocumentTagRead } from "../../../../../api/openapi/models/DocumentTagRe
 import SnackbarAPI from "../../../../../features/Snackbar/SnackbarAPI.ts";
 import { useAppSelector } from "../../../../../plugins/ReduxHooks.ts";
 import { CheckboxState } from "./CheckboxState.ts";
-import TagCreationButton from "./TagMenuCreateButton.tsx";
+import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
 
 interface TagMenuProps {
   popoverOrigin: PopoverOrigin | undefined;
@@ -193,13 +193,13 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   }
 
   if (search.trim().length === 0 && !hasChanged) {
-    actionMenu.push(<TagCreationButton tagName={search} dense key={"create-new"} />);
+    actionMenu.push(<TagMenuCreationButton tagName={search} dense key={"create-new"} />);
   } else if (
     search.trim().length > 0 &&
     !hasChanged &&
     filteredTags?.map((tag) => tag.title)?.indexOf(search.trim()) === -1
   ) {
-    actionMenu.push(<TagCreationButton tagName={search} dense key={"create-new2"} />);
+    actionMenu.push(<TagMenuCreationButton tagName={search} dense key={"create-new2"} />);
   }
 
   return (

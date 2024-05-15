@@ -1,9 +1,12 @@
+import SquareIcon from "@mui/icons-material/Square";
 import { Checkbox, Divider, TextField, Toolbar } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
-import CodeTreeView from "../../views/annotation/CodeExplorer/CodeTreeView.tsx";
-import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { KEYWORD_CODES } from "../../utils/GlobalConstants.ts";
+import { ICodeTree } from "../../views/annotation/CodeExplorer/ICodeTree.ts";
 import { flatTree } from "../../views/annotation/CodeExplorer/TreeUtils.ts";
+import DataTreeView from "../TreeExplorer/DataTreeView.tsx";
 
 interface ExporterTreeSelectProps {
   tree: ICodeTree | undefined;
@@ -52,7 +55,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
         );
 
         // filter the filteredCodeTree
-        const nodes_to_remove = filteredCodeTree.all((node) => !nodesToKeep.has(node.model.code.id));
+        const nodes_to_remove = filteredCodeTree.all((node) => !nodesToKeep.has(node.model.data.id));
         nodes_to_remove.forEach((node) => {
           node.drop();
         });
@@ -152,7 +155,9 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
       </Toolbar>
       <Divider />
       {filteredCodeTree && (
-        <CodeTreeView
+        <DataTreeView
+          dataType={KEYWORD_CODES}
+          dataIcon={SquareIcon}
           data={filteredCodeTree.model}
           multiSelect={false}
           disableSelection
@@ -161,8 +166,8 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
           onCollapseClick={handleCollapseClick}
           renderActions={(node) => (
             <Checkbox
-              name={node.data.name}
-              onChange={() => handleToggleTreeItem(node)}
+              name={(node.data as CodeRead).name}
+              onChange={() => handleToggleTreeItem(node as ICodeTree)}
               checked={value.indexOf(node.data.id) !== -1}
             />
           )}

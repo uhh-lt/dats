@@ -1,14 +1,14 @@
 import { Divider, TextField, Toolbar, Typography } from "@mui/material";
 import { useEffect } from "react";
 import { Node } from "ts-tree-structure";
-import { IDataTree } from "./IDataTree";
-import { filterTree } from "./TreeUtils";
-import { UseQueryResult } from "@tanstack/react-query";
-import { CodeRead, DocumentTagRead } from "../../api/openapi";
-import { KEYWORD_TAGS } from "../../utils/GlobalConstants";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { KEYWORD_TAGS } from "../../utils/GlobalConstants.ts";
+import { IDataTree } from "./IDataTree.ts";
+import { filterTree } from "./TreeUtils.ts";
 
 interface TreeDataFilterProps {
-  allData: UseQueryResult<CodeRead[] | DocumentTagRead[], Error>;
+  allData: CodeRead[] | DocumentTagRead[];
   setNodesToExpand: React.Dispatch<React.SetStateAction<Set<number>>>;
   setFilteredDataTree: React.Dispatch<React.SetStateAction<Node<IDataTree>>>;
   dataTree: Node<IDataTree>;
@@ -29,20 +29,17 @@ export function TreeDataFilter({
   actions,
 }: TreeDataFilterProps) {
   useEffect(() => {
-    if (allData.data) {
-      const filteredData = filterTree({
-        dataTree: dataTree,
-        dataFilter: dataFilter,
-        dataType: dataType,
-      });
-      setNodesToExpand(filteredData.nodesToExpand);
-      setFilteredDataTree(filteredData.dataTree);
-    }
-  }, [allData.data, dataFilter, dataTree, dataType, setFilteredDataTree, setNodesToExpand]);
+    const filteredData = filterTree({
+      dataTree: dataTree,
+      dataFilter: dataFilter,
+      dataType: dataType,
+    });
+    setNodesToExpand(filteredData.nodesToExpand);
+    setFilteredDataTree(filteredData.dataTree);
+  }, [allData, dataFilter, dataTree, dataType, setFilteredDataTree, setNodesToExpand]);
 
   return (
     <>
-      {" "}
       <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
         <Typography variant="h6" color="inherit" component="div">
           {"Filter " + (dataType === KEYWORD_TAGS ? "Tags" : "Codes")}

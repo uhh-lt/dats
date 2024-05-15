@@ -11,7 +11,7 @@ interface TagActionButtonCreateProps {
  * A button that sends the 'open-tag' event to open the TagCreationDialog
  * @param tagName The name of the DocumentTag to be created. The button will display the name, and the TagCreationDialog's form will be pre-filled with this name.
  */
-function TagCreationButton({ tagName, ...props }: TagActionButtonCreateProps & ListItemButtonProps) {
+function TagMenuCreationButton({ tagName, ...props }: TagActionButtonCreateProps & ListItemButtonProps) {
   const dispatch = useAppDispatch();
 
   const handleClick = () => {
@@ -28,4 +28,4 @@ function TagCreationButton({ tagName, ...props }: TagActionButtonCreateProps & L
   );
 }
 
-export default TagCreationButton;
+export default TagMenuCreationButton;
