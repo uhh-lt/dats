@@ -1,280 +1,114 @@
-import AddIcon from "@mui/icons-material/Add";
-import {
-  AppBar,
-  Box,
-  BoxProps,
-  Checkbox,
-  Divider,
-  List,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Stack,
-  TextField,
-  Toolbar,
-} from "@mui/material";
-import Typography from "@mui/material/Typography";
+import SquareIcon from "@mui/icons-material/Square";
+import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import Tree, { Node } from "ts-tree-structure";
+import { useEffect, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { useAuth } from "../../../auth/useAuth.ts";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
 import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
 import MemoButton from "../../../features/Memo/MemoButton.tsx";
-import { filterTree } from "../../../features/TagExplorer/TreeUtils.ts";
+import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { KEYWORD_CODES } from "../../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../annoSlice.ts";
+import CodeCreateListItemButton from "./CodeCreateListItemButton.tsx";
 import CodeEditButton from "./CodeEditButton.tsx";
-import CodeExplorerContextMenu from "./CodeExplorerContextMenu.tsx";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton.tsx";
-import CodeTreeView from "./CodeTreeView.tsx";
-import ICodeTree from "./ICodeTree.ts";
-import { codesToTree, flatTree, flatTreeWithRoot } from "./TreeUtils.ts";
+import { ICodeTree } from "./ICodeTree.ts";
+import { flatTreeWithRoot } from "./TreeUtils.ts";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
-interface CodeExplorerProps {
-  showToolbar?: boolean;
-  showCheckboxes?: boolean;
-  showButtons?: boolean;
-}
+function CodeExplorer(props: BoxProps) {
+  // custom hooks
+  const { codeTree, allCodes } = useComputeCodeTree();
 
-export interface CodeExplorerHandle {
-  getCheckedCodeIds: () => number[];
-}
+  // global client state (redux)
+  const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
+  const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
+  const dispatch = useAppDispatch();
 
-const CodeExplorer = forwardRef<CodeExplorerHandle, CodeExplorerProps & BoxProps>(
-  ({ showToolbar, showCheckboxes, showButtons, ...props }, ref) => {
-    const { user } = useAuth();
+  const [codeFilter, setCodeFilter] = useState<string>("");
 
-    // custom hooks
-    let { codeTree, allCodes } = useComputeCodeTree();
-
-    // global client state (redux)
-    const selectedCodeId = useAppSelector((state) => state.annotations.selectedCodeId);
-    const expandedCodeIds = useAppSelector((state) => state.annotations.expandedCodeIds);
-    const dispatch = useAppDispatch();
-
-    const [codeFilter, setCodeFilter] = useState<string>("");
-
-    if (allCodes.data) {
-      codeTree = new Tree().parse<ICodeTree>(codesToTree(allCodes.data));
-      if (codeFilter.length > 0) {
-        const filteredData = filterTree({
-          dataTree: codeTree as Node<ICodeTree>,
-          dataFilter: codeFilter,
-        });
-        codeTree = filteredData.dataTree as Node<ICodeTree>;
-      }
-    } else {
-      codeTree = null;
-    }
-
-    // effects
-    // update global client state when selection changes
-    // we tell the annotator which codes are available for selection in the combobox
-    useEffect(() => {
-      if (selectedCodeId && codeTree) {
-        const parentCode = codeTree.first((node) => node.model.code.id === selectedCodeId);
-        if (parentCode && parentCode.model) {
-          // the selected code was found -> we update the codes for selection
-          dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model)));
-        } else {
-          // the selected code was not found -> the selected code was invalid (probabily because of local storage / project change...)
-          dispatch(AnnoActions.setSelectedParentCodeId(undefined));
-        }
-      } else if (allCodes.data) {
-        dispatch(AnnoActions.setCodesForSelection(allCodes.data));
-        // dispatch(AnnoActions.setExpandedParentCodeIds(Array.from(nodesToExpand).map((id) => id.toString())));
+  // effects
+  // update global client state when selection changes
+  // we tell the annotator which codes are available for selection in the combobox
+  useEffect(() => {
+    if (selectedCodeId && codeTree) {
+      const parentCode = codeTree.first((node) => node.model.data.id === selectedCodeId);
+      if (parentCode && parentCode.model) {
+        // the selected code was found -> we update the codes for selection
+        dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model)));
       } else {
-        dispatch(AnnoActions.setCodesForSelection([]));
+        // the selected code was not found -> the selected code was invalid (probabily because of local storage / project change...)
+        dispatch(AnnoActions.setSelectedParentCodeId(undefined));
       }
-    }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
+    } else if (allCodes.data) {
+      dispatch(AnnoActions.setCodesForSelection(allCodes.data));
+    } else {
+      dispatch(AnnoActions.setCodesForSelection([]));
+    }
+  }, [dispatch, selectedCodeId, allCodes.data, codeTree]);
 
-    // handle ui events
-    const handleSelectCode = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
-      const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
-      dispatch(AnnoActions.setSelectedParentCodeId(selectedCodeId === id ? undefined : id));
-    };
-    const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
-      event.stopPropagation();
-      dispatch(AnnoActions.setExpandedParentCodeIds([nodeId, ...expandedCodeIds]));
-      // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
-    };
-    const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
-      event.stopPropagation();
-      const id = expandedCodeIds.indexOf(nodeId);
-      const newCodeIds = [...expandedCodeIds];
-      newCodeIds.splice(id, 1);
-      dispatch(AnnoActions.setExpandedParentCodeIds(newCodeIds));
-      // dispatch(AnnotationActions.setSelectedParentCodeId(parseInt(nodeId)));
-    };
+  // handle ui events
+  const handleSelectCode = (_event: React.SyntheticEvent, nodeIds: string[] | string) => {
+    const id = parseInt(Array.isArray(nodeIds) ? nodeIds[0] : nodeIds);
+    dispatch(AnnoActions.setSelectedParentCodeId(selectedCodeId === id ? undefined : id));
+  };
+  const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
+    event.stopPropagation();
+    dispatch(AnnoActions.expandCode(nodeId));
+  };
+  const handleCollapseClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
+    event.stopPropagation();
+    const id = expandedCodeIds.indexOf(nodeId);
+    const newCodeIds = [...expandedCodeIds];
+    newCodeIds.splice(id, 1);
+    dispatch(AnnoActions.setExpandedParentCodeIds(newCodeIds));
+  };
 
-    // context menu
-    const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-    const [contextMenuData, setContextMenuData] = useState<ICodeTree>();
-    const onContextMenu = (node: ICodeTree) => (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
-      event.preventDefault();
-      setContextMenuPosition({ x: event.clientX, y: event.clientY });
-      setContextMenuData(node);
-    };
-
-    // checkboxes
-    const [checkedCodeIds, setCheckedCodeIds] = useState<number[]>([]);
-
-    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>, node: ICodeTree) => {
-      event.stopPropagation();
-
-      // get ids of the code and all its children
-      const codeIds = [node.data.id];
-      if (node.children) {
-        codeIds.push(...flatTree(node).map((c) => c.id));
-      }
-
-      // toggle the code ids
-      setCheckedCodeIds((prevCheckedCodeIds) => {
-        if (prevCheckedCodeIds.includes(node.data.id)) {
-          // remove all codeIds
-          return prevCheckedCodeIds.filter((id) => !codeIds.includes(id));
-        } else {
-          // add all codeIds (that are not already present)
-          return [...prevCheckedCodeIds, ...codeIds.filter((id) => !prevCheckedCodeIds.includes(id))];
-        }
-      });
-    };
-
-    const isChecked = (node: ICodeTree): boolean => {
-      // a node is checked if it's id as well as all of its children are in the checkedCodeIds array
-      return checkedCodeIds.indexOf(node.data.id) !== -1 && (node.children?.every(isChecked) || true);
-    };
-
-    const isIndeterminate = (node: ICodeTree) => {
-      if (!node.children) {
-        return false;
-      }
-      const numCheckedChildren = node.children.filter(isChecked).length + (isChecked(node) ? 1 : 0);
-      return numCheckedChildren > 0 && numCheckedChildren < node.children.length + 1;
-    };
-
-    // exposed methods (via ref)
-    useImperativeHandle(ref, () => ({
-      getCheckedCodeIds: () => checkedCodeIds,
-    }));
-
-    const content = (
-      <>
-        {user && allCodes.isSuccess && codeTree ? (
-          <>
-            <CodeTreeView
-              className="myFlexFillAllContainer"
-              data={codeTree.model}
-              multiSelect={false}
-              selected={selectedCodeId?.toString() || ""}
-              expanded={expandedCodeIds}
-              onNodeSelect={handleSelectCode}
-              onExpandClick={handleExpandClick}
-              onCollapseClick={handleCollapseClick}
-              renderActions={(node) => (
-                <React.Fragment>
-                  {showCheckboxes ? (
-                    <Checkbox
-                      key={node.data.id}
-                      checked={isChecked(node)}
-                      indeterminate={isIndeterminate(node)}
-                      onChange={(event) => handleCheckboxChange(event, node)}
-                    />
-                  ) : (
-                    <>
-                      <CodeToggleVisibilityButton code={node} />
-                      <CodeEditButton code={node.data} />
-                      <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.CODE} />
-                    </>
-                  )}
-                  {}
-                </React.Fragment>
-              )}
-              openContextMenu={onContextMenu}
-            />
-            <CodeEditDialog codes={allCodes.data} />
-            <CodeExplorerContextMenu
-              node={contextMenuData}
-              position={contextMenuPosition}
-              handleClose={() => setContextMenuPosition(null)}
-            />
-          </>
-        ) : allCodes.isError ? (
-          <>{allCodes.error.message}</>
-        ) : (
-          "Loading..."
-        )}
-      </>
-    );
-
-    return (
-      <Box className="h100 myFlexContainer" {...props}>
-        {showToolbar && (
-          <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
-            <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
-              <Typography variant="h6" color="inherit" component="div">
-                Code Explorer
-              </Typography>
-            </Toolbar>
-          </AppBar>
-        )}
-        {showButtons && (
-          <>
-            <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
-              <Typography variant="h6" color="inherit" component="div">
-                Filter codes
-              </Typography>
-              <TextField
-                sx={{ ml: 1, flex: 1 }}
-                placeholder={"type name here..."}
-                variant="outlined"
-                size="small"
-                value={codeFilter}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  setCodeFilter(event.target.value);
-                }}
-              />
-              {/* <CodeToggleEnabledButton code={codeTree?.model} /> */}
-            </Toolbar>
-            <Divider />
-            <Stack
-              direction="row"
-              className="myFlexFitContentContainer"
-              sx={{
-                borderBottom: 1,
-                borderColor: "divider",
-                alignItems: "center",
-              }}
-            >
-              <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
-                <ListItemButton
-                  sx={{ px: 1.5 }}
-                  onClick={() => dispatch(CRUDDialogActions.openCodeCreateDialog({ parentCodeId: selectedCodeId }))}
-                >
-                  <ListItemIcon>
-                    <AddIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Create new code" />
-                </ListItemButton>
-              </List>
-
-              <ExporterButton
-                tooltip="Export codeset"
-                exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
-                iconButtonProps={{ color: "inherit" }}
-              />
-            </Stack>
-          </>
-        )}
-        {content}
-      </Box>
-    );
-  },
-);
+  return (
+    <Box {...props}>
+      {allCodes.isSuccess && codeTree && (
+        <>
+          <TreeExplorer
+            sx={{ pt: 0 }}
+            dataType={KEYWORD_CODES}
+            dataIcon={SquareIcon}
+            // data
+            allData={allCodes.data}
+            dataTree={codeTree}
+            // filter
+            showFilter
+            dataFilter={codeFilter}
+            setDataFilter={setCodeFilter}
+            // expansion
+            expandedDataIds={expandedCodeIds}
+            handleCollapseClick={handleCollapseClick}
+            handleExpandClick={handleExpandClick}
+            // selection
+            selectedDataId={selectedCodeId}
+            handleSelectData={handleSelectCode}
+            // actions
+            renderActions={(node) => (
+              <>
+                <CodeToggleVisibilityButton code={node as ICodeTree} />
+                <CodeEditButton code={(node as ICodeTree).data} />
+                <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.CODE} />
+              </>
+            )}
+            renderListActions={() => (
+              <>
+                <CodeCreateListItemButton parentCodeId={undefined} />
+                <ExporterButton
+                  tooltip="Export codeset"
+                  exporterInfo={{ type: "Codeset", singleUser: true, users: [], sdocId: -1 }}
+                  iconButtonProps={{ color: "inherit" }}
+                />
+              </>
+            )}
+          />
+        </>
+      )}
+    </Box>
+  );
+}
 
 export default CodeExplorer;

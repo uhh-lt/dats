@@ -1,19 +1,18 @@
-import { TreeItemProps, TreeView, TreeViewProps } from "@mui/x-tree-view";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import * as React from "react";
 import FolderIcon from "@mui/icons-material/Folder";
-import { TreeItem, treeItemClasses } from "@mui/x-tree-view";
-import { SvgIconProps, SvgIconTypeMap } from "@mui/material/SvgIcon";
-import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
+import { SvgIconProps } from "@mui/material/SvgIcon";
 import Typography from "@mui/material/Typography";
-import { CodeRead, DocumentTagRead } from "../../api/openapi";
+import { styled } from "@mui/material/styles";
+import { TreeItem, TreeItemProps, TreeView, TreeViewProps, treeItemClasses } from "@mui/x-tree-view";
+import * as React from "react";
 
-import { IDataTree } from "./IDataTree";
-import { KEYWORD_TAGS } from "../../utils/GlobalConstants";
-import { OverridableComponent } from "@mui/material/OverridableComponent";
 import AbcIcon from "@mui/icons-material/Abc";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { KEYWORD_TAGS } from "../../utils/GlobalConstants.ts";
+import { IDataTree } from "./IDataTree.ts";
 
 type StyledTreeItemProps = TreeItemProps & {
   labelIcon: React.ElementType<SvgIconProps>;
@@ -97,16 +96,14 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 }
 
 export interface DataTreeViewProps {
-  openContextMenu?: (node: IDataTree) => (event: any) => void;
+  openContextMenu?: (node: IDataTree) => React.MouseEventHandler<HTMLLIElement>;
   data: IDataTree;
   dataType: string;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onDataClick?: (data: DocumentTagRead | CodeRead) => void;
   renderActions?: (node: IDataTree) => React.ReactNode;
-  dataIcon?: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
-    muiName: string;
-  };
+  dataIcon?: React.ElementType<SvgIconProps>;
 }
 
 function DataTreeView({

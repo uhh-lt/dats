@@ -4,7 +4,7 @@ import { ContextMenuProps } from "../../../components/ContextMenu/ContextMenuPro
 import MemoMenuItem from "../../../features/Memo/MemoMenuItem.tsx";
 import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
-import ICodeTree from "./ICodeTree.ts";
+import { ICodeTree } from "./ICodeTree.ts";
 
 interface CodeExplorerContextMenuProps extends ContextMenuProps {
   node: ICodeTree | undefined;

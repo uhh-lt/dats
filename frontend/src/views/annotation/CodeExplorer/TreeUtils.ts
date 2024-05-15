@@ -1,5 +1,5 @@
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import ICodeTree from "./ICodeTree.ts";
+import { ICodeTree } from "./ICodeTree.ts";
 
 export function codesToTree(codes: CodeRead[]): ICodeTree {
   // map input to ICodeTree

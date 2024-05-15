@@ -100,7 +100,7 @@ function ProjectUpdate() {
               <ProjectUsers project={project.data} />
             </TabPanel>
             <TabPanel value="4" sx={{ p: 0 }} className="myFlexFillAllContainer">
-              <ProjectCodes project={project.data} />
+              <ProjectCodes />
             </TabPanel>
             <TabPanel value="5" sx={{ p: 0 }} className="myFlexFillAllContainer">
               <ProjectTags />

@@ -6,7 +6,7 @@ import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../store/store.ts";
 import { SettingsActions } from "../../settings/settingsSlice.ts";
-import ICodeTree from "./ICodeTree.ts";
+import { ICodeTree } from "./ICodeTree.ts";
 import { flatTree } from "./TreeUtils.ts";
 
 function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: ICodeTree | null | undefined }) {

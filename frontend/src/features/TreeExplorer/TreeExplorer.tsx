@@ -1,51 +1,35 @@
-import { AppBar, Box, BoxProps, Checkbox, List, Stack, SvgIconTypeMap, Toolbar } from "@mui/material";
+import { AppBar, Box, BoxProps, Checkbox, Stack, SvgIconProps, Toolbar } from "@mui/material";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { AttachedObjectType, CodeRead, DocumentTagRead } from "../../api/openapi";
-import { useAuth } from "../../auth/AuthProvider";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import ExporterButton from "../Exporter/ExporterButton";
-import MemoButton from "../Memo/MemoButton";
-
-import { flatTree } from "./TreeUtils";
-
-import { KEYWORD_TAGS } from "../../utils/GlobalConstants";
-import { IDataTree } from "./IDataTree";
-import { UseQueryResult } from "@tanstack/react-query";
-import DataTreeView from "./DataTreeView";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { Node } from "ts-tree-structure";
-import DataEditButton from "./DataEditButton";
-import TreeDataEditDialog from "../CrudDialog/TreeData/TreeDataEditDialog";
-import DataExplorerContextMenu from "./DataExplorerContextMenu";
-import DataTreeMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TreeDataMenu/TreeDataMenuCreateButton";
-import { OverridableComponent } from "@mui/material/OverridableComponent";
-import MemoDialog from "../Memo/MemoDialog";
-import { TreeDataFilter } from "./TreeDataFilter";
-import ExporterDialog from "../Exporter/ExporterDialog";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import DataTreeView from "./DataTreeView.tsx";
+import { IDataTree } from "./IDataTree.ts";
+import { TreeDataFilter } from "./TreeDataFilter.tsx";
+import { flatTree } from "./TreeUtils.ts";
 
 interface DataExplorerProps {
-  showToolbar?: boolean;
+  toolbarTitle?: string;
   showCheckboxes?: boolean;
-  showButtons?: boolean;
+  showFilter?: boolean;
   onDataClick?: (dataId: number) => void;
-  selectedDataId: number | undefined;
-  setSelectedDataId?: React.Dispatch<React.SetStateAction<number | undefined>>;
+  selectedDataId?: number | undefined;
   expandedDataIds: string[];
   setExpandedDataIds?: React.Dispatch<React.SetStateAction<string[]>>;
   dataTree: Node<IDataTree>;
-  allData: UseQueryResult<CodeRead[] | DocumentTagRead[], Error>;
+  allData: CodeRead[] | DocumentTagRead[];
   dataFilter: string;
   setDataFilter: React.Dispatch<React.SetStateAction<string>>;
   dataType: string;
-  handleSelectData: (event: React.SyntheticEvent, nodeId: string | string[]) => void;
+  handleSelectData?: (event: React.SyntheticEvent, nodeId: string | string[]) => void;
   handleExpandClick: (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   handleCollapseClick: (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   renderActions?: (node: IDataTree) => React.ReactNode;
+  renderListActions?: () => React.ReactNode;
   renderFilterActions?: () => React.ReactNode;
-  dataIcon: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
-    muiName: string;
-  };
+  dataIcon: React.ElementType<SvgIconProps>;
 }
 
 export interface TreeDataExplorerHandle {
@@ -55,12 +39,11 @@ export interface TreeDataExplorerHandle {
 const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxProps>(
   (
     {
-      showToolbar,
+      toolbarTitle,
       showCheckboxes,
-      showButtons,
+      showFilter,
       onDataClick,
       selectedDataId,
-      setSelectedDataId,
       expandedDataIds,
       setExpandedDataIds,
       dataTree,
@@ -72,31 +55,22 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
       handleExpandClick,
       handleCollapseClick,
       renderActions,
+      renderListActions,
       renderFilterActions,
       dataIcon,
       ...props
     },
     ref,
   ) => {
-    const { user } = useAuth();
-    const [nodesToExpand, setNodesToExpand] = useState<Set<number>>();
-    const [filteredDataTree, setFilteredDataTree] = useState<Node<IDataTree>>();
+    const [nodesToExpand, setNodesToExpand] = useState<Set<number>>(new Set());
+    const [filteredDataTree, setFilteredDataTree] = useState<Node<IDataTree>>(dataTree);
 
     // effects
     // automatically expand filtered nodes
-    React.useEffect(() => {
+    useEffect(() => {
       if (setExpandedDataIds && nodesToExpand)
-        setExpandedDataIds(() => Array.from(nodesToExpand as Set<number>).map((id) => id.toString()));
+        setExpandedDataIds(() => Array.from(nodesToExpand).map((id) => id.toString()));
     }, [nodesToExpand, setExpandedDataIds]);
-
-    // context menu
-    const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-    const [contextMenuData, setContextMenuData] = useState<IDataTree>();
-    const onContextMenu = (node: IDataTree) => (event: any) => {
-      event.preventDefault();
-      setContextMenuPosition({ x: event.clientX, y: event.clientY });
-      setContextMenuData(node);
-    };
 
     // checkboxes
     const [checkedDataIds, setCheckedDataIds] = useState<number[]>([]);
@@ -140,115 +114,72 @@ const TreeExplorer = forwardRef<TreeDataExplorerHandle, DataExplorerProps & BoxP
       getCheckedTreeDataIds: () => checkedDataIds,
     }));
 
-    const content = (
-      <>
-        {user && allData.isSuccess && filteredDataTree ? (
-          <>
-            <DataTreeView
-              dataType={dataType}
-              dataIcon={dataIcon}
-              className="myFlexFillAllContainer"
-              data={filteredDataTree.model}
-              multiSelect={false}
-              selected={selectedDataId?.toString() || ""}
-              expanded={expandedDataIds}
-              onNodeSelect={handleSelectData}
-              onExpandClick={handleExpandClick}
-              onCollapseClick={handleCollapseClick}
-              onDataClick={onDataClick ? (data) => onDataClick(data.id) : undefined}
-              renderActions={(node) => (
-                <React.Fragment>
-                  {renderActions && renderActions(node)}
-                  {showCheckboxes ? (
-                    <Checkbox
-                      key={node.data.id}
-                      checked={isChecked(node)}
-                      indeterminate={isIndeterminate(node)}
-                      onChange={(event) => handleCheckboxChange(event, node)}
-                    />
-                  ) : (
-                    <>
-                      <DataEditButton data={node.data} />
-                      <MemoButton
-                        attachedObjectId={node.data.id}
-                        attachedObjectType={
-                          dataType === KEYWORD_TAGS ? AttachedObjectType.DOCUMENT_TAG : AttachedObjectType.CODE
-                        }
-                      />
-                    </>
-                  )}
-                </React.Fragment>
-              )}
-              openContextMenu={onContextMenu}
-            />
-            <TreeDataEditDialog treeData={allData.data} dataType={dataType} />
-            <DataExplorerContextMenu
-              node={contextMenuData}
-              position={contextMenuPosition}
-              handleClose={() => setContextMenuPosition(null)}
-              dataType={dataType}
-            />
-            <MemoDialog />
-            <ExporterDialog />
-          </>
-        ) : allData.isError ? (
-          <>{allData.error.message}</>
-        ) : (
-          "Loading..."
-        )}
-      </>
-    );
-
     return (
       <Box className="h100 myFlexContainer" {...props}>
-        {showToolbar && (
+        {toolbarTitle && (
           <AppBar position="relative" color="secondary" className="myFlexFitContentContainer">
             <Toolbar variant="dense" sx={{ paddingRight: 0 }}>
               <Typography variant="h6" color="inherit" component="div">
-                {(dataType === KEYWORD_TAGS ? "Tag" : "Code") + "Explorer"}
+                {toolbarTitle}
               </Typography>
             </Toolbar>
           </AppBar>
         )}
-        {showButtons && (
-          <>
-            <TreeDataFilter
-              actions={renderFilterActions && renderFilterActions()}
-              allData={allData}
-              setNodesToExpand={setNodesToExpand as React.Dispatch<React.SetStateAction<Set<number>>>}
-              setFilteredDataTree={setFilteredDataTree as React.Dispatch<React.SetStateAction<Node<IDataTree>>>}
-              dataFilter={dataFilter}
-              dataTree={dataTree}
-              dataType={dataType}
-              setDataFilter={setDataFilter}
-            />
-            <Stack
-              direction="row"
-              className="myFlexFitContentContainer"
-              sx={{
-                borderBottom: 1,
-                borderColor: "divider",
-                alignItems: "center",
-              }}
-            >
-              <List sx={{ flexGrow: 1, mr: 1 }} disablePadding>
-                <DataTreeMenuCreateButton treeDataName="" dataType={dataType} sx={{ px: 1.5 }} />
-              </List>
-
-              <ExporterButton
-                tooltip="Export tagset"
-                exporterInfo={{
-                  type: dataType === KEYWORD_TAGS ? "Tagset" : "Codeset",
-                  singleUser: false,
-                  users: [],
-                  sdocId: -1,
-                }}
-                iconButtonProps={{ color: "inherit" }}
-              />
-            </Stack>
-          </>
+        {showFilter && (
+          <TreeDataFilter
+            actions={renderFilterActions && renderFilterActions()}
+            allData={allData}
+            setNodesToExpand={setNodesToExpand}
+            setFilteredDataTree={setFilteredDataTree}
+            dataFilter={dataFilter}
+            dataTree={dataTree}
+            dataType={dataType}
+            setDataFilter={setDataFilter}
+          />
         )}
-        {content}
+        {renderListActions && (
+          <Stack
+            direction="row"
+            className="myFlexFitContentContainer"
+            sx={{
+              borderBottom: 1,
+              borderColor: "divider",
+              alignItems: "center",
+            }}
+          >
+            {renderListActions()}
+          </Stack>
+        )}
+        <DataTreeView
+          dataType={dataType}
+          dataIcon={dataIcon}
+          className="myFlexFillAllContainer"
+          // data
+          data={filteredDataTree.model}
+          // selection
+          multiSelect={false}
+          disableSelection={!handleSelectData && !selectedDataId}
+          selected={selectedDataId?.toString() || ""}
+          onNodeSelect={handleSelectData}
+          // expand / collapse
+          expanded={expandedDataIds}
+          onExpandClick={handleExpandClick}
+          onCollapseClick={handleCollapseClick}
+          onDataClick={onDataClick ? (data) => onDataClick(data.id) : undefined}
+          renderActions={(node) => (
+            <>
+              {showCheckboxes && (
+                <Checkbox
+                  key={node.data.id}
+                  checked={isChecked(node)}
+                  indeterminate={isIndeterminate(node)}
+                  onChange={(event) => handleCheckboxChange(event, node)}
+                />
+              )}
+              {renderActions && renderActions(node)}
+            </>
+          )}
+        />
       </Box>
     );
   },

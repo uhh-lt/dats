@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Tree, { Node } from "ts-tree-structure";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
-import ICodeTree from "./ICodeTree.ts";
+import { ICodeTree } from "./ICodeTree.ts";
 import { codesToTree } from "./TreeUtils.ts";
 
 const useComputeCodeTree = (returnAllCodes: boolean = false) => {

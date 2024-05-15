@@ -1,8 +1,9 @@
-import { CodeRead, DocumentTagRead } from "../../api/openapi";
-import { IDataTree } from "./IDataTree";
-import { Node } from "ts-tree-structure";
 import { cloneDeep } from "lodash";
-import { KEYWORD_CODES, KEYWORD_TAGS } from "../../utils/GlobalConstants";
+import { Node } from "ts-tree-structure";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { KEYWORD_CODES, KEYWORD_TAGS } from "../../utils/GlobalConstants.ts";
+import { IDataTree } from "./IDataTree.ts";
 
 interface FilterProps {
   dataTree: Node<IDataTree>;
@@ -12,7 +13,7 @@ interface FilterProps {
 
 export function dataToTree(data: (DocumentTagRead | CodeRead)[], dataType: string): IDataTree {
   // map input to ITagTree
-  let newData: IDataTree[] = data.map((subset) => {
+  const newData: IDataTree[] = data.map((subset) => {
     return { data: subset };
   });
 
@@ -34,7 +35,7 @@ export function dataToTree(data: (DocumentTagRead | CodeRead)[], dataType: strin
     children = newData.filter((dataTree) => !(dataTree.data as DocumentTagRead).parent_tag_id);
   else if (dataType === KEYWORD_CODES)
     children = newData.filter((dataTree) => !(dataTree.data as CodeRead).parent_code_id);
-  let root: IDataTree = { data: dummyRootNode, children: children };
+  const root: IDataTree = { data: dummyRootNode, children: children };
 
   // create the full tree using the other nodes
   let nodes: IDataTree[];
@@ -73,7 +74,7 @@ export function flatTreeWithRoot(tree: IDataTree | null): (DocumentTagRead | Cod
     return [];
   }
 
-  let allChildren = flatTree(tree);
+  const allChildren = flatTree(tree);
   return [tree.data, ...allChildren];
 }
 
@@ -89,7 +90,7 @@ export function flatTree(tree: IDataTree | null): (DocumentTagRead | CodeRead)[]
 }
 
 export function filterTree({ dataTree, dataFilter, dataType }: FilterProps) {
-  let nodesToExpand = new Set<number>();
+  const nodesToExpand = new Set<number>();
 
   // clone tree using lodash
   let dataTreeCopy = cloneDeep(dataTree);
@@ -141,7 +142,7 @@ export function filterTree({ dataTree, dataFilter, dataType }: FilterProps) {
     );
 
     // filter the dataTree
-    let nodes_to_remove = (dataTreeCopy as Node<IDataTree>).all((node) => !nodesToKeep.has(node.model.data.id));
+    const nodes_to_remove = (dataTreeCopy as Node<IDataTree>).all((node) => !nodesToKeep.has(node.model.data.id));
 
     nodes_to_remove.forEach((node) => {
       node.drop();

@@ -1,4 +1,5 @@
-import { CodeRead, DocumentTagRead } from "../../api/openapi";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 
 export interface ITree<T = void> {
   isRoot?: boolean;
