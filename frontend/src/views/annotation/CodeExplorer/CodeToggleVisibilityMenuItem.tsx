@@ -1,13 +1,13 @@
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import React from "react";
+import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
+import { flatTree } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../annoSlice.ts";
-import { ICodeTree } from "./ICodeTree.ts";
-import { flatTree } from "./TreeUtils.ts";
 
 interface CodeToggleVisibilityMenuItemProps {
-  code: ICodeTree;
+  code: IDataTree;
   onClick?: () => void;
 }
 

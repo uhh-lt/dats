@@ -2,7 +2,6 @@ import { cloneDeep } from "lodash";
 import { Node } from "ts-tree-structure";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
-import { KEYWORD_CODES, KEYWORD_TAGS } from "../../utils/GlobalConstants.ts";
 import { IDataTree } from "./IDataTree.ts";
 
 interface FilterProps {
@@ -11,8 +10,8 @@ interface FilterProps {
   dataType: string;
 }
 
-export function dataToTree(data: (DocumentTagRead | CodeRead)[], dataType: string): IDataTree {
-  // map input to ITagTree
+export function dataToTree(data: (DocumentTagRead | CodeRead)[]): IDataTree {
+  // map input to IDataTree
   const newData: IDataTree[] = data.map((subset) => {
     return { data: subset };
   });
@@ -29,38 +28,25 @@ export function dataToTree(data: (DocumentTagRead | CodeRead)[], dataType: strin
     parent_id: undefined,
   };
   // create children of the new root node (all nodes that have no parent!)
-  let children = undefined;
-  if (dataType === KEYWORD_TAGS) children = newData.filter((dataTree) => !(dataTree.data as DocumentTagRead).parent_id);
-  else if (dataType === KEYWORD_CODES) children = newData.filter((dataTree) => !(dataTree.data as CodeRead).parent_id);
+  const children = newData.filter((dataTree) => !dataTree.data.parent_id);
   const root: IDataTree = { data: dummyRootNode, children: children };
 
   // create the full tree using the other nodes
-  let nodes: IDataTree[];
-  if (dataType === KEYWORD_TAGS) nodes = newData.filter((dataTree) => (dataTree.data as DocumentTagRead).parent_id);
-  else if (dataType === KEYWORD_CODES) nodes = newData.filter((dataTree) => (dataTree.data as CodeRead).parent_id);
+  const nodes: IDataTree[] = newData.filter((dataTree) => dataTree.data.parent_id);
 
   root.children!.forEach((tagTree) => {
-    dataToTreeRecursion(tagTree, nodes, dataType);
+    dataToTreeRecursion(tagTree, nodes);
   });
 
   return root;
 }
 
-function dataToTreeRecursion(root: IDataTree, nodes: IDataTree[], dataType: string): IDataTree {
-  let otherNodes: IDataTree[];
-
-  if (dataType === KEYWORD_TAGS) {
-    root.children = nodes.filter((node) => (node.data as DocumentTagRead).parent_id === root.data.id);
-    otherNodes = nodes.filter((node) => (node.data as DocumentTagRead).parent_id !== root.data.id);
-  } else if (dataType === KEYWORD_CODES) {
-    root.children = nodes.filter((node) => (node.data as CodeRead).parent_id === root.data.id);
-    otherNodes = nodes.filter((node) => (node.data as CodeRead).parent_id !== root.data.id);
-  } else {
-    root.children = [];
-  }
+function dataToTreeRecursion(root: IDataTree, nodes: IDataTree[]): IDataTree {
+  const otherNodes = nodes.filter((node) => node.data.parent_id !== root.data.id);
+  root.children = nodes.filter((node) => node.data.parent_id === root.data.id);
 
   root.children.forEach((dataTree) => {
-    dataToTreeRecursion(dataTree, otherNodes, dataType);
+    dataToTreeRecursion(dataTree, otherNodes);
   });
 
   return root;
@@ -86,7 +72,7 @@ export function flatTree(tree: IDataTree | null): (DocumentTagRead | CodeRead)[]
   return result;
 }
 
-export function filterTree({ dataTree, dataFilter, dataType }: FilterProps) {
+export function filterTree({ dataTree, dataFilter }: FilterProps) {
   const nodesToExpand = new Set<number>();
 
   // clone tree using lodash
@@ -98,39 +84,20 @@ export function filterTree({ dataTree, dataFilter, dataType }: FilterProps) {
     // find all nodes that match the filter
     dataTreeCopy.walk(
       (node) => {
-        if (dataType === KEYWORD_CODES) {
-          const code = node.model.data as CodeRead;
-          if (code.name.startsWith(dataFilter.trim())) {
-            // keep the node
-            nodesToKeep.add(code.id);
+        const data = node.model.data;
+        if (data.name.startsWith(dataFilter.trim())) {
+          // keep the node
+          nodesToKeep.add(data.id);
 
-            // keep its children
-            node.children.map((child) => (child.model.data as CodeRead).id).forEach((id) => nodesToKeep.add(id));
+          // keep its children
+          node.children.map((child) => child.model.data.id).forEach((id) => nodesToKeep.add(id));
 
-            // keep its parents
-            let parent = node.parent;
-            while (parent) {
-              nodesToKeep.add((parent.model.data as CodeRead).id);
-              nodesToExpand.add((parent.model.data as CodeRead).id);
-              parent = parent.parent;
-            }
-          }
-        } else if (dataType === KEYWORD_TAGS) {
-          const tag = node.model.data as DocumentTagRead;
-          if (tag.name.startsWith(dataFilter.trim())) {
-            // keep the node
-            nodesToKeep.add(tag.id);
-
-            // keep its children
-            node.children.map((child) => (child.model.data as DocumentTagRead).id).forEach((id) => nodesToKeep.add(id));
-
-            // keep its parents
-            let parent = node.parent;
-            while (parent) {
-              nodesToKeep.add((parent.model.data as DocumentTagRead).id);
-              nodesToExpand.add((parent.model.data as DocumentTagRead).id);
-              parent = parent.parent;
-            }
+          // keep its parents
+          let parent = node.parent;
+          while (parent) {
+            nodesToKeep.add(parent.model.data.id);
+            nodesToExpand.add(parent.model.data.id);
+            parent = parent.parent;
           }
         }
         return true;

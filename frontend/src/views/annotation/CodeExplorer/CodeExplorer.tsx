@@ -3,17 +3,17 @@ import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
 import MemoButton from "../../../features/Memo/MemoButton.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
+import { flatTreeWithRoot } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { KEYWORD_CODES } from "../../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../annoSlice.ts";
 import CodeCreateListItemButton from "./CodeCreateListItemButton.tsx";
 import CodeEditButton from "./CodeEditButton.tsx";
 import CodeToggleVisibilityButton from "./CodeToggleVisibilityButton.tsx";
-import { ICodeTree } from "./ICodeTree.ts";
-import { flatTreeWithRoot } from "./TreeUtils.ts";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 
 function CodeExplorer(props: BoxProps) {
@@ -35,7 +35,7 @@ function CodeExplorer(props: BoxProps) {
       const parentCode = codeTree.first((node) => node.model.data.id === selectedCodeId);
       if (parentCode && parentCode.model) {
         // the selected code was found -> we update the codes for selection
-        dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model)));
+        dispatch(AnnoActions.setCodesForSelection(flatTreeWithRoot(parentCode.model) as CodeRead[]));
       } else {
         // the selected code was not found -> the selected code was invalid (probabily because of local storage / project change...)
         dispatch(AnnoActions.setSelectedParentCodeId(undefined));
@@ -89,8 +89,8 @@ function CodeExplorer(props: BoxProps) {
             // actions
             renderActions={(node) => (
               <>
-                <CodeToggleVisibilityButton code={node as ICodeTree} />
-                <CodeEditButton code={(node as ICodeTree).data} />
+                <CodeToggleVisibilityButton code={node} />
+                <CodeEditButton code={node.data as CodeRead} />
                 <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.CODE} />
               </>
             )}

@@ -1,15 +1,14 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
 import { useCallback, useState } from "react";
-import { Node } from "ts-tree-structure";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import TagCreateDialog from "../../features/CrudDialog/Tag/TagCreateDialog.tsx";
 import TagEditDialog from "../../features/CrudDialog/Tag/TagEditDialog.tsx";
 import ExporterButton from "../../features/Exporter/ExporterButton.tsx";
 import MemoButton from "../../features/Memo/MemoButton.tsx";
-import { ITagTree } from "../../features/TagExplorer/ITagTree.ts";
 import TagEditButton from "../../features/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../features/TagExplorer/useComputeTagTree.ts";
+import { IDataTree } from "../../features/TreeExplorer/IDataTree.ts";
 import TreeExplorer from "../../features/TreeExplorer/TreeExplorer.tsx";
 import { KEYWORD_TAGS } from "../../utils/GlobalConstants.ts";
 import TagMenuCreateButton from "./ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
@@ -36,6 +35,23 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
     });
   }, []);
 
+  // expansion
+  // const { nodesToExpand, filteredTagTree } = React.useMemo(() => {
+  //   if (allTags.data) {
+  //     const filteredData = filterTree({
+  //       dataTree: tagTree as Node<IDataTree>,
+  //       dataFilter: tagFilter,
+  //     });
+  //     return { nodesToExpand: filteredData.nodesToExpand, filteredTagTree: filteredData.dataTree as Node<IDataTree> };
+  //   } else {
+  //     return { nodesToExpand: [], filteredTagTree: null };
+  //   }
+  // }, [allTags.data, tagFilter, tagTree]);
+
+  // React.useEffect(() => {
+  //   setExpandedTagIds(() => Array.from(nodesToExpand).map((id) => id.toString()));
+  // }, [nodesToExpand]);
+
   // handle ui events
   const handleExpandClick = (event: React.MouseEvent<HTMLDivElement>, nodeId: string) => {
     event.stopPropagation();
@@ -59,7 +75,7 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
             dataIcon={LabelIcon}
             // data
             allData={allTags.data}
-            dataTree={tagTree as Node<ITagTree>}
+            dataTree={tagTree}
             // filter
             showFilter
             dataFilter={tagFilter}
@@ -72,7 +88,7 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
             onDataClick={onTagClick}
             renderActions={(node) => (
               <>
-                <TagEditButton tag={(node as ITagTree).data} />
+                <TagEditButton tag={(node as IDataTree).data} />
                 <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.DOCUMENT_TAG} />
               </>
             )}
