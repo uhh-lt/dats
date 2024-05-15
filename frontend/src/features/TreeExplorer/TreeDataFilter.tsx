@@ -1,9 +1,9 @@
-import { Divider, TextField, Toolbar, Typography } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import { Divider, Stack, TextField } from "@mui/material";
 import { useEffect } from "react";
 import { Node } from "ts-tree-structure";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
-import { KEYWORD_TAGS } from "../../utils/GlobalConstants.ts";
 import { IDataTree } from "./IDataTree.ts";
 import { filterTree } from "./TreeUtils.ts";
 
@@ -14,7 +14,6 @@ interface TreeDataFilterProps {
   dataTree: Node<IDataTree>;
   dataFilter: string;
   onDataFilterChange: (newDataFilter: string) => void;
-  dataType: string;
   actions: React.ReactNode;
 }
 
@@ -25,37 +24,33 @@ export function TreeDataFilter({
   dataTree,
   dataFilter,
   onDataFilterChange,
-  dataType,
   actions,
 }: TreeDataFilterProps) {
   useEffect(() => {
     const filteredData = filterTree({
       dataTree: dataTree,
       dataFilter: dataFilter,
-      dataType: dataType,
     });
     setNodesToExpand(filteredData.nodesToExpand);
     setFilteredDataTree(filteredData.dataTree);
-  }, [allData, dataFilter, dataTree, dataType, setFilteredDataTree, setNodesToExpand]);
+  }, [allData, dataFilter, dataTree, setFilteredDataTree, setNodesToExpand]);
 
   return (
     <>
-      <Toolbar variant="dense" style={{ paddingRight: "8px" }} className="myFlexFitContentContainer">
-        <Typography variant="h6" color="inherit" component="div">
-          {"Filter " + (dataType === KEYWORD_TAGS ? "Tags" : "Codes")}
-        </Typography>
+      <Stack direction="row" alignItems="center" spacing={2} pl={2} pr={1}>
+        <SearchIcon sx={{ color: "dimgray" }} />
         <TextField
-          sx={{ ml: 1, flex: 1 }}
-          placeholder={"type name here..."}
+          sx={{ "& fieldset": { border: "none" }, input: { color: "dimgray", paddingY: "12px" } }}
+          fullWidth
+          placeholder="Search..."
           variant="outlined"
-          size="small"
           value={dataFilter}
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             onDataFilterChange(event.target.value);
           }}
         />
         {actions}
-      </Toolbar>
+      </Stack>
       <Divider />
     </>
   );
