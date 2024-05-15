@@ -5517,9 +5517,9 @@
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": { "type": "string", "title": "Description", "description": "Description of the Code" },
-          "parent_code_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Code Id",
+            "title": "Parent Id",
             "description": "Parent of the Code"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
@@ -5565,9 +5565,9 @@
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": { "type": "string", "title": "Description", "description": "Description of the Code" },
-          "parent_code_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Code Id",
+            "title": "Parent Id",
             "description": "Parent of the Code"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Code" },
@@ -5607,9 +5607,9 @@
             "title": "Description",
             "description": "Description of the Code"
           },
-          "parent_code_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Code Id",
+            "title": "Parent Id",
             "description": "Parent of the Code"
           }
         },
@@ -5759,16 +5759,16 @@
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
       "DocumentTagCreate": {
         "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the DocumentTag" },
+          "name": { "type": "string", "title": "Name", "description": "Title of the DocumentTag" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Description",
             "description": "Description of the DocumentTag"
           },
-          "parent_tag_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Tag Id",
+            "title": "Parent Id",
             "description": "Parent of the DocumentTag"
           },
           "project_id": {
@@ -5778,21 +5778,21 @@
           }
         },
         "type": "object",
-        "required": ["title", "project_id"],
+        "required": ["name", "project_id"],
         "title": "DocumentTagCreate"
       },
       "DocumentTagRead": {
         "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the DocumentTag" },
+          "name": { "type": "string", "title": "Name", "description": "Title of the DocumentTag" },
           "color": { "type": "string", "title": "Color", "description": "Color of the DocumentTag" },
           "description": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Description",
             "description": "Description of the DocumentTag"
           },
-          "parent_tag_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Tag Id",
+            "title": "Parent Id",
             "description": "Parent of the DocumentTag"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the DocumentTag" },
@@ -5815,15 +5815,15 @@
           }
         },
         "type": "object",
-        "required": ["title", "color", "id", "project_id", "created", "updated"],
+        "required": ["name", "color", "id", "project_id", "created", "updated"],
         "title": "DocumentTagRead"
       },
       "DocumentTagUpdate": {
         "properties": {
-          "title": {
+          "name": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Title",
-            "description": "Title of the DocumentTag"
+            "title": "Name",
+            "description": "Name of the DocumentTag"
           },
           "color": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
@@ -5835,9 +5835,9 @@
             "title": "Description",
             "description": "Description of the DocumentTag"
           },
-          "parent_tag_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Tag Id",
+            "title": "Parent Id",
             "description": "Parent of the DocumentTag"
           }
         },
@@ -8031,7 +8031,7 @@
           "DocType": { "enum": ["text", "image", "video", "audio"], "title": "DocType", "type": "string" },
           "DocumentTagRead": {
             "properties": {
-              "title": { "description": "Title of the DocumentTag", "title": "Title", "type": "string" },
+              "name": { "description": "Title of the DocumentTag", "title": "Name", "type": "string" },
               "color": { "description": "Color of the DocumentTag", "title": "Color", "type": "string" },
               "description": {
                 "anyOf": [{ "type": "string" }, { "type": "null" }],
@@ -8039,11 +8039,11 @@
                 "description": "Description of the DocumentTag",
                 "title": "Description"
               },
-              "parent_tag_id": {
+              "parent_id": {
                 "anyOf": [{ "type": "integer" }, { "type": "null" }],
                 "default": null,
                 "description": "Parent of the DocumentTag",
-                "title": "Parent Tag Id"
+                "title": "Parent Id"
               },
               "id": { "description": "ID of the DocumentTag", "title": "Id", "type": "integer" },
               "project_id": {
@@ -8064,7 +8064,7 @@
                 "type": "string"
               }
             },
-            "required": ["title", "color", "id", "project_id", "created", "updated"],
+            "required": ["name", "color", "id", "project_id", "created", "updated"],
             "title": "DocumentTagRead",
             "type": "object"
           },
