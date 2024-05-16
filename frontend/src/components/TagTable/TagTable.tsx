@@ -40,8 +40,8 @@ const columns: MRT_ColumnDef<TagTableRow>[] = [
     },
   },
   {
-    accessorKey: "title",
-    header: "Title",
+    accessorKey: "name",
+    header: "Name",
   },
   {
     accessorKey: "description",
