@@ -135,7 +135,7 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
                 )}
                 <Stack direction="column" spacing={0.5}>
                   {memos.data.map((memo) => (
-                    <MemoCard memo={memo} />
+                    <MemoCard memo={memo} key={memo.id} />
                   ))}
                 </Stack>
               </>
