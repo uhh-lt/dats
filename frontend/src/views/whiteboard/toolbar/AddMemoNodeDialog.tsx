@@ -46,7 +46,7 @@ function AddMemoNodeDialog({ projectId, buttonProps, onClick }: AddMemoNodeDialo
           projectId={projectId}
           rowSelectionModel={rowSelectionModel}
           onRowSelectionChange={setRowSelectionModel}
-          renderBottomToolbar={(props) => (
+          renderBottomToolbarCustomActions={(props) => (
             <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
               <Box flexGrow={1} />
               <Button onClick={handleClose}>Close</Button>

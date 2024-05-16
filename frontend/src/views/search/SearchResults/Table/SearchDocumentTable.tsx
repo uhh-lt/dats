@@ -352,9 +352,9 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         }
       : undefined,
     // toolbar
-    positionToolbarAlertBanner: "top",
+    positionToolbarAlertBanner: "head-overlay",
     renderTopToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center" p={0.5} height={48}>
+      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
         <DocumentTableFilterDialog
           anchorEl={tableBodyRef.current}
           buttonProps={{ size: "small" }}
@@ -372,7 +372,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       </Stack>
     ),
     renderToolbarInternalActions: ({ table }) => (
-      <Stack direction={"row"} spacing={1} alignItems="center" p={0.5}>
+      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
         <MRT_ToggleGlobalFilterButton table={table} disabled={false} />
         <SearchOptionsMenu />
         <MRT_ShowHideColumnsButton table={table} />
@@ -380,7 +380,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       </Stack>
     ),
     renderBottomToolbarCustomActions: () => (
-      <Stack direction={"row"} spacing={1} alignItems="center" p={0.5}>
+      <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
           Fetched {totalFetched} of {totalDBRowCount} total rows.
         </Typography>

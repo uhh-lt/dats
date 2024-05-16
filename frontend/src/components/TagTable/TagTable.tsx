@@ -63,7 +63,7 @@ interface TagTableProps {
   // toolbar
   renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
-  renderBottomToolbar?: (props: CodeTableActionProps) => React.ReactNode;
+  renderBottomToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
 }
 
 function TagTable({
@@ -73,7 +73,7 @@ function TagTable({
   onRowSelectionChange,
   renderToolbarInternalActions,
   renderTopToolbarCustomActions,
-  renderBottomToolbar,
+  renderBottomToolbarCustomActions,
 }: TagTableProps) {
   // global server state
   const projectTags = ProjectHooks.useGetAllTags(projectId);
@@ -154,9 +154,9 @@ function TagTable({
             selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
-    renderBottomToolbar: renderBottomToolbar
+    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
       ? (props) =>
-          renderBottomToolbar({
+          renderBottomToolbarCustomActions({
             table: props.table,
             selectedTags: Object.values(projectTagsMap).filter((row) => rowSelectionModel[row.id]),
           })

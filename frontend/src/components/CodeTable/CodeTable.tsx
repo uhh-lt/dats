@@ -64,7 +64,7 @@ export interface CodeTableProps {
   // toolbar
   renderToolbarInternalActions?: (props: CodeTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
-  renderBottomToolbar?: (props: CodeTableActionProps) => React.ReactNode;
+  renderBottomToolbarCustomActions?: (props: CodeTableActionProps) => React.ReactNode;
 }
 
 function CodeTable({
@@ -74,7 +74,7 @@ function CodeTable({
   onRowSelectionChange,
   renderToolbarInternalActions,
   renderTopToolbarCustomActions,
-  renderBottomToolbar,
+  renderBottomToolbarCustomActions,
 }: CodeTableProps) {
   // global server state
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
@@ -155,9 +155,9 @@ function CodeTable({
             selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
-    renderBottomToolbar: renderBottomToolbar
+    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
       ? (props) =>
-          renderBottomToolbar({
+          renderBottomToolbarCustomActions({
             table: props.table,
             selectedCodes: Object.values(projectCodesMap).filter((row) => rowSelectionModel[row.id]),
           })

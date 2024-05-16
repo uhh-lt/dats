@@ -368,8 +368,8 @@ function DocumentTable({
             filterStateSelector={filterStateSelector}
           />
         ),
-    renderBottomToolbar: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+    renderBottomToolbarCustomActions: (props) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
           Fetched {totalFetched} of {totalDBRowCount} total rows.
         </Typography>

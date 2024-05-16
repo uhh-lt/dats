@@ -8,14 +8,19 @@ export interface SATToolbarProps {
   filterName: string;
   table: MRT_TableInstance<AnnotationTableRow>;
   anchor: React.RefObject<HTMLElement>;
-  leftChildren?: React.ReactNode;
-  rightChildren?: React.ReactNode;
   selectedUserId: number;
+  selectedAnnotations: AnnotationTableRow[];
 }
 
-function SATToolbar({ anchor, filterName, table, leftChildren, rightChildren }: SATToolbarProps) {
+function SATToolbar({
+  anchor,
+  filterName,
+  table,
+  leftChildren,
+  rightChildren,
+}: SATToolbarProps & { leftChildren?: React.ReactNode; rightChildren?: React.ReactNode }) {
   return (
-    <Stack direction="row" spacing={1}>
+    <Stack direction="row" spacing={1} alignItems="center">
       {leftChildren}
       <SATFilterDialog anchorEl={anchor.current} buttonProps={{ size: "small" }} filterName={filterName} />
       <MRT_ShowHideColumnsButton table={table} />

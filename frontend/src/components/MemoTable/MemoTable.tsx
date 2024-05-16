@@ -62,7 +62,7 @@ interface MemoTableProps {
   // toolbar
   renderToolbarInternalActions?: (props: MemoTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: MemoTableActionProps) => React.ReactNode;
-  renderBottomToolbar?: (props: MemoTableActionProps) => React.ReactNode;
+  renderBottomToolbarCustomActions?: (props: MemoTableActionProps) => React.ReactNode;
 }
 
 function MemoTable({
@@ -72,7 +72,7 @@ function MemoTable({
   onRowSelectionChange,
   renderToolbarInternalActions,
   renderTopToolbarCustomActions,
-  renderBottomToolbar,
+  renderBottomToolbarCustomActions,
 }: MemoTableProps) {
   // global client state (react router)
   const { user } = useAuth();
@@ -159,9 +159,9 @@ function MemoTable({
             selectedMemos: Object.values(userMemosMap).filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
-    renderBottomToolbar: renderBottomToolbar
+    renderBottomToolbarCustomActions: renderBottomToolbarCustomActions
       ? (props) =>
-          renderBottomToolbar({
+          renderBottomToolbarCustomActions({
             table: props.table,
             selectedMemos: Object.values(userMemosMap).filter((row) => rowSelectionModel[row.id]),
           })

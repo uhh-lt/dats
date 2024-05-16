@@ -4,6 +4,7 @@ import SpanAnnotationTable, {
 } from "../../../components/SpanAnnotationTable/SpanAnnotationTable.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotatedSegmentsTableToolbar from "./AnnotatedSegmentsTableToolbar.tsx";
+import BulkChangeCodeButton from "./BulkChangeCodeButton.tsx";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";
 
 const filterName = "annotatedSegments";
@@ -31,7 +32,8 @@ function AnnotatedSegmentsTable({ onRowContextMenu, cardProps }: AnnotatedSegmen
       sortingModel={sortingModel}
       onSortingChange={(newSortingModel) => dispatch(AnnotatedSegmentsActions.onSortModelChange(newSortingModel))}
       onRowContextMenu={onRowContextMenu}
-      renderToolbar={AnnotatedSegmentsTableToolbar}
+      renderTopToolbarCustomActions={(props) => <BulkChangeCodeButton {...props} filterName={filterName} />}
+      renderToolbarInternalActions={AnnotatedSegmentsTableToolbar}
       cardProps={cardProps}
     />
   );

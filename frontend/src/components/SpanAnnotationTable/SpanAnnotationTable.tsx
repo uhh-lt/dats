@@ -5,7 +5,6 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
-  MRT_TableInstance,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -29,11 +28,6 @@ import { useInitSATFilterSlice } from "./useInitSATFilterSlice.ts";
 
 const fetchSize = 20;
 
-export interface SATActionProps {
-  table: MRT_TableInstance<AnnotationTableRow>;
-  selectedAnnotations: AnnotationTableRow[];
-}
-
 export interface SpanAnnotationTableProps {
   title?: string;
   projectId: number;
@@ -48,9 +42,9 @@ export interface SpanAnnotationTableProps {
   onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => void;
   // components
   cardProps?: CardProps;
-  renderToolbar?: (props: SATToolbarProps) => React.ReactNode;
-  renderTopToolbarCustomActions?: (props: SATActionProps) => React.ReactNode;
-  renderBottomToolbarCustomActions?: (props: SATActionProps) => React.ReactNode;
+  renderToolbarInternalActions?: (props: SATToolbarProps) => React.ReactNode;
+  renderTopToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
+  renderBottomToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
 }
 
 function SpanAnnotationTable({
@@ -63,7 +57,7 @@ function SpanAnnotationTable({
   onSortingChange,
   onRowContextMenu,
   cardProps,
-  renderToolbar = SATToolbar,
+  renderToolbarInternalActions = SATToolbar,
   renderTopToolbarCustomActions,
   renderBottomToolbarCustomActions,
 }: SpanAnnotationTableProps) {
@@ -313,23 +307,36 @@ function SpanAnnotationTable({
         }
       : undefined,
     // toolbar
+    positionToolbarAlertBanner: "top",
     renderTopToolbarCustomActions: renderTopToolbarCustomActions
       ? (props) =>
           renderTopToolbarCustomActions({
             table: props.table,
+            filterName,
+            anchor: tableBodyRef,
+            selectedUserId: selectedUserId,
             selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
     renderToolbarInternalActions: (props) =>
-      renderToolbar({ table: props.table, filterName, anchor: tableBodyRef, selectedUserId: selectedUserId }),
-    renderBottomToolbar: (props) => (
-      <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+      renderToolbarInternalActions({
+        table: props.table,
+        filterName,
+        anchor: tableBodyRef,
+        selectedUserId: selectedUserId,
+        selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+      }),
+    renderBottomToolbarCustomActions: (props) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
           Fetched {totalFetched} of {totalDBRowCount} total rows.
         </Typography>
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({
             table: props.table,
+            filterName,
+            anchor: tableBodyRef,
+            selectedUserId: selectedUserId,
             selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
           })}
       </Stack>
@@ -351,9 +358,7 @@ function SpanAnnotationTable({
         }
       />
       <CardContent className="myFlexFillAllContainer" style={{ padding: 0 }}>
-        <div style={{ width: "100%", height: "100%" }}>
-          <MaterialReactTable table={table} />
-        </div>
+        <MaterialReactTable table={table} />
       </CardContent>
     </Card>
   );
