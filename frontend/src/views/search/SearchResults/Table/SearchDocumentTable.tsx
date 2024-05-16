@@ -68,7 +68,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -319,9 +318,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
-    muiTableBodyProps: {
-      ref: tableBodyRef,
-    },
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
@@ -333,7 +329,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     renderTopToolbarCustomActions: () => (
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
         <DocumentTableFilterDialog
-          anchorEl={tableBodyRef.current}
+          anchorEl={tableContainerRef.current}
           buttonProps={{ size: "small" }}
           filterName={filterName}
           filterStateSelector={filterStateSelector}

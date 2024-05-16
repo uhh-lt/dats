@@ -39,7 +39,6 @@ function WordFrequencyTable() {
 
   // filtering
   const filter = useAppSelector((state) => state.wordFrequencyFilter.filter["root"]);
-  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -211,9 +210,6 @@ function WordFrequencyTable() {
       onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
-    muiTableBodyProps: {
-      ref: tableBodyRef,
-    },
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
@@ -232,7 +228,7 @@ function WordFrequencyTable() {
     ),
     renderTopToolbarCustomActions: () => (
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-        <WordFrequencyFilterDialog anchorEl={tableBodyRef.current} />
+        <WordFrequencyFilterDialog anchorEl={tableContainerRef.current} />
       </Stack>
     ),
     renderToolbarInternalActions: ({ table }) => (

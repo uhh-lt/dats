@@ -78,7 +78,6 @@ function SpanAnnotationTable({
 
   // filtering
   const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
-  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -286,9 +285,6 @@ function SpanAnnotationTable({
       onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
-    muiTableBodyProps: {
-      ref: tableBodyRef,
-    },
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
@@ -302,7 +298,7 @@ function SpanAnnotationTable({
           renderTopToolbarCustomActions({
             table: props.table,
             filterName,
-            anchor: tableBodyRef,
+            anchor: tableContainerRef,
             selectedUserId: selectedUserId,
             selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
           })
@@ -311,7 +307,7 @@ function SpanAnnotationTable({
       renderToolbarInternalActions({
         table: props.table,
         filterName,
-        anchor: tableBodyRef,
+        anchor: tableContainerRef,
         selectedUserId: selectedUserId,
         selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
       }),
@@ -324,7 +320,7 @@ function SpanAnnotationTable({
           renderBottomToolbarCustomActions({
             table: props.table,
             filterName,
-            anchor: tableBodyRef,
+            anchor: tableContainerRef,
             selectedUserId: selectedUserId,
             selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
           })}

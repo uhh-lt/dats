@@ -90,7 +90,6 @@ function DocumentTable({
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns
@@ -336,9 +335,6 @@ function DocumentTable({
       onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
-    muiTableBodyProps: {
-      ref: tableBodyRef,
-    },
     muiToolbarAlertBannerProps: isError
       ? {
           color: "error",
@@ -362,7 +358,7 @@ function DocumentTable({
       : (props) => (
           <DocumentTableToolbar
             table={props.table}
-            anchor={tableBodyRef}
+            anchor={tableContainerRef}
             filterName={filterName}
             filterActions={filterActions}
             filterStateSelector={filterStateSelector}
