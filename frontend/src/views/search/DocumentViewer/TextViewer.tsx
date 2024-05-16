@@ -1,5 +1,4 @@
 import React, { useRef } from "react";
-import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu.tsx";
 import SentenceContextMenu, {
@@ -7,26 +6,28 @@ import SentenceContextMenu, {
 } from "../../../components/ContextMenu/SentenceContextMenu.tsx";
 import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentWithDataRead;
-  adoc: AnnotationDocumentRead;
-  showEntities: boolean;
 }
 
 /**
  * Super simple annotation rendering, does not work for overlapping annotations!!!
  */
-function TextViewer({ sdoc, adoc, showEntities }: AnnotationVisualizerProps) {
+function TextViewer({ sdoc }: AnnotationVisualizerProps) {
   // local state
   const sentenceContextMenuRef = useRef<SentenceContextMenuHandle>(null);
   const imageContextMenuRef = useRef<ImageContextMenuHandle>(null);
+
+  // global client state (redux)
+  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
 
   // global server state (react-query)
   const sentences = sdoc.sentences;
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
     sdocId: sdoc.id,
-    annotationDocumentIds: showEntities ? [adoc.id] : [],
+    annotationDocumentIds: visibleAdocIds,
   });
 
   // ui events

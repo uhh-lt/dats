@@ -10,7 +10,6 @@ export interface AnnoState {
   expandedCodeIds: string[];
   hiddenCodeIds: number[];
   visibleAdocIds: number[];
-  visibleUserIds: number[] | undefined;
 }
 
 const initialState: AnnoState = {
@@ -21,7 +20,6 @@ const initialState: AnnoState = {
   expandedCodeIds: [],
   hiddenCodeIds: [],
   visibleAdocIds: [],
-  visibleUserIds: undefined,
 };
 
 export const annoSlice = createSlice({
@@ -76,9 +74,6 @@ export const annoSlice = createSlice({
     },
     setVisibleAdocIds: (state, action: PayloadAction<number[]>) => {
       state.visibleAdocIds = action.payload;
-    },
-    setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
-      state.visibleUserIds = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
       // makes most recently used order

@@ -1,10 +1,11 @@
 import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import * as React from "react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import UserName from "../../components/UserName.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { AnnoActions } from "./annoSlice.ts";
 
 interface AnnotationDocumentSelectorProps {
@@ -22,37 +23,39 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
 
   // global client state (redux)
   const dispatch = useAppDispatch();
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
 
   // global server state (react query)
   const annotationDocuments = SdocHooks.useGetAllAnnotationDocuments(sdocId);
+  const adocId2UserId: Record<number, number> = useMemo(() => {
+    return (
+      annotationDocuments.data?.reduce(
+        (acc, adoc) => {
+          acc[adoc.id] = adoc.user_id;
+          return acc;
+        },
+        {} as Record<number, number>,
+      ) || {}
+    );
+  }, [annotationDocuments.data]);
 
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number[]>) => {
-    dispatch(AnnoActions.setVisibleUserIds(event.target.value as number[]));
+    dispatch(AnnoActions.setVisibleAdocIds(event.target.value as number[]));
   };
 
   // init
   useEffect(() => {
-    if (user && visibleUserIds === undefined) {
-      dispatch(AnnoActions.setVisibleUserIds([user.id]));
+    if (user && annotationDocuments.data) {
+      // find the annotationDocument that belongs to the current user
+      const userAdoc = annotationDocuments.data.find((adoc) => adoc.user_id === user.id);
+      if (!userAdoc) {
+        dispatch(AnnoActions.setVisibleAdocIds([SYSTEM_USER_ID]));
+      } else {
+        dispatch(AnnoActions.setVisibleAdocIds([userAdoc.id]));
+      }
     }
-  }, [visibleUserIds, dispatch, user]);
-
-  // effects
-  // ensure that visible adocs, visible user ids and source document id are in sync
-  useEffect(() => {
-    if (!annotationDocuments.data) {
-      dispatch(AnnoActions.setVisibleAdocIds([]));
-      return;
-    }
-
-    const adocIds = annotationDocuments.data
-      .filter((adoc) => visibleUserIds?.includes(adoc.user_id) && adoc.source_document_id === sdocId)
-      .map((adoc) => adoc.id);
-
-    dispatch(AnnoActions.setVisibleAdocIds(adocIds));
-  }, [dispatch, annotationDocuments.data, sdocId, visibleUserIds]);
+  }, [dispatch, user, annotationDocuments.data]);
 
   // render
   return (
@@ -60,16 +63,16 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
       <InputLabel id="annotation-user-select-label">Annotations</InputLabel>
       <Select
         labelId="annotation-user-select-label"
-        label={"Annotations"}
         multiple
         fullWidth
-        value={visibleUserIds || []}
+        sx={{ minWidth: 150 }}
+        value={visibleAdocIds || []}
         onChange={handleChange}
         disabled={!annotationDocuments.isSuccess}
         renderValue={(selected) =>
-          selected.map((x, index) => (
-            <React.Fragment key={x}>
-              <UserName userId={x} />
+          selected.map((adocId, index) => (
+            <React.Fragment key={adocId}>
+              <UserName userId={adocId2UserId[adocId]} />
               {index < selected.length - 1 && ", "}
             </React.Fragment>
           ))
@@ -77,8 +80,8 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
       >
         {annotationDocuments.isSuccess &&
           annotationDocuments.data.map((adoc) => (
-            <MenuItem key={adoc.user_id} value={adoc.user_id}>
-              <Checkbox checked={visibleUserIds?.indexOf(adoc.user_id) !== -1} />
+            <MenuItem key={adoc.id} value={adoc.id}>
+              <Checkbox checked={visibleAdocIds?.indexOf(adoc.id) !== -1} />
               <ListItemText>
                 <UserName userId={adoc.user_id} />
               </ListItemText>

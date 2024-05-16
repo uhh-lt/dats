@@ -54,7 +54,6 @@ function Annotation() {
   // global client state (redux)
   const isAnnotationMode = useAppSelector((state) => state.annotations.isAnnotationMode);
   const dispatch = useAppDispatch();
-  console.log(isAnnotationMode);
 
   // global server state (react query)
   const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
@@ -139,7 +138,7 @@ function Annotation() {
                 </ToggleButton>
               </Tooltip>
             </ToggleButtonGroup>
-            <AnnotationDocumentSelector sdocId={sourceDocumentId} />
+            {annotationDocument.isSuccess && <AnnotationDocumentSelector sdocId={sourceDocumentId} />}
           </Toolbar>
           <Box className="myFlexFillAllContainer">
             <Container sx={{ py: 2 }}>
@@ -166,21 +165,13 @@ function Annotation() {
                             isAnnotationMode ? (
                               <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
                             ) : (
-                              <ImageViewer
-                                sdoc={sourceDocument.data}
-                                adoc={annotationDocument.data}
-                                showEntities={true}
-                              />
+                              <ImageViewer sdoc={sourceDocument.data} />
                             )
                           ) : sourceDocument.data.doctype === DocType.TEXT ? (
                             isAnnotationMode ? (
                               <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
                             ) : (
-                              <TextViewer
-                                sdoc={sourceDocument.data}
-                                adoc={annotationDocument.data}
-                                showEntities={true}
-                              />
+                              <TextViewer sdoc={sourceDocument.data} />
                             )
                           ) : sourceDocument.data.doctype === DocType.AUDIO ? (
                             isAnnotationMode ? (
