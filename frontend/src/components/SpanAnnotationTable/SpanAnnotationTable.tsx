@@ -78,10 +78,10 @@ function SpanAnnotationTable({
 
   // filtering
   const filter = useAppSelector((state) => state.satFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
 
   // virtualization
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const tableBodyRef = useRef<HTMLTableSectionElement>(null);
   const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
   // table columns

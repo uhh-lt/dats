@@ -50,22 +50,22 @@ export const AnnotatedSegmentsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(SATFilterActions.init, (state, action) => {
-      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
-        if (!column.column) return acc;
-        // this is a normal column
-        if (isNaN(parseInt(column.column))) {
-          return acc;
-          // this is a metadata column
-        } else {
-          return {
-            ...acc,
-            [column.column]: false,
-          };
-        }
-      }, {});
-    });
     builder
+      .addCase(SATFilterActions.init, (state, action) => {
+        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+          if (!column.column) return acc;
+          // this is a normal column
+          if (isNaN(parseInt(column.column))) {
+            return acc;
+            // this is a metadata column
+          } else {
+            return {
+              ...acc,
+              [column.column]: false,
+            };
+          }
+        }, {});
+      })
       .addCase(SATFilterActions.onFinishFilterEdit, (state) => {
         // reset page when filter changes
         state.paginationModel.pageIndex = 0;

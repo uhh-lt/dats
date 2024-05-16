@@ -11,7 +11,6 @@ import {
   MRT_SortingState,
   MRT_ToggleDensePaddingButton,
   MRT_ToggleGlobalFilterButton,
-  MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -166,19 +165,9 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     refetchOnWindowFocus: false,
   });
   // create a flat array of data mapped from id to row
-  const { hits, dataMap } = useMemo(() => {
-    const hits = data?.pages.flatMap((page) => page.hits) ?? [];
-    const dataMap = hits.reduce(
-      (prev, current) => {
-        prev[current.sdoc_id] = current;
-        return prev;
-      },
-      {} as Record<number, ElasticSearchDocumentHit>,
-    );
-    return { hits, dataMap };
-  }, [data]);
+  const hits = useMemo(() => data?.pages.flatMap((page) => page.hits) ?? [], [data]);
   const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = Object.keys(dataMap).length;
+  const totalFetched = hits.length;
 
   // infinite scrolling
   // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
@@ -206,12 +195,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   useEffect(() => {
     fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
-
-  // actions
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, sdocId: number) => {
-    event.preventDefault();
-    console.log("HI!", sdocId);
-  };
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
@@ -284,13 +267,8 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
       dispatch(SearchActions.setTableDensity(newGridDensity));
     },
     // column visiblility
-    onColumnVisibilityChange: (visibilityUpdater) => {
-      let newVisibilityModel: MRT_VisibilityState;
-      if (typeof visibilityUpdater === "function") {
-        newVisibilityModel = visibilityUpdater(columnVisibilityModel);
-      } else {
-        newVisibilityModel = visibilityUpdater;
-      }
+    onColumnVisibilityChange: (updater) => {
+      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
       dispatch(SearchActions.onColumnVisibilityChange(newVisibilityModel));
     },
     // column resizing
@@ -328,7 +306,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
           dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.sdoc_id));
         }
       },
-      onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
       sx: {
         backgroundColor: selectedDocumentId === row.original.sdoc_id ? "lightgrey !important" : undefined,
       },
