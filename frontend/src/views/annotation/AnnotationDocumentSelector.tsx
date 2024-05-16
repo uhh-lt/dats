@@ -5,7 +5,6 @@ import SdocHooks from "../../api/SdocHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import UserName from "../../components/UserName.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
 import { AnnoActions } from "./annoSlice.ts";
 
 interface AnnotationDocumentSelectorProps {
@@ -49,9 +48,7 @@ export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelecto
     if (user && annotationDocuments.data) {
       // find the annotationDocument that belongs to the current user
       const userAdoc = annotationDocuments.data.find((adoc) => adoc.user_id === user.id);
-      if (!userAdoc) {
-        dispatch(AnnoActions.setVisibleAdocIds([SYSTEM_USER_ID]));
-      } else {
+      if (userAdoc) {
         dispatch(AnnoActions.setVisibleAdocIds([userAdoc.id]));
       }
     }
