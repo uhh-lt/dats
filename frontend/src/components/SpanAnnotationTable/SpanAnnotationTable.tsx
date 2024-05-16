@@ -249,13 +249,8 @@ function SpanAnnotationTable({
     },
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: (rowSelectionUpdater) => {
-      let newRowSelectionModel: MRT_RowSelectionState;
-      if (typeof rowSelectionUpdater === "function") {
-        newRowSelectionModel = rowSelectionUpdater(rowSelectionModel);
-      } else {
-        newRowSelectionModel = rowSelectionUpdater;
-      }
+    onRowSelectionChange: (updater) => {
+      const newRowSelectionModel = updater instanceof Function ? updater(rowSelectionModel) : updater;
       onRowSelectionChange(newRowSelectionModel);
     },
     // virtualization
@@ -269,24 +264,13 @@ function SpanAnnotationTable({
     enablePagination: false,
     // sorting
     manualSorting: true,
-    onSortingChange: (sortingUpdater) => {
-      let newSortingModel: MRT_SortingState;
-      if (typeof sortingUpdater === "function") {
-        newSortingModel = sortingUpdater(sortingModel);
-      } else {
-        newSortingModel = sortingUpdater;
-      }
+    onSortingChange: (updater) => {
+      const newSortingModel = updater instanceof Function ? updater(sortingModel) : updater;
       onSortingChange(newSortingModel);
     },
     // column visiblility
-    onColumnVisibilityChange: (visibilityUpdater) => {
-      let newVisibilityModel: MRT_VisibilityState;
-      if (typeof visibilityUpdater === "function") {
-        console.log("TEST");
-        newVisibilityModel = visibilityUpdater(columnVisibilityModel);
-      } else {
-        newVisibilityModel = visibilityUpdater;
-      }
+    onColumnVisibilityChange: (updater) => {
+      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
       onColumnVisibilityChange(newVisibilityModel);
     },
     // mui components
