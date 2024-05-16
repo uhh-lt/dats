@@ -59,8 +59,13 @@ export const searchSlice = createSlice({
   initialState,
   reducers: {
     // document selection
-    onSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => {
-      state.selectedDocumentId = action.payload;
+    onToggleSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => {
+      // toggle
+      if (state.selectedDocumentId === action.payload) {
+        state.selectedDocumentId = undefined;
+      } else {
+        state.selectedDocumentId = action.payload;
+      }
     },
     toggleDocument: (state, action: PayloadAction<number>) => {
       const selectedIndex = state.selectedDocumentIds.indexOf(action.payload);

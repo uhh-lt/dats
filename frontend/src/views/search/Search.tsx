@@ -116,7 +116,7 @@ function Search() {
         >
           <DocumentInformation
             sdocId={selectedDocumentId}
-            isIdleContent={<Typography>Click a document to read it :)</Typography>}
+            isIdleContent={<Typography padding={2}>Click a document to see info :)</Typography>}
             className="h100"
           />
         </Grid>

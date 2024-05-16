@@ -325,7 +325,7 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
         if (event.detail >= 2) {
           navigate(`/project/${projectId}/annotation/${row.original.sdoc_id}`);
         } else {
-          dispatch(SearchActions.onSelectedDocumentIdChange(row.original.sdoc_id));
+          dispatch(SearchActions.onToggleSelectedDocumentIdChange(row.original.sdoc_id));
         }
       },
       onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
