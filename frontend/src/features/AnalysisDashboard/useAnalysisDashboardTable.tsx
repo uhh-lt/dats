@@ -16,12 +16,14 @@ import {
 } from "material-react-table";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import UserName from "../../components/UserName.tsx";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
 
 export type AnaylsisDashboardRow = {
   id: number;
   title: string;
   updated: string;
+  user_id: number;
 };
 
 export type AnalysisCreateOption = {
@@ -65,6 +67,12 @@ const columns: MRT_ColumnDef<AnaylsisDashboardRow>[] = [
     accessorFn: (params) => dateToLocaleString(params.updated as string),
     enableEditing: false,
   },
+  {
+    accessorKey: "user_id",
+    header: "Owner",
+    enableEditing: false,
+    Cell: ({ row }) => (row.original.user_id === -1 ? "..." : <UserName userId={row.original.user_id} />),
+  },
 ];
 
 export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps) => {
@@ -86,6 +94,7 @@ export const useAnalysisDashboardTable = (props: UseAnaylsisDashboardTableProps)
         id: -1,
         title: "",
         updated: new Date().toISOString(),
+        user_id: -1,
       }),
     );
     table.setEditingRow(null); //exit editing mode

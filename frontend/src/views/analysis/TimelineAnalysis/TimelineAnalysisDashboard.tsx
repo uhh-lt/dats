@@ -30,6 +30,7 @@ function TimelineAnalysisDashboard() {
         id: analysis.id,
         title: analysis.name,
         updated: analysis.updated,
+        user_id: analysis.user_id,
       })) || [],
     [userAnalysis],
   );
