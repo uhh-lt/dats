@@ -5,6 +5,8 @@ import {
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
+  MRT_TableOptions,
+  MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
@@ -38,10 +40,14 @@ export interface SpanAnnotationTableProps {
   // sorting
   sortingModel: MRT_SortingState;
   onSortingChange: (sortingModel: MRT_SortingState) => void;
+  // column visibility
+  columnVisibilityModel: MRT_VisibilityState;
+  onColumnVisibilityChange: (columnVisibilityModel: MRT_VisibilityState) => void;
   // actions
   onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => void;
   // components
   cardProps?: CardProps;
+  positionToolbarAlertBanner?: MRT_TableOptions<AnnotationTableRow>["positionToolbarAlertBanner"];
   renderToolbarInternalActions?: (props: SATToolbarProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
   renderBottomToolbarCustomActions?: (props: SATToolbarProps) => React.ReactNode;
@@ -55,8 +61,11 @@ function SpanAnnotationTable({
   onRowSelectionChange,
   sortingModel,
   onSortingChange,
+  columnVisibilityModel,
+  onColumnVisibilityChange,
   onRowContextMenu,
   cardProps,
+  positionToolbarAlertBanner = "top",
   renderToolbarInternalActions = SATToolbar,
   renderTopToolbarCustomActions,
   renderBottomToolbarCustomActions,
@@ -233,6 +242,7 @@ function SpanAnnotationTable({
     state: {
       rowSelection: rowSelectionModel,
       sorting: sortingModel,
+      columnVisibility: columnVisibilityModel,
       isLoading: isLoading || columns.length === 0,
       showAlertBanner: isError,
       showProgressBars: isFetching,
@@ -268,21 +278,16 @@ function SpanAnnotationTable({
       }
       onSortingChange(newSortingModel);
     },
-    // column hiding: hide metadata columns by default
-    initialState: {
-      columnVisibility: columns.reduce((acc, column) => {
-        if (!column.id) return acc;
-        // this is a normal column
-        if (isNaN(parseInt(column.id))) {
-          return acc;
-          // this is a metadata column
-        } else {
-          return {
-            ...acc,
-            [column.id]: false,
-          };
-        }
-      }, {}),
+    // column visiblility
+    onColumnVisibilityChange: (visibilityUpdater) => {
+      let newVisibilityModel: MRT_VisibilityState;
+      if (typeof visibilityUpdater === "function") {
+        console.log("TEST");
+        newVisibilityModel = visibilityUpdater(columnVisibilityModel);
+      } else {
+        newVisibilityModel = visibilityUpdater;
+      }
+      onColumnVisibilityChange(newVisibilityModel);
     },
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
@@ -307,7 +312,7 @@ function SpanAnnotationTable({
         }
       : undefined,
     // toolbar
-    positionToolbarAlertBanner: "top",
+    positionToolbarAlertBanner,
     renderTopToolbarCustomActions: renderTopToolbarCustomActions
       ? (props) =>
           renderTopToolbarCustomActions({

@@ -1,5 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { MRT_PaginationState, MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
+import {
+  MRT_PaginationState,
+  MRT_RowSelectionState,
+  MRT_SortingState,
+  MRT_VisibilityState,
+} from "material-react-table";
 import { SATFilterActions } from "../../../components/SpanAnnotationTable/satFilterSlice.ts";
 
 export interface AnnotatedSegmentsState {
@@ -8,6 +13,7 @@ export interface AnnotatedSegmentsState {
   paginationModel: MRT_PaginationState;
   rowSelectionModel: MRT_RowSelectionState;
   sortModel: MRT_SortingState;
+  columnVisibilityModel: MRT_VisibilityState;
 }
 
 const initialState: AnnotatedSegmentsState = {
@@ -16,6 +22,7 @@ const initialState: AnnotatedSegmentsState = {
   paginationModel: { pageIndex: 0, pageSize: 5 },
   rowSelectionModel: {},
   sortModel: [],
+  columnVisibilityModel: {},
 };
 
 export const AnnotatedSegmentsSlice = createSlice({
@@ -37,8 +44,27 @@ export const AnnotatedSegmentsSlice = createSlice({
     onSortModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
       state.sortModel = action.payload;
     },
+    // column visibility
+    onColumnVisibilityChange: (state, action: PayloadAction<MRT_VisibilityState>) => {
+      state.columnVisibilityModel = action.payload;
+    },
   },
   extraReducers: (builder) => {
+    builder.addCase(SATFilterActions.init, (state, action) => {
+      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+        if (!column.column) return acc;
+        // this is a normal column
+        if (isNaN(parseInt(column.column))) {
+          return acc;
+          // this is a metadata column
+        } else {
+          return {
+            ...acc,
+            [column.column]: false,
+          };
+        }
+      }, {});
+    });
     builder
       .addCase(SATFilterActions.onFinishFilterEdit, (state) => {
         // reset page when filter changes

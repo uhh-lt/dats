@@ -19,6 +19,7 @@ function AnnotatedSegmentsTable({ onRowContextMenu, cardProps }: AnnotatedSegmen
   // global client state (redux)
   const rowSelectionModel = useAppSelector((state) => state.annotatedSegments.rowSelectionModel);
   const sortingModel = useAppSelector((state) => state.annotatedSegments.sortModel);
+  const columnVisibilityModel = useAppSelector((state) => state.annotatedSegments.columnVisibilityModel);
   const dispatch = useAppDispatch();
 
   return (
@@ -31,10 +32,15 @@ function AnnotatedSegmentsTable({ onRowContextMenu, cardProps }: AnnotatedSegmen
       }
       sortingModel={sortingModel}
       onSortingChange={(newSortingModel) => dispatch(AnnotatedSegmentsActions.onSortModelChange(newSortingModel))}
+      columnVisibilityModel={columnVisibilityModel}
+      onColumnVisibilityChange={(newColumnVisibilityModel) =>
+        dispatch(AnnotatedSegmentsActions.onColumnVisibilityChange(newColumnVisibilityModel))
+      }
       onRowContextMenu={onRowContextMenu}
       renderTopToolbarCustomActions={(props) => <BulkChangeCodeButton {...props} filterName={filterName} />}
       renderToolbarInternalActions={AnnotatedSegmentsTableToolbar}
       cardProps={cardProps}
+      positionToolbarAlertBanner="head-overlay"
     />
   );
 }
