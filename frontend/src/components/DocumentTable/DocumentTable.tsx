@@ -1,16 +1,19 @@
-import { Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
   MRT_RowSelectionState,
   MRT_RowVirtualizer,
   MRT_SortingState,
   MRT_TableInstance,
+  MRT_TableOptions,
   MRT_VisibilityState,
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
 import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from "react";
+import { AnnotationTableRow } from "../../api/openapi/models/AnnotationTableRow.ts";
 import { ElasticSearchDocumentHit } from "../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
@@ -53,6 +56,7 @@ interface DocumentTableProps {
   // actions
   onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, sdocId: number) => void;
   // toolbar
+  positionToolbarAlertBanner?: MRT_TableOptions<AnnotationTableRow>["positionToolbarAlertBanner"];
   renderToolbarInternalActions?: (props: DocumentTableActionProps) => React.ReactNode;
   renderTopToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
   renderBottomToolbarCustomActions?: (props: DocumentTableActionProps) => React.ReactNode;
@@ -71,6 +75,7 @@ function DocumentTable({
   sortingModel,
   onSortingChange,
   onRowContextMenu,
+  positionToolbarAlertBanner = "top",
   renderToolbarInternalActions,
   renderTopToolbarCustomActions,
   renderBottomToolbarCustomActions,
@@ -203,7 +208,7 @@ function DocumentTable({
       SearchService.searchSdocs({
         searchQuery: searchQuery || "",
         projectId: projectId!,
-        highlight: false,
+        highlight: true,
         expertMode: false,
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
@@ -222,21 +227,9 @@ function DocumentTable({
     refetchOnWindowFocus: false,
   });
   // create a flat array of data mapped from id to row
-  const dataMap = useMemo(
-    () =>
-      data?.pages
-        .flatMap((page) => page.hits)
-        .reduce(
-          (prev, current) => {
-            prev[current.sdoc_id] = current;
-            return prev;
-          },
-          {} as Record<number, ElasticSearchDocumentHit>,
-        ) ?? [],
-    [data],
-  );
+  const flatData = useMemo(() => data?.pages.flatMap((page) => page.hits) ?? [], [data]);
   const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = Object.keys(dataMap).length;
+  const totalFetched = flatData.length;
 
   // infinite scrolling
   // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
@@ -274,7 +267,7 @@ function DocumentTable({
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
-    data: Object.values(dataMap),
+    data: flatData,
     columns: columns,
     getRowId: (row) => `${row.sdoc_id}`,
     // state
@@ -322,6 +315,20 @@ function DocumentTable({
     },
     // column visiblility
     onColumnVisibilityChange: setColumnVisibilityModel,
+    // detail (highlights)
+    renderDetailPanel:
+      searchQuery && searchQuery.trim().length > 0
+        ? ({ row }) =>
+            row.original.highlights ? (
+              <Box className="search-result-highlight">
+                {row.original.highlights.map((highlight, index) => (
+                  <Typography key={`sdoc-${row.original.sdoc_id}-highlight-${index}`} m={0.5}>
+                    {parse(highlight)}
+                  </Typography>
+                ))}
+              </Box>
+            ) : null
+        : undefined,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
       onContextMenu: (event) => handleRowContextMenu(event, row.original.sdoc_id),
@@ -342,18 +349,19 @@ function DocumentTable({
         }
       : undefined,
     // toolbar
+    positionToolbarAlertBanner,
     renderTopToolbarCustomActions: renderTopToolbarCustomActions
       ? (props) =>
           renderTopToolbarCustomActions({
             table: props.table,
-            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.sdoc_id]),
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.sdoc_id]),
           })
       : undefined,
     renderToolbarInternalActions: renderToolbarInternalActions
       ? (props) =>
           renderToolbarInternalActions({
             table: props.table,
-            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.sdoc_id]),
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.sdoc_id]),
           })
       : (props) => (
           <DocumentTableToolbar
@@ -372,7 +380,7 @@ function DocumentTable({
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({
             table: props.table,
-            selectedDocuments: Object.values(dataMap).filter((row) => rowSelectionModel[row.sdoc_id]),
+            selectedDocuments: flatData.filter((row) => rowSelectionModel[row.sdoc_id]),
           })}
       </Stack>
     ),

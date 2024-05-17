@@ -182,21 +182,9 @@ function SpanAnnotationTable({
     refetchOnWindowFocus: false,
   });
   // create a flat array of data mapped from id to row
-  const dataMap = useMemo(
-    () =>
-      data?.pages
-        .flatMap((page) => page.data)
-        .reduce(
-          (prev, current) => {
-            prev[current.id] = current;
-            return prev;
-          },
-          {} as Record<number, AnnotationTableRow>,
-        ) ?? [],
-    [data],
-  );
+  const flatData = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
   const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
-  const totalFetched = Object.keys(dataMap).length;
+  const totalFetched = flatData.length;
 
   // infinite scrolling
   // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
@@ -234,7 +222,7 @@ function SpanAnnotationTable({
 
   // table
   const table = useMaterialReactTable<AnnotationTableRow>({
-    data: Object.values(dataMap),
+    data: flatData,
     columns: columns,
     getRowId: (row) => `${row.id}`,
     // state
@@ -300,7 +288,7 @@ function SpanAnnotationTable({
             filterName,
             anchor: tableContainerRef,
             selectedUserId: selectedUserId,
-            selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
           })
       : undefined,
     renderToolbarInternalActions: (props) =>
@@ -309,7 +297,7 @@ function SpanAnnotationTable({
         filterName,
         anchor: tableContainerRef,
         selectedUserId: selectedUserId,
-        selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+        selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
       }),
     renderBottomToolbarCustomActions: (props) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
@@ -322,7 +310,7 @@ function SpanAnnotationTable({
             filterName,
             anchor: tableContainerRef,
             selectedUserId: selectedUserId,
-            selectedAnnotations: Object.values(dataMap).filter((row) => rowSelectionModel[row.id]),
+            selectedAnnotations: flatData.filter((row) => rowSelectionModel[row.id]),
           })}
       </Stack>
     ),
