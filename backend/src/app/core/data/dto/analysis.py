@@ -102,6 +102,34 @@ class AnnotatedSegmentResult(BaseModel):
     data: List[AnnotationTableRow] = Field(description="The Annotations.")
 
 
+class BBoxAnnotationTableRow(BaseModel):
+    id: int = Field(description="ID of the BBoxAnnotation")
+    x: int = Field(description="The x-coordinate of the BBoxAnnotation.")
+    y: int = Field(description="The y-coordinate of the BBoxAnnotation.")
+    width: int = Field(description="The width of the BBoxAnnotation.")
+    height: int = Field(description="The height of the BBoxAnnotation.")
+    url: str = Field(description="The url to the Image of the BBoxAnnotation.")
+    code: CodeRead = Field(description="Code the BBoxAnnotation refers to")
+    annotation_document_id: int = Field(
+        description="AnnotationDocument the BBoxAnnotation refers to"
+    )
+    user_id: int = Field(description="User the BBoxAnnotation belongs to")
+    sdoc: SourceDocumentRead = Field(
+        description="SourceDocument the BBoxAnnotation refers to"
+    )
+    tags: List[DocumentTagRead] = Field(
+        description="The DocumentTags of the SourceDocument."
+    )
+    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
+
+
+class AnnotatedImageResult(BaseModel):
+    total_results: int = Field(
+        description="The total number of bbox_annotation_ids. Used for pagination."
+    )
+    data: List[BBoxAnnotationTableRow] = Field(description="The Annotations.")
+
+
 class TimelineAnalysisResultNew(BaseModel):
     date: str = Field(description="The date.")
     sdoc_ids: List[int] = Field(description="The SourceDoument IDs.")

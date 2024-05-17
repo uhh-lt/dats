@@ -5,6 +5,11 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.analysis_service import AnalysisService
+from app.core.analysis.annotated_images import (
+    AnnotatedImagesColumns,
+    find_annotated_images,
+    find_annotated_images_info,
+)
 from app.core.analysis.annotated_segments import (
     AnnotatedSegmentsColumns,
     find_annotated_segments,
@@ -23,6 +28,7 @@ from app.core.analysis.word_frequency import (
 )
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.dto.analysis import (
+    AnnotatedImageResult,
     AnnotatedSegmentResult,
     AnnotationOccurrence,
     CodeFrequency,
@@ -132,6 +138,49 @@ def annotated_segments(
     authz_user.assert_in_project(project_id)
 
     return find_annotated_segments(
+        project_id=project_id,
+        user_id=user_id,
+        filter=filter,
+        page=page,
+        page_size=page_size,
+        sorts=sorts,
+    )
+
+
+@router.post(
+    "/annotated_images_info",
+    response_model=List[ColumnInfo[AnnotatedImagesColumns]],
+    summary="Returns AnnotationSegments Info.",
+)
+def annotated_images_info(
+    *,
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[ColumnInfo[AnnotatedImagesColumns]]:
+    authz_user.assert_in_project(project_id)
+    return find_annotated_images_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/annotated_images",
+    response_model=AnnotatedImageResult,
+    summary="Returns AnnotatedImageResult.",
+)
+def annotated_images(
+    *,
+    project_id: int,
+    user_id: int,
+    filter: Filter[AnnotatedImagesColumns],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
+    sorts: List[Sort[AnnotatedImagesColumns]],
+    authz_user: AuthzUser = Depends(),
+) -> AnnotatedImageResult:
+    authz_user.assert_in_project(project_id)
+
+    return find_annotated_images(
         project_id=project_id,
         user_id=user_id,
         filter=filter,
