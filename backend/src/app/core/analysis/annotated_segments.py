@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import Integer, func
 from sqlalchemy.dialects.postgresql import ARRAY, array_agg
@@ -131,9 +131,9 @@ def find_annotated_segments(
     project_id: int,
     user_id: int,
     filter: Filter[AnnotatedSegmentsColumns],
-    page: int,
-    page_size: int,
     sorts: List[Sort[AnnotatedSegmentsColumns]],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
 ) -> AnnotatedSegmentResult:
     with SQLService().db_session() as db:
         tag_ids_agg = aggregate_ids(
@@ -210,16 +210,21 @@ def find_annotated_segments(
 
         query = apply_sorting(query=query, sorts=sorts, db=db)
 
-        query = query.order_by(
-            SpanAnnotationORM.id
-        )  # this is very important, otherwise pagination will not work!
-        query, pagination = apply_pagination(
-            query=query, page_number=page + 1, page_size=page_size
-        )
+        if page is not None and page_size is not None:
+            query = query.order_by(
+                SpanAnnotationORM.id
+            )  # this is very important, otherwise pagination will not work!
+            query, pagination = apply_pagination(
+                query=query, page_number=page + 1, page_size=page_size
+            )
+            total_results = pagination.total_results
+            result = query.all()
+        else:
+            result = query.all()
+            total_results = len(result)
 
-        result = query.all()
         return AnnotatedSegmentResult(
-            total_results=pagination.total_results,
+            total_results=total_results,
             data=[
                 AnnotationTableRow(
                     id=row[0].id,

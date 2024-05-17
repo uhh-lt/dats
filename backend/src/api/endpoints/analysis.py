@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -124,8 +124,8 @@ def annotated_segments(
     project_id: int,
     user_id: int,
     filter: Filter[AnnotatedSegmentsColumns],
-    page: int,
-    page_size: int,
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
     sorts: List[Sort[AnnotatedSegmentsColumns]],
     authz_user: AuthzUser = Depends(),
 ) -> AnnotatedSegmentResult:
