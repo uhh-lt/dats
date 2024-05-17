@@ -33,6 +33,7 @@ import DocumentInformation from "../search/DocumentViewer/DocumentInformation/Do
 import ImageViewer from "../search/DocumentViewer/ImageViewer.tsx";
 import TextViewer from "../search/DocumentViewer/TextViewer.tsx";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
+import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
 import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
@@ -88,18 +89,22 @@ function Annotation() {
             <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
               <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
                 <Tab label="Code Explorer" value="code" />
-                {sdoc.isSuccess && sdoc.data.doctype === DocType.TEXT && (
-                  <Tab label="Annotation Explorer" value="Annotation" />
-                )}
+                <Tab label="Annotation Explorer" value="Annotation" />
               </Tabs>
             </Box>
             <Box className="myFlexFillAllContainer">
               <TabPanel value="code" style={{ padding: 0 }} className="h100">
                 <CodeExplorer className="h100" />
               </TabPanel>
-              {annotationDocument.isSuccess && sdoc.isSuccess && sdoc.data.doctype === DocType.TEXT && (
+              {annotationDocument.isSuccess && sdoc.isSuccess && (
                 <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
-                  <SpanAnnotationExplorer />
+                  {sdoc.data.doctype === DocType.TEXT ? (
+                    <SpanAnnotationExplorer />
+                  ) : sdoc.data.doctype === DocType.IMAGE ? (
+                    <BBoxAnnotationExplorer />
+                  ) : (
+                    <>Not supported (yet)!</>
+                  )}
                 </TabPanel>
               )}
             </Box>

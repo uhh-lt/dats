@@ -1,16 +1,17 @@
 import { useMemo } from "react";
 import AdocHooks from "../../../api/AdocHooks.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotationExplorer from "./AnnotationExplorer.tsx";
-import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
+import BBoxAnnotationCard from "./BBoxAnnotationCard.tsx";
 
-const filterByText = (text: string) => (annotation: SpanAnnotationReadResolved) => annotation.span_text.includes(text);
+const filterByText = (text: string) => (annotation: BBoxAnnotationReadResolvedCode) =>
+  annotation.code.name.includes(text);
 
-function SpanAnnotationExplorer() {
+function BBoxAnnotationExplorer() {
   // data
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
-  const annotationsBatch = AdocHooks.useGetAllSpanAnnotationsBatch(visibleAdocIds);
+  const annotationsBatch = AdocHooks.useGetAllBboxAnnotationsBatch(visibleAdocIds);
   const annotations = useMemo(() => {
     const annotationsIsUndefined = annotationsBatch.some((a) => !a.data);
     if (annotationsIsUndefined) return undefined;
@@ -21,9 +22,9 @@ function SpanAnnotationExplorer() {
     <AnnotationExplorer
       annotations={annotations}
       filterByText={filterByText}
-      renderAnnotationCard={SpanAnnotationCard}
+      renderAnnotationCard={BBoxAnnotationCard}
     />
   );
 }
 
-export default SpanAnnotationExplorer;
+export default BBoxAnnotationExplorer;

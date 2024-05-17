@@ -1,12 +1,12 @@
 import NotesIcon from "@mui/icons-material/Notes";
 import { Card, CardActionArea, CardContent, CardHeader, Typography } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import UserName from "../../../components/UserName.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import { AnnotationCardProps } from "./AnnotationCardProps.ts";
 
-function SpanAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardProps<SpanAnnotationReadResolved>) {
+function BBoxAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardProps<BBoxAnnotationReadResolvedCode>) {
   return (
     <Card {...cardProps}>
       <CardHeader
@@ -37,7 +37,7 @@ function SpanAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardPr
               pl: 1,
             }}
           >
-            {annotation.span_text}
+            {annotation.x_min}
           </Typography>
         </CardContent>
       </CardActionArea>
@@ -45,4 +45,4 @@ function SpanAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardPr
   );
 }
 
-export default SpanAnnotationCard;
+export default BBoxAnnotationCard;
