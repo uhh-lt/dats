@@ -375,7 +375,7 @@ function DocumentTable({
     renderBottomToolbarCustomActions: (props) => (
       <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
-          Fetched {totalFetched} of {totalDBRowCount} total rows.
+          Fetched {totalFetched} of {totalDBRowCount} total documents.
         </Typography>
         {renderBottomToolbarCustomActions &&
           renderBottomToolbarCustomActions({

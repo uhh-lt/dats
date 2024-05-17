@@ -1,14 +1,19 @@
 import InfoIcon from "@mui/icons-material/Info";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { LoadingButton } from "@mui/lab";
-import { Box, Button, Divider, Toolbar, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Divider, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
+import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { ChangeEvent, useRef, useState } from "react";
 import PreProHooks from "../../../api/PreProHooks.ts";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
+import DocumentTable from "../../../components/DocumentTable/DocumentTable.tsx";
 import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel.tsx";
+import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton.tsx";
+import DownloadSdocsButton from "../../search/ToolBar/ToolBarElements/DownloadSdocsButton.tsx";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog.tsx";
-import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "./ProjectDocumentsContextMenu.tsx";
 import { ProjectProps } from "./ProjectProps.ts";
+
+const filterName = "projectDocumentsTable";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
@@ -37,9 +42,13 @@ function ProjectDocuments({ project }: ProjectProps) {
   // global server state (react-query)
   const uploadProgress = PreProHooks.usePollPreProProjectStatus(project.id);
 
+  // table state
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
+  const selectedSdocIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
+
   // crawler / url import
   const crawlDialogRef = useRef<CrawlerRunDialogHandle>(null);
-  const contextMenuRef = useRef<ProjectDocumentsContextMenuHandle>(null);
 
   // file upload
   const [waiting, setWaiting] = useState<boolean>(false);
@@ -80,13 +89,6 @@ function ProjectDocuments({ project }: ProjectProps) {
       );
     }
   };
-
-  // context menu
-  // const onContextMenu = (sdocId: number) => (event: React.MouseEvent) => {
-  //   event.preventDefault();
-  //   if (!contextMenuRef.current) return;
-  //   contextMenuRef.current.open({ top: event.clientY, left: event.clientX }, project.id, sdocId);
-  // };
 
   return (
     <Box display="flex" className="myFlexContainer h100">
@@ -146,8 +148,25 @@ function ProjectDocuments({ project }: ProjectProps) {
         }
       />
       <Divider />
-      <div>Project Documents are disabled for now</div>
-      <ProjectDocumentsContextMenu ref={contextMenuRef} />
+      <DocumentTable
+        projectId={project.id}
+        filterName={filterName}
+        rowSelectionModel={rowSelectionModel}
+        onRowSelectionChange={setRowSelectionModel}
+        sortingModel={sortingModel}
+        onSortingChange={setSortingModel}
+        positionToolbarAlertBanner="head-overlay"
+        renderTopToolbarCustomActions={() => (
+          <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+            {selectedSdocIds.length > 0 && (
+              <>
+                <DeleteButton sdocIds={selectedSdocIds} navigateTo="../search" />
+                <DownloadSdocsButton sdocIds={selectedSdocIds} />
+              </>
+            )}
+          </Stack>
+        )}
+      />
       <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
     </Box>
   );
