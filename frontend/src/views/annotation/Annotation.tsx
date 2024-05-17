@@ -33,16 +33,16 @@ import DocumentInformation from "../search/DocumentViewer/DocumentInformation/Do
 import ImageViewer from "../search/DocumentViewer/ImageViewer.tsx";
 import TextViewer from "../search/DocumentViewer/TextViewer.tsx";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
+import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
 import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
-import MemoExplorer from "./MemoExplorer/MemoExplorer.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
 import { AnnoActions } from "./annoSlice.ts";
 
 function Annotation() {
   // global client state (URL)
-  const { sdocId } = useParams();
-  const sourceDocumentId = sdocId ? parseInt(sdocId) : undefined;
+  const params = useParams() as { projectId: string; sdocId: string };
+  const sdocId = parseInt(params.sdocId);
   const { user } = useAuth();
 
   // local state
@@ -56,8 +56,8 @@ function Annotation() {
   const dispatch = useAppDispatch();
 
   // global server state (react query)
-  const sourceDocument = SdocHooks.useGetDocument(sourceDocumentId);
-  const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sourceDocumentId, user?.id);
+  const sdoc = SdocHooks.useGetDocument(sdocId);
+  const annotationDocument = SdocHooks.useGetOrCreateAdocOfUser(sdocId, user?.id);
 
   // tabs
   const [tab, setTab] = useState("code");
@@ -69,7 +69,7 @@ function Annotation() {
     <>
       <Portal container={appBarContainerRef?.current}>
         <Typography variant="h6" color="inherit" component="div">
-          {sourceDocument.isSuccess ? `Annotator: ${sourceDocument.data.filename}` : "Annotator"}
+          {sdoc.isSuccess ? `Annotator: ${sdoc.data.filename}` : "Annotator"}
         </Typography>
       </Portal>
       <Grid container className="h100">
@@ -88,16 +88,20 @@ function Annotation() {
             <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
               <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
                 <Tab label="Code Explorer" value="code" />
-                <Tab label="Annotation Explorer" value="Annotation" />
+                {sdoc.isSuccess && sdoc.data.doctype === DocType.TEXT && (
+                  <Tab label="Annotation Explorer" value="Annotation" />
+                )}
               </Tabs>
             </Box>
             <Box className="myFlexFillAllContainer">
               <TabPanel value="code" style={{ padding: 0 }} className="h100">
                 <CodeExplorer className="h100" />
               </TabPanel>
-              <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
-                <MemoExplorer sdocId={sourceDocumentId} />
-              </TabPanel>
+              {annotationDocument.isSuccess && sdoc.isSuccess && sdoc.data.doctype === DocType.TEXT && (
+                <TabPanel value="Annotation" style={{ padding: 0 }} className="h100">
+                  <SpanAnnotationExplorer />
+                </TabPanel>
+              )}
             </Box>
           </TabContext>
         </Grid>
@@ -138,7 +142,7 @@ function Annotation() {
                 </ToggleButton>
               </Tooltip>
             </ToggleButtonGroup>
-            {annotationDocument.isSuccess && <AnnotationDocumentSelector sdocId={sourceDocumentId} />}
+            {annotationDocument.isSuccess && <AnnotationDocumentSelector sdocId={sdocId} />}
           </Toolbar>
           <Box className="myFlexFillAllContainer">
             <Container sx={{ py: 2 }}>
@@ -146,11 +150,11 @@ function Annotation() {
                 <CardContent>
                   {sdocId ? (
                     <>
-                      {sourceDocument.isSuccess && annotationDocument.isSuccess ? (
+                      {sdoc.isSuccess && annotationDocument.isSuccess ? (
                         <Stack spacing={2}>
                           <div style={{ display: "flex", alignItems: "center" }}>
                             <EditableDocumentName
-                              sdocId={sourceDocument.data.id}
+                              sdocId={sdoc.data.id}
                               variant={"h4"}
                               style={{ margin: 0 }}
                               inputProps={{ style: { fontSize: "2.125rem", padding: 0, width: "auto" } }}
@@ -161,35 +165,35 @@ function Annotation() {
                               sx={{ ml: 1 }}
                             />
                           </div>
-                          {sourceDocument.data.doctype === DocType.IMAGE ? (
+                          {sdoc.data.doctype === DocType.IMAGE ? (
                             isAnnotationMode ? (
-                              <ImageAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
+                              <ImageAnnotator sdoc={sdoc.data} adoc={annotationDocument.data} />
                             ) : (
-                              <ImageViewer sdoc={sourceDocument.data} />
+                              <ImageViewer sdoc={sdoc.data} />
                             )
-                          ) : sourceDocument.data.doctype === DocType.TEXT ? (
+                          ) : sdoc.data.doctype === DocType.TEXT ? (
                             isAnnotationMode ? (
-                              <TextAnnotator sdoc={sourceDocument.data} adoc={annotationDocument.data} />
+                              <TextAnnotator sdoc={sdoc.data} adoc={annotationDocument.data} />
                             ) : (
-                              <TextViewer sdoc={sourceDocument.data} />
+                              <TextViewer sdoc={sdoc.data} />
                             )
-                          ) : sourceDocument.data.doctype === DocType.AUDIO ? (
+                          ) : sdoc.data.doctype === DocType.AUDIO ? (
                             isAnnotationMode ? (
                               <div>Annotation is not (yet) supported for Audio Documents.</div>
                             ) : (
                               <AudioVideoViewer
-                                sdoc={sourceDocument.data}
+                                sdoc={sdoc.data}
                                 adoc={annotationDocument.data}
                                 showEntities={true}
                                 height={200}
                               />
                             )
-                          ) : sourceDocument.data.doctype === DocType.VIDEO ? (
+                          ) : sdoc.data.doctype === DocType.VIDEO ? (
                             isAnnotationMode ? (
                               <div>Annotation is not (yet) supported for Video Documents.</div>
                             ) : (
                               <AudioVideoViewer
-                                sdoc={sourceDocument.data}
+                                sdoc={sdoc.data}
                                 adoc={annotationDocument.data}
                                 showEntities={true}
                                 width={800}
@@ -200,8 +204,8 @@ function Annotation() {
                             <div>ERROR! This DocType is not (yet) supported!</div>
                           )}
                         </Stack>
-                      ) : sourceDocument.isError ? (
-                        <div>Error: {sourceDocument.error.message}</div>
+                      ) : sdoc.isError ? (
+                        <div>Error: {sdoc.error.message}</div>
                       ) : (
                         <div>Loading...</div>
                       )}
@@ -225,7 +229,7 @@ function Annotation() {
             boxShadow: 4,
           }}
         >
-          <DocumentInformation sdocId={sourceDocumentId} />
+          <DocumentInformation sdocId={sdocId} />
         </Grid>
       </Grid>
     </>

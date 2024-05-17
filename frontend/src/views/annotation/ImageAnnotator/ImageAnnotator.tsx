@@ -69,7 +69,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   // mutations for create, update, delete
   const createMutation = BboxAnnotationHooks.useCreateAnnotation();
   const updateMutation = BboxAnnotationHooks.useUpdateBBox();
-  const deleteMutation = BboxAnnotationHooks.useDelete();
+  const deleteMutation = BboxAnnotationHooks.useDeleteBBox();
 
   // right click (contextmenu) handling
   const handleRightClick = useCallback(
