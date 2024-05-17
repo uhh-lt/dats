@@ -56,7 +56,7 @@ function SdocLink({ sdoc }: { sdoc: SourceDocumentRead }) {
   return (
     <>
       attached to{" "}
-      <Link component={RouterLink} to={`../search/doc/${sdoc.id}`} color="inherit">
+      <Link component={RouterLink} to={`../annotation/${sdoc.id}`} color="inherit">
         {sdoc.filename}
       </Link>
     </>
@@ -98,7 +98,7 @@ function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotation
             </span>
           </Link>{" "}
           of{" "}
-          <Link component={RouterLink} to={`../search/doc/${sdoc.data.id}`} color="inherit">
+          <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
             {sdoc.data.filename}
           </Link>
         </Typography>
@@ -129,7 +129,7 @@ function BBoxAnnotationLink({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotation
           Bounding Box ({bboxAnnotation.code.name})
         </Link>
         of{" "}
-        <Link component={RouterLink} to={`../search/doc/${sdoc.data.id}`} color="inherit">
+        <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
           {sdoc.data.filename}
         </Link>
       </>

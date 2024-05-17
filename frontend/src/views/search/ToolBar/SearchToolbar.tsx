@@ -115,7 +115,7 @@ function SearchToolbar({
               exporterInfo={{ type: "Annotations", sdocId: sdocId, singleUser: true, users: [] }}
             />
             <Box sx={{ flexGrow: 1 }} />
-            <DocumentNavigation idsToNavigate={searchResultDocumentIds} searchPrefix="../search/doc/" showText={true} />
+            <DocumentNavigation idsToNavigate={searchResultDocumentIds} searchPrefix="../annotation/" showText={true} />
           </Box>
         )}
       </Toolbar>

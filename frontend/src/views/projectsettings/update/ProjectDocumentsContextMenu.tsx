@@ -47,7 +47,7 @@ const ProjectDocumentsContextMenu = forwardRef<ProjectDocumentsContextMenuHandle
 
     const openDocument = () => {
       closeContextMenu();
-      navigate(`/project/${projectId}/search/doc/${sdocId}`);
+      navigate(`/project/${projectId}/annotation/${sdocId}`);
     };
 
     return (

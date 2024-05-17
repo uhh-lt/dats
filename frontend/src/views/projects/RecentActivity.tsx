@@ -53,7 +53,7 @@ function RecentActivityCard({ sdocId, updateTS }: RecentActivityButtonProps) {
       {sdoc.isError && <div>Error: {sdoc.error.message}</div>}
       {sdoc.isSuccess && project.isSuccess && (
         <Card variant="outlined">
-          <CardActionArea onClick={() => navigate(`../project/${sdoc.data.project_id}/search/doc/${sdocId}`)}>
+          <CardActionArea onClick={() => navigate(`../project/${sdoc.data.project_id}/annotation/${sdocId}`)}>
             <CardContent>
               <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                 {project.data.title}

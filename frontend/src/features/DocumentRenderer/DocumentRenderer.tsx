@@ -78,8 +78,8 @@ function DocumentRenderer({
                 <SdocImageLink
                   key={`image-link-${filename}`}
                   filename={filename}
-                  toPrefix={"../search/doc/"}
-                  projectId={1}
+                  toPrefix={"../annotation/"}
+                  projectId={projectId}
                 />
               );
             }
@@ -90,7 +90,7 @@ function DocumentRenderer({
                 <SdocVideoLink
                   key={`video-link-${filename}`}
                   filename={filename}
-                  toPrefix={isViewer ? `../search/doc/` : `../annotation/`}
+                  toPrefix={"../annotation/"}
                   projectId={projectId}
                 />
               );
@@ -102,7 +102,7 @@ function DocumentRenderer({
                 <SdocAudioLink
                   key={`audio-link-${filename}`}
                   filename={filename}
-                  toPrefix={isViewer ? `../search/doc/` : `../annotation/`}
+                  toPrefix={"../annotation/"}
                   projectId={projectId}
                 />
               );

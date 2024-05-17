@@ -1,4 +1,3 @@
-import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { Link } from "react-router-dom";
@@ -28,17 +27,11 @@ function SearchResultContextMenu({ position, projectId, sdocId, handleClose }: S
       }}
       PaperProps={{ sx: { width: 240 } }}
     >
-      <MenuItem component={Link} to={`/project/${projectId}/search/doc/${sdocId}`} onClick={handleClose}>
+      <MenuItem component={Link} to={`/project/${projectId}/annotation/${sdocId}`} onClick={handleClose}>
         <ListItemIcon>
           <PlayCircleIcon fontSize="small" />
         </ListItemIcon>
         <ListItemText>Open document</ListItemText>
-      </MenuItem>
-      <MenuItem component={Link} to={`/project/${projectId}/annotation/${sdocId}`}>
-        <ListItemIcon>
-          <BorderColorIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText>Annotate document</ListItemText>
       </MenuItem>
       <MemoMenuItem
         onClick={handleClose}
