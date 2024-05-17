@@ -131,15 +131,15 @@ export class AnalysisService {
   public static annotatedSegments({
     projectId,
     userId,
+    requestBody,
     page,
     pageSize,
-    requestBody,
   }: {
     projectId: number;
     userId: number;
-    page: number;
-    pageSize: number;
     requestBody: Body_analysis_annotated_segments;
+    page?: number | null;
+    pageSize?: number | null;
   }): CancelablePromise<AnnotatedSegmentResult> {
     return __request(OpenAPI, {
       method: "POST",

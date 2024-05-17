@@ -159,6 +159,15 @@ const useUpdateBBox = () =>
 
 const useDelete = () =>
   useMutation({
+    mutationFn: BboxAnnotationService.deleteById,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ADOC_BBOX_ANNOTATIONS, data.annotation_document_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
+    },
+  });
+
+const useDeleteBBox = () =>
+  useMutation({
     mutationFn: (variables: { bboxToDelete: BBoxAnnotationRead | BBoxAnnotationReadResolvedCode }) =>
       BboxAnnotationService.deleteById({ bboxId: variables.bboxToDelete.id }),
     // optimistic updates
@@ -234,6 +243,7 @@ const BboxAnnotationHooks = {
   useUpdate,
   useUpdateBBox,
   useDelete,
+  useDeleteBBox,
   // memo
   useGetMemo,
   useGetMemos,

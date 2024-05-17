@@ -3856,12 +3856,17 @@
             "schema": { "type": "integer", "title": "Project Id" }
           },
           { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
-          { "name": "page", "in": "query", "required": true, "schema": { "type": "integer", "title": "Page" } },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
+          },
           {
             "name": "page_size",
             "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Page Size" }
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
           }
         ],
         "requestBody": {

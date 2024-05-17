@@ -198,6 +198,15 @@ const useUpdateSpan = () =>
     },
   });
 
+const useDelete = () =>
+  useMutation({
+    mutationFn: SpanAnnotationService.deleteById,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: [QueryKey.ADOC_SPAN_ANNOTATIONS, data.annotation_document_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.MEMO_SDOC_RELATED] }); // todo: this is not optimal
+    },
+  });
+
 const useDeleteSpan = () =>
   useMutation({
     mutationFn: (variables: { spanAnnotationToDelete: SpanAnnotationRead | SpanAnnotationReadResolved }) =>
@@ -275,6 +284,7 @@ const SpanAnnotationHooks = {
   useUpdateSpan,
   useOptimisticUpdateSpan,
   useUpdate,
+  useDelete,
   useDeleteSpan,
   // memo
   useGetMemos,
