@@ -54,12 +54,13 @@ import SdocNode from "./nodes/SdocNode.tsx";
 import SpanAnnotationNode from "./nodes/SpanAnnotationNode.tsx";
 import TagNode from "./nodes/TagNode.tsx";
 import TextNode from "./nodes/TextNode.tsx";
-import AddAnnotationNodeDialog from "./toolbar/AddAnnotationNodeDialog.tsx";
+import AddBBoxAnnotationNodeDialog from "./toolbar/AddBBoxAnnotationNodeDialog.tsx";
 import AddBorderNodeButton from "./toolbar/AddBorderNodeButton.tsx";
 import AddCodeNodeDialog from "./toolbar/AddCodeNodeDialog.tsx";
 import AddDocumentNodeDialog from "./toolbar/AddDocumentNodeDialog.tsx";
 import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog.tsx";
 import AddNoteNodeButton from "./toolbar/AddNoteNodeButton.tsx";
+import AddSpanAnnotationNodeDialog from "./toolbar/AddSpanAnnotationNodeDialog.tsx";
 import AddTagNodeDialog from "./toolbar/AddTagNodeDialog.tsx";
 import AddTextNodeButton from "./toolbar/AddTextNodeButton.tsx";
 import DatabaseEdgeEditMenu, { DatabaseEdgeEditMenuHandle } from "./toolbar/DatabaseEdgeEditMenu.tsx";
@@ -478,7 +479,8 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      <AddAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddSpanAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddBBoxAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddMemoNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                     </Stack>
                   </Paper>
