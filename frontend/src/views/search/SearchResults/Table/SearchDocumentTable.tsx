@@ -295,7 +295,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     renderBottomToolbarCustomActions: () => (
       <Stack direction={"row"} spacing={1} alignItems="center">
         <Typography>
-          Fetched {totalFetched} of {totalDBRowCount} total rows.
+          Fetched {totalFetched} of {totalDBRowCount} total documents.
         </Typography>
       </Stack>
     ),
