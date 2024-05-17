@@ -8,6 +8,8 @@ import BBoxAnnotationCard from "./BBoxAnnotationCard.tsx";
 const filterByText = (text: string) => (annotation: BBoxAnnotationReadResolvedCode) =>
   annotation.code.name.includes(text);
 
+const estimateSize = () => 190;
+
 function BBoxAnnotationExplorer() {
   // data
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
@@ -22,7 +24,8 @@ function BBoxAnnotationExplorer() {
     <AnnotationExplorer
       annotations={annotations}
       filterByText={filterByText}
-      renderAnnotationCard={BBoxAnnotationCard}
+      renderAnnotationCard={(props) => <BBoxAnnotationCard {...props} />}
+      estimateSize={estimateSize}
     />
   );
 }

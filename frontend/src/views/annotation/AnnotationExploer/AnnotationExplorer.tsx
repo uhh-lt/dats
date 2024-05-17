@@ -15,12 +15,14 @@ interface AnnotationExplorerProps<T extends AnnotationReadResolved> {
   annotations: T[] | undefined;
   filterByText: (text: string) => (annotation: T) => boolean; // this has to be a useCallback / constant function!
   renderAnnotationCard: (props: AnnotationCardProps<T>) => JSX.Element;
+  estimateSize?: () => number;
 }
 
 function AnnotationExplorer<T extends AnnotationReadResolved>({
   annotations,
   filterByText,
   renderAnnotationCard,
+  estimateSize = () => 95,
 }: AnnotationExplorerProps<T>) {
   // text filtering
   const [filterValue, setFilterValue] = useState("");
@@ -71,7 +73,7 @@ function AnnotationExplorer<T extends AnnotationReadResolved>({
   const virtualizer = useVirtualizer({
     count: filteredAnnotations.length,
     getScrollElement: () => listRef.current,
-    estimateSize: () => 95,
+    estimateSize,
   });
 
   return (
