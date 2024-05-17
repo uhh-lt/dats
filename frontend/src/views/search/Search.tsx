@@ -1,8 +1,14 @@
 import { Divider, Grid, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
+import { PaginatedElasticSearchDocumentHits } from "../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
+import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
+import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
 import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
+import { SearchService } from "../../api/openapi/services/SearchService.ts";
+import { MyFilter } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SettingsActions } from "../settings/settingsSlice.ts";
 import DocumentInformation from "./DocumentViewer/DocumentInformation/DocumentInformation.tsx";
@@ -16,8 +22,6 @@ import { SearchFilterActions } from "./searchFilterSlice.ts";
 function Search() {
   // router
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
-  // const navigate = useNavigate();
-  // const location = useLocation();
 
   // redux (global client state)
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
@@ -34,12 +38,6 @@ function Search() {
 
   // handle navigation
   const navigateIfNecessary = useNavigateIfNecessary();
-  // const handleResultClick = (sdocId: number) => {
-  //   // remove doc/:docId from url (if it exists) then add new doc id
-  //   const url = removeTrailingSlash(location.pathname.split("/doc")[0]);
-  //   navigate(`${url}/doc/${sdocId}`);
-  //   dispatch(SearchActions.clearSelectedDocuments());
-  // };
 
   // handle filtering
   const handleAddCodeFilter = useCallback(
@@ -69,6 +67,37 @@ function Search() {
     }
   }, [dispatch, projectCodes.data]);
 
+  // search
+  const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
+  const searchQuery = useAppSelector((state) => state.search.searchQuery);
+  const sortingModel = useAppSelector((state) => state.search.sortingModel);
+  const { data, isError, isFetching, isLoading } = useQuery<PaginatedElasticSearchDocumentHits>({
+    queryKey: [
+      "search-document-table-data",
+      projectId,
+      searchQuery, // refetch when searchQuery changes
+      filter, // refetch when columnFilters changes
+      sortingModel, // refetch when sorting changes
+    ],
+    queryFn: () =>
+      SearchService.searchSdocs({
+        searchQuery: searchQuery || "",
+        projectId: projectId!,
+        highlight: true,
+        expertMode: false,
+        requestBody: {
+          filter: filter as MyFilter<SearchColumns>,
+          sorts: sortingModel.map((sort) => ({
+            column: sort.id as SearchColumns,
+            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+          })),
+        },
+        pageNumber: undefined,
+        pageSize: undefined,
+      }),
+  });
+  const sdocIds = useMemo(() => data?.hits.map((hit) => hit.sdoc_id) || [], [data]);
+
   // render
   return (
     <>
@@ -88,7 +117,7 @@ function Search() {
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
-            sdocIds={[]}
+            sdocIds={sdocIds}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
@@ -101,7 +130,13 @@ function Search() {
           p={2}
           sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
         >
-          <SearchDocumentTable projectId={projectId} />
+          <SearchDocumentTable
+            projectId={projectId}
+            data={data}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            isError={isError}
+          />
         </Grid>
         <Grid
           item

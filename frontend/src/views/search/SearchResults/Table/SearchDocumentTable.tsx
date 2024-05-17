@@ -1,5 +1,4 @@
 import { Box, Stack, Typography } from "@mui/material";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import parse from "html-react-parser";
 import {
   MRT_ColumnDef,
@@ -14,20 +13,17 @@ import {
   MaterialReactTable,
   useMaterialReactTable,
 } from "material-react-table";
-import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
+import { useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ElasticSearchDocumentHit } from "../../../../api/openapi/models/ElasticSearchDocumentHit.ts";
 import { PaginatedElasticSearchDocumentHits } from "../../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../../api/openapi/models/SearchColumns.ts";
-import { SortDirection } from "../../../../api/openapi/models/SortDirection.ts";
-import { SearchService } from "../../../../api/openapi/services/SearchService.ts";
 import { useAuth } from "../../../../auth/useAuth.ts";
 import SdocAnnotatorsRenderer from "../../../../components/DataGrid/SdocAnnotatorsRenderer.tsx";
 import SdocMetadataRenderer from "../../../../components/DataGrid/SdocMetadataRenderer.tsx";
 import SdocRenderer from "../../../../components/DataGrid/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../../components/DataGrid/SdocTagRenderer.tsx";
 import DocumentTableFilterDialog from "../../../../components/DocumentTable/DocumentTableFilterDialog.tsx";
-import { MyFilter } from "../../../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../../store/store.ts";
 import { QueryType } from "../../QueryType.ts";
@@ -39,15 +35,19 @@ import { SearchActions } from "../../searchSlice.ts";
 import { useInitSearchFilterSlice } from "../../useInitSearchFilterSlice.ts";
 import SearchOptionsMenu from "./SearchOptionsMenu.tsx";
 
-const fetchSize = 20;
+// this has to match Search.tsx!
 const filterStateSelector = (state: RootState) => state.searchFilter;
 const filterName = "root";
 
 interface DocumentTableProps {
   projectId: number;
+  data: PaginatedElasticSearchDocumentHits | undefined;
+  isLoading: boolean;
+  isFetching: boolean;
+  isError: boolean;
 }
 
-function SearchDocumentTable({ projectId }: DocumentTableProps) {
+function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }: DocumentTableProps) {
   const navigate = useNavigate();
 
   // global client state (react router)
@@ -63,7 +63,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   const columnVisibilityModel = useAppSelector((state) => state.search.columnVisibilityModel);
   const columnSizingModel = useAppSelector((state) => state.search.columnSizingModel);
   const gridDensity = useAppSelector((state) => state.search.gridDensity);
-  const filter = useAppSelector((state) => state.searchFilter.filter["root"]);
   const dispatch = useAppDispatch();
 
   // virtualization
@@ -133,67 +132,9 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
   }, [tableInfo, user]);
 
   // table data
-  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<PaginatedElasticSearchDocumentHits>({
-    queryKey: [
-      "search-document-table-data",
-      projectId,
-      searchQuery, // refetch when searchQuery changes
-      filter, // refetch when columnFilters changes
-      sortingModel, // refetch when sorting changes
-    ],
-    queryFn: ({ pageParam }) =>
-      SearchService.searchSdocs({
-        searchQuery: searchQuery || "",
-        projectId: projectId!,
-        highlight: true,
-        expertMode: false,
-        requestBody: {
-          filter: filter as MyFilter<SearchColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SearchColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
-        },
-        pageNumber: pageParam as number,
-        pageSize: fetchSize,
-      }),
-    initialPageParam: 0,
-    getNextPageParam: (_lastGroup, groups) => {
-      return groups.length;
-    },
-    refetchOnWindowFocus: false,
-  });
-  // create a flat array of data mapped from id to row
-  const hits = useMemo(() => data?.pages.flatMap((page) => page.hits) ?? [], [data]);
-  const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
+  const hits = data?.hits ?? [];
+  const totalDBRowCount = data?.total_results ?? 0;
   const totalFetched = hits.length;
-
-  // infinite scrolling
-  // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
-  const fetchMoreOnBottomReached = useCallback(
-    (containerRefElement?: HTMLDivElement | null) => {
-      if (containerRefElement) {
-        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
-        // once the user has scrolled within 400px of the bottom of the table, fetch more data if we can
-        if (scrollHeight - scrollTop - clientHeight < 400 && !isFetching && totalFetched < totalDBRowCount) {
-          fetchNextPage();
-        }
-      }
-    },
-    [fetchNextPage, isFetching, totalFetched, totalDBRowCount],
-  );
-  // scroll to top of table when userId, sorting or filters change
-  useEffect(() => {
-    try {
-      rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
-    } catch (error) {
-      console.error(error);
-    }
-  }, [projectId, sortingModel]);
-  // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
-  useEffect(() => {
-    fetchMoreOnBottomReached(tableContainerRef.current);
-  }, [fetchMoreOnBottomReached]);
 
   // table
   const table = useMaterialReactTable<ElasticSearchDocumentHit>({
@@ -216,12 +157,12 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     autoResetAll: false,
     manualFiltering: true, // turn of client-side filtering
     // enableGlobalFilter: true,
-    onGlobalFilterChange: (rowSelectionUpdater) => {
+    onGlobalFilterChange: (globalFilterUpdater) => {
       let newSearchQuery: string | undefined;
-      if (typeof rowSelectionUpdater === "function") {
-        newSearchQuery = rowSelectionUpdater(rowSelectionModel);
+      if (typeof globalFilterUpdater === "function") {
+        newSearchQuery = globalFilterUpdater(searchQuery);
       } else {
-        newSearchQuery = rowSelectionUpdater;
+        newSearchQuery = globalFilterUpdater;
       }
       dispatch(SearchActions.onChangeSearchQuery(newSearchQuery || ""));
     },
@@ -315,7 +256,6 @@ function SearchDocumentTable({ projectId }: DocumentTableProps) {
     },
     muiTableContainerProps: {
       ref: tableContainerRef, //get access to the table container element
-      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
       style: { flexGrow: 1 },
     },
     muiToolbarAlertBannerProps: isError
