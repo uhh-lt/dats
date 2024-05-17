@@ -20,7 +20,7 @@ const initialState: FilterState = {
   },
   defaultFilterExpression: {
     id: uuidv4(),
-    column: AnnotatedSegmentsColumns.ASC_SOURCE_SOURCE_DOCUMENT_FILENAME,
+    column: AnnotatedSegmentsColumns.ASC_SPAN_TEXT,
     operator: StringOperator.STRING_CONTAINS,
     value: "",
   },
