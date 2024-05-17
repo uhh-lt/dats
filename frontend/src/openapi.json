@@ -5405,6 +5405,12 @@
             "title": "Annotation Document Id",
             "description": "AnnotationDocument the BBoxAnnotation refers to"
           },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -5419,7 +5425,19 @@
           }
         },
         "type": "object",
-        "required": ["x_min", "x_max", "y_min", "y_max", "id", "code", "annotation_document_id", "created", "updated"],
+        "required": [
+          "x_min",
+          "x_max",
+          "y_min",
+          "y_max",
+          "id",
+          "code",
+          "annotation_document_id",
+          "user_id",
+          "sdoc_id",
+          "created",
+          "updated"
+        ],
         "title": "BBoxAnnotationReadResolvedCode"
       },
       "BBoxAnnotationUpdateWithCodeId": {
