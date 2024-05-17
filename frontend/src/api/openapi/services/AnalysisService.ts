@@ -2,13 +2,16 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AnnotatedImageResult } from "../models/AnnotatedImageResult";
 import type { AnnotatedSegmentResult } from "../models/AnnotatedSegmentResult";
 import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
+import type { Body_analysis_annotated_images } from "../models/Body_analysis_annotated_images";
 import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { Body_analysis_word_frequency_analysis } from "../models/Body_analysis_word_frequency_analysis";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
+import type { ColumnInfo_AnnotatedImagesColumns_ } from "../models/ColumnInfo_AnnotatedImagesColumns_";
 import type { ColumnInfo_AnnotatedSegmentsColumns_ } from "../models/ColumnInfo_AnnotatedSegmentsColumns_";
 import type { ColumnInfo_TimelineAnalysisColumns_ } from "../models/ColumnInfo_TimelineAnalysisColumns_";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
@@ -144,6 +147,61 @@ export class AnalysisService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_segments",
+      query: {
+        project_id: projectId,
+        user_id: userId,
+        page: page,
+        page_size: pageSize,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns AnnotationSegments Info.
+   * @returns ColumnInfo_AnnotatedImagesColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static annotatedImagesInfo({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_AnnotatedImagesColumns_>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/annotated_images_info",
+      query: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns AnnotatedImageResult.
+   * @returns AnnotatedImageResult Successful Response
+   * @throws ApiError
+   */
+  public static annotatedImages({
+    projectId,
+    userId,
+    requestBody,
+    page,
+    pageSize,
+  }: {
+    projectId: number;
+    userId: number;
+    requestBody: Body_analysis_annotated_images;
+    page?: number | null;
+    pageSize?: number | null;
+  }): CancelablePromise<AnnotatedImageResult> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/annotated_images",
       query: {
         project_id: projectId,
         user_id: userId,
