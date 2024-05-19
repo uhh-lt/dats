@@ -102,7 +102,6 @@ function SearchResultsTable({ onRowClick, onRowContextMenu, sdocIds, columnInfo 
           } else {
             return {
               ...colDef,
-              flex: 1,
               Cell: () => <i>Cannot render column {column.column}</i>,
             } as MRT_ColumnDef<{ sdocId: number }>;
           }

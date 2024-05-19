@@ -74,8 +74,7 @@ function AddSpanAnnotationNodeDialog({ projectId, buttonProps, onClick }: AddSpa
             sortingModel={sortingModel}
             onSortingChange={setSortingModel}
             columnVisibilityModel={visibilityModel}
-            onColumnVisibilityChange={setVisibilityModel}
-            onRowContextMenu={(_, spanAnnotationId) => console.log("Row context menu", spanAnnotationId)}
+            onColumnVisibilityChange={setVisibilityModel as React.Dispatch<React.SetStateAction<MRT_VisibilityState>>}
             cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
             renderBottomToolbarCustomActions={(props) => (
               <>

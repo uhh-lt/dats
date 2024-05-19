@@ -110,7 +110,6 @@ function BBoxAnnotationTable({
         case AnnotatedImagesColumns.AIC_CODE_ID:
           return {
             ...colDef,
-            flex: 1,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
           } as MRT_ColumnDef<BBoxAnnotationTableRow>;
         case AnnotatedImagesColumns.AIC_MEMO_CONTENT:

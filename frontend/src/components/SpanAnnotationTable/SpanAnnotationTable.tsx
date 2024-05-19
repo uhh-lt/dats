@@ -36,13 +36,13 @@ export interface SpanAnnotationTableProps {
   filterName: string;
   // selection
   rowSelectionModel: MRT_RowSelectionState;
-  onRowSelectionChange: (rowSelectionModel: MRT_RowSelectionState) => void;
+  onRowSelectionChange: MRT_TableOptions<AnnotationTableRow>["onRowSelectionChange"];
   // sorting
   sortingModel: MRT_SortingState;
-  onSortingChange: (sortingModel: MRT_SortingState) => void;
+  onSortingChange: MRT_TableOptions<AnnotationTableRow>["onSortingChange"];
   // column visibility
   columnVisibilityModel: MRT_VisibilityState;
-  onColumnVisibilityChange: (columnVisibilityModel: MRT_VisibilityState) => void;
+  onColumnVisibilityChange: MRT_TableOptions<AnnotationTableRow>["onColumnVisibilityChange"];
   // actions
   onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => void;
   // components
@@ -92,7 +92,7 @@ function SpanAnnotationTable({
       const colDef = {
         id: column.column,
         header: column.label,
-        enableSorting: true,
+        enableSorting: column.sortable,
       };
 
       switch (column.column) {
@@ -104,17 +104,19 @@ function SpanAnnotationTable({
         case AnnotatedSegmentsColumns.ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST:
           return {
             ...colDef,
-            Cell: ({ row }) => <SdocTagsRenderer sdocId={row.original.sdoc.id} tags={row.original.tags} />,
+            accessorFn: (row) => row.tags,
+            Cell: ({ row }) => <SdocTagsRenderer tags={row.original.tags} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
         case AnnotatedSegmentsColumns.ASC_CODE_ID:
           return {
             ...colDef,
-            flex: 1,
+            accessorFn: (row) => row.code,
             Cell: ({ row }) => <CodeRenderer code={row.original.code} />,
           } as MRT_ColumnDef<AnnotationTableRow>;
         case AnnotatedSegmentsColumns.ASC_MEMO_CONTENT:
           return {
             ...colDef,
+            accessorFn: (row) => row.memo,
             Cell: ({ row }) =>
               user ? (
                 <MemoRenderer2
@@ -136,6 +138,7 @@ function SpanAnnotationTable({
           if (!isNaN(parseInt(column.column))) {
             return {
               ...colDef,
+              accessorFn: () => null,
               Cell: ({ row }) => (
                 <SdocMetadataRenderer sdocId={row.original.sdoc.id} projectMetadataId={parseInt(column.column)} />
               ),
@@ -143,6 +146,7 @@ function SpanAnnotationTable({
           } else {
             return {
               ...colDef,
+              accessorFn: () => null,
               Cell: () => <i>Cannot render column {column.column}</i>,
             } as MRT_ColumnDef<AnnotationTableRow>;
           }
@@ -213,13 +217,6 @@ function SpanAnnotationTable({
     fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
-  // actions
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => {
-    event.preventDefault();
-    onRowSelectionChange({ [spanAnnotationId]: true });
-    onRowContextMenu && onRowContextMenu(event, spanAnnotationId);
-  };
-
   // table
   const table = useMaterialReactTable<AnnotationTableRow>({
     data: flatData,
@@ -236,10 +233,7 @@ function SpanAnnotationTable({
     },
     // selection
     enableRowSelection: true,
-    onRowSelectionChange: (updater) => {
-      const newRowSelectionModel = updater instanceof Function ? updater(rowSelectionModel) : updater;
-      onRowSelectionChange(newRowSelectionModel);
-    },
+    onRowSelectionChange,
     // virtualization
     enableRowVirtualization: true,
     rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
@@ -251,18 +245,12 @@ function SpanAnnotationTable({
     enablePagination: false,
     // sorting
     manualSorting: true,
-    onSortingChange: (updater) => {
-      const newSortingModel = updater instanceof Function ? updater(sortingModel) : updater;
-      onSortingChange(newSortingModel);
-    },
+    onSortingChange,
     // column visiblility
-    onColumnVisibilityChange: (updater) => {
-      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
-      onColumnVisibilityChange(newVisibilityModel);
-    },
+    onColumnVisibilityChange,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
-      onContextMenu: (event) => handleRowContextMenu(event, row.original.id),
+      onContextMenu: onRowContextMenu ? (event) => onRowContextMenu(event, row.original.id) : undefined,
     }),
     muiTablePaperProps: {
       elevation: 0,

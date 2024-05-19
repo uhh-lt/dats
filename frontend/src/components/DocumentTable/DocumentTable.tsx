@@ -150,7 +150,6 @@ function DocumentTable({
           } else {
             return {
               ...colDef,
-              flex: 1,
               Cell: () => <i>Cannot render column {column.column}</i>,
             } as MRT_ColumnDef<ElasticSearchDocumentHit>;
           }
