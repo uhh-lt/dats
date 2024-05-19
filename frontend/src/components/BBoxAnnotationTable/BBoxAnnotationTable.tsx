@@ -20,7 +20,7 @@ import { AnalysisService } from "../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import { MyFilter, createEmptyFilter } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
-import UserSelector from "../../views/analysis/UserSelector.tsx";
+import UserSelectorSingle from "../../views/analysis/UserSelectorSingle.tsx";
 import ImageCropper from "../../views/whiteboard/nodes/ImageCropper.tsx";
 import CodeRenderer from "../DataGrid/CodeRenderer.tsx";
 import MemoRenderer2 from "../DataGrid/MemoRenderer2.tsx";
@@ -338,12 +338,11 @@ function BBoxAnnotationTable({
       <CardHeader
         title={title}
         action={
-          <UserSelector
+          <UserSelectorSingle
             title="Annotations"
             projectId={projectId}
-            userIds={[selectedUserId]}
-            selectMultiple={false}
-            onUserIdChange={(userIds) => setSelectedUserId(userIds[0])}
+            userId={selectedUserId}
+            onUserIdChange={setSelectedUserId}
           />
         }
       />

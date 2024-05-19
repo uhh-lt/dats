@@ -8,10 +8,9 @@ interface UserSelectorProps {
   userIds: number[];
   onUserIdChange: (userIds: number[]) => void;
   title: string;
-  selectMultiple?: boolean;
 }
 
-function UserSelector({ projectId, userIds, onUserIdChange, title, selectMultiple = true }: UserSelectorProps) {
+function UserSelectorMulti({ projectId, userIds, onUserIdChange, title }: UserSelectorProps) {
   // global server state (react query)
   const projectUsers = ProjectHooks.useGetAllUsers(projectId);
 
@@ -27,7 +26,6 @@ function UserSelector({ projectId, userIds, onUserIdChange, title, selectMultipl
       <Select
         labelId="user-select-label"
         label={title}
-        multiple={selectMultiple}
         size="small"
         value={userIds}
         onChange={handleChange}
@@ -55,4 +53,4 @@ function UserSelector({ projectId, userIds, onUserIdChange, title, selectMultipl
   );
 }
 
-export default UserSelector;
+export default UserSelectorMulti;
