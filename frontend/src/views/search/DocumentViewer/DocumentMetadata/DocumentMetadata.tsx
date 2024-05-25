@@ -35,9 +35,10 @@ const MyAccordionSummary = styled((props: AccordionSummaryProps) => (
 
 interface DocumentMetadataProps {
   sdocId: number | undefined;
+  filterName: string;
 }
 
-function DocumentMetadata({ sdocId }: DocumentMetadataProps) {
+function DocumentMetadata({ sdocId, filterName }: DocumentMetadataProps) {
   const metadata = SdocHooks.useGetMetadata(sdocId);
 
   return (
@@ -51,7 +52,7 @@ function DocumentMetadata({ sdocId }: DocumentMetadataProps) {
         {metadata.isSuccess &&
           metadata.data
             .sort((a, b) => a.id - b.id)
-            .map((data) => <DocumentMetadataRow key={data.id} metadata={data} />)}
+            .map((data) => <DocumentMetadataRow key={data.id} metadata={data} filterName={filterName} />)}
       </AccordionDetails>
     </MyAccordion>
   );

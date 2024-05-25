@@ -16,9 +16,10 @@ import { isValidHttpUrl } from "./utils.ts";
 
 interface DocumentMetadataRowProps {
   metadata: SourceDocumentMetadataReadResolved;
+  filterName: string;
 }
 
-function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
+function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
   // use react hook form
   const {
     register,
@@ -217,7 +218,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
       />
       {inputField}
       {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
-      <DocumentMetadataAddFilterButton metadata={metadata} size="small" />
+      <DocumentMetadataAddFilterButton metadata={metadata} filterName={filterName} size="small" />
     </Stack>
   );
 }

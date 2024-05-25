@@ -18,7 +18,7 @@ export function useAddTagFilter() {
 
   return useCallback(
     (tagId: number) => {
-      dispatch(SearchFilterActions.onAddTagFilter({ tagId }));
+      dispatch(SearchFilterActions.onAddTagFilter({ tagId, filterName: "root" }));
       navigateIfNecessary(`/project/${projectId}/search/`);
     },
     [dispatch, navigateIfNecessary, projectId],

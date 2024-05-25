@@ -76,13 +76,19 @@ function SearchToolbar({
             }}
             sx={{ borderRight: (theme) => (isSplitView ? `1px solid ${theme.palette.grey[400]}` : undefined) }}
           >
-            <ToggleAllDocumentsButton sdocIds={searchResultDocumentIds} />
+            <ToggleAllDocumentsButton
+              numSelectedDocuments={selectedDocumentIds.length}
+              sdocIds={searchResultDocumentIds}
+            />
             {selectedDocumentIds.length > 0 && (
               <>
                 <Typography color="inherit" variant="subtitle1" component="div">
                   {selectedDocumentIds.length} selected
                 </Typography>
-                <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
+                <TagMenuButton
+                  selectedSdocIds={selectedDocumentIds}
+                  popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+                />
                 <DeleteButton sdocIds={selectedDocumentIds} navigateTo="../search" />
                 <DownloadSdocsButton sdocIds={selectedDocumentIds} />
               </>
@@ -106,7 +112,11 @@ function SearchToolbar({
             <BackButton />
             <AnnotateButton projectId={projectId} sdocId={sdocId} />
             <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} />
-            <TagMenuButton forceSdocId={sdocId} popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
+            <TagMenuButton
+              selectedSdocIds={[sdocId]}
+              forceSdocId={sdocId}
+              popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+            />
             <DeleteButton sdocIds={[sdocId]} navigateTo="../search" />
             <ToggleShowEntitiesButton />
             <DownloadButton sdocId={sdocId} />

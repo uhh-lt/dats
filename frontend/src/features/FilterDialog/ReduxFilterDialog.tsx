@@ -1,12 +1,14 @@
-import FilterDialog, { FilterDialogProps } from "../../features/FilterDialog/FilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import { DocumentTableFilterProps } from "./DocumentTable.tsx";
+import FilterDialog, { FilterDialogProps } from "./FilterDialog.tsx";
+import { ReduxFilterDialogProps } from "./ReduxFilterDialogProps.ts";
 
-function DocumentTableFilterDialog({
+function ReduxFilterDialog({
   anchorEl,
   buttonProps,
+  anchorOrigin,
+  transformOrigin,
   ...filterProps
-}: DocumentTableFilterProps & Pick<FilterDialogProps, "anchorEl" | "buttonProps">) {
+}: ReduxFilterDialogProps & Pick<FilterDialogProps, "anchorEl" | "buttonProps" | "transformOrigin" | "anchorOrigin">) {
   const { filterStateSelector, filterName, filterActions } = filterProps;
   const filter = useAppSelector((state) => filterStateSelector(state).filter[filterName]);
   const editableFilter = useAppSelector((state) => filterStateSelector(state).editableFilter);
@@ -17,6 +19,8 @@ function DocumentTableFilterDialog({
   return (
     <FilterDialog
       anchorEl={anchorEl}
+      anchorOrigin={anchorOrigin}
+      transformOrigin={transformOrigin}
       filter={filter}
       filterName={filterName}
       editableFilter={editableFilter}
@@ -29,4 +33,4 @@ function DocumentTableFilterDialog({
   );
 }
 
-export default DocumentTableFilterDialog;
+export default ReduxFilterDialog;

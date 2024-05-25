@@ -24,20 +24,21 @@ export interface FilterState {
   expertMode: boolean;
 }
 
-export const filterReducer = {
-  onStartFilterEdit: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ rootFilterId: string; filter?: MyFilter }>,
-  ) => {
-    // init filter if it does not exist
-    if (!state.filter[action.payload.rootFilterId]) {
-      if (action.payload.filter) {
-        state.filter[action.payload.rootFilterId] = action.payload.filter;
-      } else {
-        state.filter[action.payload.rootFilterId] = createEmptyFilter(action.payload.rootFilterId);
-      }
+export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {
+  if (!state.filter[filterId]) {
+    if (filter) {
+      state.filter[filterId] = filter;
+    } else {
+      state.filter[filterId] = createEmptyFilter(filterId);
     }
-    state.editableFilter = JSON.parse(JSON.stringify(state.filter[action.payload.rootFilterId]));
+  }
+  return state.filter[filterId];
+};
+
+export const filterReducer = {
+  onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; filter?: MyFilter }>) => {
+    const currentFilter = getOrCreateFilter(state, action.payload.filterId, action.payload.filter);
+    state.editableFilter = JSON.parse(JSON.stringify(currentFilter));
 
     // add a default filter expression if the filter is empty
     if (state.editableFilter.items.length === 0) {
@@ -59,16 +60,6 @@ export const filterReducer = {
       logic_operator: LogicalOperator.AND,
       items: [],
     };
-  },
-  addRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
-    state.filter[action.payload.rootFilterId] = {
-      id: action.payload.rootFilterId,
-      items: [],
-      logic_operator: LogicalOperator.AND,
-    };
-  },
-  deleteRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
-    delete state.filter[action.payload.rootFilterId];
   },
   addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
@@ -156,22 +147,9 @@ export const filterReducer = {
       filterItem.value = action.payload.value;
     }
   },
-  setDefaultFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ defaultFilterExpression: MyFilterExpression }>,
-  ) => {
-    state.defaultFilterExpression = action.payload.defaultFilterExpression;
-  },
   resetEditFilter: (state: Draft<FilterState>) => {
     state.editableFilter = {
       id: state.editableFilter.id,
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    };
-  },
-  resetFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId?: string }>) => {
-    state.filter[action.payload.rootFilterId || "root"] = {
-      id: action.payload.rootFilterId || "root",
       logic_operator: LogicalOperator.AND,
       items: [],
     };

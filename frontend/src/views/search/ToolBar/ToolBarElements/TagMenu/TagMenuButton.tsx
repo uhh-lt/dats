@@ -10,9 +10,10 @@ interface TagMenuButtonProps {
   popoverOrigin: PopoverOrigin | undefined;
   forceSdocId?: number;
   type?: string;
+  selectedSdocIds: number[];
 }
 
-function TagMenuButton({ forceSdocId, popoverOrigin, type }: TagMenuButtonProps) {
+function TagMenuButton({ forceSdocId, popoverOrigin, type, selectedSdocIds }: TagMenuButtonProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -32,7 +33,13 @@ function TagMenuButton({ forceSdocId, popoverOrigin, type }: TagMenuButtonProps)
           Add Tags
         </Button>
       )}
-      <TagMenu forceSdocId={forceSdocId} anchorEl={anchorEl} setAnchorEl={setAnchorEl} popoverOrigin={popoverOrigin} />
+      <TagMenu
+        forceSdocId={forceSdocId}
+        selectedSdocIds={selectedSdocIds}
+        anchorEl={anchorEl}
+        setAnchorEl={setAnchorEl}
+        popoverOrigin={popoverOrigin}
+      />
     </>
   );
 }

@@ -23,7 +23,7 @@ import SdocAnnotatorsRenderer from "../../../../components/DataGrid/SdocAnnotato
 import SdocMetadataRenderer from "../../../../components/DataGrid/SdocMetadataRenderer.tsx";
 import SdocRenderer from "../../../../components/DataGrid/SdocRenderer.tsx";
 import SdocTagsRenderer from "../../../../components/DataGrid/SdocTagRenderer.tsx";
-import DocumentTableFilterDialog from "../../../../components/DocumentTable/DocumentTableFilterDialog.tsx";
+import ReduxFilterDialog from "../../../../features/FilterDialog/ReduxFilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../../store/store.ts";
 import { QueryType } from "../../QueryType.ts";
@@ -268,7 +268,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     positionToolbarAlertBanner: "head-overlay",
     renderTopToolbarCustomActions: () => (
       <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
-        <DocumentTableFilterDialog
+        <ReduxFilterDialog
           anchorEl={tableContainerRef.current}
           buttonProps={{ size: "small" }}
           filterName={filterName}
@@ -277,7 +277,10 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
         />
         {selectedDocumentIds.length > 0 && (
           <>
-            <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
+            <TagMenuButton
+              selectedSdocIds={selectedDocumentIds}
+              popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+            />
             <DeleteButton sdocIds={selectedDocumentIds} navigateTo="../search" />
             <DownloadSdocsButton sdocIds={selectedDocumentIds} />
           </>

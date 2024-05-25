@@ -10,9 +10,9 @@ import {
 } from "../../../../api/SearchHooks.ts";
 import { ContextMenuPosition } from "../../../../components/ContextMenu/ContextMenuPosition.ts";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import ImageSimilaritySearchResultCard from "../../../searchimages/ImageSimilaritySearchResultCard.tsx";
 import { SearchActions } from "../../searchSlice.ts";
 import SearchResultContextMenu from "../SearchResultContextMenu.tsx";
-import ImageSimilaritySearchResultCard from "./ImageSimilaritySearchResultCard.tsx";
 import LexicalSearchResultCard from "./LexicalSearchResultCard.tsx";
 import SentenceSimilaritySearchResultCard from "./SentenceSimilaritySearchResultCard.tsx";
 

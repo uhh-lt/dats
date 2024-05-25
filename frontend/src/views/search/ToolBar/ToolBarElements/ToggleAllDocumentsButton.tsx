@@ -1,16 +1,16 @@
 import Checkbox from "@mui/material/Checkbox";
 import * as React from "react";
-import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import { useAppDispatch } from "../../../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../searchSlice.ts";
 
 interface ToggleAllDocumentsButtonProps {
   sdocIds: number[];
+  numSelectedDocuments: number;
 }
 
-function ToggleAllDocumentsButton({ sdocIds }: ToggleAllDocumentsButtonProps) {
+function ToggleAllDocumentsButton({ sdocIds, numSelectedDocuments }: ToggleAllDocumentsButtonProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
-  const numSelectedDocuments = useAppSelector((state) => state.search.selectedDocumentIds.length);
 
   // ui event handlers
   const handleToggleAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {

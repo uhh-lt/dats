@@ -64,7 +64,7 @@ function ConceptList({ timelineAnalysis }: ConceptListProps) {
       dispatch(TimelineAnalysisActions.onStartConceptEdit({ concept }));
       dispatch(
         TimelineAnalysisFilterActions.onStartFilterEdit({
-          rootFilterId: conceptId,
+          filterId: conceptId,
           filter: { ...concept.filter, id: conceptId } as MyFilter<TimelineAnalysisColumns>,
         }),
       );

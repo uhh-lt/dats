@@ -6,9 +6,10 @@ import TagMenu from "./TagMenu.tsx";
 
 interface TagMenuAsListProps {
   popoverOrigin: PopoverOrigin | undefined;
+  sdocId: number | undefined;
 }
 
-function TagMenuMenuItem({ popoverOrigin }: TagMenuAsListProps) {
+function TagMenuMenuItem({ popoverOrigin, sdocId }: TagMenuAsListProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLLIElement, MouseEvent>) => {
@@ -26,7 +27,13 @@ function TagMenuMenuItem({ popoverOrigin }: TagMenuAsListProps) {
           <ArrowRightIcon />
         </Typography>
       </MenuItem>
-      <TagMenu anchorEl={anchorEl} setAnchorEl={setAnchorEl} popoverOrigin={popoverOrigin} />
+      <TagMenu
+        selectedSdocIds={sdocId ? [sdocId] : []}
+        forceSdocId={sdocId}
+        anchorEl={anchorEl}
+        setAnchorEl={setAnchorEl}
+        popoverOrigin={popoverOrigin}
+      />
     </>
   );
 }

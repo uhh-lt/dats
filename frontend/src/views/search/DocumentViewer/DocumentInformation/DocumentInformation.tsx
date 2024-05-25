@@ -16,9 +16,15 @@ import SdocListItem from "./SdocListItem.tsx";
 interface DocumentInformationProps {
   sdocId: number | undefined;
   isIdleContent?: React.ReactNode;
+  filterName: string;
 }
 
-export default function DocumentInformation({ sdocId, isIdleContent, ...props }: DocumentInformationProps & BoxProps) {
+export default function DocumentInformation({
+  sdocId,
+  isIdleContent,
+  filterName,
+  ...props
+}: DocumentInformationProps & BoxProps) {
   // global client state (context)
   const { user } = useAuth();
 
@@ -65,13 +71,14 @@ export default function DocumentInformation({ sdocId, isIdleContent, ...props }:
               {metadata.isSuccess &&
                 metadata.data
                   .sort((a, b) => a.id - b.id)
-                  .map((data) => <DocumentMetadataRow key={data.id} metadata={data} />)}
+                  .map((data) => <DocumentMetadataRow key={data.id} metadata={data} filterName={filterName} />)}
             </Stack>
           </TabPanel>
           <TabPanel value="tags" sx={{ p: 1 }} className="h100">
             <TagMenuButton
               popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
               type={"addBtn"}
+              selectedSdocIds={[sdocId]}
               forceSdocId={sdocId}
             />
             <Stack direction="column" spacing={0.5}>

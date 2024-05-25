@@ -7,7 +7,7 @@ import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
 import { SourceDocumentMetadataReadResolved } from "../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { StringOperator } from "../../api/openapi/models/StringOperator.ts";
-import { FilterState, filterReducer } from "../../features/FilterDialog/filterSlice.ts";
+import { FilterState, filterReducer, getOrCreateFilter } from "../../features/FilterDialog/filterSlice.ts";
 import {
   MyFilterExpression,
   filterOperator2FilterOperatorType,
@@ -45,7 +45,10 @@ const searchFilterSlice = createSlice({
   reducers: {
     ...filterReducer,
     // filtering
-    onAddKeywordFilter: (state, action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string }>) => {
+    onAddKeywordFilter: (
+      state,
+      action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string; filterName: string }>,
+    ) => {
       const filterItems: MyFilterExpression[] = action.payload.keywordMetadataIds?.map((keywordMetadataId) => {
         return {
           id: uuidv4(),
@@ -55,8 +58,9 @@ const searchFilterSlice = createSlice({
         };
       });
 
-      state.filter["root"].items = [
-        ...state.filter["root"].items,
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
         {
           id: uuidv4(),
           logic_operator: LogicalOperator.OR,
@@ -64,9 +68,10 @@ const searchFilterSlice = createSlice({
         },
       ];
     },
-    onAddTagFilter: (state, action: PayloadAction<{ tagId: number | string }>) => {
-      state.filter["root"].items = [
-        ...state.filter["root"].items,
+    onAddTagFilter: (state, action: PayloadAction<{ tagId: number | string; filterName: string }>) => {
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
         {
           id: uuidv4(),
           column: SearchColumns.SC_DOCUMENT_TAG_ID_LIST,
@@ -75,20 +80,13 @@ const searchFilterSlice = createSlice({
         },
       ];
     },
-    onAddFilenameFilter: (state, action: PayloadAction<{ filename: string }>) => {
-      state.filter["root"].items = [
-        ...state.filter["root"].items,
-        {
-          id: uuidv4(),
-          column: SearchColumns.SC_SOURCE_DOCUMENT_FILENAME,
-          operator: StringOperator.STRING_CONTAINS,
-          value: action.payload.filename,
-        },
-      ];
-    },
-    onAddSpanAnnotationFilter: (state, action: PayloadAction<{ codeId: number; spanText: string }>) => {
-      state.filter["root"].items = [
-        ...state.filter["root"].items,
+    onAddSpanAnnotationFilter: (
+      state,
+      action: PayloadAction<{ codeId: number; spanText: string; filterName: string }>,
+    ) => {
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
         {
           id: uuidv4(),
           column: SearchColumns.SC_SPAN_ANNOTATIONS,
@@ -97,13 +95,17 @@ const searchFilterSlice = createSlice({
         },
       ];
     },
-    onAddMetadataFilter: (state, action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved }>) => {
+    onAddMetadataFilter: (
+      state,
+      action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved; filterName: string }>,
+    ) => {
       // the column of a metadata filter is the project_metadata.id
       const filterOperator = state.column2Info[action.payload.metadata.project_metadata.id.toString()].operator;
       const filterOperatorType = filterOperator2FilterOperatorType[filterOperator];
 
-      state.filter["root"].items = [
-        ...state.filter["root"].items,
+      const currentFilter = getOrCreateFilter(state, action.payload.filterName);
+      currentFilter.items = [
+        ...currentFilter.items,
         {
           id: uuidv4(),
           column: action.payload.metadata.project_metadata.id,
@@ -111,9 +113,6 @@ const searchFilterSlice = createSlice({
           value: getValue(action.payload.metadata)!,
         },
       ];
-    },
-    onTest: (state) => {
-      console.log(state);
     },
   },
   extraReducers(builder) {

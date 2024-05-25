@@ -234,7 +234,8 @@ function Annotation() {
             boxShadow: 4,
           }}
         >
-          <DocumentInformation sdocId={sdocId} />
+          {/* todo: there should be no filter in annotation */}
+          <DocumentInformation sdocId={sdocId} filterName="root" />
         </Grid>
       </Grid>
     </>

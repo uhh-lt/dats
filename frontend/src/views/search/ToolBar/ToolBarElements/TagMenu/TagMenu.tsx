@@ -22,7 +22,6 @@ import ProjectHooks from "../../../../../api/ProjectHooks.ts";
 import TagHooks from "../../../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../../../api/openapi/models/DocumentTagRead.ts";
 import SnackbarAPI from "../../../../../features/Snackbar/SnackbarAPI.ts";
-import { useAppSelector } from "../../../../../plugins/ReduxHooks.ts";
 import { CheckboxState } from "./CheckboxState.ts";
 import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
 
@@ -31,23 +30,21 @@ interface TagMenuProps {
   anchorEl: HTMLElement | null;
   setAnchorEl: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   forceSdocId?: number;
+  selectedSdocIds: number[];
 }
 
-function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
+function TagMenu({ forceSdocId, selectedSdocIds, anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
   // react router
   const { projectId, sdocId } = useParams() as { projectId: string; sdocId: string | undefined };
   const projId = parseInt(projectId);
-
-  // global client state (redux)
-  const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
 
   // the document ids we manipulate are either the forced sdocId, the selected documents, or the currently viewed document
   const documentIds = useMemo(() => {
     if (forceSdocId) {
       return [forceSdocId];
     }
-    return selectedDocumentIds.length > 0 ? selectedDocumentIds : [parseInt(sdocId!)];
-  }, [forceSdocId, selectedDocumentIds, sdocId]);
+    return selectedSdocIds.length > 0 ? selectedSdocIds : [parseInt(sdocId!)];
+  }, [forceSdocId, selectedSdocIds, sdocId]);
 
   // global server state (react-query)
   const allTags = ProjectHooks.useGetAllTags(projId);

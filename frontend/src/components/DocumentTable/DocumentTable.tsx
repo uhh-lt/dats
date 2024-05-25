@@ -34,12 +34,6 @@ import { useInitDocumentTableFilterSlice } from "./useInitDocumentTableFilterSli
 
 const fetchSize = 20;
 
-export interface DocumentTableFilterProps {
-  filterName: string;
-  filterStateSelector: (state: RootState) => FilterState;
-  filterActions: FilterActions;
-}
-
 export interface DocumentTableActionProps {
   table: MRT_TableInstance<ElasticSearchDocumentHit>;
   selectedDocuments: ElasticSearchDocumentHit[];

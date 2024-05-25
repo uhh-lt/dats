@@ -91,7 +91,13 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
-    dispatch(SearchFilterActions.onAddSpanAnnotationFilter({ codeId: anno.code.id, spanText: anno.span_text }));
+    dispatch(
+      SearchFilterActions.onAddSpanAnnotationFilter({
+        codeId: anno.code.id,
+        spanText: anno.span_text,
+        filterName: "root",
+      }),
+    );
     closeContextMenu();
     navigate("../search");
   };
