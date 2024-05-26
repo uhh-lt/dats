@@ -157,7 +157,7 @@ function ImageSimilaritySearch() {
           <DocumentInformation
             filterName={filterName}
             sdocId={selectedDocumentId}
-            isIdleContent={<Typography padding={2}>Click a document to see info :)</Typography>}
+            isIdleContent={<Typography padding={2}>Click on an image to see info :)</Typography>}
             className="h100"
           />
         </Grid>

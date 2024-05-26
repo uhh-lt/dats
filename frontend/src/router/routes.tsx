@@ -31,6 +31,7 @@ import ProjectUpdate from "../views/projectsettings/update/ProjectUpdate.tsx";
 import Register from "../views/registration/Register.tsx";
 import Search from "../views/search/Search.tsx";
 import ImageSimilaritySearch from "../views/searchimages/ImageSimilaritySearch.tsx";
+import SentenceSimilaritySearch from "../views/searchsentences/SentenceSimilaritySearch.tsx";
 import Settings from "../views/settings/Settings.tsx";
 import Whiteboard from "../views/whiteboard/Whiteboard.tsx";
 import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard.tsx";
@@ -138,6 +139,10 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/search",
         element: <Search />,
+      },
+      {
+        path: "/project/:projectId/sentencesearch",
+        element: <SentenceSimilaritySearch />,
       },
       {
         path: "/project/:projectId/imagesearch",

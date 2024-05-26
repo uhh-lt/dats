@@ -18,6 +18,7 @@ import logbookReducer from "../views/logbook/logbookSlice.ts";
 import searchFilterReducer from "../views/search/searchFilterSlice.ts";
 import searchReducer from "../views/search/searchSlice.ts";
 import imageSearchReducer from "../views/searchimages/imageSearchSlice.ts";
+import sentenceSearchReducer from "../views/searchsentences/sentenceSearchSlice.ts";
 import settingsReducer from "../views/settings/settingsSlice.ts";
 
 const persistConfig = {
@@ -35,6 +36,7 @@ export const store = configureStore({
     analysis: analysisReducer,
     search: searchReducer,
     imageSearch: imageSearchReducer,
+    sentenceSearch: sentenceSearchReducer,
     logbook: logbookReducer,
     autologbook: autologbookReducer,
     settings: persistedSettingsReducer,

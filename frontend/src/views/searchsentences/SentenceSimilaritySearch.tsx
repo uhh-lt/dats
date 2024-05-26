@@ -3,28 +3,27 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
-import { PaginatedElasticSearchDocumentHits } from "../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
-import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
+import { SimSearchSentenceHit } from "../../api/openapi/models/SimSearchSentenceHit.ts";
 import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
-import { MyFilter } from "../../features/FilterDialog/filterUtils.ts";
+import { MyFilter, createEmptyFilter } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import DocumentInformation from "../search/DocumentViewer/DocumentInformation/DocumentInformation.tsx";
+import SearchStatistics from "../search/SearchStatistics/SearchStatistics.tsx";
+import TagExplorerNew from "../search/TagExplorer/TagExplorer.tsx";
+import { SearchFilterActions } from "../search/searchFilterSlice.ts";
 import { SettingsActions } from "../settings/settingsSlice.ts";
-import DocumentInformation from "./DocumentViewer/DocumentInformation/DocumentInformation.tsx";
-import SearchDocumentTable from "./SearchResults/Table/SearchDocumentTable.tsx";
-import SearchStatistics from "./SearchStatistics/SearchStatistics.tsx";
-import TagExplorerNew from "./TagExplorer/TagExplorer.tsx";
-import { SearchFilterActions } from "./searchFilterSlice.ts";
+import SentenceSimilaritySearchTable from "./SentenceSimilaritySearchTable.tsx";
 
-const filterName = "root";
+const filterName = "sentenceSimilaritySearch";
 
-function Search() {
+function SentenceSimilaritySearch() {
   // router
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // redux (global client state)
-  const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
+  const selectedDocumentId = useAppSelector((state) => state.sentenceSearch.selectedDocumentId);
   const dispatch = useAppDispatch();
 
   // filter
@@ -70,35 +69,31 @@ function Search() {
   }, [dispatch, projectCodes.data]);
 
   // search
-  const filter = useAppSelector((state) => state.searchFilter.filter[filterName]);
-  const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const sortingModel = useAppSelector((state) => state.search.sortingModel);
-  const { data, isError, isFetching, isLoading } = useQuery<PaginatedElasticSearchDocumentHits>({
+  const filter = useAppSelector((state) => state.searchFilter.filter[filterName]) || createEmptyFilter(filterName);
+  const topK = useAppSelector((state) => state.sentenceSearch.topK);
+  const threshold = useAppSelector((state) => state.sentenceSearch.threshold);
+  const searchQuery = useAppSelector((state) => state.sentenceSearch.searchQuery);
+  const { data, isError, isFetching, isLoading } = useQuery<SimSearchSentenceHit[]>({
     queryKey: [
-      "search-document-table-data",
+      "sentence-similarity-search",
       projectId,
       searchQuery, // refetch when searchQuery changes
       filter, // refetch when columnFilters changes
-      sortingModel, // refetch when sorting changes
+      topK,
+      threshold,
     ],
     queryFn: () =>
-      SearchService.searchSdocs({
-        searchQuery: searchQuery || "",
-        projectId: projectId!,
-        highlight: true,
-        expertMode: false,
+      SearchService.findSimilarSentences({
         requestBody: {
           filter: filter as MyFilter<SearchColumns>,
-          sorts: sortingModel.map((sort) => ({
-            column: sort.id as SearchColumns,
-            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
-          })),
+          proj_id: projectId,
+          query: searchQuery,
+          threshold: threshold,
+          top_k: topK,
         },
-        pageNumber: undefined,
-        pageSize: undefined,
       }),
   });
-  const sdocIds = useMemo(() => data?.hits.map((hit) => hit.sdoc_id) || [], [data]);
+  const sdocIds = useMemo(() => data?.map((hit) => hit.sdoc_id) || [], [data]);
 
   // render
   return (
@@ -132,7 +127,7 @@ function Search() {
           p={2}
           sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
         >
-          <SearchDocumentTable
+          <SentenceSimilaritySearchTable
             projectId={projectId}
             data={data}
             isLoading={isLoading}
@@ -154,7 +149,7 @@ function Search() {
           <DocumentInformation
             sdocId={selectedDocumentId}
             filterName={filterName}
-            isIdleContent={<Typography padding={2}>Click a document to see info :)</Typography>}
+            isIdleContent={<Typography padding={2}>Click on a sentence to see info :)</Typography>}
             className="h100"
           />
         </Grid>
@@ -163,4 +158,4 @@ function Search() {
   );
 }
 
-export default Search;
+export default SentenceSimilaritySearch;
