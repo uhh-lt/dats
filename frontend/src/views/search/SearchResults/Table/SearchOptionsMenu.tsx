@@ -1,17 +1,6 @@
 import HelpIcon from "@mui/icons-material/Help";
 import SettingsIcon from "@mui/icons-material/Settings";
-import {
-  Box,
-  Button,
-  FormControl,
-  FormControlLabel,
-  IconButton,
-  Popover,
-  Radio,
-  RadioGroup,
-  Switch,
-  Tooltip,
-} from "@mui/material";
+import { Box, Button, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { QueryType } from "../../QueryType.ts";
@@ -77,17 +66,6 @@ function SearchOptionsMenu() {
             Help
           </Button>
         </Box>
-        <FormControl>
-          <RadioGroup
-            value={searchType}
-            onChange={(_event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
-            name="radio-buttons-group"
-          >
-            {Object.values(QueryType).map((qt) => (
-              <FormControlLabel key={qt} value={qt} control={<Radio />} label={qt} />
-            ))}
-          </RadioGroup>
-        </FormControl>
       </Popover>
     </>
   );
