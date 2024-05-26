@@ -21,7 +21,7 @@ function BBoxAnnotationCard({ annotation, onClick, cardProps }: AnnotationCardPr
           </>
         }
         action={
-          <AnnotationCardActionsMenu annotationId={annotation.id} annotationType={AttachedObjectType.SPAN_ANNOTATION} />
+          <AnnotationCardActionsMenu annotationId={annotation.id} annotationType={AttachedObjectType.BBOX_ANNOTATION} />
         }
         titleTypographyProps={{
           variant: "body1",
