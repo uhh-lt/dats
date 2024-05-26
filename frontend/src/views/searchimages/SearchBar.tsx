@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "./imageSearchSlice.ts";
 
 interface SearchFormValues {
-  query: string;
+  query: string | number;
 }
 
 interface SearchBarProps {

@@ -3,7 +3,7 @@ import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
 interface ImageSearchState {
-  searchQuery: string;
+  searchQuery: string | number;
   threshold: number;
   topK: number;
   selectedDocumentIds: number[];
@@ -60,7 +60,7 @@ export const imageSearchSlice = createSlice({
     },
 
     // search
-    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
+    onChangeSearchQuery: (state, action: PayloadAction<string | number>) => {
       state.searchQuery = action.payload;
     },
     onClearSearch: (state) => {

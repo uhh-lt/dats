@@ -26,7 +26,6 @@ import SdocTagsRenderer from "../../../../components/DataGrid/SdocTagRenderer.ts
 import ReduxFilterDialog from "../../../../features/FilterDialog/ReduxFilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
 import { RootState } from "../../../../store/store.ts";
-import { QueryType } from "../../QueryType.ts";
 import DeleteButton from "../../ToolBar/ToolBarElements/DeleteButton.tsx";
 import DownloadSdocsButton from "../../ToolBar/ToolBarElements/DownloadSdocsButton.tsx";
 import TagMenuButton from "../../ToolBar/ToolBarElements/TagMenu/TagMenuButton.tsx";
@@ -55,7 +54,6 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
 
   // global client state (redux)
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
-  const searchType = useAppSelector((state) => state.search.searchType);
   const rowSelectionModel = useAppSelector((state) => state.search.selectionModel);
   const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
@@ -225,7 +223,7 @@ function SearchDocumentTable({ projectId, data, isLoading, isFetching, isError }
     },
     // detail (highlights)
     renderDetailPanel:
-      searchType === QueryType.LEXICAL && searchQuery.trim().length > 0
+      searchQuery.trim().length > 0
         ? ({ row }) =>
             row.original.highlights ? (
               <Box className="search-result-highlight">

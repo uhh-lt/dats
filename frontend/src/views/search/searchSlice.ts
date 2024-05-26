@@ -9,16 +9,12 @@ import {
 } from "material-react-table";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { DocType } from "../../api/openapi/models/DocType.ts";
-import { QueryType } from "./QueryType.ts";
 import { SearchFilterActions } from "./searchFilterSlice.ts";
 
 interface SearchState {
   isSplitView: boolean;
   isShowEntities: boolean;
   isShowTags: boolean;
-  resultModalities: DocType[];
-  searchType: QueryType;
   searchQuery: string;
   isTableView: boolean;
   expertMode: boolean;
@@ -38,8 +34,6 @@ const initialState: SearchState = {
   isSplitView: false,
   isShowEntities: true,
   isShowTags: true,
-  resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
-  searchType: QueryType.LEXICAL,
   searchQuery: "",
   isTableView: false,
   selectionModel: {},
@@ -135,23 +129,6 @@ export const searchSlice = createSlice({
     onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
       state.paginationModel = action.payload;
     },
-    setResultModalites: (state, action: PayloadAction<DocType[]>) => {
-      state.resultModalities = action.payload.sort();
-    },
-    toggleModality: (state, action: PayloadAction<DocType>) => {
-      const index = state.resultModalities.indexOf(action.payload);
-      if (index === -1) {
-        state.resultModalities.push(action.payload);
-      } else {
-        state.resultModalities.splice(index, 1);
-      }
-      state.resultModalities = state.resultModalities.sort();
-      // reset page to 0, when modalities are changed
-      state.paginationModel.pageIndex = 0;
-    },
-    setSearchType: (state, action: PayloadAction<QueryType>) => {
-      state.searchType = action.payload;
-    },
 
     // search
     onChangeSearchQuery: (state, action: PayloadAction<string>) => {
@@ -159,25 +136,12 @@ export const searchSlice = createSlice({
     },
     onClearSearch: (state) => {
       state.searchQuery = "";
-      state.searchType = QueryType.LEXICAL;
       state.selectedDocumentIds = [];
     },
     onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
       state.expertMode = action.payload;
     },
-    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string; searchType: QueryType }>) => {
-      switch (action.payload.searchType) {
-        case QueryType.SEMANTIC_IMAGES:
-          state.resultModalities = [DocType.IMAGE];
-          break;
-        case QueryType.SEMANTIC_SENTENCES:
-          state.resultModalities = [DocType.TEXT];
-          break;
-        case QueryType.LEXICAL:
-          state.resultModalities = [DocType.TEXT];
-          break;
-      }
-      state.searchType = action.payload.searchType;
+    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string }>) => {
       state.selectedDocumentIds = [];
       state.searchQuery = action.payload.query;
     },

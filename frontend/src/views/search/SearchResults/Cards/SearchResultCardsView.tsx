@@ -119,10 +119,9 @@ export default function SearchResultCardsView({ searchResults, handleResultClick
           .map((hit) => (
             <ImageSimilaritySearchResultCard
               hit={hit}
-              sdocId={hit.sdoc_id}
-              handleClick={(sdoc) => handleResultClick(sdoc.id)}
-              handleOnContextMenu={openContextMenu}
-              handleOnCheckboxChange={handleChange}
+              handleClick={() => handleResultClick(hit.sdoc_id)}
+              handleOnCheckboxChange={(event) => handleChange(event, hit.sdoc_id)}
+              checked={false}
             />
           ))
       ) : (

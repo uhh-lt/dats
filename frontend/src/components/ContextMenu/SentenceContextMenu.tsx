@@ -12,13 +12,12 @@ import {
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
-import { DocType } from "../../api/openapi/models/DocType.ts";
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import MemoListItemButton from "../../features/Memo/MemoListItemButton.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
-import { QueryType } from "../../views/search/QueryType.ts";
 import { SearchFilterActions } from "../../views/search/searchFilterSlice.ts";
-import { SearchActions } from "../../views/search/searchSlice.ts";
+import { ImageSearchActions } from "../../views/searchimages/imageSearchSlice.ts";
+import { SentenceSearchActions } from "../../views/searchsentences/sentenceSearchSlice.ts";
 
 interface SentenceContextMenuProps {}
 
@@ -73,21 +72,18 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
   };
 
   const handleSentenceSimilaritySearch = () => {
-    dispatch(SearchActions.setResultModalites([DocType.TEXT]));
-    dispatch(SearchActions.onChangeSearchQuery(sentence || ""));
-    dispatch(SearchActions.setSearchType(QueryType.SEMANTIC_SENTENCES));
-    dispatch(SearchActions.clearSelectedDocuments());
     closeContextMenu();
-    navigate("../search");
+    dispatch(SentenceSearchActions.onChangeSearchQuery(sentence || ""));
+    dispatch(SentenceSearchActions.clearSelectedDocuments());
+    closeContextMenu();
+    navigate("../searchsentences");
   };
 
   const handleImageSimilaritySearch = () => {
-    dispatch(SearchActions.setResultModalites([DocType.IMAGE]));
-    dispatch(SearchActions.onChangeSearchQuery(sentence || ""));
-    dispatch(SearchActions.setSearchType(QueryType.SEMANTIC_IMAGES));
-    dispatch(SearchActions.clearSelectedDocuments());
+    dispatch(ImageSearchActions.onChangeSearchQuery(sentence || ""));
+    dispatch(ImageSearchActions.clearSelectedDocuments());
     closeContextMenu();
-    navigate("../search");
+    navigate("../searchimages");
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {

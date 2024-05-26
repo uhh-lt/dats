@@ -3,7 +3,6 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { Box, Button, FormControlLabel, IconButton, Popover, Switch, Tooltip } from "@mui/material";
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../plugins/ReduxHooks.ts";
-import { QueryType } from "../../QueryType.ts";
 import { SearchActions } from "../../searchSlice.ts";
 
 function SearchOptionsMenu() {
@@ -12,7 +11,6 @@ function SearchOptionsMenu() {
   const open = Boolean(anchorEl);
 
   // global client state (redux)
-  const searchType = useAppSelector((state) => state.search.searchType);
   const expertMode = useAppSelector((state) => state.search.expertMode);
   const dispatch = useAppDispatch();
 
@@ -45,9 +43,8 @@ function SearchOptionsMenu() {
           <FormControlLabel
             control={
               <Switch
-                checked={expertMode && searchType === QueryType.LEXICAL}
+                checked={expertMode}
                 onChange={(event) => dispatch(SearchActions.onChangeExpertMode(event.target.checked))}
-                disabled={searchType !== QueryType.LEXICAL}
               />
             }
             label="Expert search"
