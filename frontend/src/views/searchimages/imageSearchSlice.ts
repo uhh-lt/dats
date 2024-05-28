@@ -66,6 +66,7 @@ export const imageSearchSlice = createSlice({
     onClearSearch: (state) => {
       state.searchQuery = "";
       state.selectedDocumentIds = [];
+      state.selectedDocumentId = undefined;
     },
 
     onChangeSearchOptions: (state, action: PayloadAction<{ threshold: number; topK: number }>) => {

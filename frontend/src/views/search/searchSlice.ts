@@ -137,6 +137,7 @@ export const searchSlice = createSlice({
     onClearSearch: (state) => {
       state.searchQuery = "";
       state.selectedDocumentIds = [];
+      state.selectedDocumentId = undefined;
     },
     onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
       state.expertMode = action.payload;

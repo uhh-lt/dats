@@ -59,7 +59,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
     }
     dispatch(ImageSearchActions.onChangeSearchQuery(image));
     closeContextMenu();
-    navigate("../searchimages");
+    navigate("../imagesearch");
   };
 
   return (

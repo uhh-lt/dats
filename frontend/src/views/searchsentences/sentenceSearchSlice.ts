@@ -102,6 +102,7 @@ export const sentenceSearchSlice = createSlice({
     onClearSearch: (state) => {
       state.searchQuery = "";
       state.selectedDocumentIds = [];
+      state.selectedDocumentId = undefined;
     },
     onUpdateSelectionModel: (state, action: PayloadAction<MRT_RowSelectionState>) => {
       state.selectionModel = action.payload;

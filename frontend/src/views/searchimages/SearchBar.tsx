@@ -1,8 +1,21 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
-import { IconButton, InputBase, Paper, Tooltip } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  InputBase,
+  Paper,
+  Slide,
+  Tooltip,
+} from "@mui/material";
+import { TransitionProps } from "@mui/material/transitions";
 import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import SdocHooks from "../../api/SdocHooks.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "./imageSearchSlice.ts";
 
@@ -45,6 +58,16 @@ function SearchBar({ placeholder }: SearchBarProps) {
     });
   };
 
+  const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (event) => {
+    if (event.key === "Backspace" && typeof searchQuery === "number") {
+      dispatch(ImageSearchActions.onChangeSearchQuery(""));
+      dispatch(ImageSearchActions.clearSelectedDocuments());
+      reset({
+        query: "",
+      });
+    }
+  };
+
   return (
     <Paper
       variant="outlined"
@@ -65,7 +88,14 @@ function SearchBar({ placeholder }: SearchBarProps) {
           </IconButton>
         </span>
       </Tooltip>
-      <InputBase sx={{ ml: 1, flex: 1 }} placeholder={placeholder} {...register("query")} autoComplete="off" />
+      {typeof searchQuery === "number" && <SdocImageRenderer sdocId={searchQuery} />}
+      <InputBase
+        sx={{ ml: 1, flex: 1 }}
+        placeholder={placeholder}
+        {...register("query")}
+        autoComplete="off"
+        onKeyDown={handleKeyDown}
+      />
       <Tooltip title={"Clear search"}>
         <span>
           <IconButton onClick={handleClearSearch} size="small">
@@ -75,6 +105,60 @@ function SearchBar({ placeholder }: SearchBarProps) {
       </Tooltip>
     </Paper>
   );
+}
+
+const Transition = React.forwardRef(function Transition(
+  props: TransitionProps & {
+    children: React.ReactElement;
+  },
+  ref: React.Ref<unknown>,
+) {
+  return <Slide direction="down" ref={ref} {...props} />;
+});
+
+function SdocImageRenderer({ sdocId }: { sdocId: number }) {
+  const thumbnail = SdocHooks.useGetThumbnailURL(sdocId);
+
+  const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  if (thumbnail.isSuccess) {
+    return (
+      <>
+        <Button size="small" sx={{ padding: 0, minWidth: "0px" }} onClick={handleClickOpen}>
+          <img
+            src={thumbnail.data}
+            alt="thumbnail"
+            style={{
+              marginLeft: "2px",
+              padding: "2px",
+              height: "34px",
+              borderRadius: "4px",
+              border: "1px solid lightgrey",
+            }}
+          />
+        </Button>
+        <Dialog open={open} TransitionComponent={Transition} keepMounted onClose={handleClose}>
+          <DialogTitle>{"Image Preview"}</DialogTitle>
+          <DialogContent>
+            <img src={thumbnail.data} />
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  } else if (thumbnail.isLoading) {
+    return <CircularProgress />;
+  } else if (thumbnail.isError) {
+    return <span>Thumbnail not found</span>;
+  }
+  return <></>;
 }
 
 export default SearchBar;

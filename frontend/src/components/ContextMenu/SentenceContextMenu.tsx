@@ -83,7 +83,7 @@ const SentenceContextMenu = forwardRef<SentenceContextMenuHandle, SentenceContex
     dispatch(ImageSearchActions.onChangeSearchQuery(sentence || ""));
     dispatch(ImageSearchActions.clearSelectedDocuments());
     closeContextMenu();
-    navigate("../searchimages");
+    navigate("../imagesearch");
   };
 
   const handleAddFilter = (anno: SpanAnnotationReadResolved) => {
