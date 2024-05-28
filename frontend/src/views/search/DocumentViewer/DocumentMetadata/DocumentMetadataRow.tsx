@@ -16,7 +16,7 @@ import { isValidHttpUrl } from "./utils.ts";
 
 interface DocumentMetadataRowProps {
   metadata: SourceDocumentMetadataReadResolved;
-  filterName: string;
+  filterName?: string;
 }
 
 function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
@@ -218,7 +218,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
       />
       {inputField}
       {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
-      <DocumentMetadataAddFilterButton metadata={metadata} filterName={filterName} size="small" />
+      {filterName && <DocumentMetadataAddFilterButton metadata={metadata} filterName={filterName} size="small" />}
     </Stack>
   );
 }

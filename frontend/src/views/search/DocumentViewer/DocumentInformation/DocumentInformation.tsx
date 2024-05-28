@@ -16,7 +16,7 @@ import SdocListItem from "./SdocListItem.tsx";
 interface DocumentInformationProps {
   sdocId: number | undefined;
   isIdleContent?: React.ReactNode;
-  filterName: string;
+  filterName?: string;
 }
 
 export default function DocumentInformation({
