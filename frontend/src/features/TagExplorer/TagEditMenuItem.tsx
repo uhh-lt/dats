@@ -1,21 +1,19 @@
 import EditIcon from "@mui/icons-material/Edit";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
-import React from "react";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { CRUDDialogActions } from "../CrudDialog/dialogSlice.ts";
 
 interface TagEditMenuItemProps {
   tag: DocumentTagRead;
-  onClick?: () => void;
 }
 
 function TagEditMenuItem({ tag, onClick, ...props }: TagEditMenuItemProps & MenuItemProps) {
   const dispatch = useAppDispatch();
 
-  const handleClickOpen = (event: React.MouseEvent) => {
+  const handleClickOpen: React.MouseEventHandler<HTMLLIElement> = (event) => {
     event.stopPropagation();
-    if (onClick) onClick();
+    if (onClick) onClick(event);
     dispatch(CRUDDialogActions.openTagEditDialog({ tagId: tag.id }));
   };
 

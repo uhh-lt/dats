@@ -9,12 +9,12 @@ import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
 import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
 import { MyFilter } from "../../features/FilterDialog/filterUtils.ts";
+import TagExplorer from "../../features/TagExplorer/TagExplorer.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SettingsActions } from "../settings/settingsSlice.ts";
 import DocumentInformation from "./DocumentViewer/DocumentInformation/DocumentInformation.tsx";
 import SearchDocumentTable from "./SearchResults/Table/SearchDocumentTable.tsx";
 import SearchStatistics from "./SearchStatistics/SearchStatistics.tsx";
-import TagExplorerNew from "./TagExplorer/TagExplorer.tsx";
 import { SearchFilterActions } from "./searchFilterSlice.ts";
 
 const filterName = "root";
@@ -115,7 +115,7 @@ function Search() {
             boxShadow: 4,
           }}
         >
-          <TagExplorerNew sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
+          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}

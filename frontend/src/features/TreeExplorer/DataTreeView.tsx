@@ -75,9 +75,7 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 
   return (
     <StyledTreeItemRoot
-      className="Tim"
       ContentProps={{
-        className: "Tom",
         onContextMenu: onContextMenu,
       }}
       label={

@@ -8,10 +8,10 @@ import { SimSearchImageHit } from "../../api/openapi/models/SimSearchImageHit.ts
 import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
 import { SearchService } from "../../api/openapi/services/SearchService.ts";
 import { MyFilter, createEmptyFilter } from "../../features/FilterDialog/filterUtils.ts";
+import TagExplorerNew from "../../features/TagExplorer/TagExplorer.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import DocumentInformation from "../search/DocumentViewer/DocumentInformation/DocumentInformation.tsx";
 import SearchStatistics from "../search/SearchStatistics/SearchStatistics.tsx";
-import TagExplorerNew from "../search/TagExplorer/TagExplorer.tsx";
 import { SearchFilterActions } from "../search/searchFilterSlice.ts";
 import { useInitSearchFilterSlice } from "../search/useInitSearchFilterSlice.ts";
 import { SettingsActions } from "../settings/settingsSlice.ts";

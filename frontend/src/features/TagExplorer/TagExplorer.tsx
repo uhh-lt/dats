@@ -1,15 +1,12 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
 import { useState } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import TagEditDialog from "../../../features/CrudDialog/Tag/TagEditDialog.tsx";
-import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
-import MemoButton from "../../../features/Memo/MemoButton.tsx";
-import TagEditButton from "../../../features/TagExplorer/TagEditButton.tsx";
-import useComputeTagTree from "../../../features/TagExplorer/useComputeTagTree.ts";
-import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
-import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
-import TagMenuCreateButton from "../ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
+import TagMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
+import TagEditDialog from "../CrudDialog/Tag/TagEditDialog.tsx";
+import ExporterButton from "../Exporter/ExporterButton.tsx";
+import TreeExplorer from "../TreeExplorer/TreeExplorer.tsx";
+import TagExplorerMenu from "./TagExplorerMenu.tsx";
+import useComputeTagTree from "./useComputeTagTree.ts";
 
 interface TagExplorerNewProps {
   onTagClick?: (tagId: number) => void;
@@ -42,12 +39,7 @@ function TagExplorerNew({ onTagClick, ...props }: TagExplorerNewProps & BoxProps
             onExpandedDataIdsChange={setExpandedTagIds}
             // actions
             onDataClick={onTagClick}
-            renderActions={(node) => (
-              <>
-                <TagEditButton tag={(node as IDataTree).data} />
-                <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.DOCUMENT_TAG} />
-              </>
-            )}
+            renderActions={(node) => <TagExplorerMenu tag={node} />}
             renderListActions={() => (
               <>
                 <TagMenuCreateButton tagName="" />

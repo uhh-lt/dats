@@ -1,10 +1,8 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box } from "@mui/material";
 import { useState } from "react";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import TagCreateDialog from "../../../features/CrudDialog/Tag/TagCreateDialog.tsx";
 import TagEditDialog from "../../../features/CrudDialog/Tag/TagEditDialog.tsx";
-import MemoButton from "../../../features/Memo/MemoButton.tsx";
 import TagEditButton from "../../../features/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../../features/TagExplorer/useComputeTagTree.ts";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
@@ -39,7 +37,6 @@ function ProjectTags() {
             renderActions={(node) => (
               <>
                 <TagEditButton tag={node.data} />
-                <MemoButton attachedObjectId={node.data.id} attachedObjectType={AttachedObjectType.DOCUMENT_TAG} />
               </>
             )}
             renderListActions={() => (
