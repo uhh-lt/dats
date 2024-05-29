@@ -49,7 +49,7 @@ jobs:
       - name: Update spec
         working-directory: frontend
         run: |
-          npm run updateAPI.js
+          npm run update-api
           npm run generate-api
       - name: Check that frontend builds without error
         working-directory: frontend
