@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 class DocumentTagORM(ORMBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    description: Mapped[Optional[str]] = mapped_column(String, index=True)
-    color: Mapped[Optional[str]]
+    description: Mapped[Optional[str]] = mapped_column(String, index=False)
+    color: Mapped[Optional[str]] = mapped_column(String, index=False)
     created: Mapped[Optional[datetime]] = mapped_column(
         DateTime, server_default=func.now(), index=True
     )
