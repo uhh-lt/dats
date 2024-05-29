@@ -1,12 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type DocumentTagRead = {
   /**
    * Title of the DocumentTag
    */
-  title: string;
+  name: string;
   /**
    * Color of the DocumentTag
    */
@@ -18,7 +18,7 @@ export type DocumentTagRead = {
   /**
    * Parent of the DocumentTag
    */
-  parent_tag_id?: number | null;
+  parent_id?: number | null;
   /**
    * ID of the DocumentTag
    */

@@ -1,31 +1,39 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { AnalysisService } from "../../../api/openapi";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { ColumnInfo } from "../../../features/FilterDialog/filterUtils.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { AppDispatch } from "../../../store/store.ts";
+import { TimelineAnalysisFilterActions } from "./timelineAnalysisFilterSlice.ts";
 
-const useGetTimelineAnalysisInfo = (projectId: number) =>
-  useQuery(["tableInfo", "timelineAnalysis", projectId], () => AnalysisService.timelineAnalysis2Info({ projectId }));
+const useGetTimelineAnalysisInfo = (projectId: number, dispatch: AppDispatch) =>
+  useQuery<ColumnInfo[]>({
+    queryKey: ["tableInfo", "timelineAnalysis", projectId],
+    queryFn: async () => {
+      const result = await AnalysisService.timelineAnalysis2Info({ projectId });
+      const columnInfo = result.map((info) => {
+        return {
+          ...info,
+          column: info.column.toString(),
+        };
+      });
+      const columnInfoMap: Record<string, ColumnInfo> = columnInfo.reduce((acc, info) => {
+        return {
+          ...acc,
+          [info.column]: info,
+        };
+      }, {});
+      dispatch(TimelineAnalysisFilterActions.init({ columnInfoMap }));
+      return columnInfo;
+    },
+    staleTime: Infinity,
+  });
 
 export const useInitTimelineAnalysisFilterSlice = ({ projectId }: { projectId: number }) => {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
   // global server state (react-query)
-  const tableInfo = useGetTimelineAnalysisInfo(projectId);
+  const { data: columnData } = useGetTimelineAnalysisInfo(projectId, dispatch);
 
-  // effects
-  useEffect(() => {
-    if (!tableInfo.data) return;
-    dispatch(
-      TimelineAnalysisFilterActions.init({
-        columnInfo: tableInfo.data.map((d) => {
-          return { ...d, column: d.column.toString() };
-        }),
-      }),
-    );
-    console.log("initialized timeline analysis filterSlice!");
-  }, [dispatch, tableInfo.data]);
-
-  return tableInfo;
+  return columnData;
 };

@@ -1,9 +1,8 @@
 import { Menu } from "@mui/material";
-import React from "react";
-import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps";
-import MemoEditMenuItem from "../../features/Memo/MemoEditMenuItem";
-import MemoStarMenuItem from "../../features/Memo/MemoStarMenuItem";
-import { AttachedObjectType } from "../../api/openapi";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuProps } from "../../components/ContextMenu/ContextMenuProps.tsx";
+import MemoEditMenuItem from "../../features/Memo/MemoEditMenuItem.tsx";
+import MemoStarMenuItem from "../../features/Memo/MemoStarMenuItem.tsx";
 
 interface MemoResultsContextMenuProps extends ContextMenuProps {
   memoId: number | undefined;

@@ -1,12 +1,13 @@
 import { Button, ButtonGroup, Paper, Stack } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { Edge, useReactFlow } from "reactflow";
-import CodeHooks from "../../../api/CodeHooks";
-import TagHooks from "../../../api/TagHooks";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { isCodeNode, isSdocNode, isTagNode } from "../types";
-import { CustomEdgeData } from "../types/CustomEdgeData";
-import { isCodeParentCodeEdgeArray, isTagSdocEdgeArray } from "../whiteboardUtils";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import TagHooks from "../../../api/TagHooks.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { CustomEdgeData } from "../types/CustomEdgeData.ts";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { isCodeNode, isSdocNode, isTagNode } from "../types/typeGuards.ts";
+import { isCodeParentCodeEdgeArray, isTagSdocEdgeArray } from "../whiteboardUtils.ts";
 
 interface DatabaseEdgeEditMenuProps {
   projectId: number;
@@ -18,7 +19,7 @@ export interface DatabaseEdgeEditMenuHandle {
 }
 
 const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdgeEditMenuProps>(({ projectId }, ref) => {
-  const reactFlowInstance = useReactFlow<any, CustomEdgeData>();
+  const reactFlowInstance = useReactFlow<DWTSNodeData, CustomEdgeData>();
 
   const [edges, setEdges] = useState<Edge[]>([]);
 
@@ -87,7 +88,7 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdge
           {
             codeId: sourceNode.data.codeId,
             requestBody: {
-              parent_code_id: -1,
+              parent_id: -1,
             },
           },
           {

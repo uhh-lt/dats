@@ -1,24 +1,24 @@
 import { AppBar, AppBarProps, Box, Toolbar, Typography } from "@mui/material";
 import { useRef } from "react";
 import { useParams } from "react-router-dom";
-import { AttachedObjectType } from "../../../api/openapi";
-import DocumentNavigation from "../../../components/DocumentNavigation";
-import ExporterButton from "../../../features/Exporter/ExporterButton";
-import MemoButton from "../../../features/Memo/MemoButton";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import SearchFilterDialog from "../SearchFilterDialog";
-import AnnotateButton from "./ToolBarElements/AnnotateButton";
-import BackButton from "./ToolBarElements/BackButton";
-import DeleteButton from "./ToolBarElements/DeleteButton";
-import DownloadButton from "./ToolBarElements/DownloadButton";
-import DownloadSdocsButton from "./ToolBarElements/DownloadSdocsButton";
-import TableNavigation from "./ToolBarElements/TableNavigation";
-import TagMenuButton from "./ToolBarElements/TagMenu/TagMenuButton";
-import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton";
-import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton";
-import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton";
-import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton";
-import ToggleTableView from "./ToolBarElements/ToggleTableViewButton";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import DocumentNavigation from "../../../components/DocumentNavigation.tsx";
+import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
+import MemoButton from "../../../features/Memo/MemoButton.tsx";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import SearchFilterDialog from "../SearchFilterDialog.tsx";
+import AnnotateButton from "./ToolBarElements/AnnotateButton.tsx";
+import BackButton from "./ToolBarElements/BackButton.tsx";
+import DeleteButton from "./ToolBarElements/DeleteButton.tsx";
+import DownloadButton from "./ToolBarElements/DownloadButton.tsx";
+import DownloadSdocsButton from "./ToolBarElements/DownloadSdocsButton.tsx";
+import TableNavigation from "./ToolBarElements/TableNavigation.tsx";
+import TagMenuButton from "./ToolBarElements/TagMenu/TagMenuButton.tsx";
+import ToggleAllDocumentsButton from "./ToolBarElements/ToggleAllDocumentsButton.tsx";
+import ToggleShowEntitiesButton from "./ToolBarElements/ToggleShowEntitiesButton.tsx";
+import ToggleShowTagsButton from "./ToolBarElements/ToggleShowTagsButton.tsx";
+import ToggleSplitViewButton from "./ToolBarElements/ToggleSplitViewButton.tsx";
+import ToggleTableView from "./ToolBarElements/ToggleTableViewButton.tsx";
 
 interface DocumentViewerToolbarProps {
   sdocId: number | undefined | null;
@@ -76,13 +76,19 @@ function SearchToolbar({
             }}
             sx={{ borderRight: (theme) => (isSplitView ? `1px solid ${theme.palette.grey[400]}` : undefined) }}
           >
-            <ToggleAllDocumentsButton sdocIds={searchResultDocumentIds} />
+            <ToggleAllDocumentsButton
+              numSelectedDocuments={selectedDocumentIds.length}
+              sdocIds={searchResultDocumentIds}
+            />
             {selectedDocumentIds.length > 0 && (
               <>
                 <Typography color="inherit" variant="subtitle1" component="div">
                   {selectedDocumentIds.length} selected
                 </Typography>
-                <TagMenuButton popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
+                <TagMenuButton
+                  selectedSdocIds={selectedDocumentIds}
+                  popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+                />
                 <DeleteButton sdocIds={selectedDocumentIds} navigateTo="../search" />
                 <DownloadSdocsButton sdocIds={selectedDocumentIds} />
               </>
@@ -106,7 +112,11 @@ function SearchToolbar({
             <BackButton />
             <AnnotateButton projectId={projectId} sdocId={sdocId} />
             <MemoButton attachedObjectId={sdocId} attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT} />
-            <TagMenuButton forceSdocId={sdocId} popoverOrigin={{ horizontal: "center", vertical: "bottom" }} />
+            <TagMenuButton
+              selectedSdocIds={[sdocId]}
+              forceSdocId={sdocId}
+              popoverOrigin={{ horizontal: "center", vertical: "bottom" }}
+            />
             <DeleteButton sdocIds={[sdocId]} navigateTo="../search" />
             <ToggleShowEntitiesButton />
             <DownloadButton sdocId={sdocId} />
@@ -115,7 +125,7 @@ function SearchToolbar({
               exporterInfo={{ type: "Annotations", sdocId: sdocId, singleUser: true, users: [] }}
             />
             <Box sx={{ flexGrow: 1 }} />
-            <DocumentNavigation idsToNavigate={searchResultDocumentIds} searchPrefix="../search/doc/" showText={true} />
+            <DocumentNavigation idsToNavigate={searchResultDocumentIds} searchPrefix="../annotation/" showText={true} />
           </Box>
         )}
       </Toolbar>

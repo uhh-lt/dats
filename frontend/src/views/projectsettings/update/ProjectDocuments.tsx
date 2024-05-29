@@ -1,35 +1,19 @@
 import InfoIcon from "@mui/icons-material/Info";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { LoadingButton } from "@mui/lab";
-import {
-  Box,
-  Button,
-  CardContent,
-  Divider,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from "@mui/material";
-import React, { ChangeEvent, useEffect, useRef, useState } from "react";
-import { useInView } from "react-intersection-observer";
-import PreProHooks from "../../../api/PreProHooks";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { SourceDocumentRead } from "../../../api/openapi";
-import EditableDocumentName, {
-  EditableDocumentNameHandle,
-} from "../../../components/EditableDocumentName/EditableDocumentName";
-import EditableDocumentNameButton from "../../../components/EditableDocumentName/EditableDocumentNameButton";
-import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel";
-import { docTypeToIcon } from "../../../features/DocumentExplorer/docTypeToIcon";
-import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton";
-import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog";
-import ProjectDocumentsContextMenu, { ProjectDocumentsContextMenuHandle } from "./ProjectDocumentsContextMenu";
-import { ProjectProps } from "./ProjectProps";
+import { Box, Button, Divider, Stack, Toolbar, Tooltip, Typography } from "@mui/material";
+import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
+import { ChangeEvent, useRef, useState } from "react";
+import PreProHooks from "../../../api/PreProHooks.ts";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import DocumentTable from "../../../components/DocumentTable/DocumentTable.tsx";
+import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel.tsx";
+import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton.tsx";
+import DownloadSdocsButton from "../../search/ToolBar/ToolBarElements/DownloadSdocsButton.tsx";
+import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog.tsx";
+import { ProjectProps } from "./ProjectProps.ts";
+
+const filterName = "projectDocumentsTable";
 
 // allowed mime types
 const allowedMimeTypes: Array<string> = new Array<string>();
@@ -55,28 +39,16 @@ allowedMimeTypes.push("application/msword");
 allowedMimeTypes.push("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
 function ProjectDocuments({ project }: ProjectProps) {
-  const { ref, inView } = useInView();
-
   // global server state (react-query)
   const uploadProgress = PreProHooks.usePollPreProProjectStatus(project.id);
-  const projectDocuments = ProjectHooks.useGetProjectDocumentsInfinite(
-    project.id,
-    (uploadProgress.data && uploadProgress.data.num_active_prepro_job_payloads > 0) || false,
-  );
-  // ^ refetching is not working perfectly: during upload, new documents are uploaded.
-  // however, once the uploadd is finished (in_progress = false), the last batch of new documents are not fetched.
 
-  // automatically fetch new documents when button is visible
-  // TODO: switch to virtualization
-  useEffect(() => {
-    if (inView && projectDocuments.hasNextPage) {
-      projectDocuments.fetchNextPage();
-    }
-  }, [inView, projectDocuments]);
+  // table state
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
+  const selectedSdocIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
   // crawler / url import
   const crawlDialogRef = useRef<CrawlerRunDialogHandle>(null);
-  const contextMenuRef = useRef<ProjectDocumentsContextMenuHandle>(null);
 
   // file upload
   const [waiting, setWaiting] = useState<boolean>(false);
@@ -100,7 +72,7 @@ function ProjectDocuments({ project }: ProjectProps) {
           },
         },
         {
-          onSuccess: (_data) => {
+          onSuccess: () => {
             // FIXME: selbst mit initialen Timeout vor neuem rerender gibt das Backend für in_progress false zurück
             setTimeout(() => {
               setWaiting(false);
@@ -118,13 +90,6 @@ function ProjectDocuments({ project }: ProjectProps) {
     }
   };
 
-  // context menu
-  const onContextMenu = (sdocId: number) => (event: React.MouseEvent) => {
-    event.preventDefault();
-    if (!contextMenuRef.current) return;
-    contextMenuRef.current.open({ top: event.clientY, left: event.clientX }, project.id, sdocId);
-  };
-
   return (
     <Box display="flex" className="myFlexContainer h100">
       <Toolbar variant="dense" className="myFlexFitContentContainer">
@@ -138,7 +103,7 @@ function ProjectDocuments({ project }: ProjectProps) {
         >
           <InfoIcon sx={{ ml: 0.5 }} fontSize="small" />
         </Tooltip>
-        {process.env.REACT_APP_STABILITY === "UNSTABLE" && (
+        {import.meta.env.VITE_APP_STABILITY === "UNSTABLE" && (
           <Typography
             variant="body1"
             color="inherit"
@@ -156,7 +121,7 @@ function ProjectDocuments({ project }: ProjectProps) {
           startIcon={<UploadFileIcon />}
           onClick={handleClickUploadFile}
           disabled={files.length === 0}
-          loading={uploadDocumentMutation.isLoading}
+          loading={uploadDocumentMutation.isPending}
           loadingPosition="start"
         >
           Upload File{files.length > 1 ? "s" : ""}
@@ -183,76 +148,27 @@ function ProjectDocuments({ project }: ProjectProps) {
         }
       />
       <Divider />
-      {projectDocuments.isLoading && <CardContent>Loading project documents...</CardContent>}
-      {projectDocuments.isError && (
-        <CardContent>An error occurred while loading project documents for project {project.id}...</CardContent>
-      )}
-      {projectDocuments.isSuccess && (
-        <div className="myFlexFillAllContainer">
-          <List style={{ maxHeight: "100%" }}>
-            {projectDocuments.data.pages.map((paginatedDocuments, i) => (
-              <React.Fragment key={i}>
-                {paginatedDocuments.sdocs.map((document) => (
-                  <ProjectDocumentItem key={document.id} document={document} onContextMenu={onContextMenu} />
-                ))}
-              </React.Fragment>
-            ))}
-            <ListItem disablePadding ref={ref}>
-              <ListItemButton
-                onClick={() => projectDocuments.fetchNextPage()}
-                disabled={!projectDocuments.hasNextPage || projectDocuments.isFetchingNextPage}
-              >
-                <ListItemText
-                  primary={
-                    projectDocuments.isFetchingNextPage
-                      ? "Loading more..."
-                      : projectDocuments.hasNextPage
-                        ? "Load More"
-                        : "Nothing more to load"
-                  }
-                />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </div>
-      )}
-      <ProjectDocumentsContextMenu ref={contextMenuRef} />
+      <DocumentTable
+        projectId={project.id}
+        filterName={filterName}
+        rowSelectionModel={rowSelectionModel}
+        onRowSelectionChange={setRowSelectionModel}
+        sortingModel={sortingModel}
+        onSortingChange={setSortingModel}
+        positionToolbarAlertBanner="head-overlay"
+        renderTopToolbarCustomActions={() => (
+          <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+            {selectedSdocIds.length > 0 && (
+              <>
+                <DeleteButton sdocIds={selectedSdocIds} navigateTo="../search" />
+                <DownloadSdocsButton sdocIds={selectedSdocIds} />
+              </>
+            )}
+          </Stack>
+        )}
+      />
       <CrawlerRunDialog projectId={project.id} ref={crawlDialogRef} />
     </Box>
-  );
-}
-
-interface ProjetDocumentItemProps {
-  document: SourceDocumentRead;
-  onContextMenu: (sdocId: number) => (event: React.MouseEvent) => void;
-}
-
-function ProjectDocumentItem({ document, onContextMenu }: ProjetDocumentItemProps) {
-  const ref = useRef<EditableDocumentNameHandle>(null);
-
-  return (
-    <ListItem
-      disablePadding
-      key={document.id}
-      onContextMenu={onContextMenu(document.id)}
-      secondaryAction={
-        <>
-          <DeleteButton sdocIds={[document.id]} />
-          <EditableDocumentNameButton editableDocumentNameHandle={ref.current} />
-        </>
-      }
-    >
-      <ListItemButton>
-        <ListItemIcon>{docTypeToIcon[document.doctype]}</ListItemIcon>
-        <EditableDocumentName
-          sdocId={document.id}
-          variant="body1"
-          style={{ margin: 0 }}
-          inputProps={{ style: { fontSize: 22, padding: 0, width: "auto" } }}
-          ref={ref}
-        />
-      </ListItemButton>
-    </ListItem>
   );
 }
 

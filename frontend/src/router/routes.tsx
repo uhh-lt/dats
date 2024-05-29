@@ -1,38 +1,40 @@
 import { createBrowserRouter } from "react-router-dom";
-import RequireAuth from "../auth/RequireAuth";
-import NoBarLayout from "../layouts/NoBarLayout";
-import OneBarLayout from "../layouts/OneBarLayout";
-import TwoBarLayout from "../layouts/TwoBarLayout";
-import About from "../views/About";
-import Imprint from "../views/Imprint";
-import Login from "../views/Login";
-import NotFound from "../views/NotFound";
-import Analysis from "../views/analysis/Analysis";
-import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments";
-import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis";
-import CodeGraph from "../views/analysis/CodeGraph/CodeGraph";
-import TableDashboard from "../views/analysis/Table/TableDashboard";
-import TableView from "../views/analysis/Table/TableView";
-import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis";
-import Annotation from "../views/annotation/Annotation";
-import Autologbook from "../views/autologbook/Autologbook";
-import Feedback from "../views/feedback/Feedback";
-import FeedbackAll from "../views/feedback/FeedbackAll";
-import FeedbackUser from "../views/feedback/FeedbackUser";
-import Logbook from "../views/logbook/Logbook";
-import Profile from "../views/profile/Profile";
-import Projects from "../views/projects/Projects";
-import ProjectSettings from "../views/projectsettings/ProjectSettings";
-import ProjectCreation from "../views/projectsettings/creation/ProjectCreation";
-import ProjectUpdate from "../views/projectsettings/update/ProjectUpdate";
-import Register from "../views/registration/Register";
-import Search from "../views/search/Search";
-import Settings from "../views/settings/Settings";
-import Whiteboard from "../views/whiteboard/Whiteboard";
-import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard";
-import WordFrequency from "../views/analysis/WordFrequency/WordFrequency";
-import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard";
-import DocumentSampler from "../views/analysis/DocumentSampler/DocumentSampler";
+import RequireAuth from "../auth/RequireAuth.tsx";
+import NoBarLayout from "../layouts/NoBarLayout.tsx";
+import OneBarLayout from "../layouts/OneBarLayout.tsx";
+import TwoBarLayout from "../layouts/TwoBarLayout.tsx";
+import About from "../views/About.tsx";
+import Imprint from "../views/Imprint.tsx";
+import Login from "../views/Login.tsx";
+import NotFound from "../views/NotFound.tsx";
+import Analysis from "../views/analysis/Analysis.tsx";
+import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments.tsx";
+import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis.tsx";
+import CodeGraph from "../views/analysis/CodeGraph/CodeGraph.tsx";
+import DocumentSampler from "../views/analysis/DocumentSampler/DocumentSampler.tsx";
+import TableDashboard from "../views/analysis/Table/TableDashboard.tsx";
+import TableView from "../views/analysis/Table/TableView.tsx";
+import TimelineAnalysis from "../views/analysis/TimelineAnalysis/TimelineAnalysis.tsx";
+import TimelineAnalysisDashboard from "../views/analysis/TimelineAnalysis/TimelineAnalysisDashboard.tsx";
+import WordFrequency from "../views/analysis/WordFrequency/WordFrequency.tsx";
+import Annotation from "../views/annotation/Annotation.tsx";
+import Autologbook from "../views/autologbook/Autologbook.tsx";
+import Feedback from "../views/feedback/Feedback.tsx";
+import FeedbackAll from "../views/feedback/FeedbackAll.tsx";
+import FeedbackUser from "../views/feedback/FeedbackUser.tsx";
+import Logbook from "../views/logbook/Logbook.tsx";
+import Profile from "../views/profile/Profile.tsx";
+import Projects from "../views/projects/Projects.tsx";
+import ProjectSettings from "../views/projectsettings/ProjectSettings.tsx";
+import ProjectCreation from "../views/projectsettings/creation/ProjectCreation.tsx";
+import ProjectUpdate from "../views/projectsettings/update/ProjectUpdate.tsx";
+import Register from "../views/registration/Register.tsx";
+import Search from "../views/search/Search.tsx";
+import ImageSimilaritySearch from "../views/searchimages/ImageSimilaritySearch.tsx";
+import SentenceSimilaritySearch from "../views/searchsentences/SentenceSimilaritySearch.tsx";
+import Settings from "../views/settings/Settings.tsx";
+import Whiteboard from "../views/whiteboard/Whiteboard.tsx";
+import WhiteboardDashboard from "../views/whiteboard/WhiteboardDashboard.tsx";
 
 const router = createBrowserRouter([
   {
@@ -139,8 +141,12 @@ const router = createBrowserRouter([
         element: <Search />,
       },
       {
-        path: "/project/:projectId/search/doc/:sdocId",
-        element: <Search />,
+        path: "/project/:projectId/sentencesearch",
+        element: <SentenceSimilaritySearch />,
+      },
+      {
+        path: "/project/:projectId/imagesearch",
+        element: <ImageSimilaritySearch />,
       },
       {
         path: "/project/:projectId/analysis",

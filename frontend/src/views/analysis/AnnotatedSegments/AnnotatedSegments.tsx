@@ -1,11 +1,9 @@
 import ReorderIcon from "@mui/icons-material/Reorder";
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import VerticalSplitIcon from "@mui/icons-material/VerticalSplit";
 import {
   Box,
   Card,
   CardContent,
-  CardHeader,
   Grid,
   IconButton,
   MenuItem,
@@ -15,21 +13,19 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useContext, useRef } from "react";
+import React, { useContext, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { AttachedObjectType } from "../../../api/openapi";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
-import SpanAnnotationEditDialog, {
-  openSpanAnnotationEditDialog,
-} from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
-import MemoAPI from "../../../features/Memo/MemoAPI";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable";
-import AnnotatedSegmentsUserSelector from "./AnnotatedSegmentsUserSelector";
-import SpanAnnotationCard from "./SpanAnnotationCard";
-import SpanAnnotationCardList from "./SpanAnnotationCardList";
-import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import SpanAnnotationEditDialog from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable.tsx";
+import SpanAnnotationCard from "./SpanAnnotationCard.tsx";
+import SpanAnnotationCardList from "./SpanAnnotationCardList.tsx";
+import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";
 
 function AnnotatedSegments() {
   const appBarContainerRef = useContext(AppBarContext);
@@ -44,6 +40,12 @@ function AnnotatedSegments() {
   const contextSize = useAppSelector((state) => state.annotatedSegments.contextSize);
   const isSplitView = useAppSelector((state) => state.annotatedSegments.isSplitView);
   const rowSelectionModel = useAppSelector((state) => state.annotatedSegments.rowSelectionModel);
+  const selectedAnnotationIds = useMemo(() => {
+    return Object.entries(rowSelectionModel)
+      .filter(([, value]) => value)
+      .map(([key]) => parseInt(key));
+  }, [rowSelectionModel]);
+
   const dispatch = useAppDispatch();
 
   // actions
@@ -59,26 +61,26 @@ function AnnotatedSegments() {
   };
 
   const openSpanAnnotation = (spanAnnotationIds: number[]) => {
-    openSpanAnnotationEditDialog(spanAnnotationIds);
+    dispatch(CRUDDialogActions.openSpanAnnotationEditDialog({ spanAnnotationIds }));
   };
 
   // events
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLDivElement>, spanAnnotationId: number) => {
+  const handleRowContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     contextMenuRef.current?.open({ left: event.clientX, top: event.clientY });
   };
 
   const handleContextMenuOpenMemo = () => {
-    if (rowSelectionModel.length !== 1) return;
+    if (selectedAnnotationIds.length !== 1) return;
 
     contextMenuRef.current?.close();
-    openMemo(rowSelectionModel[0]);
+    openMemo(selectedAnnotationIds[0]);
   };
 
   const handleContextMenuChangeCode = () => {
-    if (rowSelectionModel.length !== 1) return;
+    if (selectedAnnotationIds.length !== 1) return;
 
     contextMenuRef.current?.close();
-    openSpanAnnotation([rowSelectionModel[0]]);
+    openSpanAnnotation([selectedAnnotationIds[0]]);
   };
 
   return (
@@ -94,7 +96,6 @@ function AnnotatedSegments() {
             <CardContent sx={{ p: 1, pb: "8px !important" }}>
               <Stack direction="row" alignItems="center">
                 <Box sx={{ flexGrow: 1 }} />
-                <AnnotatedSegmentsUserSelector projectId={projectId} mr={1} />
                 <TextField
                   label="Context Size"
                   type="number"
@@ -102,13 +103,6 @@ function AnnotatedSegments() {
                   value={contextSize}
                   onChange={(event) => dispatch(AnnotatedSegmentsActions.setContextSize(parseInt(event.target.value)))}
                 />
-                <Tooltip title={"Export segments"}>
-                  <span>
-                    <IconButton disabled>
-                      <SaveAltIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
                 <Tooltip title="Split/not split view">
                   <IconButton onClick={handleClickSplitView}>
                     {isSplitView ? <ReorderIcon /> : <VerticalSplitIcon />}
@@ -120,22 +114,22 @@ function AnnotatedSegments() {
 
           {!isSplitView && (
             <SpanAnnotationCard
-              key={rowSelectionModel.length > 0 ? rowSelectionModel[rowSelectionModel.length - 1] : undefined}
-              annotationId={rowSelectionModel.length > 0 ? rowSelectionModel[rowSelectionModel.length - 1] : undefined}
+              key={
+                selectedAnnotationIds.length > 0 ? selectedAnnotationIds[selectedAnnotationIds.length - 1] : undefined
+              }
+              annotationId={
+                selectedAnnotationIds.length > 0 ? selectedAnnotationIds[selectedAnnotationIds.length - 1] : undefined
+              }
               sx={{ mb: 2, flexShrink: 0 }}
             />
           )}
 
-          <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer h100">
-            <CardHeader title="Annotated Segments" />
-            <CardContent className="myFlexFillAllContainer h100" style={{ padding: 0 }}>
-              <div className="h100" style={{ width: "100%" }}>
-                <AnnotatedSegmentsTable onRowContextMenu={handleRowContextMenu} />
-              </div>
-            </CardContent>
-          </Card>
+          <AnnotatedSegmentsTable
+            cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
+            onRowContextMenu={handleRowContextMenu}
+          />
         </Grid>
-        {isSplitView && <SpanAnnotationCardList spanAnnotationIds={rowSelectionModel} />}
+        {isSplitView && <SpanAnnotationCardList spanAnnotationIds={selectedAnnotationIds} />}
       </Grid>
       <SpanAnnotationEditDialog projectId={projectId} />
       <GenericPositionMenu ref={contextMenuRef}>

@@ -1,55 +1,34 @@
-import { Container, Divider, Grid, Typography } from "@mui/material";
-import Box from "@mui/material/Box";
-import Portal from "@mui/material/Portal";
-import { useCallback, useContext, useEffect, useMemo } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
-import SearchHooks from "../../api/SearchHooks";
-import { SpanEntityStat } from "../../api/openapi";
-import TagExplorer from "../../features/TagExplorer/TagExplorer";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { SettingsActions } from "../settings/settingsSlice";
-import DocumentViewer from "./DocumentViewer/DocumentViewer";
-import SearchBar from "./SearchBar/SearchBar";
-import SearchResultCardsView from "./SearchResults/Cards/SearchResultCardsView";
-import SearchResultsTableView from "./SearchResults/Table/SearchResultsTableView";
-import SearchStatistics from "./SearchStatistics/SearchStatistics";
-import SearchToolbar from "./ToolBar/SearchToolbar";
-import { useAddTagFilter } from "./hooks/useAddTagFilter";
-import { useNavigateIfNecessary } from "./hooks/useNavigateIfNecessary";
-import { SearchActions } from "./searchSlice";
-import { useInitSearchFilterSlice } from "./useInitSearchFilterSlice";
+import { Divider, Grid, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo } from "react";
+import { useParams } from "react-router-dom";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { PaginatedElasticSearchDocumentHits } from "../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
+import { SearchColumns } from "../../api/openapi/models/SearchColumns.ts";
+import { SortDirection } from "../../api/openapi/models/SortDirection.ts";
+import { SpanEntityStat } from "../../api/openapi/models/SpanEntityStat.ts";
+import { SearchService } from "../../api/openapi/services/SearchService.ts";
+import { MyFilter } from "../../features/FilterDialog/filterUtils.ts";
+import TagExplorer from "../../features/TagExplorer/TagExplorer.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { SettingsActions } from "../settings/settingsSlice.ts";
+import DocumentInformation from "./DocumentViewer/DocumentInformation/DocumentInformation.tsx";
+import SearchDocumentTable from "./SearchResults/Table/SearchDocumentTable.tsx";
+import SearchStatistics from "./SearchStatistics/SearchStatistics.tsx";
+import { SearchFilterActions } from "./searchFilterSlice.ts";
 
-export function removeTrailingSlash(text: string): string {
-  return text.replace(/\/$/, "");
-}
+const filterName = "root";
 
 function Search() {
   // router
-  const { projectId, sdocId } = useParams() as {
-    projectId: string;
-    sdocId: string | undefined;
-  };
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // searchbar
-  const appBarContainerRef = useContext(AppBarContext);
+  const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // redux (global client state)
-  const isSplitView = useAppSelector((state) => state.search.isSplitView);
-  const isTableView = useAppSelector((state) => state.search.isTableView);
-  const SearchResultsView = isTableView ? SearchResultsTableView : SearchResultCardsView;
-  const isShowEntities = useAppSelector((state) => state.search.isShowEntities);
+  const selectedDocumentId = useAppSelector((state) => state.search.selectedDocumentId);
   const dispatch = useAppDispatch();
 
   // filter
-  const projectMetadata = ProjectHooks.useGetMetadata(parseInt(projectId));
-  const columnInfo = useInitSearchFilterSlice({ projectId: parseInt(projectId) });
-
-  // query (global server state)
-  const searchResults = SearchHooks.useSearchDocumentsNew(parseInt(projectId));
+  const projectMetadata = ProjectHooks.useGetMetadata(projectId);
 
   // computed (local client state)
   const keywordMetadataIds = useMemo(() => {
@@ -57,36 +36,30 @@ function Search() {
     return projectMetadata.data.filter((m) => m.key === "keywords").map((m) => m.id);
   }, [projectMetadata.data]);
 
-  const viewDocument = Boolean(sdocId);
-
-  // handle navigation
-  const navigateIfNecessary = useNavigateIfNecessary();
-  const handleResultClick = (sdocId: number) => {
-    // remove doc/:docId from url (if it exists) then add new doc id
-    let url = removeTrailingSlash(location.pathname.split("/doc")[0]);
-    navigate(`${url}/doc/${sdocId}`);
-    dispatch(SearchActions.clearSelectedDocuments());
-  };
-
   // handle filtering
   const handleAddCodeFilter = useCallback(
     (stat: SpanEntityStat) => {
-      dispatch(SearchActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text }));
-      navigateIfNecessary(`/project/${projectId}/search/`);
+      dispatch(
+        SearchFilterActions.onAddSpanAnnotationFilter({ codeId: stat.code_id, spanText: stat.span_text, filterName }),
+      );
     },
-    [dispatch, navigateIfNecessary, projectId],
+    [dispatch],
   );
   const handleAddKeywordFilter = useCallback(
     (keyword: string) => {
-      dispatch(SearchActions.onAddKeywordFilter({ keywordMetadataIds, keyword }));
-      navigateIfNecessary(`/project/${projectId}/search/`);
+      dispatch(SearchFilterActions.onAddKeywordFilter({ keywordMetadataIds, keyword, filterName }));
     },
-    [dispatch, navigateIfNecessary, projectId, keywordMetadataIds],
+    [dispatch, keywordMetadataIds],
   );
-  const handleAddTagFilter = useAddTagFilter();
+  const handleAddTagFilter = useCallback(
+    (tagId: number) => {
+      dispatch(SearchFilterActions.onAddTagFilter({ tagId, filterName }));
+    },
+    [dispatch],
+  );
 
   // hack to disable sentences
-  const projectCodes = ProjectHooks.useGetAllCodes(parseInt(projectId), true);
+  const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
   useEffect(() => {
     if (projectCodes.data) {
       const sentence = projectCodes.data.find((code) => code.name === "SENTENCE");
@@ -96,12 +69,40 @@ function Search() {
     }
   }, [dispatch, projectCodes.data]);
 
+  // search
+  const filter = useAppSelector((state) => state.searchFilter.filter[filterName]);
+  const searchQuery = useAppSelector((state) => state.search.searchQuery);
+  const sortingModel = useAppSelector((state) => state.search.sortingModel);
+  const { data, isError, isFetching, isLoading } = useQuery<PaginatedElasticSearchDocumentHits>({
+    queryKey: [
+      "search-document-table-data",
+      projectId,
+      searchQuery, // refetch when searchQuery changes
+      filter, // refetch when columnFilters changes
+      sortingModel, // refetch when sorting changes
+    ],
+    queryFn: () =>
+      SearchService.searchSdocs({
+        searchQuery: searchQuery || "",
+        projectId: projectId!,
+        highlight: true,
+        expertMode: false,
+        requestBody: {
+          filter: filter as MyFilter<SearchColumns>,
+          sorts: sortingModel.map((sort) => ({
+            column: sort.id as SearchColumns,
+            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+          })),
+        },
+        pageNumber: undefined,
+        pageSize: undefined,
+      }),
+  });
+  const sdocIds = useMemo(() => data?.hits.map((hit) => hit.sdoc_id) || [], [data]);
+
   // render
   return (
     <>
-      <Portal container={appBarContainerRef?.current}>
-        <SearchBar placeholder="Search documents..." />{" "}
-      </Portal>
       <Grid container className="h100">
         <Grid
           item
@@ -114,11 +115,11 @@ function Search() {
             boxShadow: 4,
           }}
         >
-          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} showButtons />
+          <TagExplorer sx={{ height: "50%", pt: 0 }} onTagClick={handleAddTagFilter} />
           <Divider />
           <SearchStatistics
             sx={{ height: "50%" }}
-            sdocIds={searchResults.data?.getSearchResultSDocIds() || []}
+            sdocIds={sdocIds}
             handleKeywordClick={handleAddKeywordFilter}
             handleTagClick={handleAddTagFilter}
             handleCodeClick={handleAddCodeFilter}
@@ -126,59 +127,36 @@ function Search() {
         </Grid>
         <Grid
           item
-          md={10}
+          md={8}
           className="h100"
+          p={2}
           sx={{ backgroundColor: (theme) => theme.palette.grey[200], overflow: "auto" }}
         >
-          <SearchToolbar
-            sdocId={sdocId ? parseInt(sdocId) : undefined}
-            searchResultDocumentIds={searchResults.data?.getSearchResultSDocIds() || []}
-            numSearchResults={searchResults.data?.getNumberOfHits() || 0}
-            isSplitView={isSplitView}
-            viewDocument={viewDocument}
+          <SearchDocumentTable
+            projectId={projectId}
+            data={data}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            isError={isError}
           />
-          <Box className="myFlexContainer" sx={{ height: "calc(100% - 54px)" }}>
-            <Grid container className="myFlexFillAllContainer" sx={{ height: "calc(100% - 54px)" }}>
-              {(isSplitView || !viewDocument) && (
-                <Grid item md={isSplitView ? 6 : 12} className="h100">
-                  {searchResults.isLoading && <div>Loading!</div>}
-                  {searchResults.isError && <div>Error: {searchResults.error.message}</div>}
-                  {searchResults.isSuccess && columnInfo.isSuccess && (
-                    <Container
-                      sx={{
-                        py: 2,
-                        height: "100%",
-                        maxWidth: "100% !important",
-                      }}
-                    >
-                      {searchResults.data.getNumberOfHits() === 0 ? (
-                        <Typography>No search results for this query...</Typography>
-                      ) : (
-                        <SearchResultsView
-                          searchResults={searchResults.data}
-                          columnInfo={columnInfo.data}
-                          handleResultClick={handleResultClick}
-                        />
-                      )}
-                    </Container>
-                  )}
-                </Grid>
-              )}
-              {(isSplitView || viewDocument) && (
-                <Grid item md={isSplitView ? 6 : 12} className="h100">
-                  <Container className="h100" sx={{ py: 2 }}>
-                    <DocumentViewer
-                      sdocId={sdocId ? parseInt(sdocId) : undefined}
-                      handleTagClick={handleAddTagFilter}
-                      showEntities={isShowEntities}
-                      isIdleContent={<Typography>Click a document to read it :)</Typography>}
-                      className="h100"
-                    />
-                  </Container>
-                </Grid>
-              )}
-            </Grid>
-          </Box>
+        </Grid>
+        <Grid
+          item
+          md={2}
+          className="h100"
+          sx={{
+            zIndex: (theme) => theme.zIndex.appBar,
+            bgcolor: (theme) => theme.palette.background.paper,
+            borderLeft: "1px solid #e8eaed",
+            boxShadow: 4,
+          }}
+        >
+          <DocumentInformation
+            sdocId={selectedDocumentId}
+            filterName={filterName}
+            isIdleContent={<Typography padding={2}>Click a document to see info :)</Typography>}
+            className="h100"
+          />
         </Grid>
       </Grid>
     </>

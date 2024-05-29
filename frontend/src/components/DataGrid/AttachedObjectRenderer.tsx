@@ -1,9 +1,9 @@
-import { AttachedObjectType } from "../../api/openapi";
-import BBoxAnnotationRenderer from "./BBoxAnnotationRenderer";
-import CodeRenderer from "./CodeRenderer";
-import SdocRenderer from "./SdocRenderer";
-import SpanAnnotationRenderer from "./SpanAnnotationRenderer";
-import TagRenderer from "./TagRenderer";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import BBoxAnnotationRenderer from "./BBoxAnnotationRenderer.tsx";
+import CodeRenderer from "./CodeRenderer.tsx";
+import SdocRenderer from "./SdocRenderer.tsx";
+import SpanAnnotationRenderer from "./SpanAnnotationRenderer.tsx";
+import TagRenderer from "./TagRenderer.tsx";
 
 interface AttachedObjectRendererProps {
   attachedObjectId: number;

@@ -1,14 +1,14 @@
 import { Box, CircularProgress, Grid, Portal, Typography } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
-import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks";
-import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead";
-import { AppBarContext } from "../../../layouts/TwoBarLayout";
-import ConceptList from "./ConceptList";
-import TimeAnalysisProvenance from "./TimeAnalysisProvenance";
-import TimelineAnalysisViz from "./TimeAnalysisViz";
-import TimelineAnalysisSettings from "./TimelineAnalysisSettings";
-import { useTimelineAnalysis } from "./useTimelineAnalysis";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
+import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
+import ConceptList from "./ConceptList.tsx";
+import TimeAnalysisProvenance from "./TimeAnalysisProvenance.tsx";
+import TimelineAnalysisViz from "./TimeAnalysisViz.tsx";
+import TimelineAnalysisSettings from "./TimelineAnalysisSettings.tsx";
+import { useTimelineAnalysis } from "./useTimelineAnalysis.ts";
 
 function TimelineAnalysis() {
   // global client state

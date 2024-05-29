@@ -1,23 +1,22 @@
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Tree, { Node } from "ts-tree-structure";
-import ProjectHooks from "../../../api/ProjectHooks";
-import ICodeTree from "./ICodeTree";
-import { codesToTree } from "./TreeUtils";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
+import { dataToTree } from "../../../features/TreeExplorer/TreeUtils.ts";
 
-const useComputeCodeTree = () => {
+const useComputeCodeTree = (returnAllCodes: boolean = false) => {
   const { projectId } = useParams() as { projectId: string };
   const projId = parseInt(projectId);
 
   // global server state
-  // TODO: this is not the correct query, we are actually not interested in all codes!
-  const allCodes = ProjectHooks.useGetAllCodes(projId);
+  const allCodes = ProjectHooks.useGetAllCodes(projId, returnAllCodes);
 
   // computed
-  const codeTree: Node<ICodeTree> | null = useMemo(() => {
+  const codeTree: Node<IDataTree> | null = useMemo(() => {
     if (allCodes.data) {
       const tree = new Tree();
-      return tree.parse<ICodeTree>(codesToTree(allCodes.data));
+      return tree.parse<IDataTree>(dataToTree(allCodes.data));
     } else {
       return null;
     }

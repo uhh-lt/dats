@@ -46,7 +46,7 @@ function ExporterItemSelectList({ items, value, onChange, itemsPerPage, singleSe
     setPage(1);
   };
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
   };
 

@@ -99,6 +99,25 @@ def update_by_id(
     return AnalysisTableRead.model_validate(db_obj)
 
 
+@router.post(
+    "/duplicate/{analysis_table_id}",
+    response_model=AnalysisTableRead,
+    summary="Duplicate the Analysis Table with the given ID if it exists",
+)
+def duplicate_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    analysis_table_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> AnalysisTableRead:
+    authz_user.assert_in_same_project_as(Crud.ANALYSIS_TABLE, analysis_table_id)
+
+    db_obj = crud_analysis_table.duplicate_by_id(
+        db=db, analysis_table_id=analysis_table_id, user_id=authz_user.user.id
+    )
+    return AnalysisTableRead.model_validate(db_obj)
+
+
 @router.delete(
     "/{analysis_table_id}",
     response_model=AnalysisTableRead,

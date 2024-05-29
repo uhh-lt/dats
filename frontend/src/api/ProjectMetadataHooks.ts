@@ -1,34 +1,37 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ProjectMetadataRead, ProjectMetadataService } from "./openapi";
-import { QueryKey } from "./QueryKey";
-import queryClient from "../plugins/ReactQueryClient";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { QueryKey } from "./QueryKey.ts";
+import { ProjectMetadataRead } from "./openapi/models/ProjectMetadataRead.ts";
+import { ProjectMetadataService } from "./openapi/services/ProjectMetadataService.ts";
 
 const useCreateMetadata = () =>
-  useMutation(ProjectMetadataService.createNewMetadata, {
+  useMutation({
+    mutationFn: ProjectMetadataService.createNewMetadata,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_METADATA, data.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_METADATAS, data.project_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATA, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: ["tableInfo"] }); // tableInfo queries need to be refetched, as there is new metadata now!
     },
     meta: {
       successMessage: (data: ProjectMetadataRead) => `Added metadata to Project ${data.project_id}`,
-      errorMessage: (error: any) => (error.status === 409 ? "Key already exists" : "Could not add metadata"),
+      errorMessage: (error: { status: number }) =>
+        error.status === 409 ? "Key already exists" : "Could not add metadata",
     },
   });
 
 const useGetMetadata = (metadataId: number | null | undefined) =>
-  useQuery<ProjectMetadataRead, Error>(
-    [QueryKey.PROJECT_METADATA, metadataId],
-    () => ProjectMetadataService.getById({ metadataId: metadataId! }),
-    {
-      enabled: !!metadataId,
-    },
-  );
+  useQuery<ProjectMetadataRead, Error>({
+    queryKey: [QueryKey.PROJECT_METADATA, metadataId],
+    queryFn: () => ProjectMetadataService.getById({ metadataId: metadataId! }),
+    enabled: !!metadataId,
+  });
 
 const useUpdateMetadata = () =>
-  useMutation(ProjectMetadataService.updateById, {
+  useMutation({
+    mutationFn: ProjectMetadataService.updateById,
     onSuccess: (metadata) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_METADATA, metadata.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_METADATAS, metadata.project_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATA, metadata.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, metadata.project_id] });
     },
     meta: {
       successMessage: (projectMetadata: ProjectMetadataRead) =>
@@ -37,10 +40,11 @@ const useUpdateMetadata = () =>
   });
 
 const useDeleteMetadata = () =>
-  useMutation(ProjectMetadataService.deleteById, {
+  useMutation({
+    mutationFn: ProjectMetadataService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_METADATA, data.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_METADATAS, data.project_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATA, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_METADATAS, data.project_id] });
     },
   });
 

@@ -1,7 +1,7 @@
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { Button, Grid, MenuItem, Select, SelectChangeEvent, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-import { UserRead } from "../../../api/openapi";
+import { UserRead } from "../../../api/openapi/models/UserRead.ts";
 
 interface ProfileHomeProps {
   user: UserRead;

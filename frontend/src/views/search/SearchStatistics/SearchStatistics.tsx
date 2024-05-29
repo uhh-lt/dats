@@ -2,14 +2,14 @@ import { TabContext } from "@mui/lab";
 import { Box, BoxProps, Tab, Tabs } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { SpanEntityStat } from "../../../api/openapi";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import CodeStats from "./CodeStats";
-import DocumentTagStats from "./DocumentTagStats";
-import KeywordStats from "./KeywordStats";
-import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu";
-import StatsSearchBar from "./StatsSearchBar";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
+import CodeStats from "./CodeStats.tsx";
+import DocumentTagStats from "./DocumentTagStats.tsx";
+import KeywordStats from "./KeywordStats.tsx";
+import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu.tsx";
+import StatsSearchBar from "./StatsSearchBar.tsx";
 
 interface SearchStatisticsProps {
   sdocIds: number[];
@@ -27,7 +27,7 @@ function SearchStatistics({
 }: SearchStatisticsProps & BoxProps) {
   // tabs
   const [tab, setTab] = useState("keywords");
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string): void => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string): void => {
     setTab(newValue);
   };
 

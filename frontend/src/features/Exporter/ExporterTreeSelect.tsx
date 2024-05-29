@@ -1,12 +1,14 @@
+import SquareIcon from "@mui/icons-material/Square";
 import { Checkbox, Divider, TextField, Toolbar } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import Tree from "ts-tree-structure";
-import CodeTreeView from "../../views/annotation/CodeExplorer/CodeTreeView";
-import ICodeTree from "../../views/annotation/CodeExplorer/ICodeTree";
-import { flatTree } from "../../views/annotation/CodeExplorer/TreeUtils";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import DataTreeView from "../TreeExplorer/DataTreeView.tsx";
+import { IDataTree } from "../TreeExplorer/IDataTree.ts";
+import { flatTree } from "../TreeExplorer/TreeUtils.ts";
 
 interface ExporterTreeSelectProps {
-  tree: ICodeTree | undefined;
+  tree: IDataTree | undefined;
   value: number[];
   onChange: (value: number[]) => void;
 }
@@ -21,7 +23,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
   const { filteredCodeTree, nodesToExpand } = useMemo(() => {
     if (tree) {
       // build the tree
-      const filteredCodeTree = new Tree().parse<ICodeTree>(structuredClone(tree));
+      const filteredCodeTree = new Tree().parse<IDataTree>(structuredClone(tree));
 
       const nodesToExpand = new Set<number>();
 
@@ -31,18 +33,18 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
         // find all nodes that match the filter
         filteredCodeTree.walk(
           (node) => {
-            if (node.model.code.name.startsWith(codeFilter.trim())) {
+            if (node.model.data.name.startsWith(codeFilter.trim())) {
               // keep the node
-              nodesToKeep.add(node.model.code.id);
+              nodesToKeep.add(node.model.data.id);
 
               // keep its children
-              node.children.map((child) => child.model.code.id).forEach((id) => nodesToKeep.add(id));
+              node.children.map((child) => child.model.data.id).forEach((id) => nodesToKeep.add(id));
 
               // keep its parents
               let parent = node.parent;
               while (parent) {
-                nodesToKeep.add(parent.model.code.id);
-                nodesToExpand.add(parent.model.code.id);
+                nodesToKeep.add(parent.model.data.id);
+                nodesToExpand.add(parent.model.data.id);
                 parent = parent.parent;
               }
             }
@@ -52,7 +54,7 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
         );
 
         // filter the filteredCodeTree
-        let nodes_to_remove = filteredCodeTree.all((node) => !nodesToKeep.has(node.model.code.id));
+        const nodes_to_remove = filteredCodeTree.all((node) => !nodesToKeep.has(node.model.data.id));
         nodes_to_remove.forEach((node) => {
           node.drop();
         });
@@ -99,9 +101,9 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
     }
   };
 
-  const handleToggleTreeItem = (treeItem: ICodeTree) => {
+  const handleToggleTreeItem = (treeItem: IDataTree) => {
     // find tree item and all its children
-    const itemIds = [treeItem.code.id];
+    const itemIds = [treeItem.data.id];
     if (treeItem.children) {
       itemIds.push(...flatTree(treeItem).map((c) => c.id));
     }
@@ -152,7 +154,8 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
       </Toolbar>
       <Divider />
       {filteredCodeTree && (
-        <CodeTreeView
+        <DataTreeView
+          dataIcon={SquareIcon}
           data={filteredCodeTree.model}
           multiSelect={false}
           disableSelection
@@ -161,9 +164,9 @@ function ExporterTreeSelect({ tree, value, onChange }: ExporterTreeSelectProps) 
           onCollapseClick={handleCollapseClick}
           renderActions={(node) => (
             <Checkbox
-              name={node.code.name}
-              onChange={() => handleToggleTreeItem(node)}
-              checked={value.indexOf(node.code.id) !== -1}
+              name={(node.data as CodeRead).name}
+              onChange={() => handleToggleTreeItem(node as IDataTree)}
+              checked={value.indexOf(node.data.id) !== -1}
             />
           )}
         />

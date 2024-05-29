@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -8,6 +8,7 @@ from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.dto.search import (
     MemoContentQuery,
+    PaginatedElasticSearchDocumentHits,
     PaginatedMemoSearchResults,
     SearchColumns,
     SimSearchImageHit,
@@ -44,26 +45,31 @@ def search_sdocs_info(
 
 @router.post(
     "/sdoc",
-    response_model=List[int],
-    summary="Returns all SourceDocument Ids that match the query parameters.",
+    response_model=PaginatedElasticSearchDocumentHits,
+    summary="Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
 )
 def search_sdocs(
     *,
     search_query: str,
     project_id: int,
     expert_mode: bool,
+    highlight: bool,
+    page_number: Optional[int] = None,
+    page_size: Optional[int] = None,
     filter: Filter[SearchColumns],
     sorts: List[Sort[SearchColumns]],
     authz_user: AuthzUser = Depends(),
-) -> List[int]:
+) -> PaginatedElasticSearchDocumentHits:
     authz_user.assert_in_project(project_id)
-
     return SearchService().search(
         search_query=search_query,
         expert_mode=expert_mode,
+        highlight=highlight,
         project_id=project_id,
         filter=filter,
         sorts=sorts,
+        page_number=page_number,
+        page_size=page_size,
     )
 
 

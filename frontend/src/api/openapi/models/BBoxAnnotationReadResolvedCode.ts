@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { CodeRead } from "./CodeRead";
-
 export type BBoxAnnotationReadResolvedCode = {
   /**
    * Absolute x_min coordinate of the BBoxAnnotation
@@ -33,6 +32,14 @@ export type BBoxAnnotationReadResolvedCode = {
    * AnnotationDocument the BBoxAnnotation refers to
    */
   annotation_document_id: number;
+  /**
+   * User the SpanAnnotation belongs to
+   */
+  user_id: number;
+  /**
+   * SourceDocument the SpanAnnotation refers to
+   */
+  sdoc_id: number;
   /**
    * Created timestamp of the BBoxAnnotation
    */

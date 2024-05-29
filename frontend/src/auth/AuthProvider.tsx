@@ -1,73 +1,52 @@
-import { useQuery } from "@tanstack/react-query";
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
-import {
-  ApiError,
-  AuthenticationService,
-  OpenAPI,
-  UserAuthorizationHeaderData,
-  UserRead,
-  UserService,
-} from "../api/openapi";
-import queryClient from "../plugins/ReactQueryClient";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import React, { createContext, useCallback, useEffect, useState } from "react";
+import { ApiError } from "../api/openapi/core/ApiError.ts";
+import { OpenAPI } from "../api/openapi/core/OpenAPI.ts";
+import { UserAuthorizationHeaderData } from "../api/openapi/models/UserAuthorizationHeaderData.ts";
+import { UserRead } from "../api/openapi/models/UserRead.ts";
+import { AuthenticationService } from "../api/openapi/services/AuthenticationService.ts";
+import { UserService } from "../api/openapi/services/UserService.ts";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { LoginStatus } from "./LoginStatus.ts";
 
 // init once
-OpenAPI.BASE = process.env.REACT_APP_SERVER || "";
+OpenAPI.BASE = import.meta.env.VITE_APP_SERVER || "";
 OpenAPI.TOKEN = localStorage.getItem("dwts-access") || undefined;
-
-export enum LoginStatus {
-  LOGGED_IN = "logged_in",
-  LOADING = "loading",
-  LOGGED_OUT = "logged_out",
-}
 
 interface AuthContextType {
   user: UserRead | undefined;
-  login: (user: string, pass: string) => Promise<void>;
-  logout: () => Promise<void>;
+  updateAuthData: (authData: UserAuthorizationHeaderData) => void;
+  logout: () => void;
   loginStatus: LoginStatus;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
-export const useAuth = () => useContext(AuthContext)!;
 
 interface AuthContextProps {
   children?: React.ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthContextProps): any => {
+export const AuthProvider = ({ children }: AuthContextProps) => {
   // state
   const [accessToken, setAccessToken] = useState<string | undefined>(localStorage.getItem("dwts-access") || undefined);
-
-  let expiryString = localStorage.getItem("dwts-access-expires");
-  const persistedAccessTokenExpires = expiryString ? new Date(expiryString) : undefined;
-  const [accessTokenExpires, setAccessTokenExpires] = useState<Date | undefined>(persistedAccessTokenExpires);
-
+  const [accessTokenExpires, setAccessTokenExpires] = useState<Date | undefined>(() => {
+    const expiryString = localStorage.getItem("dwts-access-expires");
+    return expiryString ? new Date(expiryString) : undefined;
+  });
   const [refreshToken, setRefreshToken] = useState<string | undefined>(
     localStorage.getItem("dwts-refresh-access") || undefined,
   );
 
-  const internalUser = useQuery<UserRead, Error>(["me", accessToken], UserService.getMe, {
+  // fetch user data
+  const internalUser = useQuery<UserRead, Error>({
+    queryKey: ["me", accessToken],
+    queryFn: UserService.getMe,
     retry: false,
   });
+  const user = internalUser.data;
 
-  const [user, setUser] = useState<UserRead>();
-  useEffect(() => {
-    if (internalUser.isLoading) {
-      return;
-    }
-
-    if (internalUser.isError && internalUser.error instanceof ApiError && internalUser.error.status === 403) {
-      // Our credentials are invalid, we're not logged in anymore.
-      setUser(undefined);
-      return;
-    }
-
-    if (internalUser?.data?.id !== user?.id) {
-      setUser(internalUser.data);
-    }
-  }, [internalUser, user]);
-
-  const updateAuthData = (authData: UserAuthorizationHeaderData) => {
+  // methods
+  const updateAuthData = useCallback((authData: UserAuthorizationHeaderData) => {
     localStorage.setItem("dwts-access", authData.access_token);
     OpenAPI.TOKEN = authData.access_token;
     setAccessToken(authData.access_token);
@@ -77,75 +56,67 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
 
     localStorage.setItem("dwts-refresh-access", authData.refresh_token);
     setRefreshToken(authData.refresh_token);
-  };
-
-  // methods
-  /**
-   * Login and save access token
-   * @throws ApiError
-   */
-  const login = useCallback(async (username: string, password: string) => {
-    const authData = await AuthenticationService.login({ formData: { username, password } });
-    updateAuthData(authData);
   }, []);
 
-  const logout = useCallback(async () => {
-    try {
-      if (refreshToken !== undefined) {
-        await AuthenticationService.logout({ refreshToken });
-      }
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 403) {
-        // refresh token expired, keep logging the user out
-      } else {
+  const { mutate: logoutMutation } = useMutation({
+    mutationFn: AuthenticationService.logout,
+    retry: false,
+    onSettled(_data, error) {
+      if (error && !(error instanceof ApiError && error.status === 403)) {
         // There's a bug, logout didn't work
-        console.error("Error while logging out:", e);
+        console.error("Error while logging out:", error);
         return;
       }
-    }
-    OpenAPI.TOKEN = undefined;
-    localStorage.removeItem("dwts-access");
-    localStorage.removeItem("dwts-access-expires");
-    localStorage.removeItem("dwts-refresh-access");
-    setAccessToken(undefined);
-    setRefreshToken(undefined);
-    setAccessTokenExpires(undefined);
-    queryClient.clear();
-  }, [refreshToken]);
-
-  useEffect(() => {
-    if (accessTokenExpires === undefined) {
+      OpenAPI.TOKEN = undefined;
+      localStorage.removeItem("dwts-access");
+      localStorage.removeItem("dwts-access-expires");
+      localStorage.removeItem("dwts-refresh-access");
+      setAccessToken(undefined);
+      setRefreshToken(undefined);
+      setAccessTokenExpires(undefined);
+      queryClient.clear();
+    },
+  });
+  const logout = useCallback(() => {
+    if (refreshToken === undefined) {
+      console.error("No refresh token to log out with");
       return;
     }
+    logoutMutation({ refreshToken });
+  }, [refreshToken, logoutMutation]);
 
-    const refreshAccessToken = async () => {
-      if (refreshToken === undefined) {
-        console.error("Can't refresh access token, no refresh token set");
-        return;
+  const { mutate: refreshAccessTokenMutation } = useMutation({
+    mutationFn: AuthenticationService.refreshAccessToken,
+    retry: false,
+    onSuccess(data) {
+      updateAuthData(data);
+    },
+    onError(error, variables) {
+      if (error instanceof ApiError && error.status === 403) {
+        // Refresh token expired, it's time to log out
+        logoutMutation({ refreshToken: variables.refreshToken });
       }
-      try {
-        const authData = await AuthenticationService.refreshAccessToken({ refreshToken });
-        updateAuthData(authData);
-      } catch (e) {
-        if (e instanceof ApiError && e.status === 403) {
-          // Refresh token expired, it's time to log out
-          logout();
-        }
-      }
-    };
+    },
+  });
+
+  // refresh the access token when it's about to expire using the refresh token
+  useEffect(() => {
+    if (accessTokenExpires === undefined || refreshToken === undefined) {
+      return;
+    }
 
     // Refresh 60 seconds before the access token expires
     const refreshBefore = 60 * 1000;
     const msToWait = Math.max(accessTokenExpires.getTime() - Date.now() - refreshBefore, 0);
     const handle = setTimeout(() => {
-      refreshAccessToken();
+      refreshAccessTokenMutation({ refreshToken });
     }, msToWait);
 
     return () => clearTimeout(handle);
-  }, [accessTokenExpires, refreshToken, logout]);
+  }, [accessTokenExpires, refreshToken, refreshAccessTokenMutation]);
 
   let status;
-  const definitelyLoggedIn = user !== undefined || internalUser.isSuccess;
+  const definitelyLoggedIn = user !== undefined;
   const verifyingAccessToken = (internalUser.isLoading || internalUser.isFetching) && accessToken !== undefined;
   if (definitelyLoggedIn) {
     status = LoginStatus.LOGGED_IN;
@@ -158,7 +129,7 @@ export const AuthProvider = ({ children }: AuthContextProps): any => {
   return (
     <AuthContext.Provider
       value={{
-        login,
+        updateAuthData,
         logout,
         user,
         loginStatus: status,

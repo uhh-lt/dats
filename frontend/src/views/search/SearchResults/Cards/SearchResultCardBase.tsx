@@ -14,13 +14,14 @@ import Checkbox from "@mui/material/Checkbox";
 import * as React from "react";
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { AttachedObjectType, SourceDocumentWithDataRead } from "../../../../api/openapi";
-import SdocHooks from "../../../../api/SdocHooks";
-import MemoButton from "../../../../features/Memo/MemoButton";
-import { useAppSelector } from "../../../../plugins/ReduxHooks";
-import AnnotateButton from "../../ToolBar/ToolBarElements/AnnotateButton";
-import { SearchResultProps } from "../SearchResultProps";
-import SearchResultTag from "../SearchResultTag";
+import { AttachedObjectType } from "../../../../api/openapi/models/AttachedObjectType.ts";
+import { SourceDocumentWithDataRead } from "../../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import SdocHooks from "../../../../api/SdocHooks.ts";
+import MemoButton from "../../../../features/Memo/MemoButton.tsx";
+import { useAppSelector } from "../../../../plugins/ReduxHooks.ts";
+import AnnotateButton from "../../ToolBar/ToolBarElements/AnnotateButton.tsx";
+import { SearchResultProps } from "../SearchResultProps.ts";
+import SearchResultTag from "../SearchResultTag.tsx";
 
 const StyledCardHeader = styled(CardHeader)(() => ({
   color: "inherit",

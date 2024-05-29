@@ -1,16 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type WhiteboardRead = {
   /**
    * Title of the Whiteboard
    */
   title: string;
-  /**
-   * Content of the Whiteboard
-   */
-  content: string;
   /**
    * ID of the Whiteboard
    */
@@ -31,4 +27,8 @@ export type WhiteboardRead = {
    * Updated timestamp of the Whiteboard
    */
   updated: string;
+  /**
+   * Content of the Whiteboard
+   */
+  content: string;
 };

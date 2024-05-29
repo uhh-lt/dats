@@ -1,21 +1,20 @@
 import { Button, ButtonGroup, Toolbar, Typography } from "@mui/material";
 import * as d3 from "d3";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import AdocHooks from "../../../api/AdocHooks";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
-import {
-  AnnotationDocumentRead,
-  BBoxAnnotationReadResolvedCode,
-  SourceDocumentWithDataRead,
-  SpanAnnotationReadResolved,
-} from "../../../api/openapi";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu";
-import { ICode } from "../TextAnnotator/ICode";
-import SVGBBox from "./SVGBBox";
-import SVGBBoxText from "./SVGBBoxText";
-import SdocHooks from "../../../api/SdocHooks";
+import AdocHooks from "../../../api/AdocHooks.ts";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
+
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDocumentRead.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu.tsx";
+import { ICode } from "../TextAnnotator/ICode.ts";
+import SVGBBox from "./SVGBBox.tsx";
+import SVGBBoxText from "./SVGBBoxText.tsx";
 
 interface ImageAnnotatorProps {
   sdoc: SourceDocumentWithDataRead;
@@ -70,19 +69,22 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   // mutations for create, update, delete
   const createMutation = BboxAnnotationHooks.useCreateAnnotation();
   const updateMutation = BboxAnnotationHooks.useUpdateBBox();
-  const deleteMutation = BboxAnnotationHooks.useDelete();
+  const deleteMutation = BboxAnnotationHooks.useDeleteBBox();
 
   // right click (contextmenu) handling
   const handleRightClick = useCallback(
-    (event: any, d: BBoxAnnotationReadResolvedCode) => {
+    (
+      event: React.MouseEvent<SVGRectElement, MouseEvent> | React.MouseEvent<SVGTextElement, MouseEvent>,
+      bbox: BBoxAnnotationReadResolvedCode,
+    ) => {
       event.preventDefault();
-      const rect = event.target.getBoundingClientRect();
+      const rect = event.currentTarget.getBoundingClientRect();
       const position = {
         left: rect.left,
         top: rect.top + rect.height,
       };
-      codeSelectorRef.current!.open(position, [d]);
-      setSelectedBbox(d);
+      codeSelectorRef.current!.open(position, [bbox]);
+      setSelectedBbox(bbox);
     },
     [codeSelectorRef],
   );
@@ -90,7 +92,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   // drag handling
   const drag = useMemo(() => d3.drag<SVGGElement, unknown>(), []);
 
-  const handleDragStart = (event: d3.D3DragEvent<any, any, any>, d: any) => {
+  const handleDragStart = (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
     if (!rectRef.current) return;
 
     const myRect = d3.select(rectRef.current);
@@ -103,7 +105,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
       .attr("height", 0);
   };
 
-  const handleDrag = (event: d3.D3DragEvent<any, any, any>, d: any) => {
+  const handleDrag = (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
     if (!rectRef.current) return;
 
     const myRect = d3.select(rectRef.current);
@@ -143,7 +145,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
     }
   };
 
-  const handleDragEnd = (event: d3.D3DragEvent<any, any, any>, d: any) => {
+  const handleDragEnd = () => {
     const myRect = d3.select(rectRef.current);
     const width = parseInt(myRect.attr("width"));
     const height = parseInt(myRect.attr("height"));
@@ -169,7 +171,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   // zoom handling
   const zoom = useMemo(() => d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.5, 5]), []);
 
-  const handleZoom = useCallback((e: d3.D3ZoomEvent<any, any>) => {
+  const handleZoom = useCallback((e: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
     d3.select(gZoomRef.current).attr("transform", e.transform.toString());
   }, []);
 
@@ -244,7 +246,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
   };
 
   const onCodeSelectorEditCode = (
-    annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
+    _annotationToEdit: SpanAnnotationReadResolved | BBoxAnnotationReadResolvedCode,
     code: ICode,
   ) => {
     if (selectedBbox) {

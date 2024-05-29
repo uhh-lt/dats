@@ -1,4 +1,4 @@
-import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 
 export interface ChartDataPoint {
   tags: DocumentTagRead[];

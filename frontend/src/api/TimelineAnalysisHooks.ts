@@ -1,54 +1,108 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import queryClient from "../plugins/ReactQueryClient";
-import { QueryKey } from "./QueryKey";
-import { TimelineAnalysisRead, TimelineAnalysisService } from "./openapi";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { QueryKey } from "./QueryKey.ts";
+import { TimelineAnalysisRead } from "./openapi/models/TimelineAnalysisRead.ts";
+import { TimelineAnalysisService } from "./openapi/services/TimelineAnalysisService.ts";
 
 const useGetTimelineAnalysis = (timelineAnalysisId: number | null | undefined) =>
-  useQuery<TimelineAnalysisRead, Error>(
-    [QueryKey.TIMELINE_ANALYSIS, timelineAnalysisId],
-    async () => {
+  useQuery<TimelineAnalysisRead, Error>({
+    queryKey: [QueryKey.TIMELINE_ANALYSIS, timelineAnalysisId],
+    queryFn: async () => {
       return await TimelineAnalysisService.getById({ timelineAnalysisId: timelineAnalysisId! });
     },
-    {
-      retry: false,
-      enabled: !!timelineAnalysisId,
-      select: (data) => data,
-    },
-  );
+    retry: false,
+    enabled: !!timelineAnalysisId,
+    select: (data) => data,
+  });
 
 const useGetUserTimelineAnalysiss = (projectId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<TimelineAnalysisRead[], Error>(
-    [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId, userId],
-    async () => {
+  useQuery<TimelineAnalysisRead[], Error>({
+    queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, projectId, userId],
+    queryFn: async () => {
       return await TimelineAnalysisService.getByProjectAndUser({ projectId: projectId!, userId: userId! });
     },
-    {
-      retry: false,
-      enabled: !!projectId && !!userId,
-    },
-  );
+    retry: false,
+    enabled: !!projectId && !!userId,
+  });
 
 const useCreateTimelineAnalysis = () =>
-  useMutation(TimelineAnalysisService.create, {
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.TIMELINE_ANALYSIS, data.id]);
-      queryClient.invalidateQueries([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id]);
+  useMutation({
+    mutationFn: TimelineAnalysisService.create,
+    onSuccess(data) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
+            [
+              ...prevTimelineAnalysis,
+              {
+                ...data,
+              },
+            ] as TimelineAnalysisRead[],
+        );
+        queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, data.id] });
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
     },
   });
 
 const useUpdateTimelineAnalysis = () =>
-  useMutation(TimelineAnalysisService.updateById, {
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.TIMELINE_ANALYSIS, data.id]);
-      queryClient.invalidateQueries([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id]);
+  useMutation({
+    mutationFn: TimelineAnalysisService.updateById,
+    onSettled(data, _error, variables) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) => {
+            const index = prevTimelineAnalysis.findIndex((timelineAnalysis) => timelineAnalysis.id === data.id);
+            if (index === -1) {
+              return prevTimelineAnalysis;
+            }
+            return [...prevTimelineAnalysis.slice(0, index), data, ...prevTimelineAnalysis.slice(index + 1)];
+          },
+        );
+
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
+    },
+  });
+
+const useDuplicateTimelineAnalysis = () =>
+  useMutation({
+    mutationFn: TimelineAnalysisService.duplicateById,
+    onSettled(data) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) => [...prevTimelineAnalysis, data],
+        );
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
     },
   });
 
 const useDeleteTimelineAnalysis = () =>
-  useMutation(TimelineAnalysisService.deleteById, {
-    onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.TIMELINE_ANALYSIS, data.id]);
-      queryClient.invalidateQueries([QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id]);
+  useMutation({
+    mutationFn: TimelineAnalysisService.deleteById,
+    onSettled(data, _error, variables) {
+      if (data) {
+        queryClient.setQueryData(
+          [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+          (prevTimelineAnalysis: TimelineAnalysisRead[]) =>
+            prevTimelineAnalysis.filter((timelineAnalysis) => timelineAnalysis.id !== data.id),
+        );
+        queryClient.invalidateQueries({
+          queryKey: [QueryKey.TIMELINE_ANALYSIS_PROJECT_USER, data.project_id, data.user_id],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: [QueryKey.TIMELINE_ANALYSIS, variables.timelineAnalysisId] });
     },
   });
 
@@ -57,6 +111,7 @@ const TimelineAnalysisHooks = {
   useGetUserTimelineAnalysiss,
   useCreateTimelineAnalysis,
   useUpdateTimelineAnalysis,
+  useDuplicateTimelineAnalysis,
   useDeleteTimelineAnalysis,
 };
 

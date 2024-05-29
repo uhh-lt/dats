@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { ExportFormat } from "./ExportFormat";
 import type { ExportJobType } from "./ExportJobType";
 import type { SingleDocAllUserAnnotationsExportJobParams } from "./SingleDocAllUserAnnotationsExportJobParams";
@@ -13,7 +13,6 @@ import type { SingleUserAllCodesExportJobParams } from "./SingleUserAllCodesExpo
 import type { SingleUserAllDataExportJobParams } from "./SingleUserAllDataExportJobParams";
 import type { SingleUserAllMemosExportJobParams } from "./SingleUserAllMemosExportJobParams";
 import type { SingleUserLogbookExportJobParams } from "./SingleUserLogbookExportJobParams";
-
 export type ExportJobParameters = {
   /**
    * The type of the export job (what to export)

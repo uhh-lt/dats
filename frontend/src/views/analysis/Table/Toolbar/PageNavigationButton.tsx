@@ -2,7 +2,7 @@ import { IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Tooltip } from 
 import { useState } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
 import CheckIcon from "@mui/icons-material/Check";
-import { TablePage } from "../../../../api/TableHooks";
+import { TablePage } from "../../../../api/TableHooks.ts";
 
 interface PageNavigationButtonProps {
   tablePages: TablePage[];

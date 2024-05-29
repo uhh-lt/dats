@@ -1,15 +1,15 @@
 import { AppBar, AppBarProps, Box, Button, Grid, Link, Stack, Toolbar, Typography } from "@mui/material";
 import { useContext } from "react";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
-import { LoginStatus, useAuth } from "../../auth/AuthProvider";
-import UserProfileMenu from "../../features/UserProfileMenu/UserProfileMenu";
-import { AppBarContext } from "../../layouts/TwoBarLayout";
-import TemporaryDrawer from "./TemporaryDrawer";
+import { Link as RouterLink, useParams } from "react-router-dom";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { LoginStatus } from "../../auth/LoginStatus.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import UserProfileMenu from "../../features/UserProfileMenu/UserProfileMenu.tsx";
+import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
+import TemporaryDrawer from "./TemporaryDrawer.tsx";
 
 function TopBar(props: AppBarProps) {
   const { loginStatus, logout, user } = useAuth();
-  const navigate = useNavigate();
   const appBarContainerRef = useContext(AppBarContext);
 
   // global client state (react-router)
@@ -17,11 +17,6 @@ function TopBar(props: AppBarProps) {
 
   // global server state (react-query)
   const project = ProjectHooks.useGetProject(projectId ? parseInt(projectId) : undefined);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
 
   return (
     <AppBar position="static" sx={{ zIndex: (theme) => theme.zIndex.appBar }} {...props}>
@@ -58,7 +53,7 @@ function TopBar(props: AppBarProps) {
                   Login
                 </Button>
               ) : (
-                <UserProfileMenu handleLogout={handleLogout} user={user} />
+                <UserProfileMenu handleLogout={logout} user={user} />
               )}
             </Stack>
           </Grid>

@@ -1,61 +1,71 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CodeRead, CodeService, MemoRead } from "./openapi";
-import { QueryKey } from "./QueryKey";
-import queryClient from "../plugins/ReactQueryClient";
+import queryClient from "../plugins/ReactQueryClient.ts";
+import { QueryKey } from "./QueryKey.ts";
+import { CodeRead } from "./openapi/models/CodeRead.ts";
+import { MemoRead } from "./openapi/models/MemoRead.ts";
+import { CodeService } from "./openapi/services/CodeService.ts";
 
 // memo
 const useCreateMemo = () =>
-  useMutation(CodeService.addMemo, {
+  useMutation({
+    mutationFn: CodeService.addMemo,
     onSuccess: (createdMemo) => {
-      queryClient.invalidateQueries([QueryKey.USER_MEMOS, createdMemo.user_id]);
-      queryClient.invalidateQueries([QueryKey.MEMO_CODE, createdMemo.attached_object_id, createdMemo.user_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_MEMOS, createdMemo.user_id] });
+      queryClient.invalidateQueries({
+        queryKey: [QueryKey.MEMO_CODE, createdMemo.attached_object_id, createdMemo.user_id],
+      });
     },
   });
 
 const useGetMemos = (codeId: number | null | undefined) =>
-  useQuery<MemoRead[], Error>([QueryKey.MEMO_CODE, codeId], () => CodeService.getMemos({ codeId: codeId! }), {
+  useQuery<MemoRead[], Error>({
+    queryKey: [QueryKey.MEMO_CODE, codeId],
+    queryFn: () => CodeService.getMemos({ codeId: codeId! }),
     retry: false,
     enabled: !!codeId,
   });
 
 const useGetMemo = (codeId: number | null | undefined, userId: number | null | undefined) =>
-  useQuery<MemoRead, Error>(
-    [QueryKey.MEMO_CODE, codeId, userId],
-    () => CodeService.getUserMemo({ codeId: codeId!, userId: userId! }),
-    {
-      retry: false,
-      enabled: !!codeId && !!userId,
-    },
-  );
+  useQuery<MemoRead, Error>({
+    queryKey: [QueryKey.MEMO_CODE, codeId, userId],
+    queryFn: () => CodeService.getUserMemo({ codeId: codeId!, userId: userId! }),
+    retry: false,
+    enabled: !!codeId && !!userId,
+  });
 
 // code
 const useGetCode = (codeId: number | null | undefined) =>
-  useQuery<CodeRead, Error>([QueryKey.CODE, codeId], () => CodeService.getById({ codeId: codeId! }), {
+  useQuery<CodeRead, Error>({
+    queryKey: [QueryKey.CODE, codeId],
+    queryFn: () => CodeService.getById({ codeId: codeId! }),
     enabled: !!codeId,
   });
 
 const useCreateCode = () =>
-  useMutation(CodeService.createNewCode, {
+  useMutation({
+    mutationFn: CodeService.createNewCode,
     onSuccess: (newCode, variables) => {
-      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, variables.requestBody.project_id]);
-      queryClient.invalidateQueries([QueryKey.USER_CODES, newCode.user_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, variables.requestBody.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_CODES, newCode.user_id] });
     },
   });
 
 const useUpdateCode = () =>
-  useMutation(CodeService.updateById, {
+  useMutation({
+    mutationFn: CodeService.updateById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, data.project_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.CODE, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
     },
   });
 
 const useDeleteCode = () =>
-  useMutation(CodeService.deleteById, {
+  useMutation({
+    mutationFn: CodeService.deleteById,
     onSuccess: (data) => {
-      queryClient.invalidateQueries([QueryKey.CODE, data.id]);
-      queryClient.invalidateQueries([QueryKey.PROJECT_CODES, data.project_id]);
-      queryClient.invalidateQueries([QueryKey.USER_CODES, data.user_id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.CODE, data.id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.PROJECT_CODES, data.project_id] });
+      queryClient.invalidateQueries({ queryKey: [QueryKey.USER_CODES, data.user_id] });
     },
   });
 

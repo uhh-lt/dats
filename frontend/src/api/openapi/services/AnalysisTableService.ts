@@ -1,14 +1,13 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { AnalysisTableCreate } from "../models/AnalysisTableCreate";
 import type { AnalysisTableRead } from "../models/AnalysisTableRead";
 import type { AnalysisTableUpdate } from "../models/AnalysisTableUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class AnalysisTableService {
   /**
    * Creates an AnalysisTable
@@ -26,7 +25,6 @@ export class AnalysisTableService {
       },
     });
   }
-
   /**
    * Returns the AnalysisTable with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
@@ -44,7 +42,6 @@ export class AnalysisTableService {
       },
     });
   }
-
   /**
    * Updates the Analysis Table with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
@@ -70,7 +67,6 @@ export class AnalysisTableService {
       },
     });
   }
-
   /**
    * Removes the AnalysisTable with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
@@ -88,7 +84,6 @@ export class AnalysisTableService {
       },
     });
   }
-
   /**
    * Returns the AnalysisTable of the Project with the given ID and the User with the given ID if it exists
    * @returns AnalysisTableRead Successful Response
@@ -107,6 +102,23 @@ export class AnalysisTableService {
       path: {
         project_id: projectId,
         user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Duplicate the Analysis Table with the given ID if it exists
+   * @returns AnalysisTableRead Successful Response
+   * @throws ApiError
+   */
+  public static duplicateById({ analysisTableId }: { analysisTableId: number }): CancelablePromise<AnalysisTableRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysisTable/duplicate/{analysis_table_id}",
+      path: {
+        analysis_table_id: analysisTableId,
       },
       errors: {
         422: `Validation Error`,

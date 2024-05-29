@@ -371,14 +371,15 @@ class ElasticSearchService(metaclass=SingletonMeta):
         query: Dict[str, Any],
         limit: Optional[int] = None,
         skip: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        highlight: Optional[Dict[str, Any]],
+    ) -> PaginatedElasticSearchDocumentHits:
         """
         Helper function that can be reused to find SDocs or Memos with different queries.
         :param query: The ElasticSearch query object in ES Query DSL
         :param skip: The number of skipped elements
         :param limit: The maximum number of returned elements
         :return: A (possibly empty) list of Memo matching the query
-        :rtype: List[DocumentElasticSearchHit]
+        :rtype: PaginatedElasticSearchDocumentHits
         """
         if sdoc:
             idx = self.__get_index_name(proj_id=proj_id, index_type="doc")
@@ -393,14 +394,21 @@ class ElasticSearchService(metaclass=SingletonMeta):
 
         if isinstance(limit, int) and (limit > 10000 or limit < 1):
             raise ValueError("Limit must be a positive Integer smaller than 10000!")
-        elif isinstance(skip, int) and (skip > 10000 or skip < 1):
-            raise ValueError("Skip must be a positive Integer smaller than 10000!")
-        elif limit is None or skip is None:
+        elif isinstance(skip, int) and (skip > 10000):
+            raise ValueError(
+                "Skip must be a zero or positive Integer smaller than 10000!"
+            )
+
+        if limit is None or skip is None:
             # use scroll api
             res = list(
                 helpers.scan(
                     index=idx,
-                    query={"query": query, "_source": source_fields},
+                    query={
+                        "query": query,
+                        "_source": source_fields,
+                        "highlight": highlight,
+                    },
                     client=self.__client,
                     scroll="10m",
                     size=10000,
@@ -408,24 +416,40 @@ class ElasticSearchService(metaclass=SingletonMeta):
                 )
             )
 
-            # build the exact same return data structure as if we would call search directly
-            return {
-                "hits": {
-                    "total": {
-                        "value": len(res),
-                        "relation": "eq",
-                    },
-                    "hits": res,
-                }
-            }
+            hits = []
+            for document in res:
+                highlights = (
+                    document["highlight"]["content"] if "highlight" in document else []
+                )
+                document_hit = ElasticSearchDocumentHit(
+                    sdoc_id=document["_id"],
+                    score=document["_score"],
+                    highlights=highlights,
+                )
+                hits.append(document_hit)
+            total_results = len(hits)
 
-        # use search api
-        return self.__client.search(
-            index=idx,
-            query=query,
-            size=limit,
-            from_=skip,
-            _source=source_fields,
+        else:
+            # use search_api
+            client_response = self.__client.search(
+                index=idx,
+                query=query,
+                size=limit,
+                from_=skip,
+                _source=source_fields,
+                highlight=highlight,
+            )
+            hits = []
+            for hit in client_response["hits"]["hits"]:
+                highlights = hit["highlight"]["content"] if "highlight" in hit else []
+                document = ElasticSearchDocumentHit(
+                    sdoc_id=hit["_id"], score=hit["_score"], highlights=highlights
+                )
+                hits.append(document)
+            total_results = client_response["hits"]["total"]["value"]
+
+        return PaginatedElasticSearchDocumentHits(
+            hits=hits, total_results=total_results
         )
 
     def __search_sdocs(
@@ -435,40 +459,16 @@ class ElasticSearchService(metaclass=SingletonMeta):
         query: Dict[str, Any],
         limit: Optional[int] = None,
         skip: Optional[int] = None,
+        highlight: Optional[Dict[str, Any]],
     ) -> PaginatedElasticSearchDocumentHits:
-        res = self.__search(
+        return self.__search(
             sdoc=True,
             proj_id=proj_id,
             query=query,
             limit=limit,
             skip=skip,
             source_fields=False,
-        )
-        # Flo: for convenience only...
-        res = OmegaConf.create(res)
-        if res.hits.total.value == 0:
-            return PaginatedElasticSearchDocumentHits(
-                hits=[],
-                total=0,
-                has_more=False,
-                current_page_offset=skip if skip is not None else 0,
-                next_page_offset=0,
-            )
-
-        esdocs = [
-            ElasticSearchDocumentHit(sdoc_id=doc["_id"], score=doc["_score"])
-            for doc in res.hits.hits
-        ]
-
-        has_more = limit is not None and res.hits.total.value > limit
-        return PaginatedElasticSearchDocumentHits(
-            hits=esdocs,
-            total=res.hits.total.value,
-            has_more=has_more,
-            current_page_offset=skip if skip is not None else 0,
-            next_page_offset=(skip + limit)
-            if skip is not None and limit is not None and has_more
-            else 0,
+            highlight=highlight,
         )
 
     def __search_memos(
@@ -529,14 +529,15 @@ class ElasticSearchService(metaclass=SingletonMeta):
             for esmemo in esmemos
         ]
 
-        has_more = limit is not None and res.hits.total.value > limit
+        next_page_offset = skip + limit
+        has_more = limit is not None and res.hits.total.value > next_page_offset
 
         return PaginatedMemoSearchResults(
             memos=memos,
             has_more=has_more,
             total=res.hits.total.value,
             current_page_offset=skip if skip is not None else 0,
-            next_page_offset=(skip + limit)
+            next_page_offset=next_page_offset
             if skip is not None and limit is not None and has_more
             else 0,
         )
@@ -567,6 +568,7 @@ class ElasticSearchService(metaclass=SingletonMeta):
         sdoc_ids: Set[int],
         query: str,
         use_simple_query: bool = True,
+        highlight: bool = False,
         limit: Optional[int] = None,
         skip: Optional[int] = None,
     ) -> PaginatedElasticSearchDocumentHits:
@@ -581,11 +583,14 @@ class ElasticSearchService(metaclass=SingletonMeta):
         else:
             q = {"query_string": {"query": query, "default_field": "content"}}
 
+        highlight_query = {"fields": {"content": {}}} if highlight else None
+
         return self.__search_sdocs(
             proj_id=proj_id,
             query={"bool": {"must": [{"terms": {"sdoc_id": list(sdoc_ids)}}, q]}},
             limit=limit,
             skip=skip,
+            highlight=highlight_query,
         )
 
     def search_memos_by_title_query(

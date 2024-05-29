@@ -1,14 +1,17 @@
-import { Stack } from "@mui/material";
-import SdocHooks from "../../api/SdocHooks";
-import { DocumentTagRead } from "../../api/openapi";
-import TagRenderer from "./TagRenderer";
+import { Stack, StackProps } from "@mui/material";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import TagRenderer from "./TagRenderer.tsx";
 
+interface SharedProps {
+  stackProps?: Omit<StackProps, "direction" | "alignItems">;
+}
 interface SdocTagsRendererProps {
   sdocId?: number;
   tags?: number[] | DocumentTagRead[];
 }
 
-function SdocTagsRenderer({ sdocId, tags, ...props }: SdocTagsRendererProps) {
+function SdocTagsRenderer({ sdocId, tags, ...props }: SdocTagsRendererProps & SharedProps) {
   if (sdocId === undefined && tags === undefined) {
     return <>Nothing to show :(</>;
   }
@@ -23,7 +26,7 @@ function SdocTagsRenderer({ sdocId, tags, ...props }: SdocTagsRendererProps) {
   return null;
 }
 
-function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number }) {
+function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number } & SharedProps) {
   const tags = SdocHooks.useGetAllDocumentTags(sdocId);
 
   if (tags.isSuccess) {
@@ -35,11 +38,11 @@ function SdocTagsRendererWithoutData({ sdocId, ...props }: { sdocId: number }) {
   }
 }
 
-function SdocTagsRendererWithData({ tags }: { tags: number[] | DocumentTagRead[] }) {
+function SdocTagsRendererWithData({ tags, stackProps }: { tags: number[] | DocumentTagRead[] } & SharedProps) {
   return (
-    <Stack direction="row" alignItems="center">
+    <Stack direction="row" alignItems="center" {...stackProps}>
       {tags.map((tag) => (
-        <TagRenderer key={typeof tag === "number" ? tag : tag.id} tag={tag} mr={0.5} />
+        <TagRenderer key={typeof tag === "number" ? tag : tag.id} tag={tag} mr={0.5} sx={{ textWrap: "nowrap" }} />
       ))}
     </Stack>
   );

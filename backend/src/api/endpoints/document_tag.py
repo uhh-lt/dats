@@ -37,10 +37,10 @@ def create_new_doc_tag(
 ) -> DocumentTagRead:
     authz_user.assert_in_project(doc_tag.project_id)
 
-    if doc_tag.parent_tag_id is not None and doc_tag.parent_tag_id != -1:
-        authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, doc_tag.parent_tag_id)
+    if doc_tag.parent_id is not None and doc_tag.parent_id != -1:
+        authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, doc_tag.parent_id)
 
-        parent_tag = crud_document_tag.read(db, doc_tag.parent_tag_id)
+        parent_tag = crud_document_tag.read(db, doc_tag.parent_id)
         validate.validate_condition(
             parent_tag.project_id == doc_tag.project_id,
             "Parent tag needs to be in the same project",

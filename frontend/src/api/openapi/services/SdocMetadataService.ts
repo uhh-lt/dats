@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -5,11 +6,9 @@ import type { SourceDocumentMetadataCreate } from "../models/SourceDocumentMetad
 import type { SourceDocumentMetadataRead } from "../models/SourceDocumentMetadataRead";
 import type { SourceDocumentMetadataReadResolved } from "../models/SourceDocumentMetadataReadResolved";
 import type { SourceDocumentMetadataUpdate } from "../models/SourceDocumentMetadataUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class SdocMetadataService {
   /**
    * Creates a new Metadata and returns it with the generated ID.
@@ -31,7 +30,6 @@ export class SdocMetadataService {
       },
     });
   }
-
   /**
    * Returns the Metadata with the given ID.
    * @returns SourceDocumentMetadataReadResolved Successful Response
@@ -49,7 +47,6 @@ export class SdocMetadataService {
       },
     });
   }
-
   /**
    * Updates the Metadata with the given ID.
    * @returns SourceDocumentMetadataRead Successful Response
@@ -75,7 +72,6 @@ export class SdocMetadataService {
       },
     });
   }
-
   /**
    * Deletes the Metadata with the given ID.
    * @returns SourceDocumentMetadataRead Successful Response

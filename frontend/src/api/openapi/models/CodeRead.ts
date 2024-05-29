@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export type CodeRead = {
   /**
    * Name of the Code
@@ -18,7 +18,7 @@ export type CodeRead = {
   /**
    * Parent of the Code
    */
-  parent_code_id?: number | null;
+  parent_id?: number | null;
   /**
    * ID of the Code
    */

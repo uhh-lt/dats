@@ -1,11 +1,20 @@
 import { Box, CardContent, CardHeader, Divider, MenuItem, Stack, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
-import CodeHooks from "../../../api/CodeHooks";
-import SdocHooks from "../../../api/SdocHooks";
-import { useAuth } from "../../../auth/AuthProvider";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { BBoxAnnotationNodeData } from "../types/dbnodes/BBoxAnnotationNodeData.ts";
+import { isCodeNode, isMemoNode, isSdocNode } from "../types/typeGuards.ts";
 import {
   createCodeBBoxAnnotationEdge,
   createCodeNodes,
@@ -16,22 +25,17 @@ import {
   isCodeBBoxAnnotationEdge,
   isMemoBBoxAnnotationEdge,
   isSdocBBoxAnnotationEdge,
-} from "../whiteboardUtils";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { BBoxAnnotationNodeData, DWTSNodeData, isCodeNode, isMemoNode, isSdocNode } from "../types";
-import BaseCardNode from "./BaseCardNode";
-import ImageCropper from "./ImageCropper";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
-import { openBBoxAnnotationEditDialog } from "../../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
-import MemoAPI from "../../../features/Memo/MemoAPI";
-import { AttachedObjectType } from "../../../api/openapi";
+} from "../whiteboardUtils.ts";
+import BaseCardNode from "./BaseCardNode.tsx";
+import ImageCropper from "./ImageCropper.tsx";
 
 function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
   // global client state
   const userId = useAuth().user!.id;
+  const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowInstance = useReactFlow<DWTSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -121,7 +125,7 @@ function BboxAnnotationNode(props: NodeProps<BBoxAnnotationNodeData>) {
     if (!annotation.data) return;
 
     if (event.detail >= 2) {
-      openBBoxAnnotationEditDialog(annotation.data);
+      dispatch(CRUDDialogActions.openBBoxAnnotationEditDialog({ annotation: annotation.data }));
     }
   };
 

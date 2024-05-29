@@ -1,16 +1,13 @@
-import React from "react";
-import {
-  AttachedObjectType,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  DocumentTagRead,
-  SourceDocumentRead,
-  SpanAnnotationReadResolved,
-} from "../../api/openapi";
-import { Box, Link, Stack } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import SdocHooks from "../../api/SdocHooks";
 import LabelIcon from "@mui/icons-material/Label";
+import { Box, Link, Stack, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 
 interface AttachedObjectLinkProps {
   attachedObjectType: AttachedObjectType;
@@ -59,7 +56,7 @@ function SdocLink({ sdoc }: { sdoc: SourceDocumentRead }) {
   return (
     <>
       attached to{" "}
-      <Link component={RouterLink} to={`../search/doc/${sdoc.id}`} color="inherit">
+      <Link component={RouterLink} to={`../annotation/${sdoc.id}`} color="inherit">
         {sdoc.filename}
       </Link>
     </>
@@ -70,7 +67,7 @@ function TagLink({ tag }: { tag: DocumentTagRead }) {
   return (
     <Stack direction="row" alignItems="center" component="span">
       attached to tag <LabelIcon sx={{ ml: 1.5, mr: 1, color: tag.color }} />
-      {tag.title}
+      {tag.name}
     </Stack>
   );
 }
@@ -82,20 +79,29 @@ function SpanAnnotationLink({ spanAnnotation }: { spanAnnotation: SpanAnnotation
   if (sdoc.isSuccess) {
     return (
       <>
-        attached to{" "}
-        <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
-          <span
-            style={{
-              backgroundColor: spanAnnotation.code.color,
-            }}
-          >
-            [{spanAnnotation.code.name}] {spanAnnotation.span_text}
-          </span>
-        </Link>{" "}
-        of{" "}
-        <Link component={RouterLink} to={`../search/doc/${sdoc.data.id}`} color="inherit">
-          {sdoc.data.filename}
-        </Link>
+        <Typography
+          variant="subtitle1"
+          fontSize={12}
+          fontWeight={600}
+          borderLeft={4}
+          borderColor={spanAnnotation.code.color}
+          paddingLeft={1}
+        >
+          attached to{" "}
+          <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
+            <span
+              style={{
+                backgroundColor: spanAnnotation.code.color,
+              }}
+            >
+              [{spanAnnotation.code.name}] {spanAnnotation.span_text}
+            </span>
+          </Link>{" "}
+          of{" "}
+          <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
+            {sdoc.data.filename}
+          </Link>
+        </Typography>
       </>
     );
   }
@@ -123,7 +129,7 @@ function BBoxAnnotationLink({ bboxAnnotation }: { bboxAnnotation: BBoxAnnotation
           Bounding Box ({bboxAnnotation.code.name})
         </Link>
         of{" "}
-        <Link component={RouterLink} to={`../search/doc/${sdoc.data.id}`} color="inherit">
+        <Link component={RouterLink} to={`../annotation/${sdoc.data.id}`} color="inherit">
           {sdoc.data.filename}
         </Link>
       </>

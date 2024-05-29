@@ -1,19 +1,15 @@
 import { Box } from "@mui/material";
 import * as d3 from "d3";
 import React, { useEffect, useMemo, useRef } from "react";
-import AdocHooks from "../../../api/AdocHooks";
-import {
-  AnnotationDocumentRead,
-  BBoxAnnotationReadResolvedCode,
-  SourceDocumentWithDataRead,
-} from "../../../api/openapi";
-import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu";
-import SdocHooks from "../../../api/SdocHooks";
+import AdocHooks from "../../../api/AdocHooks.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
+import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu.tsx";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface ImageViewerProps {
   sdoc: SourceDocumentWithDataRead;
-  adoc: AnnotationDocumentRead | null;
-  showEntities: boolean;
 }
 
 function ImageViewer(props: ImageViewerProps) {
@@ -35,13 +31,7 @@ function ImageViewer(props: ImageViewerProps) {
   }
 }
 
-function ImageViewerWithData({
-  sdoc,
-  adoc,
-  showEntities,
-  height,
-  width,
-}: ImageViewerProps & { height: number; width: number }) {
+function ImageViewerWithData({ sdoc, height, width }: ImageViewerProps & { height: number; width: number }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
   const bboxRef = useRef<SVGGElement>(null);
@@ -51,8 +41,23 @@ function ImageViewerWithData({
 
   const imgContainerHeight = 500;
 
-  // global server state (react-query)
-  const annotations = AdocHooks.useGetAllBboxAnnotations(adoc?.id);
+  // global client state (redux)
+  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
+  const hiddenCodeIds = useAppSelector((state) => state.annotations.hiddenCodeIds);
+
+  // global server state (react query)
+  const annotationsBatch = AdocHooks.useGetAllBboxAnnotationsBatch(visibleAdocIds);
+
+  // computed
+  const annotations = useMemo(() => {
+    const annotationsIsUndefined = annotationsBatch.some((a) => !a.data);
+    if (annotationsIsUndefined) return undefined;
+    return annotationsBatch.map((a) => a.data!).flat();
+  }, [annotationsBatch]);
+
+  const annotationData = useMemo(() => {
+    return (annotations || []).filter((bbox) => !hiddenCodeIds.includes(bbox.code.id));
+  }, [annotations, hiddenCodeIds]);
 
   // ui events
   const handleContextMenu = (event: React.MouseEvent) => {
@@ -67,7 +72,7 @@ function ImageViewerWithData({
     imageContextMenuRef.current?.open(position, sdoc.id);
   };
 
-  const handleZoom = (e: d3.D3ZoomEvent<any, any>) => {
+  const handleZoom = (e: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
     d3.select(gRef.current).attr("transform", e.transform.toString());
   };
 
@@ -82,16 +87,15 @@ function ImageViewerWithData({
   useEffect(() => {
     const rect = d3.select(bboxRef.current).selectAll<SVGRectElement, BBoxAnnotationReadResolvedCode>("rect");
     const text = d3.select(textRef.current).selectAll<SVGTextElement, BBoxAnnotationReadResolvedCode>("text");
-    const data = showEntities ? annotations.data || [] : [];
     const scaledRatio = imgContainerHeight / height;
 
     const portWidth: number = svgRef.current!.clientWidth;
-    let xCentering = portWidth / 2 - (width * scaledRatio) / 2;
+    const xCentering = portWidth / 2 - (width * scaledRatio) / 2;
     imgRef.current!.setAttribute("x", "" + xCentering);
 
     // add & remove nodes
     rect
-      .data(data, (datum) => datum.id)
+      .data(annotationData, (datum) => datum.id)
       .join(
         (enter) =>
           enter
@@ -110,7 +114,7 @@ function ImageViewerWithData({
 
     // add & remove text
     text
-      .data(data, (datum) => datum.id)
+      .data(annotationData, (datum) => datum.id)
       .join(
         (enter) =>
           enter
@@ -129,11 +133,10 @@ function ImageViewerWithData({
         (update) => update.attr("x", (d) => scaledRatio * (d.x_min + 3) + xCentering),
         (exit) => exit.remove(),
       );
-  }, [width, height, annotations.data, showEntities, sdoc.content]);
+  }, [width, height, annotationData, sdoc.content]);
 
   return (
     <Box onContextMenu={handleContextMenu}>
-      {annotations.isError && <span>{annotations.error.message}</span>}
       <svg ref={svgRef} width="100%" height={imgContainerHeight + "px"} style={{ cursor: "move" }}>
         <g ref={gRef}>
           <image ref={imgRef} href={sdoc.content} height={imgContainerHeight} />

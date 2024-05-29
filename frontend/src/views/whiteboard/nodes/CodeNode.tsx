@@ -1,10 +1,23 @@
 import { CardContent, CardHeader, Divider, MenuItem, Typography } from "@mui/material";
 import { useEffect, useMemo, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { NodeProps, useReactFlow } from "reactflow";
-import CodeHooks from "../../../api/CodeHooks";
-import { useAuth } from "../../../auth/AuthProvider";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
+import CodeHooks from "../../../api/CodeHooks.ts";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
+import { useReactFlowService } from "../hooks/ReactFlowService.ts";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
+import { CodeNodeData } from "../types/dbnodes/CodeNodeData.ts";
+import { isCodeNode, isMemoNode } from "../types/typeGuards.ts";
 import {
   createBBoxAnnotationNodes,
   createCodeNodes,
@@ -14,27 +27,17 @@ import {
   createSpanAnnotationNodes,
   isCodeParentCodeEdge,
   isMemoCodeEdge,
-} from "../whiteboardUtils";
-import { useReactFlowService } from "../hooks/ReactFlowService";
-import { CodeNodeData, DWTSNodeData, isCodeNode, isMemoNode } from "../types";
-import BaseCardNode from "./BaseCardNode";
-import { openCodeEditDialog } from "../../../features/CrudDialog/Code/CodeEditDialog";
-import { openCodeCreateDialog } from "../../../features/CrudDialog/Code/CodeCreateDialog";
-import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants";
-import MemoAPI from "../../../features/Memo/MemoAPI";
-import { AttachedObjectType } from "../../../api/openapi";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { useParams } from "react-router-dom";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
+} from "../whiteboardUtils.ts";
+import BaseCardNode from "./BaseCardNode.tsx";
 
 function CodeNode(props: NodeProps<CodeNodeData>) {
   // global client state
   const userId = useAuth().user!.id;
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
+  const dispatch = useAppDispatch();
 
   // whiteboard state (react-flow)
-  const reactFlowInstance = useReactFlow<DWTSNodeData, any>();
+  const reactFlowInstance = useReactFlow<DWTSNodeData>();
   const reactFlowService = useReactFlowService(reactFlowInstance);
 
   // context menu
@@ -45,7 +48,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   const code = CodeHooks.useGetCode(props.data.codeId);
   const bboxAnnotations = BboxAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
   const spanAnnotations = SpanAnnotationHooks.useGetByCodeAndUser(props.data.codeId, userId);
-  const parentCode = CodeHooks.useGetCode(code.data?.parent_code_id);
+  const parentCode = CodeHooks.useGetCode(code.data?.parent_id);
   const memo = CodeHooks.useGetMemo(props.data.codeId, userId);
 
   // TODO: This is not optimal!
@@ -54,7 +57,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   // also! we need a mechanism in the backend to detect loops in the code tree, and prevent them
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
   const childCodes = useMemo(() => {
-    return projectCodes.data?.filter((projectcode) => projectcode.parent_code_id === props.data.codeId) ?? [];
+    return projectCodes.data?.filter((projectcode) => projectcode.parent_id === props.data.codeId) ?? [];
   }, [props.data.codeId, projectCodes.data]);
 
   // effects
@@ -129,7 +132,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
 
   const handleClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (event.detail >= 2 && code.isSuccess) {
-      openCodeEditDialog(code.data);
+      dispatch(CRUDDialogActions.openCodeEditDialog({ code: code.data }));
     }
   };
 
@@ -166,12 +169,17 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   };
 
   const handleContextMenuCreateChildCode = () => {
-    openCodeCreateDialog({
-      parentCodeId: props.data.codeId,
-      onSuccess: (code) => {
-        reactFlowService.addNodes(createCodeNodes({ codes: [code], position: { x: props.xPos, y: props.yPos - 200 } }));
-      },
-    });
+    dispatch(
+      CRUDDialogActions.openCodeCreateDialog({
+        codeName: undefined,
+        parentCodeId: props.data.codeId,
+        codeCreateSuccessHandler(code) {
+          reactFlowService.addNodes(
+            createCodeNodes({ codes: [code], position: { x: props.xPos, y: props.yPos - 200 } }),
+          );
+        },
+      }),
+    );
     contextMenuRef.current?.close();
   };
 

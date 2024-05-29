@@ -1,18 +1,15 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider, Stack } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../../EventBus";
-import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks";
-import { CodeRead } from "../../../api/openapi";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer";
-import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationRenderer";
-import CodeSelector from "../../../components/Selectors/CodeSelector";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-
-export const openSpanAnnotationEditDialog = (spanAnnotationIds: number[]) => {
-  eventBus.dispatch("open-edit-spanAnnotation", spanAnnotationIds);
-};
+import { MRT_RowSelectionState } from "material-react-table";
+import { useState } from "react";
+import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
+import CodeTable from "../../../components/CodeTable/CodeTable.tsx";
+import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
+import SpanAnnotationRenderer from "../../../components/DataGrid/SpanAnnotationRenderer.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 export interface SpanAnnotationEditDialogProps extends ButtonProps {
   projectId: number;
@@ -20,38 +17,26 @@ export interface SpanAnnotationEditDialogProps extends ButtonProps {
 
 function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) {
   // local state
-  const [open, setOpen] = useState(false);
-  const [selectedCode, setSelectedCode] = useState<CodeRead | undefined>(undefined);
-  const [annotationIds, setAnnotationIds] = useState<number[]>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const selectedCodeId =
+    Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
-  // listen to event
-  // create a (memoized) function that stays the same across re-renders
-  const onOpenEditAnnotation = useCallback((event: CustomEventInit<number[]>) => {
-    if (!event.detail || event.detail.length === 0) return;
-
-    setOpen(true);
-    setAnnotationIds(event.detail);
-    // setSelectedCode(event.detail[0].code);
-  }, []);
-
-  useEffect(() => {
-    eventBus.on("open-edit-spanAnnotation", onOpenEditAnnotation);
-    return () => {
-      eventBus.remove("open-edit-spanAnnotation", onOpenEditAnnotation);
-    };
-  }, [onOpenEditAnnotation]);
+  // global client state (redux)
+  const open = useAppSelector((state) => state.dialog.isSpanAnnotationEditDialogOpen);
+  const annotationIds = useAppSelector((state) => state.dialog.spanAnnotationIds);
+  const dispatch = useAppDispatch();
 
   // mutations
   const updateAnnotationMutation = SpanAnnotationHooks.useUpdateSpan();
 
+  // actions
   const handleClose = () => {
-    setOpen(false);
-    setSelectedCode(undefined);
-    setAnnotationIds([]);
+    dispatch(CRUDDialogActions.closeSpanAnnotationEditDialog());
+    setRowSelectionModel({});
   };
 
   const handleUpdateAnnotations = () => {
-    if (!selectedCode || annotationIds.length === 0) return;
+    if (!selectedCodeId || annotationIds.length === 0) return;
 
     // TODO: We need bulk update for annotations
     annotationIds.forEach((annotation) => {
@@ -59,11 +44,11 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
         {
           spanAnnotationId: annotation,
           requestBody: {
-            code_id: selectedCode.id,
+            code_id: selectedCodeId,
           },
         },
         {
-          onSuccess: (data) => {
+          onSuccess: () => {
             handleClose();
             SnackbarAPI.openSnackbar({
               text: `Updated annotation!`,
@@ -80,11 +65,10 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
       <DialogTitle>
         Changing the code of {annotationIds.length} annotation{annotationIds.length > 1 && "s"}
       </DialogTitle>
-      <CodeSelector
+      <CodeTable
         projectId={projectId}
-        setSelectedCodes={(codes) => setSelectedCode(codes.length > 0 ? codes[0] : undefined)}
-        allowMultiselect={false}
-        height="400px"
+        rowSelectionModel={rowSelectionModel}
+        onRowSelectionChange={setRowSelectionModel}
       />
       {annotationIds.length > 0 && (
         <>
@@ -94,14 +78,17 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
             Before:
             <SpanAnnotationRenderer spanAnnotation={annotationIds[0]} />
             After:
-            {selectedCode ? (
+            {selectedCodeId ? (
               <Stack direction="row" alignItems="center">
-                <CodeRenderer code={selectedCode} />
+                <CodeRenderer code={selectedCodeId} />
                 {": "}
                 <SpanAnnotationRenderer spanAnnotation={annotationIds[0]} showCode={false} />
               </Stack>
             ) : (
-              <>Select a code to preview the change.</>
+              <>
+                <br />
+                Select a code to preview the change.
+              </>
             )}
           </Box>
         </>
@@ -115,8 +102,8 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
           startIcon={<SaveIcon />}
           fullWidth
           onClick={handleUpdateAnnotations}
-          disabled={!selectedCode}
-          loading={updateAnnotationMutation.isLoading}
+          disabled={!selectedCodeId}
+          loading={updateAnnotationMutation.isPending}
           loadingPosition="start"
         >
           Update Annotation

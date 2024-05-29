@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -15,11 +16,9 @@ import type { ProjectMetadataRead } from "../models/ProjectMetadataRead";
 import type { ProjectRead } from "../models/ProjectRead";
 import type { ProjectUpdate } from "../models/ProjectUpdate";
 import type { UserRead } from "../models/UserRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class ProjectService {
   /**
    * Creates a new Project
@@ -37,7 +36,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns the Project with the given ID if it exists
    * @returns ProjectRead Successful Response
@@ -55,7 +53,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Updates the Project with the given ID.
    * @returns ProjectRead Successful Response
@@ -81,7 +78,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Removes the Project with the given ID.
    * @returns ProjectRead Successful Response
@@ -99,7 +95,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all SourceDocuments of the Project with the given ID.
    * @returns PaginatedSourceDocumentReads Successful Response
@@ -138,7 +133,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Uploads one or multiple SourceDocument to the Project with the given ID if it exists
    * @returns PreprocessingJobRead Successful Response
@@ -164,7 +158,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Removes all SourceDocuments of the Project with the given ID if it exists
    * @returns number Successful Response
@@ -182,7 +175,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Associates an existing User to the Project with the given ID if it exists
    * @returns UserRead Successful Response
@@ -207,7 +199,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Dissociates the Users with the Project with the given ID if it exists
    * @returns UserRead Successful Response
@@ -232,7 +223,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all Users of the Project with the given ID
    * @returns UserRead Successful Response
@@ -250,7 +240,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all Codes of the Project with the given ID
    * @returns CodeRead Successful Response
@@ -268,7 +257,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Removes all Codes of the Project with the given ID if it exists
    * @returns number Successful Response
@@ -286,7 +274,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all DocumentTags of the Project with the given ID
    * @returns DocumentTagRead Successful Response
@@ -304,7 +291,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Removes all DocumentTags of the Project with the given ID if it exists
    * @returns number Successful Response
@@ -322,7 +308,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all Codes of the Project from a User
    * @returns CodeRead Successful Response
@@ -347,7 +332,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Removes all Codes of the Project from a User. Returns the number of removed Codes.
    * @returns number Successful Response
@@ -372,7 +356,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all Memos of the Project from a User
    * @returns MemoRead Successful Response
@@ -405,7 +388,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all Actions of the Project from a User
    * @returns ActionRead Successful Response
@@ -430,7 +412,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all Actions of the Project
    * @returns ActionRead Successful Response
@@ -451,7 +432,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Adds a Memo of the current User to the Project with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -477,7 +457,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns the Memos of the current User for the Project with the given ID.
    * @returns MemoRead Successful Response
@@ -495,7 +474,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the Project with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -514,7 +492,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns the Id of the SourceDocument identified by project_id and filename if it exists
    * @returns number Successful Response
@@ -544,7 +521,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns all ProjectMetadata of the SourceDocument with the given ID if it exists
    * @returns ProjectMetadataRead Successful Response
@@ -562,7 +538,6 @@ export class ProjectService {
       },
     });
   }
-
   /**
    * Returns groups of duplicate sdoc ids.
    * @returns number Successful Response

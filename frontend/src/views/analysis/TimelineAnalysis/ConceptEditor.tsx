@@ -3,10 +3,10 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, 
 import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import ColorUtils from "../../../utils/ColorUtils";
-import ConceptFilterEditor from "./ConceptFilterEditor";
+import { TimelineAnalysisConcept_Output } from "../../../api/openapi/models/TimelineAnalysisConcept_Output.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ColorUtils from "../../../utils/ColorUtils.ts";
+import ConceptFilterEditor from "./ConceptFilterEditor.tsx";
 
 interface ConceptEditorProps {
   onUpdate: (concept: TimelineAnalysisConcept_Output) => void;

@@ -1,18 +1,23 @@
 import { ErrorMessage } from "@hookform/error-message";
-import { DialogActions, DialogContent, DialogTitle, Stack, TextField, Tooltip } from "@mui/material";
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { MemoRead } from "../../api/openapi";
-import { LoadingButton } from "@mui/lab";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
-import UserHooks from "../../api/UserHooks";
-import { dateToLocaleYYYYMMDDString } from "../../utils/DateUtils";
+import { LoadingButton } from "@mui/lab";
+import { DialogActions, DialogContent, DialogTitle, Stack, TextField, Tooltip } from "@mui/material";
+import React, { useEffect } from "react";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
+import UserHooks from "../../api/UserHooks.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { dateToLocaleYYYYMMDDString } from "../../utils/DateUtils.ts";
+
+export interface MemoFormValues {
+  title: string;
+  content: string;
+}
 
 interface MemoFormProps {
   title: string;
   memo: MemoRead | undefined;
-  handleCreateOrUpdateMemo: (data: any) => void;
+  handleCreateOrUpdateMemo: SubmitHandler<MemoFormValues>;
   handleDeleteMemo: () => void;
   isUpdateLoading: boolean;
   isCreateLoading: boolean;
@@ -34,7 +39,7 @@ export function MemoForm({
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm();
+  } = useForm<MemoFormValues>();
 
   const user = UserHooks.useGetUser(memo?.user_id);
 
@@ -51,7 +56,7 @@ export function MemoForm({
   }, [memo, reset]);
 
   // form handling
-  const handleError = (data: any) => console.error(data);
+  const handleError: SubmitErrorHandler<MemoFormValues> = (data) => console.error(data);
 
   return (
     <React.Fragment>

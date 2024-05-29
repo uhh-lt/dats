@@ -1,14 +1,13 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { WhiteboardCreate } from "../models/WhiteboardCreate";
 import type { WhiteboardRead } from "../models/WhiteboardRead";
 import type { WhiteboardUpdate } from "../models/WhiteboardUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class WhiteboardService {
   /**
    * Creates an Whiteboard
@@ -26,7 +25,6 @@ export class WhiteboardService {
       },
     });
   }
-
   /**
    * Returns the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
@@ -44,7 +42,6 @@ export class WhiteboardService {
       },
     });
   }
-
   /**
    * Updates the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
@@ -70,7 +67,6 @@ export class WhiteboardService {
       },
     });
   }
-
   /**
    * Removes the Whiteboard with the given ID if it exists
    * @returns WhiteboardRead Successful Response
@@ -88,7 +84,6 @@ export class WhiteboardService {
       },
     });
   }
-
   /**
    * Returns the Whiteboards of the Project with the given ID
    * @returns WhiteboardRead Successful Response
@@ -106,7 +101,6 @@ export class WhiteboardService {
       },
     });
   }
-
   /**
    * Returns the Whiteboard of the Project with the given ID and the User with the given ID if it exists
    * @returns WhiteboardRead Successful Response
@@ -125,6 +119,23 @@ export class WhiteboardService {
       path: {
         project_id: projectId,
         user_id: userId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Duplicates the Whiteboard with the given ID if it exists
+   * @returns WhiteboardRead Successful Response
+   * @throws ApiError
+   */
+  public static duplicateById({ whiteboardId }: { whiteboardId: number }): CancelablePromise<WhiteboardRead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/whiteboard/duplicate/{whiteboard_id}",
+      path: {
+        whiteboard_id: whiteboardId,
       },
       errors: {
         422: `Validation Error`,

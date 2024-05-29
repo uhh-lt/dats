@@ -54,6 +54,8 @@ def add_bbox_annotation(
         return BBoxAnnotationReadResolvedCode(
             **bbox_dto.model_dump(exclude={"current_code_id"}),
             code=CodeRead.model_validate(db_obj.current_code.code),
+            user_id=db_obj.annotation_document.user_id,
+            sdoc_id=db_obj.annotation_document.source_document_id,
         )
     else:
         return bbox_dto
@@ -79,6 +81,8 @@ def get_by_id(
         return BBoxAnnotationReadResolvedCode(
             **bbox_dto.model_dump(exclude={"current_code_id"}),
             code=CodeRead.model_validate(db_obj.current_code.code),
+            user_id=db_obj.annotation_document.user_id,
+            sdoc_id=db_obj.annotation_document.source_document_id,
         )
     else:
         return bbox_dto
@@ -106,6 +110,8 @@ def update_by_id(
         return BBoxAnnotationReadResolvedCode(
             **bbox_dto.model_dump(exclude={"current_code_id"}),
             code=CodeRead.model_validate(db_obj.current_code.code),
+            user_id=db_obj.annotation_document.user_id,
+            sdoc_id=db_obj.annotation_document.source_document_id,
         )
     else:
         return bbox_dto

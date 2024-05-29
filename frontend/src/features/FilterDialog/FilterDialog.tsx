@@ -1,19 +1,22 @@
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import DoneIcon from "@mui/icons-material/Done";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { Box, Button, ButtonProps, FormControlLabel, Popover, Switch } from "@mui/material";
+import { Box, Button, ButtonProps, FormControlLabel, Popover, PopoverProps, Switch } from "@mui/material";
 import { useState } from "react";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import FilterRenderer, { FilterRendererProps } from "./FilterRenderer";
-import { MyFilter, countFilterExpressions } from "./filterUtils";
-import FilterRendererSimple from "./FilterRendererSimple";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import FilterRenderer, { FilterRendererProps } from "./FilterRenderer.tsx";
+import FilterRendererSimple from "./FilterRendererSimple.tsx";
+import { MyFilter, countFilterExpressions } from "./filterUtils.ts";
 
 export interface FilterDialogProps {
   anchorEl: HTMLElement | null;
   filter: MyFilter;
+  filterName?: string;
   expertMode: boolean;
   onChangeExpertMode: (expertMode: boolean) => void;
   buttonProps?: Omit<ButtonProps, "onClick" | "startIcon">;
+  anchorOrigin?: PopoverProps["anchorOrigin"];
+  transformOrigin?: PopoverProps["transformOrigin"];
 }
 
 function FilterDialog({
@@ -22,6 +25,15 @@ function FilterDialog({
   expertMode,
   onChangeExpertMode,
   buttonProps,
+  filterName = "root",
+  anchorOrigin = {
+    vertical: "top",
+    horizontal: "left",
+  },
+  transformOrigin = {
+    vertical: "top",
+    horizontal: "left",
+  },
   ...props
 }: FilterDialogProps & FilterRendererProps) {
   // local client state
@@ -34,7 +46,7 @@ function FilterDialog({
   // actions
   const handleOpenEditDialog = () => {
     setOpen(true);
-    dispatch(props.filterActions.onStartFilterEdit({ rootFilterId: "root" }));
+    dispatch(props.filterActions.onStartFilterEdit({ filterId: filterName }));
   };
 
   const handleApplyChanges = () => {
@@ -55,21 +67,14 @@ function FilterDialog({
         open={open}
         onClose={() => setOpen(false)}
         anchorEl={anchorEl}
-        anchorOrigin={{
-          vertical: "top",
-          horizontal: "left",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "left",
-        }}
+        anchorOrigin={anchorOrigin}
+        transformOrigin={transformOrigin}
         PaperProps={{
           sx: {
             width: "50%",
             p: 1,
           },
         }}
-        sx={{ mt: "56px" }}
       >
         {expertMode ? <FilterRenderer {...props} /> : <FilterRendererSimple {...props} />}
         <Box display="flex" width="100%">

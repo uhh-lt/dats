@@ -1,9 +1,10 @@
-import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, DialogTitle, Stack } from "@mui/material";
+import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
-import { CodeRead } from "../../../../api/openapi";
-import CodeSelector from "../../../../components/Selectors/CodeSelector";
+import { CodeRead } from "../../../../api/openapi/models/CodeRead.ts";
+import CodeTable from "../../../../components/CodeTable/CodeTable.tsx";
 
-export interface AddCodeDialogProps extends ButtonProps {
+export interface AddCodeDialogProps {
   projectId: number;
   shouldOpen: () => boolean;
   onConfirmSelection: (codes: CodeRead[], addRows: boolean) => void;
@@ -11,8 +12,9 @@ export interface AddCodeDialogProps extends ButtonProps {
 }
 
 function AddCodeDialog({ projectId, shouldOpen, onConfirmSelection, buttonProps }: AddCodeDialogProps) {
+  // local state
   const [open, setOpen] = useState(false);
-  const [selectedCodes, setSelectedCodes] = useState<CodeRead[]>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   const onOpenDialogClick = () => {
     setOpen(shouldOpen());
@@ -20,11 +22,11 @@ function AddCodeDialog({ projectId, shouldOpen, onConfirmSelection, buttonProps 
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedCodes([]);
+    setRowSelectionModel({});
   };
 
-  const handleConfirmSelection = (addRows: boolean) => {
-    onConfirmSelection(selectedCodes, addRows);
+  const handleConfirmSelection = (codes: CodeRead[], isAddCodesToCell: boolean) => {
+    onConfirmSelection(codes, !isAddCodesToCell);
     handleClose();
   };
 
@@ -35,21 +37,19 @@ function AddCodeDialog({ projectId, shouldOpen, onConfirmSelection, buttonProps 
       </Button>
       <Dialog onClose={() => setOpen(false)} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select codes to add to table</DialogTitle>
-        <CodeSelector
+        <CodeTable
           projectId={projectId}
-          setSelectedCodes={setSelectedCodes}
-          allowMultiselect={true}
-          height="400px"
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionChange={setRowSelectionModel}
+          renderBottomToolbarCustomActions={(props) => (
+            <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+              <Box flexGrow={1} />
+              <Button onClick={handleClose}>Close</Button>
+              <Button onClick={() => handleConfirmSelection(props.selectedCodes, true)}>Add to cell</Button>
+              <Button onClick={() => handleConfirmSelection(props.selectedCodes, false)}>Add as rows</Button>
+            </Stack>
+          )}
         />
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={() => handleConfirmSelection(false)} disabled={selectedCodes.length === 0}>
-            Add {selectedCodes.length > 0 ? selectedCodes.length : null} Codes to cell
-          </Button>
-          <Button onClick={() => handleConfirmSelection(true)} disabled={selectedCodes.length === 0}>
-            Add {selectedCodes.length > 0 ? selectedCodes.length : null} Codes as new rows below cell
-          </Button>
-        </DialogActions>
       </Dialog>
     </>
   );

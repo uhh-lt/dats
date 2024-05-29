@@ -1,8 +1,8 @@
 import { Box, TextField, Typography, useTheme } from "@mui/material";
 import { useState } from "react";
 import { NodeProps, useReactFlow } from "reactflow";
-import { NoteNodeData } from "../types/customnodes/NoteNodeData";
-import BaseCardNode from "./BaseCardNode";
+import { NoteNodeData } from "../types/customnodes/NoteNodeData.ts";
+import BaseCardNode from "./BaseCardNode.tsx";
 
 function NoteNode(props: NodeProps<NoteNodeData>) {
   const reactFlowInstance = useReactFlow();
@@ -19,7 +19,7 @@ function NoteNode(props: NodeProps<NoteNodeData>) {
   const handleChangeText = (
     event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement, Element> | React.KeyboardEvent<HTMLDivElement>,
   ) => {
-    // @ts-ignore
+    // @ts-expect-error event target value is always a string
     const value: string = event.target.value;
     console.log(value);
     reactFlowInstance.setNodes((nodes) =>

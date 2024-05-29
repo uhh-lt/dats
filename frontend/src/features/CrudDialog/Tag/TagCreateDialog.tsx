@@ -13,26 +13,18 @@ import {
   TextField,
   rgbToHex,
 } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import eventBus from "../../../EventBus";
-import ProjectHooks from "../../../api/ProjectHooks";
-import TagHooks from "../../../api/TagHooks";
-import { DocumentTagCreate } from "../../../api/openapi";
-import TagRenderer from "../../../components/DataGrid/TagRenderer";
-import { contrastiveColors } from "../../../views/annotation/colors";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-
-type TagCreateDialogPayload = {
-  tagName?: string;
-  parentTagId?: number;
-};
-
-export const openTagCreateDialog = (payload: TagCreateDialogPayload) => {
-  eventBus.dispatch("open-create-tag", payload);
-};
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import TagHooks from "../../../api/TagHooks.ts";
+import { DocumentTagCreate } from "../../../api/openapi/models/DocumentTagCreate.ts";
+import TagRenderer from "../../../components/DataGrid/TagRenderer.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { contrastiveColors } from "../../../views/annotation/colors.ts";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 /**
  * A dialog that allows to create a DocumentTag.
@@ -56,46 +48,38 @@ function TagCreateDialog() {
     control,
   } = useForm<DocumentTagCreate>({
     defaultValues: {
-      parent_tag_id: -1,
-      title: "",
+      parent_id: -1,
+      name: "",
       color: "#000000",
       description: "",
       project_id: projectId,
     },
   });
 
-  // state
-  const [isTagCreateDialogOpen, setIsTagCreateDialogOpen] = useState(false);
+  // local state
   const [color, setColor] = useState("#000000");
 
-  // create a (memoized) function that stays the same across re-renders
-  const onOpenCreateTag = useCallback(
-    (data: CustomEventInit<TagCreateDialogPayload>) => {
-      if (!data.detail) return;
+  // global client state (redux)
+  const isTagCreateDialogOpen = useAppSelector((state) => state.dialog.isTagCreateDialogOpen);
+  const tagName = useAppSelector((state) => state.dialog.tagName);
+  const parentTagId = useAppSelector((state) => state.dialog.parentTagId);
+  const dispatch = useAppDispatch();
 
-      // reset
-      const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
-      reset({
-        title: data.detail.tagName ? data.detail.tagName : "",
-        color: randomHexColor,
-        parent_tag_id: data.detail.parentTagId ? data.detail.parentTagId : -1,
-      });
-      setColor(randomHexColor);
-      setIsTagCreateDialogOpen(true);
-    },
-    [reset],
-  );
-
+  // initialize form when tag changes
   useEffect(() => {
-    eventBus.on("open-create-tag", onOpenCreateTag);
-    return () => {
-      eventBus.remove("open-create-tag", onOpenCreateTag);
-    };
-  }, [onOpenCreateTag]);
+    // reset
+    const randomHexColor = rgbToHex(contrastiveColors[Math.floor(Math.random() * contrastiveColors.length)]);
+    reset({
+      name: tagName || "",
+      color: randomHexColor,
+      parent_id: parentTagId ? parentTagId : -1,
+    });
+    setColor(randomHexColor);
+  }, [parentTagId, reset, tagName]);
 
   // actions
   const handleClose = () => {
-    setIsTagCreateDialogOpen(false);
+    dispatch(CRUDDialogActions.closeTagCreateDialog());
   };
 
   // mutations
@@ -106,26 +90,26 @@ function TagCreateDialog() {
     createTagMutation.mutate(
       {
         requestBody: {
-          title: data.title,
+          name: data.name,
           description: data.description || "",
           color: data.color,
-          parent_tag_id: data.parent_tag_id,
+          parent_id: data.parent_id,
           project_id: projectId,
         },
       },
       {
         onSuccess: (data) => {
           SnackbarAPI.openSnackbar({
-            text: `Added tag ${data.title}`,
+            text: `Added tag ${data.name}`,
             severity: "success",
           });
 
-          setIsTagCreateDialogOpen(false); // close dialog
+          handleClose();
         },
       },
     );
   };
-  const handleError = (data: any) => console.error(data);
+  const handleError: SubmitErrorHandler<DocumentTagCreate> = (data) => console.error(data);
 
   return (
     <Dialog open={isTagCreateDialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
@@ -134,7 +118,7 @@ function TagCreateDialog() {
         <DialogContent>
           <Stack spacing={3}>
             <Controller
-              name="parent_tag_id"
+              name="parent_id"
               control={control}
               rules={{
                 required: "Value is required",
@@ -148,8 +132,8 @@ function TagCreateDialog() {
                   onChange={onChange}
                   onBlur={onBlur}
                   value={value}
-                  error={Boolean(errors.parent_tag_id)}
-                  helperText={<ErrorMessage errors={errors} name="parent_tag_id" />}
+                  error={Boolean(errors.parent_id)}
+                  helperText={<ErrorMessage errors={errors} name="parent_id" />}
                   InputLabelProps={{ shrink: true }}
                 >
                   <MenuItem value={-1}>No parent</MenuItem>
@@ -166,8 +150,8 @@ function TagCreateDialog() {
               autoFocus
               fullWidth
               variant="standard"
-              {...register("title", { required: "Tag title is required" })}
-              error={Boolean(errors?.title)}
+              {...register("name", { required: "Tag name is required" })}
+              error={Boolean(errors?.name)}
               helperText={<ErrorMessage errors={errors} name="color" />}
               InputLabelProps={{ shrink: true }}
             />
@@ -213,7 +197,7 @@ function TagCreateDialog() {
             variant="contained"
             type="submit"
             startIcon={<SaveIcon />}
-            loading={createTagMutation.isLoading}
+            loading={createTagMutation.isPending}
             loadingPosition="start"
           >
             Create

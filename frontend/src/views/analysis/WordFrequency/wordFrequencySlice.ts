@@ -1,49 +1,64 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
-import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice";
-import { SortDirection, WordFrequencyColumns } from "../../../api/openapi";
+import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
+import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
+import { WordFrequencyFilterActions } from "./wordFrequencyFilterSlice.ts";
 
 export interface WordFrequencyState {
-  paginationModel: GridPaginationModel;
-  rowSelectionModel: number[];
-  sortModel: GridSortModel;
+  rowSelectionModel: MRT_RowSelectionState;
+  sortingModel: MRT_SortingState;
+  columnVisibilityModel: MRT_VisibilityState;
 }
 
 const initialState: WordFrequencyState = {
-  paginationModel: { page: 0, pageSize: 5 },
-  rowSelectionModel: [],
-  sortModel: [
+  rowSelectionModel: {},
+  sortingModel: [
     {
-      field: WordFrequencyColumns.WF_WORD_FREQUENCY,
-      sort: SortDirection.DESC,
+      id: WordFrequencyColumns.WF_WORD_FREQUENCY,
+      desc: true,
     },
   ],
+  columnVisibilityModel: {},
 };
 
 export const WordFrequencySlice = createSlice({
   name: "wordFrequency",
   initialState,
   reducers: {
-    onPaginationModelChange: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
-      state.paginationModel = action.payload;
-    },
-    onSelectionModelChange: (state, action: PayloadAction<number[]>) => {
+    onSelectionModelChange: (state, action: PayloadAction<MRT_RowSelectionState>) => {
       state.rowSelectionModel = action.payload;
     },
-    onSortModelChange: (state, action: PayloadAction<GridSortModel>) => {
-      state.sortModel = action.payload;
+    onSortingModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
+      state.sortingModel = action.payload;
+    },
+    onColumnVisibilityModelChange: (state, action: PayloadAction<MRT_VisibilityState>) => {
+      state.columnVisibilityModel = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(WordFrequencyFilterActions.onFinishFilterEdit, (state, action) => {
+      .addCase(WordFrequencyFilterActions.init, (state, action) => {
+        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+          if (!column.column) return acc;
+          // this is a normal column
+          if (isNaN(parseInt(column.column))) {
+            return acc;
+            // this is a metadata column
+          } else {
+            return {
+              ...acc,
+              [column.column]: false,
+            };
+          }
+        }, {});
+      })
+      .addCase(WordFrequencyFilterActions.onFinishFilterEdit, (state) => {
         // reset page when filter changes
-        state.paginationModel.page = 0;
+        // state.paginationModel.pageIndex = 0;
 
         // reset selection when filter changes
-        state.rowSelectionModel = [];
+        state.rowSelectionModel = {};
       })
-      .addDefaultCase((state) => {});
+      .addDefaultCase(() => {});
   },
 });
 

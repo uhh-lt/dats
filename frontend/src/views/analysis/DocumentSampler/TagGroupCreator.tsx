@@ -14,19 +14,18 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { DocumentTagRead } from "../../../api/openapi";
-import EditableTypography from "../../../components/NavBarTop/EditableTypography";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import { DocumentSamplerActions } from "./documentSamplerSlice";
+import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
+import EditableTypography from "../../../components/NavBarTop/EditableTypography.tsx";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
 interface TagGroupCreatorProps {
   tags: DocumentTagRead[];
-  tagsMap: Record<number, DocumentTagRead>;
   aggregationGroups: Record<string, DocumentTagRead[]>;
   cardProps?: CardProps;
 }
 
-function TagGroupCreator({ tags, tagsMap, aggregationGroups, cardProps = {} }: TagGroupCreatorProps) {
+function TagGroupCreator({ tags, aggregationGroups, cardProps = {} }: TagGroupCreatorProps) {
   // global client state (redux)
   const dispatch = useAppDispatch();
 
@@ -88,14 +87,14 @@ function TagGroupCreator({ tags, tagsMap, aggregationGroups, cardProps = {} }: T
             <Autocomplete
               multiple
               value={groupTags}
-              onChange={(event, newValue) => {
+              onChange={(_, newValue) => {
                 dispatch(DocumentSamplerActions.onUpdateGroupTags({ groupName, tags: newValue }));
               }}
               options={tags}
-              getOptionLabel={(option) => option.title}
+              getOptionLabel={(option) => option.name}
               getOptionDisabled={(option) => selectedTagIds.includes(option.id)}
               renderTags={(tagValue, getTagProps) =>
-                tagValue.map((option, index) => <Chip label={option.title} {...getTagProps({ index })} />)
+                tagValue.map((option, index) => <Chip label={option.name} {...getTagProps({ index })} />)
               }
               style={{ flexGrow: 2, width: "100%" }}
               sx={{ mr: 1 }}

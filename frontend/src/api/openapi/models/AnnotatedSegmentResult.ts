@@ -1,14 +1,15 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
+import type { AnnotationTableRow } from "./AnnotationTableRow";
 export type AnnotatedSegmentResult = {
   /**
    * The total number of span_annotation_ids. Used for pagination.
    */
   total_results: number;
   /**
-   * The SpanAnnotation IDs.
+   * The Annotations.
    */
-  span_annotation_ids: Array<number>;
+  data: Array<AnnotationTableRow>;
 };

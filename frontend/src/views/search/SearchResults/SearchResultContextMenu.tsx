@@ -1,13 +1,11 @@
-import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
-import React from "react";
-import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenu/TagMenuMenuItem";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition";
-import BorderColorIcon from "@mui/icons-material/BorderColor";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { Link } from "react-router-dom";
-import MemoMenuItem from "../../../features/Memo/MemoMenuItem";
-import { AttachedObjectType } from "../../../api/openapi";
-import DeleteMenuItem from "../ToolBar/ToolBarElements/DeleteMenuItem";
+import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
+import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
+import MemoMenuItem from "../../../features/Memo/MemoMenuItem.tsx";
+import DeleteMenuItem from "../ToolBar/ToolBarElements/DeleteMenuItem.tsx";
+import TagMenuMenuItem from "../ToolBar/ToolBarElements/TagMenu/TagMenuMenuItem.tsx";
 
 interface SearchResultContextMenuProps {
   position: ContextMenuPosition | null;
@@ -29,24 +27,18 @@ function SearchResultContextMenu({ position, projectId, sdocId, handleClose }: S
       }}
       PaperProps={{ sx: { width: 240 } }}
     >
-      <MenuItem component={Link} to={`/project/${projectId}/search/doc/${sdocId}`} onClick={handleClose}>
+      <MenuItem component={Link} to={`/project/${projectId}/annotation/${sdocId}`} onClick={handleClose}>
         <ListItemIcon>
           <PlayCircleIcon fontSize="small" />
         </ListItemIcon>
         <ListItemText>Open document</ListItemText>
-      </MenuItem>
-      <MenuItem component={Link} to={`/project/${projectId}/annotation/${sdocId}`}>
-        <ListItemIcon>
-          <BorderColorIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText>Annotate document</ListItemText>
       </MenuItem>
       <MemoMenuItem
         onClick={handleClose}
         attachedObjectId={sdocId}
         attachedObjectType={AttachedObjectType.SOURCE_DOCUMENT}
       />
-      <TagMenuMenuItem popoverOrigin={{ vertical: "top", horizontal: "right" }} />
+      <TagMenuMenuItem sdocId={sdocId} popoverOrigin={{ vertical: "top", horizontal: "right" }} />
       <DeleteMenuItem onClick={handleClose} sdocId={sdocId} navigateTo="../search" />
     </Menu>
   );

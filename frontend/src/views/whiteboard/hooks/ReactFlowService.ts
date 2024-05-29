@@ -1,15 +1,15 @@
 import { differenceBy } from "lodash";
 import { useMemo } from "react";
 import { Node, ReactFlowInstance } from "reactflow";
-import { DWTSNodeData } from "../types";
+import { DWTSNodeData } from "../types/DWTSNodeData.ts";
 
 export class ReactFlowService {
   zoom = 1.85;
   duration = 1000;
   timeout = 100;
-  reactFlowInstance: ReactFlowInstance<DWTSNodeData, any>;
+  reactFlowInstance: ReactFlowInstance<DWTSNodeData>;
 
-  constructor(reactFlowInstance: ReactFlowInstance<DWTSNodeData, any>) {
+  constructor(reactFlowInstance: ReactFlowInstance<DWTSNodeData>) {
     this.reactFlowInstance = reactFlowInstance;
   }
 
@@ -31,6 +31,6 @@ export class ReactFlowService {
   }
 }
 
-export const useReactFlowService = (reactFlowInstance: ReactFlowInstance<DWTSNodeData, any>) => {
+export const useReactFlowService = (reactFlowInstance: ReactFlowInstance<DWTSNodeData>) => {
   return useMemo(() => new ReactFlowService(reactFlowInstance), [reactFlowInstance]);
 };

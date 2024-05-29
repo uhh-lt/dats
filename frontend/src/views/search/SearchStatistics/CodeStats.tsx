@@ -1,13 +1,13 @@
 import { TabPanel } from "@mui/lab";
+import { Box, CircularProgress } from "@mui/material";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useMemo } from "react";
-import StatsDisplayButton from "./StatsDisplayButton";
-import { useFilterStats } from "../hooks/useFilterStats";
-import { SpanEntityStat } from "../../../api/openapi";
-import SearchHooks from "../../../api/SearchHooks";
-import { useAuth } from "../../../auth/AuthProvider";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import { Box, CircularProgress } from "@mui/material";
+import { useAuth } from "../../../auth/useAuth.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useFilterStats } from "../hooks/useFilterStats.ts";
+import StatsDisplayButton from "./StatsDisplayButton.tsx";
+import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
+import SearchHooks from "../../../api/SearchHooks.ts";
 
 interface CodeStatsProps {
   currentTab: string;
@@ -58,7 +58,6 @@ function CodeStatsWithoutData(props: CodeStatsProps) {
 }
 
 function CodeStatsWithData({
-  codeId,
   codeStats,
   handleClick,
   parentRef,
@@ -87,7 +86,7 @@ function CodeStatsWithData({
     >
       {filteredCodeStats.length === 0 && <i>empty</i>}
       {rowVirtualizer.getVirtualItems().map((virtualItem) => {
-        let codeStat = filteredCodeStats[virtualItem.index];
+        const codeStat = filteredCodeStats[virtualItem.index];
 
         return (
           <StatsDisplayButton

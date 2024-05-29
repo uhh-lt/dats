@@ -1,5 +1,5 @@
 import { AlertProps } from "@mui/material/Alert";
-import eventBus from "../../EventBus";
+import eventBus from "../../EventBus.ts";
 
 export interface SnackbarEvent {
   severity: AlertProps["severity"];

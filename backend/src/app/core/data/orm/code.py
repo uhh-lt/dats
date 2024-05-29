@@ -50,17 +50,17 @@ class CodeORM(ORMBase):
     project: Mapped["ProjectORM"] = relationship("ProjectORM", back_populates="codes")
 
     # hierarchy reference
-    parent_code_id: Mapped[Optional[int]] = mapped_column(
+    parent_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("code.id", ondelete="CASCADE")
     )
-    parent_code: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
+    parent: Mapped["CodeORM"] = relationship("CodeORM", remote_side=[id])
 
     __table_args__ = (
         UniqueConstraint(
             "user_id",
             "project_id",
             "name",
-            "parent_code_id",
+            "parent_id",
             name="UC_name_unique_per_user_parent_and_project",
         ),
     )

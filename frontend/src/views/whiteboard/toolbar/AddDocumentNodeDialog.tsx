@@ -1,11 +1,13 @@
-import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, DialogTitle } from "@mui/material";
+import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
-import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead";
-import DocumentSelector from "../../../components/Selectors/DocumentSelector";
-import { ReactFlowService } from "../hooks/ReactFlowService";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
-import { createSdocNodes } from "../whiteboardUtils";
+import DocumentTable from "../../../components/DocumentTable/DocumentTable.tsx";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { createSdocNodes } from "../whiteboardUtils.ts";
+
+const filterName = "documentDialogWhiteboard";
 
 export interface AddDocumentNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
@@ -13,8 +15,11 @@ export interface AddDocumentNodeDialogProps extends AddNodeDialogProps {
 }
 
 function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentNodeDialogProps) {
+  // local state
   const [open, setOpen] = useState(false);
-  const [selectedDocuments, setSelectedDocuments] = useState<SourceDocumentRead[]>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
+  const selectedSdocIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
 
   const handleOpenDialogClick = () => {
     setOpen(true);
@@ -22,12 +27,12 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedDocuments([]);
+    setRowSelectionModel({});
   };
 
   const handleConfirmSelection = () => {
     const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
-      reactFlowService.addNodes(createSdocNodes({ sdocs: selectedDocuments, position: position }));
+      reactFlowService.addNodes(createSdocNodes({ sdocs: selectedSdocIds, position: position }));
     onClick(addNode);
     handleClose();
   };
@@ -39,13 +44,23 @@ function AddDocumentNodeDialog({ projectId, buttonProps, onClick }: AddDocumentN
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select documents to add to Whiteboard</DialogTitle>
-        <DocumentSelector projectId={projectId} setSelectedDocuments={setSelectedDocuments} />
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={selectedDocuments.length === 0}>
-            Add {selectedDocuments.length > 0 ? selectedDocuments.length : null} Documents
-          </Button>
-        </DialogActions>
+        <DocumentTable
+          projectId={projectId}
+          filterName={filterName}
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionChange={setRowSelectionModel}
+          sortingModel={sortingModel}
+          onSortingChange={setSortingModel}
+          renderBottomToolbarCustomActions={(props) => (
+            <>
+              <Box flexGrow={1} />
+              <Button onClick={handleClose}>Close</Button>
+              <Button onClick={handleConfirmSelection} disabled={props.selectedDocuments.length === 0}>
+                Add {props.selectedDocuments.length > 0 ? props.selectedDocuments.length : null} Documents
+              </Button>
+            </>
+          )}
+        />
       </Dialog>
     </>
   );

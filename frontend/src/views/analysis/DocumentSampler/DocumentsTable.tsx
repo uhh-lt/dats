@@ -1,8 +1,8 @@
 import { CardProps } from "@mui/material";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import BulkDocTagger from "./BulkDocTagger";
-import DataCard from "./DataCard";
-import SdocTable from "./SdocTable";
+import SimpleSdocTable from "../../../components/DocumentTable/SimpleSdocTable.tsx";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import BulkDocTagger from "./BulkDocTagger.tsx";
+import DataCard from "./DataCard.tsx";
 
 interface DocumentsTableProps {
   cardProps?: CardProps;
@@ -19,9 +19,9 @@ function DocumentsTable({ cardProps, onTableRefresh }: DocumentsTableProps) {
       action={<BulkDocTagger />}
       onDataRefresh={onTableRefresh}
       cardProps={cardProps}
-      cardContentProps={{ sx: { padding: 0 } }}
+      cardContentProps={{ sx: { padding: "0 !important" } }}
       renderData={(chartData) => (
-        <SdocTable
+        <SimpleSdocTable
           sdocIds={chartData
             .map((chartDatum) =>
               isFixedSamplingStrategy ? chartDatum.fixedSampleSdocIds : chartDatum.relativeSampleSdocIds,

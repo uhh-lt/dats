@@ -1,21 +1,23 @@
-import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
+import { Box, Button, ButtonProps, Dialog, DialogTitle, Stack } from "@mui/material";
+import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import { XYPosition } from "reactflow";
-import { MemoRead } from "../../../api/openapi";
-import MemoSelector from "../../../components/Selectors/MemoSelector";
-import { ReactFlowService } from "../hooks/ReactFlowService";
-import { AddNodeDialogProps } from "../types/AddNodeDialogProps";
-import { createMemoNodes } from "../whiteboardUtils";
+import { MemoRead } from "../../../api/openapi/models/MemoRead.ts";
+import MemoTable from "../../../components/MemoTable/MemoTable.tsx";
+import { ReactFlowService } from "../hooks/ReactFlowService.ts";
+import { AddNodeDialogProps } from "../types/AddNodeDialogProps.ts";
+import { PendingAddNodeAction } from "../types/PendingAddNodeAction.ts";
+import { createMemoNodes } from "../whiteboardUtils.ts";
 
 export interface AddMemoNodeDialogProps extends AddNodeDialogProps {
   projectId: number;
-  userId: number;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoNodeDialogProps) {
+function AddMemoNodeDialog({ projectId, buttonProps, onClick }: AddMemoNodeDialogProps) {
+  // local state
   const [open, setOpen] = useState(false);
-  const [selectedMemos, setSelectedMemos] = useState<MemoRead[]>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   const handleOpenDialogClick = () => {
     setOpen(true);
@@ -23,12 +25,12 @@ function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoN
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedMemos([]);
+    setRowSelectionModel({});
   };
 
-  const handleConfirmSelection = () => {
-    const addNode = (position: XYPosition, reactFlowService: ReactFlowService) =>
-      reactFlowService.addNodes(createMemoNodes({ memos: selectedMemos, position: position }));
+  const handleConfirmSelection = (memos: MemoRead[]) => {
+    const addNode: PendingAddNodeAction = (position: XYPosition, reactFlowService: ReactFlowService) =>
+      reactFlowService.addNodes(createMemoNodes({ memos, position: position }));
     onClick(addNode);
     handleClose();
   };
@@ -40,13 +42,23 @@ function AddMemoNodeDialog({ projectId, userId, buttonProps, onClick }: AddMemoN
       </Button>
       <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
         <DialogTitle>Select memos to add to Whiteboard</DialogTitle>
-        <MemoSelector projectId={projectId} userId={userId} setSelectedMemos={setSelectedMemos} />
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={handleConfirmSelection} disabled={selectedMemos.length === 0}>
-            Add {selectedMemos.length > 0 ? selectedMemos.length : null} Memos
-          </Button>
-        </DialogActions>
+        <MemoTable
+          projectId={projectId}
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionChange={setRowSelectionModel}
+          renderBottomToolbarCustomActions={(props) => (
+            <Stack direction={"row"} spacing={1} alignItems="center" p={1}>
+              <Box flexGrow={1} />
+              <Button onClick={handleClose}>Close</Button>
+              <Button
+                onClick={() => handleConfirmSelection(props.selectedMemos)}
+                disabled={props.selectedMemos.length === 0}
+              >
+                Add {props.selectedMemos.length > 0 ? props.selectedMemos.length : null} Codes
+              </Button>
+            </Stack>
+          )}
+        />
       </Dialog>
     </>
   );

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.timeline_analysis import (
+    TimelineAnalysiCreateAsInDB,
     TimelineAnalysisCreate,
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
@@ -15,7 +16,9 @@ from app.core.data.orm.timeline_analysis import TimelineAnalysisORM
 
 
 class CRUDTimelineAnalysis(
-    CRUDBase[TimelineAnalysisORM, TimelineAnalysisCreate, TimelineAnalysisUpdateAsInDB]
+    CRUDBase[
+        TimelineAnalysisORM, TimelineAnalysiCreateAsInDB, TimelineAnalysisUpdateAsInDB
+    ]
 ):
     def read_by_project_and_user(
         self, db: Session, *, project_id: int, user_id: int
@@ -29,6 +32,13 @@ class CRUDTimelineAnalysis(
             .all()
         )
         return db_obj
+
+    def create(
+        self, db: Session, *, create_dto: TimelineAnalysisCreate
+    ) -> TimelineAnalysisORM:
+        return super().create(
+            db, create_dto=TimelineAnalysiCreateAsInDB(**create_dto.model_dump())
+        )
 
     def update(self, db: Session, id: int, update_dto: TimelineAnalysisUpdate):
         # make sure that analysis with id exists
@@ -59,6 +69,21 @@ class CRUDTimelineAnalysis(
 
         # return the results
         return TimelineAnalysisRead.model_validate(db_obj)
+
+    def duplicate_by_id(
+        self, db: Session, *, timeline_analysis_id: int, user_id: int
+    ) -> TimelineAnalysisORM:
+        db_obj = self.read(db, id=timeline_analysis_id)
+        return self.create(
+            db,
+            create_dto=TimelineAnalysiCreateAsInDB(
+                project_id=db_obj.project_id,
+                user_id=user_id,
+                name=db_obj.name + " (Copy)",
+                concepts=db_obj.concepts,
+                settings=db_obj.settings,
+            ),
+        )
 
 
 crud_timeline_analysis = CRUDTimelineAnalysis(TimelineAnalysisORM)

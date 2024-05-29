@@ -1,6 +1,6 @@
 import { Button, ButtonGroup, Card, CardContent, CardHeader, CardProps, TextField, Typography } from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { DocumentSamplerActions } from "./documentSamplerSlice";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
 interface SamplingStrategySelectorProps {
   cardProps?: Omit<CardProps, "className">;

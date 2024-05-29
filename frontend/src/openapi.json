@@ -1304,67 +1304,6 @@
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
         }
-      },
-      "delete": {
-        "tags": ["sourceDocument"],
-        "summary": "Unlinks all DocumentTags of the SourceDocument.",
-        "operationId": "unlinks_all_tags",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/sdoc/{sdoc_id}/tag/{tag_id}": {
-      "patch": {
-        "tags": ["sourceDocument"],
-        "summary": "Links a DocumentTag with the SourceDocument with the given ID if it exists",
-        "operationId": "link_tag",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      },
-      "delete": {
-        "tags": ["sourceDocument"],
-        "summary": "Unlinks the DocumentTags from the SourceDocument.",
-        "operationId": "unlink_tag",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          { "name": "sdoc_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Sdoc Id" } },
-          { "name": "tag_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tag Id" } }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceDocumentRead" } } }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
       }
     },
     "/sdoc/{sdoc_id}/memo": {
@@ -3211,7 +3150,7 @@
     "/search/sdoc": {
       "post": {
         "tags": ["search"],
-        "summary": "Returns all SourceDocument Ids that match the query parameters.",
+        "summary": "Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.",
         "operationId": "search_sdocs",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
@@ -3232,6 +3171,24 @@
             "in": "query",
             "required": true,
             "schema": { "type": "boolean", "title": "Expert Mode" }
+          },
+          {
+            "name": "highlight",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "boolean", "title": "Highlight" }
+          },
+          {
+            "name": "page_number",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Number" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
           }
         ],
         "requestBody": {
@@ -3242,9 +3199,7 @@
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": {
-                "schema": { "type": "array", "items": { "type": "integer" }, "title": "Response Search-Search Sdocs" }
-              }
+              "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedElasticSearchDocumentHits" } }
             }
           },
           "422": {
@@ -3900,12 +3855,18 @@
             "required": true,
             "schema": { "type": "integer", "title": "Project Id" }
           },
-          { "name": "page", "in": "query", "required": true, "schema": { "type": "integer", "title": "Page" } },
+          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
+          },
           {
             "name": "page_size",
             "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Page Size" }
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
           }
         ],
         "requestBody": {
@@ -3918,6 +3879,85 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedSegmentResult" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/annotated_images_info": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns AnnotationSegments Info.",
+        "operationId": "annotated_images_info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_AnnotatedImagesColumns_" },
+                  "title": "Response Analysis-Annotated Images Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/analysis/annotated_images": {
+      "post": {
+        "tags": ["analysis"],
+        "summary": "Returns AnnotatedImageResult.",
+        "operationId": "annotated_images",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          { "name": "user_id", "in": "query", "required": true, "schema": { "type": "integer", "title": "User Id" } },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page" }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Page Size" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Body_analysis-annotated_images" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnnotatedImageResult" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -4547,6 +4587,32 @@
         }
       }
     },
+    "/analysisTable/duplicate/{analysis_table_id}": {
+      "post": {
+        "tags": ["analysisTable"],
+        "summary": "Duplicate the Analysis Table with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "analysis_table_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Analysis Table Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnalysisTableRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
     "/whiteboard": {
       "put": {
         "tags": ["whiteboard"],
@@ -4708,6 +4774,32 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/whiteboard/duplicate/{whiteboard_id}": {
+      "post": {
+        "tags": ["whiteboard"],
+        "summary": "Duplicates the Whiteboard with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "whiteboard_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Whiteboard Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WhiteboardRead" } } }
           },
           "422": {
             "description": "Validation Error",
@@ -4950,6 +5042,32 @@
           }
         }
       }
+    },
+    "/timelineAnalysis/duplicate/{timeline_analysis_id}": {
+      "post": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Duplicates the TimelineAnalysis with the given ID if it exists",
+        "operationId": "duplicate_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "timeline_analysis_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Timeline Analysis Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5101,6 +5219,34 @@
         "required": ["title", "content", "table_type"],
         "title": "AnalysisTableUpdate"
       },
+      "AnnotatedImageResult": {
+        "properties": {
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of bbox_annotation_ids. Used for pagination."
+          },
+          "data": {
+            "items": { "$ref": "#/components/schemas/BBoxAnnotationTableRow" },
+            "type": "array",
+            "title": "Data",
+            "description": "The Annotations."
+          }
+        },
+        "type": "object",
+        "required": ["total_results", "data"],
+        "title": "AnnotatedImageResult"
+      },
+      "AnnotatedImagesColumns": {
+        "type": "string",
+        "enum": [
+          "AIC_CODE_ID",
+          "AIC_MEMO_CONTENT",
+          "AIC_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "AIC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
+        ],
+        "title": "AnnotatedImagesColumns"
+      },
       "AnnotatedSegmentResult": {
         "properties": {
           "total_results": {
@@ -5108,25 +5254,25 @@
             "title": "Total Results",
             "description": "The total number of span_annotation_ids. Used for pagination."
           },
-          "span_annotation_ids": {
-            "items": { "type": "integer" },
+          "data": {
+            "items": { "$ref": "#/components/schemas/AnnotationTableRow" },
             "type": "array",
-            "title": "Span Annotation Ids",
-            "description": "The SpanAnnotation IDs."
+            "title": "Data",
+            "description": "The Annotations."
           }
         },
         "type": "object",
-        "required": ["total_results", "span_annotation_ids"],
+        "required": ["total_results", "data"],
         "title": "AnnotatedSegmentResult"
       },
       "AnnotatedSegmentsColumns": {
         "type": "string",
         "enum": [
-          "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME",
-          "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST",
-          "ASC_CODE_ID",
           "ASC_SPAN_TEXT",
-          "ASC_MEMO_CONTENT"
+          "ASC_CODE_ID",
+          "ASC_MEMO_CONTENT",
+          "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME",
+          "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
         ],
         "title": "AnnotatedSegmentsColumns"
       },
@@ -5189,6 +5335,43 @@
         "type": "object",
         "required": ["annotation", "code", "sdoc", "text"],
         "title": "AnnotationOccurrence"
+      },
+      "AnnotationTableRow": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the SpanAnnotation" },
+          "span_text": {
+            "type": "string",
+            "title": "Span Text",
+            "description": "The SpanText the SpanAnnotation spans."
+          },
+          "code": {
+            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
+            "description": "Code the SpanAnnotation refers to"
+          },
+          "annotation_document_id": {
+            "type": "integer",
+            "title": "Annotation Document Id",
+            "description": "AnnotationDocument the SpanAnnotation refers to"
+          },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc": {
+            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The DocumentTags of the SourceDocument."
+          },
+          "memo": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
+            "description": "The Memo of the Annotation."
+          }
+        },
+        "type": "object",
+        "required": ["id", "span_text", "code", "annotation_document_id", "user_id", "sdoc", "tags", "memo"],
+        "title": "AnnotationTableRow"
       },
       "AttachedObjectType": {
         "type": "string",
@@ -5329,6 +5512,12 @@
             "title": "Annotation Document Id",
             "description": "AnnotationDocument the BBoxAnnotation refers to"
           },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the SpanAnnotation belongs to" },
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "SourceDocument the SpanAnnotation refers to"
+          },
           "created": {
             "type": "string",
             "format": "date-time",
@@ -5343,8 +5532,70 @@
           }
         },
         "type": "object",
-        "required": ["x_min", "x_max", "y_min", "y_max", "id", "code", "annotation_document_id", "created", "updated"],
+        "required": [
+          "x_min",
+          "x_max",
+          "y_min",
+          "y_max",
+          "id",
+          "code",
+          "annotation_document_id",
+          "user_id",
+          "sdoc_id",
+          "created",
+          "updated"
+        ],
         "title": "BBoxAnnotationReadResolvedCode"
+      },
+      "BBoxAnnotationTableRow": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id", "description": "ID of the BBoxAnnotation" },
+          "x": { "type": "integer", "title": "X", "description": "The x-coordinate of the BBoxAnnotation." },
+          "y": { "type": "integer", "title": "Y", "description": "The y-coordinate of the BBoxAnnotation." },
+          "width": { "type": "integer", "title": "Width", "description": "The width of the BBoxAnnotation." },
+          "height": { "type": "integer", "title": "Height", "description": "The height of the BBoxAnnotation." },
+          "url": { "type": "string", "title": "Url", "description": "The url to the Image of the BBoxAnnotation." },
+          "code": {
+            "allOf": [{ "$ref": "#/components/schemas/CodeRead" }],
+            "description": "Code the BBoxAnnotation refers to"
+          },
+          "annotation_document_id": {
+            "type": "integer",
+            "title": "Annotation Document Id",
+            "description": "AnnotationDocument the BBoxAnnotation refers to"
+          },
+          "user_id": { "type": "integer", "title": "User Id", "description": "User the BBoxAnnotation belongs to" },
+          "sdoc": {
+            "allOf": [{ "$ref": "#/components/schemas/SourceDocumentRead" }],
+            "description": "SourceDocument the BBoxAnnotation refers to"
+          },
+          "tags": {
+            "items": { "$ref": "#/components/schemas/DocumentTagRead" },
+            "type": "array",
+            "title": "Tags",
+            "description": "The DocumentTags of the SourceDocument."
+          },
+          "memo": {
+            "anyOf": [{ "$ref": "#/components/schemas/MemoRead" }, { "type": "null" }],
+            "description": "The Memo of the Annotation."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "x",
+          "y",
+          "width",
+          "height",
+          "url",
+          "code",
+          "annotation_document_id",
+          "user_id",
+          "sdoc",
+          "tags",
+          "memo"
+        ],
+        "title": "BBoxAnnotationTableRow"
       },
       "BBoxAnnotationUpdateWithCodeId": {
         "properties": {
@@ -5359,9 +5610,21 @@
         "enum": ["Waiting", "Running", "Finished", "Errorneous", "Aborted"],
         "title": "BackgroundJobStatus"
       },
+      "Body_analysis-annotated_images": {
+        "properties": {
+          "filter": { "$ref": "#/components/schemas/Filter_AnnotatedImagesColumns_" },
+          "sorts": {
+            "items": { "$ref": "#/components/schemas/Sort_AnnotatedImagesColumns_" },
+            "type": "array",
+            "title": "Sorts"
+          }
+        },
+        "type": "object",
+        "required": ["filter", "sorts"],
+        "title": "Body_analysis-annotated_images"
+      },
       "Body_analysis-annotated_segments": {
         "properties": {
-          "user_ids": { "items": { "type": "integer" }, "type": "array", "title": "User Ids" },
           "filter": { "$ref": "#/components/schemas/Filter_AnnotatedSegmentsColumns_" },
           "sorts": {
             "items": { "$ref": "#/components/schemas/Sort_AnnotatedSegmentsColumns_" },
@@ -5370,7 +5633,7 @@
           }
         },
         "type": "object",
-        "required": ["user_ids", "filter", "sorts"],
+        "required": ["filter", "sorts"],
         "title": "Body_analysis-annotated_segments"
       },
       "Body_analysis-code_frequencies": {
@@ -5447,9 +5710,9 @@
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": { "type": "string", "title": "Description", "description": "Description of the Code" },
-          "parent_code_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Code Id",
+            "title": "Parent Id",
             "description": "Parent of the Code"
           },
           "project_id": { "type": "integer", "title": "Project Id", "description": "Project the Code belongs to" },
@@ -5495,9 +5758,9 @@
           "name": { "type": "string", "title": "Name", "description": "Name of the Code" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": { "type": "string", "title": "Description", "description": "Description of the Code" },
-          "parent_code_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Code Id",
+            "title": "Parent Id",
             "description": "Parent of the Code"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Code" },
@@ -5537,14 +5800,29 @@
             "title": "Description",
             "description": "Description of the Code"
           },
-          "parent_code_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Code Id",
+            "title": "Parent Id",
             "description": "Parent of the Code"
           }
         },
         "type": "object",
         "title": "CodeUpdate"
+      },
+      "ColumnInfo_AnnotatedImagesColumns_": {
+        "properties": {
+          "label": { "type": "string", "title": "Label" },
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedImagesColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "sortable": { "type": "boolean", "title": "Sortable" },
+          "operator": { "$ref": "#/components/schemas/FilterOperator" },
+          "value": { "$ref": "#/components/schemas/FilterValueType" }
+        },
+        "type": "object",
+        "required": ["label", "column", "sortable", "operator", "value"],
+        "title": "ColumnInfo[AnnotatedImagesColumns]"
       },
       "ColumnInfo_AnnotatedSegmentsColumns_": {
         "properties": {
@@ -5689,16 +5967,16 @@
       "DocType": { "type": "string", "enum": ["text", "image", "video", "audio"], "title": "DocType" },
       "DocumentTagCreate": {
         "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the DocumentTag" },
+          "name": { "type": "string", "title": "Name", "description": "Title of the DocumentTag" },
           "color": { "type": "string", "title": "Color", "description": "Color of the Code" },
           "description": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Description",
             "description": "Description of the DocumentTag"
           },
-          "parent_tag_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Tag Id",
+            "title": "Parent Id",
             "description": "Parent of the DocumentTag"
           },
           "project_id": {
@@ -5708,21 +5986,21 @@
           }
         },
         "type": "object",
-        "required": ["title", "project_id"],
+        "required": ["name", "project_id"],
         "title": "DocumentTagCreate"
       },
       "DocumentTagRead": {
         "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the DocumentTag" },
+          "name": { "type": "string", "title": "Name", "description": "Title of the DocumentTag" },
           "color": { "type": "string", "title": "Color", "description": "Color of the DocumentTag" },
           "description": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Description",
             "description": "Description of the DocumentTag"
           },
-          "parent_tag_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Tag Id",
+            "title": "Parent Id",
             "description": "Parent of the DocumentTag"
           },
           "id": { "type": "integer", "title": "Id", "description": "ID of the DocumentTag" },
@@ -5745,15 +6023,15 @@
           }
         },
         "type": "object",
-        "required": ["title", "color", "id", "project_id", "created", "updated"],
+        "required": ["name", "color", "id", "project_id", "created", "updated"],
         "title": "DocumentTagRead"
       },
       "DocumentTagUpdate": {
         "properties": {
-          "title": {
+          "name": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
-            "title": "Title",
-            "description": "Title of the DocumentTag"
+            "title": "Name",
+            "description": "Name of the DocumentTag"
           },
           "color": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
@@ -5765,14 +6043,38 @@
             "title": "Description",
             "description": "Description of the DocumentTag"
           },
-          "parent_tag_id": {
+          "parent_id": {
             "anyOf": [{ "type": "integer" }, { "type": "null" }],
-            "title": "Parent Tag Id",
+            "title": "Parent Id",
             "description": "Parent of the DocumentTag"
           }
         },
         "type": "object",
         "title": "DocumentTagUpdate"
+      },
+      "ElasticSearchDocumentHit": {
+        "properties": {
+          "sdoc_id": {
+            "type": "integer",
+            "title": "Sdoc Id",
+            "description": "The ID of the SourceDocument as it is in the SQL DB"
+          },
+          "score": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Score",
+            "description": "The score of the SourceDocument that was found by a ES Query"
+          },
+          "highlights": {
+            "items": { "type": "string" },
+            "type": "array",
+            "title": "Highlights",
+            "description": "The highlights found within the document.",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": ["sdoc_id"],
+        "title": "ElasticSearchDocumentHit"
       },
       "ExportFormat": { "type": "string", "enum": ["CSV", "JSON"], "title": "ExportFormat" },
       "ExportJobParameters": {
@@ -5887,6 +6189,39 @@
         "type": "object",
         "required": ["user_content", "id", "user_id", "created"],
         "title": "FeedbackRead"
+      },
+      "FilterExpression_AnnotatedImagesColumns_": {
+        "properties": {
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedImagesColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "operator": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/IDOperator" },
+              { "$ref": "#/components/schemas/NumberOperator" },
+              { "$ref": "#/components/schemas/StringOperator" },
+              { "$ref": "#/components/schemas/IDListOperator" },
+              { "$ref": "#/components/schemas/ListOperator" },
+              { "$ref": "#/components/schemas/DateOperator" },
+              { "$ref": "#/components/schemas/BooleanOperator" }
+            ],
+            "title": "Operator"
+          },
+          "value": {
+            "anyOf": [
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "integer" },
+              { "items": { "type": "string" }, "type": "array" },
+              { "items": { "items": { "type": "string" }, "type": "array" }, "type": "array" }
+            ],
+            "title": "Value"
+          }
+        },
+        "type": "object",
+        "required": ["column", "operator", "value"],
+        "title": "FilterExpression[AnnotatedImagesColumns]"
       },
       "FilterExpression_AnnotatedSegmentsColumns_": {
         "properties": {
@@ -6029,6 +6364,24 @@
         "type": "string",
         "enum": ["SDOC_ID", "CODE_ID", "USER_ID", "TAG_ID", "SPAN_ANNOTATION", "DOC_TYPE", "INFER_FROM_OPERATOR"],
         "title": "FilterValueType"
+      },
+      "Filter_AnnotatedImagesColumns_": {
+        "properties": {
+          "items": {
+            "items": {
+              "anyOf": [
+                { "$ref": "#/components/schemas/FilterExpression_AnnotatedImagesColumns_" },
+                { "$ref": "#/components/schemas/Filter_AnnotatedImagesColumns_" }
+              ]
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "logic_operator": { "$ref": "#/components/schemas/LogicalOperator" }
+        },
+        "type": "object",
+        "required": ["items", "logic_operator"],
+        "title": "Filter[AnnotatedImagesColumns]"
       },
       "Filter_AnnotatedSegmentsColumns_": {
         "properties": {
@@ -6274,6 +6627,24 @@
         "type": "string",
         "enum": ["NUMBER_EQUALS", "NUMBER_NOT_EQUALS", "NUMBER_GT", "NUMBER_LT", "NUMBER_GTE", "NUMBER_LTE"],
         "title": "NumberOperator"
+      },
+      "PaginatedElasticSearchDocumentHits": {
+        "properties": {
+          "hits": {
+            "items": { "$ref": "#/components/schemas/ElasticSearchDocumentHit" },
+            "type": "array",
+            "title": "Hits",
+            "description": "The IDs, scores and (optional) highlights of SourceDocument search results on the requested page."
+          },
+          "total_results": {
+            "type": "integer",
+            "title": "Total Results",
+            "description": "The total number of hits. Used for pagination."
+          }
+        },
+        "type": "object",
+        "required": ["hits", "total_results"],
+        "title": "PaginatedElasticSearchDocumentHits"
       },
       "PaginatedMemoSearchResults": {
         "properties": {
@@ -6856,6 +7227,18 @@
         "title": "SingleUserLogbookExportJobParams"
       },
       "SortDirection": { "type": "string", "enum": ["asc", "desc"], "title": "SortDirection" },
+      "Sort_AnnotatedImagesColumns_": {
+        "properties": {
+          "column": {
+            "anyOf": [{ "$ref": "#/components/schemas/AnnotatedImagesColumns" }, { "type": "integer" }],
+            "title": "Column"
+          },
+          "direction": { "$ref": "#/components/schemas/SortDirection" }
+        },
+        "type": "object",
+        "required": ["column", "direction"],
+        "title": "Sort[AnnotatedImagesColumns]"
+      },
       "Sort_AnnotatedSegmentsColumns_": {
         "properties": {
           "column": {
@@ -7793,7 +8176,6 @@
       "WhiteboardCreate": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" },
           "project_id": {
             "type": "integer",
             "title": "Project Id",
@@ -7802,13 +8184,12 @@
           "user_id": { "type": "integer", "title": "User Id", "description": "User the Whiteboard belongs to" }
         },
         "type": "object",
-        "required": ["title", "content", "project_id", "user_id"],
+        "required": ["title", "project_id", "user_id"],
         "title": "WhiteboardCreate"
       },
       "WhiteboardRead": {
         "properties": {
           "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" },
           "id": { "type": "integer", "title": "Id", "description": "ID of the Whiteboard" },
           "project_id": {
             "type": "integer",
@@ -7827,19 +8208,27 @@
             "format": "date-time",
             "title": "Updated",
             "description": "Updated timestamp of the Whiteboard"
-          }
+          },
+          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" }
         },
         "type": "object",
-        "required": ["title", "content", "id", "project_id", "user_id", "created", "updated"],
+        "required": ["title", "id", "project_id", "user_id", "created", "updated", "content"],
         "title": "WhiteboardRead"
       },
       "WhiteboardUpdate": {
         "properties": {
-          "title": { "type": "string", "title": "Title", "description": "Title of the Whiteboard" },
-          "content": { "type": "string", "title": "Content", "description": "Content of the Whiteboard" }
+          "title": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Title",
+            "description": "Title of the Whiteboard"
+          },
+          "content": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Content",
+            "description": "Content of the Whiteboard"
+          }
         },
         "type": "object",
-        "required": ["title", "content"],
         "title": "WhiteboardUpdate"
       },
       "WordFrequencyColumns": {
@@ -7913,7 +8302,7 @@
           "DocType": { "enum": ["text", "image", "video", "audio"], "title": "DocType", "type": "string" },
           "DocumentTagRead": {
             "properties": {
-              "title": { "description": "Title of the DocumentTag", "title": "Title", "type": "string" },
+              "name": { "description": "Title of the DocumentTag", "title": "Name", "type": "string" },
               "color": { "description": "Color of the DocumentTag", "title": "Color", "type": "string" },
               "description": {
                 "anyOf": [{ "type": "string" }, { "type": "null" }],
@@ -7921,11 +8310,11 @@
                 "description": "Description of the DocumentTag",
                 "title": "Description"
               },
-              "parent_tag_id": {
+              "parent_id": {
                 "anyOf": [{ "type": "integer" }, { "type": "null" }],
                 "default": null,
                 "description": "Parent of the DocumentTag",
-                "title": "Parent Tag Id"
+                "title": "Parent Id"
               },
               "id": { "description": "ID of the DocumentTag", "title": "Id", "type": "integer" },
               "project_id": {
@@ -7946,7 +8335,7 @@
                 "type": "string"
               }
             },
-            "required": ["title", "color", "id", "project_id", "created", "updated"],
+            "required": ["name", "color", "id", "project_id", "created", "updated"],
             "title": "DocumentTagRead",
             "type": "object"
           },

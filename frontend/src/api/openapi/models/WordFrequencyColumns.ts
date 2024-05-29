@@ -1,7 +1,7 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 export enum WordFrequencyColumns {
   WF_WORD = "WF_WORD",
   WF_WORD_FREQUENCY = "WF_WORD_FREQUENCY",

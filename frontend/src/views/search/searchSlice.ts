@@ -1,39 +1,50 @@
-import { GridDensity, GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  MRT_ColumnSizingState,
+  MRT_DensityState,
+  MRT_PaginationState,
+  MRT_RowSelectionState,
+  MRT_SortingState,
+  MRT_VisibilityState,
+} from "material-react-table";
 import { persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { DocType, SourceDocumentMetadataReadResolved } from "../../api/openapi";
-import { QueryType } from "./QueryType";
+import { SearchFilterActions } from "./searchFilterSlice.ts";
 
 interface SearchState {
-  selectedDocumentIds: number[];
   isSplitView: boolean;
   isShowEntities: boolean;
   isShowTags: boolean;
-  page: number;
-  rowsPerPage: number;
-  resultModalities: DocType[];
-  searchType: QueryType;
-  searchQuery: string | number;
+  searchQuery: string;
   isTableView: boolean;
-  sortModel: GridSortModel;
-  gridDensity: GridDensity;
   expertMode: boolean;
+  selectedDocumentIds: number[];
+  selectedDocumentId: number | undefined;
+  selectionModel: MRT_RowSelectionState;
+  paginationModel: MRT_PaginationState;
+  sortingModel: MRT_SortingState;
+  columnVisibilityModel: MRT_VisibilityState;
+  columnSizingModel: MRT_ColumnSizingState;
+  gridDensity: MRT_DensityState;
 }
 
 const initialState: SearchState = {
   selectedDocumentIds: [],
+  selectedDocumentId: undefined,
   isSplitView: false,
   isShowEntities: true,
   isShowTags: true,
-  page: 0,
-  rowsPerPage: 10,
-  resultModalities: [DocType.TEXT, DocType.IMAGE, DocType.VIDEO, DocType.AUDIO],
-  searchType: QueryType.LEXICAL,
   searchQuery: "",
   isTableView: false,
-  sortModel: [],
-  gridDensity: "standard",
+  selectionModel: {},
+  paginationModel: {
+    pageIndex: 0,
+    pageSize: 10,
+  },
+  sortingModel: [],
+  columnVisibilityModel: {},
+  columnSizingModel: {},
+  gridDensity: "comfortable",
   expertMode: false,
 };
 
@@ -42,6 +53,14 @@ export const searchSlice = createSlice({
   initialState,
   reducers: {
     // document selection
+    onToggleSelectedDocumentIdChange: (state, action: PayloadAction<number | undefined>) => {
+      // toggle
+      if (state.selectedDocumentId === action.payload) {
+        state.selectedDocumentId = undefined;
+      } else {
+        state.selectedDocumentId = action.payload;
+      }
+    },
     toggleDocument: (state, action: PayloadAction<number>) => {
       const selectedIndex = state.selectedDocumentIds.indexOf(action.payload);
       if (selectedIndex === -1) {
@@ -71,8 +90,17 @@ export const searchSlice = createSlice({
     },
 
     // sorting
-    onSortModelChange: (state, action: PayloadAction<GridSortModel>) => {
-      state.sortModel = action.payload;
+    onSortModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
+      state.sortingModel = action.payload;
+    },
+
+    // column visibility
+    onColumnVisibilityChange: (state, action: PayloadAction<MRT_VisibilityState>) => {
+      state.columnVisibilityModel = action.payload;
+    },
+    // column visibility
+    onColumnSizingChange: (state, action: PayloadAction<MRT_ColumnSizingState>) => {
+      state.columnSizingModel = action.payload;
     },
 
     // ui
@@ -88,84 +116,57 @@ export const searchSlice = createSlice({
     toggleShowTags: (state) => {
       state.isShowTags = !state.isShowTags;
     },
-    setTableDensity: (state, action: PayloadAction<GridDensity>) => {
+    setTableDensity: (state, action: PayloadAction<MRT_DensityState>) => {
       state.gridDensity = action.payload;
     },
     // pagination
     setRowsPerPage: (state, action: PayloadAction<number>) => {
-      state.rowsPerPage = action.payload;
+      state.paginationModel.pageSize = action.payload;
     },
     setPage: (state, action: PayloadAction<number>) => {
-      state.page = action.payload;
+      state.paginationModel.pageIndex = action.payload;
     },
-    onPaginationModelChange: (state, action: PayloadAction<GridPaginationModel>) => {
-      state.page = action.payload.page;
-      state.rowsPerPage = action.payload.pageSize;
-    },
-    setResultModalites: (state, action: PayloadAction<DocType[]>) => {
-      state.resultModalities = action.payload.sort();
-    },
-    toggleModality: (state, action: PayloadAction<DocType>) => {
-      let index = state.resultModalities.indexOf(action.payload);
-      if (index === -1) {
-        state.resultModalities.push(action.payload);
-      } else {
-        state.resultModalities.splice(index, 1);
-      }
-      state.resultModalities = state.resultModalities.sort();
-      // reset page to 0, when modalities are changed
-      state.page = 0;
-    },
-    setSearchType: (state, action: PayloadAction<QueryType>) => {
-      state.searchType = action.payload;
-    },
-
-    // filtering
-    // TODO are these actions for logging only? Why do they exist?
-    onAddKeywordFilter: (state, action: PayloadAction<{ keywordMetadataIds: number[]; keyword: string }>) => {
-      console.log("added keywod filter!");
-    },
-    onAddTagFilter: (state, action: PayloadAction<{ tagId: number | string }>) => {
-      console.log("added tag filter!");
-    },
-    onAddFilenameFilter: (state, action: PayloadAction<{ filename: string }>) => {
-      console.log("added filename filter!");
-    },
-    onAddSpanAnnotationFilter: (state, action: PayloadAction<{ codeId: number; spanText: string }>) => {
-      console.log("added span annotation filter!");
-    },
-    onAddMetadataFilter: (state, action: PayloadAction<{ metadata: SourceDocumentMetadataReadResolved }>) => {
-      console.log("added metadata filter!");
+    onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
+      state.paginationModel = action.payload;
     },
 
     // search
-    onChangeSearchQuery: (state, action: PayloadAction<string | number>) => {
+    onChangeSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
     onClearSearch: (state) => {
       state.searchQuery = "";
-      state.searchType = QueryType.LEXICAL;
       state.selectedDocumentIds = [];
+      state.selectedDocumentId = undefined;
     },
     onChangeExpertMode: (state, action: PayloadAction<boolean>) => {
       state.expertMode = action.payload;
     },
-    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string | number; searchType: QueryType }>) => {
-      switch (action.payload.searchType) {
-        case QueryType.SEMANTIC_IMAGES:
-          state.resultModalities = [DocType.IMAGE];
-          break;
-        case QueryType.SEMANTIC_SENTENCES:
-          state.resultModalities = [DocType.TEXT];
-          break;
-        case QueryType.LEXICAL:
-          state.resultModalities = [DocType.TEXT];
-          break;
-      }
-      state.searchType = action.payload.searchType;
+    onSearchWithSimilarity: (state, action: PayloadAction<{ query: string }>) => {
       state.selectedDocumentIds = [];
       state.searchQuery = action.payload.query;
     },
+    onUpdateSelectionModel: (state, action: PayloadAction<MRT_RowSelectionState>) => {
+      state.selectionModel = action.payload;
+      state.selectedDocumentIds = Object.keys(action.payload).map((key) => parseInt(key));
+    },
+  },
+  extraReducers(builder) {
+    builder.addCase(SearchFilterActions.init, (state, action) => {
+      state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+        if (!column.column) return acc;
+        // this is a normal column
+        if (isNaN(parseInt(column.column))) {
+          return acc;
+          // this is a metadata column
+        } else {
+          return {
+            ...acc,
+            [column.column]: false,
+          };
+        }
+      }, {});
+    });
   },
 });
 

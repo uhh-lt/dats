@@ -2,10 +2,11 @@ import { Box, List } from "@mui/material";
 import { BoxProps } from "@mui/system";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import React, { useRef, useState } from "react";
-import { AttachedObjectType } from "../../api/openapi";
-import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition";
-import MemoCard from "./MemoCard";
-import MemoResultsContextMenu from "./MemoResultsContextMenu";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
+import MemoCard from "../../features/Memo/MemoCard/MemoCard.tsx";
+import MemoResultsContextMenu from "./MemoResultsContextMenu.tsx";
 
 interface MemoResultsProps {
   memoIds: number[];
@@ -20,7 +21,7 @@ export interface MemoCardContextMenuData {
 
 function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & BoxProps) {
   // virtualized results
-  const containerRef: React.MutableRefObject<HTMLDivElement | null> = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useVirtualizer({
     count: memoIds.length || 0,
     getScrollElement: () => containerRef.current,
@@ -29,27 +30,23 @@ function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & Bo
 
   // context menu
   const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
-  const [contextMenuData, setContextMenuData] = useState<MemoCardContextMenuData>({
-    memoId: undefined,
-    attachedObjectType: undefined,
-    memoStarred: undefined,
-  });
-  const onContextMenu = (data: MemoCardContextMenuData) => (event: React.MouseEvent) => {
+  const [contextMenuData, setContextMenuData] = useState<MemoRead | undefined>(undefined);
+  const onContextMenu = (memo: MemoRead) => (event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setContextMenuData(data);
+    setContextMenuData(memo);
   };
 
   return (
     <>
       <MemoResultsContextMenu
-        memoId={contextMenuData.memoId}
-        memoStarred={contextMenuData.memoStarred}
-        attachedObjectType={contextMenuData.attachedObjectType!}
+        memoId={contextMenuData?.id}
+        memoStarred={contextMenuData?.starred}
+        attachedObjectType={contextMenuData?.attached_object_type || AttachedObjectType.SPAN_GROUP}
         position={contextMenuPosition}
         handleClose={() => setContextMenuPosition(null)}
       />
-      <Box ref={containerRef} style={{ height: "100%", overflowY: "auto" }} {...props}>
+      <Box ref={containerRef} style={{ height: "90%", overflowY: "auto" }} {...props}>
         <List
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
@@ -58,11 +55,11 @@ function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & Bo
           }}
         >
           {rowVirtualizer.getVirtualItems().map((virtualItem) => (
-            <MemoCard
+            <Box
               key={virtualItem.key}
-              // @ts-ignore
-              ref={(element) => rowVirtualizer.measureElement(element)}
-              dataIndex={virtualItem.index}
+              ref={(element: HTMLDivElement) => rowVirtualizer.measureElement(element)}
+              component="div"
+              data-index={virtualItem.index}
               style={{
                 paddingBottom: "8px",
                 width: "100%",
@@ -71,9 +68,9 @@ function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & Bo
                 left: 0,
                 transform: `translateY(${virtualItem.start}px)`,
               }}
-              memoId={memoIds[virtualItem.index]}
-              onContextMenu={onContextMenu}
-            />
+            >
+              <MemoCard memo={memoIds[virtualItem.index]} onContextMenu={onContextMenu} />
+            </Box>
           ))}
           {memoIds.length === 0 && <div>{noResultsText}</div>}
         </List>

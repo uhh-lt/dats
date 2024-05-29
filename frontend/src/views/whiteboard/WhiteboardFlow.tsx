@@ -2,9 +2,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { toPng } from "html-to-image";
-import { parseInt } from "lodash";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { unstable_useBlocker, useParams } from "react-router-dom";
+import { useBlocker, useParams } from "react-router-dom";
 import ReactFlow, {
   Background,
   Connection,
@@ -30,48 +29,54 @@ import ReactFlow, {
   useStore,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import BboxAnnotationHooks from "../../api/BboxAnnotationHooks";
-import CodeHooks from "../../api/CodeHooks";
-import ProjectHooks from "../../api/ProjectHooks";
-import SpanAnnotationHooks from "../../api/SpanAnnotationHooks";
-import TagHooks from "../../api/TagHooks";
-import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks";
-import { useAuth } from "../../auth/AuthProvider";
-import BBoxAnnotationEditDialog from "../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog";
-import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog";
-import SpanAnnotationEditDialog from "../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog";
-import TagEditDialog from "../../features/CrudDialog/Tag/TagEditDialog";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import StraightConnectionLine from "./connectionlines/StraightConnectionLine";
-import CustomEdge from "./edges/CustomEdge";
-import FloatingEdge from "./edges/FloatingEdge";
-import { useReactFlowService } from "./hooks/ReactFlowService";
-import { useEdgeStateCustom, useNodeStateCustom } from "./hooks/useNodesEdgesStateCustom";
-import BboxAnnotationNode from "./nodes/BboxAnnotationNode";
-import BorderNode from "./nodes/BorderNode";
-import CodeNode from "./nodes/CodeNode";
-import MemoNode from "./nodes/MemoNode";
-import NoteNode from "./nodes/NoteNode";
-import SdocNode from "./nodes/SdocNode";
-import SpanAnnotationNode from "./nodes/SpanAnnotationNode";
-import TagNode from "./nodes/TagNode";
-import TextNode from "./nodes/TextNode";
-import AddAnnotationNodeDialog from "./toolbar/AddAnnotationNodeDialog";
-import AddBorderNodeButton from "./toolbar/AddBorderNodeButton";
-import AddCodeNodeDialog from "./toolbar/AddCodeNodeDialog";
-import AddDocumentNodeDialog from "./toolbar/AddDocumentNodeDialog";
-import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog";
-import AddNoteNodeButton from "./toolbar/AddNoteNodeButton";
-import AddTagNodeDialog from "./toolbar/AddTagNodeDialog";
-import AddTextNodeButton from "./toolbar/AddTextNodeButton";
-import DatabaseEdgeEditMenu, { DatabaseEdgeEditMenuHandle } from "./toolbar/DatabaseEdgeEditMenu";
-import EdgeEditMenu, { EdgeEditMenuHandle } from "./toolbar/EdgeEditMenu";
-import NodeEditMenu, { NodeEditMenuHandle } from "./toolbar/NodeEditMenu";
-import { isBBoxAnnotationNode, isCodeNode, isSdocNode, isSpanAnnotationNode, isTagNode } from "./types";
-import { CustomEdgeData } from "./types/CustomEdgeData";
-import { DWTSNodeData } from "./types/DWTSNodeData";
-import { PendingAddNodeAction } from "./types/PendingAddNodeAction";
-import { isCustomNode } from "./types/typeGuards";
+import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
+import CodeHooks from "../../api/CodeHooks.ts";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
+import TagHooks from "../../api/TagHooks.ts";
+import WhiteboardHooks, { Whiteboard, WhiteboardGraph } from "../../api/WhiteboardHooks.ts";
+import BBoxAnnotationEditDialog from "../../features/CrudDialog/BBoxAnnotation/BBoxAnnotationEditDialog.tsx";
+import CodeEditDialog from "../../features/CrudDialog/Code/CodeEditDialog.tsx";
+import SpanAnnotationEditDialog from "../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog.tsx";
+import TagEditDialog from "../../features/CrudDialog/Tag/TagEditDialog.tsx";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import StraightConnectionLine from "./connectionlines/StraightConnectionLine.tsx";
+import CustomEdge from "./edges/CustomEdge.tsx";
+import FloatingEdge from "./edges/FloatingEdge.tsx";
+import { useReactFlowService } from "./hooks/ReactFlowService.ts";
+import { useEdgeStateCustom, useNodeStateCustom } from "./hooks/useNodesEdgesStateCustom.ts";
+import BboxAnnotationNode from "./nodes/BboxAnnotationNode.tsx";
+import BorderNode from "./nodes/BorderNode.tsx";
+import CodeNode from "./nodes/CodeNode.tsx";
+import MemoNode from "./nodes/MemoNode.tsx";
+import NoteNode from "./nodes/NoteNode.tsx";
+import SdocNode from "./nodes/SdocNode.tsx";
+import SpanAnnotationNode from "./nodes/SpanAnnotationNode.tsx";
+import TagNode from "./nodes/TagNode.tsx";
+import TextNode from "./nodes/TextNode.tsx";
+import AddBBoxAnnotationNodeDialog from "./toolbar/AddBBoxAnnotationNodeDialog.tsx";
+import AddBorderNodeButton from "./toolbar/AddBorderNodeButton.tsx";
+import AddCodeNodeDialog from "./toolbar/AddCodeNodeDialog.tsx";
+import AddDocumentNodeDialog from "./toolbar/AddDocumentNodeDialog.tsx";
+import AddMemoNodeDialog from "./toolbar/AddMemoNodeDialog.tsx";
+import AddNoteNodeButton from "./toolbar/AddNoteNodeButton.tsx";
+import AddSpanAnnotationNodeDialog from "./toolbar/AddSpanAnnotationNodeDialog.tsx";
+import AddTagNodeDialog from "./toolbar/AddTagNodeDialog.tsx";
+import AddTextNodeButton from "./toolbar/AddTextNodeButton.tsx";
+import DatabaseEdgeEditMenu, { DatabaseEdgeEditMenuHandle } from "./toolbar/DatabaseEdgeEditMenu.tsx";
+import EdgeEditMenu, { EdgeEditMenuHandle } from "./toolbar/EdgeEditMenu.tsx";
+import NodeEditMenu, { NodeEditMenuHandle } from "./toolbar/NodeEditMenu.tsx";
+import { CustomEdgeData } from "./types/CustomEdgeData.ts";
+import { DWTSNodeData } from "./types/DWTSNodeData.ts";
+import { PendingAddNodeAction } from "./types/PendingAddNodeAction.ts";
+import {
+  isBBoxAnnotationNode,
+  isCodeNode,
+  isCustomNode,
+  isSdocNode,
+  isSpanAnnotationNode,
+  isTagNode,
+} from "./types/typeGuards.ts";
 import "./whiteboard.css";
 import {
   defaultDatabaseEdgeOptions,
@@ -79,7 +84,7 @@ import {
   isCustomEdge,
   isCustomEdgeArray,
   isDatabaseEdge,
-} from "./whiteboardUtils";
+} from "./whiteboardUtils.ts";
 
 const nodeTypes: NodeTypes = {
   border: BorderNode,
@@ -154,7 +159,6 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
 
   // global client state (react-router)
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
-  const userId = useAuth().user?.id;
 
   // global server state (react query)
   const projectCodes = ProjectHooks.useGetAllCodes(projectId, true);
@@ -237,7 +241,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
             {
               codeId: sourceNode.data.codeId,
               requestBody: {
-                parent_code_id: targetNode.data.codeId,
+                parent_id: targetNode.data.codeId,
               },
             },
             {
@@ -317,7 +321,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     setPendingAction(undefined);
   };
 
-  const onEdgeClick = (event: React.MouseEvent<Element, MouseEvent>, edge: Edge) => {
+  const onEdgeClick = () => {
     setPendingAction(undefined);
   };
 
@@ -350,8 +354,12 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
     });
 
     selectedEdges.forEach((currentEdge) => {
-      let sourceHandle = document.querySelector(`[data-id='${currentEdge.source}-${currentEdge.sourceHandle}-source']`);
-      let targetHandle = document.querySelector(`[data-id='${currentEdge.target}-${currentEdge.targetHandle}-source']`);
+      const sourceHandle = document.querySelector(
+        `[data-id='${currentEdge.source}-${currentEdge.sourceHandle}-source']`,
+      );
+      const targetHandle = document.querySelector(
+        `[data-id='${currentEdge.target}-${currentEdge.targetHandle}-source']`,
+      );
       sourceHandle?.classList.add("selected-handle");
       targetHandle?.classList.add("selected-handle");
     });
@@ -363,7 +371,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
   useEffect(() => {
     setOldData(JSON.stringify(whiteboard.content));
   }, [whiteboard.content]);
-  unstable_useBlocker(() => {
+  useBlocker(() => {
     const newData: WhiteboardGraph = { nodes: nodes, edges: edges };
     if (oldData !== JSON.stringify(newData)) {
       return !window.confirm("You have unsaved changes! Are you sure you want to leave?");
@@ -471,16 +479,9 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       <AddDocumentNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddTagNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                       <AddCodeNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
-                      {userId && (
-                        <AddAnnotationNodeDialog
-                          projectId={projectId}
-                          userIds={[userId]}
-                          onClick={handleChangePendingAction}
-                        />
-                      )}
-                      {userId && (
-                        <AddMemoNodeDialog projectId={projectId} userId={userId} onClick={handleChangePendingAction} />
-                      )}
+                      <AddSpanAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddBBoxAnnotationNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
+                      <AddMemoNodeDialog projectId={projectId} onClick={handleChangePendingAction} />
                     </Stack>
                   </Paper>
                   <Paper elevation={1}>
@@ -508,7 +509,7 @@ function WhiteboardFlow({ whiteboard, readonly }: WhiteboardFlowProps) {
                       startIcon={<SaveIcon />}
                       fullWidth
                       type="submit"
-                      loading={updateWhiteboard.isLoading}
+                      loading={updateWhiteboard.isPending}
                       loadingPosition="start"
                       onClick={handleSaveWhiteboard}
                     >

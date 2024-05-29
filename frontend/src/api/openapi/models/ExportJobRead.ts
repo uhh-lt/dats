@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { BackgroundJobStatus } from "./BackgroundJobStatus";
 import type { ExportJobParameters } from "./ExportJobParameters";
-
 export type ExportJobRead = {
   /**
    * Status of the ExportJob

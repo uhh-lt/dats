@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -9,11 +10,9 @@ import type { SpanAnnotationRead } from "../models/SpanAnnotationRead";
 import type { SpanAnnotationReadResolved } from "../models/SpanAnnotationReadResolved";
 import type { SpanAnnotationUpdateWithCodeId } from "../models/SpanAnnotationUpdateWithCodeId";
 import type { SpanGroupRead } from "../models/SpanGroupRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class SpanAnnotationService {
   /**
    * Creates a SpanAnnotation
@@ -43,7 +42,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Returns the SpanAnnotation with the given ID.
    * @returns any Successful Response
@@ -73,7 +71,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Updates the SpanAnnotation with the given ID.
    * @returns any Successful Response
@@ -107,7 +104,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Deletes the SpanAnnotation with the given ID.
    * @returns any Successful Response
@@ -129,7 +125,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Returns the Code of the SpanAnnotation with the given ID if it exists.
    * @returns CodeRead Successful Response
@@ -147,7 +142,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Returns all SpanGroups that contain the the SpanAnnotation.
    * @returns SpanGroupRead Successful Response
@@ -165,7 +159,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Removes the SpanAnnotation from all SpanGroups
    * @returns SpanAnnotationRead Successful Response
@@ -183,7 +176,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Adds the SpanAnnotation to the SpanGroup
    * @returns SpanAnnotationRead Successful Response
@@ -208,7 +200,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Removes the SpanAnnotation from the SpanGroup
    * @returns SpanAnnotationRead Successful Response
@@ -233,7 +224,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Adds a Memo to the SpanAnnotation with the given ID if it exists
    * @returns MemoRead Successful Response
@@ -259,7 +249,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Returns the Memos attached to the SpanAnnotation with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -277,7 +266,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Returns the Memo attached to the SpanAnnotation with the given ID of the User with the given ID if it exists.
    * @returns MemoRead Successful Response
@@ -296,7 +284,6 @@ export class SpanAnnotationService {
       },
     });
   }
-
   /**
    * Returns SpanAnnotations with the given Code of the User with the given ID
    * @returns SpanAnnotationReadResolved Successful Response

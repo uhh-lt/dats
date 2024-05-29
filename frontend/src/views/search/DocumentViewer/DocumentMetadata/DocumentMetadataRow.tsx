@@ -1,26 +1,25 @@
 import { ErrorMessage } from "@hookform/error-message";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { Autocomplete, Chip, Stack, Switch, TextField, Box } from "@mui/material";
+import { Autocomplete, Box, Chip, Stack, Switch, TextField } from "@mui/material";
 import { useCallback } from "react";
 import { Controller, SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import SdocMetadataHooks from "../../../../api/SdocMetadataHooks";
-import {
-  MetaType,
-  SourceDocumentMetadataRead,
-  SourceDocumentMetadataReadResolved,
-  SourceDocumentMetadataUpdate,
-} from "../../../../api/openapi";
-import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI";
-import { dateToLocaleYYYYMMDDString } from "../../../../utils/DateUtils";
-import { isValidHttpUrl } from "./utils";
-import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton";
-import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton";
+import SdocMetadataHooks from "../../../../api/SdocMetadataHooks.ts";
+
+import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
+import { SourceDocumentMetadataRead } from "../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
+import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
+import { SourceDocumentMetadataUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
+import SnackbarAPI from "../../../../features/Snackbar/SnackbarAPI.ts";
+import { dateToLocaleYYYYMMDDString } from "../../../../utils/DateUtils.ts";
+import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
+import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
+import { isValidHttpUrl } from "./utils.ts";
 
 interface DocumentMetadataRowProps {
   metadata: SourceDocumentMetadataReadResolved;
+  filterName?: string;
 }
 
-function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
+function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps) {
   // use react hook form
   const {
     register,
@@ -165,7 +164,7 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
             return (
               <Autocomplete
                 value={field.value ? [...field.value] : []}
-                onChange={(event, newValue) => {
+                onChange={(_event, newValue) => {
                   field.onChange(newValue);
                 }}
                 disabled={metadata.project_metadata.read_only}
@@ -208,7 +207,6 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
 
   return (
     <Stack direction="row" alignItems="flex-end" mt={1}>
-      <InfoOutlinedIcon fontSize="medium" sx={{ my: "5px", mr: 1 }} />
       <TextField
         variant="standard"
         error={false}
@@ -216,10 +214,11 @@ function DocumentMetadataRow({ metadata }: DocumentMetadataRowProps) {
         disabled
         defaultValue={metadata.project_metadata.key}
         sx={{ flexGrow: 1, flexBasis: 1 }}
+        inputProps={{ style: { textAlign: "right", paddingRight: "8px" } }}
       />
       {inputField}
       {isLink && <DocumentMetadataGoToButton link={metadata.str_value!} size="small" />}
-      <DocumentMetadataAddFilterButton metadata={metadata} size="small" />
+      {filterName && <DocumentMetadataAddFilterButton metadata={metadata} filterName={filterName} size="small" />}
     </Stack>
   );
 }

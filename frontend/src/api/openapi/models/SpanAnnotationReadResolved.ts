@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { CodeRead } from "./CodeRead";
-
 export type SpanAnnotationReadResolved = {
   /**
    * Begin of the SpanAnnotation in characters

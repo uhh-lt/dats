@@ -1,6 +1,6 @@
-import FilterDialog, { FilterDialogProps } from "../../features/FilterDialog/FilterDialog";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { SearchFilterActions } from "./searchFilterSlice";
+import FilterDialog, { FilterDialogProps } from "../../features/FilterDialog/FilterDialog.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { SearchFilterActions } from "./searchFilterSlice.ts";
 
 function SearchFilterDialog({ anchorEl }: Pick<FilterDialogProps, "anchorEl">) {
   const filter = useAppSelector((state) => state.searchFilter.filter["root"]);

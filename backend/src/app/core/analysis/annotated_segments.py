@@ -1,8 +1,18 @@
-from typing import List
+from typing import List, Optional
+
+from sqlalchemy import Integer, func
+from sqlalchemy.dialects.postgresql import ARRAY, array_agg
+from sqlalchemy.orm import InstrumentedAttribute
 
 from app.core.data.crud.project_metadata import crud_project_meta
 from app.core.data.doc_type import DocType
-from app.core.data.dto.analysis import AnnotatedSegmentResult
+from app.core.data.dto.analysis import (
+    AnnotatedSegmentResult,
+    AnnotationTableRow,
+)
+from app.core.data.dto.code import CodeRead
+from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.source_document import SourceDocumentRead
 from app.core.data.orm.annotation_document import AnnotationDocumentORM
 from app.core.data.orm.code import CodeORM, CurrentCodeORM
 from app.core.data.orm.document_tag import DocumentTagORM
@@ -22,19 +32,27 @@ from app.core.filters.pagination import apply_pagination
 from app.core.filters.sorting import Sort, apply_sorting
 
 
-class AnnotatedSegmentsColumns(AbstractColumns):
+def aggregate_ids(column: InstrumentedAttribute, label: str):
+    return func.array_remove(
+        array_agg(func.distinct(column), type_=ARRAY(Integer)),
+        None,
+        type_=ARRAY(Integer),
+    ).label(label)
+
+
+class AnnotatedSegmentsColumns(str, AbstractColumns):
+    SPAN_TEXT = "ASC_SPAN_TEXT"
+    CODE_ID = "ASC_CODE_ID"
+    MEMO_CONTENT = "ASC_MEMO_CONTENT"
     SOURCE_DOCUMENT_FILENAME = "ASC_SOURCE_SOURCE_DOCUMENT_FILENAME"
     DOCUMENT_TAG_ID_LIST = "ASC_DOCUMENT_DOCUMENT_TAG_ID_LIST"
-    CODE_ID = "ASC_CODE_ID"
-    SPAN_TEXT = "ASC_SPAN_TEXT"
-    MEMO_CONTENT = "ASC_MEMO_CONTENT"
 
     def get_filter_column(self, **kwargs):
         match self:
             case AnnotatedSegmentsColumns.SOURCE_DOCUMENT_FILENAME:
                 return SourceDocumentORM.filename
             case AnnotatedSegmentsColumns.DOCUMENT_TAG_ID_LIST:
-                return (SourceDocumentORM.document_tags, DocumentTagORM.id)
+                return AnnotatedSegmentsColumns.DOCUMENT_TAG_ID_LIST
             case AnnotatedSegmentsColumns.CODE_ID:
                 return CodeORM.id
             case AnnotatedSegmentsColumns.SPAN_TEXT:
@@ -111,30 +129,79 @@ def find_annotated_segments_info(
 
 def find_annotated_segments(
     project_id: int,
-    user_ids: List[int],
+    user_id: int,
     filter: Filter[AnnotatedSegmentsColumns],
-    page: int,
-    page_size: int,
     sorts: List[Sort[AnnotatedSegmentsColumns]],
+    page: Optional[int] = None,
+    page_size: Optional[int] = None,
 ) -> AnnotatedSegmentResult:
     with SQLService().db_session() as db:
-        query = (
-            db.query(SpanAnnotationORM.id)
-            # join Span Annotation with Source Document
+        tag_ids_agg = aggregate_ids(
+            DocumentTagORM.id, label=AnnotatedSegmentsColumns.DOCUMENT_TAG_ID_LIST
+        )
+
+        # subquery of all memo ids for SpanAnnotations by user_id
+        memo_subquery = (
+            db.query(
+                SpanAnnotationORM.id.label("span_annotation_id"),
+                MemoORM.id.label("memo_id"),
+            )
             .join(SpanAnnotationORM.annotation_document)
-            .join(AnnotationDocumentORM.source_document)
+            .join(SpanAnnotationORM.object_handle)
+            .join(ObjectHandleORM.attached_memos)
+            .filter(
+                MemoORM.project_id == project_id,  # memo is in the correct project
+                MemoORM.user_id == user_id,  # i own the memo
+                AnnotationDocumentORM.user_id == user_id,  # i own the annotation
+            )
+            .subquery()
+        )
+
+        query = (
+            db.query(
+                SpanAnnotationORM,
+                SourceDocumentORM.filename,
+                tag_ids_agg,
+                SpanTextORM.text,
+                CodeORM.id,
+                MemoORM.content,
+            )
+            # join Span Annotation with Source Document
+            .join(
+                AnnotationDocumentORM,
+                AnnotationDocumentORM.id == SpanAnnotationORM.annotation_document_id,
+            )
+            .join(
+                SourceDocumentORM,
+                SourceDocumentORM.id == AnnotationDocumentORM.source_document_id,
+            )
+            # join Source Document with Document Tag
+            .join(SourceDocumentORM.document_tags, isouter=True)
             # join Span Annotation with Code
             .join(SpanAnnotationORM.current_code)
             .join(CurrentCodeORM.code)
             # join Span Annotation with Text
             .join(SpanAnnotationORM.span_text)
-            # join Span Annotation with Memo
-            .join(SpanAnnotationORM.object_handle, isouter=True)
+            # join Span Annotation with my Memo
             .join(
-                ObjectHandleORM.attached_memos, isouter=True
-            )  # issouter true: return the row, even if no memo exists
+                memo_subquery,
+                SpanAnnotationORM.id == memo_subquery.c.span_annotation_id,
+                isouter=True,
+            )
+            .join(
+                MemoORM,
+                MemoORM.id == memo_subquery.c.memo_id,
+                isouter=True,
+            )
+            .group_by(
+                SpanAnnotationORM.id,
+                SourceDocumentORM.filename,
+                SpanTextORM.text,
+                CodeORM.id,
+                MemoORM.content,
+            )
             .filter(
-                AnnotationDocumentORM.user_id.in_(user_ids),
+                AnnotationDocumentORM.user_id == user_id,
                 SourceDocumentORM.project_id == project_id,
             )
         )
@@ -143,15 +210,39 @@ def find_annotated_segments(
 
         query = apply_sorting(query=query, sorts=sorts, db=db)
 
-        query = query.order_by(
-            SpanAnnotationORM.id
-        )  # this is very important, otherwise pagination will not work!
-        query, pagination = apply_pagination(
-            query=query, page_number=page + 1, page_size=page_size
-        )
+        if page is not None and page_size is not None:
+            query = query.order_by(
+                SpanAnnotationORM.id
+            )  # this is very important, otherwise pagination will not work!
+            query, pagination = apply_pagination(
+                query=query, page_number=page + 1, page_size=page_size
+            )
+            total_results = pagination.total_results
+            result = query.all()
+        else:
+            result = query.all()
+            total_results = len(result)
 
-        result = query.all()
         return AnnotatedSegmentResult(
-            total_results=pagination.total_results,
-            span_annotation_ids=[row[0] for row in result],
+            total_results=total_results,
+            data=[
+                AnnotationTableRow(
+                    id=row[0].id,
+                    span_text=row[0].span_text.text,
+                    code=CodeRead.model_validate(row[0].current_code.code),
+                    annotation_document_id=row[0].annotation_document_id,
+                    user_id=row[0].annotation_document.user_id,
+                    sdoc=SourceDocumentRead.model_validate(
+                        row[0].annotation_document.source_document
+                    ),
+                    tags=[
+                        DocumentTagRead.model_validate(tag)
+                        for tag in row[
+                            0
+                        ].annotation_document.source_document.document_tags
+                    ],
+                    memo=None,
+                )
+                for row in result
+            ],
         )

@@ -1,23 +1,28 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { GridPaginationModel, GridSortModel } from "@mui/x-data-grid";
-import { AnnotatedSegmentsFilterActions } from "./annotatedSegmentsFilterSlice";
+import {
+  MRT_PaginationState,
+  MRT_RowSelectionState,
+  MRT_SortingState,
+  MRT_VisibilityState,
+} from "material-react-table";
+import { SATFilterActions } from "../../../components/SpanAnnotationTable/satFilterSlice.ts";
 
 export interface AnnotatedSegmentsState {
   isSplitView: boolean;
   contextSize: number;
-  selectedUserIds: number[];
-  paginationModel: GridPaginationModel;
-  rowSelectionModel: number[];
-  sortModel: GridSortModel;
+  paginationModel: MRT_PaginationState;
+  rowSelectionModel: MRT_RowSelectionState;
+  sortModel: MRT_SortingState;
+  columnVisibilityModel: MRT_VisibilityState;
 }
 
 const initialState: AnnotatedSegmentsState = {
   isSplitView: false,
   contextSize: 100,
-  selectedUserIds: [],
-  paginationModel: { page: 0, pageSize: 5 },
-  rowSelectionModel: [],
+  paginationModel: { pageIndex: 0, pageSize: 5 },
+  rowSelectionModel: {},
   sortModel: [],
+  columnVisibilityModel: {},
 };
 
 export const AnnotatedSegmentsSlice = createSlice({
@@ -30,32 +35,47 @@ export const AnnotatedSegmentsSlice = createSlice({
     setContextSize: (state, action: PayloadAction<number>) => {
       state.contextSize = action.payload;
     },
-    setSelectedUserIds: (state, action: PayloadAction<number[]>) => {
-      state.selectedUserIds = action.payload;
-    },
-    onPaginationModelChange: (state, action: PayloadAction<{ page: number; pageSize: number }>) => {
+    onPaginationModelChange: (state, action: PayloadAction<MRT_PaginationState>) => {
       state.paginationModel = action.payload;
     },
-    onSelectionModelChange: (state, action: PayloadAction<number[]>) => {
+    onSelectionModelChange: (state, action: PayloadAction<MRT_RowSelectionState>) => {
       state.rowSelectionModel = action.payload;
     },
-    onSortModelChange: (state, action: PayloadAction<GridSortModel>) => {
+    onSortModelChange: (state, action: PayloadAction<MRT_SortingState>) => {
       state.sortModel = action.payload;
+    },
+    // column visibility
+    onColumnVisibilityChange: (state, action: PayloadAction<MRT_VisibilityState>) => {
+      state.columnVisibilityModel = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(AnnotatedSegmentsFilterActions.onFinishFilterEdit, (state, action) => {
+      .addCase(SATFilterActions.init, (state, action) => {
+        state.columnVisibilityModel = Object.values(action.payload.columnInfoMap).reduce((acc, column) => {
+          if (!column.column) return acc;
+          // this is a normal column
+          if (isNaN(parseInt(column.column))) {
+            return acc;
+            // this is a metadata column
+          } else {
+            return {
+              ...acc,
+              [column.column]: false,
+            };
+          }
+        }, {});
+      })
+      .addCase(SATFilterActions.onFinishFilterEdit, (state) => {
         // reset page when filter changes
-        state.paginationModel.page = 0;
+        state.paginationModel.pageIndex = 0;
 
         // reset selection when filter changes
-        state.rowSelectionModel = [];
+        state.rowSelectionModel = {};
       })
-      .addDefaultCase((state) => {});
+      .addDefaultCase(() => {});
   },
 });
 
 export const AnnotatedSegmentsActions = AnnotatedSegmentsSlice.actions;
-
 export default AnnotatedSegmentsSlice.reducer;

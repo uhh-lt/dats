@@ -257,65 +257,6 @@ def get_all_tags(
     ]
 
 
-@router.delete(
-    "/{sdoc_id}/tags",
-    response_model=SourceDocumentRead,
-    summary="Unlinks all DocumentTags of the SourceDocument.",
-)
-def unlinks_all_tags(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-
-    sdoc_db_obj = crud_sdoc.unlink_all_document_tags(db=db, sdoc_id=sdoc_id)
-    return SourceDocumentRead.model_validate(sdoc_db_obj)
-
-
-@router.patch(
-    "/{sdoc_id}/tag/{tag_id}",
-    response_model=SourceDocumentRead,
-    summary="Links a DocumentTag with the SourceDocument with the given ID if it exists",
-)
-def link_tag(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    tag_id: int,
-    authz_user: AuthzUser = Depends(),
-    validate: Validate = Depends(),
-) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
-    validate.validate_objects_in_same_project(
-        [(Crud.SOURCE_DOCUMENT, sdoc_id), (Crud.DOCUMENT_TAG, tag_id)]
-    )
-
-    sdoc_db_obj = crud_sdoc.link_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
-    return SourceDocumentRead.model_validate(sdoc_db_obj)
-
-
-@router.delete(
-    "/{sdoc_id}/tag/{tag_id}",
-    response_model=SourceDocumentRead,
-    summary="Unlinks the DocumentTags from the SourceDocument.",
-)
-def unlink_tag(
-    *,
-    db: Session = Depends(get_db_session),
-    sdoc_id: int,
-    tag_id: int,
-    authz_user: AuthzUser = Depends(),
-) -> SourceDocumentRead:
-    authz_user.assert_in_same_project_as(Crud.SOURCE_DOCUMENT, sdoc_id)
-    authz_user.assert_in_same_project_as(Crud.DOCUMENT_TAG, tag_id)
-
-    sdoc_db_obj = crud_sdoc.unlink_document_tag(db=db, sdoc_id=sdoc_id, tag_id=tag_id)
-    return SourceDocumentRead.model_validate(sdoc_db_obj)
-
-
 @router.put(
     "/{sdoc_id}/memo",
     response_model=MemoRead,

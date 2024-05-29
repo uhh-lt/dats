@@ -1,7 +1,7 @@
 import { StackProps } from "@mui/material";
-import { AttachedObjectType } from "../../api/openapi";
-import { useGetMemoQuery } from "../../features/Memo/useGetMemoQuery";
-import { MemoRendererSharedProps, MemoRendererWithData } from "./MemoRenderer";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { useGetMemoQuery } from "../../features/Memo/useGetMemoQuery.ts";
+import { MemoRendererSharedProps, MemoRendererWithData } from "./MemoRenderer.tsx";
 
 interface MemoRenderer2Props {
   attachedObjectType: AttachedObjectType;

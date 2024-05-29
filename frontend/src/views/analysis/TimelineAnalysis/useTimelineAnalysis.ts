@@ -1,8 +1,10 @@
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { AnalysisService, TimelineAnalysisColumns, TimelineAnalysisRead } from "../../../api/openapi";
-import { MyFilter } from "../../../features/FilterDialog/filterUtils";
+import { TimelineAnalysisColumns } from "../../../api/openapi/models/TimelineAnalysisColumns.ts";
+import { TimelineAnalysisRead } from "../../../api/openapi/models/TimelineAnalysisRead.ts";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
 
 export interface TimelineAnalysisCount {
   date: string;

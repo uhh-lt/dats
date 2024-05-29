@@ -1,23 +1,11 @@
-import SdocHooks from "../../api/SdocHooks";
-import {
-  AppBar,
-  AppBarProps,
-  Checkbox,
-  FormControl,
-  ListItemText,
-  MenuItem,
-  Select,
-  SelectChangeEvent,
-  Stack,
-  Toolbar,
-} from "@mui/material";
-import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks";
-import { AnnoActions } from "./annoSlice";
+import { Checkbox, FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import * as React from "react";
-import { useEffect } from "react";
-import { useAuth } from "../../auth/AuthProvider";
-import Typography from "@mui/material/Typography";
-import UserName from "../../components/UserName";
+import { useEffect, useMemo } from "react";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { useAuth } from "../../auth/useAuth.ts";
+import UserName from "../../components/UserName.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { AnnoActions } from "./annoSlice.ts";
 
 interface AnnotationDocumentSelectorProps {
   sdocId: number | undefined;
@@ -28,93 +16,75 @@ interface AnnotationDocumentSelectorProps {
  * The selected (visible) annotation documents are stored in the redux store.
  * @param sdocId the id of the SourceDocument to select annotation documents for
  */
-export function AnnotationDocumentSelector({ sdocId, ...props }: AnnotationDocumentSelectorProps & AppBarProps) {
+export function AnnotationDocumentSelector({ sdocId }: AnnotationDocumentSelectorProps) {
   // global client state (context)
   const { user } = useAuth();
 
   // global client state (redux)
   const dispatch = useAppDispatch();
-  const visibleUserIds = useAppSelector((state) => state.annotations.visibleUserIds);
+  const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
 
   // global server state (react query)
   const annotationDocuments = SdocHooks.useGetAllAnnotationDocuments(sdocId);
+  const adocId2UserId: Record<number, number> = useMemo(() => {
+    return (
+      annotationDocuments.data?.reduce(
+        (acc, adoc) => {
+          acc[adoc.id] = adoc.user_id;
+          return acc;
+        },
+        {} as Record<number, number>,
+      ) || {}
+    );
+  }, [annotationDocuments.data]);
 
   // handlers (for ui)
   const handleChange = (event: SelectChangeEvent<number[]>) => {
-    dispatch(AnnoActions.setVisibleUserIds(event.target.value as number[]));
+    dispatch(AnnoActions.setVisibleAdocIds(event.target.value as number[]));
   };
 
   // init
   useEffect(() => {
-    if (user && visibleUserIds === undefined) {
-      dispatch(AnnoActions.setVisibleUserIds([user.id]));
+    if (user && annotationDocuments.data) {
+      // find the annotationDocument that belongs to the current user
+      const userAdoc = annotationDocuments.data.find((adoc) => adoc.user_id === user.id);
+      if (userAdoc) {
+        dispatch(AnnoActions.setVisibleAdocIds([userAdoc.id]));
+      }
     }
-  }, [visibleUserIds, dispatch, user]);
-
-  // effects
-  // ensure that visible adocs, visible user ids and source document id are in sync
-  useEffect(() => {
-    if (!annotationDocuments.data) {
-      dispatch(AnnoActions.setVisibleAdocIds([]));
-      return;
-    }
-
-    const adocIds = annotationDocuments.data
-      .filter((adoc) => visibleUserIds?.includes(adoc.user_id) && adoc.source_document_id === sdocId)
-      .map((adoc) => adoc.id);
-
-    dispatch(AnnoActions.setVisibleAdocIds(adocIds));
-  }, [dispatch, annotationDocuments.data, sdocId, visibleUserIds]);
+  }, [dispatch, user, annotationDocuments.data]);
 
   // render
   return (
-    <AppBar
-      position="relative"
-      variant="outlined"
-      elevation={0}
-      sx={{
-        backgroundColor: (theme) => theme.palette.grey[100],
-        color: (theme) => theme.palette.text.primary,
-        borderTop: 0,
-        ...props.sx,
-      }}
-      {...props}
-    >
-      <Toolbar variant="dense">
-        <FormControl size="small" fullWidth>
-          <Stack direction="row" sx={{ width: "100%", alignItems: "center" }}>
-            <Typography variant="body1" color="inherit" component="div" className="overflow-ellipsis" flexShrink={0}>
-              Annotations
-            </Typography>
-            <Select
-              sx={{ ml: 1, backgroundColor: "white" }}
-              multiple
-              fullWidth
-              value={visibleUserIds || []}
-              onChange={handleChange}
-              disabled={!annotationDocuments.isSuccess}
-              renderValue={(selected) =>
-                selected.map((x, index) => (
-                  <React.Fragment key={x}>
-                    <UserName userId={x} />
-                    {index < selected.length - 1 && ", "}
-                  </React.Fragment>
-                ))
-              }
-            >
-              {annotationDocuments.isSuccess &&
-                annotationDocuments.data.map((adoc) => (
-                  <MenuItem key={adoc.user_id} value={adoc.user_id}>
-                    <Checkbox checked={visibleUserIds?.indexOf(adoc.user_id) !== -1} />
-                    <ListItemText>
-                      <UserName userId={adoc.user_id} />
-                    </ListItemText>
-                  </MenuItem>
-                ))}
-            </Select>
-          </Stack>
-        </FormControl>
-      </Toolbar>
-    </AppBar>
+    <FormControl size="small">
+      <InputLabel id="annotation-user-select-label">Annotations</InputLabel>
+      <Select
+        labelId="annotation-user-select-label"
+        multiple
+        fullWidth
+        sx={{ minWidth: 150 }}
+        value={visibleAdocIds || []}
+        onChange={handleChange}
+        disabled={!annotationDocuments.isSuccess}
+        renderValue={(selected) =>
+          selected.map((adocId, index) => (
+            <React.Fragment key={adocId}>
+              <UserName userId={adocId2UserId[adocId]} />
+              {index < selected.length - 1 && ", "}
+            </React.Fragment>
+          ))
+        }
+      >
+        {annotationDocuments.isSuccess &&
+          annotationDocuments.data.map((adoc) => (
+            <MenuItem key={adoc.id} value={adoc.id}>
+              <Checkbox checked={visibleAdocIds?.indexOf(adoc.id) !== -1} />
+              <ListItemText>
+                <UserName userId={adoc.user_id} />
+              </ListItemText>
+            </MenuItem>
+          ))}
+      </Select>
+    </FormControl>
   );
 }

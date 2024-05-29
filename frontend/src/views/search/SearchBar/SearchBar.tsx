@@ -7,28 +7,23 @@ import {
   Card,
   CardContent,
   ClickAwayListener,
-  FormControl,
   FormControlLabel,
-  FormLabel,
   IconButton,
   InputBase,
   Paper,
   Popper,
-  Radio,
-  RadioGroup,
   Switch,
   Tooltip,
 } from "@mui/material";
 import React, { useRef, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { QueryType } from "../QueryType";
-import { useNavigateIfNecessary } from "../hooks/useNavigateIfNecessary";
-import { SearchActions } from "../searchSlice";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { useNavigateIfNecessary } from "../hooks/useNavigateIfNecessary.ts";
+import { SearchActions } from "../searchSlice.ts";
 
 interface SearchFormValues {
-  query: string | number;
+  query: string;
 }
 
 interface SearchBarProps {
@@ -41,7 +36,6 @@ function SearchBar({ placeholder }: SearchBarProps) {
   const navigateIfNecessary = useNavigateIfNecessary();
 
   // global client state (redux)
-  const searchType = useAppSelector((state) => state.search.searchType);
   const searchQuery = useAppSelector((state) => state.search.searchQuery);
   const expertMode = useAppSelector((state) => state.search.expertMode);
   const dispatch = useAppDispatch();
@@ -58,7 +52,7 @@ function SearchBar({ placeholder }: SearchBarProps) {
   const open = Boolean(anchorEl);
 
   // event handlers
-  const handleFocus = (event: any) => {
+  const handleFocus: React.FocusEventHandler<HTMLInputElement | HTMLTextAreaElement> = (event) => {
     event.stopPropagation();
     setAnchorEl(container.current);
   };
@@ -89,7 +83,7 @@ function SearchBar({ placeholder }: SearchBarProps) {
     console.error(errors);
   };
 
-  const handleClearSearch = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClearSearch: React.MouseEventHandler<HTMLButtonElement> = () => {
     dispatch(SearchActions.onClearSearch());
     navigateIfNecessary(`/project/${projectId}/search/`);
 
@@ -159,9 +153,8 @@ function SearchBar({ placeholder }: SearchBarProps) {
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={expertMode && searchType === QueryType.LEXICAL}
+                      checked={expertMode}
                       onChange={(event) => dispatch(SearchActions.onChangeExpertMode(event.target.checked))}
-                      disabled={searchType !== QueryType.LEXICAL}
                     />
                   }
                   label="Expert search"
@@ -183,20 +176,6 @@ function SearchBar({ placeholder }: SearchBarProps) {
                 </Button>
               </Box>
               <Box flexGrow={1} />
-              <FormControl>
-                <FormLabel id="radio-buttons-group-query">Query Type</FormLabel>
-                <RadioGroup
-                  row
-                  aria-labelledby="radio-buttons-group-query"
-                  value={searchType}
-                  onChange={(_event, value) => dispatch(SearchActions.setSearchType(value as QueryType))}
-                  name="radio-buttons-group"
-                >
-                  {Object.values(QueryType).map((qt) => (
-                    <FormControlLabel key={qt} value={qt} control={<Radio />} label={qt} />
-                  ))}
-                </RadioGroup>
-              </FormControl>
             </CardContent>
           </Card>
         </Popper>

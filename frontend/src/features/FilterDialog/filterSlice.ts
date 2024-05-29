@@ -1,19 +1,20 @@
-import { ActionReducerMapBuilder, CaseReducerActions, createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { CaseReducerActions, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid";
-import { LogicalOperator } from "../../api/openapi";
+import { LogicalOperator } from "../../api/openapi/models/LogicalOperator.ts";
 import {
   ColumnInfo,
-  deleteInFilter,
-  filterOperator2defaultValue,
-  filterOperator2FilterOperatorType,
   FilterOperators,
+  MyFilter,
+  MyFilterExpression,
+  createEmptyFilter,
+  deleteInFilter,
+  filterOperator2FilterOperatorType,
+  filterOperator2defaultValue,
   findInFilter,
   getDefaultOperator,
   isFilter,
   isFilterExpression,
-  MyFilter,
-  MyFilterExpression,
-} from "./filterUtils";
+} from "./filterUtils.ts";
 
 export interface FilterState {
   filter: Record<string, MyFilter>;
@@ -23,24 +24,21 @@ export interface FilterState {
   expertMode: boolean;
 }
 
-const filterReducer = {
-  onStartFilterEdit: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ rootFilterId: string; filter?: MyFilter }>,
-  ) => {
-    // init filter if it does not exist
-    if (!state.filter[action.payload.rootFilterId]) {
-      if (action.payload.filter) {
-        state.filter[action.payload.rootFilterId] = action.payload.filter;
-      } else {
-        state.filter[action.payload.rootFilterId] = {
-          id: action.payload.rootFilterId,
-          items: [],
-          logic_operator: LogicalOperator.AND,
-        };
-      }
+export const getOrCreateFilter = (state: FilterState, filterId: string, filter?: MyFilter): MyFilter => {
+  if (!state.filter[filterId]) {
+    if (filter) {
+      state.filter[filterId] = filter;
+    } else {
+      state.filter[filterId] = createEmptyFilter(filterId);
     }
-    state.editableFilter = JSON.parse(JSON.stringify(state.filter[action.payload.rootFilterId]));
+  }
+  return state.filter[filterId];
+};
+
+export const filterReducer = {
+  onStartFilterEdit: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; filter?: MyFilter }>) => {
+    const currentFilter = getOrCreateFilter(state, action.payload.filterId, action.payload.filter);
+    state.editableFilter = JSON.parse(JSON.stringify(currentFilter));
 
     // add a default filter expression if the filter is empty
     if (state.editableFilter.items.length === 0) {
@@ -62,16 +60,6 @@ const filterReducer = {
       logic_operator: LogicalOperator.AND,
       items: [],
     };
-  },
-  addRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
-    state.filter[action.payload.rootFilterId] = {
-      id: action.payload.rootFilterId,
-      items: [],
-      logic_operator: LogicalOperator.AND,
-    };
-  },
-  deleteRootFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId: string }>) => {
-    delete state.filter[action.payload.rootFilterId];
   },
   addDefaultFilter: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string }>) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
@@ -126,7 +114,7 @@ const filterReducer = {
   changeColumn: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; columnValue: string }>) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
-      if (!!parseInt(action.payload.columnValue)) {
+      if (parseInt(action.payload.columnValue)) {
         // it is a Metadata column: metadata columns are stored as project_metadata.id
         filterItem.column = parseInt(action.payload.columnValue);
       } else {
@@ -150,17 +138,14 @@ const filterReducer = {
       filterItem.operator = action.payload.operator;
     }
   },
-  changeValue: (state: Draft<FilterState>, action: PayloadAction<{ filterId: string; value: any }>) => {
+  changeValue: (
+    state: Draft<FilterState>,
+    action: PayloadAction<{ filterId: string; value: string | number | boolean | string[] }>,
+  ) => {
     const filterItem = findInFilter(state.editableFilter, action.payload.filterId);
     if (filterItem && isFilterExpression(filterItem)) {
       filterItem.value = action.payload.value;
     }
-  },
-  setDefaultFilterExpression: (
-    state: Draft<FilterState>,
-    action: PayloadAction<{ defaultFilterExpression: MyFilterExpression }>,
-  ) => {
-    state.defaultFilterExpression = action.payload.defaultFilterExpression;
   },
   resetEditFilter: (state: Draft<FilterState>) => {
     state.editableFilter = {
@@ -169,20 +154,8 @@ const filterReducer = {
       items: [],
     };
   },
-  resetFilter: (state: Draft<FilterState>, action: PayloadAction<{ rootFilterId?: string }>) => {
-    state.filter[action.payload.rootFilterId || "root"] = {
-      id: action.payload.rootFilterId || "root",
-      logic_operator: LogicalOperator.AND,
-      items: [],
-    };
-  },
-  init: (state: Draft<FilterState>, action: PayloadAction<{ columnInfo: ColumnInfo[] }>) => {
-    state.column2Info = action.payload.columnInfo.reduce((acc, columnInfo) => {
-      return {
-        ...acc,
-        [columnInfo.column]: columnInfo,
-      };
-    }, {});
+  init: (state: Draft<FilterState>, action: PayloadAction<{ columnInfoMap: Record<string, ColumnInfo> }>) => {
+    state.column2Info = action.payload.columnInfoMap;
   },
   onChangeExpertMode: (state: Draft<FilterState>, action: PayloadAction<{ expertMode: boolean }>) => {
     state.expertMode = action.payload.expertMode;
@@ -191,21 +164,3 @@ const filterReducer = {
 
 export type FilterReducer = typeof filterReducer;
 export type FilterActions = CaseReducerActions<FilterReducer, string>;
-
-export const createFilterSlice = ({
-  name,
-  initialState,
-  extraReducer,
-}: {
-  name: string;
-  initialState: FilterState;
-  extraReducer?: (builder: ActionReducerMapBuilder<FilterState>) => void;
-}) =>
-  createSlice({
-    name,
-    initialState,
-    reducers: filterReducer,
-    extraReducers(builder) {
-      extraReducer && extraReducer(builder);
-    },
-  });

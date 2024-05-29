@@ -163,6 +163,8 @@ def get_all_bbox_annotations(
             BBoxAnnotationReadResolvedCode(
                 **bbox_dto.model_dump(exclude={"current_code_id"}),
                 code=CodeRead.model_validate(bbox_orm.current_code.code),
+                user_id=bbox_orm.annotation_document.user_id,
+                sdoc_id=bbox_orm.annotation_document.source_document_id,
             )
             for bbox_orm, bbox_dto in zip(bboxes, bbox_read_dtos)
         ]

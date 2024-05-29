@@ -145,6 +145,8 @@ class CRUDBBoxAnnotation(
                     exclude={"current_code_id"}
                 ),
                 code=CodeRead.model_validate(db_obj.current_code.code),
+                user_id=db_obj.annotation_document.user_id,
+                sdoc_id=db_obj.annotation_document.source_document_id,
             ).model_dump()
         )
 

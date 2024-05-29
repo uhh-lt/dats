@@ -1,17 +1,14 @@
 import SaveIcon from "@mui/icons-material/Save";
 import { LoadingButton } from "@mui/lab";
 import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../../EventBus";
-import BBoxAnnotationRenderer from "../../../components/DataGrid/BBoxAnnotationRenderer";
-import CodeSelector from "../../../components/Selectors/CodeSelector";
-import SnackbarAPI from "../../Snackbar/SnackbarAPI";
-import { BBoxAnnotationReadResolvedCode, CodeRead } from "../../../api/openapi";
-import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks";
-
-export const openBBoxAnnotationEditDialog = (annotation: BBoxAnnotationReadResolvedCode) => {
-  eventBus.dispatch("open-edit-bboxAnnotation", annotation);
-};
+import { MRT_RowSelectionState } from "material-react-table";
+import { useState } from "react";
+import BboxAnnotationHooks from "../../../api/BboxAnnotationHooks.ts";
+import CodeTable from "../../../components/CodeTable/CodeTable.tsx";
+import BBoxAnnotationRenderer from "../../../components/DataGrid/BBoxAnnotationRenderer.tsx";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 export interface BBoxAnnotationEditDialogProps extends ButtonProps {
   projectId: number;
@@ -19,48 +16,36 @@ export interface BBoxAnnotationEditDialogProps extends ButtonProps {
 
 function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) {
   // local state
-  const [open, setOpen] = useState(false);
-  const [selectedCode, setSelectedCode] = useState<CodeRead | undefined>(undefined);
-  const [annotation, setAnnotation] = useState<BBoxAnnotationReadResolvedCode | undefined>(undefined);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const selectedCodeId =
+    Object.keys(rowSelectionModel).length === 1 ? parseInt(Object.keys(rowSelectionModel)[0]) : undefined;
 
-  // listen to event
-  // create a (memoized) function that stays the same across re-renders
-  const onOpenEditAnnotation = useCallback((event: CustomEventInit<BBoxAnnotationReadResolvedCode>) => {
-    if (!event.detail) return;
-
-    setOpen(true);
-    setAnnotation(event.detail);
-    setSelectedCode(event.detail.code);
-  }, []);
-
-  useEffect(() => {
-    eventBus.on("open-edit-bboxAnnotation", onOpenEditAnnotation);
-    return () => {
-      eventBus.remove("open-edit-bboxAnnotation", onOpenEditAnnotation);
-    };
-  }, [onOpenEditAnnotation]);
+  // global client state (redux)
+  const open = useAppSelector((state) => state.dialog.isBBoxAnnotationEditDialogOpen);
+  const annotation = useAppSelector((state) => state.dialog.bboxAnnotation);
+  const dispatch = useAppDispatch();
 
   // mutations
   const updateAnnotationMutation = BboxAnnotationHooks.useUpdateBBox();
 
+  // actions
   const handleClose = () => {
-    setOpen(false);
-    setSelectedCode(undefined);
-    setAnnotation(undefined);
+    dispatch(CRUDDialogActions.closeBBoxAnnotationEditDialog());
+    setRowSelectionModel({});
   };
 
   const handleUpdateAnnotation = () => {
-    if (!selectedCode || !annotation) return;
+    if (!selectedCodeId || !annotation) return;
 
     updateAnnotationMutation.mutate(
       {
         bboxToUpdate: annotation,
         requestBody: {
-          code_id: selectedCode.id,
+          code_id: selectedCodeId,
         },
       },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           handleClose();
           SnackbarAPI.openSnackbar({
             text: `Updated annotation!`,
@@ -74,11 +59,10 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Change the code of the annotation</DialogTitle>
-      <CodeSelector
+      <CodeTable
         projectId={projectId}
-        setSelectedCodes={(codes) => setSelectedCode(codes.length > 0 ? codes[0] : undefined)}
-        allowMultiselect={false}
-        height="400px"
+        rowSelectionModel={rowSelectionModel}
+        onRowSelectionChange={setRowSelectionModel}
       />
       {!!annotation && (
         <>
@@ -88,9 +72,18 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
             Before:
             <BBoxAnnotationRenderer bboxAnnotation={annotation} />
             After:
-            <BBoxAnnotationRenderer
-              bboxAnnotation={selectedCode ? { ...annotation, code: selectedCode } : annotation}
-            />
+            {selectedCodeId ? (
+              <BBoxAnnotationRenderer
+                bboxAnnotation={
+                  selectedCodeId ? { ...annotation, code: { ...annotation.code, id: selectedCodeId } } : annotation
+                }
+              />
+            ) : (
+              <>
+                <br />
+                Select a code to preview the change.
+              </>
+            )}
           </Box>
         </>
       )}
@@ -103,8 +96,8 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
           startIcon={<SaveIcon />}
           fullWidth
           onClick={handleUpdateAnnotation}
-          disabled={!selectedCode || selectedCode?.id === annotation?.code.id}
-          loading={updateAnnotationMutation.isLoading}
+          disabled={!selectedCodeId || selectedCodeId === annotation?.code.id}
+          loading={updateAnnotationMutation.isPending}
           loadingPosition="start"
         >
           Update Annotation

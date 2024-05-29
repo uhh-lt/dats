@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -5,17 +6,16 @@ import type { Body_search_search_sdocs } from "../models/Body_search_search_sdoc
 import type { ColumnInfo_SearchColumns_ } from "../models/ColumnInfo_SearchColumns_";
 import type { KeywordStat } from "../models/KeywordStat";
 import type { MemoContentQuery } from "../models/MemoContentQuery";
+import type { PaginatedElasticSearchDocumentHits } from "../models/PaginatedElasticSearchDocumentHits";
 import type { PaginatedMemoSearchResults } from "../models/PaginatedMemoSearchResults";
 import type { SimSearchImageHit } from "../models/SimSearchImageHit";
 import type { SimSearchQuery } from "../models/SimSearchQuery";
 import type { SimSearchSentenceHit } from "../models/SimSearchSentenceHit";
 import type { SpanEntityStat } from "../models/SpanEntityStat";
 import type { TagStat } from "../models/TagStat";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class SearchService {
   /**
    * Returns Search Info.
@@ -38,23 +38,28 @@ export class SearchService {
       },
     });
   }
-
   /**
-   * Returns all SourceDocument Ids that match the query parameters.
-   * @returns number Successful Response
+   * Returns all SourceDocument Ids and their scores and (optional) hightlights that match the query parameters.
+   * @returns PaginatedElasticSearchDocumentHits Successful Response
    * @throws ApiError
    */
   public static searchSdocs({
     searchQuery,
     projectId,
     expertMode,
+    highlight,
     requestBody,
+    pageNumber,
+    pageSize,
   }: {
     searchQuery: string;
     projectId: number;
     expertMode: boolean;
+    highlight: boolean;
     requestBody: Body_search_search_sdocs;
-  }): CancelablePromise<Array<number>> {
+    pageNumber?: number | null;
+    pageSize?: number | null;
+  }): CancelablePromise<PaginatedElasticSearchDocumentHits> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/search/sdoc",
@@ -62,6 +67,9 @@ export class SearchService {
         search_query: searchQuery,
         project_id: projectId,
         expert_mode: expertMode,
+        highlight: highlight,
+        page_number: pageNumber,
+        page_size: pageSize,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -70,7 +78,6 @@ export class SearchService {
       },
     });
   }
-
   /**
    * Returns SpanEntityStats for the given SourceDocuments.
    * @returns SpanEntityStat Successful Response
@@ -99,7 +106,6 @@ export class SearchService {
       },
     });
   }
-
   /**
    * Returns KeywordStats for the given SourceDocuments.
    * @returns KeywordStat Successful Response
@@ -131,7 +137,6 @@ export class SearchService {
       },
     });
   }
-
   /**
    * Returns Stat for the given SourceDocuments.
    * @returns TagStat Successful Response
@@ -157,7 +162,6 @@ export class SearchService {
       },
     });
   }
-
   /**
    * Returns all Memos where the content matches the query via lexical search
    * @returns PaginatedMemoSearchResults Successful Response
@@ -192,7 +196,6 @@ export class SearchService {
       },
     });
   }
-
   /**
    * Returns similar sentences according to a textual or visual query.
    * @returns SimSearchSentenceHit Successful Response
@@ -213,7 +216,6 @@ export class SearchService {
       },
     });
   }
-
   /**
    * Returns similar images according to a textual or visual query.
    * @returns SimSearchImageHit Successful Response

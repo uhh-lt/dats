@@ -50,9 +50,9 @@ class AnalysisService(metaclass=SingletonMeta):
 
             parent_code_id2child_code_ids = {}
             for code in all_codes:
-                if code.parent_code_id not in parent_code_id2child_code_ids:
-                    parent_code_id2child_code_ids[code.parent_code_id] = []
-                parent_code_id2child_code_ids[code.parent_code_id].append(code.id)
+                if code.parent_id not in parent_code_id2child_code_ids:
+                    parent_code_id2child_code_ids[code.parent_id] = []
+                parent_code_id2child_code_ids[code.parent_id].append(code.id)
 
             # bfs to find all children of the given codes
             result = []

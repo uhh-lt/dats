@@ -1,10 +1,9 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { DateGroupBy } from "./DateGroupBy";
 import type { TimelineAnalysisResultType } from "./TimelineAnalysisResultType";
-
 export type TimelineAnalysisSettings = {
   /**
    * Group by date

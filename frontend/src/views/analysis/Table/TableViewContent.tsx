@@ -1,9 +1,7 @@
-import HotTable from "@handsontable/react";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-
 import SaveIcon from "@mui/icons-material/Save";
 import {
   Box,
@@ -20,34 +18,38 @@ import {
   Tooltip,
   tabsClasses,
 } from "@mui/material";
-import Handsontable from "handsontable";
-import "handsontable/dist/handsontable.full.min.css";
-import { registerAllModules } from "handsontable/registry";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { unstable_useBlocker } from "react-router-dom";
+import { useBlocker } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import TableHooks, { TableRead } from "../../../api/TableHooks";
-import { AnnotationOccurrence, CodeRead, SourceDocumentRead } from "../../../api/openapi";
-import GenericAnchorMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorMenu";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import CustomHTMLCellRenderer from "./Renderer/CustomHTMLCellRenderer";
-import AddAnnotationDialog from "./Toolbar/AddAnnotationDialog";
-import AddCodeDialog from "./Toolbar/AddCodeDialog";
-import AddDocumentDialog from "./Toolbar/AddDocumentDialog";
-import PageNavigationButton from "./Toolbar/PageNavigationButton";
-import { TableType2Template } from "./templates";
+import TableHooks, { TableRead } from "../../../api/TableHooks.ts";
 
 // register Handsontable's modules
+import type { HotTableClass } from "@handsontable//react/hotTableClass.d.ts";
+import { HotTable } from "@handsontable/react";
+import Handsontable from "handsontable/base";
+import "handsontable/dist/handsontable.full.min.css";
+import { registerAllModules } from "handsontable/registry";
+import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
+import GenericAnchorMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorMenu.tsx";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import CustomHTMLCellRenderer from "./Renderer/CustomHTMLCellRenderer.tsx";
+import AddAnnotationDialog from "./Toolbar/AddAnnotationDialog.tsx";
+import AddCodeDialog from "./Toolbar/AddCodeDialog.tsx";
+import AddDocumentDialog from "./Toolbar/AddDocumentDialog.tsx";
+import PageNavigationButton from "./Toolbar/PageNavigationButton.tsx";
+import { TableType2Template } from "./templates.ts";
+
 registerAllModules();
 
 // table actions
 const isCellSelected = (hot: Handsontable | null | undefined) => {
   if (!hot) return false;
 
-  let selectedCells = hot.getSelected();
-  let selectedCell = selectedCells ? selectedCells[0] : undefined;
-  let x = selectedCell ? selectedCell[0] : undefined;
-  let y = selectedCell ? selectedCell[1] : undefined;
+  const selectedCells = hot.getSelected();
+  const selectedCell = selectedCells ? selectedCells[0] : undefined;
+  const x = selectedCell ? selectedCell[0] : undefined;
+  const y = selectedCell ? selectedCell[1] : undefined;
 
   const shouldOpen = x !== undefined && y !== undefined && x !== -1 && y !== -1;
   if (!shouldOpen) {
@@ -63,7 +65,7 @@ type CellInfo = {
 };
 
 const getSelectedCellInfo = (hot: Handsontable): CellInfo => {
-  let selectedCell = hot.getSelected()![0]!;
+  const selectedCell = hot.getSelected()![0]!;
   return {
     x: selectedCell[1],
     y: selectedCell[0],
@@ -80,7 +82,7 @@ const addData = (hot: Handsontable, cell: CellInfo, dataToAdd: string[], addAsRo
 };
 
 const addDataToCell = (hot: Handsontable, cell: CellInfo, dataToAdd: string[]) => {
-  let newLine = cell.data.length > 0 ? "\n" : "";
+  const newLine = cell.data.length > 0 ? "\n" : "";
   hot.setDataAtCell(cell.y, cell.x, cell.data + newLine + dataToAdd.join("\n"));
 };
 
@@ -97,14 +99,14 @@ interface TableViewContentProps {
 
 function TableViewContent({ table }: TableViewContentProps) {
   // local client state
-  const hotRef = useRef<HotTable>(null);
+  const hotRef = useRef<HotTableClass>(null);
   const tabContextMenuRef = useRef<GenericAnchorContextMenuHandle>(null);
   const [tablePages, setTablePages] = useState(table.content); // page data
   const [hasChanged, setHasChanged] = useState(false);
 
   // table pages tabs
   const [currentPageId, setCurrentPageId] = useState<string>(table.content[0].id); // pages tab
-  const handlePageChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handlePageChange = (_event: React.SyntheticEvent, newValue: string) => {
     setCurrentPageId(newValue);
   };
 
@@ -132,7 +134,7 @@ function TableViewContent({ table }: TableViewContentProps) {
   useEffect(() => {
     setOldData(JSON.stringify(table.content));
   }, [table.content]);
-  unstable_useBlocker(() => {
+  useBlocker(() => {
     if (oldData !== JSON.stringify(tablePages)) {
       return !window.confirm("You have unsaved changes! Are you sure you want to leave?");
     }
@@ -150,7 +152,7 @@ function TableViewContent({ table }: TableViewContentProps) {
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Saved table '${data.title}'`,
             severity: "success",
@@ -216,7 +218,7 @@ function TableViewContent({ table }: TableViewContentProps) {
   const handleRename = () => {
     if (renamingPageId === "") return;
 
-    let newName = (document.getElementById("rename-tab-" + renamingPageId + "-input") as HTMLInputElement).value;
+    const newName = (document.getElementById("rename-tab-" + renamingPageId + "-input") as HTMLInputElement).value;
 
     const newPages = [...tablePages];
     const renameIndex = newPages.findIndex((p) => p.id === renamingPageId);
@@ -238,14 +240,12 @@ function TableViewContent({ table }: TableViewContentProps) {
   };
 
   // table actions: add annotations
-  const onAddAnnotations = (annotations: AnnotationOccurrence[], addRows: boolean) => {
+  const onAddSpanAnnotations = (spanAnnotationIds: number[], addRows: boolean) => {
     const hot = hotRef.current?.hotInstance;
     if (!hot) return;
 
     const cellInfo = getSelectedCellInfo(hot);
-    const dataToAdd = annotations.map(
-      (a) => `<annotation sdocId="${a.sdoc.id}" codeId="${a.code.id}">${a.text}</annotation>`,
-    );
+    const dataToAdd = spanAnnotationIds.map((spanAnnotationId) => `<annotation id="${spanAnnotationId}" />`);
     addData(hot, cellInfo, dataToAdd, addRows);
   };
 
@@ -347,9 +347,8 @@ function TableViewContent({ table }: TableViewContentProps) {
           />
           <AddAnnotationDialog
             projectId={table.project_id}
-            userIds={[table.user_id]}
             shouldOpen={() => isCellSelected(hotRef.current?.hotInstance)}
-            onConfirmSelection={onAddAnnotations}
+            onConfirmSelection={onAddSpanAnnotations}
             buttonProps={{ variant: "outlined" }}
           />
           <AddDocumentDialog
@@ -385,7 +384,7 @@ function TableViewContent({ table }: TableViewContentProps) {
             style={{ overflowX: "scroll" }}
             outsideClickDeselects={false}
             licenseKey="non-commercial-and-evaluation" // for non-commercial use only
-            afterChange={(changes, source) => {
+            afterChange={(_changes, source) => {
               if (!hasChanged && source === "edit") {
                 setHasChanged(true);
               }

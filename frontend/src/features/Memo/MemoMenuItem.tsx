@@ -1,10 +1,10 @@
+import CommentIcon from "@mui/icons-material/Comment";
 import { ListItemIcon, ListItemText, MenuItem } from "@mui/material";
 import React from "react";
-import CommentIcon from "@mui/icons-material/Comment";
-import MemoAPI, { MemoEvent } from "./MemoAPI";
+import MemoAPI, { MemoEvent } from "./MemoAPI.ts";
 
 interface MemoMenuItemProps {
-  onClick: () => void;
+  onClick: React.MouseEventHandler<HTMLLIElement>;
 }
 
 export default function MemoMenuItem({
@@ -13,9 +13,9 @@ export default function MemoMenuItem({
   attachedObjectType,
   onClick,
 }: MemoEvent & MemoMenuItemProps) {
-  const handleClickOpen = (event: React.MouseEvent) => {
+  const handleClickOpen: React.MouseEventHandler<HTMLLIElement> = (event) => {
     event.stopPropagation();
-    onClick();
+    onClick(event);
     MemoAPI.openMemo({ memoId, attachedObjectId, attachedObjectType });
   };
 

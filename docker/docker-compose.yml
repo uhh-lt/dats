@@ -234,6 +234,12 @@ services:
       SYSTEM_USER_LAST_NAME: ${SYSTEM_USER_LAST_NAME}
       SYSTEM_USER_EMAIL: ${SYSTEM_USER_EMAIL}
       SYSTEM_USER_PASSWORD: ${SYSTEM_USER_PASSWORD}
+    healthcheck:
+      test: curl --fail "http://localhost:${API_PORT}" || exit 1
+      interval: 60s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
     volumes:
       - ../backend/src:/dwts_code/src
       - ./backend_repo:/tmp/dwts

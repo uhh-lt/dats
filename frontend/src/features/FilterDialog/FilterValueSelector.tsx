@@ -1,14 +1,16 @@
 import { Autocomplete, Button, ButtonGroup, Chip, MenuItem, TextField } from "@mui/material";
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import ProjectHooks from "../../api/ProjectHooks";
-import { DocType, FilterOperator, FilterValueType } from "../../api/openapi";
-import CodeRenderer from "../../components/DataGrid/CodeRenderer";
-import TagRenderer from "../../components/DataGrid/TagRenderer";
-import UserRenderer from "../../components/DataGrid/UserRenderer";
-import { isValidDateString } from "../../utils/DateUtils";
-import { docTypeToIcon } from "../DocumentExplorer/docTypeToIcon";
-import { ColumnInfo, MyFilterExpression } from "./filterUtils";
+import ProjectHooks from "../../api/ProjectHooks.ts";
+import { DocType } from "../../api/openapi/models/DocType.ts";
+import { FilterOperator } from "../../api/openapi/models/FilterOperator.ts";
+import { FilterValueType } from "../../api/openapi/models/FilterValueType.ts";
+import CodeRenderer from "../../components/DataGrid/CodeRenderer.tsx";
+import TagRenderer from "../../components/DataGrid/TagRenderer.tsx";
+import UserRenderer from "../../components/DataGrid/UserRenderer.tsx";
+import { isValidDateString } from "../../utils/DateUtils.ts";
+import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
+import { ColumnInfo, MyFilterExpression } from "./filterUtils.ts";
 
 interface SharedFilterValueSelectorProps {
   filterExpression: MyFilterExpression;
@@ -64,7 +66,7 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
           return (
             <Autocomplete
               value={Array.isArray(filterExpression.value) ? (filterExpression.value as string[]) : []}
-              onChange={(event, newValue) => {
+              onChange={(_event, newValue) => {
                 onChangeValue(filterExpression.id, newValue);
               }}
               fullWidth
@@ -98,8 +100,8 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               onChange={(e) => onChangeValue(filterExpression.id, e.target.value)}
             />
           );
-        case FilterOperator.BOOLEAN:
-          let value = typeof filterExpression.value === "boolean" ? filterExpression.value : false;
+        case FilterOperator.BOOLEAN: {
+          const value = typeof filterExpression.value === "boolean" ? filterExpression.value : false;
           return (
             <ButtonGroup>
               <Button
@@ -116,22 +118,7 @@ function FilterValueSelector({ filterExpression, onChangeValue, column2Info }: F
               </Button>
             </ButtonGroup>
           );
-
-        // <Box
-        //   sx={{
-        //     flexGrow: 1,
-        //     flexBasis: 1,
-        //   }}
-        // >
-        //   <Switch
-        //     defaultChecked
-        //     // checked={typeof filterExpression.value === "boolean" ? filterExpression.value : false}
-        //     // onChange={(e) => {
-        //     //   console.log(e.target.checked);
-        //     //   onChangeValue(filterExpression.id, e.target.checked);
-        //     // }}
-        //   />
-        // </Box>
+        }
       }
       break;
     default:
@@ -242,9 +229,13 @@ function SpanAnnotationValueSelector({ filterExpression, onChangeValue }: Shared
   // global server state (react-query)
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
 
-  const [value, setValue] = useState<string[]>(
-    Array.isArray(filterExpression.value) ? filterExpression.value : ["-1", ""],
-  );
+  const [value, setValue] = useState<string[]>(() => {
+    // check if value is string[][] or string[], then make sure that value is string[]
+    if (Array.isArray(filterExpression.value) && filterExpression.value.every((entry) => !Array.isArray(entry))) {
+      return filterExpression.value as string[];
+    }
+    return ["-1", ""];
+  });
 
   const handleCodeValueChange = (codeId: string) => {
     const newValue = [codeId, value[1]];

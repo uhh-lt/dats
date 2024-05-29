@@ -1,3 +1,5 @@
+import LabelIcon from "@mui/icons-material/Label";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   Checkbox,
@@ -13,50 +15,40 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useMemo, useState } from "react";
-import LabelIcon from "@mui/icons-material/Label";
-import SearchIcon from "@mui/icons-material/Search";
-import { useParams } from "react-router-dom";
 import { isEqual } from "lodash";
-import ProjectHooks from "../../../../../api/ProjectHooks";
-import TagHooks from "../../../../../api/TagHooks";
-import { DocumentTagRead } from "../../../../../api/openapi";
-import SnackbarAPI from "../../../../../features/Snackbar/SnackbarAPI";
-import { useAppSelector } from "../../../../../plugins/ReduxHooks";
-import TagCreationButton from "./TagMenuCreateButton";
-
-export enum CheckboxState {
-  NOT_CHECKED,
-  CHECKED,
-  INDETERMINATE,
-}
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
+import ProjectHooks from "../../../../../api/ProjectHooks.ts";
+import TagHooks from "../../../../../api/TagHooks.ts";
+import { DocumentTagRead } from "../../../../../api/openapi/models/DocumentTagRead.ts";
+import SnackbarAPI from "../../../../../features/Snackbar/SnackbarAPI.ts";
+import { CheckboxState } from "./CheckboxState.ts";
+import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
 
 interface TagMenuProps {
   popoverOrigin: PopoverOrigin | undefined;
   anchorEl: HTMLElement | null;
   setAnchorEl: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   forceSdocId?: number;
+  selectedSdocIds: number[];
 }
 
-function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
+function TagMenu({ forceSdocId, selectedSdocIds, anchorEl, setAnchorEl, popoverOrigin }: TagMenuProps) {
   // react router
   const { projectId, sdocId } = useParams() as { projectId: string; sdocId: string | undefined };
   const projId = parseInt(projectId);
-
-  // global client state (redux)
-  const selectedDocumentIds = useAppSelector((state) => state.search.selectedDocumentIds);
 
   // the document ids we manipulate are either the forced sdocId, the selected documents, or the currently viewed document
   const documentIds = useMemo(() => {
     if (forceSdocId) {
       return [forceSdocId];
     }
-    return selectedDocumentIds.length > 0 ? selectedDocumentIds : [parseInt(sdocId!)];
-  }, [forceSdocId, selectedDocumentIds, sdocId]);
+    return selectedSdocIds.length > 0 ? selectedSdocIds : [parseInt(sdocId!)];
+  }, [forceSdocId, selectedSdocIds, sdocId]);
 
   // global server state (react-query)
   const allTags = ProjectHooks.useGetAllTags(projId);
-  const documentTags = TagHooks.useGetTagDocumentCounts(documentIds).data;
+  const documentTagCounts = TagHooks.useGetTagDocumentCounts(documentIds).data;
 
   // mutations
   const updateTagsMutation = TagHooks.useBulkUpdateDocumentTags();
@@ -70,16 +62,16 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
   // computed state
   const filteredTags: DocumentTagRead[] | undefined = useMemo(() => {
-    return allTags.data?.filter((tag) => tag.title.toLowerCase().startsWith(search.toLowerCase()));
+    return allTags.data?.filter((tag) => tag.name.toLowerCase().startsWith(search.toLowerCase()));
   }, [allTags.data, search]);
 
   // For each tag id, compute how the checkbox should look
   const initialCheckedTags: Map<number, CheckboxState> | undefined = useMemo(() => {
-    if (allTags.data && documentTags !== undefined) {
+    if (allTags.data && documentTagCounts !== undefined) {
       const maxTags = documentIds.length;
       // Depending on the count, set the CheckboxState
       return new Map(
-        Array.from(documentTags).map(([docTagId, docTagCount]) => [
+        Array.from(documentTagCounts).map(([docTagId, docTagCount]) => [
           docTagId,
           docTagCount === 0
             ? CheckboxState.NOT_CHECKED
@@ -90,7 +82,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
       );
     }
     return undefined;
-  }, [documentTags, allTags.data, documentIds]);
+  }, [documentTagCounts, allTags.data, documentIds]);
 
   const hasChanged = useMemo(() => !isEqual(initialCheckedTags, checked), [initialCheckedTags, checked]);
 
@@ -188,7 +180,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   if (hasChanged) {
     actionMenu.push(
       <ListItem disablePadding dense key={"apply"}>
-        <ListItemButton onClick={handleApplyTags} dense disabled={updateTagsMutation.isLoading}>
+        <ListItemButton onClick={handleApplyTags} dense disabled={updateTagsMutation.isPending}>
           <Typography align={"center"} sx={{ width: "100%" }}>
             Apply
           </Typography>
@@ -198,13 +190,13 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
   }
 
   if (search.trim().length === 0 && !hasChanged) {
-    actionMenu.push(<TagCreationButton tagName={search} dense key={"create-new"} />);
+    actionMenu.push(<TagMenuCreationButton tagName={search} dense key={"create-new"} />);
   } else if (
     search.trim().length > 0 &&
     !hasChanged &&
-    filteredTags?.map((tag) => tag.title)?.indexOf(search.trim()) === -1
+    filteredTags?.map((tag) => tag.name)?.indexOf(search.trim()) === -1
   ) {
-    actionMenu.push(<TagCreationButton tagName={search} dense key={"create-new2"} />);
+    actionMenu.push(<TagMenuCreationButton tagName={search} dense key={"create-new2"} />);
   }
 
   return (
@@ -241,7 +233,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
 
         <Box sx={{ maxHeight: "240px", overflowY: "auto" }}>
           {filteredTags?.map((tag) => {
-            const labelId = `tag-menu-list-label-${tag.title}`;
+            const labelId = `tag-menu-list-label-${tag.name}`;
 
             return (
               <ListItem
@@ -265,7 +257,7 @@ function TagMenu({ forceSdocId, anchorEl, setAnchorEl, popoverOrigin }: TagMenuP
                   <ListItemIcon sx={{ minWidth: "32px" }}>
                     <LabelIcon style={{ color: tag.color }} />
                   </ListItemIcon>
-                  <ListItemText id={labelId} primary={tag.title} />
+                  <ListItemText id={labelId} primary={tag.name} />
                 </ListItemButton>
               </ListItem>
             );

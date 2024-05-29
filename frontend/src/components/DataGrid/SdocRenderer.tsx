@@ -1,7 +1,7 @@
 import { Link, Stack } from "@mui/material";
-import SdocHooks from "../../api/SdocHooks";
-import { SourceDocumentRead } from "../../api/openapi";
-import { docTypeToIcon } from "../../features/DocumentExplorer/docTypeToIcon";
+import SdocHooks from "../../api/SdocHooks.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { docTypeToIcon } from "../../utils/docTypeToIcon.tsx";
 
 export interface SdocRendererSharedProps {
   link?: boolean;
@@ -47,11 +47,7 @@ function SdocRendererWithData({
   );
 
   if (link) {
-    return (
-      <Link href={`/project/${sdoc.project_id}/search/doc/${sdoc.id}`} target="_blank">
-        {content}
-      </Link>
-    );
+    return <Link href={`/project/${sdoc.project_id}/annotation/${sdoc.id}`}>{content}</Link>;
   }
   return content;
 }

@@ -1,15 +1,22 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
-from app.core.data.dto.bbox_annotation import BBoxAnnotationRead
+from app.core.data.dto.bbox_annotation import (
+    BBoxAnnotationRead,
+)
 from app.core.data.dto.code import CodeRead
+from app.core.data.dto.document_tag import DocumentTagRead
+from app.core.data.dto.memo import MemoRead
 from app.core.data.dto.source_document import SourceDocumentRead
-from app.core.data.dto.span_annotation import SpanAnnotationRead
+from app.core.data.dto.span_annotation import (
+    SpanAnnotationRead,
+    SpanAnnotationReadResolved,
+)
 
 
 class CodeOccurrence(BaseModel):
@@ -59,11 +66,68 @@ class AnnotationOccurrence(BaseModel):
     text: str = Field(description="The Text of the Annotation")
 
 
+class AnnotationOccurrence2(BaseModel):
+    annotation: SpanAnnotationReadResolved = Field(description="The Annotation")
+    sdoc: SourceDocumentRead = Field(
+        description="The SourceDocument where the Code occurs."
+    )
+    tags: List[DocumentTagRead] = Field(
+        description="The DocumentTags of the SourceDocument."
+    )
+    text: str = Field(description="The Text of the Annotation")
+    memos: List[MemoRead] = Field(description="The Memos of the Annotation.")
+
+
+class AnnotationTableRow(BaseModel):
+    id: int = Field(description="ID of the SpanAnnotation")
+    span_text: str = Field(description="The SpanText the SpanAnnotation spans.")
+    code: CodeRead = Field(description="Code the SpanAnnotation refers to")
+    annotation_document_id: int = Field(
+        description="AnnotationDocument the SpanAnnotation refers to"
+    )
+    user_id: int = Field(description="User the SpanAnnotation belongs to")
+    sdoc: SourceDocumentRead = Field(
+        description="SourceDocument the SpanAnnotation refers to"
+    )
+    tags: List[DocumentTagRead] = Field(
+        description="The DocumentTags of the SourceDocument."
+    )
+    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
+
+
 class AnnotatedSegmentResult(BaseModel):
     total_results: int = Field(
         description="The total number of span_annotation_ids. Used for pagination."
     )
-    span_annotation_ids: List[int] = Field(description="The SpanAnnotation IDs.")
+    data: List[AnnotationTableRow] = Field(description="The Annotations.")
+
+
+class BBoxAnnotationTableRow(BaseModel):
+    id: int = Field(description="ID of the BBoxAnnotation")
+    x: int = Field(description="The x-coordinate of the BBoxAnnotation.")
+    y: int = Field(description="The y-coordinate of the BBoxAnnotation.")
+    width: int = Field(description="The width of the BBoxAnnotation.")
+    height: int = Field(description="The height of the BBoxAnnotation.")
+    url: str = Field(description="The url to the Image of the BBoxAnnotation.")
+    code: CodeRead = Field(description="Code the BBoxAnnotation refers to")
+    annotation_document_id: int = Field(
+        description="AnnotationDocument the BBoxAnnotation refers to"
+    )
+    user_id: int = Field(description="User the BBoxAnnotation belongs to")
+    sdoc: SourceDocumentRead = Field(
+        description="SourceDocument the BBoxAnnotation refers to"
+    )
+    tags: List[DocumentTagRead] = Field(
+        description="The DocumentTags of the SourceDocument."
+    )
+    memo: Optional[MemoRead] = Field(description="The Memo of the Annotation.")
+
+
+class AnnotatedImageResult(BaseModel):
+    total_results: int = Field(
+        description="The total number of bbox_annotation_ids. Used for pagination."
+    )
+    data: List[BBoxAnnotationTableRow] = Field(description="The Annotations.")
 
 
 class TimelineAnalysisResultNew(BaseModel):

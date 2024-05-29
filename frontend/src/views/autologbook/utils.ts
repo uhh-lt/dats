@@ -1,19 +1,17 @@
-import {
-  ActionRead,
-  ActionTargetObjectType,
-  ActionType,
-  AnnotationDocumentRead,
-  BBoxAnnotationReadResolvedCode,
-  CodeRead,
-  DocumentTagRead,
-  MemoRead,
-  ProjectRead,
-  SourceDocumentRead,
-  SpanAnnotationReadResolved,
-} from "../../api/openapi";
+import { ActionRead } from "../../api/openapi/models/ActionRead.ts";
+import { ActionTargetObjectType } from "../../api/openapi/models/ActionTargetObjectType.ts";
+import { ActionType } from "../../api/openapi/models/ActionType.ts";
+import { AnnotationDocumentRead } from "../../api/openapi/models/AnnotationDocumentRead.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
+import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
+import { ProjectRead } from "../../api/openapi/models/ProjectRead.ts";
+import { SourceDocumentRead } from "../../api/openapi/models/SourceDocumentRead.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 
 export const formatTimestampAsTime = (timestamp: string): string => {
-  let date = new Date(timestamp);
+  const date = new Date(timestamp);
   return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
 };
 
@@ -51,22 +49,24 @@ export const action2TargetTitle = (action: ActionRead): string | null | undefine
 
   // parse the JSON string into an object
   try {
-    const parsedObject: any = JSON.parse(obj);
+    const parsedObject = JSON.parse(obj);
     switch (action.target_type) {
       case ActionTargetObjectType.MEMO:
         return (parsedObject as MemoRead).title;
       case ActionTargetObjectType.PROJECT:
         return (parsedObject as ProjectRead).title;
       case ActionTargetObjectType.DOCUMENT_TAG:
-        return (parsedObject as DocumentTagRead).title;
+        return (parsedObject as DocumentTagRead).name;
       case ActionTargetObjectType.SOURCE_DOCUMENT:
         return (parsedObject as SourceDocumentRead).filename;
-      case ActionTargetObjectType.SPAN_ANNOTATION:
+      case ActionTargetObjectType.SPAN_ANNOTATION: {
         const spanAnno = parsedObject as SpanAnnotationReadResolved;
         return `${spanAnno.span_text} (${spanAnno.code.name})`;
-      case ActionTargetObjectType.BBOX_ANNOTATION:
+      }
+      case ActionTargetObjectType.BBOX_ANNOTATION: {
         const bboxAnno = parsedObject as BBoxAnnotationReadResolvedCode;
         return `Code: ${bboxAnno.code.name} Coordinates: ${bboxAnno.x_min}, ${bboxAnno.y_min}, ${bboxAnno.x_max}, ${bboxAnno.y_max}`;
+      }
       case ActionTargetObjectType.CODE:
         return (parsedObject as CodeRead).name;
       case ActionTargetObjectType.ANNOTATION_DOCUMENT:
@@ -79,7 +79,7 @@ export const action2TargetTitle = (action: ActionRead): string | null | undefine
   }
 };
 
-export const parseActionState = (input: string | null | undefined | null): any => {
+export const parseActionState = (input: string | null | undefined | null) => {
   if (input === undefined) {
     throw new Error("state is undefined!");
   }
@@ -93,8 +93,7 @@ export const parseActionState = (input: string | null | undefined | null): any =
   }
 
   try {
-    const parsedObject: any = JSON.parse(input);
-    return parsedObject;
+    return JSON.parse(input);
   } catch (e) {
     throw new Error("Could not parse state as JSON (json is invalid)!");
   }
@@ -106,24 +105,28 @@ export const generateActionStrings = (before: string | null | undefined, after: 
     after: "",
   };
 
-  let beforeObj: Record<string, any> = {};
+  let beforeObj: Record<string, unknown> = {};
   try {
     beforeObj = parseActionState(before);
-  } catch (e: any) {
-    result.before = e.message;
+  } catch (e) {
+    if (e instanceof Error) {
+      result.before = e.message;
+    }
   }
 
-  let afterObj: Record<string, any> = {};
+  let afterObj: Record<string, unknown> = {};
   try {
     afterObj = parseActionState(after);
-  } catch (e: any) {
-    result.after = e.message;
+  } catch (e) {
+    if (e instanceof Error) {
+      result.after = e.message;
+    }
   }
 
   if (result.before === "" && result.after === "") {
     const keysToDelete = [];
     for (const [key, value] of Object.entries(beforeObj)) {
-      let afterProp: any = afterObj[key];
+      const afterProp = afterObj[key];
       if (value === afterProp) {
         keysToDelete.push(key);
       }

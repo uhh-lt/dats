@@ -1,31 +1,34 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../../store/store";
-import { CodeRead } from "../../api/openapi";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { RootState } from "../../store/store.ts";
 
 export interface AnnoState {
+  isAnnotationMode: boolean;
   codesForSelection: CodeRead[];
   selectedDocumentTagId: number | undefined;
   selectedCodeId: number | undefined;
   expandedCodeIds: string[];
   hiddenCodeIds: number[];
   visibleAdocIds: number[];
-  visibleUserIds: number[] | undefined;
 }
 
 const initialState: AnnoState = {
+  isAnnotationMode: false,
   codesForSelection: [],
   selectedDocumentTagId: undefined,
   selectedCodeId: undefined,
   expandedCodeIds: [],
   hiddenCodeIds: [],
   visibleAdocIds: [],
-  visibleUserIds: undefined,
 };
 
 export const annoSlice = createSlice({
   name: "anno",
   initialState,
   reducers: {
+    onToggleAnnotationMode: (state) => {
+      state.isAnnotationMode = !state.isAnnotationMode;
+    },
     setCodesForSelection: (state, action: PayloadAction<CodeRead[]>) => {
       state.codesForSelection = action.payload;
     },
@@ -53,16 +56,11 @@ export const annoSlice = createSlice({
       }
       state.hiddenCodeIds = hiddenCodeIds;
     },
-    setSelectedParentCodeId: (state, action: PayloadAction<number | undefined>) => {
+    setSelectedCodeId: (state, action: PayloadAction<number | undefined>) => {
       state.selectedCodeId = action.payload;
     },
-    setExpandedParentCodeIds: (state, action: PayloadAction<string[]>) => {
+    setExpandedCodeIds: (state, action: PayloadAction<string[]>) => {
       state.expandedCodeIds = action.payload;
-    },
-    expandCode: (state, action: PayloadAction<string>) => {
-      if (state.expandedCodeIds.indexOf(action.payload) === -1) {
-        state.expandedCodeIds.push(action.payload);
-      }
     },
     expandCodes: (state, action: PayloadAction<string[]>) => {
       for (const codeId of action.payload) {
@@ -76,9 +74,6 @@ export const annoSlice = createSlice({
     },
     setVisibleAdocIds: (state, action: PayloadAction<number[]>) => {
       state.visibleAdocIds = action.payload;
-    },
-    setVisibleUserIds: (state, action: PayloadAction<number[]>) => {
-      state.visibleUserIds = action.payload;
     },
     moveCodeToTop: (state, action: PayloadAction<CodeRead>) => {
       // makes most recently used order

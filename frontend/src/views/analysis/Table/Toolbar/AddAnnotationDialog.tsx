@@ -1,25 +1,41 @@
-import { Button, ButtonProps, Dialog, DialogActions, DialogTitle } from "@mui/material";
-import { useState } from "react";
-import { AnnotationOccurrence } from "../../../../api/openapi";
-import AnnotationSelector from "../../../../components/Selectors/AnnotationSelector";
+import { Box, Button, ButtonProps, Dialog } from "@mui/material";
+import { MRT_RowSelectionState, MRT_SortingState, MRT_VisibilityState } from "material-react-table";
+import { useEffect, useState } from "react";
+import ProjectHooks from "../../../../api/ProjectHooks.ts";
+import SpanAnnotationTable from "../../../../components/SpanAnnotationTable/SpanAnnotationTable.tsx";
+
+const filterName = "spanAnnotationDialogTable";
 
 export interface AddAnnotationDialogProps {
   projectId: number;
-  userIds: number[];
   shouldOpen: () => boolean;
-  onConfirmSelection: (annotations: AnnotationOccurrence[], addRows: boolean) => void;
+  onConfirmSelection: (spanAnnotationIds: number[], addRows: boolean) => void;
   buttonProps?: Omit<ButtonProps, "onClick">;
 }
 
-function AddAnnotationDialog({
-  projectId,
-  userIds,
-  onConfirmSelection,
-  shouldOpen,
-  buttonProps,
-}: AddAnnotationDialogProps) {
+function AddAnnotationDialog({ projectId, onConfirmSelection, shouldOpen, buttonProps }: AddAnnotationDialogProps) {
   const [open, setOpen] = useState(false);
-  const [selectedAnnotations, setSelectedAnnotations] = useState<AnnotationOccurrence[]>([]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
+  const [sortingModel, setSortingModel] = useState<MRT_SortingState>([]);
+  const [visibilityModel, setVisibilityModel] = useState<MRT_VisibilityState | undefined>(undefined);
+  const selectedAnnotationIds = Object.keys(rowSelectionModel).map((id) => parseInt(id));
+
+  // init visibility (disable metadata)
+  // TODO: i dont like this solution
+  const metadata = ProjectHooks.useGetMetadata(projectId);
+  useEffect(() => {
+    if (!metadata.data) {
+      return;
+    }
+    setVisibilityModel(
+      metadata.data.reduce((acc, curr) => {
+        return {
+          ...acc,
+          [curr.id]: false,
+        };
+      }, {}),
+    );
+  }, [metadata.data]);
 
   const onOpenDialogClick = () => {
     setOpen(shouldOpen());
@@ -27,11 +43,11 @@ function AddAnnotationDialog({
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedAnnotations([]);
+    setRowSelectionModel({});
   };
 
   const handleConfirmSelection = (addRows: boolean) => {
-    onConfirmSelection(selectedAnnotations, addRows);
+    onConfirmSelection(selectedAnnotationIds, addRows);
     handleClose();
   };
 
@@ -40,18 +56,34 @@ function AddAnnotationDialog({
       <Button onClick={onOpenDialogClick} {...buttonProps}>
         Add annotations
       </Button>
-      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth>
-        <DialogTitle>Select annotations to add to table</DialogTitle>
-        <AnnotationSelector projectId={projectId} userIds={userIds} setSelectedAnnotations={setSelectedAnnotations} />
-        <DialogActions>
-          <Button onClick={handleClose}>Close</Button>
-          <Button onClick={() => handleConfirmSelection(false)} disabled={selectedAnnotations.length === 0}>
-            Add {selectedAnnotations.length > 0 ? selectedAnnotations.length : null} Annotations to cell
-          </Button>
-          <Button onClick={() => handleConfirmSelection(true)} disabled={selectedAnnotations.length === 0}>
-            Add {selectedAnnotations.length > 0 ? selectedAnnotations.length : null} Annotations as new rows below cell
-          </Button>
-        </DialogActions>
+      <Dialog onClose={handleClose} open={open} maxWidth="lg" fullWidth PaperProps={{ style: { height: "100%" } }}>
+        {visibilityModel && (
+          <SpanAnnotationTable
+            title="Select annotations to add to table"
+            projectId={projectId}
+            filterName={filterName}
+            rowSelectionModel={rowSelectionModel}
+            onRowSelectionChange={setRowSelectionModel}
+            sortingModel={sortingModel}
+            onSortingChange={setSortingModel}
+            columnVisibilityModel={visibilityModel}
+            onColumnVisibilityChange={setVisibilityModel as React.Dispatch<React.SetStateAction<MRT_VisibilityState>>}
+            cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
+            renderBottomToolbarCustomActions={() => (
+              <>
+                <Box flexGrow={1} />
+                <Button onClick={handleClose}>Close</Button>
+                <Button onClick={() => handleConfirmSelection(false)} disabled={selectedAnnotationIds.length === 0}>
+                  Add {selectedAnnotationIds.length > 0 ? selectedAnnotationIds.length : null} Annotations to cell
+                </Button>
+                <Button onClick={() => handleConfirmSelection(true)} disabled={selectedAnnotationIds.length === 0}>
+                  Add {selectedAnnotationIds.length > 0 ? selectedAnnotationIds.length : null} Annotations as new rows
+                  below cell
+                </Button>
+              </>
+            )}
+          />
+        )}
       </Dialog>
     </>
   );

@@ -1,13 +1,17 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { AnnotatedImageResult } from "../models/AnnotatedImageResult";
 import type { AnnotatedSegmentResult } from "../models/AnnotatedSegmentResult";
 import type { AnnotationOccurrence } from "../models/AnnotationOccurrence";
+import type { Body_analysis_annotated_images } from "../models/Body_analysis_annotated_images";
 import type { Body_analysis_annotated_segments } from "../models/Body_analysis_annotated_segments";
 import type { Body_analysis_code_frequencies } from "../models/Body_analysis_code_frequencies";
 import type { Body_analysis_word_frequency_analysis } from "../models/Body_analysis_word_frequency_analysis";
 import type { CodeFrequency } from "../models/CodeFrequency";
 import type { CodeOccurrence } from "../models/CodeOccurrence";
+import type { ColumnInfo_AnnotatedImagesColumns_ } from "../models/ColumnInfo_AnnotatedImagesColumns_";
 import type { ColumnInfo_AnnotatedSegmentsColumns_ } from "../models/ColumnInfo_AnnotatedSegmentsColumns_";
 import type { ColumnInfo_TimelineAnalysisColumns_ } from "../models/ColumnInfo_TimelineAnalysisColumns_";
 import type { ColumnInfo_WordFrequencyColumns_ } from "../models/ColumnInfo_WordFrequencyColumns_";
@@ -16,11 +20,9 @@ import type { Filter_TimelineAnalysisColumns__Input } from "../models/Filter_Tim
 import type { SampledSdocsResults } from "../models/SampledSdocsResults";
 import type { TimelineAnalysisResultNew } from "../models/TimelineAnalysisResultNew";
 import type { WordFrequencyResult } from "../models/WordFrequencyResult";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class AnalysisService {
   /**
    * Returns all SourceDocument IDs that match the query parameters.
@@ -47,7 +49,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns all SourceDocument IDs that match the query parameters.
    * @returns CodeOccurrence Successful Response
@@ -76,7 +77,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns AnnotationOccurrences.
    * @returns AnnotationOccurrence Successful Response
@@ -105,7 +105,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns AnnotationSegments Info.
    * @returns ColumnInfo_AnnotatedSegmentsColumns_ Successful Response
@@ -127,7 +126,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns AnnotationSegments.
    * @returns AnnotatedSegmentResult Successful Response
@@ -135,20 +133,23 @@ export class AnalysisService {
    */
   public static annotatedSegments({
     projectId,
+    userId,
+    requestBody,
     page,
     pageSize,
-    requestBody,
   }: {
     projectId: number;
-    page: number;
-    pageSize: number;
+    userId: number;
     requestBody: Body_analysis_annotated_segments;
+    page?: number | null;
+    pageSize?: number | null;
   }): CancelablePromise<AnnotatedSegmentResult> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/analysis/annotated_segments",
       query: {
         project_id: projectId,
+        user_id: userId,
         page: page,
         page_size: pageSize,
       },
@@ -159,7 +160,61 @@ export class AnalysisService {
       },
     });
   }
-
+  /**
+   * Returns AnnotationSegments Info.
+   * @returns ColumnInfo_AnnotatedImagesColumns_ Successful Response
+   * @throws ApiError
+   */
+  public static annotatedImagesInfo({
+    projectId,
+  }: {
+    projectId: number;
+  }): CancelablePromise<Array<ColumnInfo_AnnotatedImagesColumns_>> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/annotated_images_info",
+      query: {
+        project_id: projectId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
+  /**
+   * Returns AnnotatedImageResult.
+   * @returns AnnotatedImageResult Successful Response
+   * @throws ApiError
+   */
+  public static annotatedImages({
+    projectId,
+    userId,
+    requestBody,
+    page,
+    pageSize,
+  }: {
+    projectId: number;
+    userId: number;
+    requestBody: Body_analysis_annotated_images;
+    page?: number | null;
+    pageSize?: number | null;
+  }): CancelablePromise<AnnotatedImageResult> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/analysis/annotated_images",
+      query: {
+        project_id: projectId,
+        user_id: userId,
+        page: page,
+        page_size: pageSize,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
   /**
    * Returns TimelineAnalysis Info.
    * @returns any[] Successful Response
@@ -184,7 +239,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns TimelineAnalysis Info.
    * @returns ColumnInfo_TimelineAnalysisColumns_ Successful Response
@@ -206,7 +260,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Perform new timeline analysis.
    * @returns TimelineAnalysisResultNew Successful Response
@@ -238,7 +291,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Returns WordFrequency Info.
    * @returns ColumnInfo_WordFrequencyColumns_ Successful Response
@@ -260,7 +312,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Perform word frequency analysis.
    * @returns WordFrequencyResult Successful Response
@@ -292,7 +343,6 @@ export class AnalysisService {
       },
     });
   }
-
   /**
    * Sample & Aggregate Source Documents by tags.
    * @returns SampledSdocsResults Successful Response

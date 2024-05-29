@@ -15,31 +15,28 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { useAuth } from "../../../auth/AuthProvider";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { ProjectCreate } from "../../../api/openapi/models/ProjectCreate.ts";
 
 function ProjectCreation() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<ProjectCreate>();
 
   // mutations
   const createProjectMutation = ProjectHooks.useCreateProject();
 
   // form handling
-  const handleProjectCreation = (data: any) => {
-    if (!user) return;
+  const handleProjectCreation: SubmitHandler<ProjectCreate> = (data) => {
     createProjectMutation.mutate(
       {
-        userId: user.id,
         requestBody: {
-          title: data.name,
+          title: data.title,
           description: data.description,
         },
       },
@@ -48,7 +45,7 @@ function ProjectCreation() {
       },
     );
   };
-  const handleError = (error: any) => {
+  const handleError: SubmitErrorHandler<ProjectCreate> = (error) => {
     console.error(error);
   };
 
@@ -74,12 +71,12 @@ function ProjectCreation() {
               label="Project name"
               variant="outlined"
               fullWidth
-              {...register("name", {
+              {...register("title", {
                 required: "Project name is required",
                 // validate: (value: string) => !/\s/g.test(value) || "Project name must not contain spaces",
               })}
-              error={Boolean(errors.name)}
-              helperText={<ErrorMessage errors={errors} name="name" />}
+              error={Boolean(errors.title)}
+              helperText={<ErrorMessage errors={errors} name="title" />}
             />
             <TextField
               label="Project description"
@@ -99,9 +96,6 @@ function ProjectCreation() {
               placeholder="Which method(s) are you using in your project?"
               variant="outlined"
               fullWidth
-              {...register("method")}
-              error={Boolean(errors.method)}
-              helperText={<ErrorMessage errors={errors} name="method" />}
               disabled
             />
             <TextField
@@ -109,9 +103,6 @@ function ProjectCreation() {
               placeholder="What kind of materials are you using in your project?"
               variant="outlined"
               fullWidth
-              {...register("materials")}
-              error={Boolean(errors.materials)}
-              helperText={<ErrorMessage errors={errors} name="materials" />}
               disabled
             />
           </Stack>
@@ -125,9 +116,8 @@ function ProjectCreation() {
             startIcon={<SaveIcon />}
             sx={{ mr: 1 }}
             type="submit"
-            loading={createProjectMutation.isLoading}
+            loading={createProjectMutation.isPending}
             loadingPosition="start"
-            disabled={!user}
           >
             Create project
           </LoadingButton>

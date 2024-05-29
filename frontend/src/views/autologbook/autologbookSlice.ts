@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ActionTargetObjectType, ActionType } from "../../api/openapi";
+import { ActionTargetObjectType } from "../../api/openapi/models/ActionTargetObjectType.ts";
+import { ActionType } from "../../api/openapi/models/ActionType.ts";
 
 interface AutologbookState {
   visibleDays: number;
@@ -11,8 +12,8 @@ interface AutologbookState {
 }
 
 const initState: () => AutologbookState = () => {
-  let to = new Date();
-  let from = new Date();
+  const to = new Date();
+  const from = new Date();
   from.setDate(from.getDate() - 6);
   return {
     visibleDays: 7,

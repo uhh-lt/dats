@@ -2,10 +2,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI";
-import { useAppDispatch } from "../../plugins/ReduxHooks";
-import { QueryType } from "../../views/search/QueryType";
-import { SearchActions } from "../../views/search/searchSlice";
+import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { ImageSearchActions } from "../../views/searchimages/imageSearchSlice.ts";
 
 interface ImageContextMenuProps {}
 
@@ -39,28 +38,14 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
     setImage(image);
   };
 
-  const closeContextMenu = (_reason?: "backdropClick" | "escapeKeyDown") => {
+  const closeContextMenu = () => {
     setIsPopoverOpen(false);
   };
 
   // ui events
-  const handleContextMenu = (event: any) => {
+  const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
-    closeContextMenu("backdropClick");
-  };
-
-  const handleSentenceSimilaritySearch = () => {
-    if (image === undefined) {
-      // We're fucked
-      SnackbarAPI.openSnackbar({
-        severity: "error",
-        text: "Something went wrong. This is a bug, please report it to the developers.",
-      });
-      return;
-    }
-    dispatch(SearchActions.onSearchWithSimilarity({ query: image, searchType: QueryType.SEMANTIC_SENTENCES }));
     closeContextMenu();
-    navigate("../search");
   };
 
   const handleImageSimilaritySearch = () => {
@@ -72,15 +57,15 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
       });
       return;
     }
-    dispatch(SearchActions.onSearchWithSimilarity({ query: image, searchType: QueryType.SEMANTIC_IMAGES }));
+    dispatch(ImageSearchActions.onChangeSearchQuery(image));
     closeContextMenu();
-    navigate("../search");
+    navigate("../imagesearch");
   };
 
   return (
     <Popover
       open={isPopoverOpen}
-      onClose={(event, reason) => closeContextMenu(reason)}
+      onClose={() => closeContextMenu()}
       anchorPosition={position}
       anchorReference="anchorPosition"
       anchorOrigin={{
@@ -94,14 +79,14 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
       onContextMenu={handleContextMenu}
     >
       <List dense>
-        <ListItem disablePadding>
+        {/* <ListItem disablePadding>
           <ListItemButton onClick={handleSentenceSimilaritySearch} disabled={!image}>
             <ListItemIcon>
               <SearchIcon />
             </ListItemIcon>
             <ListItemText primary="Find similar sentences" />
           </ListItemButton>
-        </ListItem>
+        </ListItem> */}
         <ListItem disablePadding>
           <ListItemButton onClick={handleImageSimilaritySearch} disabled={!image}>
             <ListItemIcon>

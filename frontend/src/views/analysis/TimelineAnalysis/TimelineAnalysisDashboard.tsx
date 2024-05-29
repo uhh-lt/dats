@@ -1,128 +1,90 @@
-import CancelIcon from "@mui/icons-material/Close";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/DeleteOutlined";
-import EditIcon from "@mui/icons-material/Edit";
-import SaveIcon from "@mui/icons-material/Save";
-import {
-  DataGrid,
-  GridActionsCellItem,
-  GridColDef,
-  GridEventListener,
-  GridRowEditStopReasons,
-  GridRowId,
-  GridRowModel,
-  GridRowModes,
-  GridRowModesModel,
-} from "@mui/x-data-grid";
-import { useCallback, useState } from "react";
+import { MRT_Row, MRT_TableOptions } from "material-react-table";
+import { useMemo } from "react";
 import { useParams } from "react-router";
-import { useNavigate } from "react-router-dom";
-import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks";
-import { TimelineAnalysisRead } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard";
-import CreateEntityCard from "../../../features/AnalysisDashboard/CreateTableCard";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { dateToLocaleString } from "../../../utils/DateUtils";
+import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard.tsx";
+import {
+  AnaylsisDashboardRow,
+  HandleCreateAnalysis,
+  useAnalysisDashboardTable,
+} from "../../../features/AnalysisDashboard/useAnalysisDashboardTable.tsx";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
 
 function TimelineAnalysisDashboard() {
-  const navigate = useNavigate();
-
   // global client state
   const { user } = useAuth();
   const projectId = parseInt((useParams() as { projectId: string }).projectId);
 
   // global server state
-  const userAnalysis = TimelineAnalysisHooks.useGetUserTimelineAnalysiss(projectId, user?.id);
-
-  // local client state
-  const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
+  const {
+    data: userAnalysis,
+    isLoading: isLoadingAnalysis,
+    isFetching: isFetchingAnalysis,
+    isError: isLoadingAnalysisError,
+  } = TimelineAnalysisHooks.useGetUserTimelineAnalysiss(projectId, user?.id);
+  const userAnalysisTableData: AnaylsisDashboardRow[] = useMemo(
+    () =>
+      userAnalysis?.map((analysis) => ({
+        id: analysis.id,
+        title: analysis.name,
+        updated: analysis.updated,
+        user_id: analysis.user_id,
+      })) || [],
+    [userAnalysis],
+  );
 
   // mutations
-  const createAnalysis = TimelineAnalysisHooks.useCreateTimelineAnalysis();
-  const deleteAnalysis = TimelineAnalysisHooks.useDeleteTimelineAnalysis();
-  const updateAnalysis = TimelineAnalysisHooks.useUpdateTimelineAnalysis();
-
-  const columns: GridColDef[] = [
-    { field: "id", headerName: "ID" },
-    {
-      field: "name",
-      headerName: "Name",
-      flex: 1,
-      editable: true,
-    },
-    {
-      field: "updated",
-      headerName: "Last modified",
-      flex: 0.5,
-      valueGetter: (params) => dateToLocaleString(params.value as string),
-    },
-    {
-      field: "actions",
-      type: "actions",
-      headerName: "Actions",
-      width: 110,
-      cellClassName: "actions",
-      getActions: ({ id }) => {
-        const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
-        if (isInEditMode) {
-          return [
-            <GridActionsCellItem
-              icon={<SaveIcon />}
-              label="Save"
-              sx={{
-                color: "primary.main",
-              }}
-              onClick={handleSaveClick(id)}
-            />,
-            <GridActionsCellItem
-              icon={<CancelIcon />}
-              label="Cancel"
-              className="textPrimary"
-              onClick={handleCancelClick(id)}
-              color="inherit"
-            />,
-          ];
-        }
-
-        return [
-          <GridActionsCellItem
-            icon={<EditIcon />}
-            label="Edit"
-            className="textPrimary"
-            onClick={handleEditClick(id)}
-            color="inherit"
-          />,
-          <GridActionsCellItem
-            icon={<ContentCopyIcon />}
-            label="Duplicate"
-            onClick={handleDuplicateAnalysis(id as number)}
-            color="inherit"
-          />,
-          <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={handleDeleteClick(id)} color="inherit" />,
-        ];
-      },
-    },
-  ];
+  const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } =
+    TimelineAnalysisHooks.useCreateTimelineAnalysis();
+  const {
+    mutate: deleteTimelineAnalysis,
+    isPending: isDeletingTimelineAnalysis,
+    variables: deletingVariables,
+  } = TimelineAnalysisHooks.useDeleteTimelineAnalysis();
+  const { mutate: updateTimelineAnalysis, isPending: isUpdatingTimelineAnalysis } =
+    TimelineAnalysisHooks.useUpdateTimelineAnalysis();
+  const {
+    mutate: duplicateTimelineAnalysis,
+    isPending: isDuplicatingTimelineAnalysis,
+    variables: duplicatingVariables,
+  } = TimelineAnalysisHooks.useDuplicateTimelineAnalysis();
 
   // CRUD actions
-  const handleCreateAnalysis = (title: string) => {
-    if (!user?.id) return;
-
-    createAnalysis.mutate(
-      {
-        requestBody: {
-          project_id: projectId,
-          user_id: user.id,
-          name: title,
+  const handleCreateAnalysis: HandleCreateAnalysis =
+    () =>
+    ({ values, table }) => {
+      if (!user?.id) return;
+      createTimelineAnalysis(
+        {
+          requestBody: {
+            project_id: projectId,
+            user_id: user.id,
+            name: values.title,
+          },
         },
+        {
+          onSuccess(data) {
+            SnackbarAPI.openSnackbar({
+              text: `Created new timeline analysis '${data.name}'`,
+              severity: "success",
+            });
+            table.setCreatingRow(null); //exit creating mode
+          },
+        },
+      );
+    };
+
+  const handleDuplicateAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
+    duplicateTimelineAnalysis(
+      {
+        timelineAnalysisId: row.original.id,
       },
       {
-        onSuccess(_data, _variables, _context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
-            text: `Created new analysis '${title}'`,
+            text: `Duplicated analysis '${data.name}'`,
             severity: "success",
           });
         },
@@ -130,45 +92,16 @@ function TimelineAnalysisDashboard() {
     );
   };
 
-  const handleDuplicateAnalysis = useCallback(
-    (id: number) => () => {
-      if (!user?.id || !userAnalysis.data) return;
-
-      const analysis = userAnalysis.data.find((analysis) => analysis.id === id);
-      if (!analysis) return;
-
-      const mutation = createAnalysis.mutate;
-      mutation(
-        {
-          requestBody: {
-            project_id: projectId,
-            user_id: user.id,
-            name: analysis.name + " (copy)",
-          },
-        },
-        {
-          onSuccess(_data, _variables, _context) {
-            SnackbarAPI.openSnackbar({
-              text: `Duplicated analysis '${analysis.name}'`,
-              severity: "success",
-            });
-          },
-        },
-      );
-    },
-    [createAnalysis.mutate, projectId, user, userAnalysis.data],
-  );
-
-  const handleDeleteClick = (id: GridRowId) => () => {
+  const handleDeleteAnalysis = (row: MRT_Row<AnaylsisDashboardRow>) => {
     ConfirmationAPI.openConfirmationDialog({
-      text: `Do you really want to remove the analysis ${id}? This action cannot be undone!`,
+      text: `Do you really want to remove the analysis ${row.original.id}? This action cannot be undone!`,
       onAccept: () => {
-        deleteAnalysis.mutate(
+        deleteTimelineAnalysis(
           {
-            timelineAnalysisId: id as number,
+            timelineAnalysisId: row.original.id,
           },
           {
-            onSuccess(data, variables, context) {
+            onSuccess(data) {
               SnackbarAPI.openSnackbar({
                 text: `Deleted analysis '${data.name}'`,
                 severity: "success",
@@ -180,90 +113,52 @@ function TimelineAnalysisDashboard() {
     });
   };
 
-  const processRowUpdate = (newRow: GridRowModel<TimelineAnalysisRead>) => {
-    updateAnalysis.mutate(
+  const handleEditAnalysis: MRT_TableOptions<AnaylsisDashboardRow>["onEditingRowSave"] = ({ values, table }) => {
+    updateTimelineAnalysis(
       {
-        timelineAnalysisId: newRow.id,
+        timelineAnalysisId: values.id,
         requestBody: {
-          name: newRow.name,
+          name: values.name,
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated analysis '${data.name}'`,
             severity: "success",
           });
+          table.setEditingRow(null); //exit editing mode
         },
       },
     );
-    return newRow;
   };
 
-  // UI actions
-  const handleRowClick: GridEventListener<"rowClick"> = (params, event) => {
-    if (params.id in rowModesModel && rowModesModel[params.id].mode === GridRowModes.Edit) return;
-    navigate(`./${params.id}`);
-  };
-
-  const handleEditClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-  };
-
-  const handleSaveClick = (id: GridRowId) => () => {
-    setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-  };
-
-  const handleCancelClick = (id: GridRowId) => () => {
-    setRowModesModel({
-      ...rowModesModel,
-      [id]: { mode: GridRowModes.View, ignoreModifications: true },
-    });
-  };
-
-  const handleRowEditStop: GridEventListener<"rowEditStop"> = (params, event) => {
-    if (params.reason === GridRowEditStopReasons.rowFocusOut) {
-      event.defaultMuiPrevented = true;
-    }
-  };
-
-  const createCards = (
-    <>
-      <CreateEntityCard
-        title="New analysis"
-        description="Create a new timeline analysis"
-        onClick={() => handleCreateAnalysis("New analysis")}
-      />
-    </>
-  );
+  // table
+  const table = useAnalysisDashboardTable({
+    analysisName: "Table",
+    data: userAnalysisTableData,
+    isLoadingData: isLoadingAnalysis,
+    isFetchingData: isFetchingAnalysis,
+    isLoadingDataError: isLoadingAnalysisError,
+    isCreatingAnalysis: isCreatingTimelineAnalysis,
+    isUpdatingAnalysis: isUpdatingTimelineAnalysis,
+    isDuplicatingAnalysis: isDuplicatingTimelineAnalysis,
+    isDeletingAnalysis: isDeletingTimelineAnalysis,
+    deletingAnalysisId: deletingVariables?.timelineAnalysisId,
+    duplicatingAnalysisId: duplicatingVariables?.timelineAnalysisId,
+    handleCreateAnalysis,
+    handleEditAnalysis,
+    handleDeleteAnalysis,
+    handleDuplicateAnalysis,
+  });
 
   return (
     <AnalysisDashboard
       pageTitle="Timeline Analysis Dashboard"
-      headerTitle="Create analysis"
-      headerCards={createCards}
-      bodyTitle="Load analysis"
-    >
-      <DataGrid
-        rows={userAnalysis.data || []}
-        columns={columns}
-        autoPageSize
-        getRowId={(row) => row.id}
-        onRowClick={handleRowClick}
-        hideFooterSelectedRowCount
-        style={{ border: "none" }}
-        initialState={{
-          sorting: {
-            sortModel: [{ field: "updated", sort: "desc" }],
-          },
-        }}
-        editMode="row"
-        rowModesModel={rowModesModel}
-        onRowModesModelChange={(newRowModesModel) => setRowModesModel(newRowModesModel)}
-        onRowEditStop={handleRowEditStop}
-        processRowUpdate={processRowUpdate}
-      />
-    </AnalysisDashboard>
+      headerTitle="Timeline Analysis Dashboard"
+      subheaderTitle="Manage your timeline analysis"
+      table={table}
+    />
   );
 }
 

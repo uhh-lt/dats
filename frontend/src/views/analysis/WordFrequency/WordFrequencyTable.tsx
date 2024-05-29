@@ -1,156 +1,252 @@
-import { Card, CardContent, CardHeader, CircularProgress, Typography } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { useMemo } from "react";
+import SaveAltIcon from "@mui/icons-material/SaveAlt";
+import { IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  MRT_ColumnDef,
+  MRT_RowVirtualizer,
+  MRT_ShowHideColumnsButton,
+  MRT_ToggleDensePaddingButton,
+  MaterialReactTable,
+  useMaterialReactTable,
+} from "material-react-table";
+import { useCallback, useEffect, useMemo, useRef, type UIEvent } from "react";
 import { useParams } from "react-router-dom";
-import { WordFrequencyColumns, WordFrequencyStat } from "../../../api/openapi";
-import { useAuth } from "../../../auth/AuthProvider";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice";
-import { useWordFrequencyQuery } from "./useWordFrequencyQuery";
-import { WordFrequencyActions } from "./wordFrequencySlice";
+import { SortDirection } from "../../../api/openapi/models/SortDirection.ts";
+import { WordFrequencyColumns } from "../../../api/openapi/models/WordFrequencyColumns.ts";
+import { WordFrequencyResult } from "../../../api/openapi/models/WordFrequencyResult.ts";
+import { WordFrequencyStat } from "../../../api/openapi/models/WordFrequencyStat.ts";
+import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
+import { useAuth } from "../../../auth/useAuth.ts";
+import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import WordFrequencyFilterDialog from "./WordFrequencyFilterDialog.tsx";
+import { useInitWordFrequencyFilterSlice } from "./useInitWordFrequencyFilterSlice.ts";
+import { WordFrequencyActions } from "./wordFrequencySlice.ts";
 
-interface WordFrequencyTableProps {
-  onRowContextMenu: (event: React.MouseEvent<HTMLDivElement>, spanAnnotationId: number) => void;
-  tableContainerRef: React.RefObject<HTMLDivElement>;
-}
+const fetchSize = 20;
 
-function WordFrequencyTable({ onRowContextMenu, tableContainerRef }: WordFrequencyTableProps) {
+function WordFrequencyTable() {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   // global client state (react router)
   const { user } = useAuth();
 
   // global client state (redux)
-  const paginationModel = useAppSelector((state) => state.wordFrequency.paginationModel);
   const rowSelectionModel = useAppSelector((state) => state.wordFrequency.rowSelectionModel);
-  const sortModel = useAppSelector((state) => state.wordFrequency.sortModel);
+  const sortingModel = useAppSelector((state) => state.wordFrequency.sortingModel);
+  const columnVisibilityModel = useAppSelector((state) => state.wordFrequency.columnVisibilityModel);
   const dispatch = useAppDispatch();
 
-  // custom hooks (query)
-  const wordFrequency = useWordFrequencyQuery(projectId);
+  // filtering
+  const filter = useAppSelector((state) => state.wordFrequencyFilter.filter["root"]);
+
+  // virtualization
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
+
+  // table columns
   const tableInfo = useInitWordFrequencyFilterSlice({ projectId });
+  const columns: MRT_ColumnDef<WordFrequencyStat>[] = useMemo(() => {
+    if (!tableInfo || !user) return [];
 
-  // computed
-  const columns: GridColDef<WordFrequencyStat>[] = useMemo(() => {
-    if (!tableInfo.data || !user) return [];
-
-    const result = tableInfo.data.map((column) => {
-      const colDef = {
-        field: column.column,
-        headerName: column.label,
-        sortable: column.sortable,
-      } as GridColDef<WordFrequencyStat>;
+    const result: Array<MRT_ColumnDef<WordFrequencyStat> | null> = tableInfo.map((column) => {
+      const colDef: MRT_ColumnDef<WordFrequencyStat> = {
+        id: column.column,
+        header: column.label,
+        enableSorting: column.sortable,
+      };
 
       switch (column.column) {
         case WordFrequencyColumns.WF_WORD:
           return {
             ...colDef,
-            flex: 2,
-            valueGetter(params) {
-              return params.row.word;
+            accessorFn(originalRow) {
+              return originalRow.word;
             },
-          } as GridColDef<WordFrequencyStat>;
+          };
         case WordFrequencyColumns.WF_WORD_FREQUENCY:
           return {
             ...colDef,
-            flex: 2,
-            valueGetter(params) {
-              return params.row.count;
+            accessorFn(originalRow) {
+              return originalRow.count;
             },
-          } as GridColDef<WordFrequencyStat>;
+          };
         case WordFrequencyColumns.WF_WORD_PERCENT:
           return {
             ...colDef,
-            flex: 1,
-            valueGetter(params) {
-              return (params.row.word_percent * 100).toFixed(2);
+            accessorFn(originalRow) {
+              return (originalRow.word_percent * 100).toFixed(2);
             },
-          } as GridColDef<WordFrequencyStat>;
+          };
         case WordFrequencyColumns.WF_SOURCE_DOCUMENT_FREQUENCY:
           return {
             ...colDef,
-            flex: 2,
-            valueGetter(params) {
-              return params.row.sdocs;
+            accessorFn(originalRow) {
+              return originalRow.sdocs;
             },
-          } as GridColDef<WordFrequencyStat>;
+          };
         case WordFrequencyColumns.WF_SOURCE_DOCUMENT_PERCENT:
           return {
             ...colDef,
-            flex: 2,
-            valueGetter(params) {
-              return (params.row.sdocs_percent * 100).toFixed(2);
+            accessorFn(originalRow) {
+              return (originalRow.sdocs_percent * 100).toFixed(2);
             },
-          } as GridColDef<WordFrequencyStat>;
+          };
         default:
           return null;
       }
     });
 
     // unwanted columns are set to null, so we filter those out
-    return result.filter((column) => column !== null) as GridColDef<WordFrequencyStat>[];
-  }, [tableInfo.data, user]);
+    return result.filter((column) => column !== null) as MRT_ColumnDef<WordFrequencyStat>[];
+  }, [tableInfo, user]);
 
-  let tableContent: JSX.Element;
-  if (wordFrequency.isError) {
-    tableContent = (
-      <Typography variant="body1" color="inherit" component="div">
-        {wordFrequency.error?.message}
-      </Typography>
-    );
-  } else if (columns.length === 0) {
-    tableContent = <CircularProgress />;
-  } else {
-    tableContent = (
-      <DataGrid
-        rows={wordFrequency.data?.word_frequencies || []}
-        columns={columns}
-        getRowId={(row) => row.word}
-        style={{ border: "none" }}
-        slotProps={{
-          row: {
-            onContextMenu: (event) => console.log(event),
-          },
-        }}
-        disableColumnFilter
-        // selection
-        checkboxSelection
-        rowSelectionModel={rowSelectionModel}
-        onRowSelectionModelChange={(selectionModel) =>
-          dispatch(WordFrequencyActions.onSelectionModelChange(selectionModel as number[]))
-        }
-        // server side pagination
-        autoPageSize
-        paginationMode="server"
-        rowCount={wordFrequency.data?.total_results || 0}
-        paginationModel={paginationModel}
-        onPaginationModelChange={(model) => dispatch(WordFrequencyActions.onPaginationModelChange(model))}
-        keepNonExistentRowsSelected
-        loading={wordFrequency.isLoading || wordFrequency.isPreviousData}
-        // sorting
-        sortingMode="server"
-        sortModel={sortModel}
-        onSortModelChange={(sortModel) => dispatch(WordFrequencyActions.onSortModelChange(sortModel))}
-      />
-    );
-  }
+  // table data
+  const { data, fetchNextPage, isError, isFetching, isLoading } = useInfiniteQuery<WordFrequencyResult>({
+    queryKey: [
+      "wordfrequency-table-data",
+      projectId,
+      filter, //refetch when columnFilters changes
+      sortingModel, //refetch when sorting changes
+    ],
+    queryFn: ({ pageParam }) =>
+      AnalysisService.wordFrequencyAnalysis({
+        projectId: projectId!,
+        requestBody: {
+          filter: filter as MyFilter<WordFrequencyColumns>,
+          sorts: sortingModel.map((sort) => ({
+            column: sort.id as WordFrequencyColumns,
+            direction: sort.desc ? SortDirection.DESC : SortDirection.ASC,
+          })),
+        },
+        page: pageParam as number,
+        pageSize: fetchSize,
+      }),
+    initialPageParam: 0,
+    getNextPageParam: (_lastGroup, groups) => {
+      return groups.length;
+    },
+    refetchOnWindowFocus: false,
+  });
+  // create a flat array of data mapped from id to row
+  const flatData = useMemo(() => data?.pages.flatMap((page) => page.word_frequencies) ?? [], [data]);
+  const totalDBRowCount = data?.pages?.[0]?.total_results ?? 0;
+  const totalFetched = flatData.length;
 
-  return (
-    <Card sx={{ width: "100%" }} elevation={2} className="myFlexFillAllContainer myFlexContainer h100">
-      <CardHeader
-        title="Word Frequencies"
-        subheader={
-          wordFrequency.isSuccess &&
-          `From ${wordFrequency.data.sdocs_total} documents (${wordFrequency.data.words_total} words)`
+  // infinite scrolling
+  // called on scroll and possibly on mount to fetch more data as the user scrolls and reaches bottom of table
+  const fetchMoreOnBottomReached = useCallback(
+    (containerRefElement?: HTMLDivElement | null) => {
+      if (containerRefElement) {
+        const { scrollHeight, scrollTop, clientHeight } = containerRefElement;
+        // once the user has scrolled within 400px of the bottom of the table, fetch more data if we can
+        if (scrollHeight - scrollTop - clientHeight < 400 && !isFetching && totalFetched < totalDBRowCount) {
+          fetchNextPage();
         }
-      />
-      <CardContent className="myFlexFillAllContainer h100" style={{ padding: 0 }}>
-        <div className="h100" style={{ width: "100%" }} ref={tableContainerRef}>
-          {tableContent}
-        </div>
-      </CardContent>
-    </Card>
+      }
+    },
+    [fetchNextPage, isFetching, totalFetched, totalDBRowCount],
   );
+  // scroll to top of table when userId, sorting or filters change
+  useEffect(() => {
+    try {
+      rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [projectId, sortingModel]);
+  // a check on mount to see if the table is already scrolled to the bottom and immediately needs to fetch more data
+  useEffect(() => {
+    fetchMoreOnBottomReached(tableContainerRef.current);
+  }, [fetchMoreOnBottomReached]);
+
+  // table
+  const table = useMaterialReactTable({
+    data: flatData,
+    columns: columns,
+    getRowId: (row) => row.word,
+    // state
+    state: {
+      rowSelection: rowSelectionModel,
+      sorting: sortingModel,
+      columnVisibility: columnVisibilityModel,
+      isLoading: isLoading || columns.length === 0,
+      showAlertBanner: isError,
+      showProgressBars: isFetching,
+    },
+    // selection
+    enableRowSelection: true,
+    onRowSelectionChange: (updater) => {
+      const newRowSelectionModel = updater instanceof Function ? updater(rowSelectionModel) : updater;
+      dispatch(WordFrequencyActions.onSelectionModelChange(newRowSelectionModel));
+    },
+    // virtualization
+    enableRowVirtualization: true,
+    rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
+    rowVirtualizerOptions: { overscan: 4 },
+    // filtering
+    manualFiltering: true,
+    enableColumnFilters: false,
+    // pagination
+    enablePagination: false,
+    // sorting
+    manualSorting: true,
+    onSortingChange: (updater) => {
+      const newSortingModel = updater instanceof Function ? updater(sortingModel) : updater;
+      dispatch(WordFrequencyActions.onSortingModelChange(newSortingModel));
+    },
+    // column visiblility
+    onColumnVisibilityChange: (updater) => {
+      const newVisibilityModel = updater instanceof Function ? updater(columnVisibilityModel) : updater;
+      dispatch(WordFrequencyActions.onColumnVisibilityModelChange(newVisibilityModel));
+    },
+    // mui components
+    muiTablePaperProps: {
+      elevation: 4,
+      style: { height: "100%", display: "flex", flexDirection: "column" },
+    },
+    muiTableContainerProps: {
+      ref: tableContainerRef, //get access to the table container element
+      onScroll: (event: UIEvent<HTMLDivElement>) => fetchMoreOnBottomReached(event.target as HTMLDivElement), //add an event listener to the table container element
+      style: { flexGrow: 1 },
+    },
+    muiToolbarAlertBannerProps: isError
+      ? {
+          color: "error",
+          children: "Error loading data",
+        }
+      : undefined,
+    // toolbar
+    positionToolbarAlertBanner: "head-overlay",
+    renderBottomToolbarCustomActions: () => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>
+          Fetched {totalFetched} of {totalDBRowCount} unique words (from {data?.pages?.[0]?.sdocs_total ?? 0} documents
+          with {data?.pages?.[0]?.words_total ?? 0} words).
+        </Typography>
+      </Stack>
+    ),
+    renderTopToolbarCustomActions: () => (
+      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+        <WordFrequencyFilterDialog anchorEl={tableContainerRef.current} />
+      </Stack>
+    ),
+    renderToolbarInternalActions: ({ table }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
+        <MRT_ShowHideColumnsButton table={table} />
+        <MRT_ToggleDensePaddingButton table={table} />
+        <Tooltip title={"Export word frequencies"}>
+          <span>
+            <IconButton disabled>
+              <SaveAltIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Stack>
+    ),
+  });
+
+  return <MaterialReactTable table={table} />;
 }
 
 export default WordFrequencyTable;
