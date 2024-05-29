@@ -3,7 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from api.dependencies import get_db_session
+from api.dependencies import get_current_user, get_db_session
 from app.core.analysis.cota.service import COTAService
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
@@ -21,7 +21,11 @@ from app.core.db.redis_service import RedisService
 cotas: COTAService = COTAService()
 redis: RedisService = RedisService()
 
-router = APIRouter(prefix="/cota", tags=["conceptOverTimeAnalysis"])
+router = APIRouter(
+    prefix="/cota",
+    dependencies=[Depends(get_current_user)],
+    tags=["conceptOverTimeAnalysis"],
+)
 
 
 @router.put(
@@ -31,8 +35,14 @@ router = APIRouter(prefix="/cota", tags=["conceptOverTimeAnalysis"])
     description="Creates an ConceptOverTimeAnalysis",
 )
 async def create(
-    *, db: Session = Depends(get_db_session), cota: COTACreate
+    *,
+    db: Session = Depends(get_db_session),
+    cota: COTACreate,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARead:
+    authz_user.assert_in_project(cota.project_id)
+    authz_user.assert_is_same_user(cota.user_id)
+
     return cotas.create(db=db, cota_create=cota)
 
 
@@ -46,7 +56,10 @@ async def get_by_id(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARead:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     cota = cotas.read_by_id(db=db, cota_id=cota_id)
     return cota
 
@@ -64,6 +77,9 @@ async def get_by_project_and_user(
     user_id: int,
     authz_user: AuthzUser = Depends(),
 ) -> List[COTARead]:
+    # No need to authorize against the user:
+    # all users can see all cota analysis in the project
+    # at the moment.
     authz_user.assert_in_project(project_id)
 
     db_objs = crud_cota.read_by_project_and_user(
@@ -83,7 +99,10 @@ async def update_by_id(
     db: Session = Depends(get_db_session),
     cota_id: int,
     cota_upate: COTAUpdate,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARead:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     return cotas.update(
         db=db,
         cota_id=cota_id,
@@ -121,7 +140,10 @@ async def annotate_cota_sentence(
     cota_id: int,
     cota_sentence_ids: List[COTASentenceID],
     concept_id: Optional[str] = None,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARead:  # noqa: F821
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     return cotas.annotate_sentences(
         db=db,
         cota_id=cota_id,
@@ -140,7 +162,10 @@ async def remove_cota_sentence(
     db: Session = Depends(get_db_session),
     cota_id: int,
     cota_sentence_ids: List[COTASentenceID],
+    authz_user: AuthzUser = Depends(),
 ) -> COTARead:  # noqa: F821
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     return cotas.remove_sentences(
         db=db,
         cota_id=cota_id,
@@ -159,7 +184,10 @@ async def refine_cota_by_id(
     db: Session = Depends(get_db_session),
     cota_id: int,
     hyperparams: Optional[COTARefinementHyperparameters] = None,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARefinementJobRead:  # noqa: F821
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     return cotas.create_and_start_refinement_job_async(
         db=db,
         cota_id=cota_id,
@@ -174,8 +202,13 @@ async def refine_cota_by_id(
     description="Removes the ConceptOverTimeAnalysis with the given ID if it exists",
 )
 async def delete_by_id(
-    *, db: Session = Depends(get_db_session), cota_id: int
+    *,
+    db: Session = Depends(get_db_session),
+    cota_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARead:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     return cotas.delete_by_id(db=db, cota_id=cota_id)
 
 
@@ -188,8 +221,13 @@ async def delete_by_id(
 async def get_cota_job(
     *,
     cota_job_id: str,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARefinementJobRead:
-    return redis.load_cota_job(cota_job_id)
+    cota_job = redis.load_cota_job(cota_job_id)
+
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_job.cota.id)
+
+    return cota_job
 
 
 @router.get(
@@ -201,7 +239,10 @@ async def get_cota_job(
 async def get_most_recent_cota_job(
     *,
     cota_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> Optional[COTARefinementJobRead]:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     return redis.get_most_recent_cota_job_by_cota_id(cota_id=cota_id)
 
 
@@ -215,7 +256,10 @@ async def reset_cota(
     *,
     db: Session = Depends(get_db_session),
     cota_id: int,
+    authz_user: AuthzUser = Depends(),
 ) -> COTARead:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
     return cotas.reset(
         db=db,
         cota_id=cota_id,
