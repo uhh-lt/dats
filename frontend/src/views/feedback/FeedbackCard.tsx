@@ -7,7 +7,7 @@ import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
 import { FeedbackRead } from "../../api/openapi/models/FeedbackRead.ts";
-import UserName from "../../components/UserName.tsx";
+import UserName from "../../components/User/UserName.tsx";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
 
 type FeedbackReplyValues = {

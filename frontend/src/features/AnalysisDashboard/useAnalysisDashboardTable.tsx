@@ -16,7 +16,7 @@ import {
 } from "material-react-table";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import UserName from "../../components/UserName.tsx";
+import UserName from "../../components/User/UserName.tsx";
 import { dateToLocaleString } from "../../utils/DateUtils.ts";
 
 export type AnaylsisDashboardRow = {

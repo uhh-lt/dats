@@ -2,7 +2,7 @@ import NotesIcon from "@mui/icons-material/Notes";
 import { Card, CardActionArea, CardContent, CardHeader, Typography } from "@mui/material";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import UserName from "../../../components/UserName.tsx";
+import UserName from "../../../components/User/UserName.tsx";
 import AnnotationCardActionsMenu from "./AnnotationCardActionMenu.tsx";
 import { AnnotationCardProps } from "./AnnotationCardProps.ts";
 

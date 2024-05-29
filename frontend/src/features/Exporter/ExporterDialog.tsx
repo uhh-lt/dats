@@ -35,7 +35,7 @@ import { SingleUserAllCodesExportJobParams } from "../../api/openapi/models/Sing
 import { SingleUserAllMemosExportJobParams } from "../../api/openapi/models/SingleUserAllMemosExportJobParams.ts";
 import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/SingleUserLogbookExportJobParams.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import UserName from "../../components/UserName.tsx";
+import UserName from "../../components/User/UserName.tsx";
 import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
 import ExporterItemSelectList from "./ExporterItemSelectList.tsx";
 

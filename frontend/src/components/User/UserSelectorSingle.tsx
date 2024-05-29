@@ -1,6 +1,6 @@
 import { FormControl, InputLabel, ListItemText, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import ProjectHooks from "../../api/ProjectHooks.ts";
-import UserName from "../../components/UserName.tsx";
+import UserName from "./UserName.tsx";
 
 interface UserSelectorProps {
   projectId: number | undefined;

@@ -20,12 +20,12 @@ import { AnalysisService } from "../../api/openapi/services/AnalysisService.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import { MyFilter, createEmptyFilter } from "../../features/FilterDialog/filterUtils.ts";
 import { useAppSelector } from "../../plugins/ReduxHooks.ts";
-import UserSelectorSingle from "../../views/analysis/UserSelectorSingle.tsx";
 import ImageCropper from "../../views/whiteboard/nodes/ImageCropper.tsx";
 import CodeRenderer from "../DataGrid/CodeRenderer.tsx";
 import MemoRenderer2 from "../DataGrid/MemoRenderer2.tsx";
 import SdocMetadataRenderer from "../DataGrid/SdocMetadataRenderer.tsx";
 import SdocTagsRenderer from "../DataGrid/SdocTagRenderer.tsx";
+import UserSelectorSingle from "../User/UserSelectorSingle.tsx";
 import BBoxToolbar, { BBoxToolbarProps } from "./BBoxToolbar.tsx";
 import { useInitBBoxFilterSlice } from "./useInitBBoxFilterSlice.ts";
 
