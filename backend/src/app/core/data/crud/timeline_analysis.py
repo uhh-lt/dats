@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 
 from app.core.data.crud.crud_base import CRUDBase
 from app.core.data.dto.timeline_analysis import (
-    TimelineAnalysiCreateAsInDB,
     TimelineAnalysisCreate,
+    TimelineAnalysisCreateAsInDB,
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
     TimelineAnalysisUpdateAsInDB,
@@ -17,7 +17,7 @@ from app.core.data.orm.timeline_analysis import TimelineAnalysisORM
 
 class CRUDTimelineAnalysis(
     CRUDBase[
-        TimelineAnalysisORM, TimelineAnalysiCreateAsInDB, TimelineAnalysisUpdateAsInDB
+        TimelineAnalysisORM, TimelineAnalysisCreateAsInDB, TimelineAnalysisUpdateAsInDB
     ]
 ):
     def read_by_project_and_user(
@@ -37,7 +37,7 @@ class CRUDTimelineAnalysis(
         self, db: Session, *, create_dto: TimelineAnalysisCreate
     ) -> TimelineAnalysisORM:
         return super().create(
-            db, create_dto=TimelineAnalysiCreateAsInDB(**create_dto.model_dump())
+            db, create_dto=TimelineAnalysisCreateAsInDB(**create_dto.model_dump())
         )
 
     def update(self, db: Session, id: int, update_dto: TimelineAnalysisUpdate):
@@ -76,7 +76,7 @@ class CRUDTimelineAnalysis(
         db_obj = self.read(db, id=timeline_analysis_id)
         return self.create(
             db,
-            create_dto=TimelineAnalysiCreateAsInDB(
+            create_dto=TimelineAnalysisCreateAsInDB(
                 project_id=db_obj.project_id,
                 user_id=user_id,
                 name=db_obj.name + " (Copy)",

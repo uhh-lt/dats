@@ -14,7 +14,7 @@ ENV NODE_ENV production
 
 # Install dependencies
 COPY package.json package-lock.json ./
-RUN npm ci --omit optional --legacy-peer-deps
+RUN npm ci --include=dev
 
 # Copy app files
 COPY . .
@@ -26,7 +26,7 @@ RUN npm run build
 FROM nginx:stable-alpine
 
 # Copy built files
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 # Run
 CMD ["nginx", "-g", "daemon off;"]

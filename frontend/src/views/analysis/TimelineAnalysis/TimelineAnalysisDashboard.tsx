@@ -135,7 +135,7 @@ function TimelineAnalysisDashboard() {
 
   // table
   const table = useAnalysisDashboardTable({
-    analysisName: "Table",
+    analysisName: "Timeline Analysis",
     data: userAnalysisTableData,
     isLoadingData: isLoadingAnalysis,
     isFetchingData: isFetchingAnalysis,

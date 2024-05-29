@@ -11,6 +11,8 @@ import Analysis from "../views/analysis/Analysis.tsx";
 import AnnotatedSegments from "../views/analysis/AnnotatedSegments/AnnotatedSegments.tsx";
 import CodeFrequencyAnalysis from "../views/analysis/CodeFrequency/CodeFrequencyAnalysis.tsx";
 import CodeGraph from "../views/analysis/CodeGraph/CodeGraph.tsx";
+import CotaDashboard from "../views/analysis/ConceptsOverTime/CotaDashboard.tsx";
+import CotaView from "../views/analysis/ConceptsOverTime/CotaView.tsx";
 import DocumentSampler from "../views/analysis/DocumentSampler/DocumentSampler.tsx";
 import TableDashboard from "../views/analysis/Table/TableDashboard.tsx";
 import TableView from "../views/analysis/Table/TableView.tsx";
@@ -183,6 +185,14 @@ const router = createBrowserRouter([
       {
         path: "/project/:projectId/analysis/table/:tableId",
         element: <TableView />,
+      },
+      {
+        path: "/project/:projectId/analysis/concepts-over-time-analysis",
+        element: <CotaDashboard />,
+      },
+      {
+        path: "/project/:projectId/analysis/concepts-over-time-analysis/:cotaId",
+        element: <CotaView />,
       },
       {
         path: "/project/:projectId/analysis/document-sampler",

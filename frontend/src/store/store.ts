@@ -6,6 +6,7 @@ import documentTableFilterReducer from "../components/DocumentTable/documentTabl
 import satFilterReducer from "../components/SpanAnnotationTable/satFilterSlice.ts";
 import dialogReducer from "../features/CrudDialog/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
+import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import documentSamplerReducer from "../views/analysis/DocumentSampler/documentSamplerSlice.ts";
 import timelineAnalysisFilterReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisFilterSlice.ts";
 import timelineAnalysisReducer from "../views/analysis/TimelineAnalysis/timelineAnalysisSlice.ts";
@@ -49,6 +50,7 @@ export const store = configureStore({
     timelineAnalysisFilter: timelineAnalysisFilterReducer,
     wordFrequency: wordFrequencyReducer,
     wordFrequencyFilter: wordFrequencyFilterReducer,
+    cota: cotaReducer,
     dialog: dialogReducer,
     documentSampler: documentSamplerReducer,
   },

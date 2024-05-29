@@ -139,15 +139,22 @@ services:
       CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY: ${CELERY_BACKGROUND_JOBS_WORKER_CONCURRENCY:-1}
       CELERY_DEBUG_MODE: ${CELERY_DEBUG_MODE:-0}
       DWISE_BACKEND_CONFIG: ${DWISE_BACKEND_CONFIG:-/dwts_code/src/configs/default.yaml}
+      HUGGINGFACE_HUB_CACHE: /models_cache
+      TRANSFORMERS_CACHE: /models_cache
+      TORCH_HOME: /models_cache
+      NUMBA_CACHE_DIR: /numba_cache
     volumes:
       - ../backend/src:/dwts_code/src
       - ./backend_repo:/tmp/dwts
+      - ./models_cache:/models_cache
+      - ./numba_cache:/numba_cache
     depends_on:
       - rabbitmq
       - redis
       - postgres
     ports:
       - "${JUPYTER_BACKGROUND_JOBS_EXPOSED:-8880}:8888"
+      - "${CELERY_DEBUG_PORT:-45678}:6900"
     restart: always
     links:
       - postgres
@@ -156,6 +163,13 @@ services:
       - ray
     networks:
       - dwts_demo_network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    profiles:
+      - background
 
   ray:
     image: uhhlt/dwts_ray:${DWTS_RAY_DOCKER_VERSION:-debian_dev_latest}

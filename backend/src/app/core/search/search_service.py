@@ -378,7 +378,9 @@ class SearchService(metaclass=SingletonMeta):
             filtered_sdoc_ids, _ = self._get_filtered_sdoc_ids(
                 db, query.proj_id, query.filter
             )
-        return self.sss.find_similar_sentences(filtered_sdoc_ids, query=query)
+        return self.sss.find_similar_sentences(
+            sdoc_ids_to_search=filtered_sdoc_ids, query=query
+        )
 
     def find_similar_images(
         self,
@@ -388,4 +390,6 @@ class SearchService(metaclass=SingletonMeta):
             filtered_sdoc_ids, _ = self._get_filtered_sdoc_ids(
                 db, query.proj_id, query.filter
             )
-        return self.sss.find_similar_images(filtered_sdoc_ids, query=query)
+        return self.sss.find_similar_images(
+            sdoc_ids_to_search=filtered_sdoc_ids, query=query
+        )

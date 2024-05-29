@@ -143,6 +143,15 @@ export const QueryKey = {
   // All analyses from a single user in a given project
   TIMELINE_ANALYSIS_PROJECT_USER: "timelineAnalysisProjectUser",
 
+  // a single COTA (by COTA id)
+  COTA: "cota",
+  // all project, user COTAs (by user id and project id)
+  COTAS_PROJECT_USER: "cotasProjectUser",
+  // a single COTARefinementJob (by refinement job id)
+  COTA_REFINEMENT_JOB: "cotaRefinementJob",
+  // the most recent COTARefinementJob of a cota (by cota id)
+  COTA_MOST_RECENT_REFINEMENT_JOB: "cotaMostRecentRefinementJob",
+
   // a single WHITEBOARD (by WHITEBOARD id)
   WHITEBOARD: "whiteboard",
   // all project WHITEBOARDs (by project id)

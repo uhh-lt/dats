@@ -237,19 +237,25 @@ class RepoService(metaclass=SingletonMeta):
         )
 
     def create_directory_structure_for_project(self, proj_id: int) -> Optional[Path]:
-        dst_path = self._get_project_repo_sdocs_root_path(proj_id=proj_id)
-        try:
-            if dst_path.exists():
-                logger.warning(
-                    "Cannot create project directory structure because it already exists!"
-                )
-                raise ProjectAlreadyExistsInRepositoryError(proj_id=proj_id)
-            dst_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            # FIXME Flo: Throw or what?!
-            logger.error(f"Cannot create project directory structure! {e}")
+        paths = [
+            self.get_embeddings_root_dir(proj_id=proj_id),
+            self.get_models_root_path(proj_id=proj_id),
+            self.get_dataloaders_root_dir(proj_id=proj_id),
+            self._get_project_repo_sdocs_root_path(proj_id=proj_id),
+        ]
+        for dst_path in paths:
+            try:
+                if dst_path.exists():
+                    logger.warning(
+                        "Cannot create project directory structure because it already exists!"
+                    )
+                    raise ProjectAlreadyExistsInRepositoryError(proj_id=proj_id)
+                dst_path.mkdir(parents=True, exist_ok=True)
+            except Exception as e:
+                # FIXME Flo: Throw or what?!
+                logger.error(f"Cannot create project directory structure! {e}")
 
-        return dst_path
+        return paths[-1]
 
     def _create_directory_structure_for_project_file(
         self, proj_id: int, filename: Union[str, Path]
@@ -475,3 +481,70 @@ class RepoService(metaclass=SingletonMeta):
             **extra_data,
         )
         return dst_path, create_dto
+
+    def get_models_root_path(self, proj_id: int) -> Path:
+        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("models")
+
+    def get_model_dir(
+        self,
+        proj_id: int,
+        model_name: str,
+        model_prefix: str = "cota_",
+    ) -> Path:
+        name = (
+            self.get_models_root_path(proj_id=proj_id) / f"{model_prefix}{model_name}"
+        )
+        return name
+
+    def model_exists(
+        self,
+        proj_id: int,
+        model_name: str,
+        model_prefix: str = "cota_",
+    ) -> bool:
+        return self.get_model_dir(proj_id=proj_id, model_name=model_name).exists()
+
+    def get_dataloaders_root_dir(self, proj_id: int) -> Path:
+        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("dataloaders")
+
+    def get_dataloader_filename(
+        self,
+        proj_id: int,
+        dataloader_name: str,
+        dataloader_prefix: str = "cota_",
+    ) -> Path:
+        return self.get_dataloaders_root_dir(proj_id=proj_id).joinpath(dataloader_name)
+
+    def dataloader_exists(
+        self,
+        proj_id: int,
+        dataloader_name: str,
+        dataloader_prefix: str = "cota_",
+    ) -> bool:
+        return self.get_dataloader_filename(
+            proj_id=proj_id, dataloader_name=dataloader_name
+        ).exists()
+
+    def get_embeddings_root_dir(self, proj_id: int) -> Path:
+        return self.get_project_repo_root_path(proj_id=proj_id).joinpath("embeddings")
+
+    def get_embeddings_filename(
+        self,
+        proj_id: int,
+        embedding_name: str,
+        embeddings_prefix: str = "cota_",
+    ) -> Path:
+        return (
+            self.get_embeddings_root_dir(proj_id=proj_id)
+            / f"{embeddings_prefix}{embedding_name}.pt"
+        )
+
+    def embeddings_exists(
+        self,
+        proj_id: int,
+        embedding_name: str,
+        embeddings_prefix: str = "cota_",
+    ) -> bool:
+        return self.get_embeddings_filename(
+            proj_id=proj_id, embedding_name=embedding_name
+        ).exists()

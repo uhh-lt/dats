@@ -50,7 +50,7 @@ jobs:
     env:
       API_PRODUCTION_WORKERS: 1
       # disable backend and frontend
-      COMPOSE_PROFILES: ""
+      COMPOSE_PROFILES: "background"
       RAY_ENABLED: False
       POSTGRES_DB: dwts-test
       JWT_SECRET: ${{ secrets.JWT_SECRET }}

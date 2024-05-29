@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import weaviate
@@ -306,9 +306,9 @@ class SimSearchService(metaclass=SingletonMeta):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
         top_k: int = 10,
         threshold: float = 0.0,
+        sdoc_ids_to_search: Optional[List[int]] = None,
     ) -> List[Dict[str, Any]]:
         project_filter = {
             "path": ["project_id"],
@@ -339,13 +339,14 @@ class SimSearchService(metaclass=SingletonMeta):
             .with_limit(top_k)
         )
 
-        query.with_where(
-            {
-                "operator": "ContainsAny",
-                "path": "sdoc_id",
-                "valueInt": sdoc_ids_to_search,
-            }
-        )
+        if sdoc_ids_to_search is not None:
+            query.with_where(
+                {
+                    "operator": "ContainsAny",
+                    "path": "sdoc_id",
+                    "valueInt": sdoc_ids_to_search,
+                }
+            )
 
         results = query.do()["data"]["Get"][self.class_names[index_type]]
         if results is None:
@@ -396,7 +397,7 @@ class SimSearchService(metaclass=SingletonMeta):
         return query_params
 
     def find_similar_sentences(
-        self, sdoc_ids_to_search: List[int], query: SimSearchQuery
+        self, query: SimSearchQuery, sdoc_ids_to_search: Optional[List[int]] = None
     ) -> List[SimSearchSentenceHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query.query),
@@ -444,3 +445,67 @@ class SimSearchService(metaclass=SingletonMeta):
         return (
             self._client.query.aggregate(self.class_names[index_type]).with_meta_count()
         ).do()["data"]["Aggregate"][self.class_names[index_type]][0]["meta"]["count"]
+
+    def get_sentence_embeddings(
+        self, search_tuples: List[Tuple[int, int]]
+    ) -> np.ndarray:
+        # First prepare the query to run through data
+        def run_batch(batch):
+            query = (
+                self._client.query.get(
+                    self._sentence_class_name,
+                    self._sentence_props,
+                )
+                .with_additional(["vector"])
+                .with_where(
+                    {
+                        "operator": "Or",
+                        "operands": [
+                            {
+                                "operator": "And",
+                                "operands": [
+                                    {
+                                        "path": ["sentence_id"],
+                                        "operator": "Equal",
+                                        "valueInt": sentence_id,
+                                    },
+                                    {
+                                        "path": ["sdoc_id"],
+                                        "operator": "Equal",
+                                        "valueInt": sdoc_id,
+                                    },
+                                ],
+                            }
+                            for sentence_id, sdoc_id in batch
+                        ],
+                    }
+                )
+            )
+            result = query.do()["data"]["Get"][self._sentence_class_name]
+            result_dict = {
+                f'{r["sdoc_id"]}-{r["sentence_id"]}': r["_additional"]["vector"]
+                for r in result
+            }
+            sorted_res = []
+            for sentence_id, sdoc_id in batch:
+                sorted_res.append(result_dict[f"{sdoc_id}-{sentence_id}"])
+            return sorted_res
+
+        embeddings = []
+        batch = search_tuples
+        while True:
+            if len(batch) >= 100:
+                minibatch = batch[:100]
+                batch = batch[100:]
+            else:
+                minibatch = batch
+                batch = []
+
+            # Get the next batch of objects
+            embeddings_minibatch = run_batch(minibatch)
+            embeddings.extend(embeddings_minibatch)
+
+            if len(batch) == 0:
+                break
+
+        return np.array(embeddings)
