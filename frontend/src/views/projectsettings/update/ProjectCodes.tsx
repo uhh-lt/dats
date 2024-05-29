@@ -2,14 +2,14 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import { useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import CodeCreateListItemButton from "../../../components/Code/CodeCreateListItemButton.tsx";
+import CodeEditButton from "../../../components/Code/CodeEditButton.tsx";
+import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
+import CodeToggleEnabledButton from "../../../components/Code/CodeToggleEnabledButton.tsx";
+import CodeToggleVisibilityButton from "../../../components/Code/CodeToggleVisibilityButton.tsx";
 import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
 import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
-import CodeCreateListItemButton from "../../annotation/CodeExplorer/CodeCreateListItemButton.tsx";
-import CodeEditButton from "../../annotation/CodeExplorer/CodeEditButton.tsx";
-import CodeToggleEnabledButton from "../../annotation/CodeExplorer/CodeToggleEnabledButton.tsx";
-import CodeToggleVisibilityButton from "../../annotation/CodeExplorer/CodeToggleVisibilityButton.tsx";
-import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree.ts";
 
 function ProjectCodes() {
   // custom hooks

@@ -3,11 +3,11 @@ import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import { IconButton, IconButtonProps } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import React from "react";
-import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
-import { flatTree } from "../../../features/TreeExplorer/TreeUtils.ts";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { RootState } from "../../../store/store.ts";
-import { SettingsActions } from "../../settings/settingsSlice.ts";
+import { IDataTree } from "../../features/TreeExplorer/IDataTree.ts";
+import { flatTree } from "../../features/TreeExplorer/TreeUtils.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { RootState } from "../../store/store.ts";
+import { SettingsActions } from "../../views/settings/settingsSlice.ts";
 
 function CodeToggleEnabledButton({ code, ...props }: IconButtonProps & { code: IDataTree | null | undefined }) {
   // redux (global client state)

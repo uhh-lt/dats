@@ -25,8 +25,8 @@ import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
-import { contrastiveColors } from "../../../views/annotation/colors.ts";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { contrastiveColors } from "../colors.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 
 export type CodeCreateSuccessHandler = ((code: CodeRead, isNewCode: boolean) => void) | undefined;

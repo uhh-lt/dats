@@ -1,9 +1,9 @@
 import { Card, CardHeader, Grid, Portal, Stack, Typography } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import useComputeCodeTree from "../../annotation/CodeExplorer/useComputeCodeTree.ts";
 import CodeFrequencyUserSelector from "./CodeFrequencyUserSelector.tsx";
 import CodeFrequencyView from "./CodeFrequencyView.tsx";
 import CodeOccurrenceTable from "./CodeOccurrenceTable.tsx";

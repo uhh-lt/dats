@@ -14,10 +14,13 @@ import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRendere
 import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData.ts";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu.tsx";
+import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
+import { ICode } from "../ICode.ts";
 import { AnnoActions } from "../annoSlice.ts";
-import { ICode } from "./ICode.ts";
-import { selectionIsEmpty } from "./utils.ts";
+
+const selectionIsEmpty = (selection: Selection): boolean => {
+  return selection.toString().trim().length === 0;
+};
 
 interface AnnotatorRemasteredProps {
   sdoc: SourceDocumentWithDataRead;

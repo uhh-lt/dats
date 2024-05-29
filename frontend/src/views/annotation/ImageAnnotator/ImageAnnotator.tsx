@@ -11,8 +11,8 @@ import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDo
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import SpanContextMenu, { CodeSelectorHandle } from "../SpanContextMenu/SpanContextMenu.tsx";
-import { ICode } from "../TextAnnotator/ICode.ts";
+import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
+import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
 import SVGBBoxText from "./SVGBBoxText.tsx";
 

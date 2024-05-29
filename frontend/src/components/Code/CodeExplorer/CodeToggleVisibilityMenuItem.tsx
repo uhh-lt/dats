@@ -5,7 +5,7 @@ import React from "react";
 import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
 import { flatTree } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions, isHiddenCodeId } from "../annoSlice.ts";
+import { AnnoActions, isHiddenCodeId } from "../../../views/annotation/annoSlice.ts";
 
 interface CodeToggleVisibilityMenuItemProps {
   code: IDataTree;

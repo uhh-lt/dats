@@ -15,15 +15,15 @@ import {
   UseAutocompleteProps,
 } from "@mui/material";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
-import CodeHooks from "../../../api/CodeHooks.ts";
-import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
-import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
-import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import MemoButton from "../../../features/Memo/MemoButton.tsx";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { ICode } from "../TextAnnotator/ICode.ts";
+import CodeHooks from "../../api/CodeHooks.ts";
+import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
+import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
+import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
+import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { CRUDDialogActions } from "../../features/CrudDialog/dialogSlice.ts";
+import MemoButton from "../../features/Memo/MemoButton.tsx";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { ICode } from "./ICode.ts";
 
 interface ICodeFilter extends CodeRead {
   title: string;

@@ -8,8 +8,8 @@ import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
 import { flatTreeWithRoot } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { AnnoActions } from "../annoSlice.ts";
-import CodeCreateListItemButton from "./CodeCreateListItemButton.tsx";
+import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
+import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
 import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 

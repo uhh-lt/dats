@@ -22,6 +22,7 @@ import { useParams } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import { DocType } from "../../api/openapi/models/DocType.ts";
 import { useAuth } from "../../auth/useAuth.ts";
+import CodeExplorer from "../../components/Code/CodeExplorer/CodeExplorer.tsx";
 import EditableDocumentName, {
   EditableDocumentNameHandle,
 } from "../../components/EditableDocumentName/EditableDocumentName.tsx";
@@ -32,7 +33,6 @@ import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
-import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
 import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
 import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
 import TextViewer from "./DocumentViewer/TextViewer.tsx";

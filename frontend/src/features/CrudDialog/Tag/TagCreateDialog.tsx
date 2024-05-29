@@ -22,8 +22,8 @@ import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagCreate } from "../../../api/openapi/models/DocumentTagCreate.ts";
 import TagRenderer from "../../../components/DataGrid/TagRenderer.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import { contrastiveColors } from "../../../views/annotation/colors.ts";
 import SnackbarAPI from "../../Snackbar/SnackbarAPI.ts";
+import { contrastiveColors } from "../colors.ts";
 import { CRUDDialogActions } from "../dialogSlice.ts";
 
 /**
