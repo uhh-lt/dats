@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, CardContent, CardHeader, Typography } from "@mui/material";
 import { padStart } from "lodash";
 import React, { useMemo } from "react";
@@ -12,11 +13,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { COTARead, DateGroupBy } from "../../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { dateToLocaleDate } from "../../../utils/DateUtils";
-import CotaPlotToggleButton from "./CotaPlotToggleButton";
-import { CotaActions } from "./cotaSlice";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { dateToLocaleDate } from "../../../utils/DateUtils.ts";
+import CotaPlotToggleButton from "./CotaPlotToggleButton.tsx";
+import { CotaActions } from "./cotaSlice.ts";
 
 interface CotaTimelinePlotProps {
   cota: COTARead;
@@ -33,7 +35,7 @@ function CotaTimelinePlot({ cota }: CotaTimelinePlotProps) {
     if (cota.timeline_settings.threshold === undefined) return [];
     if (cota.timeline_settings.group_by === undefined) return [];
 
-    let result: Record<string, any> = {};
+    const result: Record<string, any> = {};
     cota.search_space.forEach((cotaSentence) => {
       // prepare date
       const date = dateToLocaleDate(cotaSentence.date);
@@ -116,7 +118,7 @@ function CotaTimelinePlot({ cota }: CotaTimelinePlotProps) {
                   isSelected={selectedConceptId === concept.id && selectedDate === props.payload.date}
                 />
               )}
-              activeDot={(props) => (
+              activeDot={(props: any) => (
                 <CustomizedDot
                   {...props}
                   r={5}

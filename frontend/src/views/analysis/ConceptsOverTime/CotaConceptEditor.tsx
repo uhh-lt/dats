@@ -3,9 +3,9 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, 
 import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { COTAConcept } from "../../../api/openapi";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import ColorUtils from "../../../utils/ColorUtils";
+import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ColorUtils from "../../../utils/ColorUtils.ts";
 
 interface CotaConceptEditorProps {
   onUpdate: (concept: COTAConcept) => void;

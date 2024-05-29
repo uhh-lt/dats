@@ -12,8 +12,10 @@ import {
 } from "@mui/material";
 import { useEffect } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
-import { COTARead, COTATrainingSettings, DimensionalityReductionAlgorithm } from "../../../api/openapi";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
+import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 interface CotaTrainingSettingsProps {
   cota: COTARead;

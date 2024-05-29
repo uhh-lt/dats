@@ -1,10 +1,10 @@
-import { forwardRef } from "react";
-import { COTARead } from "../../../api/openapi";
-import { MenuItem, ListItemIcon, ListItemText, Divider } from "@mui/material";
 import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";
-import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { Divider, ListItemIcon, ListItemText, MenuItem } from "@mui/material";
+import { forwardRef } from "react";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
 
 interface CotaEditMenuProps {
   cota: COTARead;

@@ -3,36 +3,34 @@ import CircleIcon from "@mui/icons-material/Circle";
 import ClearIcon from "@mui/icons-material/Clear";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
-import { Box, Button, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from "@mui/material";
+import { Button, ListItemIcon, ListItemText, Menu, MenuItem, Stack, Typography } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
-import {
-  DataGrid,
-  GridColDef,
-  GridEventListener,
-  GridFooterContainer,
-  GridRowSelectionModel,
-  GridSortModel,
-  GridToolbarColumnsButton,
-  GridToolbarContainer,
-  GridToolbarDensitySelector,
-  GridToolbarExport,
-  useGridApiContext,
-  useGridApiRef,
-} from "@mui/x-data-grid";
 import { padStart } from "lodash";
-import React, { useEffect, useMemo, useState } from "react";
-import CotaHooks from "../../../api/CotaHooks";
-import { COTAConcept, COTARead, COTASentence, COTASentenceID, DateGroupBy } from "../../../api/openapi";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer";
-import { renderTextCellExpand } from "../../../components/DataGrid/renderTextCellExpand";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import { dateToLocaleDate } from "../../../utils/DateUtils";
-import TablePaginationActions from "../../search/ToolBar/ToolBarElements/TablePaginationActions";
-import { CotaActions } from "./cotaSlice";
+import {
+  MRT_ColumnDef,
+  MRT_RowSelectionState,
+  MRT_RowVirtualizer,
+  MRT_ShowHideColumnsButton,
+  MRT_ToggleDensePaddingButton,
+  MRT_ToggleGlobalFilterButton,
+  MaterialReactTable,
+  useMaterialReactTable,
+} from "material-react-table";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import CotaHooks from "../../../api/CotaHooks.ts";
+import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
+import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
+import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
+import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import { dateToLocaleDate } from "../../../utils/DateUtils.ts";
+import { CotaActions } from "./cotaSlice.ts";
 
 interface CotaSentenceAnnotatorProps {
   cota: COTARead;
@@ -86,42 +84,21 @@ interface SimilarSentencesTableProps {
 
 function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
   // local state
-  const apiRef = useGridApiRef();
-  const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
-  const [sortModel, setSortModel] = useState<GridSortModel>([
-    {
-      field: "similarity",
-      sort: "desc",
-    },
-  ]);
+  const [rowSelectionModel, setRowSelectionModel] = useState<MRT_RowSelectionState>({});
 
   // global client state (redux)
   const provenanceSdocIdSentenceId = useAppSelector((state) => state.cota.provenanceSdocIdSentenceId);
   const selectedDate = useAppSelector((state) => state.cota.selectedDate);
+  const dispatch = useAppDispatch();
 
-  // scroll
-  useEffect(() => {
-    apiRef.current &&
-      provenanceSdocIdSentenceId &&
-      requestIdleCallback(() => {
-        const pageSize = apiRef.current.state.pagination.paginationModel.pageSize;
-        const getSortedRowIds = apiRef.current.getSortedRowIds();
-        const rowIndex = getSortedRowIds.indexOf(provenanceSdocIdSentenceId);
-        // set page
-        const page = Math.floor(rowIndex / pageSize);
-        apiRef.current.setPage(page);
-        // set focus
-        setTimeout(() => {
-          apiRef.current.setCellFocus(provenanceSdocIdSentenceId, "sentenceId");
-        }, 500);
-      });
-  }, [apiRef, provenanceSdocIdSentenceId]);
+  // virtualization
+  const rowVirtualizerInstanceRef = useRef<MRT_RowVirtualizer>(null);
 
-  // computed
+  // compute search space
   const searchSpace = useMemo(() => {
     if (!selectedDate) return cota.search_space;
 
-    let result: COTASentence[] = [];
+    const result: COTASentence[] = [];
     cota.search_space.forEach((cotaSentence) => {
       // prepare date
       const date = dateToLocaleDate(cotaSentence.date);
@@ -145,7 +122,7 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
     return result;
   }, [cota, selectedDate]);
 
-  const columns: GridColDef<COTASentence>[] = useMemo(() => {
+  const columns: MRT_ColumnDef<COTASentence>[] = useMemo(() => {
     const conceptDict = cota.concepts.reduce(
       (acc, concept) => {
         acc[concept.id] = concept;
@@ -156,49 +133,65 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
 
     return [
       {
-        field: "similarity",
-        headerName: "Similarity",
-        renderCell: (params) => <>{(params.row.concept_similarities[concept.id] * 100.0).toFixed(2)}</>,
-        valueGetter: (params) => params.row.concept_similarities[concept.id],
+        id: "similarity",
+        header: "Similarity",
+        Cell: ({ row }) => <>{(row.original.concept_similarities[concept.id] * 100.0).toFixed(2)}</>,
+        accessorFn: (row) => row.concept_similarities[concept.id],
       },
       {
-        field: "probability",
-        headerName: "Probability",
-        renderCell: (params) => <>{(params.row.concept_probabilities[concept.id] * 100.0).toFixed(2)}</>,
-        valueGetter: (params) => params.row.concept_probabilities[concept.id],
+        id: "probability",
+        header: "Probability",
+        Cell: ({ row }) => <>{(row.original.concept_probabilities[concept.id] * 100.0).toFixed(2)}</>,
+        accessorFn: (row) => row.concept_probabilities[concept.id],
       },
       {
-        field: "annotation",
-        headerName: "Annotation",
-        renderCell: (params) => (
-          <Box
-            sx={{
-              width: 16,
-              height: 16,
-              backgroundColor: params.row.concept_annotation && conceptDict[params.row.concept_annotation].color,
-              borderRadius: "100%",
-            }}
-          />
-        ),
+        id: "annotation",
+        header: "Annotation",
+        accessorFn: (row) => (row.concept_annotation ? conceptDict[row.concept_annotation].name : ""),
+        muiTableBodyCellProps({ row }) {
+          return {
+            sx: {
+              ...(row.original.concept_annotation && {
+                color: conceptDict[row.original.concept_annotation].color,
+              }),
+            },
+          };
+        },
       },
       {
-        field: "sdocId",
-        headerName: "Document",
-        flex: 2,
-        renderCell: (params) => <SdocRenderer sdoc={params.row.sdoc_id} link renderFilename />,
+        id: "sdocId",
+        header: "Document",
+        Cell: ({ row }) => <SdocRenderer sdoc={row.original.sdoc_id} link renderFilename />,
       },
       {
-        field: "sentenceId",
-        headerName: "Sentence",
-        flex: 3,
-        renderCell: (params) =>
-          renderTextCellExpand({
-            ...params,
-            value: params.row.text,
-          }),
+        id: "sentence",
+        header: "Sentence",
+        accessorFn: (row) => row.text,
       },
-    ] as GridColDef<COTASentence>[];
+    ] as MRT_ColumnDef<COTASentence>[];
   }, [concept.id, cota.concepts]);
+
+  // scroll
+  useEffect(() => {
+    provenanceSdocIdSentenceId &&
+      requestIdleCallback(() => {
+        const [sdocIdStr, sentenceIdStr] = provenanceSdocIdSentenceId.toString().split("-");
+        const sdocId = parseInt(sdocIdStr);
+        const sentenceId = parseInt(sentenceIdStr);
+        const scrollToIndex = searchSpace.findIndex(
+          (cotaSentence) => cotaSentence.sdoc_id === sdocId && cotaSentence.sentence_id === sentenceId,
+        );
+        try {
+          if (scrollToIndex !== -1) {
+            rowVirtualizerInstanceRef.current?.scrollToIndex?.(scrollToIndex);
+          } else {
+            rowVirtualizerInstanceRef.current?.scrollToIndex?.(0);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      });
+  }, [provenanceSdocIdSentenceId, searchSpace]);
 
   // actions
   const annotateCotaSentences = CotaHooks.useAnnotateCotaSentences();
@@ -210,12 +203,12 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
         requestBody: sentences,
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
-          setRowSelectionModel([]);
+          setRowSelectionModel({});
         },
       },
     );
@@ -229,82 +222,101 @@ function SimilarSentencesTable({ cota, concept }: SimilarSentencesTableProps) {
         requestBody: sentences,
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
-          setRowSelectionModel([]);
+          setRowSelectionModel({});
         },
       },
     );
   };
 
-  const dispatch = useAppDispatch();
-  const handleRowClick: GridEventListener<"rowClick"> = (params) => {
-    dispatch(CotaActions.onSentenceAnnotatorRowClick(params.id as string));
-  };
-
-  return (
-    <DataGrid
-      apiRef={apiRef}
-      rows={searchSpace}
-      columns={columns}
-      autoPageSize
-      getRowId={(row) => `${row.sdoc_id}-${row.sentence_id}`}
-      style={{ border: "none" }}
-      disableColumnFilter
-      // interaction
-      onRowClick={handleRowClick}
-      // selection
-      checkboxSelection
-      disableRowSelectionOnClick
-      rowSelectionModel={rowSelectionModel}
-      onRowSelectionModelChange={(newSelection) => setRowSelectionModel(newSelection)}
-      // custom toolbar
-      slots={{
-        toolbar: SimilarSentencesToolbar,
-        footer: CustomFooter,
-      }}
-      slotProps={{
-        toolbar: {
-          selectedRows: rowSelectionModel,
-          onAnnotateSentences: handleAnnotateSentences,
-          onRemoveSentences: handleRemoveSentences,
-          concepts: cota.concepts,
+  // table
+  const table = useMaterialReactTable<COTASentence>({
+    data: searchSpace,
+    columns: columns,
+    getRowId: (row) => `${row.sdoc_id}-${row.sentence_id}`,
+    // state
+    state: {
+      rowSelection: rowSelectionModel,
+    },
+    // initial state
+    initialState: {
+      sorting: [
+        {
+          id: "similarity",
+          desc: true,
         },
-      }}
-      // always sort by similarity desc by default
-      sortModel={sortModel}
-      onSortModelChange={(model) => setSortModel(model)}
-    />
-  );
-}
-
-function CustomFooter(props: any) {
-  const apiRef = useGridApiContext();
-
-  const page = apiRef.current.state.pagination.paginationModel.page;
-  const rowsPerPage = apiRef.current.state.pagination.paginationModel.pageSize;
-  const count = apiRef.current.state.rows.totalRowCount;
-  const text = `${page * rowsPerPage + 1}-${Math.min((page + 1) * rowsPerPage, count)} of ${count}`;
-  return (
-    <GridFooterContainer>
-      <Box flexGrow={1} />
-      <Typography>{text}</Typography>
-      <TablePaginationActions
-        count={count}
-        page={page}
-        onPageChange={(event, value) => apiRef.current.setPage(value)}
-        rowsPerPage={rowsPerPage}
+      ],
+    },
+    // search query
+    autoResetAll: false,
+    manualFiltering: false, // turn on client-side filtering
+    enableGlobalFilter: true,
+    // selection
+    enableRowSelection: true,
+    onRowSelectionChange: setRowSelectionModel,
+    // virtualization
+    enableRowVirtualization: true,
+    rowVirtualizerInstanceRef: rowVirtualizerInstanceRef,
+    rowVirtualizerOptions: { overscan: 4 },
+    // filtering
+    enableColumnFilters: false,
+    // pagination
+    enablePagination: false,
+    // sorting
+    manualSorting: false,
+    // column resizing
+    enableColumnResizing: true,
+    columnResizeMode: "onEnd",
+    // mui components
+    muiTableBodyRowProps: ({ row }) => ({
+      onClick: () => {
+        dispatch(CotaActions.onSentenceAnnotatorRowClick(row.id));
+      },
+      sx: {
+        backgroundColor: provenanceSdocIdSentenceId === row.id ? "lightgrey !important" : undefined,
+      },
+    }),
+    muiTablePaperProps: {
+      elevation: 8,
+      style: { height: "100%", display: "flex", flexDirection: "column" },
+    },
+    muiTableContainerProps: {
+      style: { flexGrow: 1 },
+    },
+    // toolbar
+    positionToolbarAlertBanner: "head-overlay",
+    renderTopToolbarCustomActions: () => (
+      <SimilarSentencesToolbar
+        concepts={cota.concepts}
+        selectedRows={rowSelectionModel}
+        onAnnotateSentences={handleAnnotateSentences}
+        onRemoveSentences={handleRemoveSentences}
       />
-    </GridFooterContainer>
-  );
+    ),
+    renderToolbarInternalActions: ({ table }) => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <MRT_ToggleGlobalFilterButton table={table} disabled={false} />
+        <MRT_ShowHideColumnsButton table={table} />
+        <MRT_ToggleDensePaddingButton table={table} />
+      </Stack>
+    ),
+    renderBottomToolbarCustomActions: () => (
+      <Stack direction={"row"} spacing={1} alignItems="center">
+        <Typography>Found {searchSpace.length} sentences.</Typography>
+      </Stack>
+    ),
+  });
+
+  return <MaterialReactTable table={table} />;
 }
 
 interface SimilarSentencesToolbarProps {
   concepts: COTAConcept[];
-  selectedRows: GridRowSelectionModel;
+  selectedRows: MRT_RowSelectionState;
   onAnnotateSentences: (sentences: COTASentenceID[], conceptId: string | null) => void;
   onRemoveSentences: (sentences: COTASentenceID[]) => void;
 }
@@ -315,11 +327,13 @@ function SimilarSentencesToolbar({
   onRemoveSentences,
   concepts,
 }: SimilarSentencesToolbarProps) {
+  const numSelectedRows = Object.keys(selectedRows).length;
+
   // actions
   const handleAnnotateSentences = (conceptId: string | null) => {
     setAnchorEl(null);
     onAnnotateSentences(
-      selectedRows.map((row) => {
+      Object.keys(selectedRows).map((row) => {
         // row is a string in the format of `${row.sdocId}-${row.sentenceId}`
         const [sdocId, sentenceId] = row.toString().split("-");
         return {
@@ -333,7 +347,7 @@ function SimilarSentencesToolbar({
 
   const handleRemoveSentences = () => {
     onRemoveSentences(
-      selectedRows.map((row) => {
+      Object.keys(selectedRows).map((row) => {
         // row is a string in the format of `${row.sdocId}-${row.sentenceId}`
         const [sdocId, sentenceId] = row.toString().split("-");
         return {
@@ -355,10 +369,10 @@ function SimilarSentencesToolbar({
   };
 
   return (
-    <GridToolbarContainer>
-      {selectedRows.length > 0 && (
+    <Stack direction={"row"} spacing={1} alignItems="center">
+      {numSelectedRows > 0 && (
         <Button startIcon={<BorderColorIcon />} size="small" onClick={handleClick}>
-          Annotate ({selectedRows.length})
+          Annotate ({numSelectedRows})
         </Button>
       )}
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
@@ -377,15 +391,12 @@ function SimilarSentencesToolbar({
           </MenuItem>
         ))}
       </Menu>
-      {selectedRows.length > 0 && (
+      {numSelectedRows > 0 && (
         <Button startIcon={<DeleteIcon />} size="small" onClick={() => handleRemoveSentences()}>
-          Remove ({selectedRows.length}) sentence{selectedRows.length > 0 ? "s" : null}
+          Remove ({numSelectedRows}) sentence{numSelectedRows > 0 ? "s" : null}
         </Button>
       )}
-      <GridToolbarColumnsButton />
-      <GridToolbarDensitySelector />
-      <GridToolbarExport />
-    </GridToolbarContainer>
+    </Stack>
   );
 }
 

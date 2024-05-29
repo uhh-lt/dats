@@ -1,4 +1,4 @@
-import { useTimelineAnalysisCheckQuery } from "./useTimelineAnalysisCheckQuery";
+import { useTimelineAnalysisCheckQuery } from "./useTimelineAnalysisCheckQuery.ts";
 
 interface ValidDocumentsCheckerProps {
   projectId: number;

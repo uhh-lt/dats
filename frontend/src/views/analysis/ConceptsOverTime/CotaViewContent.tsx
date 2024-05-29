@@ -1,12 +1,12 @@
 import { Box, Grid } from "@mui/material";
-import { COTARead } from "../../../api/openapi";
-import CotaConceptList from "./CotaConceptList";
-import CotaScatterPlot from "./CotaScatterPlot";
-import CotaSentenceAnnotator2 from "./CotaSentenceAnnotator";
-import CotaControl from "./CotaControl";
-import CotaTimelineSettings from "./CotaTimelineSettings";
-import { useAppSelector } from "../../../plugins/ReduxHooks";
-import CotaTimelinePlot from "./CotaTimelinePlot";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import CotaConceptList from "./CotaConceptList.tsx";
+import CotaControl from "./CotaControl.tsx";
+import CotaScatterPlot from "./CotaScatterPlot.tsx";
+import CotaSentenceAnnotator2 from "./CotaSentenceAnnotator.tsx";
+import CotaTimelinePlot from "./CotaTimelinePlot.tsx";
+import CotaTimelineSettings from "./CotaTimelineSettings.tsx";
 
 interface CotaViewContentProps {
   cota: COTARead;

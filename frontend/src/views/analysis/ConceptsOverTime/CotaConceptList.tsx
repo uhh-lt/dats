@@ -8,13 +8,14 @@ import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItemText from "@mui/material/ListItemText";
 import { v4 as uuidv4 } from "uuid";
-import CotaHooks from "../../../api/CotaHooks";
-import { COTAConcept, COTARead } from "../../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import CotaConceptEditor from "./CotaConceptEditor";
-import CotaConceptListItem from "./CotaConceptListItem";
-import { CotaActions } from "./cotaSlice";
-import { canAddNewConcept, canDeleteConcept, canEditConceptDescription } from "./cotaUtils";
+import CotaHooks from "../../../api/CotaHooks.ts";
+import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import CotaConceptEditor from "./CotaConceptEditor.tsx";
+import CotaConceptListItem from "./CotaConceptListItem.tsx";
+import { CotaActions } from "./cotaSlice.ts";
+import { canAddNewConcept, canDeleteConcept, canEditConceptDescription } from "./cotaUtils.ts";
 
 interface CotaConceptListProps {
   cota: COTARead;
@@ -77,7 +78,7 @@ function CotaConceptList({ cota }: CotaConceptListProps) {
   };
 
   const handleApplyConceptChanges = (concept: COTAConcept) => {
-    dispatch(CotaActions.onFinishConceptEdit({ concept }));
+    dispatch(CotaActions.onFinishConceptEdit());
     const cotaConcepts = JSON.parse(JSON.stringify(cota.concepts)) as COTAConcept[];
     const index = cotaConcepts.findIndex((c) => c.id === concept.id);
     if (index !== -1) {
@@ -95,7 +96,7 @@ function CotaConceptList({ cota }: CotaConceptListProps) {
     dispatch(CotaActions.onStartConceptEdit({ concept }));
   };
 
-  const handleCancelConceptChanges = (concept: COTAConcept) => {
+  const handleCancelConceptChanges = () => {
     dispatch(CotaActions.onCancelConceptEdit());
   };
 

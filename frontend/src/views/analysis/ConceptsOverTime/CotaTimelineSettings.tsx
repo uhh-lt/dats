@@ -6,11 +6,14 @@ import CardHeader from "@mui/material/CardHeader";
 import IconButton from "@mui/material/IconButton";
 import React from "react";
 import { useParams } from "react-router-dom";
-import CotaHooks from "../../../api/CotaHooks";
-import ProjectHooks from "../../../api/ProjectHooks";
-import { COTARead, DateGroupBy, DocType, MetaType } from "../../../api/openapi";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import ValidDocumentsChecker from "../TimelineAnalysis/ValidDocumentsChecker";
+import CotaHooks from "../../../api/CotaHooks.ts";
+import ProjectHooks from "../../../api/ProjectHooks.ts";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
+import { DocType } from "../../../api/openapi/models/DocType.ts";
+import { MetaType } from "../../../api/openapi/models/MetaType.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import ValidDocumentsChecker from "../TimelineAnalysis/ValidDocumentsChecker.tsx";
 
 interface CotaSettingsProps {
   cota: COTARead;
@@ -40,7 +43,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated timeline settings of CotA '${data.name}'`,
             severity: "success",
@@ -63,7 +66,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated timeline settings of CotA '${data.name}'`,
             severity: "success",
@@ -87,7 +90,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated timeline settings of CotA '${data.name}'`,
             severity: "success",

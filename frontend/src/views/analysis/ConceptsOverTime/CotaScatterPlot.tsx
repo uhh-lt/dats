@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import CircleIcon from "@mui/icons-material/Circle";
 import {
   Box,
   Card,
@@ -25,16 +27,18 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { COTAConcept, COTARead, COTASentence, COTASentenceID } from "../../../api/openapi";
-import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks";
-import CotaPlotToggleButton from "./CotaPlotToggleButton";
-import { CotaActions } from "./cotaSlice";
-import CircleIcon from "@mui/icons-material/Circle";
-import { UNANNOTATED_SENTENCE_COLOR } from "./cotaUtils";
-import CotaEditMenu from "./CotaEditMenu";
-import CotaHooks from "../../../api/CotaHooks";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu";
+import CotaHooks from "../../../api/CotaHooks.ts";
+import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
+import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
+import { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import CotaEditMenu from "./CotaEditMenu.tsx";
+import CotaPlotToggleButton from "./CotaPlotToggleButton.tsx";
+import { CotaActions } from "./cotaSlice.ts";
+import { UNANNOTATED_SENTENCE_COLOR } from "./cotaUtils.ts";
 
 interface CotaScatterPlotProps {
   cota: COTARead;
@@ -52,7 +56,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
   // computed
   const { chartData, xDomain, yDomain, conceptId2Concept } = useMemo(() => {
     // 1. compute chart data
-    let result: Record<string, COTASentence[]> = {};
+    const result: Record<string, COTASentence[]> = {};
     cota.concepts.forEach((concept) => {
       result[concept.id] = [];
     });
@@ -112,7 +116,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
         requestBody: [rightClickedSentence],
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
@@ -133,7 +137,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
         requestBody: [rightClickedSentence],
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
@@ -177,7 +181,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
               data={chartData[concept.id]}
               fill={concept.color}
               isAnimationActive={false}
-              shape={(props) => (
+              shape={(props: any) => (
                 <ScatterPlotDot
                   props={props}
                   onClick={handleDotClick}
@@ -193,7 +197,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
             data={chartData["NO_CONCEPT"]}
             fill={UNANNOTATED_SENTENCE_COLOR}
             isAnimationActive={false}
-            shape={(props) => (
+            shape={(props: any) => (
               <ScatterPlotDot
                 props={props}
                 onClick={handleDotClick}
@@ -241,7 +245,7 @@ function ScatterPlotDot({ props, onClick, provenanceSdocIdSentenceId, onContextM
   const sdocIdSentenceId = `${props.sdoc_id}-${props.sentence_id}`;
   const isSelected = sdocIdSentenceId === provenanceSdocIdSentenceId;
 
-  const handleContextMenu = (dot: DotProps, event: React.MouseEvent<SVGCircleElement, MouseEvent>) => {
+  const handleContextMenu = (_dot: DotProps, event: React.MouseEvent<SVGCircleElement, MouseEvent>) => {
     event.preventDefault();
     onContextMenu(
       { top: event.clientY, left: event.clientX },
@@ -266,7 +270,7 @@ function ScatterPlotDot({ props, onClick, provenanceSdocIdSentenceId, onContextM
   );
 }
 
-function CotaScatterPlotTooltip({ active, payload, label, conceptId2Concept }: any) {
+function CotaScatterPlotTooltip({ active, payload, conceptId2Concept }: any) {
   // conceptId2Concept: Record<string, COTAConcept>
 
   if (active && payload && payload.length && payload.length > 0) {

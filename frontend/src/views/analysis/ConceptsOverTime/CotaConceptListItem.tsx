@@ -5,7 +5,7 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { Box, ListItem, ListItemButton, Tooltip } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import ListItemText from "@mui/material/ListItemText";
-import { COTAConcept } from "../../../api/openapi";
+import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
 
 interface CotaConceptListItemProps {
   concept: COTAConcept;

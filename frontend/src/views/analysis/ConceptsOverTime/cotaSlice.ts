@@ -1,5 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { COTAConcept, COTATrainingSettings, DimensionalityReductionAlgorithm } from "../../../api/openapi";
+import { COTAConcept } from "../../../api/openapi/models/COTAConcept.ts";
+import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
+import { DimensionalityReductionAlgorithm } from "../../../api/openapi/models/DimensionalityReductionAlgorithm.ts";
 
 export interface CotaState {
   conceptEditorOpen: boolean;
@@ -61,7 +63,7 @@ export const cotaSlice = createSlice({
       state.conceptEditorOpen = true;
       state.currentConcept = action.payload.concept;
     },
-    onFinishConceptEdit: (state, action: PayloadAction<{ concept: COTAConcept }>) => {
+    onFinishConceptEdit: (state) => {
       state.conceptEditorOpen = false;
       state.currentConcept = initialState.currentConcept;
     },

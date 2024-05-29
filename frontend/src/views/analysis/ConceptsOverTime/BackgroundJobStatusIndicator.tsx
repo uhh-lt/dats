@@ -1,6 +1,6 @@
-import { Box } from "@mui/material";
-import { BackgroundJobStatus } from "../../../api/openapi";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import { Box } from "@mui/material";
+import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
 
 interface BackgroundJobStatusIndicatorProps {
   status: BackgroundJobStatus | undefined | null;

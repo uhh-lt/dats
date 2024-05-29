@@ -2,6 +2,7 @@ import FastForwardIcon from "@mui/icons-material/FastForward";
 import InfoIcon from "@mui/icons-material/Info";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ReplayIcon from "@mui/icons-material/Replay";
+import SettingsIcon from "@mui/icons-material/Settings";
 import {
   Alert,
   Card,
@@ -16,23 +17,24 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect } from "react";
-import CotaHooks from "../../../api/CotaHooks";
-import { QueryKey } from "../../../api/QueryKey";
-import { BackgroundJobStatus, COTARead, COTATrainingSettings } from "../../../api/openapi";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI";
-import queryClient from "../../../plugins/ReactQueryClient";
-import { useAppDispatch } from "../../../plugins/ReduxHooks";
-import BackgroundJobStatusIndicator from "./BackgroundJobStatusIndicator";
-import CotaTrainingSettings from "./CotaTrainingSettings";
-import { CotaActions } from "./cotaSlice";
+import CotaHooks from "../../../api/CotaHooks.ts";
+import { QueryKey } from "../../../api/QueryKey.ts";
+import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobStatus.ts";
+import { COTARead } from "../../../api/openapi/models/COTARead.ts";
+import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import queryClient from "../../../plugins/ReactQueryClient.ts";
+import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
+import BackgroundJobStatusIndicator from "./BackgroundJobStatusIndicator.tsx";
+import CotaTrainingSettings from "./CotaTrainingSettings.tsx";
+import { CotaActions } from "./cotaSlice.ts";
 import {
   MIN_ANNOTATIONS_PER_CONCEPT,
   conceptsWithUnsufficientAnnotations,
   hasConceptsWithDescription,
   hasEnoughAnnotations,
-} from "./cotaUtils";
-import SettingsIcon from "@mui/icons-material/Settings";
+} from "./cotaUtils.ts";
 
 interface CotaControlProps {
   cota: COTARead;
@@ -49,7 +51,7 @@ function CotaControl({ cota }: CotaControlProps) {
   useEffect(() => {
     if (!refinementJob.data) return;
     if (refinementJob.data.status === BackgroundJobStatus.FINISHED) {
-      queryClient.invalidateQueries([QueryKey.COTA, refinementJob.data.cota.id]);
+      queryClient.invalidateQueries({ queryKey: [QueryKey.COTA, refinementJob.data.cota.id] });
     }
   }, [refinementJob.data]);
 
@@ -61,7 +63,7 @@ function CotaControl({ cota }: CotaControlProps) {
         cotaId: cota.id,
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Refining CotA '${data.cota.name}', Job ID: '${data.id}'`,
             severity: "success",
@@ -81,7 +83,7 @@ function CotaControl({ cota }: CotaControlProps) {
             cotaId: cota.id,
           },
           {
-            onSuccess(data, variables, context) {
+            onSuccess(data) {
               SnackbarAPI.openSnackbar({
                 text: `Resetted CotA '${data.name}'`,
                 severity: "success",
@@ -112,7 +114,7 @@ function CotaControl({ cota }: CotaControlProps) {
         },
       },
       {
-        onSuccess(data, variables, context) {
+        onSuccess(data) {
           SnackbarAPI.openSnackbar({
             text: `Updated training settings of CotA '${data.name}'`,
             severity: "success",
