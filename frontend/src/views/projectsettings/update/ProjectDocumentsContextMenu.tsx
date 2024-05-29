@@ -2,7 +2,7 @@ import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import { List, ListItemIcon, ListItemText, MenuItem, Popover, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import DeleteMenuItem from "../../search/ToolBar/ToolBarElements/DeleteMenuItem.tsx";
+import DeleteSdocsMenuItem from "../../../components/SourceDocument/DeleteSdocsMenuItem.tsx";
 
 interface ProjectDocumentsContextMenuProps {}
 
@@ -73,7 +73,7 @@ const ProjectDocumentsContextMenu = forwardRef<ProjectDocumentsContextMenuHandle
             </ListItemIcon>
             <ListItemText>Open document</ListItemText>
           </MenuItem>
-          <DeleteMenuItem onClick={closeContextMenu} sdocId={sdocId} />
+          <DeleteSdocsMenuItem onClick={closeContextMenu} sdocId={sdocId} />
         </List>
       </Popover>
     );

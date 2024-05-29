@@ -15,9 +15,9 @@ import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import MemoListItemButton from "../../features/Memo/MemoListItemButton.tsx";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
+import { ImageSearchActions } from "../../views/search/ImageSearch/imageSearchSlice.ts";
+import { SentenceSearchActions } from "../../views/search/SentenceSearch/sentenceSearchSlice.ts";
 import { SearchFilterActions } from "../../views/search/searchFilterSlice.ts";
-import { ImageSearchActions } from "../../views/searchimages/imageSearchSlice.ts";
-import { SentenceSearchActions } from "../../views/searchsentences/sentenceSearchSlice.ts";
 
 interface SentenceContextMenuProps {}
 

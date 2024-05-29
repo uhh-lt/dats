@@ -1,7 +1,7 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box, BoxProps } from "@mui/material";
 import { useState } from "react";
-import TagMenuCreateButton from "../../views/search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
+import TagMenuCreateButton from "../../components/Tag/TagMenu/TagMenuCreateButton.tsx";
 import TagEditDialog from "../CrudDialog/Tag/TagEditDialog.tsx";
 import ExporterButton from "../Exporter/ExporterButton.tsx";
 import TreeExplorer from "../TreeExplorer/TreeExplorer.tsx";

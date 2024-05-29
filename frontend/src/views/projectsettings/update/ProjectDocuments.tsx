@@ -8,8 +8,8 @@ import PreProHooks from "../../../api/PreProHooks.ts";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import DocumentTable from "../../../components/DocumentTable/DocumentTable.tsx";
 import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel.tsx";
-import DeleteButton from "../../search/ToolBar/ToolBarElements/DeleteButton.tsx";
-import DownloadSdocsButton from "../../search/ToolBar/ToolBarElements/DownloadSdocsButton.tsx";
+import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
+import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog.tsx";
 import { ProjectProps } from "./ProjectProps.ts";
 
@@ -160,7 +160,7 @@ function ProjectDocuments({ project }: ProjectProps) {
           <Stack direction={"row"} spacing={1} alignItems="center" height={48}>
             {selectedSdocIds.length > 0 && (
               <>
-                <DeleteButton sdocIds={selectedSdocIds} navigateTo="../search" />
+                <DeleteSdocsButton sdocIds={selectedSdocIds} navigateTo="../search" />
                 <DownloadSdocsButton sdocIds={selectedSdocIds} />
               </>
             )}

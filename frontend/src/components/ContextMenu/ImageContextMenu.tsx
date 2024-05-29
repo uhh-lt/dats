@@ -4,7 +4,7 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
-import { ImageSearchActions } from "../../views/searchimages/imageSearchSlice.ts";
+import { ImageSearchActions } from "../../views/search/ImageSearch/imageSearchSlice.ts";
 
 interface ImageContextMenuProps {}
 

@@ -1,12 +1,12 @@
 import LabelIcon from "@mui/icons-material/Label";
 import { Box } from "@mui/material";
 import { useState } from "react";
+import TagMenuCreateButton from "../../../components/Tag/TagMenu/TagMenuCreateButton.tsx";
 import TagCreateDialog from "../../../features/CrudDialog/Tag/TagCreateDialog.tsx";
 import TagEditDialog from "../../../features/CrudDialog/Tag/TagEditDialog.tsx";
 import TagEditButton from "../../../features/TagExplorer/TagEditButton.tsx";
 import useComputeTagTree from "../../../features/TagExplorer/useComputeTagTree.ts";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
-import TagMenuCreateButton from "../../search/ToolBar/ToolBarElements/TagMenu/TagMenuCreateButton.tsx";
 
 function ProjectTags() {
   // custom hooks

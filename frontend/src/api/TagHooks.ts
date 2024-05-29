@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { CheckboxState } from "../components/Tag/TagMenu/CheckboxState.ts";
 import queryClient from "../plugins/ReactQueryClient.ts";
-import { CheckboxState } from "../views/search/ToolBar/ToolBarElements/TagMenu/CheckboxState.ts";
 import { QueryKey } from "./QueryKey.ts";
 import { DocumentTagRead } from "./openapi/models/DocumentTagRead.ts";
 import { MemoRead } from "./openapi/models/MemoRead.ts";

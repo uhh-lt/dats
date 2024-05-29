@@ -13,8 +13,8 @@ import {
   filterOperator2FilterOperatorType,
   getDefaultOperator,
 } from "../../features/FilterDialog/filterUtils.ts";
-import { getValue } from "../../views/search/DocumentViewer/DocumentMetadata/metadataUtils.ts";
-import { SearchActions } from "../../views/search/searchSlice.ts";
+import { SearchActions } from "./DocumentSearch/searchSlice.ts";
+import { getValue } from "./metadataUtils.ts";
 
 const initialState: FilterState = {
   filter: {

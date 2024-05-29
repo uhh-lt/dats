@@ -16,10 +16,10 @@ import analysisReducer from "../views/analysis/analysisSlice.ts";
 import annoReducer from "../views/annotation/annoSlice.ts";
 import autologbookReducer from "../views/autologbook/autologbookSlice.ts";
 import logbookReducer from "../views/logbook/logbookSlice.ts";
+import searchReducer from "../views/search/DocumentSearch/searchSlice.ts";
+import imageSearchReducer from "../views/search/ImageSearch/imageSearchSlice.ts";
+import sentenceSearchReducer from "../views/search/SentenceSearch/sentenceSearchSlice.ts";
 import searchFilterReducer from "../views/search/searchFilterSlice.ts";
-import searchReducer from "../views/search/searchSlice.ts";
-import imageSearchReducer from "../views/searchimages/imageSearchSlice.ts";
-import sentenceSearchReducer from "../views/searchsentences/sentenceSearchSlice.ts";
 import settingsReducer from "../views/settings/settingsSlice.ts";
 
 const persistConfig = {

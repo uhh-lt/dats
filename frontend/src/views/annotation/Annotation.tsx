@@ -26,16 +26,16 @@ import EditableDocumentName, {
   EditableDocumentNameHandle,
 } from "../../components/EditableDocumentName/EditableDocumentName.tsx";
 import EditableDocumentNameButton from "../../components/EditableDocumentName/EditableDocumentNameButton.tsx";
+import DocumentInformation from "../../components/SourceDocument/DocumentInformation/DocumentInformation.tsx";
 import { AppBarContext } from "../../layouts/TwoBarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
-import AudioVideoViewer from "../search/DocumentViewer/AudioVideoViewer.tsx";
-import DocumentInformation from "../search/DocumentViewer/DocumentInformation/DocumentInformation.tsx";
-import ImageViewer from "../search/DocumentViewer/ImageViewer.tsx";
-import TextViewer from "../search/DocumentViewer/TextViewer.tsx";
 import { AnnotationDocumentSelector } from "./AnnotationDocumentSelector.tsx";
 import BBoxAnnotationExplorer from "./AnnotationExploer/BBoxAnnotationExplorer.tsx";
 import SpanAnnotationExplorer from "./AnnotationExploer/SpanAnnotationExplorer.tsx";
 import CodeExplorer from "./CodeExplorer/CodeExplorer.tsx";
+import AudioVideoViewer from "./DocumentViewer/AudioVideoViewer.tsx";
+import ImageViewer from "./DocumentViewer/ImageViewer.tsx";
+import TextViewer from "./DocumentViewer/TextViewer.tsx";
 import ImageAnnotator from "./ImageAnnotator/ImageAnnotator.tsx";
 import TextAnnotator from "./TextAnnotator/TextAnnotator.tsx";
 import { AnnoActions } from "./annoSlice.ts";
