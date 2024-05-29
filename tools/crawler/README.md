@@ -12,15 +12,13 @@ Crawled pages are post-processed in a multi-step pipeline consisting of:
 
 ## Requirements
 
-- Python
-- Readability
-- Scrapy
-- python-magic
+- Mamba / Conda
+- Node
 
 ## Installation
 
 ```
-pip install scrapy python-magic
+mamba create -f environment.yml
 ```
 
 ## Settings

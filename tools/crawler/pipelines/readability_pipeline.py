@@ -15,7 +15,7 @@ class ReadabilityPipeline:
         self.readability = Readability(port=6667)
 
     def process_item(self, item: GenericWebsiteItem, spider):
-        info = self.readability.parse(item["html"], item["url"])
+        info = self.readability.parse(item["raw_html"], item["url"])
         item["title"] = item["title"] if "title" in item else info["title"]
         item["html"] = info["content"]  # cleaned html
         item["text"] = info["textContent"]  # raw text, no html

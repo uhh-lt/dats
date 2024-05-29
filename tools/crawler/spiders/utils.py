@@ -7,17 +7,17 @@ from typing import Union
 def validate_output_dir(output_dir: Union[str, None]) -> Path:
     if output_dir is None:
         print(
-            "You have to provide an output directory with -a output_directory=/path/to/directory"
+            "You have to provide an output directory with -a output_dir=/path/to/directory"
         )
         exit()
 
-    output_dir = Path(output_dir)
-    if output_dir.is_file():
-        print(f"{output_dir} cannot be a file!")
+    output_path = Path(output_dir)
+    if output_path.is_file():
+        print(f"{output_path} cannot be a file!")
         exit()
-    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    return output_dir
+    return output_path
 
 
 def slugify(value, allow_unicode=False):

@@ -1,0 +1,9 @@
+beautifulsoup4==4.12.3
+lxml==5.2.1
+lxml_html_clean==0.1.1
+python-dateutil==2.9.0.post0
+Scrapy==2.11.1
+scrapy-selenium==0.0.7
+selenium==3.141.0
+urllib3==1.26.16
+webdriver-manager==4.0.1
