@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import AdocHooks from "../../api/AdocHooks.ts";
-import SdocHooks from "../../api/SdocHooks.ts";
-import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import AdocHooks from "../../../api/AdocHooks.ts";
+import SdocHooks from "../../../api/SdocHooks.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { IToken } from "./IToken.ts";
 
 function useComputeTokenData({ sdocId, annotationDocumentIds }: { sdocId: number; annotationDocumentIds: number[] }) {

@@ -4,9 +4,9 @@ import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/Co
 import SentenceContextMenu, {
   SentenceContextMenuHandle,
 } from "../../../components/ContextMenu/SentenceContextMenu.tsx";
-import DocumentRenderer from "../../../features/DocumentRenderer/DocumentRenderer.tsx";
-import useComputeTokenData from "../../../features/DocumentRenderer/useComputeTokenData.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
+import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentWithDataRead;

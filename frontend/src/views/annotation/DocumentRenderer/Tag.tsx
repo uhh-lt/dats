@@ -1,4 +1,4 @@
-import CodeHooks from "../../api/CodeHooks.ts";
+import CodeHooks from "../../../api/CodeHooks.ts";
 
 interface TagProps {
   codeId: number;

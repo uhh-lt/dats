@@ -1,7 +1,7 @@
 import { range } from "lodash";
 import { useMemo } from "react";
-import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { IToken } from "./IToken.ts";
 import Mark from "./Mark.tsx";
 import Tag from "./Tag.tsx";

@@ -4,7 +4,7 @@ import React, { useMemo, useRef } from "react";
 import "./DocumentRenderer.css";
 
 import { DOMNode, Element, HTMLReactParserOptions, domToReact } from "html-react-parser";
-import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
+import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import DocumentPage from "./DocumentPage.tsx";
 import { IToken } from "./IToken.ts";
 import SdocAudioLink from "./SdocAudioLink.tsx";
