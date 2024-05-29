@@ -306,9 +306,9 @@ class SimSearchService(metaclass=SingletonMeta):
         proj_id: int,
         index_type: IndexType,
         query_emb: np.ndarray,
-        sdoc_ids_to_search: List[int],
         top_k: int = 10,
         threshold: float = 0.0,
+        sdoc_ids_to_search: Optional[List[int]] = None,
     ) -> List[Dict[str, Any]]:
         project_filter = {
             "path": ["project_id"],
@@ -339,13 +339,14 @@ class SimSearchService(metaclass=SingletonMeta):
             .with_limit(top_k)
         )
 
-        query.with_where(
-            {
-                "operator": "ContainsAny",
-                "path": "sdoc_id",
-                "valueInt": sdoc_ids_to_search,
-            }
-        )
+        if sdoc_ids_to_search is not None:
+            query.with_where(
+                {
+                    "operator": "ContainsAny",
+                    "path": "sdoc_id",
+                    "valueInt": sdoc_ids_to_search,
+                }
+            )
 
         results = query.do()["data"]["Get"][self.class_names[index_type]]
         if results is None:
@@ -396,7 +397,7 @@ class SimSearchService(metaclass=SingletonMeta):
         return query_params
 
     def find_similar_sentences(
-        self, sdoc_ids_to_search: List[int], query: SimSearchQuery
+        self, query: SimSearchQuery, sdoc_ids_to_search: Optional[List[int]] = None
     ) -> List[SimSearchSentenceHit]:
         query_emb = self._encode_query(
             **self.__parse_query_param(query.query),

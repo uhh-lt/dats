@@ -57,7 +57,7 @@ class TimelineAnalysisCreate(TimelineAnalysisBaseDTO):
     user_id: int = Field(description="User the TimelineAnalysis belongs to")
 
 
-class TimelineAnalysiCreateAsInDB(TimelineAnalysisCreate, UpdateDTOBase):
+class TimelineAnalysisCreateAsInDB(TimelineAnalysisCreate, UpdateDTOBase):
     settings: Optional[str] = Field(
         description="JSON Representation of the Timeline Settings of the TimelineAnalysis.",
         default=None,

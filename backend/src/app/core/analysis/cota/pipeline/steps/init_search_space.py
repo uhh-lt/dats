@@ -6,11 +6,12 @@ from app.core.data.crud.source_document import crud_sdoc
 from app.core.data.dto.concept_over_time_analysis import (
     COTASentence,
 )
-from app.core.data.dto.search import SimSearchQuery
+from app.core.data.dto.search import SearchColumns, SimSearchQuery
 from app.core.data.dto.source_document import SourceDocumentWithDataRead
 from app.core.data.orm.source_document import SourceDocumentORM
 from app.core.data.orm.source_document_metadata import SourceDocumentMetadataORM
 from app.core.db.sql_service import SQLService
+from app.core.filters.filtering import Filter, LogicalOperator
 from app.core.search.simsearch_service import SimSearchService
 
 sqls: SQLService = SQLService()
@@ -26,18 +27,22 @@ def init_search_space(cargo: Cargo) -> Cargo:
         return cargo
 
     # the search space is empty, we build the search space with simsearch
-    search_space_dict: Dict[
-        str, COTASentence
-    ] = dict()  # we use a dict here to prevent duplicates in the search space
+    search_space_dict: Dict[str, COTASentence] = (
+        dict()
+    )  # we use a dict here to prevent duplicates in the search space
     for concept in cota.concepts:
         # find similar sentences for each concept to define search space
         sents = sims.find_similar_sentences(
+            sdoc_ids_to_search=None,
             query=SimSearchQuery(
                 proj_id=cota.project_id,
                 query=concept.description,
                 top_k=cota.training_settings.search_space_topk,
                 threshold=cota.training_settings.search_space_threshold,
-            )
+                filter=Filter[SearchColumns](
+                    items=[], logic_operator=LogicalOperator.and_
+                ),
+            ),
         )
 
         for sent in sents:

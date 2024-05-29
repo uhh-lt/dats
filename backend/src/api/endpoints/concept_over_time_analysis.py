@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from api.dependencies import get_db_session
 from app.core.analysis.cota.service import COTAService
 from app.core.authorization.authz_user import AuthzUser
+from app.core.data.crud import Crud
 from app.core.data.crud.concept_over_time_analysis import crud_cota
 from app.core.data.dto.concept_over_time_analysis import (
     COTACreate,
@@ -88,6 +89,25 @@ async def update_by_id(
         cota_id=cota_id,
         cota_update=cota_upate,
     )
+
+
+@router.post(
+    "/duplicate/{cota_id}",
+    response_model=COTARead,
+    summary="Duplicates the ConceptOverTimeAnalysis with the given ID if it exists",
+)
+def duplicate_by_id(
+    *,
+    db: Session = Depends(get_db_session),
+    cota_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> COTARead:
+    authz_user.assert_in_same_project_as(Crud.COTA_ANALYSIS, cota_id)
+
+    db_obj = crud_cota.duplicate_by_id(
+        db=db, cota_id=cota_id, user_id=authz_user.user.id
+    )
+    return COTARead.model_validate(db_obj)
 
 
 @router.post(

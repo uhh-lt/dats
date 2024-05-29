@@ -110,6 +110,24 @@ class COTACreate(ConceptOverTimeAnalysisBaseDTO):
     user_id: int = Field(description="User the ConceptOverTimeAnalysis belongs to")
 
 
+class COTACreateAsInDB(COTACreate, UpdateDTOBase):
+    timeline_settings: Optional[str] = Field(
+        description="JSON Representation of the Timeline Settings of the ConceptOverTimeAnalysis.",
+        default=None,
+    )
+    training_settings: Optional[str] = Field(
+        description="JSON Representation of the Training Settings of the ConceptOverTimeAnalysis.",
+        default=None,
+    )
+    concepts: Optional[str] = Field(
+        description=(
+            "JSON Representation of the list of Concepts that are "
+            "part of the ConceptOverTimeAnalysis"
+        ),
+        default=None,
+    )
+
+
 class COTAUpdate(BaseModel, UpdateDTOBase):
     name: Optional[str] = Field(
         description="Name of the ConceptOverTimeAnalysis",

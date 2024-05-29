@@ -1,10 +1,11 @@
 """introduced_cota
 
 Revision ID: e0a8fb361b1e
-Revises: 058eeaf4aa8d
+Revises: ea297732c5f8
 Create Date: 2024-01-26 10:50:01.483063
 
 """
+
 from typing import Sequence, Union
 
 import sqlalchemy as sa
@@ -13,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "e0a8fb361b1e"
-down_revision: Union[str, None] = "058eeaf4aa8d"
+down_revision: Union[str, None] = "ea297732c5f8"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
