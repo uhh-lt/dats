@@ -1,12 +1,11 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { COTAConcept } from "./COTAConcept";
 import type { COTASentence } from "./COTASentence";
 import type { COTATimelineSettings } from "./COTATimelineSettings";
 import type { COTATrainingSettings } from "./COTATrainingSettings";
-
 export type COTARead = {
   /**
    * Name of the ConceptOverTimeAnalysis

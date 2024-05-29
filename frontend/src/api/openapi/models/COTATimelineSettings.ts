@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { DateGroupBy } from "./DateGroupBy";
-
 export type COTATimelineSettings = {
   /**
    * Group by date

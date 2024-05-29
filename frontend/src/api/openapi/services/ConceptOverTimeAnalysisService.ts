@@ -1,3 +1,4 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -7,11 +8,9 @@ import type { COTARefinementHyperparameters } from "../models/COTARefinementHype
 import type { COTARefinementJobRead } from "../models/COTARefinementJobRead";
 import type { COTASentenceID } from "../models/COTASentenceID";
 import type { COTAUpdate } from "../models/COTAUpdate";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class ConceptOverTimeAnalysisService {
   /**
    * Creates an ConceptOverTimeAnalysis
@@ -30,7 +29,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Returns the ConceptOverTimeAnalysis
    * Returns the ConceptOverTimeAnalysis with the given ID if it exists
@@ -49,7 +47,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Updates the ConceptOverTimeAnalysis
    * Updates the ConceptOverTimeAnalysis with the given ID if it exists
@@ -76,7 +73,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Removes the ConceptOverTimeAnalysis
    * Removes the ConceptOverTimeAnalysis with the given ID if it exists
@@ -95,7 +91,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Returns COTAs of the Project of the User
    * Returns the COTA of the Project with the given ID and the User with the given ID if it exists
@@ -121,7 +116,23 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
+  /**
+   * Duplicates the ConceptOverTimeAnalysis with the given ID if it exists
+   * @returns COTARead Successful Response
+   * @throws ApiError
+   */
+  public static duplicateById({ cotaId }: { cotaId: number }): CancelablePromise<COTARead> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/cota/duplicate/{cota_id}",
+      path: {
+        cota_id: cotaId,
+      },
+      errors: {
+        422: `Validation Error`,
+      },
+    });
+  }
   /**
    * Annotate (multiple) COTASentences
    * @returns COTARead Successful Response
@@ -152,7 +163,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Remove (multiple) COTASentences from the search space
    * @returns COTARead Successful Response
@@ -178,7 +188,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Refines the ConceptOverTimeAnalysis
    * Refines the ConceptOverTimeAnalysis with the given ID if it exists
@@ -205,7 +214,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Returns the COTA Refinement Job for the given ID
    * Returns the COTA Refinement Job for the given ID if it exists
@@ -224,7 +232,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Returns the most recent COTA Refinement Job for the given COTA ID
    * Returns the most recent COTA Refinement Job for the given COTA ID
@@ -243,7 +250,6 @@ export class ConceptOverTimeAnalysisService {
       },
     });
   }
-
   /**
    * Resets the ConceptOverTimeAnalysis
    * Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space

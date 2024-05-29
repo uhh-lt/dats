@@ -1,9 +1,8 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-
 import type { DimensionalityReductionAlgorithm } from "./DimensionalityReductionAlgorithm";
-
 export type COTATrainingSettings = {
   /**
    * Number of sentences to use as search space per concept.

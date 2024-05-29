@@ -1,13 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
 import type { TrainerJobParameters } from "../models/TrainerJobParameters";
 import type { TrainerJobRead } from "../models/TrainerJobRead";
-
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class TrainerService {
   /**
    * Starts a TrainerJob
@@ -30,7 +29,6 @@ export class TrainerService {
       },
     });
   }
-
   /**
    * Returns the TrainerJob for the given ID
    * Returns the TrainerJob for the given ID if it exists
@@ -49,7 +47,6 @@ export class TrainerService {
       },
     });
   }
-
   /**
    * Returns all TrainerJobs for the given project ID
    * Returns all TrainerJobs for the given project ID if it exists
