@@ -35,6 +35,10 @@ def upgrade() -> None:
     # rename documenttag table's title to name
     op.alter_column("documenttag", "title", new_column_name="name")
 
+    # remove title and add name index to documenttag table
+    op.drop_index("ix_documenttag_title", table_name="documenttag")
+    op.create_index(op.f("ix_documenttag_name"), "documenttag", ["name"], unique=False)
+
 
 def downgrade() -> None:
     pass
