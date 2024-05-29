@@ -1,7 +1,8 @@
 from typing import List
 
-from app.trainer.trainer_service import TrainerService
 from loguru import logger
+
+from app.trainer.trainer_service import TrainerService
 
 ts: TrainerService = TrainerService()
 

@@ -69,9 +69,9 @@ def init_or_load_initial_search_space(cargo: Cargo) -> Cargo:
         return cargo
 
     # the search space is empty, we build the search space with simsearch
-    search_space_dict: Dict[
-        str, COTASentence
-    ] = dict()  # we use a dict here to prevent duplicates in the search space
+    search_space_dict: Dict[str, COTASentence] = (
+        dict()
+    )  # we use a dict here to prevent duplicates in the search space
     for concept in cota.concepts:
         # find similar sentences for each concept to define search space
         sents = sims.find_similar_sentences(

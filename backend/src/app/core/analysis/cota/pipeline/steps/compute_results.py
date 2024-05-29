@@ -25,9 +25,9 @@ def compute_results(cargo: Cargo) -> Cargo:
     if _has_min_concept_sentence_annotations(cargo):
         # 2.1 compute representation for each concept
         annotation_indices = _get_annotation_sentence_indices(cargo)
-        concept_embeddings: Dict[
-            str, torch.Tensor
-        ] = dict()  # Dict[concept_id, concept_embedding]
+        concept_embeddings: Dict[str, torch.Tensor] = (
+            dict()
+        )  # Dict[concept_id, concept_embedding]
         for concept in cargo.job.cota.concepts:
             # the concept representation is the average of all annotated concept sentences
             concept_embeddings[concept.id] = search_space_embeddings[
@@ -35,9 +35,9 @@ def compute_results(cargo: Cargo) -> Cargo:
             ].mean(axis=0)  # TODO: normalize??
 
         # 2.2  compute similarity of average representation to each sentence
-        concept_similarities: Dict[
-            str, List[float]
-        ] = dict()  # Dict[concept_id, List[similarity]]
+        concept_similarities: Dict[str, List[float]] = (
+            dict()
+        )  # Dict[concept_id, List[similarity]]
         for concept_id, concept_embedding in concept_embeddings.items():
             sims = concept_embedding @ search_space_embeddings.T
             concept_similarities[concept_id] = sims.tolist()  # TODO normalize?
