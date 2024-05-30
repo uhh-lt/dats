@@ -1,13 +1,13 @@
-import { useTimelineAnalysisCheckQuery } from "./useTimelineAnalysisCheckQuery.ts";
+import { useCountSdocsWithDateMetadataQuery } from "./useCountSdocsWithDateMetadataQuery.ts";
 
-interface ValidDocumentsCheckerProps {
+interface SdocsWithDateCounterProps {
   projectId: number;
   dateMetadataId: number;
 }
 
-function ValidDocumentsChecker({ projectId, dateMetadataId }: ValidDocumentsCheckerProps) {
+function SdocsWithDateCounter({ projectId, dateMetadataId }: SdocsWithDateCounterProps) {
   // global server state (react-query)
-  const validDocumentsCheck = useTimelineAnalysisCheckQuery(projectId, dateMetadataId);
+  const validDocumentsCheck = useCountSdocsWithDateMetadataQuery(projectId, dateMetadataId);
 
   if (dateMetadataId === -1 || validDocumentsCheck.isLoading) {
     return <>Specify the metadata key that denotes the date of the document.</>;
@@ -24,4 +24,4 @@ function ValidDocumentsChecker({ projectId, dateMetadataId }: ValidDocumentsChec
   }
 }
 
-export default ValidDocumentsChecker;
+export default SdocsWithDateCounter;

@@ -12,8 +12,8 @@ import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
+import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
 import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
-import ValidDocumentsChecker from "../TimelineAnalysis/ValidDocumentsChecker.tsx";
 
 interface CotaSettingsProps {
   cota: COTARead;
@@ -138,7 +138,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
             value={cota.timeline_settings.date_metadata_id || -1}
             onChange={handleChangeMetadataId}
             helperText={
-              <ValidDocumentsChecker
+              <SdocsWithDateCounter
                 projectId={projectId}
                 dateMetadataId={cota.timeline_settings.date_metadata_id || -1}
               />
