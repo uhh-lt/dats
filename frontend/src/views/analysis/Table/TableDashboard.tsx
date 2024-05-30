@@ -4,14 +4,14 @@ import { v4 as uuidv4 } from "uuid";
 import TableHooks from "../../../api/TableHooks.ts";
 import { TableType } from "../../../api/openapi/models/TableType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import AnalysisDashboard from "../../../features/AnalysisDashboard/AnalysisDashboard.tsx";
+import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
-} from "../../../features/AnalysisDashboard/useAnalysisDashboardTable.tsx";
-import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+} from "../AnalysisDashboard/useAnalysisDashboardTable.tsx";
 import { TableType2Template } from "./templates.ts";
 
 function TableDashboard() {

@@ -23,7 +23,7 @@ import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobSt
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import BackgroundJobStatusIndicator from "./BackgroundJobStatusIndicator.tsx";

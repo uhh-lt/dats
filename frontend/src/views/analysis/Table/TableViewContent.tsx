@@ -30,9 +30,8 @@ import Handsontable from "handsontable/base";
 import "handsontable/dist/handsontable.full.min.css";
 import { registerAllModules } from "handsontable/registry";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import GenericAnchorMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorMenu.tsx";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 import CustomHTMLCellRenderer from "./Renderer/CustomHTMLCellRenderer.tsx";
 import AddAnnotationDialog from "./Toolbar/AddAnnotationDialog.tsx";
 import AddCodeDialog from "./Toolbar/AddCodeDialog.tsx";
@@ -250,12 +249,12 @@ function TableViewContent({ table }: TableViewContentProps) {
   };
 
   // table actions: add documents
-  const onAddDocuments = (sdocs: SourceDocumentRead[], addRows: boolean) => {
+  const onAddDocuments = (sdocIds: number[], addRows: boolean) => {
     const hot = hotRef.current?.hotInstance;
     if (!hot) return;
 
     const cellInfo = getSelectedCellInfo(hot);
-    const dataToAdd = sdocs.map((sdoc) => `<sdoc id="${sdoc.id}">${sdoc.filename}</sdoc>`);
+    const dataToAdd = sdocIds.map((sdocId) => `<sdoc id="${sdocId}" />`);
     addData(hot, cellInfo, dataToAdd, addRows);
   };
 

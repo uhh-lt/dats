@@ -1,10 +1,10 @@
 import { Action, ThunkAction, configureStore } from "@reduxjs/toolkit";
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import bboxFilterReducer from "../components/BBoxAnnotationTable/bboxFilterSlice.ts";
-import documentTableFilterReducer from "../components/DocumentTable/documentTableFilterSlice.ts";
-import satFilterReducer from "../components/SpanAnnotationTable/satFilterSlice.ts";
-import dialogReducer from "../features/CrudDialog/dialogSlice.ts";
+import bboxFilterReducer from "../components/BBoxAnnotation/BBoxAnnotationTable/bboxFilterSlice.ts";
+import documentTableFilterReducer from "../components/SourceDocument/SdocTable/documentTableFilterSlice.ts";
+import satFilterReducer from "../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
+import dialogReducer from "../features/dialogSlice.ts";
 import annotatedSegmentsReducer from "../views/analysis/AnnotatedSegments/annotatedSegmentsSlice.ts";
 import cotaReducer from "../views/analysis/ConceptsOverTime/cotaSlice.ts";
 import documentSamplerReducer from "../views/analysis/DocumentSampler/documentSamplerSlice.ts";

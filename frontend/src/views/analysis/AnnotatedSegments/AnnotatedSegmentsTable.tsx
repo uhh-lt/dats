@@ -1,8 +1,8 @@
 import { useParams } from "react-router-dom";
 import SpanAnnotationTable, {
   SpanAnnotationTableProps,
-} from "../../../components/SpanAnnotationTable/SpanAnnotationTable.tsx";
-import { useReduxConnector } from "../../../components/SpanAnnotationTable/useReduxConnector.ts";
+} from "../../../components/SpanAnnotation/SpanAnnotationTable/SpanAnnotationTable.tsx";
+import { useReduxConnector } from "../../../components/SpanAnnotation/SpanAnnotationTable/useReduxConnector.ts";
 import AnnotatedSegmentsTableToolbar from "./AnnotatedSegmentsTableToolbar.tsx";
 import BulkChangeCodeButton from "./BulkChangeCodeButton.tsx";
 import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";

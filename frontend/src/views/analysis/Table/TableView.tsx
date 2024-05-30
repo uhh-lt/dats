@@ -2,7 +2,7 @@ import { CircularProgress, Portal } from "@mui/material";
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import TableHooks from "../../../api/TableHooks.ts";
-import EditableTypography from "../../../components/NavBarTop/EditableTypography.tsx";
+import EditableTypography from "../../../components/EditableTypography.tsx";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import TableViewContent from "./TableViewContent.tsx";
 

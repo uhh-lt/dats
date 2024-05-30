@@ -3,7 +3,7 @@ import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/materi
 import React from "react";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 
 interface SpanAnnotationDeleteMenuItemProps {
   annotationId: number;

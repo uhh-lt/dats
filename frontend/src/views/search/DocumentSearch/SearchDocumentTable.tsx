@@ -19,12 +19,12 @@ import { ElasticSearchDocumentHit } from "../../../api/openapi/models/ElasticSea
 import { PaginatedElasticSearchDocumentHits } from "../../../api/openapi/models/PaginatedElasticSearchDocumentHits.ts";
 import { SearchColumns } from "../../../api/openapi/models/SearchColumns.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import SdocAnnotatorsRenderer from "../../../components/DataGrid/SdocAnnotatorsRenderer.tsx";
-import SdocMetadataRenderer from "../../../components/DataGrid/SdocMetadataRenderer.tsx";
-import SdocRenderer from "../../../components/DataGrid/SdocRenderer.tsx";
-import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer.tsx";
+import SdocMetadataRenderer from "../../../components/Metadata/SdocMetadataRenderer.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
 import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
+import SdocAnnotatorsRenderer from "../../../components/SourceDocument/SdocAnnotatorsRenderer.tsx";
+import SdocRenderer from "../../../components/SourceDocument/SdocRenderer.tsx";
+import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 import TagMenuButton from "../../../components/Tag/TagMenu/TagMenuButton.tsx";
 import ReduxFilterDialog from "../../../features/FilterDialog/ReduxFilterDialog.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";

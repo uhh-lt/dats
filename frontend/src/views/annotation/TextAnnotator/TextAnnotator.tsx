@@ -10,7 +10,7 @@ import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDo
 import { SpanAnnotationCreateWithCodeId } from "../../../api/openapi/models/SpanAnnotationCreateWithCodeId.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";

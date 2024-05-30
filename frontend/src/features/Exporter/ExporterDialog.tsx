@@ -36,7 +36,7 @@ import { SingleUserAllMemosExportJobParams } from "../../api/openapi/models/Sing
 import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/SingleUserLogbookExportJobParams.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import UserName from "../../components/User/UserName.tsx";
-import SnackbarAPI from "../Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../SnackbarDialog/SnackbarAPI.ts";
 import ExporterItemSelectList from "./ExporterItemSelectList.tsx";
 
 // users documents codes tags attached_to

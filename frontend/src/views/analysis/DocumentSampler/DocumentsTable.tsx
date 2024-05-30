@@ -1,5 +1,5 @@
 import { CardProps } from "@mui/material";
-import SimpleSdocTable from "../../../components/DocumentTable/SimpleSdocTable.tsx";
+import SdocTableSimple from "../../../components/SourceDocument/SdocTableSimple.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import BulkDocTagger from "./BulkDocTagger.tsx";
 import DataCard from "./DataCard.tsx";
@@ -21,7 +21,7 @@ function DocumentsTable({ cardProps, onTableRefresh }: DocumentsTableProps) {
       cardProps={cardProps}
       cardContentProps={{ sx: { padding: "0 !important" } }}
       renderData={(chartData) => (
-        <SimpleSdocTable
+        <SdocTableSimple
           sdocIds={chartData
             .map((chartDatum) =>
               isFixedSamplingStrategy ? chartDatum.fixedSampleSdocIds : chartDatum.relativeSampleSdocIds,

@@ -3,7 +3,7 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { Edge, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 import { CustomEdgeData } from "../types/CustomEdgeData.ts";
 import { DWTSNodeData } from "../types/DWTSNodeData.ts";
 import { isCodeNode, isSdocNode, isTagNode } from "../types/typeGuards.ts";

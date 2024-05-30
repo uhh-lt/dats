@@ -2,14 +2,14 @@ import { MRT_Row, MRT_TableOptions } from "material-react-table";
 import { useParams } from "react-router";
 import WhiteboardHooks from "../../api/WhiteboardHooks.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import AnalysisDashboard from "../../features/AnalysisDashboard/AnalysisDashboard.tsx";
+import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
+import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import AnalysisDashboard from "../analysis/AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
   HandleCreateAnalysis,
   useAnalysisDashboardTable,
-} from "../../features/AnalysisDashboard/useAnalysisDashboardTable.tsx";
-import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+} from "../analysis/AnalysisDashboard/useAnalysisDashboardTable.tsx";
 
 function WhiteboardDashboard() {
   // global client state

@@ -8,10 +8,10 @@ import ProjectHooks from "../../../api/ProjectHooks.ts";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import CodeRenderer from "../../../components/DataGrid/CodeRenderer.tsx";
+import CodeRenderer from "../../../components/Code/CodeRenderer.tsx";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
+import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../../utils/GlobalConstants.ts";
 import { useReactFlowService } from "../hooks/ReactFlowService.ts";
@@ -204,7 +204,7 @@ function CodeNode(props: NodeProps<CodeNodeData>) {
   const handleContextMenuCreateMemo = () => {
     if (memo.data) return;
 
-    MemoAPI.openMemo({
+    MemoDialogAPI.openMemo({
       attachedObjectType: AttachedObjectType.CODE,
       attachedObjectId: props.data.codeId,
       onCreateSuccess: (memo) => {

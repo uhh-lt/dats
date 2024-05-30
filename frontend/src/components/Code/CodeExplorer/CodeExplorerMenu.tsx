@@ -3,8 +3,8 @@ import { IconButton, IconButtonProps, Menu } from "@mui/material";
 import { useState } from "react";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import MemoMenuItem from "../../../features/Memo/MemoMenuItem.tsx";
 import { IDataTree } from "../../../features/TreeExplorer/IDataTree.ts";
+import MemoMenuItem from "../../Memo/MemoMenuItem.tsx";
 import CodeEditMenuItem from "./CodeEditMenuItem.tsx";
 import CodeToggleVisibilityMenuItem from "./CodeToggleVisibilityMenuItem.tsx";
 

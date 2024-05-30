@@ -3,13 +3,13 @@ import { Box, BoxProps } from "@mui/material";
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
 import ExporterButton from "../../../features/Exporter/ExporterButton.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
 import { flatTreeWithRoot } from "../../../features/TreeExplorer/TreeUtils.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import { AnnoActions } from "../../../views/annotation/annoSlice.ts";
 import CodeCreateListItemButton from "../CodeCreateListItemButton.tsx";
+import CodeEditDialog from "../CodeEditDialog.tsx";
 import CodeExplorerMenu from "./CodeExplorerMenu.tsx";
 import useComputeCodeTree from "./useComputeCodeTree.ts";
 

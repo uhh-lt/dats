@@ -1,7 +1,7 @@
 import { Box, Stack } from "@mui/material";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import TagUnlinkButton from "../../../features/TagExplorer/TagUnlinkButton.tsx";
-import TagRenderer from "../../DataGrid/TagRenderer.tsx";
+import TagUnlinkButton from "../../Tag/TagExplorer/TagUnlinkButton.tsx";
+import TagRenderer from "../../Tag/TagRenderer.tsx";
 
 interface DocumentTagRow {
   sdocId: number;

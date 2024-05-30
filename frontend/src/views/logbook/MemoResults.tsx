@@ -5,7 +5,7 @@ import React, { useRef, useState } from "react";
 import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import { MemoRead } from "../../api/openapi/models/MemoRead.ts";
 import { ContextMenuPosition } from "../../components/ContextMenu/ContextMenuPosition.ts";
-import MemoCard from "../../features/Memo/MemoCard/MemoCard.tsx";
+import MemoCard from "../../components/Memo/MemoCard/MemoCard.tsx";
 import MemoResultsContextMenu from "./MemoResultsContextMenu.tsx";
 
 interface MemoResultsProps {

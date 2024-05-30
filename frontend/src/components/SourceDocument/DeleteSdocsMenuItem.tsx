@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import SdocHooks from "../../api/SdocHooks.ts";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
 import { useAppDispatch } from "../../plugins/ReduxHooks.ts";
 import { SearchActions } from "../../views/search/DocumentSearch/searchSlice.ts";
 

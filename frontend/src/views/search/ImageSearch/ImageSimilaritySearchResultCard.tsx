@@ -14,7 +14,7 @@ import * as d3 from "d3";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { SimSearchImageHit } from "../../../api/openapi/models/SimSearchImageHit.ts";
-import SdocTagsRenderer from "../../../components/DataGrid/SdocTagRenderer.tsx";
+import SdocTagsRenderer from "../../../components/SourceDocument/SdocTagRenderer.tsx";
 
 const simSearchColorScale = d3.scaleLinear([0, 1 / 3, 2 / 3, 1], ["red", "orange", "gold", "yellowgreen"]);
 

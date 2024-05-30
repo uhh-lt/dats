@@ -2,13 +2,13 @@ import SquareIcon from "@mui/icons-material/Square";
 import { Box } from "@mui/material";
 import { useState } from "react";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
+import CodeCreateDialog from "../../../components/Code/CodeCreateDialog.tsx";
 import CodeCreateListItemButton from "../../../components/Code/CodeCreateListItemButton.tsx";
 import CodeEditButton from "../../../components/Code/CodeEditButton.tsx";
+import CodeEditDialog from "../../../components/Code/CodeEditDialog.tsx";
 import useComputeCodeTree from "../../../components/Code/CodeExplorer/useComputeCodeTree.ts";
 import CodeToggleEnabledButton from "../../../components/Code/CodeToggleEnabledButton.tsx";
 import CodeToggleVisibilityButton from "../../../components/Code/CodeToggleVisibilityButton.tsx";
-import CodeCreateDialog from "../../../features/CrudDialog/Code/CodeCreateDialog.tsx";
-import CodeEditDialog from "../../../features/CrudDialog/Code/CodeEditDialog.tsx";
 import TreeExplorer from "../../../features/TreeExplorer/TreeExplorer.tsx";
 
 function ProjectCodes() {

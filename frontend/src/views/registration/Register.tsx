@@ -20,7 +20,7 @@ import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import UserHooks from "../../api/UserHooks.ts";
 import { UserCreate } from "../../api/openapi/models/UserCreate.ts";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
 import { EMAIL_REGEX } from "../../utils/GlobalConstants.ts";
 
 interface RegisterFormValues extends UserCreate {

@@ -6,8 +6,8 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
-import MemoCard from "../../../features/Memo/MemoCard/MemoCard.tsx";
+import MemoCard from "../../Memo/MemoCard/MemoCard.tsx";
+import MemoDialogAPI from "../../Memo/MemoDialog/MemoDialogAPI.ts";
 import TagMenuButton from "../../Tag/TagMenu/TagMenuButton.tsx";
 import DocumentMetadataRow from "./DocumentMetadataRow/DocumentMetadataRow.tsx";
 import DocumentTagRow from "./DocumentTagRow.tsx";
@@ -131,7 +131,7 @@ export default function DocumentInformation({
                     startIcon={<AddCircleIcon />}
                     sx={{ mb: 1 }}
                     onClick={() =>
-                      MemoAPI.openMemo({
+                      MemoDialogAPI.openMemo({
                         attachedObjectType: AttachedObjectType.SOURCE_DOCUMENT,
                         attachedObjectId: sdocId,
                       })

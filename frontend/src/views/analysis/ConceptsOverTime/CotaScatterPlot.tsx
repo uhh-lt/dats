@@ -33,7 +33,7 @@ import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
 import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
 import { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaEditMenu from "./CotaEditMenu.tsx";
 import CotaPlotToggleButton from "./CotaPlotToggleButton.tsx";

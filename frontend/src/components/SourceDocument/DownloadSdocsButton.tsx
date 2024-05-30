@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import ExporterHooks from "../../api/ExporterHooks.ts";
 import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
 
 interface DownloadSdocsButtonProps {
   sdocIds: number[];

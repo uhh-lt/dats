@@ -5,8 +5,8 @@ import AdocHooks from "../../../api/AdocHooks.ts";
 import SdocHooks from "../../../api/SdocHooks.ts";
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
-import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
+import ImageContextMenu, { ImageContextMenuHandle } from "./ImageContextMenu.tsx";
 
 interface ImageViewerProps {
   sdoc: SourceDocumentWithDataRead;

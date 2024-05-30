@@ -13,7 +13,7 @@ import {
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import SdocHooks from "../../api/SdocHooks.ts";
-import SnackbarAPI from "../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
 import DocumentLinkToOriginal from "./DocumentLinkToOriginal.tsx";
 
 type EditFormValues = {

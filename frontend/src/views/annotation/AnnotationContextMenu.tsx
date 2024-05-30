@@ -20,8 +20,8 @@ import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.
 import { BBoxAnnotationReadResolvedCode } from "../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { SpanAnnotationReadResolved } from "../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import { CRUDDialogActions } from "../../features/CrudDialog/dialogSlice.ts";
-import MemoButton from "../../features/Memo/MemoButton.tsx";
+import MemoButton from "../../components/Memo/MemoButton.tsx";
+import { CRUDDialogActions } from "../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { ICode } from "./ICode.ts";
 

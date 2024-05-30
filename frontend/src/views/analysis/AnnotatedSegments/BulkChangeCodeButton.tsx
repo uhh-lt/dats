@@ -2,9 +2,9 @@ import { Button, Stack } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { AnnotatedSegmentsColumns } from "../../../api/openapi/models/AnnotatedSegmentsColumns.ts";
 import { AnalysisService } from "../../../api/openapi/services/AnalysisService.ts";
-import { SATToolbarProps } from "../../../components/SpanAnnotationTable/SATToolbar.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
+import { SATToolbarProps } from "../../../components/SpanAnnotation/SpanAnnotationTable/SATToolbar.tsx";
 import { MyFilter } from "../../../features/FilterDialog/filterUtils.ts";
+import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 function BulkChangeCodeButton({

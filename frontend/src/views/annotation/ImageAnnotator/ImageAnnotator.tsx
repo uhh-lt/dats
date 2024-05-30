@@ -9,7 +9,7 @@ import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDo
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
 import { ICode } from "../ICode.ts";

@@ -1,12 +1,10 @@
 import React, { useRef } from "react";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
-import ImageContextMenu, { ImageContextMenuHandle } from "../../../components/ContextMenu/ImageContextMenu.tsx";
-import SentenceContextMenu, {
-  SentenceContextMenuHandle,
-} from "../../../components/ContextMenu/SentenceContextMenu.tsx";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
+import ImageContextMenu, { ImageContextMenuHandle } from "./ImageContextMenu.tsx";
+import SentenceContextMenu, { SentenceContextMenuHandle } from "./SentenceContextMenu.tsx";
 
 interface AnnotationVisualizerProps {
   sdoc: SourceDocumentWithDataRead;

@@ -14,7 +14,7 @@ import { ProjectMetadataCreate } from "../../../api/openapi/models/ProjectMetada
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { ProjectMetadataUpdate } from "../../../api/openapi/models/ProjectMetadataUpdate.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/Snackbar/SnackbarAPI.ts";
+import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
 import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
 import { ProjectProps } from "./ProjectProps.ts";
 import ProjectMetadataDeleteButton from "./metadata/ProjectMetadataDeleteButton.tsx";

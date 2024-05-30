@@ -6,10 +6,10 @@ import { MRT_RowSelectionState, MRT_SortingState } from "material-react-table";
 import { ChangeEvent, useRef, useState } from "react";
 import PreProHooks from "../../../api/PreProHooks.ts";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
-import DocumentTable from "../../../components/DocumentTable/DocumentTable.tsx";
 import LinearProgressWithLabel from "../../../components/LinearProgressWithLabel.tsx";
 import DeleteSdocsButton from "../../../components/SourceDocument/DeleteSdocsButton.tsx";
 import DownloadSdocsButton from "../../../components/SourceDocument/DownloadSdocsButton.tsx";
+import SdocTable from "../../../components/SourceDocument/SdocTable/SdocTable.tsx";
 import CrawlerRunDialog, { CrawlerRunDialogHandle } from "./CrawlerRunDialog.tsx";
 import { ProjectProps } from "./ProjectProps.ts";
 
@@ -148,7 +148,7 @@ function ProjectDocuments({ project }: ProjectProps) {
         }
       />
       <Divider />
-      <DocumentTable
+      <SdocTable
         projectId={project.id}
         filterName={filterName}
         rowSelectionModel={rowSelectionModel}

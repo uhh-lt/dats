@@ -5,7 +5,7 @@ import {
   MRT_SortingState,
   MRT_VisibilityState,
 } from "material-react-table";
-import { SATFilterActions } from "../../../components/SpanAnnotationTable/satFilterSlice.ts";
+import { SATFilterActions } from "../../../components/SpanAnnotation/SpanAnnotationTable/satFilterSlice.ts";
 
 export interface AnnotatedSegmentsState {
   isSplitView: boolean;

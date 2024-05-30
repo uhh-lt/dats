@@ -17,9 +17,9 @@ import React, { useContext, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { AttachedObjectType } from "../../../api/openapi/models/AttachedObjectType.ts";
 import GenericPositionMenu, { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import SpanAnnotationEditDialog from "../../../features/CrudDialog/SpanAnnotation/SpanAnnotationEditDialog.tsx";
-import { CRUDDialogActions } from "../../../features/CrudDialog/dialogSlice.ts";
-import MemoAPI from "../../../features/Memo/MemoAPI.ts";
+import MemoDialogAPI from "../../../components/Memo/MemoDialog/MemoDialogAPI.ts";
+import SpanAnnotationEditDialog from "../../../components/SpanAnnotation/SpanAnnotationEditDialog.tsx";
+import { CRUDDialogActions } from "../../../features/dialogSlice.ts";
 import { AppBarContext } from "../../../layouts/TwoBarLayout.tsx";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import AnnotatedSegmentsTable from "./AnnotatedSegmentsTable.tsx";
@@ -54,7 +54,7 @@ function AnnotatedSegments() {
   };
 
   const openMemo = (spanAnnotationId: number) => {
-    MemoAPI.openMemo({
+    MemoDialogAPI.openMemo({
       attachedObjectType: AttachedObjectType.SPAN_ANNOTATION,
       attachedObjectId: spanAnnotationId,
     });

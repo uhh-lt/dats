@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import EditableTypography from "../../../components/NavBarTop/EditableTypography.tsx";
+import EditableTypography from "../../../components/EditableTypography.tsx";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { DocumentSamplerActions } from "./documentSamplerSlice.ts";
 
