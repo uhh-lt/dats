@@ -33,7 +33,7 @@ import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTASentence } from "../../../api/openapi/models/COTASentence.ts";
 import { COTASentenceID } from "../../../api/openapi/models/COTASentenceID.ts";
 import { GenericPositionContextMenuHandle } from "../../../components/GenericPositionMenu.tsx";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import CotaEditMenu from "./CotaEditMenu.tsx";
 import CotaPlotToggleButton from "./CotaPlotToggleButton.tsx";
@@ -94,6 +94,9 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
     };
   }, [cota]);
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // actions
   const handleDotClick = (sdocIdSentenceId: string) => {
     dispatch(CotaActions.onScatterPlotDotClick(sdocIdSentenceId));
@@ -117,7 +120,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });
@@ -138,7 +141,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated CotA '${data.name}'`,
             severity: "success",
           });

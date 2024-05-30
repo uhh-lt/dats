@@ -3,7 +3,7 @@ import { forwardRef, useImperativeHandle, useState } from "react";
 import { Edge, useReactFlow } from "reactflow";
 import CodeHooks from "../../../api/CodeHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CustomEdgeData } from "../types/CustomEdgeData.ts";
 import { DWTSNodeData } from "../types/DWTSNodeData.ts";
 import { isCodeNode, isSdocNode, isTagNode } from "../types/typeGuards.ts";
@@ -38,6 +38,9 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdge
     setEdges([]);
   };
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // actions
   const bulkUnlinkDocumentTagsMutation = TagHooks.useBulkUnlinkDocumentTags();
   const handleDeleteTagSdocEdges = () => {
@@ -60,7 +63,7 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdge
           },
           {
             onSuccess() {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: "Tag removed from document",
                 severity: "success",
               });
@@ -93,7 +96,7 @@ const DatabaseEdgeEditMenu = forwardRef<DatabaseEdgeEditMenuHandle, DatabaseEdge
           },
           {
             onSuccess(data) {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Removed parent code from code "${data.name}"`,
                 severity: "success",
               });

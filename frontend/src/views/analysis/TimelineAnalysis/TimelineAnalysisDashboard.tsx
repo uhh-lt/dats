@@ -4,7 +4,7 @@ import { useParams } from "react-router";
 import TimelineAnalysisHooks from "../../../api/TimelineAnalysisHooks.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
@@ -34,6 +34,9 @@ function TimelineAnalysisDashboard() {
       })) || [],
     [userAnalysis],
   );
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // mutations
   const { mutate: createTimelineAnalysis, isPending: isCreatingTimelineAnalysis } =
@@ -66,7 +69,7 @@ function TimelineAnalysisDashboard() {
         },
         {
           onSuccess(data) {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created new timeline analysis '${data.name}'`,
               severity: "success",
             });
@@ -83,7 +86,7 @@ function TimelineAnalysisDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Duplicated analysis '${data.name}'`,
             severity: "success",
           });
@@ -102,7 +105,7 @@ function TimelineAnalysisDashboard() {
           },
           {
             onSuccess(data) {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted analysis '${data.name}'`,
                 severity: "success",
               });
@@ -123,7 +126,7 @@ function TimelineAnalysisDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated analysis '${data.name}'`,
             severity: "success",
           });

@@ -2,7 +2,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 interface MemoDeleteButtonProps {
   memoId: number;
@@ -10,6 +10,8 @@ interface MemoDeleteButtonProps {
 }
 
 function MemoDeleteButton({ memoId, memoTitle, ...props }: MemoDeleteButtonProps & IconButtonProps) {
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
   const deleteMutation = MemoHooks.useDeleteMemo();
   const handleDeleteMemo = () => {
     if (memoId) {
@@ -20,7 +22,7 @@ function MemoDeleteButton({ memoId, memoTitle, ...props }: MemoDeleteButtonProps
             { memoId: memoId },
             {
               onSuccess: () => {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: `Deleted memo ${memoTitle}`,
                   severity: "success",
                 });

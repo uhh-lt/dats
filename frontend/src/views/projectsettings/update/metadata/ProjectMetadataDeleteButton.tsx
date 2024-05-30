@@ -5,7 +5,7 @@ import Tooltip from "@mui/material/Tooltip";
 import { useCallback } from "react";
 import ProjectMetadataHooks from "../../../../api/ProjectMetadataHooks.ts";
 import ConfirmationAPI from "../../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 interface ProjectMetadataDeleteButtonProps {
   metadataId: number;
@@ -14,6 +14,9 @@ interface ProjectMetadataDeleteButtonProps {
 function ProjectMetadataDeleteButton({ metadataId, ...props }: ProjectMetadataDeleteButtonProps & IconButtonProps) {
   // mutations
   const deleteMutation = ProjectMetadataHooks.useDeleteMetadata();
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   const handleDeleteMetadata = useCallback(() => {
     ConfirmationAPI.openConfirmationDialog({
@@ -26,7 +29,7 @@ function ProjectMetadataDeleteButton({ metadataId, ...props }: ProjectMetadataDe
           },
           {
             onSuccess: (data) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted Metadata ${data.id} from Project ${data.project_id}`,
                 severity: "success",
               });
@@ -35,7 +38,7 @@ function ProjectMetadataDeleteButton({ metadataId, ...props }: ProjectMetadataDe
         );
       },
     });
-  }, [deleteMutation.mutate, metadataId]);
+  }, [deleteMutation.mutate, metadataId, openSnackbar]);
 
   return (
     <Tooltip title="Delete">

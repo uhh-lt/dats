@@ -10,7 +10,7 @@ import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../api/openapi/models/DocumentTagRead.ts";
 import { DocumentTagUpdate } from "../../api/openapi/models/DocumentTagUpdate.ts";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CRUDDialogActions } from "../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
@@ -65,6 +65,9 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
   const updateTagMutation = TagHooks.useUpdateTag();
   const deleteTagMutation = TagHooks.useDeleteTag();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // form handling
   const handleClose = () => {
     dispatch(CRUDDialogActions.closeTagEditDialog());
@@ -84,7 +87,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
         {
           onSuccess: (data) => {
             handleClose();
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated tag with id ${data.id}`,
               severity: "success",
             });
@@ -106,7 +109,7 @@ function TagEditDialog({ tags }: TagEditDialogProps) {
             {
               onSuccess: (data) => {
                 handleClose();
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: `Deleted tag with id ${data.id}`,
                   severity: "success",
                 });

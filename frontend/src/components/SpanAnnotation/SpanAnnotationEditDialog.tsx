@@ -4,7 +4,7 @@ import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider, 
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import SpanAnnotationHooks from "../../api/SpanAnnotationHooks.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CRUDDialogActions } from "../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeRenderer from "../Code/CodeRenderer.tsx";
@@ -29,6 +29,9 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
   // mutations
   const updateAnnotationMutation = SpanAnnotationHooks.useUpdateSpan();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // actions
   const handleClose = () => {
     dispatch(CRUDDialogActions.closeSpanAnnotationEditDialog());
@@ -50,7 +53,7 @@ function SpanAnnotationEditDialog({ projectId }: SpanAnnotationEditDialogProps) 
         {
           onSuccess: () => {
             handleClose();
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated annotation!`,
               severity: "success",
             });

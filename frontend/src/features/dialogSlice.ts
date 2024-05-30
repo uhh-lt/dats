@@ -1,25 +1,34 @@
+import { AlertProps } from "@mui/material";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit/react";
 import { BBoxAnnotationReadResolvedCode } from "../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { CodeRead } from "../api/openapi/models/CodeRead.ts";
 import { CodeCreateSuccessHandler } from "../components/Code/CodeCreateDialog.tsx";
+import { SnackbarEvent } from "./SnackbarDialog/SnackbarEvent.ts";
 
 interface DialogState {
+  // tags
   isTagEditDialogOpen: boolean;
   isTagCreateDialogOpen: boolean;
   tagId?: number;
   tagName?: string;
   parentTagId?: number;
+  // codes
   isCodeCreateDialogOpen: boolean;
   isCodeEditDialogOpen: boolean;
   codeName?: string;
   parentCodeId?: number;
   codeCreateSuccessHandler: CodeCreateSuccessHandler;
   code?: CodeRead;
+  // span
   isSpanAnnotationEditDialogOpen: boolean;
   spanAnnotationIds: number[];
+  // bbox
   isBBoxAnnotationEditDialogOpen: boolean;
   isBBoxAnnotationCreateDialogOpen: boolean;
   bboxAnnotation?: BBoxAnnotationReadResolvedCode;
+  // snackbar
+  isSnackbarOpen: boolean;
+  snackbarData: SnackbarEvent;
 }
 
 const initialState: DialogState = {
@@ -43,6 +52,13 @@ const initialState: DialogState = {
   isBBoxAnnotationEditDialogOpen: false,
   isBBoxAnnotationCreateDialogOpen: false,
   bboxAnnotation: undefined,
+  // snackbar
+  isSnackbarOpen: false,
+  snackbarData: {
+    severity: "info",
+    text: "",
+    title: undefined,
+  },
 };
 
 export const dialogSlice = createSlice({
@@ -113,6 +129,17 @@ export const dialogSlice = createSlice({
     },
     closeBBoxAnnotationCreateDialog: (state) => {
       state.isBBoxAnnotationCreateDialogOpen = false;
+    },
+    openSnackbar: (
+      state,
+      action: PayloadAction<{ severity: AlertProps["severity"]; text: string; title?: string }>,
+    ) => {
+      state.isSnackbarOpen = true;
+      state.snackbarData = action.payload;
+    },
+    closeSnackbar: (state) => {
+      state.isSnackbarOpen = false;
+      state.snackbarData = initialState.snackbarData;
     },
   },
 });

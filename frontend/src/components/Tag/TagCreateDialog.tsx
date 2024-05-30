@@ -20,7 +20,7 @@ import { useParams } from "react-router-dom";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import TagHooks from "../../api/TagHooks.ts";
 import { DocumentTagCreate } from "../../api/openapi/models/DocumentTagCreate.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CRUDDialogActions } from "../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { contrastiveColors } from "../../utils/colors.ts";
@@ -85,6 +85,9 @@ function TagCreateDialog() {
   // mutations
   const createTagMutation = TagHooks.useCreateTag();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // form actions
   const handleTagCreation: SubmitHandler<DocumentTagCreate> = (data) => {
     createTagMutation.mutate(
@@ -99,7 +102,7 @@ function TagCreateDialog() {
       },
       {
         onSuccess: (data) => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Added tag ${data.name}`,
             severity: "success",
           });

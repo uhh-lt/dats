@@ -10,7 +10,7 @@ import CodeHooks from "../../api/CodeHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { CodeUpdate } from "../../api/openapi/models/CodeUpdate.ts";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CRUDDialogActions } from "../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import ColorUtils from "../../utils/ColorUtils.ts";
@@ -68,6 +68,9 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
   const updateCodeMutation = CodeHooks.useUpdateCode();
   const deleteCodeMutation = CodeHooks.useDeleteCode();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   const handleClose = () => {
     dispatch(CRUDDialogActions.closeCodeEditDialog());
   };
@@ -112,7 +115,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             }
 
             handleClose();
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated code ${data.name}`,
               severity: "success",
             });
@@ -133,7 +136,7 @@ function CodeEditDialog({ codes }: CodeEditDialogProps) {
             {
               onSuccess: (data: CodeRead) => {
                 handleClose();
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: `Deleted code ${data.name}`,
                   severity: "success",
                 });

@@ -13,7 +13,7 @@ import { DateGroupBy } from "../../../api/openapi/models/DateGroupBy.ts";
 import { DocType } from "../../../api/openapi/models/DocType.ts";
 import { MetaType } from "../../../api/openapi/models/MetaType.ts";
 import SdocsWithDateCounter from "../../../components/Metadata/SdocsWithDateCounter/SdocsWithDateCounter.tsx";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 interface CotaSettingsProps {
   cota: COTARead;
@@ -27,6 +27,9 @@ function CotaSettings({ cota }: CotaSettingsProps) {
   const filteredProjectMetadata = projectMetadata.data?.filter(
     (metadata) => metadata.doctype === DocType.TEXT && metadata.metatype === MetaType.DATE,
   );
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // actions
   const updateCota = CotaHooks.useUpdateCota();
@@ -44,7 +47,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated timeline settings of CotA '${data.name}'`,
             severity: "success",
           });
@@ -67,7 +70,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated timeline settings of CotA '${data.name}'`,
             severity: "success",
           });
@@ -91,7 +94,7 @@ function CotaSettings({ cota }: CotaSettingsProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated timeline settings of CotA '${data.name}'`,
             severity: "success",
           });

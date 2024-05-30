@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import CodeExplorer from "../../../components/Code/CodeExplorer/CodeExplorer.tsx";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import ForceLayout, { GraphData, LinkData } from "./ForceLayout.tsx";
 
 function generateGraphData(selectedIds: number[], allCodes: CodeRead[]): GraphData {
@@ -37,6 +37,9 @@ const CodeGraph = () => {
   // local state
   const [graphData, setGraphData] = useState<GraphData | undefined>(undefined);
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   const handleGenerateGraph = () => {
     if (!codes.isSuccess) return;
 
@@ -45,7 +48,7 @@ const CodeGraph = () => {
 
     // ensure that at least one code is checked
     if (checkedCodeIds.length === 0) {
-      SnackbarAPI.openSnackbar({
+      openSnackbar({
         text: "Please select at least one code to generate the graph.",
         severity: "warning",
       });

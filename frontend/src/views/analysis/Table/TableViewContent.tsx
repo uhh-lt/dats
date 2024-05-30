@@ -31,7 +31,7 @@ import "handsontable/dist/handsontable.full.min.css";
 import { registerAllModules } from "handsontable/registry";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import GenericAnchorMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorMenu.tsx";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import CustomHTMLCellRenderer from "./Renderer/CustomHTMLCellRenderer.tsx";
 import AddAnnotationDialog from "./Toolbar/AddAnnotationDialog.tsx";
 import AddCodeDialog from "./Toolbar/AddCodeDialog.tsx";
@@ -120,6 +120,9 @@ function TableViewContent({ table }: TableViewContentProps) {
   // global server state
   const updateTable = TableHooks.useUpdateTable();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // context menu
   const handleOpenContextMenu = (page: string) => (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -152,7 +155,7 @@ function TableViewContent({ table }: TableViewContentProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Saved table '${data.title}'`,
             severity: "success",
           });

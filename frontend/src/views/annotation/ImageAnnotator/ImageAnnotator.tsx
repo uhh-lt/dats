@@ -9,7 +9,7 @@ import { AnnotationDocumentRead } from "../../../api/openapi/models/AnnotationDo
 import { BBoxAnnotationReadResolvedCode } from "../../../api/openapi/models/BBoxAnnotationReadResolvedCode.ts";
 import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDocumentWithDataRead.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
 import { ICode } from "../ICode.ts";
@@ -50,6 +50,9 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
 
   // global server state (react query)
   const annotationsBatch = AdocHooks.useGetAllBboxAnnotationsBatch(visibleAdocIds);
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // computed
   const annotations = useMemo(() => {
@@ -231,7 +234,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         },
         {
           onSuccess: (bboxAnnotation) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created Bounding Box Annotation ${bboxAnnotation.id}`,
               severity: "success",
             });
@@ -260,7 +263,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         },
         {
           onSuccess: (updatedBboxAnnotation) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated Bounding Box Annotation ${updatedBboxAnnotation.id}`,
               severity: "success",
             });
@@ -279,7 +282,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         { bboxToDelete: selectedBbox },
         {
           onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Deleted Bounding Box Annotation ${data.id}`,
               severity: "success",
             });

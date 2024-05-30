@@ -4,7 +4,7 @@ import SdocHooks from "../../../api/SdocHooks.ts";
 import { SourceDocumentRead } from "../../../api/openapi/models/SourceDocumentRead.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
 import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
@@ -25,6 +25,9 @@ export function MemoContentSourceDocument({
   const updateMutation = MemoHooks.useUpdateMemo();
   const deleteMutation = MemoHooks.useDeleteMemo();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // form handling
   const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
@@ -40,7 +43,7 @@ export function MemoContentSourceDocument({
         },
         {
           onSuccess: () => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated memo for source document ${sdoc.filename}`,
               severity: "success",
             });
@@ -61,7 +64,7 @@ export function MemoContentSourceDocument({
         },
         {
           onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created memo for source document ${sdoc.filename}`,
               severity: "success",
             });
@@ -81,7 +84,7 @@ export function MemoContentSourceDocument({
             { memoId: memo.id },
             {
               onSuccess: () => {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: `Deleted memo for source document ${sdoc.filename}`,
                   severity: "success",
                 });

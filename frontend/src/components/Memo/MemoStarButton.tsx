@@ -2,7 +2,7 @@ import StarIcon from "@mui/icons-material/Star";
 import StarOutlineIcon from "@mui/icons-material/StarOutline";
 import { IconButton, IconButtonProps, Tooltip, Typography } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 interface MemoStarButtonProps {
   memoId: number;
@@ -12,6 +12,9 @@ interface MemoStarButtonProps {
 function MemoStarButton({ memoId, isStarred, ...props }: MemoStarButtonProps & IconButtonProps) {
   // mutation
   const updateMutation = MemoHooks.useUpdateMemo();
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // ui events
   const handleClick = () => {
@@ -24,7 +27,7 @@ function MemoStarButton({ memoId, isStarred, ...props }: MemoStarButtonProps & I
       },
       {
         onSuccess: (memo) => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Toggled favorite status of memo ${memo.id}`,
             severity: "success",
           });

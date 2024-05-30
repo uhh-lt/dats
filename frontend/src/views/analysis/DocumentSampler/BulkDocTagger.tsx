@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
 
 function BulkDocTagger() {
@@ -25,6 +25,9 @@ function BulkDocTagger() {
   // mutation
   const { mutate: linkDocumentTags, isPending: isLinkingDocumentTags } = TagHooks.useBulkLinkDocumentTags();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // actions
   const bulkTagDocuments = () => {
     linkDocumentTags(
@@ -39,7 +42,7 @@ function BulkDocTagger() {
       },
       {
         onSuccess: () => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Tagged sampled documents!`,
             severity: "success",
           });

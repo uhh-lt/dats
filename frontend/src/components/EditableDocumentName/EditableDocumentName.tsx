@@ -13,7 +13,7 @@ import {
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import SdocHooks from "../../api/SdocHooks.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import DocumentLinkToOriginal from "./DocumentLinkToOriginal.tsx";
 
 type EditFormValues = {
@@ -52,6 +52,9 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
       toggle: toggleEditForm,
     }));
 
+    // snackbar
+    const openSnackbar = useOpenSnackbar();
+
     // handlers
     const toggleEditForm = () => {
       setIsEditing((isEditing) => !isEditing);
@@ -73,7 +76,7 @@ const EditableDocumentName = forwardRef<EditableDocumentNameHandle, EditableDocu
           },
           {
             onSuccess: (data) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Updated document name to ${data.name}`,
                 severity: "success",
               });

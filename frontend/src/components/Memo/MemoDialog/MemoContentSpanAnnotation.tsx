@@ -4,7 +4,7 @@ import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
 import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
@@ -25,6 +25,9 @@ export function MemoContentSpanAnnotation({
   const updateMutation = MemoHooks.useUpdateMemo();
   const deleteMutation = MemoHooks.useDeleteMemo();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // form handling
   const handleCreateOrUpdateSpanAnnotationMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
@@ -40,7 +43,7 @@ export function MemoContentSpanAnnotation({
         },
         {
           onSuccess: (memo) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated memo for spanAnnotation ${memo.attached_object_id}`,
               severity: "success",
             });
@@ -61,7 +64,7 @@ export function MemoContentSpanAnnotation({
         },
         {
           onSuccess: (memo) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created memo for spanAnnotation ${memo.attached_object_id}`,
               severity: "success",
             });
@@ -81,7 +84,7 @@ export function MemoContentSpanAnnotation({
             { memoId: memo.id },
             {
               onSuccess: (memo) => {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: `Deleted memo for spanAnnotation ${memo.attached_object_id}`,
                   severity: "success",
                 });

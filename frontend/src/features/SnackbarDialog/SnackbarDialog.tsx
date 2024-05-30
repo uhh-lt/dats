@@ -1,34 +1,20 @@
 import { AlertTitle, Snackbar } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
-import { useCallback, useEffect, useState } from "react";
-import eventBus from "../../EventBus.ts";
-import { SnackbarEvent } from "./SnackbarAPI.ts";
+import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
+import { CRUDDialogActions } from "../dialogSlice.ts";
 
 export default function SnackbarDialog() {
-  const [event, setEvent] = useState<SnackbarEvent | undefined>();
-  const [open, setOpen] = useState(false);
-
-  const openSnackbar = useCallback((event: CustomEventInit) => {
-    const snackbarEvent: SnackbarEvent = event.detail;
-    setOpen(true);
-    setEvent(snackbarEvent);
-  }, []);
-
-  useEffect(() => {
-    eventBus.on("open-snackbar", openSnackbar);
-
-    return () => {
-      eventBus.remove("open-snackbar", openSnackbar);
-    };
-  }, [openSnackbar]);
+  const isSnackbarOpen = useAppSelector((state) => state.dialog.isSnackbarOpen);
+  const event = useAppSelector((state) => state.dialog.snackbarData);
+  const dispatch = useAppDispatch();
 
   const closeSnackbar = () => {
-    setOpen(false);
+    dispatch(CRUDDialogActions.closeSnackbar());
   };
 
   return (
     <Snackbar
-      open={open}
+      open={isSnackbarOpen}
       autoHideDuration={6000}
       onClose={closeSnackbar}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}

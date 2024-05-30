@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import ExporterHooks from "../../api/ExporterHooks.ts";
 import { BackgroundJobStatus } from "../../api/openapi/models/BackgroundJobStatus.ts";
 import { ExportJobType } from "../../api/openapi/models/ExportJobType.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 interface DownloadSdocsButtonProps {
   sdocIds: number[];
@@ -17,6 +17,9 @@ export default function DownloadSdocsButton({ sdocIds }: DownloadSdocsButtonProp
 
   const startExport = ExporterHooks.useStartExportJob();
   const exportJob = ExporterHooks.useGetExportJob(startExport.data?.id);
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   const onClick = () => {
     startExport.mutate({
@@ -39,13 +42,13 @@ export default function DownloadSdocsButton({ sdocIds }: DownloadSdocsButtonProp
         // Make sure the download doesn't start again on a re-render
         startExport.reset();
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
-        SnackbarAPI.openSnackbar({
+        openSnackbar({
           text: `Export job ${exportJob.data.id} failed`,
           severity: "error",
         });
       }
     }
-  }, [exportJob.data, startExport]);
+  }, [exportJob.data, startExport, openSnackbar]);
 
   if (startExport.isPending || exportJob.data?.status === BackgroundJobStatus.WAITING) {
     return <CircularProgress size={20} />;

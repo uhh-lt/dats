@@ -5,7 +5,7 @@ import TableHooks from "../../../api/TableHooks.ts";
 import { TableType } from "../../../api/openapi/models/TableType.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import AnalysisDashboard from "../AnalysisDashboard/AnalysisDashboard.tsx";
 import {
   AnaylsisDashboardRow,
@@ -37,6 +37,9 @@ function TableDashboard() {
   } = TableHooks.useDuplicateTable();
   const { mutate: updateTable, isPending: isUpdatingTable } = TableHooks.useUpdateTable();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // CRUD actions
   const handleCreateAnalysis: HandleCreateAnalysis =
     (createOption) =>
@@ -57,7 +60,7 @@ function TableDashboard() {
         },
         {
           onSuccess(data) {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created new table '${data.title}'`,
               severity: "success",
             });
@@ -74,7 +77,7 @@ function TableDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Duplicated table '${data.title}'`,
             severity: "success",
           });
@@ -93,7 +96,7 @@ function TableDashboard() {
           },
           {
             onSuccess(data) {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted table '${data.title}'`,
                 severity: "success",
               });
@@ -116,7 +119,7 @@ function TableDashboard() {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated table '${data.title}'`,
             severity: "success",
           });

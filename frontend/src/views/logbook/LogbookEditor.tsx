@@ -59,7 +59,7 @@
 //         },
 //         {
 //           onSuccess: (data) => {
-//             SnackbarAPI.openSnackbar({
+//             openSnackbar({
 //               text: `Updated Logbook for project ${data.project_id}`,
 //               severity: "success",
 //             });
@@ -80,7 +80,7 @@
 //         },
 //         {
 //           onSuccess: (data) => {
-//             SnackbarAPI.openSnackbar({
+//             openSnackbar({
 //               text: `Created Logbook for project ${data.project_id}`,
 //               severity: "success",
 //             });

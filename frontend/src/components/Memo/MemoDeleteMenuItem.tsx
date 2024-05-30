@@ -2,7 +2,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/material";
 import MemoHooks from "../../api/MemoHooks.ts";
 import ConfirmationAPI from "../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { MemoEvent } from "./MemoDialog/MemoDialogAPI.ts";
 
 interface MemoDeleteMenuItemProps {
@@ -19,6 +19,8 @@ function MemoDeleteMenuItem({
   onClick,
   ...props
 }: MemoEvent & MemoDeleteMenuItemProps & MenuItemProps) {
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
   const deleteMutation = MemoHooks.useDeleteMemo();
   const handleDeleteMemo: React.MouseEventHandler<HTMLLIElement> = (event) => {
     event.stopPropagation();
@@ -31,7 +33,7 @@ function MemoDeleteMenuItem({
             { memoId: memoId },
             {
               onSuccess: () => {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: `Deleted memo attached to ${attachedObjectType}`,
                   severity: "success",
                 });

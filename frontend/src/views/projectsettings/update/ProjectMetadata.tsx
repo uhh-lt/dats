@@ -14,7 +14,7 @@ import { ProjectMetadataCreate } from "../../../api/openapi/models/ProjectMetada
 import { ProjectMetadataRead } from "../../../api/openapi/models/ProjectMetadataRead.ts";
 import { ProjectMetadataUpdate } from "../../../api/openapi/models/ProjectMetadataUpdate.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { docTypeToIcon } from "../../../utils/docTypeToIcon.tsx";
 import { ProjectProps } from "./ProjectProps.ts";
 import ProjectMetadataDeleteButton from "./metadata/ProjectMetadataDeleteButton.tsx";
@@ -191,6 +191,9 @@ function ProjectMetadataRowCreate({ docType, projectId }: { docType: DocType; pr
     formState: { errors },
   } = useForm<ProjectMetadataCreate>();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // form handling
   const createMutation = ProjectMetadataHooks.useCreateMetadata();
   const handleCreateMetadata: SubmitHandler<ProjectMetadataCreate> = useCallback(
@@ -208,7 +211,7 @@ function ProjectMetadataRowCreate({ docType, projectId }: { docType: DocType; pr
         },
         {
           onSuccess: (projectMetadata) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created projectMetadata '${projectMetadata.key}' for project ${projectMetadata.project_id}`,
               severity: "success",
             });
@@ -216,7 +219,7 @@ function ProjectMetadataRowCreate({ docType, projectId }: { docType: DocType; pr
         },
       );
     },
-    [createMutation.mutate, docType, projectId],
+    [createMutation.mutate, docType, openSnackbar, projectId],
   );
   const handleError: SubmitErrorHandler<ProjectMetadataCreate> = useCallback((data) => console.error(data), []);
 

@@ -4,7 +4,7 @@ import { Box, Button, ButtonProps, Dialog, DialogActions, DialogTitle, Divider }
 import { MRT_RowSelectionState } from "material-react-table";
 import { useState } from "react";
 import BboxAnnotationHooks from "../../api/BboxAnnotationHooks.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CRUDDialogActions } from "../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import CodeTable from "../Code/CodeTable.tsx";
@@ -34,6 +34,9 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
     setRowSelectionModel({});
   };
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   const handleUpdateAnnotation = () => {
     if (!selectedCodeId || !annotation) return;
 
@@ -47,7 +50,7 @@ function BBoxAnnotationEditDialog({ projectId }: BBoxAnnotationEditDialogProps) 
       {
         onSuccess: () => {
           handleClose();
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated annotation!`,
             severity: "success",
           });

@@ -21,7 +21,7 @@ import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CheckboxState } from "./CheckboxState.ts";
 import TagMenuCreationButton from "./TagMenuCreateButton.tsx";
 
@@ -93,6 +93,9 @@ function TagMenu({ forceSdocId, selectedSdocIds, anchorEl, setAnchorEl, popoverO
     }
   }, [initialCheckedTags]);
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // actions
   const handleClose = () => {
     setAnchorEl(null);
@@ -126,7 +129,7 @@ function TagMenu({ forceSdocId, selectedSdocIds, anchorEl, setAnchorEl, popoverO
         },
         {
           onSuccess: () => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Removed tags!`,
               severity: "success",
             });
@@ -144,7 +147,7 @@ function TagMenu({ forceSdocId, selectedSdocIds, anchorEl, setAnchorEl, popoverO
         },
         {
           onSuccess: () => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Added tags!`,
               severity: "success",
             });
@@ -165,7 +168,7 @@ function TagMenu({ forceSdocId, selectedSdocIds, anchorEl, setAnchorEl, popoverO
       },
       {
         onSuccess: () => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated tags!`,
             severity: "success",
           });

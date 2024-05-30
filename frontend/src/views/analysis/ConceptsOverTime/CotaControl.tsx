@@ -23,7 +23,7 @@ import { BackgroundJobStatus } from "../../../api/openapi/models/BackgroundJobSt
 import { COTARead } from "../../../api/openapi/models/COTARead.ts";
 import { COTATrainingSettings } from "../../../api/openapi/models/COTATrainingSettings.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import queryClient from "../../../plugins/ReactQueryClient.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import BackgroundJobStatusIndicator from "./BackgroundJobStatusIndicator.tsx";
@@ -55,6 +55,9 @@ function CotaControl({ cota }: CotaControlProps) {
     }
   }, [refinementJob.data]);
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // actions
   const refineCota = CotaHooks.useRefineCota();
   const handleRefineCota = () => {
@@ -64,7 +67,7 @@ function CotaControl({ cota }: CotaControlProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Refining CotA '${data.cota.name}', Job ID: '${data.id}'`,
             severity: "success",
           });
@@ -84,7 +87,7 @@ function CotaControl({ cota }: CotaControlProps) {
           },
           {
             onSuccess(data) {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Resetted CotA '${data.name}'`,
                 severity: "success",
               });
@@ -115,7 +118,7 @@ function CotaControl({ cota }: CotaControlProps) {
       },
       {
         onSuccess(data) {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated training settings of CotA '${data.name}'`,
             severity: "success",
           });

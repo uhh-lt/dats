@@ -21,7 +21,7 @@ import CodeHooks from "../../api/CodeHooks.ts";
 import ProjectHooks from "../../api/ProjectHooks.ts";
 import { CodeRead } from "../../api/openapi/models/CodeRead.ts";
 import { useAuth } from "../../auth/useAuth.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { CRUDDialogActions } from "../../features/dialogSlice.ts";
 import { useAppDispatch, useAppSelector } from "../../plugins/ReduxHooks.ts";
 import { SYSTEM_USER_ID } from "../../utils/GlobalConstants.ts";
@@ -97,6 +97,9 @@ function CodeCreateDialog() {
     dispatch(CRUDDialogActions.closeCodeCreateDialog());
   };
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // react form handlers
   const handleSubmitCodeCreateDialog: SubmitHandler<CodeCreateValues> = (data) => {
     if (user) {
@@ -119,7 +122,7 @@ function CodeCreateDialog() {
         },
         {
           onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Added new Code ${data.name}!`,
               severity: "success",
             });

@@ -8,7 +8,7 @@ import { MetaType } from "../../../../api/openapi/models/MetaType.ts";
 import { SourceDocumentMetadataRead } from "../../../../api/openapi/models/SourceDocumentMetadataRead.ts";
 import { SourceDocumentMetadataReadResolved } from "../../../../api/openapi/models/SourceDocumentMetadataReadResolved.ts";
 import { SourceDocumentMetadataUpdate } from "../../../../api/openapi/models/SourceDocumentMetadataUpdate.ts";
-import SnackbarAPI from "../../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { dateToLocaleYYYYMMDDString } from "../../../../utils/DateUtils.ts";
 import DocumentMetadataAddFilterButton from "./DocumentMetadataAddFilterButton.tsx";
 import DocumentMetadataGoToButton from "./DocumentMetadataGoToButton.tsx";
@@ -39,6 +39,9 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
   // computed
   const isLink = metadata.str_value ? isValidHttpUrl(metadata.str_value) : false;
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // mutation
   const updateMutation = SdocMetadataHooks.useUpdateMetadata();
 
@@ -67,7 +70,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
           },
           {
             onSuccess: (metadata: SourceDocumentMetadataRead) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Updated metadata ${metadata.id} for document ${metadata.source_document_id}`,
                 severity: "success",
               });
@@ -76,7 +79,7 @@ function DocumentMetadataRow({ metadata, filterName }: DocumentMetadataRowProps)
         );
       }
     },
-    [metadata, updateMutation.mutate],
+    [metadata, updateMutation.mutate, openSnackbar],
   );
   const handleError: SubmitErrorHandler<SourceDocumentMetadataUpdate> = useCallback((data) => console.error(data), []);
 

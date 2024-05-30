@@ -10,7 +10,7 @@ import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDo
 import { SpanAnnotationCreateWithCodeId } from "../../../api/openapi/models/SpanAnnotationCreateWithCodeId.ts";
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
 import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
@@ -36,6 +36,9 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
   const visibleAdocIds = useAppSelector((state) => state.annotations.visibleAdocIds);
   const codes = useAppSelector((state) => state.annotations.codesForSelection);
   const dispatch = useAppDispatch();
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // computed / custom hooks
   const { tokenData, annotationsPerToken, annotationMap } = useComputeTokenData({
@@ -202,7 +205,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
           { spanAnnotationToDelete: annotation as SpanAnnotationReadResolved },
           {
             onSuccess: (spanAnnotation) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted Span Annotation ${spanAnnotation.id}`,
                 severity: "success",
               });
@@ -225,7 +228,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
       },
       {
         onSuccess: (spanAnnotation) => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Updated Span Annotation ${spanAnnotation.id}`,
             severity: "success",
           });
@@ -248,7 +251,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
             // if we use an existing code to annotate, we move it to the top
             dispatch(AnnoActions.moveCodeToTop(code));
           }
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Created Span Annotation ${spanAnnotation.id}`,
             severity: "success",
           });
@@ -266,7 +269,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
           { requestBody: fakeAnnotation },
           {
             onSuccess: (spanAnnotation) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Created Span Annotation ${spanAnnotation.id}`,
                 severity: "success",
               });

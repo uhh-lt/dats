@@ -3,7 +3,7 @@ import { ListItemIcon, ListItemText, MenuItem, MenuItemProps } from "@mui/materi
 import React from "react";
 import SpanAnnotationHooks from "../../../api/SpanAnnotationHooks.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 interface SpanAnnotationDeleteMenuItemProps {
   annotationId: number;
@@ -17,6 +17,9 @@ function SpanAnnotationDeleteMenuItem({
 }: SpanAnnotationDeleteMenuItemProps & MenuItemProps) {
   const deleteMutation = SpanAnnotationHooks.useDelete();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   const handleClick = (event: React.MouseEvent) => {
     event.stopPropagation();
 
@@ -27,7 +30,7 @@ function SpanAnnotationDeleteMenuItem({
           { spanId: annotationId },
           {
             onSuccess: (spanAnnotation) => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Deleted Span Annotation ${spanAnnotation.id}`,
                 severity: "success",
               });

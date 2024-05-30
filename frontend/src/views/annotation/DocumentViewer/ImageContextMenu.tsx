@@ -2,7 +2,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Popover, PopoverPosition } from "@mui/material";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch } from "../../../plugins/ReduxHooks.ts";
 import { ImageSearchActions } from "../../search/ImageSearch/imageSearchSlice.ts";
 
@@ -42,6 +42,9 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
     setIsPopoverOpen(false);
   };
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // ui events
   const handleContextMenu: React.MouseEventHandler<HTMLDivElement> = (event) => {
     event.preventDefault();
@@ -51,7 +54,7 @@ const ImageContextMenu = forwardRef<ImageContextMenuHandle, ImageContextMenuProp
   const handleImageSimilaritySearch = () => {
     if (image === undefined) {
       // We're fucked
-      SnackbarAPI.openSnackbar({
+      openSnackbar({
         severity: "error",
         text: "Something went wrong. This is a bug, please report it to the developers.",
       });

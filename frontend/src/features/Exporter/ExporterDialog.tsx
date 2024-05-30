@@ -36,7 +36,7 @@ import { SingleUserAllMemosExportJobParams } from "../../api/openapi/models/Sing
 import { SingleUserLogbookExportJobParams } from "../../api/openapi/models/SingleUserLogbookExportJobParams.ts";
 import { useAuth } from "../../auth/useAuth.ts";
 import UserName from "../../components/User/UserName.tsx";
-import SnackbarAPI from "../SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../SnackbarDialog/useOpenSnackbar.ts";
 import ExporterItemSelectList from "./ExporterItemSelectList.tsx";
 
 // users documents codes tags attached_to
@@ -164,6 +164,9 @@ function ExporterDialog() {
   // mutations (react-query)
   const createJobMutation = ExporterHooks.useStartExportJob();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   const handleClick = () => {
     const requestBody = exporterInfoToExporterJobParameters(exporterData, projectId);
     createJobMutation.mutate(
@@ -172,7 +175,7 @@ function ExporterDialog() {
       },
       {
         onSuccess: (exportJobRead) => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Created new export job ${exportJobRead.id}`,
             severity: "success",
           });
@@ -215,14 +218,14 @@ function ExporterDialog() {
         window.open(import.meta.env.VITE_APP_CONTENT + "/" + exportJob.data.results_url, "_blank");
         setExportJobId(undefined);
       } else if (exportJob.data.status === BackgroundJobStatus.ERRORNEOUS) {
-        SnackbarAPI.openSnackbar({
+        openSnackbar({
           text: `Export job ${exportJob.data.id} failed`,
           severity: "error",
         });
         setExportJobId(undefined);
       }
     }
-  }, [exportJob.data]);
+  }, [exportJob.data, openSnackbar]);
 
   useEffect(() => {
     eventBus.on("open-exporter", openModal);

@@ -4,11 +4,14 @@ import { useCallback } from "react";
 import TagHooks from "../../../api/TagHooks.ts";
 import { DocumentTagRead } from "../../../api/openapi/models/DocumentTagRead.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: number; tag: DocumentTagRead }) {
   // mutations
   const { mutate: removeTagMutation, isPending } = TagHooks.useBulkUnlinkDocumentTags();
+
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
 
   // actions
   const handleDeleteDocumentTag = useCallback(() => {
@@ -25,7 +28,7 @@ function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: 
           },
           {
             onSuccess: () => {
-              SnackbarAPI.openSnackbar({
+              openSnackbar({
                 text: `Removed tag from document ${sdocId}!`,
                 severity: "success",
               });
@@ -34,7 +37,7 @@ function TagUnlinkButton({ sdocId, tag, ...props }: IconButtonProps & { sdocId: 
         );
       },
     });
-  }, [removeTagMutation, tag, sdocId]);
+  }, [removeTagMutation, tag, sdocId, openSnackbar]);
 
   return (
     <Tooltip title="Remove tag from document">

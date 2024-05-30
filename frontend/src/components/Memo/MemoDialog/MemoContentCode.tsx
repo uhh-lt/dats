@@ -4,7 +4,7 @@ import MemoHooks from "../../../api/MemoHooks.ts";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
 import { useAuth } from "../../../auth/useAuth.ts";
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
-import SnackbarAPI from "../../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { MemoContentProps } from "./MemoContentBboxAnnotation.tsx";
 import { MemoForm, MemoFormValues } from "./MemoForm.tsx";
 
@@ -25,6 +25,9 @@ export function MemoContentCode({
   const updateMutation = MemoHooks.useUpdateMemo();
   const deleteMutation = MemoHooks.useDeleteMemo();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // form handling
   const handleCreateOrUpdateCodeMemo: SubmitHandler<MemoFormValues> = (data) => {
     if (!user) return;
@@ -40,7 +43,7 @@ export function MemoContentCode({
         },
         {
           onSuccess: () => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Updated memo for code ${code.name}`,
               severity: "success",
             });
@@ -61,7 +64,7 @@ export function MemoContentCode({
         },
         {
           onSuccess: (data) => {
-            SnackbarAPI.openSnackbar({
+            openSnackbar({
               text: `Created memo for code ${code.name}`,
               severity: "success",
             });
@@ -81,7 +84,7 @@ export function MemoContentCode({
             { memoId: memo.id },
             {
               onSuccess: () => {
-                SnackbarAPI.openSnackbar({
+                openSnackbar({
                   text: `Deleted memo for code ${code.name}`,
                   severity: "success",
                 });

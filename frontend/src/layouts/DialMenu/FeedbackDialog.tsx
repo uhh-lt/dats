@@ -6,7 +6,7 @@ import React from "react";
 import { SubmitErrorHandler, SubmitHandler, useForm } from "react-hook-form";
 import FeedbackHooks from "../../api/FeedbackHooks.ts";
 import { UserRead } from "../../api/openapi/models/UserRead.ts";
-import SnackbarAPI from "../../features/SnackbarDialog/SnackbarAPI.ts";
+import { useOpenSnackbar } from "../../features/SnackbarDialog/useOpenSnackbar.ts";
 
 interface FeedbackFormValues {
   content: string;
@@ -29,6 +29,9 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
   // mutations
   const createMutation = FeedbackHooks.useCreateFeedback();
 
+  // snackbar
+  const openSnackbar = useOpenSnackbar();
+
   // close dialog event handler
   const closeFeedbackDialog = () => {
     setIsFeedbackDialogOpen(false);
@@ -45,7 +48,7 @@ function FeedbackDialog({ setIsFeedbackDialogOpen, user, locPathName }: Feedback
       },
       {
         onSuccess: () => {
-          SnackbarAPI.openSnackbar({
+          openSnackbar({
             text: `Thanks for your feedback!`,
             severity: "success",
           });
