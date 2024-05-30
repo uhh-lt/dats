@@ -37,24 +37,6 @@ class CodeFrequency(BaseModel):
     count: int = Field(description="The number of occurrences of the code.")
 
 
-class AnalysisConcept(BaseModel):
-    name: str = Field(description="The nane of the concept.")
-    sentences: List[str] = Field(description="The sentences describing the concept.")
-
-
-class TimelineAnalysisResult(BaseModel):
-    concept_name: str = Field(description="The name of the concept.")
-    date: str = Field(description="The date of document.")
-
-    sentence: str = Field(description="The similar sentence.")
-    score: float = Field(description="The similarity score.")
-
-    sdoc_id: int = Field(
-        description="The id of the SourceDocument the similar sentence belongs to."
-    )
-    context: str = Field(description="The context of the similar sentence.")
-
-
 class AnnotationOccurrence(BaseModel):
     annotation: Union[SpanAnnotationRead, BBoxAnnotationRead] = Field(
         description="The Annotation"
@@ -130,7 +112,7 @@ class AnnotatedImageResult(BaseModel):
     data: List[BBoxAnnotationTableRow] = Field(description="The Annotations.")
 
 
-class TimelineAnalysisResultNew(BaseModel):
+class TimelineAnalysisResult(BaseModel):
     date: str = Field(description="The date.")
     sdoc_ids: List[int] = Field(description="The SourceDoument IDs.")
 

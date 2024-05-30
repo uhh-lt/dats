@@ -4,14 +4,22 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user, get_db_session
+from app.core.analysis.timeline import (
+    TimelineAnalysisColumns,
+    timeline_analysis,
+    timeline_analysis_info,
+)
 from app.core.authorization.authz_user import AuthzUser
 from app.core.data.crud import Crud
 from app.core.data.crud.timeline_analysis import crud_timeline_analysis
+from app.core.data.dto.analysis import DateGroupBy, TimelineAnalysisResult
 from app.core.data.dto.timeline_analysis import (
     TimelineAnalysisCreate,
     TimelineAnalysisRead,
     TimelineAnalysisUpdate,
 )
+from app.core.filters.columns import ColumnInfo
+from app.core.filters.filtering import Filter
 
 router = APIRouter(
     prefix="/timelineAnalysis",
@@ -133,3 +141,43 @@ def delete_by_id(
 
     db_obj = crud_timeline_analysis.remove(db=db, id=timeline_analysis_id)
     return TimelineAnalysisRead.model_validate(db_obj)
+
+
+@router.get(
+    "/info/{project_id}",
+    response_model=List[ColumnInfo[TimelineAnalysisColumns]],
+    summary="Returns TimelineAnalysis Info.",
+)
+def info(
+    *,
+    project_id: int,
+    authz_user: AuthzUser = Depends(),
+) -> List[ColumnInfo[TimelineAnalysisColumns]]:
+    authz_user.assert_in_project(project_id)
+
+    return timeline_analysis_info(
+        project_id=project_id,
+    )
+
+
+@router.post(
+    "/do_analysis",
+    response_model=List[TimelineAnalysisResult],
+    summary="Perform new timeline analysis.",
+)
+def do_analysis(
+    *,
+    project_id: int,
+    group_by: DateGroupBy,
+    project_metadata_id: int,
+    filter: Filter[TimelineAnalysisColumns],
+    authz_user: AuthzUser = Depends(),
+) -> List[TimelineAnalysisResult]:
+    authz_user.assert_in_project(project_id)
+
+    return timeline_analysis(
+        project_id=project_id,
+        group_by=group_by,
+        project_metadata_id=project_metadata_id,
+        filter=filter,
+    )
