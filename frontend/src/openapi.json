@@ -3966,11 +3966,11 @@
         }
       }
     },
-    "/analysis/timeline_analysis_valid_docments/{project_id}/metadata/{date_metadata_id}}": {
+    "/analysis/count_sdocs_with_date_metadata/{project_id}/metadata/{date_metadata_id}}": {
       "get": {
         "tags": ["analysis"],
-        "summary": "Returns TimelineAnalysis Info.",
-        "operationId": "get_timeline_analysis_valid_documents",
+        "summary": "Returns Tuple[num_sdocs_with_date_metadata, num_total_sdocs].",
+        "operationId": "count_sdocs_with_date_metadata",
         "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
@@ -3996,93 +3996,7 @@
                   "minItems": 2,
                   "prefixItems": [{ "type": "integer" }, { "type": "integer" }],
                   "maxItems": 2,
-                  "title": "Response Analysis-Get Timeline Analysis Valid Documents"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/timeline_analysis2_info/{project_id}": {
-      "get": {
-        "tags": ["analysis"],
-        "summary": "Returns TimelineAnalysis Info.",
-        "operationId": "timeline_analysis2_info",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/ColumnInfo_TimelineAnalysisColumns_" },
-                  "title": "Response Analysis-Timeline Analysis2 Info"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
-          }
-        }
-      }
-    },
-    "/analysis/timeline_analysis2": {
-      "post": {
-        "tags": ["analysis"],
-        "summary": "Perform new timeline analysis.",
-        "operationId": "timeline_analysis2",
-        "security": [{ "OAuth2PasswordBearer": [] }],
-        "parameters": [
-          {
-            "name": "project_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Id" }
-          },
-          {
-            "name": "group_by",
-            "in": "query",
-            "required": true,
-            "schema": { "$ref": "#/components/schemas/DateGroupBy" }
-          },
-          {
-            "name": "project_metadata_id",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "integer", "title": "Project Metadata Id" }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": { "schema": { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input" } }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/TimelineAnalysisResultNew" },
-                  "title": "Response Analysis-Timeline Analysis2"
+                  "title": "Response Analysis-Count Sdocs With Date Metadata"
                 }
               }
             }
@@ -4927,7 +4841,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/trainer/{trainer_job_id}": {
@@ -4936,6 +4851,7 @@
         "summary": "Returns the TrainerJob for the given ID",
         "description": "Returns the TrainerJob for the given ID if it exists",
         "operationId": "get_trainer_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
             "name": "trainer_job_id",
@@ -4969,6 +4885,7 @@
         "summary": "Returns all TrainerJobs for the given project ID",
         "description": "Returns all TrainerJobs for the given project ID if it exists",
         "operationId": "get_all_trainer_jobs",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
             "name": "project_id",
@@ -5016,7 +4933,8 @@
             "description": "Validation Error",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
           }
-        }
+        },
+        "security": [{ "OAuth2PasswordBearer": [] }]
       }
     },
     "/cota/{cota_id}": {
@@ -5025,6 +4943,7 @@
         "summary": "Returns the ConceptOverTimeAnalysis",
         "description": "Returns the ConceptOverTimeAnalysis with the given ID if it exists",
         "operationId": "get_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
@@ -5044,6 +4963,7 @@
         "summary": "Updates the ConceptOverTimeAnalysis",
         "description": "Updates the ConceptOverTimeAnalysis with the given ID if it exists",
         "operationId": "update_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
@@ -5067,6 +4987,7 @@
         "summary": "Removes the ConceptOverTimeAnalysis",
         "description": "Removes the ConceptOverTimeAnalysis with the given ID if it exists",
         "operationId": "delete_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
@@ -5144,6 +5065,7 @@
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Annotate (multiple) COTASentences",
         "operationId": "annotate_cota_sentence",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } },
           {
@@ -5182,6 +5104,7 @@
         "tags": ["conceptOverTimeAnalysis"],
         "summary": "Remove (multiple) COTASentences from the search space",
         "operationId": "remove_cota_sentence",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
@@ -5215,6 +5138,7 @@
         "summary": "Refines the ConceptOverTimeAnalysis",
         "description": "Refines the ConceptOverTimeAnalysis with the given ID if it exists",
         "operationId": "refine_cota_by_id",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
@@ -5246,6 +5170,7 @@
         "summary": "Returns the COTA Refinement Job for the given ID",
         "description": "Returns the COTA Refinement Job for the given ID if it exists",
         "operationId": "get_cota_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           {
             "name": "cota_job_id",
@@ -5272,6 +5197,7 @@
         "summary": "Returns the most recent COTA Refinement Job for the given COTA ID",
         "description": "Returns the most recent COTA Refinement Job for the given COTA ID",
         "operationId": "get_most_recent_cota_job",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
@@ -5300,6 +5226,7 @@
         "summary": "Resets the ConceptOverTimeAnalysis",
         "description": "Resets the ConceptOverTimeAnalysis deleting model, embeddings, refinement jobs and resetting the search space",
         "operationId": "reset_cota",
+        "security": [{ "OAuth2PasswordBearer": [] }],
         "parameters": [
           { "name": "cota_id", "in": "path", "required": true, "schema": { "type": "integer", "title": "Cota Id" } }
         ],
@@ -5468,6 +5395,92 @@
           "200": {
             "description": "Successful Response",
             "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TimelineAnalysisRead" } } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/timelineAnalysis/info/{project_id}": {
+      "get": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Returns TimelineAnalysis Info.",
+        "operationId": "info",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ColumnInfo_TimelineAnalysisColumns_" },
+                  "title": "Response Timelineanalysis-Info"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HTTPValidationError" } } }
+          }
+        }
+      }
+    },
+    "/timelineAnalysis/do_analysis": {
+      "post": {
+        "tags": ["timelineAnalysis"],
+        "summary": "Perform new timeline analysis.",
+        "operationId": "do_analysis",
+        "security": [{ "OAuth2PasswordBearer": [] }],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Id" }
+          },
+          {
+            "name": "group_by",
+            "in": "query",
+            "required": true,
+            "schema": { "$ref": "#/components/schemas/DateGroupBy" }
+          },
+          {
+            "name": "project_metadata_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "title": "Project Metadata Id" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/Filter_TimelineAnalysisColumns_-Input" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TimelineAnalysisResult" },
+                  "title": "Response Timelineanalysis-Do Analysis"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -8734,7 +8747,7 @@
         "required": ["name", "id", "user_id", "project_id", "settings", "concepts", "created", "updated"],
         "title": "TimelineAnalysisRead"
       },
-      "TimelineAnalysisResultNew": {
+      "TimelineAnalysisResult": {
         "properties": {
           "date": { "type": "string", "title": "Date", "description": "The date." },
           "sdoc_ids": {
@@ -8746,7 +8759,7 @@
         },
         "type": "object",
         "required": ["date", "sdoc_ids"],
-        "title": "TimelineAnalysisResultNew"
+        "title": "TimelineAnalysisResult"
       },
       "TimelineAnalysisResultType": { "const": "document", "title": "TimelineAnalysisResultType" },
       "TimelineAnalysisSettings": {

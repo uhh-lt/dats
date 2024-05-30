@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TimelineAnalysisResultNew = {
+export type TimelineAnalysisResult = {
   /**
    * The date.
    */
