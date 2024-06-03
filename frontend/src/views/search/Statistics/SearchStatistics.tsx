@@ -1,5 +1,5 @@
 import { TabContext } from "@mui/lab";
-import { Box, BoxProps, Tab, Tabs } from "@mui/material";
+import { Box, BoxProps, Stack, Tab, Tabs } from "@mui/material";
 import React, { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
@@ -7,7 +7,7 @@ import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
 import CodeStats from "./CodeStats.tsx";
 import DocumentTagStats from "./DocumentTagStats.tsx";
 import KeywordStats from "./KeywordStats.tsx";
-import SearchStatisticsContextMenu, { ContextMenuData } from "./SearchStatisticsContextMenu.tsx";
+import SearchStatisticsMenu from "./SearchStatisticsMenu.tsx";
 import StatsSearchBar from "./StatsSearchBar.tsx";
 
 interface SearchStatisticsProps {
@@ -36,15 +36,7 @@ function SearchStatistics({
   // query all codes of the current project
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
 
-  // context menu
-  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuData | null>(null);
-  const openContextMenu = useCallback((event: React.MouseEvent) => {
-    event.preventDefault();
-    setContextMenuPosition({ x: event.pageX, y: event.pageY });
-  }, []);
-  const closeContextMenu = useCallback(() => {
-    setContextMenuPosition(null);
-  }, []);
+  // menu
   const handleMenuItemClick = useCallback((navigateTo: string) => {
     setTab(navigateTo);
   }, []);
@@ -61,13 +53,23 @@ function SearchStatistics({
   return (
     <Box className="myFlexContainer" {...(props as BoxProps)}>
       <TabContext value={tab}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }} className="myFlexFitContentContainer">
-          <Tabs value={tab} onChange={handleTabChange} variant="scrollable" onContextMenu={openContextMenu}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          sx={{ borderBottom: 1, borderColor: "divider" }}
+          className="myFlexFitContentContainer"
+        >
+          <SearchStatisticsMenu
+            menuItems={projectCodes.data || []}
+            handleMenuItemClick={handleMenuItemClick}
+            sx={{ ml: 1 }}
+          />
+          <Tabs value={tab} onChange={handleTabChange} variant="scrollable">
             <Tab label="Keywords" value="keywords" />
             <Tab label="Tags" value="tags" />
             {projectCodes.data?.map((code) => <Tab key={code.id} label={code.name} value={`${code.id}`} />)}
           </Tabs>
-        </Box>
+        </Stack>
 
         {/* Stats Searchbar Component */}
         <Box ref={parentRef} className="myFlexFitContentContainer" sx={{ borderBottom: 1, borderColor: "divider" }}>
@@ -100,12 +102,6 @@ function SearchStatistics({
           ))}
         </Box>
       </TabContext>
-      <SearchStatisticsContextMenu
-        menuItems={projectCodes.data || []}
-        contextMenuData={contextMenuPosition}
-        handleClose={closeContextMenu}
-        handleMenuItemClick={handleMenuItemClick}
-      />
     </Box>
   );
 }
