@@ -71,13 +71,10 @@ const StyledTreeItemRoot = styled(TreeItem)(({ theme }) => ({
 }));
 
 function StyledTreeItem(props: StyledTreeItemProps) {
-  const { labelIcon: LabelIcon, actions, labelText, labelIconColor, hasChildren, onContextMenu, ...other } = props;
+  const { labelIcon: LabelIcon, actions, labelText, labelIconColor, hasChildren, ...other } = props;
 
   return (
     <StyledTreeItemRoot
-      ContentProps={{
-        onContextMenu: onContextMenu,
-      }}
       label={
         <Box sx={{ display: "flex", alignItems: "center", p: 0.5, pr: 0, ml: !hasChildren ? "30px" : 0 }}>
           <Box component={LabelIcon} color={labelIconColor} sx={{ mr: 1 }} />
@@ -93,7 +90,6 @@ function StyledTreeItem(props: StyledTreeItemProps) {
 }
 
 export interface DataTreeViewProps {
-  openContextMenu?: (node: IDataTree) => React.MouseEventHandler<HTMLLIElement>;
   data: IDataTree;
   onExpandClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
   onCollapseClick: (e: React.MouseEvent<HTMLDivElement>, nodeId: string) => void;
@@ -107,7 +103,6 @@ function DataTreeView({
   data,
   onExpandClick,
   onCollapseClick,
-  openContextMenu,
   onDataClick,
   dataIcon,
   ...props
@@ -140,7 +135,6 @@ function DataTreeView({
         }
         labelIconColor={node.data.color}
         actions={renderActions ? renderActions(node) : undefined}
-        onContextMenu={openContextMenu ? openContextMenu(node) : undefined}
         onClick={onDataClick ? () => onDataClick(node.data) : undefined}
       >
         {Array.isArray(node.children) && node.children.length > 0 && (

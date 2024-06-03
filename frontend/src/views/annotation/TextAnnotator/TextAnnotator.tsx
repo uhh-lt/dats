@@ -12,7 +12,7 @@ import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnno
 import ConfirmationAPI from "../../../features/ConfirmationDialog/ConfirmationAPI.ts";
 import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppDispatch, useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
+import AnnotationContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
 import DocumentRenderer from "../DocumentRenderer/DocumentRenderer.tsx";
 import useComputeTokenData from "../DocumentRenderer/useComputeTokenData.ts";
 import { ICode } from "../ICode.ts";
@@ -296,7 +296,7 @@ function TextAnnotator({ sdoc, adoc }: AnnotatorRemasteredProps) {
 
   return (
     <>
-      <SpanContextMenu
+      <AnnotationContextMenu
         ref={spanContextMenuRef}
         onAdd={handleCodeSelectorAddCode}
         onClose={handleCodeSelectorClose}

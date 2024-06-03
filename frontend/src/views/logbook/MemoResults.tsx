@@ -2,18 +2,11 @@ import { Box, List } from "@mui/material";
 import { BoxProps } from "@mui/system";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
-import { AttachedObjectType } from "../../api/openapi/models/AttachedObjectType.ts";
 import MemoCard from "../../components/Memo/MemoCard/MemoCard.tsx";
 
 interface MemoResultsProps {
   memoIds: number[];
   noResultsText: string;
-}
-
-export interface MemoCardContextMenuData {
-  memoId: number | undefined;
-  memoStarred: boolean | undefined;
-  attachedObjectType: AttachedObjectType | undefined;
 }
 
 function MemoResults({ noResultsText, memoIds, ...props }: MemoResultsProps & BoxProps) {

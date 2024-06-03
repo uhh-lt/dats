@@ -11,7 +11,7 @@ import { SourceDocumentWithDataRead } from "../../../api/openapi/models/SourceDo
 import { SpanAnnotationReadResolved } from "../../../api/openapi/models/SpanAnnotationReadResolved.ts";
 import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import { useAppSelector } from "../../../plugins/ReduxHooks.ts";
-import SpanContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
+import AnnotationContextMenu, { CodeSelectorHandle } from "../AnnotationContextMenu.tsx";
 import { ICode } from "../ICode.ts";
 import SVGBBox from "./SVGBBox.tsx";
 import SVGBBoxText from "./SVGBBoxText.tsx";
@@ -322,7 +322,7 @@ function ImageAnnotatorWithHeight({ sdoc, adoc, height }: ImageAnnotatorProps & 
         </Typography>
       </Toolbar>
 
-      <SpanContextMenu
+      <AnnotationContextMenu
         ref={codeSelectorRef}
         onAdd={onCodeSelectorAddCode}
         onEdit={onCodeSelectorEditCode}

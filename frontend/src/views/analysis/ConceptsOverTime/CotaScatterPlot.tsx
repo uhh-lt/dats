@@ -221,7 +221,7 @@ function CotaScatterPlot({ cota }: CotaScatterPlotProps) {
         <CardHeader
           className="myFlexFitContentContainer"
           title={"Scatter Plot"}
-          subheader={`Hover on a dot to see more information.`}
+          subheader={`Hover on a dot to see more information. Right-click dot to modify.`}
           action={<CotaPlotToggleButton />}
         />
         <CardContent className="myFlexFillAllContainer">{content}</CardContent>

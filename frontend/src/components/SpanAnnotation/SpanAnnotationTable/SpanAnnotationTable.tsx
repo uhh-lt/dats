@@ -43,8 +43,6 @@ export interface SpanAnnotationTableProps {
   // column visibility
   columnVisibilityModel: MRT_VisibilityState;
   onColumnVisibilityChange: MRT_TableOptions<AnnotationTableRow>["onColumnVisibilityChange"];
-  // actions
-  onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => void;
   // components
   cardProps?: CardProps;
   positionToolbarAlertBanner?: MRT_TableOptions<AnnotationTableRow>["positionToolbarAlertBanner"];
@@ -63,7 +61,6 @@ function SpanAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  onRowContextMenu,
   cardProps,
   positionToolbarAlertBanner = "top",
   renderToolbarInternalActions = SATToolbar,
@@ -217,6 +214,14 @@ function SpanAnnotationTable({
     fetchMoreOnBottomReached(tableContainerRef.current);
   }, [fetchMoreOnBottomReached]);
 
+  // actions
+  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => {
+    event.preventDefault();
+    if (onRowSelectionChange) {
+      onRowSelectionChange({ [spanAnnotationId]: true });
+    }
+  };
+
   // table
   const table = useMaterialReactTable<AnnotationTableRow>({
     data: flatData,
@@ -250,7 +255,7 @@ function SpanAnnotationTable({
     onColumnVisibilityChange,
     // mui components
     muiTableBodyRowProps: ({ row }) => ({
-      onContextMenu: onRowContextMenu ? (event) => onRowContextMenu(event, row.original.id) : undefined,
+      onContextMenu: (event) => handleRowContextMenu(event, row.original.id),
     }),
     muiTablePaperProps: {
       elevation: 0,

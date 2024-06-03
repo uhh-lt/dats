@@ -2,13 +2,16 @@ import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import SaveIcon from "@mui/icons-material/Save";
+
 import {
   Box,
   Button,
   IconButton,
   ListItemIcon,
   ListItemText,
+  Menu,
   MenuItem,
   Stack,
   Tab,
@@ -30,7 +33,6 @@ import Handsontable from "handsontable/base";
 import "handsontable/dist/handsontable.full.min.css";
 import { registerAllModules } from "handsontable/registry";
 import { CodeRead } from "../../../api/openapi/models/CodeRead.ts";
-import GenericAnchorMenu, { GenericAnchorContextMenuHandle } from "../../../components/GenericAnchorMenu.tsx";
 import { useOpenSnackbar } from "../../../features/SnackbarDialog/useOpenSnackbar.ts";
 import CustomHTMLCellRenderer from "./Renderer/CustomHTMLCellRenderer.tsx";
 import AddAnnotationDialog from "./Toolbar/AddAnnotationDialog.tsx";
@@ -99,7 +101,6 @@ interface TableViewContentProps {
 function TableViewContent({ table }: TableViewContentProps) {
   // local client state
   const hotRef = useRef<HotTableClass>(null);
-  const tabContextMenuRef = useRef<GenericAnchorContextMenuHandle>(null);
   const [tablePages, setTablePages] = useState(table.content); // page data
   const [hasChanged, setHasChanged] = useState(false);
 
@@ -124,9 +125,11 @@ function TableViewContent({ table }: TableViewContentProps) {
   const openSnackbar = useOpenSnackbar();
 
   // context menu
-  const handleOpenContextMenu = (page: string) => (event: React.MouseEvent<HTMLDivElement>) => {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const isOpen = Boolean(anchorEl);
+  const handleTabMenuClick = (page: string) => (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    tabContextMenuRef.current?.open(event.currentTarget);
+    setAnchorEl(event.currentTarget);
     setSelectedPageId(page);
     setCurrentPageId(page);
   };
@@ -183,7 +186,7 @@ function TableViewContent({ table }: TableViewContentProps) {
     const deleteIndex = newPages.findIndex((p) => p.id === selectedPageId);
     newPages.splice(deleteIndex, 1);
 
-    tabContextMenuRef.current?.close();
+    setAnchorEl(null);
     setTablePages(newPages);
     setCurrentPageId(newPages[0].id);
     setSelectedPageId("");
@@ -201,7 +204,7 @@ function TableViewContent({ table }: TableViewContentProps) {
       content: tablePages[copyIndex].content,
     });
 
-    tabContextMenuRef.current?.close();
+    setAnchorEl(null);
     setTablePages(newPages);
     setSelectedPageId("");
   };
@@ -210,7 +213,7 @@ function TableViewContent({ table }: TableViewContentProps) {
   const handleClickRename = () => {
     if (selectedPageId === "") return;
 
-    tabContextMenuRef.current?.close();
+    setAnchorEl(null);
     setRenamingPageId(selectedPageId);
   };
   useEffect(() => {
@@ -286,9 +289,18 @@ function TableViewContent({ table }: TableViewContentProps) {
               return (
                 <Tab
                   key={pageData.id}
-                  label={pageData.name}
+                  label={
+                    <Stack direction="row" alignItems="center" gap={1}>
+                      {pageData.name}
+                      <IconButton size="small" onClick={handleTabMenuClick(pageData.id)}>
+                        <MoreVertIcon />
+                      </IconButton>
+                    </Stack>
+                  }
                   value={pageData.id}
-                  onContextMenu={handleOpenContextMenu(pageData.id)}
+                  style={{
+                    padding: "6px 0px 6px 12px",
+                  }}
                 />
               );
             } else {
@@ -319,7 +331,7 @@ function TableViewContent({ table }: TableViewContentProps) {
             }
           })}
         </Tabs>
-        <GenericAnchorMenu ref={tabContextMenuRef}>
+        <Menu anchorEl={anchorEl} open={isOpen} onClose={() => setAnchorEl(null)}>
           <MenuItem onClick={() => handleClickDelete()} disabled={tablePages.length === 1}>
             <ListItemIcon>
               <DeleteIcon />
@@ -338,7 +350,7 @@ function TableViewContent({ table }: TableViewContentProps) {
             </ListItemIcon>
             <ListItemText>Duplicate</ListItemText>
           </MenuItem>
-        </GenericAnchorMenu>
+        </Menu>
         <Box sx={{ flexGrow: 1 }} />
         <Stack direction="row" spacing={1} mr={2} flexShrink={0}>
           <AddCodeDialog

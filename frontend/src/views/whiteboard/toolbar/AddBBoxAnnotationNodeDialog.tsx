@@ -75,7 +75,6 @@ function AddBBoxAnnotationNodeDialog({ projectId, buttonProps, onClick }: AddBBo
             onSortingChange={setSortingModel}
             columnVisibilityModel={visibilityModel}
             onColumnVisibilityChange={setVisibilityModel}
-            onRowContextMenu={(_, bboxAnnotationId) => console.log("Row context menu", bboxAnnotationId)}
             cardProps={{ elevation: 2, className: "myFlexFillAllContainer myFlexContainer" }}
             renderBottomToolbarCustomActions={(props) => (
               <>

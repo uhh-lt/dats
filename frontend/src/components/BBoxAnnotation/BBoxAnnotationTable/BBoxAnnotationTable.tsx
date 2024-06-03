@@ -44,8 +44,6 @@ export interface BBoxAnnotationTableProps {
   // column visibility
   columnVisibilityModel: MRT_VisibilityState;
   onColumnVisibilityChange: (columnVisibilityModel: MRT_VisibilityState) => void;
-  // actions
-  onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, bboxAnnotationId: number) => void;
   // components
   cardProps?: CardProps;
   positionToolbarAlertBanner?: MRT_TableOptions<BBoxAnnotationTableRow>["positionToolbarAlertBanner"];
@@ -64,7 +62,6 @@ function BBoxAnnotationTable({
   onSortingChange,
   columnVisibilityModel,
   onColumnVisibilityChange,
-  onRowContextMenu,
   cardProps,
   positionToolbarAlertBanner = "top",
   renderToolbarInternalActions = BBoxToolbar,
@@ -234,7 +231,6 @@ function BBoxAnnotationTable({
   const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, bboxAnnotationId: number) => {
     event.preventDefault();
     onRowSelectionChange({ [bboxAnnotationId]: true });
-    onRowContextMenu && onRowContextMenu(event, bboxAnnotationId);
   };
 
   // table

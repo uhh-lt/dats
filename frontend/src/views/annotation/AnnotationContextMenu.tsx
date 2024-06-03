@@ -45,7 +45,7 @@ export interface CodeSelectorHandle {
   ) => void;
 }
 
-const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
+const AnnotationContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
   ({ onClose, onAdd, onEdit, onDelete }, ref) => {
     // global client state (redux)
     const codes = useAppSelector((state) => state.annotations.codesForSelection);
@@ -247,7 +247,7 @@ const SpanContextMenu = forwardRef<CodeSelectorHandle, CodeSelectorProps>(
   },
 );
 
-export default SpanContextMenu;
+export default AnnotationContextMenu;
 
 interface CodeSelectorListItemProps {
   codeId: number;

@@ -47,8 +47,6 @@ interface SdocTableProps {
   // sorting
   sortingModel: MRT_SortingState;
   onSortingChange: (sortingModel: MRT_SortingState) => void;
-  // actions
-  onRowContextMenu?: (event: React.MouseEvent<HTMLTableRowElement>, sdocId: number) => void;
   // toolbar
   positionToolbarAlertBanner?: MRT_TableOptions<AnnotationTableRow>["positionToolbarAlertBanner"];
   renderToolbarInternalActions?: (props: DocumentTableActionProps) => React.ReactNode;
@@ -68,7 +66,6 @@ function SdocTable({
   onRowSelectionChange,
   sortingModel,
   onSortingChange,
-  onRowContextMenu,
   positionToolbarAlertBanner = "top",
   renderToolbarInternalActions,
   renderTopToolbarCustomActions,
@@ -252,10 +249,9 @@ function SdocTable({
   }, [fetchMoreOnBottomReached]);
 
   // actions
-  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, spanAnnotationId: number) => {
+  const handleRowContextMenu = (event: React.MouseEvent<HTMLTableRowElement>, sdocId: number) => {
     event.preventDefault();
-    onRowSelectionChange({ [spanAnnotationId]: true });
-    onRowContextMenu && onRowContextMenu(event, spanAnnotationId);
+    onRowSelectionChange({ [sdocId]: true });
   };
 
   // table

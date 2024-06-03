@@ -9,7 +9,6 @@ import useGetMemosAttachedObject from "../useGetMemosAttachedObject.ts";
 import MemoCardActionsMenu from "./MemoCardActionsMenu.tsx";
 
 interface MemoCardSharedProps {
-  onContextMenu?: (memo: MemoRead) => (event: React.MouseEvent) => void;
   onMouseEnter?: (memo: MemoRead) => (event: React.MouseEvent) => void;
   onMouseLeave?: (memo: MemoRead) => (event: React.MouseEvent) => void;
 }
@@ -43,12 +42,7 @@ function MemoCardWithoutContent({ memoId, ...props }: MemoCardSharedProps & { me
   }
 }
 
-function MemoCardWithContent({
-  memo,
-  onContextMenu,
-  onMouseEnter,
-  onMouseLeave,
-}: MemoCardSharedProps & { memo: MemoRead }) {
+function MemoCardWithContent({ memo, onMouseEnter, onMouseLeave }: MemoCardSharedProps & { memo: MemoRead }) {
   // query
   const attachedObject = useGetMemosAttachedObject(memo.attached_object_type)(memo.attached_object_id);
 
@@ -86,7 +80,6 @@ function MemoCardWithContent({
       variant="outlined"
       onMouseEnter={onMouseEnter ? onMouseEnter(memo) : undefined}
       onMouseLeave={onMouseLeave ? onMouseLeave(memo) : undefined}
-      onContextMenu={onContextMenu ? onContextMenu(memo) : undefined}
     >
       <CardHeader
         title={

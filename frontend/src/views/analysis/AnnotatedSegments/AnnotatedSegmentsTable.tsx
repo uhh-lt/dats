@@ -10,10 +10,9 @@ import { AnnotatedSegmentsActions } from "./annotatedSegmentsSlice.ts";
 const filterName = "annotatedSegments";
 interface AnnotatedSegmentsTableProps {
   cardProps: SpanAnnotationTableProps["cardProps"];
-  onRowContextMenu: SpanAnnotationTableProps["onRowContextMenu"];
 }
 
-function AnnotatedSegmentsTable({ cardProps, onRowContextMenu }: AnnotatedSegmentsTableProps) {
+function AnnotatedSegmentsTable({ cardProps }: AnnotatedSegmentsTableProps) {
   const projectId = parseInt(useParams<{ projectId: string }>().projectId!);
 
   // global client state (redux) connected to table state
@@ -40,7 +39,6 @@ function AnnotatedSegmentsTable({ cardProps, onRowContextMenu }: AnnotatedSegmen
       onSortingChange={setSortingModel}
       columnVisibilityModel={columnVisibilityModel}
       onColumnVisibilityChange={setColumnVisibilityModel}
-      onRowContextMenu={onRowContextMenu}
       renderTopToolbarCustomActions={(props) => <BulkChangeCodeButton {...props} filterName={filterName} />}
       renderToolbarInternalActions={AnnotatedSegmentsTableToolbar}
       cardProps={cardProps}
