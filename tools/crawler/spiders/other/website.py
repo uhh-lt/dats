@@ -1,50 +1,38 @@
-from urllib.parse import urlparse
+from scrapy.linkextractors import LinkExtractor
+from scrapy.spiders import Rule
 
-import scrapy
-
-from crawler.spiders.spider_base import SpiderBase
+from crawler.spiders.crawl_spider_base import CrawlSpiderBase
 
 
-class WebsiteSpider(SpiderBase):
+class WebsiteSpider(CrawlSpiderBase):
     """
-    This Spiders finds and follows all <a href=""> links that are in-domain.
+    This Spiders finds and follows all links that are in-domain.
     """
 
     name = "website"
+    allowed_domains = ["uni-hamburg.de"]
     start_urls = ["https://www.uni-hamburg.de/"]
-    domain = "uni-hamburg.de"
     visited_links = set()
+    filenams = set()
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    rules = (Rule(LinkExtractor(), callback="parse_item", follow=True),)
 
-    def parse(self, response, **kwargs):
-        # find all links (a-tags) on the page
-        links = response.css("a::attr(href)").getall()
+    def parse_item(self, response, **kwargs):
+        # skip already visited links
+        if response.url in self.visited_links:
+            return
+        self.visited_links.add(response.url)
 
-        # filter out links that are not in-domain
-        valid_links = set()
-        for link in links:
-            # join with response url
-            link = response.urljoin(link)
+        # init item
+        item = self.init_item(response=response)
 
-            # remove query parameters
-            link = urlparse(link)._replace(query="").geturl()
-
-            # filter out links that are not in-domain
-            if self.domain in link:
-                valid_links.add(link)
-
-        # filter out links that have already been visited
-        links_to_visit = valid_links - self.visited_links
-        self.visited_links.update(links_to_visit)
-
-        # follow links
-        for link in links_to_visit:
-            yield scrapy.Request(link, callback=self.parse)
+        # skip already saved files
+        filename = item["file_name"]
+        if filename in self.filenams:
+            return
+        self.filenams.add(filename)
 
         # apply pipeline
-        item = self.init_item(response=response)
         yield item
 
     # save visited links in txt file
@@ -52,3 +40,7 @@ class WebsiteSpider(SpiderBase):
         with open("visited_links.txt", "w") as f:
             for link in self.visited_links:
                 f.write(link + "\n")
+
+        with open("filenames.txt", "w") as f:
+            for filename in self.filenams:
+                f.write(filename + "\n")
