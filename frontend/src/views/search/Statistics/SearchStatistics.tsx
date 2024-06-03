@@ -4,11 +4,10 @@ import React, { useCallback, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectHooks from "../../../api/ProjectHooks.ts";
 import { SpanEntityStat } from "../../../api/openapi/models/SpanEntityStat.ts";
-import { ContextMenuPosition } from "../../../components/ContextMenu/ContextMenuPosition.ts";
 import CodeStats from "./CodeStats.tsx";
 import DocumentTagStats from "./DocumentTagStats.tsx";
 import KeywordStats from "./KeywordStats.tsx";
-import SearchStatisticsContextMenu from "./SearchStatisticsContextMenu.tsx";
+import SearchStatisticsContextMenu, { ContextMenuData } from "./SearchStatisticsContextMenu.tsx";
 import StatsSearchBar from "./StatsSearchBar.tsx";
 
 interface SearchStatisticsProps {
@@ -38,7 +37,7 @@ function SearchStatistics({
   const projectCodes = ProjectHooks.useGetAllCodes(projectId);
 
   // context menu
-  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuPosition | null>(null);
+  const [contextMenuPosition, setContextMenuPosition] = useState<ContextMenuData | null>(null);
   const openContextMenu = useCallback((event: React.MouseEvent) => {
     event.preventDefault();
     setContextMenuPosition({ x: event.pageX, y: event.pageY });

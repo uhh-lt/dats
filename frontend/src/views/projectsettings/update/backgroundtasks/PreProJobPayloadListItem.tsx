@@ -16,32 +16,23 @@ import React from "react";
 import { BackgroundJobStatus } from "../../../../api/openapi/models/BackgroundJobStatus.ts";
 import { PreprocessingJobPayloadRead } from "../../../../api/openapi/models/PreprocessingJobPayloadRead.ts";
 import { docTypeToIcon } from "../../../../utils/docTypeToIcon.tsx";
-import { ProjectDocumentsContextMenuHandle } from "../ProjectDocumentsContextMenu.tsx";
 import { statusToTypographyColor } from "./StatusToTypographyColor.ts";
 
 interface PreProJobPayloadListItemProps {
   ppj: PreprocessingJobPayloadRead;
-  contextMenuRef: React.RefObject<ProjectDocumentsContextMenuHandle>;
 }
 
-function PreProJobPayloadListItem({ ppj, contextMenuRef }: PreProJobPayloadListItemProps) {
+function PreProJobPayloadListItem({ ppj }: PreProJobPayloadListItemProps) {
   // local state
   const [expanded, setExpanded] = React.useState(false);
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
 
-  // context menu
-  const onContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
-    if (!contextMenuRef.current) return;
-    contextMenuRef.current.open({ top: event.clientY, left: event.clientX }, ppj.project_id, ppj.source_document_id);
-  };
-
   return (
     <>
       <Tooltip title="Click to view details" followCursor={true} enterDelay={1000}>
-        <ListItemButton sx={{ pl: 8 }} onClick={handleExpandClick} onContextMenu={onContextMenu}>
+        <ListItemButton sx={{ pl: 8 }} onClick={handleExpandClick}>
           <ListItemIcon sx={{ color: `${statusToTypographyColor[ppj.status!]}` }}>
             {ppj.status === BackgroundJobStatus.RUNNING ? (
               <CircularProgress color="secondary" size={"1.5em"} />
