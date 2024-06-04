@@ -1,4 +1,4 @@
-import { AccountBox, Email, Help, Lock, Support, Visibility } from "@mui/icons-material";
+import { AccountBox, Email, Help, Lock, Visibility } from "@mui/icons-material";
 import { Container, Grid, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
@@ -8,6 +8,7 @@ import { useAuth } from "../../auth/useAuth.ts";
 import DataPrivacy from "./pages/DataPrivacy.tsx";
 import PasswordReset from "./pages/PasswordReset.tsx";
 import ProfileHome from "./pages/ProfileHome.tsx";
+import Support from "./pages/Support.tsx";
 import UpdateEmail from "./pages/UpdateEmail.tsx";
 
 interface TabPanelProps {
